@@ -1,0 +1,14 @@
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\Crypto\bin\Release\net8.0\GiblexVault.Security.ZK.deps.json
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\Crypto\bin\Release\net8.0\GiblexVault.Security.ZK.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\Crypto\bin\Release\net8.0\GiblexVault.Security.ZK.pdb
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\Crypto\bin\Release\net8.0\GiblexVault.Security.ZK.xml
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\Crypto\obj\Release\net8.0\GiblexVault.Security.ZK.csproj.AssemblyReference.cache
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\Crypto\obj\Release\net8.0\GiblexVault.Security.ZK.GeneratedMSBuildEditorConfig.editorconfig
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\Crypto\obj\Release\net8.0\GiblexVault.Security.ZK.AssemblyInfoInputs.cache
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\Crypto\obj\Release\net8.0\GiblexVault.Security.ZK.AssemblyInfo.cs
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\Crypto\obj\Release\net8.0\GiblexVault.Security.ZK.csproj.CoreCompileInputs.cache
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\Crypto\obj\Release\net8.0\GiblexVault.Security.ZK.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\Crypto\obj\Release\net8.0\refint\GiblexVault.Security.ZK.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\Crypto\obj\Release\net8.0\GiblexVault.Security.ZK.xml
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\Crypto\obj\Release\net8.0\GiblexVault.Security.ZK.pdb
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\Crypto\obj\Release\net8.0\ref\GiblexVault.Security.ZK.dll

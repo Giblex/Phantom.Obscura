@@ -1,0 +1,623 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:PhantomVault.UI.Views">
+
+    <!-- ============================================= -->
+    <!-- BUTTON PRESS EFFECTS WITH SPRING PHYSICS -->
+    <!-- ============================================= -->
+
+    <Style Selector="Button.animated">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.15"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Button.animated:pointerover">
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.animated:pressed">
+        <Setter Property="Opacity" Value="0.9"/>
+    </Style>
+
+    <!-- Accent Button with Press Effect -->
+    <Style Selector="Button.accent-animated">
+        <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="16,8"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.2"/>
+                <ThicknessTransition Property="Margin" Duration="0:0:0.15" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Button.accent-animated:pointerover">
+        <Setter Property="Background" Value="{DynamicResource AccentHoverBrush}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.accent-animated:pressed">
+        <Setter Property="Margin" Value="0,1,0,-1"/>
+    </Style>
+
+    <!-- Icon Button with Scale Effect -->
+    <Style Selector="Button.icon-animated">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="8"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.15"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Button.icon-animated:pointerover">
+        <Setter Property="Background" Value="#10FFFFFF"/>
+    </Style>
+
+    <Style Selector="Button.icon-animated:pressed">
+        <Setter Property="Background" Value="#20FFFFFF"/>
+    </Style>
+
+    <!-- ============================================= -->
+    <!-- LIST ITEM STAGGER ANIMATIONS -->
+    <!-- ============================================= -->
+
+    <Style Selector="ListBoxItem.credential-item">
+        <Setter Property="Opacity" Value="0"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="ListBoxItem.credential-item.show">
+        <Setter Property="Opacity" Value="1"/>
+    </Style>
+
+    <!-- Stagger delays for first 20 items -->
+    <Style Selector="ListBoxItem.credential-item.delay-0.show">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Delay="0:0:0" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="ListBoxItem.credential-item.delay-1.show">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Delay="0:0:0.05" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="ListBoxItem.credential-item.delay-2.show">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Delay="0:0:0.1" Easing="CubicEaseOut"/>
+
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <!-- Continue pattern for more items as needed... -->
+
+    <!-- ============================================= -->
+    <!-- SEARCH RESULT TRANSITIONS -->
+    <!-- ============================================= -->
+
+    <Style Selector="Panel.search-results">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.25" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Panel.search-results.filtering">
+        <Setter Property="Opacity" Value="0.5"/>
+    </Style>
+
+    <!-- ============================================= -->
+    <!-- COPY FEEDBACK ANIMATION -->
+    <!-- ============================================= -->
+
+    <Style Selector="Button.copy-button">
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.2"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Button.copy-button:pressed">
+        <Setter Property="Opacity" Value="0.9"/>
+    </Style>
+
+    <Style Selector="Button.copy-button.copied">
+        <Setter Property="Background" Value="{DynamicResource SuccessBrush}"/>
+    </Style>
+
+    <!-- Copy tooltip animation -->
+    <Style Selector="Border.copy-tooltip">
+        <Setter Property="Opacity" Value="0"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.2" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Border.copy-tooltip.show">
+        <Setter Property="Opacity" Value="1"/>
+    </Style>
+
+    <!-- ============================================= -->
+    <!-- PASSWORD STRENGTH METER ANIMATION -->
+    <!-- ============================================= -->
+
+    <Style Selector="ProgressBar.strength-meter">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Value" Duration="0:0:0.4" Easing="CubicEaseOut"/>
+                <BrushTransition Property="Foreground" Duration="0:0:0.3"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="ProgressBar.strength-meter.weak">
+        <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
+    </Style>
+
+    <Style Selector="ProgressBar.strength-meter.medium">
+        <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+    </Style>
+
+    <Style Selector="ProgressBar.strength-meter.strong">
+        <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+    </Style>
+
+    <!-- ============================================= -->
+    <!-- FADE IN/OUT ANIMATIONS -->
+    <!-- ============================================= -->
+
+    <Style Selector="Panel.fade-in">
+        <Setter Property="Opacity" Value="0"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.3" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Panel.fade-in.show">
+        <Setter Property="Opacity" Value="1"/>
+    </Style>
+
+    <!-- ============================================= -->
+    <!-- SLIDE ANIMATIONS -->
+    <!-- ============================================= -->
+
+    <Style Selector="Panel.slide-left">
+        <Setter Property="Opacity" Value="0"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.35" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Panel.slide-left.show">
+        <Setter Property="Opacity" Value="1"/>
+    </Style>
+
+    <Style Selector="Panel.slide-up">
+        <Setter Property="Opacity" Value="0"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.25"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Panel.slide-up.show">
+        <Setter Property="Opacity" Value="1"/>
+    </Style>
+
+    <!-- ============================================= -->
+    <!-- PULSE ANIMATION (for notifications/badges) -->
+    <!-- ============================================= -->
+
+    <Style Selector="Border.pulse">
+        <Style.Animations>
+            <Animation Duration="0:0:2" IterationCount="Infinite">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="1"/>
+                </KeyFrame>
+                <KeyFrame Cue="50%">
+                    <Setter Property="Opacity" Value="0.6"/>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="1"/>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <!-- ============================================= -->
+    <!-- SHAKE ANIMATION (for errors) -->
+    <!-- ============================================= -->
+
+    <!-- Shake animation removed - RenderTransform animations not supported in Avalonia -->
+
+    <!-- ============================================= -->
+    <!-- MFA SETTINGS WINDOW ANIMATIONS -->
+    <!-- ============================================= -->
+
+    <!-- Window Entrance Animation -->
+    <Style Selector="views|ThemeAwareWindow.mfa-window">
+        <Setter Property="Opacity" Value="0"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.3" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="views|ThemeAwareWindow.mfa-window:loaded">
+        <Setter Property="Opacity" Value="1"/>
+    </Style>
+
+    <!-- Card Stagger Entrance Animations -->
+    <Style Selector="Border.mfa-card">
+        <Setter Property="Opacity" Value="0"/>
+        <Setter Property="RenderTransform" Value="translateY(20px)"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Easing="CubicEaseOut"/>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.4" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Border.mfa-card.show">
+        <Setter Property="Opacity" Value="1"/>
+        <Setter Property="RenderTransform" Value="translateY(0)"/>
+    </Style>
+
+    <!-- Stagger delays for MFA cards -->
+    <Style Selector="Border.mfa-card.delay-0.show">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Delay="0:0:0.05" Easing="CubicEaseOut"/>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.4" Delay="0:0:0.05" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Border.mfa-card.delay-1.show">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Delay="0:0:0.1" Easing="CubicEaseOut"/>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.4" Delay="0:0:0.1" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Border.mfa-card.delay-2.show">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Delay="0:0:0.15" Easing="CubicEaseOut"/>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.4" Delay="0:0:0.15" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Border.mfa-card.delay-3.show">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Delay="0:0:0.2" Easing="CubicEaseOut"/>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.4" Delay="0:0:0.2" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Border.mfa-card.delay-4.show">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Delay="0:0:0.25" Easing="CubicEaseOut"/>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.4" Delay="0:0:0.25" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <!-- Success Pulse Animation -->
+    <Style Selector="Border.success-pulse">
+        <Style.Animations>
+            <Animation Duration="0:0:0.6" FillMode="Forward">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Background" Value="{DynamicResource Brush.Card}"/>
+                </KeyFrame>
+                <KeyFrame Cue="50%">
+                    <Setter Property="Background" Value="#20008000"/>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Background" Value="{DynamicResource Brush.Card}"/>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <!-- Error Flash Animation -->
+    <Style Selector="Border.error-flash">
+        <Style.Animations>
+            <Animation Duration="0:0:0.6" FillMode="Forward">
+                <KeyFrame Cue="0%">
+                    <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+                </KeyFrame>
+                <KeyFrame Cue="50%">
+                    <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}"/>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <!-- Toggle Switch Smooth Transition -->
+    <Style Selector="ToggleSwitch">
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.25" Easing="CubicEaseInOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <!-- TOTP Code Input Animation -->
+    <Style Selector="TextBox.totp-input">
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="BorderBrush" Duration="0:0:0.2"/>
+                <ThicknessTransition Property="BorderThickness" Duration="0:0:0.2"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="TextBox.totp-input:focus">
+        <Setter Property="BorderThickness" Value="2"/>
+    </Style>
+
+    <!-- Biometric Icon Pulse (for enrollment success) -->
+    <Style Selector="TextBlock.biometric-success">
+        <Style.Animations>
+            <Animation Duration="0:0:1" IterationCount="2">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="1"/>
+                </KeyFrame>
+                <KeyFrame Cue="50%">
+                    <Setter Property="Opacity" Value="0.7"/>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="1"/>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <!-- Loading Spinner Animation - removed (RenderTransform not supported) -->
+
+    <!-- Button Ripple Effect (on click) -->
+    <Style Selector="Button.ripple-effect">
+        <Setter Property="ClipToBounds" Value="True"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.3"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Button.ripple-effect:pressed">
+        <Setter Property="Opacity" Value="0.9"/>
+    </Style>
+
+    <!-- Status Message Slide In -->
+    <Style Selector="Border.status-message">
+        <Setter Property="Opacity" Value="0"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.3" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Border.status-message.show">
+        <Setter Property="Opacity" Value="1"/>
+    </Style>
+
+    <!-- ============================================== -->
+    <!-- ENHANCED ANIMATIONS - Skeleton & Interactions -->
+    <!-- ============================================== -->
+
+    <!-- Skeleton Loading Shimmer Animation -->
+    <Style Selector="Border.skeleton">
+        <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}"/>
+        <Setter Property="Opacity" Value="0.6"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:1.2" Easing="SineEaseInOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Border.skeleton.pulse">
+        <Style.Animations>
+            <Animation Duration="0:0:1.5" IterationCount="Infinite">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="0.4"/>
+                </KeyFrame>
+                <KeyFrame Cue="50%">
+                    <Setter Property="Opacity" Value="0.8"/>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="0.4"/>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <!-- Skeleton Text Lines -->
+    <Style Selector="Border.skeleton-text">
+        <Setter Property="Height" Value="12"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}"/>
+    </Style>
+
+    <Style Selector="Border.skeleton-text.pulse">
+        <Style.Animations>
+            <Animation Duration="0:0:1.5" IterationCount="Infinite">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="0.3"/>
+                </KeyFrame>
+                <KeyFrame Cue="50%">
+                    <Setter Property="Opacity" Value="0.7"/>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="0.3"/>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <!-- Card Hover Micro-interactions -->
+    <Style Selector="Border.mfa-card">
+        <Setter Property="Transitions">
+            <Transitions>
+                <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Border.mfa-card:pointerover">
+        <Setter Property="BoxShadow" Value="0 4 12 0 #10000000"/>
+    </Style>
+
+    <!-- TOTP Digit Entry Animation -->
+    <Style Selector="TextBox.totp-input">
+        <Setter Property="Transitions">
+            <Transitions>
+                <ThicknessTransition Property="BorderThickness" Duration="0:0:0.15" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="TextBox.totp-input:focus /template/ Border#PART_BorderElement">
+        <Setter Property="BorderThickness" Value="2"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+    </Style>
+
+    <!-- TOTP Code Success Animation -->
+    <Style Selector="Border.totp-success">
+        <Setter Property="Background" Value="#4CAF50"/>
+        <Setter Property="Opacity" Value="0"/>
+    </Style>
+
+    <Style Selector="Border.totp-success.show">
+        <Style.Animations>
+            <Animation Duration="0:0:0.6" FillMode="Forward">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="0"/>
+                </KeyFrame>
+                <KeyFrame Cue="30%">
+                    <Setter Property="Opacity" Value="1"/>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="1"/>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <!-- TOTP Code Error Shake Animation - removed (RenderTransform not supported) -->
+
+    <!-- Enhanced Loading Spinner with Gradient -->
+    <Style Selector="ProgressBar.enhanced-spinner">
+        <Setter Property="IsIndeterminate" Value="True"/>
+        <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+        <Setter Property="Height" Value="4"/>
+        <Setter Property="CornerRadius" Value="2"/>
+    </Style>
+
+    <Style Selector="ProgressBar.enhanced-spinner:indeterminate /template/ Border#PART_Indicator">
+        <Style.Animations>
+            <Animation Duration="0:0:1.5" IterationCount="Infinite">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="0.5"/>
+                </KeyFrame>
+                <KeyFrame Cue="50%">
+                    <Setter Property="Opacity" Value="1"/>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="0.5"/>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <!-- Toggle Switch Smooth Color Transition -->
+    <Style Selector="ToggleSwitch">
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.3" Easing="CubicEaseInOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <!-- Button Press Feedback -->
+    <Style Selector="Button.liquid-glass:pressed">
+        <Setter Property="Opacity" Value="0.9"/>
+    </Style>
+
+    <!-- QR Code Fade In (for TOTP) -->
+    <Style Selector="Image.qr-code">
+        <Setter Property="Opacity" Value="0"/>
+    </Style>
+
+    <Style Selector="Image.qr-code.show">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Delay="0:0:0.2" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+        <Setter Property="Opacity" Value="1"/>
+    </Style>
+
+    <!-- Biometric Authenticating Pulse -->
+    <Style Selector="Border.biometric-active">
+        <Style.Animations>
+            <Animation Duration="0:0:1.2" IterationCount="Infinite">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="1"/>
+                </KeyFrame>
+                <KeyFrame Cue="50%">
+                    <Setter Property="Opacity" Value="0.6"/>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="1"/>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+</Styles>

@@ -1,0 +1,90 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PhantomVault.UI.Views.AutoInjectPromptWindow"
+        Title="PhantomVault - Auto-Fill"
+        Width="400"
+        Height="300"
+        MinWidth="400"
+        MinHeight="200"
+        WindowStartupLocation="CenterScreen"
+        Topmost="True"
+        CanResize="False"
+        Background="{DynamicResource ContentBackgroundBrush}">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="20">
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+            <TextBlock Text="🔐 PhantomVault Detected"
+                       FontSize="18"
+                       FontWeight="Bold"
+                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+            <TextBlock x:Name="ContextText"
+                       Text="Found credentials for:"
+                       FontSize="12"
+                       Foreground="{DynamicResource MutedTextBrush}"
+                       Margin="0,5,0,0"/>
+        </StackPanel>
+
+        <!-- Credential List -->
+        <Border Grid.Row="1"
+                Background="{DynamicResource CardBackgroundBrush}"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="10">
+            <ScrollViewer>
+                <ItemsControl x:Name="CredentialsListBox">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="Transparent"
+                                    Padding="10,8"
+                                    Margin="0,2"
+                                    CornerRadius="4"
+                                    Cursor="Hand">
+                                <Border.Styles>
+                                    <Style Selector="Border:pointerover">
+                                        <Setter Property="Background" Value="{DynamicResource ComboBoxItemBackgroundPointerOver}"/>
+                                    </Style>
+                                </Border.Styles>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding DisplayName}"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    <TextBlock Text="{Binding Domain}"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource MutedTextBrush}"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Action Buttons -->
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="10"
+                    Margin="0,20,0,0">
+            <Button x:Name="MoreOptionsButton"
+                    Content="More Options"
+                    Padding="15,8"
+                    Background="{DynamicResource ControlBackgroundBrush}"
+                    Foreground="{DynamicResource PrimaryTextBrush}"
+                    BorderBrush="{DynamicResource ControlBorderBrush}"/>
+            <Button x:Name="NoButton"
+                    Content="No"
+                    Padding="15,8"
+                    Background="{DynamicResource ControlBackgroundBrush}"
+                    Foreground="{DynamicResource PrimaryTextBrush}"
+                    BorderBrush="{DynamicResource ControlBorderBrush}"/>
+            <Button x:Name="YesButton"
+                    Content="Yes"
+                    Padding="15,8"
+                    Background="{DynamicResource AccentBrush}"
+                    Foreground="{DynamicResource ButtonForegroundBrush}"
+                    BorderThickness="0"/>
+        </StackPanel>
+    </Grid>
+</Window>

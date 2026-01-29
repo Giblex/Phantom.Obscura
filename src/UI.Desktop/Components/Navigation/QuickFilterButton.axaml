@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="280" d:DesignHeight="44"
+             x:Class="PhantomVault.UI.Components.Navigation.QuickFilterButton"
+             x:Name="Root">
+    
+    <ToggleButton Command="{Binding #Root.Command}"
+                  IsChecked="{Binding #Root.IsChecked, Mode=TwoWay}"
+                  Classes="quick-filter">
+        <StackPanel Orientation="Horizontal" Spacing="8" Margin="16,0,0,0">
+            <TextBlock Text="{Binding #Root.Label}" VerticalAlignment="Center"/>
+            <TextBlock Text="{Binding #Root.Count}"
+                       Foreground="{DynamicResource MutedTextBrush}"
+                       VerticalAlignment="Center"
+                       Margin="4,0,0,0"
+                       IsVisible="{Binding #Root.ShowCount}"/>
+        </StackPanel>
+    </ToggleButton>
+    
+</UserControl>
+

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PhantomVault.UI.App"
+             RequestedThemeVariant="Dark">
+
+    <Application.Resources>
+        <!-- Localization Resources (English by default) -->
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://PhantomVault.UI/Resources/Strings.en-US.axaml"/>
+                <!-- To enable Spanish, uncomment: -->
+                <!-- <ResourceInclude Source="avares://PhantomVault.UI/Resources/Strings.es-ES.axaml"/> -->
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+
+    <Application.Styles>
+    <!-- Fluent theme base -->
+    <FluentTheme />
+
+        <!-- PhantomTheme is loaded dynamically by ThemeManagerService -->
+        
+        <!-- Liquid Glass Button Style -->
+        <StyleInclude Source="avares://PhantomVault.UI/Assets/Styles/LiquidGlass.axaml" />
+
+        <!-- Modern Animation Library -->
+        <StyleInclude Source="avares://PhantomVault.UI/Assets/Animations/ModernAnimations.axaml" />
+
+        <!-- TEMPORARILY DISABLED: Enhanced Animations cause RenderTransform animator errors -->
+        <!-- <StyleInclude Source="avares://PhantomVault.UI/Styles/Animations.axaml" /> -->
+
+        <!-- Global UI Styles (buttons, cards, typography) -->
+        <StyleInclude Source="avares://PhantomVault.UI/Assets/Styles/GlobalStyles.axaml" />
+
+        <!-- Subtle focus fade to complement liquid glass transitions -->
+        <Style Selector="Control:focus">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.18" />
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <!-- Smooth scrolling for all ScrollViewers -->
+        <Style Selector="ScrollViewer">
+            <Setter Property="AllowAutoHide" Value="True"/>
+        </Style>
+
+        <!-- Shared window entrance animation (opt-in via 'animated-window' class) -->
+        <Style Selector="Window.animated-window">
+            <Setter Property="Opacity" Value="0"/>
+        </Style>
+        <Style Selector="Window.animated-window[IsVisible=True]">
+            <Style.Animations>
+                <Animation Duration="0:0:0.35" FillMode="Forward" Easing="0.16,1,0.3,1">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="0"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="1"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+
+        <!-- Shared overlay fade (apply class 'overlay-fade' to Border overlays) -->
+        <Style Selector="Border.overlay-fade">
+            <Setter Property="Opacity" Value="0"/>
+        </Style>
+        <Style Selector="Border.overlay-fade[IsVisible=True]">
+            <Style.Animations>
+                <Animation Duration="0:0:0.20" FillMode="Forward" Easing="SineEaseOut">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="0"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="1"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+
+        <!-- Quick fade utility (apply 'fade-toggle' class on lightweight controls) -->
+        <Style Selector="Control.fade-toggle">
+            <Setter Property="Opacity" Value="0"/>
+        </Style>
+        <Style Selector="Control.fade-toggle[IsVisible=True]">
+            <Style.Animations>
+                <Animation Duration="0:0:0.16" FillMode="Forward" Easing="SineEaseOut">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="0"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="1"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+
+        <!-- REMOVED: Tile entrance animation (RenderTransform animations cause crashes) -->
+        <!-- Re-enable once Avalonia RenderTransform animator issue is resolved -->
+    </Application.Styles>
+
+    <Application.Resources>
+        <!-- Shared aqua acrylic material for liquid glass accents -->
+    <ExperimentalAcrylicMaterial x:Key="LiquidAcrylic"
+                     TintColor="#9FD8FF"
+                                     TintOpacity="0.32"
+                                     MaterialOpacity="0.56"
+                                     FallbackColor="#66FFFFFF"/>
+    </Application.Resources>
+</Application>

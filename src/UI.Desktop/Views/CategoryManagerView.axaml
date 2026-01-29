@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PhantomVault.UI.ViewModels"
+             xmlns:converters="using:PhantomVault.UI.Converters"
+             x:Class="PhantomVault.UI.Views.CategoryManagerView"
+             x:Name="CategoryWindow">
+    <Design.DataContext>
+        <vm:CategoryManagerViewModel/>
+    </Design.DataContext>
+
+    <UserControl.Resources>
+        <converters:CategoryRemovableToEnabledConverter x:Key="CategoryRemovableToEnabledConverter"/>
+        <converters:CategoryDeletedNameToReadOnlyConverter x:Key="CategoryDeletedNameToReadOnlyConverter"/>
+        <converters:CategoryMoveEnabledConverter x:Key="CategoryMoveEnabledConverter"/>
+    <converters:HexToBrushConverter x:Key="HexToBrushConverter"/>
+        <converters:HexToForegroundBrushConverter x:Key="HexToForegroundBrushConverter"/>
+        <converters:HexToDarkerBrushConverter x:Key="HexToDarkerBrushConverter"/>
+    <converters:IconPathToBitmapConverter x:Key="IconPathToBitmapConverter"/>
+    <converters:IconPathExistsConverter x:Key="IconPathExistsConverter"/>
+    <converters:InvertBoolConverter x:Key="InvertBoolConverter"/>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Button.round">
+            <Setter Property="MinWidth" Value="0"/>
+            <Setter Property="MinHeight" Value="0"/>
+            <Setter Property="Width" Value="22"/>
+            <Setter Property="Height" Value="22"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="CornerRadius" Value="11"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border CornerRadius="11"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Padding="2"
+                            Effect="{x:Null}">
+                        <TextBlock Text="{TemplateBinding Content}"
+                                   Foreground="{TemplateBinding Foreground}"
+                                   FontWeight="SemiBold"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="Button.palette-swatch">
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="3"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+        <Style Selector="Button.palette-swatch:selected-color">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="BorderThickness" Value="2"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,*,Auto" ClipToBounds="False">
+        <!-- Header with theme-matching background -->
+        <Border Grid.Row="0"
+                Background="{DynamicResource HeaderBackgroundBrush}"
+                Padding="20,16"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                BorderThickness="0,0,0,1">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0"
+                           Text="Manage Categories"
+                           FontSize="18"
+                           FontWeight="SemiBold"
+                           Foreground="White"
+                           VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                    <Button Content="Select all"
+                            Width="100"
+                            Command="{Binding SelectAllCommand}"
+                            Classes="liquid-glass"/>
+                    <Button Content="Reset Colors"
+                            Width="110"
+                            Command="{Binding ResetAllColorsCommand}"
+                            Classes="liquid-glass"/>
+                    <Button Content="Icon Library"
+                            Width="120"
+                            Command="{Binding OpenIconLibraryCommand}"
+                            Classes="liquid-glass"/>
+                    <Button Content="Add Category"
+                            Width="130"
+                            Command="{Binding AddCategoryCommand}"
+                            Background="{DynamicResource AccentBrush}"
+                            Foreground="White"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1" Padding="16" ClipToBounds="False">
+            <Grid RowDefinitions="*,Auto">
+                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <ItemsControl x:Name="CategoryItems" ItemsSource="{Binding Categories}" ClipToBounds="False">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border x:Name="TileContainer"
+                                    Background="Transparent"
+                                    Margin="16,2,16,2"
+                                    HorizontalAlignment="Stretch"
+                                    ClipToBounds="False"
+                                    RenderTransformOrigin="0,0"
+                                    ZIndex="0"
+                                    Opacity="1.0">
+                                <Border.RenderTransform>
+                                    <TransformGroup>
+                                        <ScaleTransform/>
+                                        <RotateTransform/>
+                                        <TranslateTransform/>
+                                    </TransformGroup>
+                                </Border.RenderTransform>
+                                <Border.Transitions>
+                                    <Transitions>
+                                        <IntegerTransition Property="ZIndex" Duration="0:0:0.0"/>
+                                        <DoubleTransition Property="Opacity" Duration="0:0:0.15">
+                                            <DoubleTransition.Easing>
+                                                <QuadraticEaseInOut/>
+                                            </DoubleTransition.Easing>
+                                        </DoubleTransition>
+                                    </Transitions>
+                                </Border.Transitions>
+
+                                <Border x:Name="CategoryTile"
+                                        Background="{DynamicResource ControlBackgroundBrush}"
+                                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        Padding="6"
+                                        MaxWidth="650"
+                                        HorizontalAlignment="Stretch"
+                                        ClipToBounds="False">
+
+                                    <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto">
+                                        <Border Grid.Column="0" Width="6" CornerRadius="3" Background="{Binding TileColor, Converter={StaticResource HexToBrushConverter}}" Margin="6,0,8,0"/>
+                                        <CheckBox Grid.Column="1" IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="8,0,8,0"/>
+
+                                        <Button Grid.Column="2" Width="38" Height="38"
+                                                Command="{Binding #CategoryWindow.DataContext.PickIconCommand}"
+                                                CommandParameter="{Binding .}"
+                                                Background="Transparent"
+                                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                                Margin="0,0,6,0"
+                                                ToolTip.Tip="Choose icon"
+                                                VerticalAlignment="Center">
+                                            <Border Width="64" Height="64" CornerRadius="32"
+                                                    Background="{DynamicResource HeaderBackgroundBrush}"
+                                                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                                                    BorderThickness="1"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center">
+                                                <Grid>
+                                                    <Image Source="{Binding Icon, Converter={StaticResource IconPathToBitmapConverter}}" Width="48" Height="48" Stretch="Uniform" IsVisible="{Binding Icon, Converter={StaticResource IconPathExistsConverter}}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="?"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center"
+                                                               Opacity="0.35"
+                                                               FontWeight="Bold"
+                                                               FontSize="16"
+                                                               Foreground="{DynamicResource MutedTextBrush}"/>
+                                                    <TextBlock Text="{Binding Icon}"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center"
+                                                               FontSize="14"
+                                                               Foreground="{Binding TileColor, Converter={StaticResource HexToForegroundBrushConverter}, TargetNullValue={StaticResource ControlForegroundBrush}}"
+                                                               IsVisible="{Binding Icon, Converter={StaticResource IconPathExistsConverter}, ConverterParameter=invert}"/>
+                                                </Grid>
+                                            </Border>
+                                        </Button>
+
+                                        <Button Grid.Column="3"
+                                                Width="18" Height="18"
+                                                Background="Transparent"
+                                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                                BorderThickness="0"
+                                                Padding="0"
+                                                ToolTip.Tip="Choose color"
+                                            VerticalAlignment="Center" Margin="0,0,6,0">
+                                            <Image Source="/Assets/palette-icon.png" 
+                                                   Width="16" Height="16" 
+                                                   Stretch="Uniform" 
+                                                   HorizontalAlignment="Center" 
+                                                   VerticalAlignment="Center"/>
+                                            <Button.Flyout>
+                                            <Flyout Placement="Bottom" Opened="OnColorFlyoutOpened">
+                                                    <Border x:Name="ColorFlyoutRoot"
+                                                            Background="{DynamicResource ContentBackgroundBrush}"
+                                                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                                                            BorderThickness="1"
+                                                            CornerRadius="6"
+                                                            Padding="12">
+                                                        <StackPanel Spacing="8">
+                                                                <WrapPanel MaxWidth="240">
+                                                                <Button Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="#FDE68A" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
+                                                                        Tag="#FDE68A" Click="OnPaletteColorClick"/>
+                                                                <Button Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="#BFDBFE" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
+                                                                        Tag="#BFDBFE" Click="OnPaletteColorClick"/>
+                                                                <Button Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="#C7D2FE" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
+                                                                        Tag="#C7D2FE" Click="OnPaletteColorClick"/>
+                                                                <Button Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="#FBCFE8" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
+                                                                        Tag="#FBCFE8" Click="OnPaletteColorClick"/>
+                                                                <Button Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="#A7F3D0" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
+                                                                        Tag="#A7F3D0" Click="OnPaletteColorClick"/>
+                                                                <Button Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="#E5E7EB" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
+                                                                        Tag="#E5E7EB" Click="OnPaletteColorClick"/>
+                                                                <Button Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="#FECACA" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
+                                                                        Tag="#FECACA" Click="OnPaletteColorClick"/>
+                                                                <Button Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="#D1FAE5" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
+                                                                        Tag="#D1FAE5" Click="OnPaletteColorClick"/>
+                                                                <Button Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="#E9D5FF" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
+                                                                    Tag="#E9D5FF" Click="OnPaletteColorClick"/>
+                                                                <Button Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="{DynamicResource ControlBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
+                                                                        Tag="{x:Null}" Click="OnPaletteColorClick">
+                                                                    <TextBlock Text="✕" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="11"/>
+                                                                </Button>
+                                                            </WrapPanel>
+                                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                <TextBox x:Name="CustomHexBox" Width="120" Watermark="#RRGGBB" VerticalContentAlignment="Center"/>
+                                                                <Button Content="Apply" Width="60" Click="OnPaletteApplyClick"/>
+                                                            </StackPanel>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </Flyout>
+                                            </Button.Flyout>
+                                        </Button>
+
+                                        <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                            <TextBox Text="{Binding Name}"
+                                                     MaxWidth="200"
+                                                     VerticalAlignment="Center"
+                                                     Background="{DynamicResource ControlBackgroundBrush}"
+                                                     Foreground="{DynamicResource ControlForegroundBrush}"
+                                                     IsReadOnly="{Binding ., Converter={StaticResource CategoryDeletedNameToReadOnlyConverter}}"/>
+                                            <!-- Entry count badge -->
+                                            <Border Background="{DynamicResource HeaderBackgroundBrush}"
+                                                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="10"
+                                                    Padding="8,4"
+                                                    VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Count}"
+                                                           FontSize="11"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                            </Border>
+                                        </StackPanel>
+
+                                        <Button Grid.Column="5"
+                                                Content="X"
+                                                Width="28" Height="28"
+                                                Margin="8,0,0,0"
+                                                VerticalAlignment="Center"
+                                                FontWeight="Bold"
+                                                FontSize="12"
+                                                Background="{DynamicResource ControlBackgroundBrush}"
+                                                BorderThickness="0"
+                                                CornerRadius="4"
+                                                Padding="0"
+                                                Foreground="{DynamicResource MutedTextBrush}"
+                                                Effect="{x:Null}"
+                                                Command="{Binding #CategoryWindow.DataContext.RemoveCategoryCommand}"
+                                                CommandParameter="{Binding .}"
+                                                IsEnabled="{Binding ., Converter={StaticResource CategoryRemovableToEnabledConverter}}"/>
+
+                                        <Border Grid.Column="6"
+                                                x:Name="DragHandle"
+                                                Width="20"
+                                                Height="32"
+                                                Background="Transparent"
+                                                Cursor="Hand"
+                                                VerticalAlignment="Center"
+                                                Margin="8,0,0,0"
+                                                Tag="{Binding .}"
+                                                PointerPressed="OnCategoryPointerPressed"
+                                                PointerMoved="OnCategoryPointerMoved"
+                                                PointerReleased="OnCategoryPointerReleased"
+                                                PointerCaptureLost="OnCategoryPointerCaptureLost">
+                                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="3">
+                                                <Ellipse Width="4" Height="4" Fill="White"/>
+                                                <Ellipse Width="4" Height="4" Fill="White"/>
+                                                <Ellipse Width="4" Height="4" Fill="White"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <Border Grid.Row="1" IsVisible="{Binding HasSelection}" Padding="8" Margin="0,8,12,0" Background="{DynamicResource HeaderBackgroundBrush}">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                    <TextBlock Text="Bulk actions:" VerticalAlignment="Center"/>
+                    <Button Content="Manage Selected…" Width="160" Command="{Binding ManageSelectedCategoriesCommand}"/>
+                </StackPanel>
+            </Border>
+            </Grid>
+        </Border>
+
+        <!-- Bottom action bar with Apply Changes moved to right -->
+        <Border Grid.Row="2"
+                Background="{DynamicResource WindowBackgroundBrush}"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="20,12">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                <Button Content="Apply Changes"
+                        Width="140"
+                        Command="{Binding SaveAllCommand}"
+                        Background="{DynamicResource AccentBrush}"
+                        Foreground="White"/>
+                <Button Content="Close"
+                        Width="100"
+                        Command="{Binding CloseCommand}"
+                        Classes="liquid-glass"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

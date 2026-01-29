@@ -1,0 +1,276 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PhantomVault.UI.Views.Settings.SecuritySettingsView">
+    <StackPanel Spacing="{StaticResource Space.Xl}"
+                Margin="0,0,30,60">
+        <TextBlock Text="Security Settings" 
+                   FontSize="{StaticResource Type.H3.Size}" 
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+        
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Lg}" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Authentication" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <CheckBox Content="Require hardware token" 
+                          IsChecked="{Binding RequireHardwareToken, Mode=TwoWay}"
+                          ToolTip.Tip="Use a physical security key for authentication"/>
+                
+                <CheckBox Content="Require keyfile" 
+                          IsChecked="{Binding RequireKeyfile, Mode=TwoWay}"
+                          ToolTip.Tip="Require a keyfile in addition to password"/>
+                
+                <StackPanel Spacing="{StaticResource Space.Sm}">
+                    <TextBlock Text="Idle timeout (minutes):" 
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <TextBox Width="100" 
+                             HorizontalAlignment="Left"
+                             Text="{Binding IdleTimeoutMinutes, Mode=TwoWay}"
+                             ToolTip.Tip="Lock vault after this many minutes of inactivity"/>
+                </StackPanel>
+
+                <Border Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                        BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{DynamicResource Radius.Lg}"
+                        Padding="14">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="PIN Lock"
+                                   FontSize="{StaticResource Type.Label.Size}"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+                        <TextBlock Text="Enable a quick lockscreen PIN for re-authentication without exiting the app."
+                                   FontSize="{StaticResource Type.Small.Size}"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   TextWrapping="Wrap"/>
+
+                        <CheckBox Content="Enable PIN lock"
+                                  IsChecked="{Binding EnablePinLock, Mode=TwoWay}"/>
+
+                        <CheckBox Content="Use PIN lock for auto-lock (do not dismount)"
+                                  IsChecked="{Binding UsePinLockForAutoLock, Mode=TwoWay}"
+                                  IsVisible="{Binding EnablePinLock}"
+                                  ToolTip.Tip="If enabled, auto-lock shows the lockscreen without dismounting the vault."/>
+
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Button Content="Set / Change PIN"
+                                    Command="{Binding SetOrChangePinCommand}"
+                                    Classes="liquid-glass"
+                                    Width="170"/>
+
+                            <Button Content="Disable PIN"
+                                    Command="{Binding ClearPinCommand}"
+                                    Classes="liquid-glass"
+                                    Width="120"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{DynamicResource Radius.Lg}" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Clipboard Security" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <CheckBox Content="Clear clipboard after copying passwords" 
+                          IsChecked="True"
+                          ToolTip.Tip="Automatically clear clipboard after 30 seconds"/>
+                
+                <StackPanel Spacing="{StaticResource Space.Sm}">
+                    <TextBlock Text="Clipboard timeout (seconds):" 
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <TextBox Width="100" 
+                             HorizontalAlignment="Left"
+                             Text="30"/>
+                </StackPanel>
+                
+                <CheckBox Content="Auto-copy TOTP code with password" 
+                          IsChecked="{Binding AutoCopyTotpWithPassword, Mode=TwoWay}"
+                          ToolTip.Tip="When copying passwords, automatically include the current TOTP code in the clipboard"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Decoy Vault Section -->
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource Radius.Lg}"
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Decoy Vault Protection"
+                           FontSize="{StaticResource Type.Body.Size}"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+                <TextBlock Text="When enabled, PhantomVault will show fake credentials to attackers during security incidents, protecting your real data"
+                           FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
+
+                <CheckBox Content="Enable decoy vault activation"
+                          IsChecked="{Binding EnableDecoyVault, Mode=TwoWay}"
+                          ToolTip.Tip="Automatically switch to fake credentials when threats are detected"/>
+
+                <StackPanel Spacing="{StaticResource Space.Sm}"
+                            IsEnabled="{Binding EnableDecoyVault}">
+                    <TextBlock Text="Number of fake credentials to generate:"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBox Width="100"
+                                 HorizontalAlignment="Left"
+                                 Text="{Binding DecoyCredentialCount, Mode=TwoWay}"
+                                 ToolTip.Tip="Between 15-30 credentials recommended for realism"/>
+                        <TextBlock Text="(15-30 recommended)"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <CheckBox Content="Enable read-only mode when decoy is active"
+                          IsChecked="{Binding DecoyReadOnlyMode, Mode=TwoWay}"
+                          IsEnabled="{Binding EnableDecoyVault}"
+                          ToolTip.Tip="Prevents attackers from modifying fake credentials"/>
+
+                <CheckBox Content="Log decoy vault activations"
+                          IsChecked="{Binding DecoyLogActivations, Mode=TwoWay}"
+                          IsEnabled="{Binding EnableDecoyVault}"
+                          ToolTip.Tip="Record security events for forensic analysis"/>
+
+                <Border Background="{DynamicResource WindowBackgroundBrush}"
+                        BorderBrush="{DynamicResource Brush.Accent}"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        Padding="12"
+                        Margin="0,5,0,0">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="ℹ️  How Decoy Vault Works"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <TextBlock TextWrapping="Wrap"
+                                   FontSize="{StaticResource Type.Small.Size}"
+                                   Foreground="{DynamicResource MutedTextBrush}">
+                            When a security threat is detected (debugger, memory scanning, multiple failed authentications),
+                            the vault automatically switches to showing realistic fake credentials. Attackers believe they succeeded,
+                            while your real data remains protected. All activations are logged for security auditing.
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="{DynamicResource Radius.Lg}"
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Master Password"
+                           FontSize="{StaticResource Type.Body.Size}"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+                <Button Content="Change Master Password"
+                        Width="200"
+                        HorizontalAlignment="Left"
+                        Classes="liquid-glass"
+                        ToolTip.Tip="Update your vault's master password"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Multi-Factor Authentication Section -->
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{DynamicResource Radius.Lg}" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Multi-Factor Authentication" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <TextBlock Text="Add additional layers of security to protect your vault" 
+                           FontSize="{StaticResource Type.Small.Size}" 
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
+
+                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" Margin="0,8,0,0">
+                    <!-- TOTP Setup -->
+                    <Button Grid.Row="0" Grid.Column="0"
+                            Click="OpenTotpSettings_Click"
+                            Classes="liquid-glass"
+                            HorizontalAlignment="Stretch"
+                            Margin="0,0,6,12"
+                            Height="50"
+                            ToolTip.Tip="Set up time-based one-time password (Google Authenticator, Authy, etc.)">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="•" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Text="TOTP Setup" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <!-- Passkey Setup -->
+                    <Button Grid.Row="0" Grid.Column="1"
+                            Click="OpenPasskeySettings_Click"
+                            Classes="liquid-glass"
+                            HorizontalAlignment="Stretch"
+                            Margin="6,0,0,12"
+                            Height="50"
+                            ToolTip.Tip="Configure passkey/FIDO2 authentication (hardware keys, password managers)">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="🔑" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Text="Passkey/FIDO2" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <!-- Windows Hello Setup -->
+                    <Button Grid.Row="1" Grid.Column="0"
+                            Click="OpenWindowsHelloSettings_Click"
+                            Classes="liquid-glass"
+                            HorizontalAlignment="Stretch"
+                            Margin="0,0,6,0"
+                            Height="50"
+                            ToolTip.Tip="Use Windows Hello biometrics (fingerprint, face, PIN)">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="👁️" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Text="Windows Hello" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <!-- Backup Codes -->
+                    <Button Grid.Row="1" Grid.Column="1"
+                            Click="OpenBackupCodes_Click"
+                            Classes="liquid-glass"
+                            HorizontalAlignment="Stretch"
+                            Margin="6,0,0,0"
+                            Height="50"
+                            ToolTip.Tip="Generate emergency backup codes for account recovery">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="📋" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Text="Backup Codes" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>
+
+
+
+

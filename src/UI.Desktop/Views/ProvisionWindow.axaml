@@ -1,0 +1,669 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PhantomVault.UI.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="750"
+        x:Class="PhantomVault.UI.Views.ProvisionWindow"
+        x:DataType="vm:ProvisionViewModel"
+        Title="Create Your Vault"
+    Width="1000" Height="760"
+    MinWidth="800" MinHeight="640"
+    MaxWidth="1400" MaxHeight="1100"
+        WindowStartupLocation="CenterScreen"
+        CanResize="True"
+        Icon="avares://PhantomVault.UI/Assets/images/Parent Icon.ico" FontFamily="Segoe UI">
+
+    <Design.DataContext>
+        <vm:ProvisionViewModel/>
+    </Design.DataContext>
+
+    <!-- Using global SuccessBrush from theme files for success states -->
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="0">
+        
+        <Grid.KeyBindings>
+            <!-- Ctrl+Enter: Create vault -->
+            <KeyBinding Gesture="Ctrl+Enter" Command="{Binding CreateVaultCommand}"/>
+            <!-- Escape: Go back -->
+            <KeyBinding Gesture="Escape" Command="{Binding GoBackCommand}"/>
+        </Grid.KeyBindings>
+        
+        <!-- Header -->
+        <Border Grid.Row="0" Background="{DynamicResource HeaderBackgroundBrush}" Padding="15,8">
+            <StackPanel Spacing="{StaticResource Space.Sm}">
+            <TextBlock Text="Create Your Vault"
+                           FontSize="22"
+                           FontWeight="Bold"
+                           HorizontalAlignment="Center"/>
+            <TextBlock Text="Configure your secure password vault"
+                           FontSize="13"
+                           Foreground="{DynamicResource SecondaryTextBrush}"
+                           HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Main Content with Tabs -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <TabControl Margin="12" Padding="0">
+                
+                <!-- Basic Tab -->
+                <TabItem Header="Basic">
+                    <StackPanel Spacing="25" MaxWidth="980" HorizontalAlignment="Center" Margin="40,20,40,30">
+                        
+                        <!-- Vault Name -->
+                        <StackPanel Spacing="10">
+            <TextBlock Text="Vault Name"
+                                       FontSize="15"
+                                       FontWeight="SemiBold"
+                                       />
+            <TextBlock Text="Choose a name for your vault"
+                                       FontSize="{StaticResource Type.Small.Size}"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       Margin="0,0,0,8"/>
+                            
+                            <TextBox Text="{Binding VaultName, Mode=TwoWay}"
+                                     MaxWidth="920"
+                                     Height="36"
+                                     HorizontalAlignment="Stretch"
+                                     FontSize="13"
+                                     Watermark="My Secure Vault"
+                                     ToolTip.Tip="Enter a descriptive name for your vault (e.g., 'Personal Passwords', 'Work Accounts')"
+                                     AutomationProperties.Name="Vault name"
+                                     AutomationProperties.HelpText="Enter a descriptive name for your vault"/>
+                        </StackPanel>
+
+                        <!-- Volume Size -->
+                        <StackPanel Spacing="10">
+            <TextBlock Text="Volume Size (MB)"
+                                       FontSize="15"
+                                       FontWeight="SemiBold"
+                                       />
+            <TextBlock Text="Size of the encrypted container"
+                                       FontSize="{StaticResource Type.Small.Size}"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       Margin="0,0,0,8"/>
+                            
+                            <StackPanel Orientation="Horizontal" Spacing="15" HorizontalAlignment="Center">
+                                <NumericUpDown Value="{Binding VolumeSizeMb}"
+                                               Minimum="10"
+                                               Maximum="10240"
+                                               Increment="100"
+                                               Width="320"
+                                               Height="36"
+                                               ToolTip.Tip="Size of encrypted container (1024 MB = 1 GB). Ensure enough free space on your USB drive."
+                                               AutomationProperties.Name="Volume size in megabytes"
+                                               AutomationProperties.HelpText="Set the size of your encrypted vault container in megabytes"/>
+            <TextBlock Text="MB"
+                                           VerticalAlignment="Center"
+                                           FontSize="{StaticResource Type.Body.Size}"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBlock Text="{Binding VolumeSizeGB, StringFormat='({0} GB)'}"
+                                           VerticalAlignment="Center"
+                                           FontSize="13"
+                                           Foreground="{DynamicResource MutedTextBrush}"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Master Password -->
+                        <StackPanel Spacing="10">
+            <TextBlock Text="Master Password (Optional)"
+                                       FontSize="15"
+                                       FontWeight="SemiBold"
+                                       />
+            <TextBlock Text="Must have 1 uppercase, 1 lowercase, 1 number, 1 special character, 8-64 characters"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       Margin="0,0,0,8"/>
+                            
+                            <Grid MaxWidth="920" HorizontalAlignment="Center">
+            <TextBox Name="PasswordTextBox"
+                                         Text="{Binding Passphrase, Mode=TwoWay}"
+                                         Height="36"
+                                         FontSize="13"
+                                         Watermark="Enter master password (optional)"
+                                         IsVisible="{Binding !ShowPassword}"
+                                         HorizontalAlignment="Stretch"
+                                         AutomationProperties.Name="Master password"
+                                         AutomationProperties.HelpText="Enter your master password with 1 uppercase, 1 lowercase, 1 number, 1 special character, 8-64 characters">
+            <TextBox.Styles>
+                                        <Style Selector="TextBox">
+                                            <Setter Property="PasswordChar" Value="●"/>
+                                        </Style>
+                                    </TextBox.Styles>
+                                </TextBox>
+            <TextBox Name="PasswordTextBoxVisible"
+                     Text="{Binding Passphrase, Mode=TwoWay}"
+                     Height="36"
+                     FontSize="13"
+                     Watermark="Enter master password (optional)"
+                     IsVisible="{Binding ShowPassword}"
+                     HorizontalAlignment="Stretch"
+                     AutomationProperties.Name="Master password visible"
+                     AutomationProperties.HelpText="Enter your master password with 1 uppercase, 1 lowercase, 1 number, 1 special character, 8-64 characters"/>
+                <Button Content="👁"
+                    Classes="liquid-glass"
+                    Width="36"
+                    Height="36"
+                    FontSize="16"
+                    HorizontalAlignment="Right"
+                    Command="{Binding ToggleShowPasswordCommand}"
+                    ToolTip.Tip="Toggle password visibility"
+                    AutomationProperties.Name="Show password"
+                    AutomationProperties.HelpText="Toggle between showing and hiding the password"
+                    Background="Transparent"
+                    BorderThickness="0"/>
+                            </Grid>
+                            
+                            <!-- Password Error Message -->
+            <TextBlock Text="{Binding PasswordError}"
+                                       FontSize="{StaticResource Type.Small.Size}"
+                                       Foreground="{DynamicResource ErrorBrush}"
+                                       IsVisible="{Binding PasswordError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                       TextWrapping="Wrap"
+                                       MaxWidth="400"
+                                       HorizontalAlignment="Left"/>
+                        </StackPanel>
+
+                        <!-- Confirm Password -->
+                        <StackPanel Spacing="10">
+            <TextBlock Text="Confirm Password"
+                                       FontSize="15"
+                                       FontWeight="SemiBold"
+                                       />
+                            
+                            <Grid MaxWidth="920" HorizontalAlignment="Center">
+            <TextBox Name="ConfirmPasswordTextBox"
+                                         Text="{Binding ConfirmPassphrase, Mode=TwoWay}"
+                                         Height="36"
+                                         FontSize="13"
+                                         Watermark="Re-enter password"
+                                         IsVisible="{Binding !ShowConfirmPassword}">
+            <TextBox.Styles>
+                                        <Style Selector="TextBox">
+                                            <Setter Property="PasswordChar" Value="●"/>
+                                        </Style>
+                                    </TextBox.Styles>
+                                </TextBox>
+            <TextBox Name="ConfirmPasswordTextBoxVisible"
+                                         Text="{Binding ConfirmPassphrase, Mode=TwoWay}"
+                                         Height="36"
+                                         FontSize="13"
+                                         Watermark="Re-enter password"
+                                         IsVisible="{Binding ShowConfirmPassword}"
+                                         HorizontalAlignment="Stretch"/>
+                                <Button Content="👁"
+                                        Classes="liquid-glass"
+                                        Width="36"
+                                        Height="36"
+                                        FontSize="16"
+                                        HorizontalAlignment="Right"
+                                        Command="{Binding ToggleShowConfirmPasswordCommand}"
+                                        ToolTip.Tip="Toggle password visibility"
+                                        Background="Transparent"
+                                        BorderThickness="0"/>
+                            </Grid>
+                            
+                            <!-- Confirm Password Error Message -->
+            <TextBlock Text="{Binding ConfirmPasswordError}"
+                                       FontSize="{StaticResource Type.Small.Size}"
+                                       Foreground="{DynamicResource ErrorBrush}"
+                                       IsVisible="{Binding ConfirmPasswordError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                       TextWrapping="Wrap"
+                                       MaxWidth="400"
+                                       HorizontalAlignment="Left"/>
+                        </StackPanel>
+
+                        <!-- USB Drive (Auto-configured) -->
+                        <StackPanel Spacing="10">
+            <TextBlock Text="USB Drive (Configured)"
+                                       FontSize="15"
+                                       FontWeight="SemiBold"
+                                       />
+            <TextBlock Text="Your vault will be stored on the USB drive you selected"
+                                       FontSize="{StaticResource Type.Small.Size}"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       Margin="0,0,0,8"/>
+            <TextBlock Text="{Binding SelectedDrive}"
+                                       FontSize="{StaticResource Type.Body.Size}"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource AccentBrush}"
+                                       Margin="0,0,0,0" HorizontalAlignment="Center"/>
+                        </StackPanel>
+
+                            <StackPanel Margin="0,10,0,0"><CheckBox Content="Use VeraCrypt outer container" IsChecked="{Binding UseVeraCrypt, Mode=TwoWay}" ToolTip.Tip="When disabled, the vault will use only zero-knowledge encryption without a VeraCrypt volume."/></StackPanel>
+    <!-- Keyfile Section (REQUIRED) -->
+                        <StackPanel Spacing="10">
+            <TextBlock Text="Keyfile (Required)"
+                                       FontSize="15"
+                                       FontWeight="SemiBold"
+                                       />
+            <TextBlock FontSize="{StaticResource Type.Small.Size}"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       TextWrapping="Wrap"
+                                       Margin="0,0,0,8">
+                                A keyfile is required for vault security.<LineBreak/>
+                                Generate a new one or select an existing file.
+                            </TextBlock>
+                            
+                            <!-- Keyfile Path Display -->
+                            <TextBox Text="{Binding KeyfilePath, Mode=TwoWay}"
+                                     MaxWidth="920"
+                                     Height="36"
+                                     HorizontalAlignment="Stretch"
+                                     FontSize="{StaticResource Type.Small.Size}"
+                                     IsReadOnly="True"
+                                     Watermark="No keyfile selected (required)"/>
+                            
+                            <!-- Keyfile Buttons -->
+                            <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,8,0,0">
+                                <Button Command="{Binding GenerateKeyfileCommand}"
+                                        Width="150"
+                                        Height="36"
+                                        FontSize="13"
+                                        ToolTip.Tip="Generate a cryptographically secure random keyfile">
+                                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+            <TextBlock Text="⌘" FontSize="16" VerticalAlignment="Center"/>
+            <TextBlock Text="Generate Keyfile" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <Button Command="{Binding BrowseKeyfileCommand}"
+                                        Width="130"
+                                        Height="36"
+                                        Classes="liquid-glass"
+                                        FontSize="13"
+                                        ToolTip.Tip="Select an existing file to use as a keyfile">
+                                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+            <TextBlock Text="📁" FontSize="{StaticResource Type.Body.Size}" VerticalAlignment="Center"/>
+            <TextBlock Text="Browse..." VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+
+                                <Button Command="{Binding ClearKeyfileCommand}"
+                                        Width="100"
+                                        Height="36"
+                                        Classes="liquid-glass"
+                                        FontSize="13"
+                                        IsVisible="{Binding KeyfilePath, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                        ToolTip.Tip="Remove the selected keyfile">
+            <TextBlock Text="Clear"/>
+                                </Button>
+                            </StackPanel>
+                        </StackPanel>
+
+                    </StackPanel>
+                </TabItem>
+
+            <!-- Advanced Tab -->
+            <TabItem Header="Advanced">
+                <StackPanel Spacing="25" MaxWidth="760" Margin="40,20,40,30" HorizontalAlignment="Center">
+
+                        <!-- Encryption Level -->
+                        <StackPanel Spacing="10">
+            <TextBlock Text="Encryption Level"
+                                       FontSize="15"
+                                       FontWeight="SemiBold"
+                                       />
+            <TextBlock Text="Higher levels use more secure algorithms but may be slower"
+                                       FontSize="{StaticResource Type.Small.Size}"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       Margin="0,0,0,8"/>
+                            
+                            <ComboBox ItemsSource="{Binding EncryptionLevels}"
+                                      SelectedValue="{Binding SelectedEncryptionLevel}"
+                                      Width="300"
+                                      Height="36"
+                                      HorizontalAlignment="Center"
+                                      FontSize="13"
+                                      ToolTip.Tip="Choose encryption strength: Higher levels provide better security but may be slower">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" Padding="5"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <TextBlock Text="{Binding EncryptionLevelDescription}"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource SuccessBrush}"
+                                       TextWrapping="Wrap"
+                                       Margin="0,5,0,0" TextAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Hardware Token -->
+                        <StackPanel Spacing="10">
+                            <CheckBox Content="Require Hardware Token (YubiKey)"
+                                      IsChecked="{Binding RequiresHardwareToken, Mode=TwoWay}"
+                                      FontSize="{StaticResource Type.Body.Size}"
+                                      HorizontalAlignment="Center"
+                                      ToolTip.Tip="Require a physical YubiKey device to unlock your vault (most secure option)"/>
+            <TextBlock Text="Adds an extra security layer requiring a physical device"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       Margin="0,0,0,0"
+                                       TextWrapping="Wrap" TextAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- TOTP -->
+                        <StackPanel Spacing="10">
+                            <CheckBox Content="Enable TOTP (Time-based One-Time Password)"
+                                      IsChecked="{Binding UseTotp, Mode=TwoWay}"
+                                      FontSize="{StaticResource Type.Body.Size}"
+                                      HorizontalAlignment="Center"
+                                      ToolTip.Tip="Enable 2FA code generation (like Google Authenticator) for your stored accounts"/>
+            <TextBlock Text="Generate 2FA codes for your accounts"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       Margin="0,0,0,0"
+                                       TextWrapping="Wrap" TextAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Passkey -->
+                        <StackPanel Spacing="10">
+                            <CheckBox Content="Enable Passkey Support"
+                                      IsChecked="{Binding UsePasskey, Mode=TwoWay}"
+                                      FontSize="{StaticResource Type.Body.Size}"
+                                      HorizontalAlignment="Center"
+                                      ToolTip.Tip="Enable passwordless authentication using FIDO2/WebAuthn (biometrics, security keys)"/>
+            <TextBlock Text="Use FIDO2/WebAuthn for passwordless authentication"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       Margin="0,0,0,0"
+                                       TextWrapping="Wrap" TextAlignment="Center"/>
+                        </StackPanel>
+
+                </StackPanel>
+            </TabItem>
+
+            <!-- Import Tab -->
+            <TabItem Header="Import">
+                <StackPanel Spacing="25" MaxWidth="760" Margin="40,20,40,30">
+                        
+                        <!-- KeePass Import -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                Padding="20"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                BorderBrush="{DynamicResource AccentBrush}"
+                                BorderThickness="1">
+                            <StackPanel Spacing="15">
+                                <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+            <TextBlock Text="Import from KeePass"
+                                               FontSize="{StaticResource Type.H3.Size}"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+            <TextBlock FontSize="13"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           TextWrapping="Wrap"
+                                           LineHeight="20">
+                                    Import your existing passwords from a KeePass database (KDBX format).<LineBreak/>
+                                    <LineBreak/>
+                                    Supported versions:<LineBreak/>
+                                    • KeePass 2.x (.kdbx)<LineBreak/>
+                                    • KeePassXC<LineBreak/>
+                                    <LineBreak/>
+                                    All entries, groups, and attachments will be imported.
+                                </TextBlock>
+                                <TextBox Text="{Binding KeePassFilePath, Mode=TwoWay}"
+                                         MaxWidth="920"
+                                         Height="36"
+                                         FontSize="{StaticResource Type.Small.Size}"
+                                         IsReadOnly="True"
+                                         Watermark="No KeePass file selected"
+                                         Margin="0,10,0,0"/>
+
+                                <Button Command="{Binding ImportKeePassCommand}"
+                                        Width="200"
+                                        Height="38"
+                                        FontSize="{StaticResource Type.Body.Size}"
+                                        FontWeight="SemiBold"
+                                        HorizontalAlignment="Left"
+                                        Margin="0,5,0,0"
+                                        ToolTip.Tip="Select a KeePass .kdbx database file to import (credentials will be imported after vault creation)">
+            <TextBlock Text="Select KeePass File" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                </Button>
+
+                                <!-- Optional: Open full Import dialog (preview) -->
+                                <Button Command="{Binding OpenImportDialogCommand}"
+                                        Width="200"
+                                        Height="38"
+                                        FontSize="{StaticResource Type.Body.Size}"
+                                        Classes="liquid-glass"
+                                        HorizontalAlignment="Left"
+                                        Margin="8,5,0,0"
+                                        ToolTip.Tip="Open the full import dialog (preview).">
+                                    <TextBlock Text="Open Import Dialog…" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                </Button>
+            <TextBlock Text="{Binding ImportStatus}"
+                                           FontSize="{StaticResource Type.Small.Size}"
+                                           Foreground="{DynamicResource SuccessBrush}"
+                                           TextWrapping="Wrap"
+                                           Margin="0,10,0,0"
+                                           IsVisible="{Binding ImportStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- CSV Import (Future) -->
+                        <Border Background="{DynamicResource FooterBackgroundBrush}"
+                                Padding="20"
+                                CornerRadius="{StaticResource Radius.Md}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1"
+                                Opacity="0.6">
+                            <StackPanel Spacing="10">
+                                <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+            <TextBlock Text="Import from CSV"
+                                               FontSize="16"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"
+                                               VerticalAlignment="Center"/>
+            <TextBlock Text="(Coming Soon)"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               VerticalAlignment="Center"
+                                               Margin="5,0,0,0"/>
+                                </StackPanel>
+            <TextBlock FontSize="{StaticResource Type.Small.Size}"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           TextWrapping="Wrap">
+                                    Import passwords from a CSV file exported from other password managers.
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                </StackPanel>
+            </TabItem>
+
+            <!-- Authentication Tab -->
+            <TabItem Header="Authentication">
+                <StackPanel Spacing="25" MaxWidth="760" Margin="40,20,40,30" HorizontalAlignment="Center">
+
+                    <!-- Tab Header -->
+                    <StackPanel Spacing="{StaticResource Space.Sm}">
+                        <TextBlock Text="⚙️ Authentication Options"
+                                   FontSize="{StaticResource Type.H3.Size}"
+                                   FontWeight="Bold"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="Configure additional authentication methods for vault access"
+                                   FontSize="{StaticResource Type.Small.Size}"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   HorizontalAlignment="Center"
+                                   TextWrapping="Wrap"
+                                   TextAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- Windows Hello -->
+                    <Border BorderBrush="{DynamicResource ControlBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{DynamicResource Radius.Md}"
+                            Padding="20"
+                            Background="{DynamicResource CardBackgroundBrush}">
+                        <StackPanel Spacing="{StaticResource Space.Md}">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <TextBlock Text="🔐" FontSize="20" VerticalAlignment="Center"/>
+                                <TextBlock Text="Windows Hello"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock Text="Use fingerprint or face recognition to unlock your vault"
+                                       FontSize="{StaticResource Type.Small.Size}"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       TextWrapping="Wrap"/>
+                            <Button Content="Configure Windows Hello"
+                                    Click="ConfigureWindowsHello_Click"
+                                    Height="36"
+                                    HorizontalAlignment="Stretch"
+                                    ToolTip.Tip="Set up biometric authentication for quick vault access"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Passkeys -->
+                    <Border BorderBrush="{DynamicResource ControlBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{DynamicResource Radius.Md}"
+                            Padding="20"
+                            Background="{DynamicResource CardBackgroundBrush}">
+                        <StackPanel Spacing="{StaticResource Space.Md}">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <TextBlock Text="🔑" FontSize="20" VerticalAlignment="Center"/>
+                                <TextBlock Text="Passkey Authentication"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock Text="Use hardware security keys (YubiKey, Titan Key) for passwordless access"
+                                       FontSize="{StaticResource Type.Small.Size}"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       TextWrapping="Wrap"/>
+                            <Button Content="Configure Passkeys"
+                                    Click="ConfigurePasskeys_Click"
+                                    Height="36"
+                                    HorizontalAlignment="Stretch"
+                                    ToolTip.Tip="Set up WebAuthn/FIDO2 hardware keys"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- TOTP -->
+                    <Border BorderBrush="{DynamicResource ControlBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource Radius.Md}"
+                            Padding="20"
+                            Background="{DynamicResource CardBackgroundBrush}">
+                        <StackPanel Spacing="{StaticResource Space.Md}">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <TextBlock Text="⏱️" FontSize="20" VerticalAlignment="Center"/>
+                                <TextBlock Text="TOTP Authenticator"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock Text="Add two-factor authentication with time-based codes"
+                                       FontSize="{StaticResource Type.Small.Size}"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       TextWrapping="Wrap"/>
+                            <Button Content="Configure TOTP"
+                                    Click="ConfigureTotp_Click"
+                                    Height="36"
+                                    HorizontalAlignment="Stretch"
+                                    ToolTip.Tip="Set up TOTP 2FA with authenticator apps"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Info Notice -->
+                    <Border BorderBrush="{DynamicResource AccentBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource Radius.Md}"
+                            Padding="15"
+                            Background="{DynamicResource CardBackgroundBrush}">
+                        <StackPanel Spacing="{StaticResource Space.Sm}">
+                            <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space.Sm}">
+                                <TextBlock Text="ℹ️" FontSize="16" VerticalAlignment="Top"/>
+                                <TextBlock Text="Setup Timing"
+                                           FontSize="{StaticResource Type.Body.Size}"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock FontSize="{StaticResource Type.Small.Size}"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       TextWrapping="Wrap"
+                                       Margin="26,0,0,0">
+                                You can configure these authentication methods now or later from the Settings menu. They are optional but highly recommended for enhanced security.
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+            </TabItem>
+            </TabControl>
+        </ScrollViewer>
+
+                <!-- Progress and Action Buttons -->
+        <Border Grid.Row="2" Background="{DynamicResource FooterBackgroundBrush}" Padding="25,15,25,15">
+            <StackPanel Spacing="18" MaxWidth="1100" HorizontalAlignment="Center">
+                
+                <!-- Progress Bar -->
+                    <StackPanel Spacing="{StaticResource Space.Sm}" IsVisible="{Binding IsBusy}">
+                    <ProgressBar Value="{Binding Progress}"
+                                 Minimum="0"
+                                 Maximum="1"
+                                 Height="12"
+                                 Width="960"
+                                 Foreground="{DynamicResource AccentBrush}"/>
+            <TextBlock Text="{Binding Status}"
+                               FontSize="{StaticResource Type.Small.Size}"
+                               Foreground="{DynamicResource SuccessBrush}"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Status Message -->
+                <Border Background="{DynamicResource FooterBackgroundBrush}"
+                        Padding="12,10"
+                        CornerRadius="{StaticResource Radius.Md}"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"
+                        Margin="0,5,0,0"
+                        IsVisible="{Binding Status, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+            <TextBlock Text="{Binding Status}"
+                               FontSize="{StaticResource Type.Small.Size}"
+                               Foreground="{DynamicResource WarningBrush}"
+                               TextWrapping="Wrap"
+                               HorizontalAlignment="Center"/>
+                </Border>
+
+                <!-- Action Buttons -->
+                <StackPanel Orientation="Horizontal" 
+                            HorizontalAlignment="Center"
+                            Spacing="15">
+                    
+                    <!-- Go Back Button -->
+                    <Button Click="GoBack_Click"
+                            Width="140"
+                            Height="42"
+                            FontSize="{StaticResource Type.Body.Size}"
+                            Classes="liquid-glass"
+                            IsEnabled="{Binding !IsBusy}"
+                            ToolTip.Tip="Return to the previous screen">
+            <TextBlock Text="Go Back" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
+                    
+                    <!-- Create Vault Button -->
+                    <Button Command="{Binding CreateVaultCommand}"
+                            Width="160"
+                            Height="42"
+                            FontSize="15"
+                            FontWeight="SemiBold"
+                            ToolTip.Tip="Create your encrypted vault with the configured settings"
+                            AutomationProperties.Name="Create vault"
+                            AutomationProperties.HelpText="Create your secure vault with the current configuration">
+            <TextBlock Text="Create Vault" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
+
+

@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "dgSpecHash": "vZCFGvCTBB0=",
+  "success": true,
+  "projectFilePath": "O:\\Users\\Giblex\\Build Projects\\Phantom.Obscura\\src\\Crypto\\GiblexVault.Security.ZK.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Main\\.nuget\\packages\\isopoh.cryptography.argon2\\2.0.0\\isopoh.cryptography.argon2.2.0.0.nupkg.sha512",
+    "C:\\Users\\Main\\.nuget\\packages\\isopoh.cryptography.blake2b\\2.0.0\\isopoh.cryptography.blake2b.2.0.0.nupkg.sha512",
+    "C:\\Users\\Main\\.nuget\\packages\\isopoh.cryptography.securearray\\2.0.0\\isopoh.cryptography.securearray.2.0.0.nupkg.sha512",
+    "C:\\Users\\Main\\.nuget\\packages\\libsodium\\1.0.18.2\\libsodium.1.0.18.2.nupkg.sha512",
+    "C:\\Users\\Main\\.nuget\\packages\\nsec.cryptography\\22.4.0\\nsec.cryptography.22.4.0.nupkg.sha512",
+    "C:\\Users\\Main\\.nuget\\packages\\system.security.cryptography.protecteddata\\8.0.0\\system.security.cryptography.protecteddata.8.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}

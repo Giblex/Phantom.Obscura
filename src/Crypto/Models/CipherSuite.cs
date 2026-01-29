@@ -1,0 +1,1 @@
+namespace GiblexVault.Security.ZK.Models; public enum CipherSuite { Aes256Gcm, XChaCha20Poly1305 }

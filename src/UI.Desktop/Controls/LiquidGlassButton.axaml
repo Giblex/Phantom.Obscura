@@ -1,0 +1,17 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Giblex.Controls"
+             x:Class="Giblex.Controls.LiquidGlassButton"
+             x:Name="RootControl">
+
+  <!-- This UserControl wraps a real Button with liquid-glass styling -->
+  <Button x:Name="PART_Button"
+          Classes="liquid-glass"
+          HorizontalContentAlignment="Center"
+          VerticalContentAlignment="Center"
+          MinWidth="0"
+          Content="{Binding #RootControl.ButtonContent}"
+          ContentTemplate="{Binding #RootControl.ButtonContentTemplate}"/>
+
+</UserControl>
+

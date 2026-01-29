@@ -1,0 +1,265 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:PhantomVault.UI.Desktop.Controls"
+             x:Class="PhantomVault.UI.Desktop.Controls.SecurityDashboard">
+
+    <UserControl.Styles>
+        <!-- IMPROVED: Dashboard card with hover effects and consistent spacing -->
+        <Style Selector="Border.dashboard-card">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="Padding" Value="32"/>
+            <Setter Property="BoxShadow" Value="0 4 12 0 #20000000"/>
+            <Setter Property="Margin" Value="0,0,20,20"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2" Easing="CubicEaseOut"/>
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <!-- ADDED: Hover effect for cards -->
+        <Style Selector="Border.dashboard-card:pointerover">
+            <Setter Property="BoxShadow" Value="0 6 16 0 #30000000"/>
+        </Style>
+
+        <Style Selector="TextBlock.stat-value">
+            <Setter Property="FontSize" Value="48"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+        </Style>
+
+        <Style Selector="TextBlock.stat-label">
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+            <Setter Property="Margin" Value="0,8,0,0"/>
+        </Style>
+
+        <!-- IMPROVED: Faster animation for snappier feel -->
+        <Style Selector="ProgressBar.health-score">
+            <Setter Property="Height" Value="8"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Minimum" Value="0"/>
+            <Setter Property="Maximum" Value="100"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Value" Duration="0:0:0.4" Easing="CubicEaseOut"/>
+                </Transitions>
+            </Setter>
+        </Style>
+    </UserControl.Styles>
+
+    <StackPanel Spacing="0">
+
+        <!-- Header -->
+        <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,20">
+            <TextBlock Grid.Column="0"
+                       Text="Security Statistics"
+                       FontSize="24"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+            <Button Grid.Column="1"
+                    Classes="icon-animated"
+                    x:Name="RefreshButton"
+                    ToolTip.Tip="Refresh statistics"
+                    AutomationProperties.Name="Refresh Statistics">
+                <controls:SvgIcon IconName="Assets/SVG/Current/Refresh.svg" Width="20" Height="20"/>
+            </Button>
+        </Grid>
+
+        <!-- Basic Statistics Cards -->
+        <WrapPanel Orientation="Horizontal" x:Name="StatsPanel">
+
+            <!-- Total Credentials -->
+            <Border Classes="dashboard-card"
+                    Width="480" MinWidth="400">
+                <StackPanel>
+                    <controls:SvgIcon IconName="Assets/SVG/Current/Key.svg"
+                                      Width="32" Height="32"
+                                      IconColor="{DynamicResource AccentBrush}"/>
+
+                    <TextBlock x:Name="TotalCredentialsValue"
+                               Classes="stat-value"
+                               Text="47"/>
+
+                    <TextBlock Classes="stat-label"
+                               Text="Total Credentials"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Weak Passwords -->
+            <Border Classes="dashboard-card"
+                    Width="480" MinWidth="400">
+                <StackPanel>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <controls:SvgIcon Grid.Column="0"
+                                          IconName="Assets/SVG/Current/Warning.svg"
+                                          Width="32" Height="32"
+                                          IconColor="{DynamicResource WarningBrush}"/>
+
+                        <Border Grid.Column="1"
+                                Background="{DynamicResource WarningBrush}"
+                                CornerRadius="12"
+                                Padding="6,4"
+                                IsVisible="{Binding HasWeakPasswords}">
+                            <TextBlock Text="!"
+                                       FontSize="12"
+                                       FontWeight="Bold"
+                                       Foreground="White"/>
+                        </Border>
+                    </Grid>
+
+                    <TextBlock x:Name="WeakPasswordsValue"
+                               Classes="stat-value"
+                               Text="3"
+                               Foreground="{DynamicResource WarningBrush}"/>
+
+                    <TextBlock Classes="stat-label"
+                               Text="Weak Passwords"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Breached Passwords -->
+            <Border Classes="dashboard-card"
+                    Width="480" MinWidth="400">
+                <StackPanel>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <controls:SvgIcon Grid.Column="0"
+                                          IconName="Assets/SVG/Current/Warning.svg"
+                                          Width="32" Height="32"
+                                          IconColor="{DynamicResource ErrorBrush}"/>
+
+                        <Border Grid.Column="1"
+                                Background="{DynamicResource ErrorBrush}"
+                                CornerRadius="12"
+                                Padding="6,4"
+                                Classes="pulse"
+                                IsVisible="{Binding HasBreachedPasswords}">
+                            <TextBlock Text="!"
+                                       FontSize="12"
+                                       FontWeight="Bold"
+                                       Foreground="White"/>
+                        </Border>
+                    </Grid>
+
+                    <TextBlock x:Name="BreachedPasswordsValue"
+                               Classes="stat-value"
+                               Text="1"
+                               Foreground="{DynamicResource ErrorBrush}"/>
+
+                    <TextBlock Classes="stat-label"
+                               Text="Breached Passwords"/>
+                </StackPanel>
+            </Border>
+
+        </WrapPanel>
+
+        <!-- Weak Passwords Summary -->
+        <Border Background="{DynamicResource ContentBackgroundBrush}"
+                CornerRadius="12"
+                Padding="20"
+                Margin="0,16,0,0">
+            <StackPanel Spacing="16">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0"
+                               Text="Credentials Requiring Attention"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <TextBlock Grid.Column="1"
+                               x:Name="IssueCountText"
+                               Text="{Binding WeakCredentials.Count, StringFormat='{}{0} issues'}"
+                               FontSize="13"
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               VerticalAlignment="Center"/>
+                </Grid>
+
+                <TextBlock Text="Sorted by criticality - Fix critical issues first"
+                           FontSize="12"
+                           Foreground="{DynamicResource MutedTextBrush}"/>
+
+                <!-- Empty State -->
+                <controls:EmptyState x:Name="EmptyCredentialsState"
+                                    Title="All Clear!"
+                                    Description="Your passwords are secure and strong. No issues detected."
+                                    IsVisible="{Binding !WeakCredentials.Count}"/>
+
+                <!-- IMPROVED: Virtualized list for performance -->
+                <ListBox x:Name="WeakCredentialsList"
+                         ItemsSource="{Binding WeakCredentials}"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         MaxHeight="400"
+                         IsVisible="{Binding WeakCredentials.Count}"
+                         AutomationProperties.Name="Weak Credentials List">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                                <Border Background="{DynamicResource SurfaceBrush}"
+                                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Padding="16"
+                                        Margin="0,0,0,12">
+                                    <Grid ColumnDefinitions="Auto,16,*,Auto,12,Auto">
+                                        <!-- Severity Indicator -->
+                                        <Border Grid.Column="0"
+                                                Width="4"
+                                                Height="48"
+                                                CornerRadius="2"
+                                                Background="{Binding SeverityColor}"
+                                                VerticalAlignment="Center"/>
+
+                                        <!-- Credential Info -->
+                                        <StackPanel Grid.Column="2" Spacing="4">
+                                            <TextBlock Text="{Binding Title}"
+                                                       FontSize="14"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                            <TextBlock Text="{Binding Username}"
+                                                       FontSize="12"
+                                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                            <TextBlock Text="{Binding MaskedPassword}"
+                                                       FontSize="11"
+                                                       FontFamily="Consolas"
+                                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                                        </StackPanel>
+
+                                        <!-- Issue Badge -->
+                                        <Border Grid.Column="3"
+                                                Background="{Binding SeverityColor}"
+                                                CornerRadius="12"
+                                                Padding="10,4"
+                                                VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding IssueLabel}"
+                                                       FontSize="11"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="White"/>
+                                        </Border>
+
+                                        <!-- IMPROVED: Edit Button with better accessibility -->
+                                        <Button Grid.Column="5"
+                                                Command="{Binding $parent[ListBox].((controls:SecurityDashboard)DataContext).EditCredentialCommand}"
+                                                CommandParameter="{Binding}"
+                                                Classes="liquid-glass"
+                                                Width="80"
+                                                Height="32"
+                                                VerticalAlignment="Center"
+                                                ToolTip.Tip="Edit credential - Update password and security settings"
+                                                AutomationProperties.Name="{Binding Title, StringFormat='Edit {0}'}">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <TextBlock Text="✎" FontSize="14"/>
+                                                <TextBlock Text="Edit" FontSize="12" FontWeight="SemiBold"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+        </Border>
+
+    </StackPanel>
+
+</UserControl>

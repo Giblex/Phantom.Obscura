@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:system="clr-namespace:System;assembly=System.Runtime">
+    
+    <!-- Common UI Strings -->
+    <system:String x:Key="Str.Common.Cancel">Cancelar</system:String>
+    <system:String x:Key="Str.Common.Save">Guardar</system:String>
+    <system:String x:Key="Str.Common.Delete">Eliminar</system:String>
+    <system:String x:Key="Str.Common.Edit">Editar</system:String>
+    <system:String x:Key="Str.Common.Add">Agregar</system:String>
+    <system:String x:Key="Str.Common.Close">Cerrar</system:String>
+    <system:String x:Key="Str.Common.OK">Aceptar</system:String>
+    <system:String x:Key="Str.Common.Yes">Sí</system:String>
+    <system:String x:Key="Str.Common.No">No</system:String>
+    <system:String x:Key="Str.Common.Search">Buscar</system:String>
+    <system:String x:Key="Str.Common.Refresh">Actualizar</system:String>
+    <system:String x:Key="Str.Common.GoBack">Volver</system:String>
+    <system:String x:Key="Str.Common.Continue">Continuar</system:String>
+    <system:String x:Key="Str.Common.Browse">Examinar...</system:String>
+    
+    <!-- Vault Window -->
+    <system:String x:Key="Str.Vault.Title">PhantomVault</system:String>
+    <system:String x:Key="Str.Vault.SearchPlaceholder">Buscar credenciales...</system:String>
+    <system:String x:Key="Str.Vault.AddEntry">Agregar Entrada</system:String>
+    <system:String x:Key="Str.Vault.Lock">Bloquear</system:String>
+    <system:String x:Key="Str.Vault.Settings">Configuración</system:String>
+    <system:String x:Key="Str.Vault.PasswordGenerator">Generador de Contraseñas</system:String>
+    
+    <!-- Categories -->
+    <system:String x:Key="Str.Categories.All">Todos</system:String>
+    <system:String x:Key="Str.Categories.Favorites">Favoritos</system:String>
+    <system:String x:Key="Str.Categories.Recent">Recientes</system:String>
+    <system:String x:Key="Str.Categories.Weak">Contraseñas Débiles</system:String>
+    <system:String x:Key="Str.Categories.Duplicate">Duplicados</system:String>
+    <system:String x:Key="Str.Categories.Manage">Administrar Categorías</system:String>
+    
+    <!-- Credential Form -->
+    <system:String x:Key="Str.Credential.Title">Título</system:String>
+    <system:String x:Key="Str.Credential.Username">Usuario / Correo</system:String>
+    <system:String x:Key="Str.Credential.Password">Contraseña</system:String>
+    <system:String x:Key="Str.Credential.URL">URL del Sitio Web</system:String>
+    <system:String x:Key="Str.Credential.Notes">Notas</system:String>
+    <system:String x:Key="Str.Credential.Category">Categoría</system:String>
+    <system:String x:Key="Str.Credential.Icon">Icono</system:String>
+    <system:String x:Key="Str.Credential.Required">Requerido</system:String>
+    <system:String x:Key="Str.Credential.Optional">Opcional</system:String>
+    <system:String x:Key="Str.Credential.Generate">Generar</system:String>
+    <system:String x:Key="Str.Credential.ShowPassword">Mostrar contraseña</system:String>
+    <system:String x:Key="Str.Credential.HidePassword">Ocultar contraseña</system:String>
+    
+    <!-- Password Strength -->
+    <system:String x:Key="Str.Password.Strength">Fortaleza:</system:String>
+    <system:String x:Key="Str.Password.Weak">Débil</system:String>
+    <system:String x:Key="Str.Password.Fair">Aceptable</system:String>
+    <system:String x:Key="Str.Password.Good">Buena</system:String>
+    <system:String x:Key="Str.Password.Strong">Fuerte</system:String>
+    <system:String x:Key="Str.Password.VeryStrong">Muy Fuerte</system:String>
+    
+    <!-- Provision Window -->
+    <system:String x:Key="Str.Provision.Title">Crear Tu Bóveda</system:String>
+    <system:String x:Key="Str.Provision.Description">Configura tu bóveda segura de contraseñas</system:String>
+    <system:String x:Key="Str.Provision.VaultName">Nombre de la Bóveda</system:String>
+    <system:String x:Key="Str.Provision.VaultNameDesc">Elige un nombre para tu bóveda</system:String>
+    <system:String x:Key="Str.Provision.VolumeSize">Tamaño del Volumen (MB)</system:String>
+    <system:String x:Key="Str.Provision.VolumeSizeDesc">Tamaño del contenedor encriptado</system:String>
+    <system:String x:Key="Str.Provision.MasterPassword">Contraseña Maestra</system:String>
+    <system:String x:Key="Str.Provision.MasterPasswordOptional">Contraseña Maestra (Opcional)</system:String>
+    <system:String x:Key="Str.Provision.CreateVault">Crear Bóveda</system:String>
+    
+    <!-- Welcome Page -->
+    <system:String x:Key="Str.Welcome.GetStarted">Comenzar</system:String>
+    <system:String x:Key="Str.Welcome.AccessVault">Acceder a tu bóveda</system:String>
+    
+    <!-- Messages -->
+    <system:String x:Key="Str.Message.RequiredFields">* Campos requeridos</system:String>
+    <system:String x:Key="Str.Message.NoCredentials">No se encontraron credenciales</system:String>
+    <system:String x:Key="Str.Message.DeleteConfirm">¿Estás seguro de que deseas eliminar esta credencial?</system:String>
+    
+    <!-- ToolTips -->
+    <system:String x:Key="Str.Tip.ClearSearch">Limpiar búsqueda</system:String>
+    <system:String x:Key="Str.Tip.AddCredential">Agregar nueva credencial</system:String>
+    <system:String x:Key="Str.Tip.LockVault">Bloquear bóveda y regresar</system:String>
+    <system:String x:Key="Str.Tip.PasswordGenerator">Generador de Contraseñas</system:String>
+    <system:String x:Key="Str.Tip.VaultSettings">Configuración de la bóveda</system:String>
+    <system:String x:Key="Str.Tip.TogglePassword">Mostrar/Ocultar contraseña</system:String>
+    
+</ResourceDictionary>
+
+

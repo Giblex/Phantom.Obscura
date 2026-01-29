@@ -1,0 +1,70 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:PhantomVault.UI.Converters"
+             x:Class="PhantomVault.UI.Views.Details.WiFiDetailView">
+    
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://PhantomVault.UI/Resources/Converters/ConverterResources.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    
+    <!-- Wi-Fi Details -->
+    <StackPanel Spacing="12"
+                IsVisible="{Binding SelectedCredential.IsWiFiEntry}">
+        <TextBlock Text="Wi-Fi Network"
+                   FontSize="14"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasWiFiSSID}">
+            <TextBlock Text="SSID" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBox Text="{Binding SelectedCredential.WiFiSSID}" IsReadOnly="True" Height="36" Padding="8,16">
+                <TextBox.Effect>
+                    <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                </TextBox.Effect>
+            </TextBox>
+        </StackPanel>
+        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasWiFiSecurity}">
+            <TextBlock Text="Security" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBox Text="{Binding SelectedCredential.WiFiSecurityType}" IsReadOnly="True" Height="36" Padding="8,16"/>
+        </StackPanel>
+        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasWiFiBssid}">
+            <TextBlock Text="BSSID" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBox Text="{Binding SelectedCredential.WiFiBSSID}" IsReadOnly="True" Height="36" Padding="8,16">
+                <TextBox.Effect>
+                    <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                </TextBox.Effect>
+            </TextBox>
+        </StackPanel>
+        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasWiFiPassword}">
+            <TextBlock Text="Network Password" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBox Grid.Column="0"
+                         Text="{Binding SelectedCredential.MaskedWiFiPassword}"
+                         PasswordChar="•"
+                         IsReadOnly="True"
+                         BorderThickness="1"
+                         BorderBrush="{DynamicResource ControlBorderBrush}"
+                         Height="36"
+                         Padding="8,16">
+                    <TextBox.Effect>
+                        <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                    </TextBox.Effect>
+                </TextBox>
+                <Button Grid.Column="1"
+                        Command="{Binding CopyPasswordCommand}"
+                        CommandParameter="{Binding SelectedCredential}"
+                        Classes="copy-btn"
+                        Width="36"
+                        Height="36"
+                        Padding="4"
+                        Margin="8,0,0,0"
+                        ToolTip.Tip="Copy password">
+                    <Image Source="{DynamicResource CopyIcon}" Width="18" Height="18" Stretch="Uniform"/>
+                </Button>
+            </Grid>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

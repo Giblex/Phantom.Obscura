@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>PhantomVault.Platform</name>
+    </assembly>
+    <members>
+        <member name="T:PhantomVault.Core.Services.Platform.AndroidPasskeyService">
+            <summary>
+            Placeholder for when Android-specific code is not being compiled.
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Platform.IOSPasskeyService">
+            <summary>
+            Placeholder for when iOS-specific code is not being compiled.
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Platform.WindowsPasskeyService">
+            <summary>
+            Windows implementation of passkey service using Windows Hello via WebAuthn API.
+            Requires Windows 10 1903 or later with Windows Hello configured.
+            Uses Windows Credential Manager for secure credential storage.
+            </summary>
+        </member>
+        <member name="M:PhantomVault.Core.Services.Platform.WindowsPasskeyService.RegisterAsync(System.String,System.String,System.String,System.Byte[])">
+            <summary>
+            Registers a new passkey using Windows Hello biometric authentication.
+            </summary>
+        </member>
+        <member name="M:PhantomVault.Core.Services.Platform.WindowsPasskeyService.AuthenticateAsync(System.Byte[],System.String,System.Byte[])">
+            <summary>
+            Authenticates using a previously registered passkey with Windows Hello.
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Platform.NullPasskeyService">
+            <summary>
+            Fallback implementation when no platform-specific passkey service is available.
+            Always returns false for IsSupported and throws exceptions on operations.
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Platform.Windows.WindowsActiveWindowDetector">
+            <summary>
+            Windows implementation for detecting active window context using Win32 APIs
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Platform.Windows.WindowsAutoTypeService">
+            <summary>
+            Windows implementation using SendInput API for realistic keyboard simulation
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Platform.Services.IActiveWindowDetector">
+            <summary>
+            Platform-specific service for detecting the active window and extracting context
+            </summary>
+        </member>
+        <member name="M:PhantomVault.Platform.Services.IActiveWindowDetector.GetCurrentContext">
+            <summary>
+            Gets the current active window context
+            </summary>
+            <returns>Context information about the active window</returns>
+        </member>
+        <member name="M:PhantomVault.Platform.Services.IActiveWindowDetector.IsActiveBrowser">
+            <summary>
+            Checks if the active window is a supported browser
+            </summary>
+        </member>
+        <member name="M:PhantomVault.Platform.Services.IActiveWindowDetector.TryGetBrowserUrl">
+            <summary>
+            Attempts to extract URL from active browser window
+            </summary>
+            <returns>URL if available, otherwise null</returns>
+        </member>
+        <member name="T:PhantomVault.Platform.Services.IAutoTypeService">
+            <summary>
+            Platform-specific service for typing credentials into forms
+            </summary>
+        </member>
+        <member name="M:PhantomVault.Platform.Services.IAutoTypeService.TypeCredentialsAsync(System.String,System.String,System.Boolean)">
+            <summary>
+            Types a simple username + password sequence
+            </summary>
+            <param name="username">Username to type</param>
+            <param name="password">Password to type</param>
+            <param name="submit">Whether to press Enter after password</param>
+        </member>
+        <member name="M:PhantomVault.Platform.Services.IAutoTypeService.TypeCustomSequenceAsync(System.String,System.String,System.String)">
+            <summary>
+            Types a custom sequence with special commands
+            Supports: {username}, {password}, {tab}, {enter}, {delay:ms}
+            Example: "{username}{tab}{password}{delay:500}{enter}"
+            </summary>
+        </member>
+        <member name="M:PhantomVault.Platform.Services.IAutoTypeService.TypeTextAsync(System.String,System.Int32)">
+            <summary>
+            Types text character by character with realistic delays
+            </summary>
+        </member>
+        <member name="M:PhantomVault.Platform.Services.IAutoTypeService.PressKeyAsync(PhantomVault.Platform.Services.SpecialKey)">
+            <summary>
+            Simulates pressing a special key
+            </summary>
+        </member>
+    </members>
+</doc>

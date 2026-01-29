@@ -1,0 +1,52 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:PhantomVault.UI.Desktop.Controls"
+             x:Class="PhantomVault.UI.Controls.EnhancedSearchBar">
+
+    <Border Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource ControlBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="{StaticResource Radius.Md}"
+            Padding="12,8">
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+            
+            <!-- Search Icon -->
+            <controls:SvgIcon Grid.Column="0"
+                              Preset="Search"
+                              Width="20" Height="20"
+                              IconColor="{DynamicResource MutedTextBrush}"
+                              Margin="0,0,8,0"
+                              VerticalAlignment="Center"/>
+
+            <!-- Search TextBox -->
+            <TextBox Grid.Column="1"
+                     x:Name="SearchTextBox"
+                     Text="{Binding SearchText, Mode=TwoWay}"
+                     Watermark="Search credentials, URLs, usernames..."
+                     BorderThickness="0"
+                     Background="Transparent"
+                     Foreground="{DynamicResource PrimaryTextBrush}"
+                     VerticalAlignment="Center"
+                     FontSize="{StaticResource Type.Body.Size}">
+                <TextBox.KeyBindings>
+                    <KeyBinding Gesture="Escape" Command="{Binding ClearSearchCommand}"/>
+                    <KeyBinding Gesture="Down" Command="{Binding NavigateResultsDownCommand}"/>
+                    <KeyBinding Gesture="Up" Command="{Binding NavigateResultsUpCommand}"/>
+                    <KeyBinding Gesture="Enter" Command="{Binding SelectCurrentResultCommand}"/>
+                </TextBox.KeyBindings>
+            </TextBox>
+
+            <!-- Clear Button -->
+            <Button Grid.Column="3"
+                    Command="{Binding ClearSearchCommand}"
+                    IsVisible="{Binding HasSearchText}"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Padding="8,4"
+                    VerticalAlignment="Center"
+                    ToolTip.Tip="Clear search (Esc)">
+                <controls:SvgIcon Preset="X" Width="16" Height="16" IconColor="{DynamicResource MutedTextBrush}"/>
+            </Button>
+        </Grid>
+    </Border>
+</UserControl>

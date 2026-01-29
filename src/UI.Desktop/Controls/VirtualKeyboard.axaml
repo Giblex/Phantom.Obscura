@@ -1,0 +1,169 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="350" d:DesignHeight="250"
+             x:Class="PhantomVault.UI.Controls.VirtualKeyboard">
+
+    <UserControl.Styles>
+        <Style Selector="Button.key-btn">
+            <Setter Property="Background" Value="#3C3C3C"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="MinWidth" Value="32"/>
+            <Setter Property="MinHeight" Value="32"/>
+        </Style>
+        
+        <Style Selector="Button.key-wide">
+            <Setter Property="MinWidth" Value="70"/>
+        </Style>
+        
+        <Style Selector="Button.key-special">
+            <Setter Property="Background" Value="#2B2B2B"/>
+            <Setter Property="FontSize" Value="11"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Border Background="{DynamicResource KeyboardBackgroundBrush}" 
+            BorderBrush="#404040" 
+            BorderThickness="1"
+            CornerRadius="{StaticResource Radius.Lg}"
+            Padding="8"
+            BoxShadow="0 4 12 #80000000">
+        <StackPanel Spacing="4">
+            <!-- Title bar -->
+            <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,8">
+                <TextBlock Grid.Column="0" 
+                          Text="🔒 Virtual Keyboard" 
+                          FontWeight="Bold" 
+                          FontSize="13"
+                          Foreground="White"
+                          VerticalAlignment="Center"/>
+                <Button Grid.Column="1" 
+                       Name="CloseButton"
+                       Content="✕" 
+                       Background="Transparent"
+                       Foreground="{DynamicResource AutofillTextBrush}"
+                       BorderThickness="0"
+                       Padding="4"
+                       FontSize="14"
+                       Cursor="Hand"/>
+            </Grid>
+
+            <!-- Number row -->
+            <WrapPanel HorizontalAlignment="Center">
+                <Button Classes="key-btn" Content="1" Tag="1"/>
+                <Button Classes="key-btn" Content="2" Tag="2"/>
+                <Button Classes="key-btn" Content="3" Tag="3"/>
+                <Button Classes="key-btn" Content="4" Tag="4"/>
+                <Button Classes="key-btn" Content="5" Tag="5"/>
+                <Button Classes="key-btn" Content="6" Tag="6"/>
+                <Button Classes="key-btn" Content="7" Tag="7"/>
+                <Button Classes="key-btn" Content="8" Tag="8"/>
+                <Button Classes="key-btn" Content="9" Tag="9"/>
+                <Button Classes="key-btn" Content="0" Tag="0"/>
+            </WrapPanel>
+
+            <!-- First letter row -->
+            <WrapPanel HorizontalAlignment="Center">
+                <Button Classes="key-btn" Content="Q" Tag="Q"/>
+                <Button Classes="key-btn" Content="W" Tag="W"/>
+                <Button Classes="key-btn" Content="E" Tag="E"/>
+                <Button Classes="key-btn" Content="R" Tag="R"/>
+                <Button Classes="key-btn" Content="T" Tag="T"/>
+                <Button Classes="key-btn" Content="Y" Tag="Y"/>
+                <Button Classes="key-btn" Content="U" Tag="U"/>
+                <Button Classes="key-btn" Content="I" Tag="I"/>
+                <Button Classes="key-btn" Content="O" Tag="O"/>
+                <Button Classes="key-btn" Content="P" Tag="P"/>
+            </WrapPanel>
+
+            <!-- Second letter row -->
+            <WrapPanel HorizontalAlignment="Center">
+                <Button Classes="key-btn" Content="A" Tag="A"/>
+                <Button Classes="key-btn" Content="S" Tag="S"/>
+                <Button Classes="key-btn" Content="D" Tag="D"/>
+                <Button Classes="key-btn" Content="F" Tag="F"/>
+                <Button Classes="key-btn" Content="G" Tag="G"/>
+                <Button Classes="key-btn" Content="H" Tag="H"/>
+                <Button Classes="key-btn" Content="J" Tag="J"/>
+                <Button Classes="key-btn" Content="K" Tag="K"/>
+                <Button Classes="key-btn" Content="L" Tag="L"/>
+            </WrapPanel>
+
+            <!-- Third letter row -->
+            <WrapPanel HorizontalAlignment="Center">
+                <Button Classes="key-btn key-special key-wide" Content="⇧ Shift" Name="ShiftButton"/>
+                <Button Classes="key-btn" Content="Z" Tag="Z"/>
+                <Button Classes="key-btn" Content="X" Tag="X"/>
+                <Button Classes="key-btn" Content="C" Tag="C"/>
+                <Button Classes="key-btn" Content="V" Tag="V"/>
+                <Button Classes="key-btn" Content="B" Tag="B"/>
+                <Button Classes="key-btn" Content="N" Tag="N"/>
+                <Button Classes="key-btn" Content="M" Tag="M"/>
+                <Button Classes="key-btn key-special key-wide" Content="⌫ Back" Name="BackspaceButton"/>
+            </WrapPanel>
+
+            <!-- Special characters row -->
+            <WrapPanel HorizontalAlignment="Center">
+                <Button Classes="key-btn" Content="!" Tag="!"/>
+                <Button Classes="key-btn" Content="@" Tag="@"/>
+                <Button Classes="key-btn" Content="#" Tag="#"/>
+                <Button Classes="key-btn" Content="$" Tag="$"/>
+                <Button Classes="key-btn" Content="%" Tag="%"/>
+                <Button Classes="key-btn" Content="^" Tag="^"/>
+                <Button Classes="key-btn" Content="&amp;" Tag="&amp;"/>
+                <Button Classes="key-btn" Content="*" Tag="*"/>
+                <Button Classes="key-btn" Content="(" Tag="("/>
+                <Button Classes="key-btn" Content=")" Tag=")"/>
+            </WrapPanel>
+
+            <!-- Bottom row -->
+            <WrapPanel HorizontalAlignment="Center">
+                <Button Classes="key-btn" Content="-" Tag="-"/>
+                <Button Classes="key-btn" Content="_" Tag="_"/>
+                <Button Classes="key-btn" Content="=" Tag="="/>
+                <Button Classes="key-btn" Content="+" Tag="+"/>
+                <Button Classes="key-btn" Content="[" Tag="["/>
+                <Button Classes="key-btn" Content="]" Tag="]"/>
+                <Button Classes="key-btn" Content=";" Tag=";"/>
+                <Button Classes="key-btn" Content=":" Tag=":"/>
+                <Button Classes="key-btn" Content="'" Tag="'"/>
+                <Button Classes="key-btn" Content="&quot;" Tag="&quot;"/>
+            </WrapPanel>
+
+            <!-- Space bar row -->
+            <WrapPanel HorizontalAlignment="Center">
+                <Button Classes="key-btn" Content="," Tag=","/>
+                <Button Classes="key-btn" Content="." Tag="."/>
+                <Button Classes="key-btn" Content="/" Tag="/"/>
+                <Button Classes="key-btn" Content="?" Tag="?"/>
+                <Button Classes="key-btn key-wide" Content="Space" Tag=" " MinWidth="150"/>
+                <Button Classes="key-btn" Content="|" Tag="|"/>
+                <Button Classes="key-btn" Content="\" Tag="\"/>
+                <Button Classes="key-btn" Content="&lt;" Tag="&lt;"/>
+                <Button Classes="key-btn" Content="&gt;" Tag="&gt;"/>
+            </WrapPanel>
+
+            <!-- Status bar -->
+            <Border Background="{DynamicResource KeyboardKeyBackgroundBrush}" 
+                   CornerRadius="{StaticResource Radius.Sm}" 
+                   Padding="8,4"
+                   Margin="0,4,0,0">
+                <TextBlock Name="StatusText"
+                          Text="Click keys to input securely" 
+                          FontSize="11"
+                          Foreground="{DynamicResource AutofillTextSecondaryBrush}"
+                          HorizontalAlignment="Center"/>
+            </Border>
+        </StackPanel>
+    </Border>
+</UserControl>
+
+

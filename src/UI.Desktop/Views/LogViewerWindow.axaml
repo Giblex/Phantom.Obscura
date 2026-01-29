@@ -1,0 +1,128 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:PhantomVault.UI.ViewModels"
+        x:Class="PhantomVault.UI.Views.LogViewerWindow"
+        x:DataType="vm:LogViewerViewModel"
+        Title="Log Viewer"
+        Width="1000"
+        Height="700"
+        MinWidth="800"
+        MinHeight="500"
+        CanResize="True"
+        Background="{DynamicResource ObscuraCanvasBrush}">
+  <Grid RowDefinitions="Auto,Auto,*,Auto">
+    <!-- Header -->
+    <Border Grid.Row="0"
+            Background="{DynamicResource ObscuraSurfaceAltBrush}"
+            BorderBrush="{DynamicResource ObscuraBorderBrush}"
+            BorderThickness="0,0,0,1"
+            Padding="20,16">
+      <Grid ColumnDefinitions="*,Auto,Auto">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Application Logs"
+                     FontSize="20"
+                     FontWeight="SemiBold"/>
+          <TextBlock Text="View and filter application log entries"
+                     FontSize="12"
+                     Classes="subtle"/>
+        </StackPanel>
+        <Button Grid.Column="1"
+                Content="Refresh"
+                Classes="secondary"
+                Command="{Binding RefreshCommand}"
+                MinWidth="100"
+                Margin="0,0,8,0"/>
+        <Button Grid.Column="2"
+                Content="Clear Logs"
+                Classes="danger"
+                Command="{Binding ClearLogsCommand}"
+                MinWidth="100"/>
+      </Grid>
+    </Border>
+
+    <!-- Toolbar -->
+    <Border Grid.Row="1"
+            Background="{DynamicResource ObscuraSurfaceBrush}"
+            BorderBrush="{DynamicResource ObscuraBorderBrush}"
+            BorderThickness="0,0,0,1"
+            Padding="20,12">
+      <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <TextBlock Text="Filter:" FontSize="13" VerticalAlignment="Center"/>
+          <ComboBox SelectedIndex="{Binding SelectedLogLevel}"
+                    MinWidth="120">
+            <ComboBoxItem>All Levels</ComboBoxItem>
+            <ComboBoxItem>Error</ComboBoxItem>
+            <ComboBoxItem>Warning</ComboBoxItem>
+            <ComboBoxItem>Information</ComboBoxItem>
+            <ComboBoxItem>Debug</ComboBoxItem>
+          </ComboBox>
+        </StackPanel>
+
+        <TextBox Grid.Column="1"
+                 Watermark="Search logs..."
+                 Text="{Binding SearchText}"
+                 Margin="16,0"
+                 MinWidth="200"/>
+
+        <CheckBox Grid.Column="2"
+                  Content="Auto-scroll"
+                  IsChecked="{Binding AutoScroll}"
+                  Margin="0,0,16,0"/>
+
+        <Button Grid.Column="3"
+                Content="Export..."
+                Classes="secondary"
+                Command="{Binding ExportLogsCommand}"
+                MinWidth="100"/>
+      </Grid>
+    </Border>
+
+    <!-- Log Content -->
+    <Border Grid.Row="2"
+            Margin="20"
+            Background="{DynamicResource ObscuraSurfaceBrush}"
+            BorderBrush="{DynamicResource ObscuraBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12">
+      <ScrollViewer x:Name="LogScrollViewer"
+                    VerticalScrollBarVisibility="Auto"
+                    HorizontalScrollBarVisibility="Auto">
+        <TextBox Text="{Binding LogContent}"
+                 IsReadOnly="True"
+                 AcceptsReturn="True"
+                 TextWrapping="NoWrap"
+                 FontFamily="Consolas"
+                 FontSize="11"
+                 Padding="16"
+                 Background="Transparent"
+                 BorderThickness="0"/>
+      </ScrollViewer>
+    </Border>
+
+    <!-- Footer -->
+    <Border Grid.Row="3"
+            Background="{DynamicResource ObscuraSurfaceAltBrush}"
+            BorderBrush="{DynamicResource ObscuraBorderBrush}"
+            BorderThickness="0,1,0,0"
+            Padding="20,12">
+      <Grid ColumnDefinitions="*,Auto,Auto">
+        <TextBlock Text="{Binding StatusMessage}"
+                   FontSize="12"
+                   VerticalAlignment="Center"
+                   Classes="subtle"/>
+        <Button Grid.Column="1"
+                Content="Open Log Folder"
+                Classes="secondary"
+                Command="{Binding OpenLogFolderCommand}"
+                MinWidth="140"
+                Margin="0,0,8,0"/>
+        <Button Grid.Column="2"
+                Content="Close"
+                Classes="secondary"
+                Click="Close_Click"
+                MinWidth="100"/>
+      </Grid>
+    </Border>
+  </Grid>
+</Window>

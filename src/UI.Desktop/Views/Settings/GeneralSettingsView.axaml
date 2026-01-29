@@ -1,0 +1,89 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PhantomVault.UI.Views.Settings.GeneralSettingsView">
+    <StackPanel Spacing="20" Margin="0,0,30,60">
+        <TextBlock Text="General Settings" 
+                   FontSize="{StaticResource Type.H3.Size}" 
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+        
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="8" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Vault Preferences" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <CheckBox Content="Start with Windows" 
+                          ToolTip.Tip="Launch PhantomVault automatically when Windows starts"/>
+                
+                <CheckBox Content="Minimize to system tray" 
+                          ToolTip.Tip="Keep PhantomVault running in background when minimized"/>
+                
+                <CheckBox Content="Check for updates automatically" 
+                          ToolTip.Tip="Automatically check for new versions on startup"/>
+                
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Default view mode:" 
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <ComboBox Width="200" HorizontalAlignment="Left">
+                        <ComboBoxItem Content="List View" IsSelected="True"/>
+                        <ComboBoxItem Content="Grid View"/>
+                    </ComboBox>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="8" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="VeraCrypt Integration" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <TextBlock Text="Configure VeraCrypt encryption settings and integration options" 
+                           FontSize="12"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
+                
+                <Button Content="Configure VeraCrypt Settings" 
+                        Width="240" 
+                        HorizontalAlignment="Left"
+                        Classes="liquid-glass"
+                        ToolTip.Tip="Open detailed VeraCrypt configuration"/>
+            </StackPanel>
+        </Border>
+
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="8" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Icon Management" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <TextBlock Text="Manage custom icons, import new icons, and organize your icon library" 
+                           FontSize="12"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
+                
+                <Button Content="Open Icon Manager" 
+                        HorizontalAlignment="Left"
+                        Classes="liquid-glass"
+                        Command="{Binding $parent[Window].DataContext.OpenIconManagerCommand}"
+                        ToolTip.Tip="Manage custom icons and download icon packs"/>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

@@ -1,0 +1,82 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PhantomVault.UI.Views.Settings.AutoFillSettingsView">
+    <StackPanel Spacing="20" Margin="0,0,30,60">
+        <TextBlock Text="Auto-Fill Settings" 
+                   FontSize="{StaticResource Type.H3.Size}" 
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+        
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="8" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Browser Integration" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <CheckBox Content="Enable browser auto-fill" 
+                          IsChecked="True"
+                          ToolTip.Tip="Allow PhantomVault to auto-fill credentials in browsers"/>
+                
+                <CheckBox Content="Auto-submit after filling" 
+                          ToolTip.Tip="Automatically submit forms after filling credentials"/>
+                
+                <CheckBox Content="Show auto-fill icon in password fields" 
+                          IsChecked="True"
+                          ToolTip.Tip="Display PhantomVault icon next to password fields"/>
+            </StackPanel>
+        </Border>
+
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="8" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Mobile Integration" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <TextBlock Text="Configure auto-fill settings for Android and iOS devices" 
+                           FontSize="12"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
+                
+                <Button Content="Configure Mobile Auto-Fill" 
+                        Width="240" 
+                        HorizontalAlignment="Left"
+                        Classes="liquid-glass"
+                        ToolTip.Tip="Set up auto-fill for mobile devices"/>
+            </StackPanel>
+        </Border>
+
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="8" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Desktop Applications" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <CheckBox Content="Enable auto-fill for desktop apps" 
+                          ToolTip.Tip="Allow PhantomVault to auto-fill credentials in desktop applications"/>
+                
+                <Button Content="Manage App Permissions" 
+                        Width="200" 
+                        HorizontalAlignment="Left"
+                        Classes="liquid-glass"
+                        ToolTip.Tip="Control which apps can use auto-fill"/>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>
+
+

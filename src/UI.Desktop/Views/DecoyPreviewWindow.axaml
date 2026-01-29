@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PhantomVault.UI.Views.DecoyPreviewWindow"
+        Title="Decoy Vault Preview"
+        Width="900" Height="700"
+        MinWidth="700" MinHeight="500"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Classes="animated-window">
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        <!-- Header -->
+        <Border Grid.Row="0" Padding="25,20" BorderThickness="0,0,0,1"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                Background="{DynamicResource ContentBackgroundBrush}">
+            <StackPanel Spacing="8">
+                <TextBlock Text="🎭 Decoy Vault Preview"
+                           FontSize="20"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <TextBlock TextWrapping="Wrap"
+                           FontSize="13"
+                           Foreground="{DynamicResource MutedTextBrush}">
+                    <Run Text="This is what an attacker would see if tamper detection is triggered."/>
+                    <LineBreak/>
+                    <Run Text="All credentials below are fake and generated randomly." FontWeight="SemiBold" Foreground="{DynamicResource WarningBrush}"/>
+                </TextBlock>
+            </StackPanel>
+        </Border>
+
+        <!-- Credential list -->
+        <ScrollViewer Grid.Row="1" Padding="25,20">
+            <ItemsControl ItemsSource="{Binding DecoyCredentials}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="{DynamicResource ContentBackgroundBrush}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="20"
+                                Margin="0,0,0,12">
+                            <StackPanel Spacing="10">
+                                <!-- Title and Type -->
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding Title}"
+                                               FontSize="15"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    <Border Grid.Column="1"
+                                            Background="{DynamicResource AccentBrush}"
+                                            CornerRadius="4"
+                                            Padding="8,4">
+                                        <TextBlock Text="{Binding EntryType}"
+                                                   FontSize="11"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="White"/>
+                                    </Border>
+                                </Grid>
+
+                                <!-- Username (if exists) -->
+                                <StackPanel Spacing="4" IsVisible="{Binding Username, Converter={StaticResource NullToBoolConverter}}">
+                                    <TextBlock Text="Username:"
+                                               FontSize="11"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource MutedTextBrush}"/>
+                                    <TextBlock Text="{Binding Username}"
+                                               FontSize="13"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                </StackPanel>
+
+                                <!-- Password (if exists) -->
+                                <StackPanel Spacing="4" IsVisible="{Binding Password, Converter={StaticResource NullToBoolConverter}}">
+                                    <TextBlock Text="Password:"
+                                               FontSize="11"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource MutedTextBrush}"/>
+                                    <TextBlock Text="{Binding Password}"
+                                               FontFamily="Consolas,Courier New,monospace"
+                                               FontSize="13"
+                                               Foreground="{DynamicResource AccentBrush}"/>
+                                </StackPanel>
+
+                                <!-- URL (if exists) -->
+                                <StackPanel Spacing="4" IsVisible="{Binding Url, Converter={StaticResource NullToBoolConverter}}">
+                                    <TextBlock Text="URL:"
+                                               FontSize="11"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource MutedTextBrush}"/>
+                                    <TextBlock Text="{Binding Url}"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource AccentBrush}"/>
+                                </StackPanel>
+
+                                <!-- Notes (if exists) -->
+                                <StackPanel Spacing="4" IsVisible="{Binding Notes, Converter={StaticResource NullToBoolConverter}}">
+                                    <TextBlock Text="Notes:"
+                                               FontSize="11"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource MutedTextBrush}"/>
+                                    <TextBlock Text="{Binding Notes}"
+                                               FontSize="12"
+                                               TextWrapping="Wrap"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                </StackPanel>
+
+                                <!-- Category -->
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Category:"
+                                               FontSize="11"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource MutedTextBrush}"/>
+                                    <TextBlock Text="{Binding Group}"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!-- Footer -->
+        <Border Grid.Row="2" Padding="25,20" BorderThickness="0,1,0,0"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                Background="{DynamicResource ContentBackgroundBrush}">
+            <StackPanel Orientation="Horizontal" Spacing="15" HorizontalAlignment="Right">
+                <TextBlock Text="{Binding TotalCredentialsText}"
+                           FontSize="13"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource MutedTextBrush}"/>
+                <Button Content="Close Preview"
+                        Command="{Binding CloseCommand}"
+                        Width="140"
+                        Height="36"
+                        FontSize="13"
+                        Background="{DynamicResource AccentBrush}"
+                        Foreground="White"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

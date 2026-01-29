@@ -1,0 +1,84 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PhantomVault.UI.Views.Settings.ImportExportSettingsView">
+    <StackPanel Spacing="20" Margin="0,0,30,60">
+        <TextBlock Text="Import / Export" 
+                   FontSize="{StaticResource Type.H3.Size}" 
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+        
+        <!-- Import Section -->
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Import Credentials" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <TextBlock Text="Import credentials from other password managers (CSV, KeePass, Bitwarden, LastPass, 1Password, Chrome, Edge, Firefox)" 
+                           FontSize="12" 
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
+                <Button Command="{Binding $parent[Window].DataContext.OpenImportWindowCommand}"
+                        Classes="liquid-glass"
+                        HorizontalAlignment="Left"
+                        Width="180"
+                        Height="40"
+                        Margin="0,8,0,0">
+                    <TextBlock Text="Import Credentials" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                </Button>
+            </StackPanel>
+        </Border>
+        
+        <!-- Export Section -->
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Export Credentials" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <TextBlock Text="Export your vault data to portable formats for backup or migration" 
+                           FontSize="12" 
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
+                <Grid ColumnDefinitions="*,12,*,12,*" Margin="0,8,0,0">
+                    <Button Grid.Column="0"
+                            Command="{Binding $parent[Window].DataContext.ExportVaultCommand}"
+                            Classes="liquid-glass"
+                            HorizontalAlignment="Stretch"
+                            Height="40">
+                        <TextBlock Text="Export JSON" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
+                    <Button Grid.Column="2"
+                            Command="{Binding $parent[Window].DataContext.ExportVaultCsvCommand}"
+                            Classes="liquid-glass"
+                            HorizontalAlignment="Stretch"
+                            Height="40">
+                        <TextBlock Text="Export CSV" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
+                    <Button Grid.Column="4"
+                            Command="{Binding $parent[Window].DataContext.ExportKeePassCommand}"
+                            Classes="liquid-glass"
+                            HorizontalAlignment="Stretch"
+                            Height="40">
+                        <TextBlock Text="Export KeePass" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
+                </Grid>
+                <TextBlock Text="⚠ Exported files contain unencrypted passwords. Store them securely!" 
+                           FontSize="11" 
+                           Foreground="{DynamicResource WarningBrush}"
+                           TextWrapping="Wrap"
+                           Margin="0,8,0,0"/>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>
+
+

@@ -1,0 +1,100 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="400"
+             x:Class="PhantomVault.UI.Controls.HeroHeader"
+             x:Name="HeroRoot">
+    
+    <!-- ═══════════════════════════════════════════════════════════════════════════════
+         HeroHeader - Reusable hero section component
+         Deep navy gradient background, pill badge, large title, optional glass card
+         ═══════════════════════════════════════════════════════════════════════════════ -->
+    
+    <Border Background="{DynamicResource Brush.HeroGradient}"
+            Padding="48,40">
+        
+        <!-- Vignette overlay for depth -->
+        <Border.OpacityMask>
+            <RadialGradientBrush Center="0.5,0.5" RadiusX="1" RadiusY="1">
+                <GradientStop Color="#FFFFFFFF" Offset="0"/>
+                <GradientStop Color="#FFFFFFFF" Offset="0.7"/>
+                <GradientStop Color="#E0FFFFFF" Offset="1"/>
+            </RadialGradientBrush>
+        </Border.OpacityMask>
+        
+        <Grid ColumnDefinitions="*,Auto">
+            
+            <!-- Left Side: Badge + Title + Subtitle -->
+            <StackPanel Grid.Column="0" 
+                        Spacing="16" 
+                        VerticalAlignment="Center"
+                        MaxWidth="600">
+                
+                <!-- Pill Badge (only badge uses pill radius) -->
+                <Border Classes="pill-badge"
+                        HorizontalAlignment="Left"
+                        IsVisible="{Binding BadgeText, ElementName=HeroRoot, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <!-- Teal dot indicator -->
+                        <Ellipse Width="8" Height="8"
+                                 Fill="{DynamicResource Brush.Accent}"
+                                 VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding BadgeText, ElementName=HeroRoot}"
+                                   FontSize="12"
+                                   FontWeight="Medium"
+                                   Foreground="{DynamicResource Brush.TextOnDark}"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Main Title (uppercase, wide tracking) -->
+                <TextBlock Text="{Binding Title, ElementName=HeroRoot}"
+                           Classes="hero-title"
+                           TextWrapping="Wrap"
+                           LineHeight="1.1">
+                    <TextBlock.RenderTransform>
+                        <TranslateTransform/>
+                    </TextBlock.RenderTransform>
+                </TextBlock>
+                
+                <!-- Subtitle -->
+                <TextBlock Text="{Binding Subtitle, ElementName=HeroRoot}"
+                           Classes="hero-subtitle"
+                           TextWrapping="Wrap"
+                           MaxWidth="500"
+                           IsVisible="{Binding Subtitle, ElementName=HeroRoot, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                
+                <!-- Optional action buttons slot -->
+                <ContentPresenter Content="{Binding ActionsContent, ElementName=HeroRoot}"
+                                  Margin="0,8,0,0"
+                                  IsVisible="{Binding ActionsContent, ElementName=HeroRoot, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+            </StackPanel>
+            
+            <!-- Right Side: Optional Glass Card Panel -->
+            <Border Grid.Column="1"
+                    Classes="glass-card"
+                    MinWidth="300"
+                    MaxWidth="450"
+                    Margin="48,0,0,0"
+                    VerticalAlignment="Center"
+                    IsVisible="{Binding ShowGlassPanel, ElementName=HeroRoot}">
+                
+                <StackPanel Spacing="12">
+                    <!-- Glass panel header -->
+                    <TextBlock Text="{Binding GlassPanelTitle, ElementName=HeroRoot}"
+                               FontSize="14"
+                               FontWeight="Medium"
+                               Foreground="{DynamicResource Brush.TextMuted}"
+                               IsVisible="{Binding GlassPanelTitle, ElementName=HeroRoot, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                    
+                    <!-- Glass panel content slot -->
+                    <ContentPresenter Content="{Binding GlassPanelContent, ElementName=HeroRoot}"/>
+                </StackPanel>
+            </Border>
+            
+        </Grid>
+    </Border>
+    
+</UserControl>
+

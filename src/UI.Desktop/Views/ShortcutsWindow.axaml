@@ -1,0 +1,21 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PhantomVault.UI.Views.ShortcutsWindow"
+        Width="480" Height="360"
+        WindowStartupLocation="CenterOwner"
+        Title="Keyboard Shortcuts">
+  <Grid RowDefinitions="Auto,*" Margin="16">
+    <TextBlock Text="Keyboard Shortcuts" FontSize="18" FontWeight="Bold" />
+    <DataGrid Grid.Row="1"
+              ItemsSource="{Binding Shortcuts}"
+              HeadersVisibility="Column"
+              AutoGenerateColumns="False"
+              IsReadOnly="True">
+      <DataGrid.Columns>
+        <DataGridTextColumn Header="Action" Binding="{Binding Action}" Width="2*"/>
+        <DataGridTextColumn Header="Keys" Binding="{Binding Keys}" Width="*"/>
+      </DataGrid.Columns>
+    </DataGrid>
+  </Grid>
+</Window>
+

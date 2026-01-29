@@ -1,0 +1,16 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Sidebar hover effects -->
+    <!-- WCAG AA Accessibility: Increased opacity for better visual feedback -->
+    <SolidColorBrush x:Key="SidebarHeadingHoverBrush" Color="#20000000"/>
+    <SolidColorBrush x:Key="SidebarHoverBaseGreyBrush" Color="#18000000"/>
+
+    <!-- Composite hover: subtle grey base plus the glass tint on top to simulate depth -->
+    <LinearGradientBrush x:Key="SidebarHeadingHoverCompositeBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#18000000" Offset="0"/>
+        <GradientStop Color="#20000000" Offset="1"/>
+    </LinearGradientBrush>
+
+</ResourceDictionary>
+

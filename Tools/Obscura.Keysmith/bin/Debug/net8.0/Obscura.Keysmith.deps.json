@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "Obscura.Keysmith/1.0.0": {
+        "runtime": {
+          "Obscura.Keysmith.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Obscura.Keysmith/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

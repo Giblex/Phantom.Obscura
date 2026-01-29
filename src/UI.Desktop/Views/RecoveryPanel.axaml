@@ -1,0 +1,84 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:recovery="clr-namespace:PhantomRecovery.App.Views;assembly=PhantomRecovery.App"
+             x:Class="PhantomVault.UI.Views.RecoveryPanel"
+             Background="{DynamicResource WindowBackgroundBrush}">
+    
+    <Border Background="{DynamicResource ContentBackgroundBrush}"
+            BorderBrush="{DynamicResource ControlBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="6"
+            Margin="12">
+        <Grid RowDefinitions="Auto,*">
+            <!-- Header -->
+            <Border Grid.Row="0"
+                    Background="{DynamicResource HeaderBackgroundBrush}"
+                    Padding="16,12"
+                    CornerRadius="6,6,0,0">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Grid.Column="0" Spacing="4">
+                        <TextBlock Text="PhantomRecovery"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource HeaderTextBrush}"/>
+                        <TextBlock Text="Recover and manage vault artifacts"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource HeaderTextBrush}"
+                                   Opacity="0.8"/>
+                    </StackPanel>
+                    <Button Grid.Column="1"
+                            Content="✕"
+                            Classes="copy-btn"
+                            Width="32"
+                            Height="32"
+                            FontSize="16"
+                            Click="Close_Click"
+                            ToolTip.Tip="Close Recovery Panel"/>
+                </Grid>
+            </Border>
+
+            <!-- Recovery Content -->
+            <recovery:MainView x:Name="RecoveryView"
+                              Grid.Row="1"/>
+
+            <!-- Progress Overlay -->
+            <Border x:Name="ProgressOverlay"
+                    Grid.RowSpan="2"
+                    Background="#CC000000"
+                    IsVisible="False">
+                <StackPanel HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           Spacing="16">
+                    <!-- Spinning indicator -->
+                    <Border Width="64"
+                            Height="64"
+                            BorderBrush="{DynamicResource Brush.Accent}"
+                            BorderThickness="4"
+                            CornerRadius="32"
+                            RenderTransformOrigin="0.5,0.5">
+                        <Border.RenderTransform>
+                            <RotateTransform Angle="0"/>
+                        </Border.RenderTransform>
+                        <Border.Styles>
+                            <Style Selector="Border">
+                                <!-- Animation removed - RenderTransform not supported -->
+                            </Style>
+                        </Border.Styles>
+                    </Border>
+                    
+                    <TextBlock Text="Initializing Recovery Vault..."
+                              FontSize="16"
+                              FontWeight="SemiBold"
+                              Foreground="White"
+                              HorizontalAlignment="Center"/>
+                    
+                    <TextBlock Text="Please wait while we configure USB binding"
+                              FontSize="12"
+                              Foreground="White"
+                              Opacity="0.8"
+                              HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
+</UserControl>

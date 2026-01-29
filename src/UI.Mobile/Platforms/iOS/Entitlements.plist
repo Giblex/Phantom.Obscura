@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Allow access to external storage (USB-C/Lightning drives) -->
+	<key>com.apple.developer.usernotifications.critical-alerts</key>
+	<false/>
+
+	<!-- File provider access for Files app integration -->
+	<key>com.apple.security.files.user-selected.read-write</key>
+	<true/>
+
+	<!-- Keychain sharing for secure credential storage -->
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)com.phantomvault.mobile</string>
+	</array>
+
+	<!-- Face ID / Touch ID usage -->
+	<key>com.apple.developer.authentication-services.autofill-credential-provider</key>
+	<true/>
+</dict>
+</plist>

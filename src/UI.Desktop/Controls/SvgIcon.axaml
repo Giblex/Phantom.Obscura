@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:svg="clr-namespace:Avalonia.Svg.Skia;assembly=Avalonia.Svg.Skia"
+             x:Class="PhantomVault.UI.Desktop.Controls.SvgIcon">
+
+    <Viewbox Width="{Binding $parent[UserControl].Width}"
+             Height="{Binding $parent[UserControl].Height}"
+             Stretch="Uniform">
+        <Panel>
+            <!-- SVG content will be loaded dynamically -->
+            <Path x:Name="IconPath"
+                  Fill="Transparent"
+                  Stroke="{Binding $parent[UserControl].IconColor}"
+                  StrokeThickness="2"
+                  StrokeLineCap="Round"
+                  StrokeJoin="Round"
+                  Stretch="Uniform"
+                  Width="24"
+                  Height="24"/>
+        </Panel>
+    </Viewbox>
+
+</UserControl>

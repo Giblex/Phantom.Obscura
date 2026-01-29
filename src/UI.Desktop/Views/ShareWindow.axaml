@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:ThemeAwareWindow
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="https://github.com/avaloniaui/design"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="clr-namespace:PhantomVault.UI.ViewModels"
+    xmlns:views="clr-namespace:PhantomVault.UI.Views"
+    mc:Ignorable="d"
+    x:Class="PhantomVault.UI.Views.ShareWindow"
+    Title="Share Credential"
+    Width="540"
+    Height="420"
+    MinWidth="480"
+    MinHeight="360"
+    WindowStartupLocation="CenterOwner"
+    Background="{DynamicResource WindowBackgroundBrush}"
+    Classes="animated-window">
+    <Border Margin="20"
+            Padding="20"
+            Background="{DynamicResource ContentBackgroundBrush}"
+            BorderBrush="{DynamicResource ControlBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="10">
+        <StackPanel Spacing="12">
+            <TextBlock Text="Select credential:" Foreground="{DynamicResource PrimaryTextBrush}"/>
+            <ComboBox ItemsSource="{Binding Credentials}" SelectedItem="{Binding SelectedCredential}">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Title}" />
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
+            <TextBlock Text="Recipient public key (PEM):" Foreground="{DynamicResource PrimaryTextBrush}"/>
+            <TextBox Text="{Binding RecipientPublicKeyPem}" AcceptsReturn="True" Height="100"/>
+            <Button Content="Generate Share" Command="{Binding ShareCommand}" Width="160" HorizontalAlignment="Left"/>
+            <TextBlock Text="Share package (JSON):" Foreground="{DynamicResource PrimaryTextBrush}"/>
+            <TextBox Text="{Binding SharePackageJson}" AcceptsReturn="True" Height="150"/>
+        </StackPanel>
+    </Border>
+</views:ThemeAwareWindow>
+

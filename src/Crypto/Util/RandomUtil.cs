@@ -1,0 +1,2 @@
+using System.Security.Cryptography;
+namespace GiblexVault.Security.ZK.Util { internal static class RandomUtil { public static byte[] Bytes(int len) { var b = new byte[len]; RandomNumberGenerator.Fill(b); return b; } } }

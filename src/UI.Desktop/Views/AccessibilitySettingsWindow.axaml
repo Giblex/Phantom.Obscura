@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PhantomVault.UI.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="750" d:DesignHeight="900"
+        x:Class="PhantomVault.UI.Views.AccessibilitySettingsWindow"
+        x:DataType="vm:AccessibilitySettingsViewModel"
+        Title="Accessibility Settings"
+        Width="750" Height="900"
+        MinWidth="650" MinHeight="700"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Classes="animated-window">
+
+    <Design.DataContext>
+        <vm:AccessibilitySettingsViewModel/>
+    </Design.DataContext>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Border Padding="30,20">
+            <StackPanel Spacing="25">
+                
+                <!-- Header -->
+                <StackPanel Spacing="8">
+                    <TextBlock Text="♿ Accessibility Settings"
+                               FontSize="24"
+                               FontWeight="Bold"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="Customize the interface to match your preferences and needs"
+                               FontSize="13"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               HorizontalAlignment="Center"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Language Settings -->
+                <Border BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{DynamicResource Radius.Md}"
+                        Padding="20"
+                        Background="{DynamicResource CardBackgroundBrush}">
+                    <StackPanel Spacing="15">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="🌍" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Text="Language"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="Choose your preferred language for the interface"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   TextWrapping="Wrap"/>
+                        <ComboBox ItemsSource="{Binding AvailableLanguages}"
+                                  SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"
+                                  Width="300"
+                                  Height="36"
+                                  FontSize="13"
+                                  HorizontalAlignment="Left"/>
+                        <TextBlock Text="Note: Language changes will take effect after restarting the application"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   FontStyle="Italic"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Theme Settings -->
+                <Border BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{DynamicResource Radius.Md}"
+                        Padding="20"
+                        Background="{DynamicResource CardBackgroundBrush}">
+                    <StackPanel Spacing="15">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="🎨" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Text="Theme Appearance"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Dark/Light Theme Toggle -->
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="Color Mode"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"/>
+                            <CheckBox Content="Use dark theme"
+                                      IsChecked="{Binding IsDarkTheme, Mode=TwoWay}"
+                                      FontSize="13"/>
+                            <Button Content="Toggle Theme"
+                                    Command="{Binding ToggleThemeCommand}"
+                                    Width="150"
+                                    Height="36"
+                                    HorizontalAlignment="Left"/>
+                        </StackPanel>
+
+                        <!-- Theme Skin Selection -->
+                        <StackPanel Spacing="12" Margin="0,10,0,0">
+                            <TextBlock Text="Theme Skin"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"/>
+                            <TextBlock Text="Choose a color theme variant"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                            <ComboBox ItemsSource="{Binding AvailableThemeSkins}"
+                                      SelectedItem="{Binding SelectedThemeSkin, Mode=TwoWay}"
+                                      Width="300"
+                                      Height="36"
+                                      FontSize="13"
+                                      HorizontalAlignment="Left"/>
+                        </StackPanel>
+
+                        <!-- High Contrast -->
+                        <CheckBox Content="Use high contrast mode"
+                                  IsChecked="{Binding UseHighContrast, Mode=TwoWay}"
+                                  FontSize="13"
+                                  Margin="0,10,0,0"
+                                  ToolTip.Tip="Increases contrast for better visibility"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Display Scale Settings -->
+                <Border BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{StaticResource Radius.Md}"
+                        Padding="20"
+                        Background="{DynamicResource CardBackgroundBrush}">
+                    <StackPanel Spacing="15">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="🔍" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Text="Display Scale"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="Adjust the size of text and interface elements"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   TextWrapping="Wrap"/>
+                        
+                        <ComboBox ItemsSource="{Binding UiScaleOptions}"
+                                  SelectedItem="{Binding SelectedScaleOption, Mode=TwoWay}"
+                                  Width="300"
+                                  Height="36"
+                                  FontSize="13"
+                                  HorizontalAlignment="Left">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Label}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        
+                        <TextBlock Text="Changes take effect immediately"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource SuccessBrush}"
+                                   FontStyle="Italic"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- View Preferences -->
+                <Border BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{StaticResource Radius.Md}"
+                        Padding="20"
+                        Background="{DynamicResource CardBackgroundBrush}">
+                    <StackPanel Spacing="15">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="☷" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Text="Default View Preference"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="Choose how credentials are displayed by default"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   TextWrapping="Wrap"/>
+                        
+                        <StackPanel Spacing="10">
+                            <RadioButton Content="List View (Default)"
+                                         IsChecked="{Binding IsListViewDefault, Mode=TwoWay}"
+                                         FontSize="13"
+                                         ToolTip.Tip="Show credentials in a detailed list format"/>
+                            <RadioButton Content="Grid View"
+                                         IsChecked="{Binding IsGridViewDefault, Mode=TwoWay}"
+                                         FontSize="13"
+                                         ToolTip.Tip="Show credentials as cards in a grid layout"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Autofill Preferences -->
+                <Border BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{StaticResource Radius.Md}"
+                        Padding="20"
+                        Background="{DynamicResource CardBackgroundBrush}">
+                    <StackPanel Spacing="15">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="📧" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Text="Autofill Preferences"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock Text="Set default values for new credential entries"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   TextWrapping="Wrap"/>
+                        
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Default Email/Username"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"/>
+                            <TextBox Text="{Binding DefaultEmailUsername, Mode=TwoWay}"
+                                     Watermark="user@example.com"
+                                     Width="350"
+                                     Height="36"
+                                     FontSize="13"
+                                     HorizontalAlignment="Left"
+                                     ToolTip.Tip="This will be pre-filled when creating new login entries"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Keyboard Shortcuts -->
+                <Border BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{StaticResource Radius.Md}"
+                        Padding="20"
+                        Background="{DynamicResource CardBackgroundBrush}">
+                    <StackPanel Spacing="15">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="⌨️" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Text="Keyboard Shortcuts"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                        
+                        <CheckBox Content="Show keyboard shortcut hints"
+                                  IsChecked="{Binding ShowShortcutHints, Mode=TwoWay}"
+                                  FontSize="13"
+                                  ToolTip.Tip="Display keyboard shortcuts in tooltips and menus"/>
+                        
+                        <Button Command="{Binding ViewShortcutsCommand}"
+                                Height="36"
+                                HorizontalAlignment="Stretch">
+                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                <TextBlock Text="⚙️" FontSize="16" VerticalAlignment="Center"/>
+                                <TextBlock Text="View &amp; Customize Shortcuts" FontSize="13" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        
+                        <TextBlock Text="Common shortcuts: Ctrl+N (New), Ctrl+F (Search), Ctrl+C (Copy), Ctrl+L (Lock)"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,5,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Additional Accessibility Features -->
+                <Border BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{StaticResource Radius.Md}"
+                        Padding="20"
+                        Background="{DynamicResource CardBackgroundBrush}">
+                    <StackPanel Spacing="15">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="♿" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Text="Additional Features"
+                                       FontSize="16"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                        
+                        <CheckBox Content="Reduce motion and animations"
+                                  IsChecked="{Binding ReduceMotion, Mode=TwoWay}"
+                                  FontSize="13"
+                                  ToolTip.Tip="Minimize animations for users sensitive to motion"/>
+                        
+                        <CheckBox Content="Use larger tooltips"
+                                  IsChecked="{Binding LargeTooltips, Mode=TwoWay}"
+                                  FontSize="13"
+                                  ToolTip.Tip="Display tooltips with larger text for better readability"/>
+                        
+                        <TextBlock Text="Screen reader support: Enabled"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource SuccessBrush}"
+                                   Margin="0,10,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Action Buttons -->
+                <Border BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{StaticResource Radius.Md}"
+                        Padding="20"
+                        Background="{DynamicResource CardBackgroundBrush}">
+                    <StackPanel Spacing="12">
+                        <Button Command="{Binding ResetToDefaultsCommand}"
+                                Height="40"
+                                HorizontalAlignment="Stretch"
+                                Classes="liquid-glass">
+                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                <TextBlock Text="🔄" FontSize="16" VerticalAlignment="Center"/>
+                                <TextBlock Text="Reset All to Defaults" FontSize="14" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        
+                        <TextBlock Text="This will restore all accessibility settings to their default values"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   TextAlignment="Center"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </Border>
+    </ScrollViewer>
+</Window>

@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PhantomVault.UI.ViewModels"
+        x:Class="PhantomVault.UI.Views.AddCategoryDialog"
+        Title="Add New Category"
+        Width="800"
+        Height="600"
+        MinWidth="700"
+        MinHeight="500"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource WindowBackgroundBrush}">
+    
+    <Design.DataContext>
+        <vm:AddCategoryDialogViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+        <!-- Header -->
+        <Border Grid.Row="0"
+                Background="#FF2A4560"
+                Padding="20,16"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                BorderThickness="0,0,0,1">
+            <TextBlock Text="Add New Category"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       Foreground="White"/>
+        </Border>
+
+        <!-- Source category selector -->
+        <Border Grid.Row="1" Padding="20,16" Background="{DynamicResource ContentBackgroundBrush}">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Select source category to populate from:"
+                           FontSize="13"
+                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                <ComboBox ItemsSource="{Binding SourceCategories}"
+                          SelectedItem="{Binding SelectedSourceCategory}"
+                          Width="300"
+                          HorizontalAlignment="Left"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Two-column drag-drop area -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,*" Margin="20">
+            <!-- Left column: Source entries -->
+            <Border Grid.Column="0"
+                    Background="{DynamicResource ContentBackgroundBrush}"
+                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Margin="0,0,10,0">
+                <Grid RowDefinitions="Auto,*">
+                    <Border Grid.Row="0"
+                            Background="{DynamicResource HeaderBackgroundBrush}"
+                            Padding="12,8"
+                            CornerRadius="8,8,0,0">
+                        <TextBlock Text="{Binding SourceColumnHeader}"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    </Border>
+                    <ListBox Grid.Row="1"
+                             x:Name="SourceListBox"
+                             ItemsSource="{Binding SourceEntries}"
+                             SelectionMode="Multiple"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             DragDrop.AllowDrop="True"
+                             Padding="8">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{DynamicResource TileGlassBrush}"
+                                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        Padding="10,8"
+                                        Margin="0,2">
+                                    <TextBlock Text="{Binding Title}"
+                                               FontSize="13"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <!-- Right column: New category destination -->
+            <Border Grid.Column="1"
+                    Background="{DynamicResource ContentBackgroundBrush}"
+                    BorderBrush="{DynamicResource AccentBrush}"
+                    BorderThickness="2"
+                    CornerRadius="8"
+                    Margin="10,0,0,0">
+                <Grid RowDefinitions="Auto,*">
+                    <Border Grid.Row="0"
+                            Background="{DynamicResource AccentBrush}"
+                            Padding="12,8"
+                            CornerRadius="6,6,0,0">
+                        <TextBlock Text="New Category"
+                                   FontWeight="SemiBold"
+                                   Foreground="White"/>
+                    </Border>
+                    <ListBox Grid.Row="1"
+                             x:Name="DestinationListBox"
+                             ItemsSource="{Binding DestinationEntries}"
+                             SelectionMode="Multiple"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             DragDrop.AllowDrop="True"
+                             Padding="8">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{DynamicResource TileGlassBrush}"
+                                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        Padding="10,8"
+                                        Margin="0,2">
+                                    <TextBlock Text="{Binding Title}"
+                                               FontSize="13"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Bottom action bar -->
+        <Border Grid.Row="3"
+                Background="{DynamicResource WindowBackgroundBrush}"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="20,12">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="0" Spacing="4">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="New category name:"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        <TextBox Text="{Binding NewCategoryName}"
+                                 Width="200"
+                                 Watermark="Enter category name"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding ValidationError}"
+                               Foreground="#FFE74C3C"
+                               FontSize="12"
+                               Margin="150,0,0,0"
+                               IsVisible="{Binding ValidationError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                    <Button Content="Apply"
+                            Width="120"
+                            Command="{Binding ApplyCommand}"
+                            Classes="liquid-glass primary"/>
+                    <Button Content="Cancel"
+                            Width="100"
+                            Command="{Binding CancelCommand}"
+                            Classes="liquid-glass"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

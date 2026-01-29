@@ -1,0 +1,294 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <!-- PhantomVault Custom Theme: Matted Light Navy Blue with Charcoal Grey -->
+    
+    <Style>
+        <Style.Resources>
+            <!-- Color Palette -->
+            <!-- Main Background: Light Navy Blue with Charcoal blend (#2B3A4A) -->
+            <SolidColorBrush x:Key="WindowBackgroundBrush">#39506A</SolidColorBrush>
+            
+            <!-- Header Background: Slightly darker navy (#3D4F61) -->
+            <SolidColorBrush x:Key="HeaderBackgroundBrush">#3D4F61</SolidColorBrush>
+            
+            <!-- Footer Background: Darker charcoal-navy (#34424F) -->
+            <SolidColorBrush x:Key="FooterBackgroundBrush">#34424F</SolidColorBrush>
+            
+            <!-- Content Background: Slightly lighter than main (#35475B) -->
+            <SolidColorBrush x:Key="ContentBackgroundBrush">#35475B</SolidColorBrush>
+            
+            <!-- Accent Color: Pastel Duller Blue (#6B8CAE) -->
+            <SolidColorBrush x:Key="AccentBrush">#6B8CAE</SolidColorBrush>
+            
+            <!-- Accent Hover: Slightly Lighter Pastel Blue (#7FA3C3) -->
+            <SolidColorBrush x:Key="AccentHoverBrush">#7FA3C3</SolidColorBrush>
+            
+            <!-- Secondary Accent: Muted Teal (#6FA89F) -->
+            <SolidColorBrush x:Key="SecondaryAccentBrush">#6FA89F</SolidColorBrush>
+            
+            <!-- Text Colors -->
+            <SolidColorBrush x:Key="PrimaryTextBrush">#FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="SecondaryTextBrush">#E0E6ED</SolidColorBrush>
+            <SolidColorBrush x:Key="MutedTextBrush">#B0B8C0</SolidColorBrush>
+            <SolidColorBrush x:Key="DisabledTextBrush">#7A8590</SolidColorBrush>
+            
+            <!-- Control Backgrounds -->
+            <SolidColorBrush x:Key="ControlBackgroundBrush">#1E2530</SolidColorBrush>
+            <!-- IMPROVED: Better contrast border for accessibility (WCAG AA compliant) -->
+            <SolidColorBrush x:Key="ControlBorderBrush">#6A8BAF</SolidColorBrush>
+            
+            <!-- Success/Warning/Error Text Colors -->
+            <!-- Changed to a softer pastel/dull green per UX request -->
+            <SolidColorBrush x:Key="SuccessBrush">#B8E6C8</SolidColorBrush>
+            <SolidColorBrush x:Key="WarningBrush">#FFC107</SolidColorBrush>
+            <SolidColorBrush x:Key="ErrorBrush">#F48771</SolidColorBrush>
+            
+            <!-- Dialog/Info Background Colors - Dull Navy Blue -->
+            <SolidColorBrush x:Key="SuccessBackgroundBrush">#3D4F61</SolidColorBrush>
+            <SolidColorBrush x:Key="WarningBackgroundBrush">#3D4F61</SolidColorBrush>
+            <SolidColorBrush x:Key="ErrorBackgroundBrush">#3D4F61</SolidColorBrush>
+            <SolidColorBrush x:Key="InfoBackgroundBrush">#3D4F61</SolidColorBrush>
+            
+            <!-- Font Family -->
+            <FontFamily x:Key="MainFontFamily">Segoe UI</FontFamily>
+            
+            <!-- Text Selection Colors -->
+            <!-- Light grey selection for dark theme -->
+            <SolidColorBrush x:Key="TextSelectionBrush">#60A0A0A0</SolidColorBrush>
+            <SolidColorBrush x:Key="TextCaretBrush">#FFFFFF</SolidColorBrush>
+
+            <!-- FIXED: Dark input surface for dark theme (was light #F5F7FA) -->
+            <SolidColorBrush x:Key="InputBackgroundBrush">#4A5C6E</SolidColorBrush>
+            <SolidColorBrush x:Key="InputForegroundBrush">#FFFFFF</SolidColorBrush>
+            <!-- IMPROVED: Better contrast placeholder text for dark theme -->
+            <SolidColorBrush x:Key="InputPlaceholderBrush">#C5CDD5</SolidColorBrush>
+
+            <!-- ADDED: Dropdown/Flyout brushes for dark theme -->
+            <SolidColorBrush x:Key="FlyoutPresenterBackground">#35475B</SolidColorBrush>
+            <SolidColorBrush x:Key="MenuFlyoutPresenterBackground">#35475B</SolidColorBrush>
+            <SolidColorBrush x:Key="ComboBoxDropDownBackground">#35475B</SolidColorBrush>
+            <SolidColorBrush x:Key="PopupBackgroundBrush">#35475B</SolidColorBrush>
+            <SolidColorBrush x:Key="SystemControlBackgroundChromeMediumLowBrush">#35475B</SolidColorBrush>
+            <SolidColorBrush x:Key="SystemControlForegroundBaseHighBrush">#FFFFFF</SolidColorBrush>
+
+            <!-- ComboBox item states for dark theme - SUBTLER: Barely visible highlights -->
+            <SolidColorBrush x:Key="ComboBoxItemBackground">#35475B</SolidColorBrush>
+            <!-- SUBTLER: Barely noticeable hover (was #4A5C6E) -->
+            <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver">#3A4D62</SolidColorBrush>
+            <!-- SUBTLER: Subtle pressed/selected (was #556D8A) -->
+            <SolidColorBrush x:Key="ComboBoxItemBackgroundPressed">#3F5368</SolidColorBrush>
+            <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected">#3F5368</SolidColorBrush>
+            <SolidColorBrush x:Key="ComboBoxItemForeground">#FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="ComboBoxItemForegroundPointerOver">#FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="ComboBoxItemForegroundPressed">#FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="ComboBoxItemForegroundSelected">#FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="ComboBoxItemForegroundDisabled">#7A8590</SolidColorBrush>
+
+            <!-- ADDED: Focus and accessibility colors -->
+            <SolidColorBrush x:Key="FocusBorderBrush">#7FA3C3</SolidColorBrush>
+            <SolidColorBrush x:Key="FocusGlowBrush">#406B8CAE</SolidColorBrush>
+            <x:Double x:Key="FocusBorderThickness">2</x:Double>
+        </Style.Resources>
+    </Style>
+    
+    <!-- Global Text Style -->
+    <Style Selector="TextBlock">
+        <Setter Property="FontFamily" Value="{DynamicResource MainFontFamily}" />
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+    </Style>
+    
+    <!-- Button Styles -->
+    <Style Selector="Button">
+        <Setter Property="FontFamily" Value="{DynamicResource MainFontFamily}" />
+        <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="12,6" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="MinHeight" Value="36" />
+        <Setter Property="MinWidth" Value="90" />
+    </Style>
+    
+    <Style Selector="Button:pointerover">
+        <Setter Property="Background" Value="{DynamicResource AccentHoverBrush}" />
+    </Style>
+    
+    <Style Selector="Button:disabled">
+        <Setter Property="Opacity" Value="0.4" />
+        <Setter Property="Cursor" Value="Arrow" />
+    </Style>
+
+    <!-- ADDED: Focus state for accessibility -->
+    <Style Selector="Button:focus-visible">
+        <Setter Property="BorderBrush" Value="{DynamicResource FocusBorderBrush}" />
+        <Setter Property="BorderThickness" Value="{DynamicResource FocusBorderThickness}" />
+        <Setter Property="RenderTransform">
+            <TransformGroup>
+                <ScaleTransform ScaleX="1.02" ScaleY="1.02"/>
+            </TransformGroup>
+        </Setter>
+    </Style>
+    
+    <Style Selector="Button.secondary">
+        <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}" />
+    </Style>
+    
+    <Style Selector="Button.secondary:pointerover">
+        <Setter Property="Background" Value="{DynamicResource ControlBorderBrush}" />
+    </Style>
+    
+    <Style Selector="Button.secondary:disabled">
+        <Setter Property="Opacity" Value="0.3" />
+        <Setter Property="Cursor" Value="Arrow" />
+    </Style>
+    
+    <!-- Accent Button Style (liquid glass with accent tint) -->
+    <Style Selector="Button.accent">
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Foreground" Value="#FFFFFF"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="MinHeight" Value="36"/>
+        <Setter Property="Padding" Value="16,8"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Panel>
+                    <Border Name="BaseBorder"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            BorderBrush="#70FFFFFF"
+                            ClipToBounds="True">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                <GradientStop Color="#90A855F7" Offset="0"/>
+                                <GradientStop Color="#70A855F7" Offset="0.55"/>
+                                <GradientStop Color="#60A855F7" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                    </Border>
+                    <Border Margin="1"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            BorderThickness="1"
+                            BorderBrush="#30FFFFFF"
+                            IsHitTestVisible="False"/>
+                    <Border Height="16"
+                            VerticalAlignment="Top"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            Opacity="0.85"
+                            IsHitTestVisible="False">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                <GradientStop Color="#30FFFFFF" Offset="0"/>
+                                <GradientStop Color="#00FFFFFF" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                    </Border>
+                    <ContentPresenter Name="PART_ContentPresenter"
+                                      Margin="{TemplateBinding Padding}"
+                                      HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                      VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                      Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      RecognizesAccessKey="True"/>
+                </Panel>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    
+    <Style Selector="Button.accent:pointerover /template/ Border#BaseBorder">
+        <Setter Property="BorderBrush" Value="#A0FFFFFF"/>
+        <Setter Property="Background">
+            <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                <GradientStop Color="#A0A855F7" Offset="0"/>
+                <GradientStop Color="#80A855F7" Offset="0.55"/>
+                <GradientStop Color="#70A855F7" Offset="1"/>
+            </LinearGradientBrush>
+        </Setter>
+    </Style>
+    
+    <Style Selector="Button.accent:pressed">
+        <Setter Property="RenderTransform">
+            <TranslateTransform Y="1"/>
+        </Setter>
+    </Style>
+    
+    <!-- TextBox Styles -->
+    <Style Selector="TextBox">
+        <Setter Property="FontFamily" Value="{DynamicResource MainFontFamily}" />
+        <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="8,6" />
+        <Setter Property="SelectionBrush" Value="{DynamicResource TextSelectionBrush}" />
+        <Setter Property="CaretBrush" Value="{DynamicResource TextCaretBrush}" />
+    </Style>
+
+    <!-- ADDED: TextBox focus and error states -->
+    <Style Selector="TextBox:focus">
+        <Setter Property="BorderBrush" Value="{DynamicResource FocusBorderBrush}" />
+        <Setter Property="BorderThickness" Value="2" />
+    </Style>
+
+    <Style Selector="TextBox.error">
+        <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}" />
+        <Setter Property="BorderThickness" Value="2" />
+    </Style>
+    
+    <!-- ComboBox Styles -->
+    <Style Selector="ComboBox">
+        <Setter Property="FontFamily" Value="{DynamicResource MainFontFamily}" />
+        <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
+    </Style>
+    
+    <!-- CheckBox Styles -->
+    <Style Selector="CheckBox">
+        <Setter Property="FontFamily" Value="{DynamicResource MainFontFamily}" />
+        <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
+    </Style>
+    
+    <!-- ScrollBar Styles - Fix scrollbar to go all the way down -->
+    <Style Selector="ScrollBar">
+        <Setter Property="Background" Value="{DynamicResource WindowBackgroundBrush}" />
+    </Style>
+    
+    <Style Selector="ScrollBar:vertical">
+        <Setter Property="Width" Value="12" />
+    </Style>
+    
+    <Style Selector="ScrollBar:horizontal">
+        <Setter Property="Height" Value="12" />
+    </Style>
+    
+    <Style Selector="ScrollBar /template/ RepeatButton">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    
+    <Style Selector="ScrollBar /template/ Thumb">
+        <Setter Property="Background" Value="{DynamicResource ControlBorderBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    
+    <Style Selector="ScrollBar /template/ Thumb:pointerover">
+        <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+    </Style>
+    
+    <!-- ScrollViewer Styles -->
+    <Style Selector="ScrollViewer">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+    
+    <!-- MenuFlyout Rounded Corners -->
+    <Style Selector="MenuFlyoutPresenter">
+        <Setter Property="CornerRadius" Value="8" />
+    </Style>
+    
+</Styles>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PhantomVault.UI.Mobile.App">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
+                <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- PhantomVault Theme Colors (Obscura) -->
+            <Color x:Key="PrimaryColor">#1E1E2E</Color>
+            <Color x:Key="SecondaryColor">#2A2A3E</Color>
+            <Color x:Key="AccentColor">#6C5CE7</Color>
+            <Color x:Key="SurfaceColor">#252535</Color>
+            <Color x:Key="BackgroundColor">#1A1A26</Color>
+            <Color x:Key="TextPrimaryColor">#E8EAF0</Color>
+            <Color x:Key="TextSecondaryColor">#B0B8C0</Color>
+            <Color x:Key="ErrorColor">#FF6B6B</Color>
+            <Color x:Key="SuccessColor">#51CF66</Color>
+            <Color x:Key="WarningColor">#FFD93D</Color>
+
+            <!-- Brushes -->
+            <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource PrimaryColor}" />
+            <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource SecondaryColor}" />
+            <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
+            <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}" />
+            <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource BackgroundColor}" />
+            <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimaryColor}" />
+            <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}" />
+
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

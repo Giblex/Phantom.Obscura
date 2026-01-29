@@ -1,0 +1,221 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:PhantomVault.UI.ViewModels"
+        x:Class="PhantomVault.UI.Views.TotpScannerDialog"
+        Title="Add TOTP Authenticator"
+        Width="500"
+        Height="650"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="{DynamicResource WindowBackgroundBrush}">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="20">
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,20">
+            <TextBlock Text="Add Two-Factor Authentication"
+                       FontSize="20"
+                       FontWeight="Bold"
+                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+            <TextBlock Text="Scan a QR code or enter the secret manually"
+                       FontSize="13"
+                       Foreground="{DynamicResource MutedTextBrush}"/>
+        </StackPanel>
+
+        <!-- Content -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="20">
+                <!-- QR Code Scanner Section -->
+                <Border Background="{DynamicResource CardBackgroundBrush}"
+                        BorderThickness="1"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        CornerRadius="8"
+                        Padding="16">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Scan QR Code"
+                                   FontSize="15"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        
+                        <!-- Camera Preview (Placeholder - will be implemented with ZXing.Net) -->
+                        <Border Height="250"
+                                Background="{DynamicResource ControlBorderBrush}"
+                                CornerRadius="6"
+                                ClipToBounds="True">
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12">
+                                <TextBlock Text="📷"
+                                           FontSize="48"
+                                           HorizontalAlignment="Center"
+                                           Foreground="{DynamicResource MutedTextBrush}"/>
+                                <TextBlock Text="Camera Preview"
+                                           FontSize="14"
+                                           HorizontalAlignment="Center"
+                                           Foreground="{DynamicResource MutedTextBrush}"/>
+                                <Button Content="Start Camera"
+                                        Command="{Binding StartCameraCommand}"
+                                        Classes="primary-btn"
+                                        HorizontalAlignment="Center"
+                                        Padding="16,8"/>
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Text="{Binding QrScanStatus}"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   HorizontalAlignment="Center"
+                                   IsVisible="{Binding HasQrScanStatus}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Manual Entry Section -->
+                <Border Background="{DynamicResource CardBackgroundBrush}"
+                        BorderThickness="1"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        CornerRadius="8"
+                        Padding="16">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Manual Entry"
+                                   FontSize="15"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+                        <!-- Issuer -->
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Issuer (e.g., Google, GitHub)"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                            <TextBox Text="{Binding Issuer}"
+                                     Watermark="Enter service name"
+                                     Height="36"
+                                     Padding="10"/>
+                        </StackPanel>
+
+                        <!-- Account Name -->
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Account Name (e.g., user@example.com)"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                            <TextBox Text="{Binding AccountName}"
+                                     Watermark="Enter account identifier"
+                                     Height="36"
+                                     Padding="10"/>
+                        </StackPanel>
+
+                        <!-- Secret Key -->
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Secret Key *"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                            <TextBox Text="{Binding SecretKey}"
+                                     Watermark="Enter Base32 secret (e.g., JBSWY3DPEHPK3PXP)"
+                                     Height="36"
+                                     Padding="10"
+                                     FontFamily="Consolas,Courier New,monospace"/>
+                            <TextBlock Text="{Binding SecretValidationMessage}"
+                                       FontSize="11"
+                                       Foreground="{Binding SecretValidationColor}"
+                                       IsVisible="{Binding HasSecretValidationMessage}"/>
+                        </StackPanel>
+
+                        <!-- Advanced Settings (Collapsible) -->
+                        <Expander Header="Advanced Settings" IsExpanded="False">
+                            <StackPanel Spacing="12" Margin="0,12,0,0">
+                                <!-- Digits -->
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="Code Length"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource MutedTextBrush}"/>
+                                    <ComboBox SelectedItem="{Binding Digits}"
+                                              Width="100"
+                                              HorizontalAlignment="Left">
+                                        <ComboBoxItem Content="6" />
+                                        <ComboBoxItem Content="7" />
+                                        <ComboBoxItem Content="8" />
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <!-- Period -->
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="Time Step (seconds)"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource MutedTextBrush}"/>
+                                    <NumericUpDown Value="{Binding Period}"
+                                                   Minimum="15"
+                                                   Maximum="60"
+                                                   Increment="15"
+                                                   Width="100"
+                                                   HorizontalAlignment="Left"/>
+                                </StackPanel>
+
+                                <!-- Algorithm -->
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="Hash Algorithm"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource MutedTextBrush}"/>
+                                    <ComboBox SelectedItem="{Binding Algorithm}"
+                                              Width="120"
+                                              HorizontalAlignment="Left">
+                                        <ComboBoxItem Content="SHA1" />
+                                        <ComboBoxItem Content="SHA256" />
+                                        <ComboBoxItem Content="SHA512" />
+                                    </ComboBox>
+                                </StackPanel>
+                            </StackPanel>
+                        </Expander>
+                    </StackPanel>
+                </Border>
+
+                <!-- Preview Code -->
+                <Border Background="{DynamicResource AccentBrush}"
+                        Opacity="0.1"
+                        BorderThickness="1"
+                        BorderBrush="{DynamicResource AccentBrush}"
+                        CornerRadius="8"
+                        Padding="16"
+                        IsVisible="{Binding HasValidSecret}">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Preview Code"
+                                   FontSize="13"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource AccentBrush}"/>
+                        <TextBlock Text="{Binding PreviewCode}"
+                                   FontSize="28"
+                                   FontWeight="Bold"
+                                   FontFamily="Consolas,Courier New,monospace"
+                                   LetterSpacing="4"
+                                   HorizontalAlignment="Center"
+                                   Foreground="{DynamicResource AccentBrush}"/>
+                        <TextBlock Text="{Binding PreviewTimeRemaining, StringFormat='Refreshes in {0} seconds'}"
+                                   FontSize="11"
+                                   HorizontalAlignment="Center"
+                                   Foreground="{DynamicResource AccentBrush}"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Action Buttons -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto" Margin="0,20,0,0">
+            <CheckBox Grid.Column="0"
+                      IsChecked="{Binding LinkToCurrentEntry}"
+                      Content="Link to current password entry"
+                      VerticalAlignment="Center"
+                      FontSize="12"/>
+            
+            <Button Grid.Column="1"
+                    Content="Cancel"
+                    Command="{Binding CancelCommand}"
+                    Classes="secondary-btn"
+                    Width="100"
+                    Height="36"
+                    Margin="0,0,12,0"/>
+            
+            <Button Grid.Column="2"
+                    Content="Add TOTP"
+                    Command="{Binding SaveCommand}"
+                    Classes="primary-btn"
+                    Width="120"
+                    Height="36"
+                    IsEnabled="{Binding CanSave}"/>
+        </Grid>
+    </Grid>
+</Window>

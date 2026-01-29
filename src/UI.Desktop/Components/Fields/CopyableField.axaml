@@ -1,0 +1,47 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:Giblex.Controls"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="80"
+             x:Class="PhantomVault.UI.Components.Fields.CopyableField"
+             x:Name="Root">
+    
+    <StackPanel Spacing="{StaticResource Space6}">
+        <!-- Label -->
+        <TextBlock Text="{Binding #Root.Label}" 
+                   FontSize="13" 
+                   FontWeight="SemiBold" 
+                   Foreground="{DynamicResource MutedTextBrush}"/>
+        
+        <!-- Value TextBox + Copy/Action Button -->
+        <Grid ColumnDefinitions="*,Auto">
+            <TextBox Grid.Column="0" 
+                     x:Name="ValueTextBox"
+                     Text="{Binding #Root.Value}"
+                     IsReadOnly="True" 
+                     Background="{DynamicResource ControlBackgroundBrush}" 
+                     Foreground="{DynamicResource PrimaryTextBrush}" 
+                     BorderThickness="1" 
+                     BorderBrush="{DynamicResource ControlBorderBrush}" 
+                     Height="36" 
+                     Padding="8,16"/>
+            
+            <controls:LiquidGlassButton Grid.Column="1"
+                    x:Name="ActionButton"
+                    Command="{Binding #Root.CopyCommand}" 
+                    CommandParameter="{Binding #Root.CopyCommandParameter}"
+                    WidthOverride="36" 
+                    HeightOverride="36"
+                    CornerRadiusValue="8"
+                    PaddingOverride="0"
+                    Margin="8,0,0,0" 
+                    ToolTipText="{Binding #Root.ButtonTooltip}">
+                <TextBlock Text="⧉" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}"/>
+            </controls:LiquidGlassButton>
+        </Grid>
+    </StackPanel>
+    
+</UserControl>
+
+

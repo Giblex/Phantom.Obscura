@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PhantomVault.UI.Views.Details.DetailActionButtons">
+    
+    <!-- Action Buttons -->
+    <Grid ColumnDefinitions="*,*" Margin="0,8,0,0">
+        <Button Grid.Column="0"
+                Command="{Binding EditCredentialCommand}"
+                CommandParameter="{Binding SelectedCredential}"
+                Classes="liquid-glass"
+                HorizontalAlignment="Stretch"
+                Height="44"
+                FontWeight="SemiBold"
+                Margin="0,0,6,0">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Text="✎" FontSize="16" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <TextBlock Text="Edit" FontSize="14"/>
+            </StackPanel>
+        </Button>
+        <Button Grid.Column="1"
+                Command="{Binding DeleteCredentialCommand}"
+                CommandParameter="{Binding SelectedCredential}"
+                Background="{DynamicResource ErrorBrush}"
+                HorizontalAlignment="Stretch"
+                Height="44"
+                FontWeight="SemiBold"
+                Margin="6,0,0,0">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Text="🗑" FontSize="16"/>
+                <TextBlock Text="Delete" FontSize="14"/>
+            </StackPanel>
+        </Button>
+    </Grid>
+</UserControl>
+

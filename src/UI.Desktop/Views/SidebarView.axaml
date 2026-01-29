@@ -1,0 +1,619 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:nav="clr-namespace:PhantomVault.UI.Components.Navigation"
+             xmlns:controls="clr-namespace:PhantomVault.UI.Desktop.Controls"
+             mc:Ignorable="d" d:DesignWidth="220" d:DesignHeight="800"
+             x:Class="PhantomVault.UI.Views.SidebarView">
+
+    <UserControl.Styles>
+        <Style Selector="Button.collapsed-icon">
+            <Setter Property="Width" Value="52"/>
+            <Setter Property="Height" Value="52"/>
+            <Setter Property="MinWidth" Value="52"/>
+            <Setter Property="MinHeight" Value="52"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="ToggleButton.collapsed-icon">
+            <Setter Property="Width" Value="52"/>
+            <Setter Property="Height" Value="52"/>
+            <Setter Property="MinWidth" Value="52"/>
+            <Setter Property="MinHeight" Value="52"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+    </UserControl.Styles>
+    
+    <Border Background="{DynamicResource WindowBackgroundBrush}"
+            BorderBrush="{DynamicResource ControlBorderBrush}"
+            BorderThickness="0,0,1,0"
+            Padding="0"
+            Effect="{x:Null}">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Spacing="0" Margin="0,20">
+                
+                <!-- Dashboard and Passwords Buttons -->
+                <StackPanel Spacing="6" Margin="0,0,0,12" IsVisible="{Binding !IsSidebarCollapsed}">
+                    <ToggleButton Command="{Binding ShowDashboardCommand}"
+                                  IsChecked="{Binding IsShowingDashboard, Mode=OneWay}"
+                                  Classes="quick-filter"
+                                  ToolTip.Tip="Dashboard">
+                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
+                            <controls:SvgIcon IconName="Assets/SVG/Current/dashboard-outline.svg"
+                                              Width="14" Height="14" IconColor="White" />
+                            <TextBlock Text="Dashboard" FontSize="13" Foreground="White" VerticalAlignment="Center" IsVisible="{Binding !IsSidebarCollapsed}"/>
+                        </StackPanel>
+                    </ToggleButton>
+
+                    <ToggleButton Command="{Binding ShowPasswordsCommand}"
+                                  IsChecked="{Binding IsShowingPasswords, Mode=OneWay}"
+                                  Classes="quick-filter"
+                                  ToolTip.Tip="Passwords">
+                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
+                            <controls:SvgIcon IconName="Assets/SVG/Current/password-outline.svg"
+                                              Width="14" Height="14" IconColor="White" />
+                            <TextBlock Text="Passwords" FontSize="13" Foreground="White" VerticalAlignment="Center" IsVisible="{Binding !IsSidebarCollapsed}"/>
+                        </StackPanel>
+                    </ToggleButton>
+                </StackPanel>
+                
+                <!-- Collapsed Icon-Only View -->
+                <StackPanel Spacing="6" Margin="0,0,0,12" IsVisible="{Binding IsSidebarCollapsed}">
+                    <!-- Dashboard Icon -->
+                    <ToggleButton Command="{Binding ShowDashboardCommand}"
+                                  IsChecked="{Binding IsShowingDashboard, Mode=OneWay}"
+                                  Classes="liquid-glass collapsed-icon"
+                                  ToolTip.Tip="Dashboard"
+                                  HorizontalAlignment="Center">
+                        <controls:SvgIcon IconName="Assets/SVG/Current/dashboard-outline.svg"
+                                          Width="22" Height="22" IconColor="White" />
+                    </ToggleButton>
+
+                    <!-- Passwords Icon -->
+                    <ToggleButton Command="{Binding ShowPasswordsCommand}"
+                                  IsChecked="{Binding IsShowingPasswords, Mode=OneWay}"
+                                  Classes="liquid-glass collapsed-icon"
+                                  ToolTip.Tip="Passwords"
+                                  HorizontalAlignment="Center">
+                        <controls:SvgIcon IconName="Assets/SVG/Current/password-outline.svg"
+                                          Width="22" Height="22" IconColor="White" />
+                    </ToggleButton>
+
+                    <!-- Password Health Icon -->
+                    <Button Command="{Binding OpenPasswordHealthPanelCommand}"
+                            Classes="liquid-glass collapsed-icon"
+                            ToolTip.Tip="Password Health"
+                            HorizontalAlignment="Center">
+                        <controls:SvgIcon IconName="Assets/SVG/Current/Security.svg"
+                                          Width="22" Height="22" IconColor="White" />
+                    </Button>
+
+                    <!-- Category Manager Icon -->
+                    <Button Command="{Binding ManageCategoriesCommand}"
+                            Classes="liquid-glass collapsed-icon"
+                            ToolTip.Tip="Category Manager"
+                            HorizontalAlignment="Center">
+                        <controls:SvgIcon IconName="Assets/SVG/Current/tag.svg"
+                                          Width="22" Height="22" IconColor="White" />
+                    </Button>
+
+                    <!-- Recovery Icon -->
+                    <Button Command="{Binding ToggleRecoveryPanelCommand}"
+                            Classes="liquid-glass collapsed-icon"
+                            ToolTip.Tip="Recovery"
+                            HorizontalAlignment="Center">
+                        <controls:SvgIcon IconName="Assets/SVG/Current/Recovery.svg"
+                                          Width="22" Height="22" IconColor="White" />
+                    </Button>
+
+                    <!-- PhantomAttestor Icon -->
+                    <Button Command="{Binding AddTotpCommand}"
+                            Classes="liquid-glass collapsed-icon"
+                            ToolTip.Tip="Add TOTP Code"
+                            HorizontalAlignment="Center">
+                        <controls:SvgIcon IconName="Assets/SVG/Current/totp-icon.svg"
+                                          Width="22" Height="22" IconColor="White" />
+                    </Button>
+                </StackPanel>
+                
+                <!-- Quick Access -->
+                <StackPanel Spacing="{StaticResource Space6}" Margin="0,0,0,12" IsVisible="{Binding !IsSidebarCollapsed}">
+                    <Border Background="Transparent"
+                            Margin="6,0,0,6"
+                            Padding="12,0">
+                        <Border.Styles>
+                            <Style Selector="Border:pointerover">
+                                <Setter Property="Background" Value="{DynamicResource SidebarHeadingHoverCompositeBrush}"/>
+                                <Setter Property="Padding" Value="6,0"/>
+                            </Style>
+                        </Border.Styles>
+                        <TextBlock Text="QUICK ACCESS"
+                                   FontSize="12"
+                                   FontWeight="Bold"
+                                   Foreground="White"/>
+                    </Border>
+
+                    <Grid>
+                        <StackPanel x:Name="QuickFilterButtonsPanel"
+                                    Spacing="{StaticResource Space6}"
+                                    Margin="0">
+                            <ToggleButton Command="{Binding ShowAllCommand}"
+                                          IsChecked="{Binding IsShowingAll, Mode=OneWay}"
+                                          Classes="quick-filter">
+                                <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
+                                    <TextBlock Text="All Items" FontSize="13" Foreground="White" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding TotalCount}"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               VerticalAlignment="Center"
+                                               Margin="4,0,0,0"/>
+                                </StackPanel>
+                            </ToggleButton>
+
+                            <ToggleButton Command="{Binding ShowFavoritesCommand}"
+                                          IsChecked="{Binding IsShowingFavorites, Mode=OneWay}"
+                                          Classes="quick-filter">
+                                <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
+                                    <TextBlock Text="Favorites" FontSize="13" Foreground="White" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding FavoritesCount}"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               VerticalAlignment="Center"
+                                               Margin="4,0,0,0"/>
+                                </StackPanel>
+                            </ToggleButton>
+
+                            <nav:QuickFilterButton 
+                                Label="Passkeys" 
+                                Command="{Binding ShowPasskeysCommand}" 
+                                IsChecked="{Binding IsShowingPasskeys, Mode=OneWay}" 
+                                Count="{Binding PasskeysCount}" 
+                                ShowCount="True" />
+
+                            <nav:QuickFilterButton 
+                                Label="Recent" 
+                                Command="{Binding ShowRecentCommand}" 
+                                IsChecked="{Binding IsShowingRecent, Mode=OneWay}" 
+                                ShowCount="False" />
+
+                            <nav:QuickFilterButton 
+                                Label="Expiring Soon" 
+                                Command="{Binding ShowExpiringSoonCommand}" 
+                                IsChecked="{Binding IsShowingExpiringSoon, Mode=OneWay}" 
+                                ShowCount="False" />
+                        </StackPanel>
+
+                        <Border x:Name="QuickFilterHighlight"
+                                Height="44"
+                                VerticalAlignment="Top"
+                                HorizontalAlignment="Stretch"
+                                Margin="{Binding QuickFilterHighlightMargin}"
+                                Opacity="{Binding QuickFilterHighlightOpacity}"
+                                RenderTransformOrigin="0.5,0.5"
+                                IsHitTestVisible="False">
+                            <Border.Transitions>
+                                <Transitions>
+                                    <ThicknessTransition Property="Margin" Duration="0:0:0.18" Easing="CubicEaseOut"/>
+                                    <DoubleTransition Property="Opacity" Duration="0:0:0.12" Easing="CubicEaseOut"/>
+                                </Transitions>
+                            </Border.Transitions>
+                            <Border.RenderTransform>
+                                <TranslateTransform X="{Binding QuickFilterHighlightOffset}">
+                                    <TranslateTransform.Transitions>
+                                        <Transitions>
+                                            <DoubleTransition Property="X" Duration="0:0:0.10" Easing="CubicEaseOut"/>
+                                        </Transitions>
+                                    </TranslateTransform.Transitions>
+                                </TranslateTransform>
+                            </Border.RenderTransform>
+                            <Grid IsHitTestVisible="False" ClipToBounds="True" Margin="0">
+                                <Border CornerRadius="8"
+                                        Margin="0"
+                                        Opacity="0.18">
+                                    <Border.Background>
+                                        <VisualBrush Visual="{Binding ElementName=QuickFilterButtonsPanel}"
+                                                     Stretch="UniformToFill"
+                                                     AlignmentX="Center"
+                                                     AlignmentY="Center"/>
+                                    </Border.Background>
+                                    <Border.OpacityMask>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                            <GradientStop Color="#40FFFFFF" Offset="0"/>
+                                            <GradientStop Color="#08FFFFFF" Offset="0.5"/>
+                                            <GradientStop Color="#40FFFFFF" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.OpacityMask>
+                                </Border>
+                                <Border CornerRadius="8"
+                                        Opacity="0.72">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                            <GradientStop Color="#00FFFFFF" Offset="0"/>
+                                            <GradientStop Color="#28FFFFFF" Offset="{Binding QuickFilterHighlightLightLeft}"/>
+                                            <GradientStop Color="#88FFFFFF" Offset="{Binding QuickFilterHighlightSheenInnerLeft}"/>
+                                            <GradientStop Color="#C6FFFFFF" Offset="{Binding QuickFilterHighlightLightShift}"/>
+                                            <GradientStop Color="#88FFFFFF" Offset="{Binding QuickFilterHighlightSheenInnerRight}"/>
+                                            <GradientStop Color="#28FFFFFF" Offset="{Binding QuickFilterHighlightLightRight}"/>
+                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <Border Background="{StaticResource QuickFilterGelTopHighlightBrush}"
+                                        CornerRadius="13"
+                                        Margin="6,2,6,0"
+                                        Height="18"
+                                        VerticalAlignment="Top"
+                                        Opacity="0.72"/>
+                                <Border Background="{StaticResource QuickFilterGelBottomGlowBrush}"
+                                        CornerRadius="14"
+                                        Margin="8,0,8,4"
+                                        Height="16"
+                                        VerticalAlignment="Bottom"
+                                        Opacity="0.62"/>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </StackPanel>
+                
+                <!-- Entry Types Dropdown Filter -->
+                <StackPanel Spacing="4" Margin="0,0,0,12" IsVisible="{Binding !IsSidebarCollapsed}">
+                    <ToggleButton x:Name="EntryTypeDropdownToggle"
+                                  Classes="category-filter"
+                                  HorizontalAlignment="Stretch"
+                                  HorizontalContentAlignment="Left"
+                                  Height="36"
+                                  Margin="6,0">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Path Grid.Column="0" Data="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" Stroke="White" StrokeThickness="1.5" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center" Margin="6,0,8,0"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="ENTRY TYPES"
+                                       FontSize="12"
+                                       FontWeight="Bold"
+                                       Foreground="White"
+                                       VerticalAlignment="Center"/>
+                            <Path Grid.Column="2"
+                                  Data="M6 9 L12 15 L18 9"
+                                  Stroke="White"
+                                  StrokeThickness="2"
+                                  StrokeLineCap="Round"
+                                  StrokeJoin="Round"
+                                  Width="12"
+                                  Height="12"
+                                  Stretch="Uniform"
+                                  VerticalAlignment="Center"
+                                  Margin="4,0">
+                                <Path.RenderTransform>
+                                    <RotateTransform Angle="0"/>
+                                </Path.RenderTransform>
+                                <Path.Styles>
+                                    <Style Selector="Path">
+                                        <Setter Property="RenderTransform">
+                                            <RotateTransform Angle="0"/>
+                                        </Setter>
+                                    </Style>
+                                    <Style Selector="ToggleButton:checked Path">
+                                        <Setter Property="RenderTransform">
+                                            <RotateTransform Angle="180"/>
+                                        </Setter>
+                                    </Style>
+                                </Path.Styles>
+                            </Path>
+                        </Grid>
+                    </ToggleButton>
+
+                    <ItemsControl Margin="0" IsVisible="{Binding IsChecked, ElementName=EntryTypeDropdownToggle}">
+                        <Button Command="{Binding FilterByEntryTypeCommand}"
+                                CommandParameter="All"
+                                Classes="liquid-glass"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left"
+                                Height="36"
+                                CornerRadius="0"
+                                Background="{DynamicResource ContentBackgroundBrush}"
+                                Foreground="{DynamicResource PrimaryTextBrush}"
+                                Margin="6,1">
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
+                                <Path Data="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" Stroke="White" StrokeThickness="1.5" StrokeLineCap="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text="All Types" FontSize="13" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding FilterByEntryTypeCommand}"
+                                CommandParameter="Password"
+                                Classes="liquid-glass"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left"
+                                Height="36"
+                                CornerRadius="0"
+                                Background="{DynamicResource ContentBackgroundBrush}"
+                                Foreground="{DynamicResource PrimaryTextBrush}"
+                                Margin="6,1">
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
+                                <Path Data="M19 11h-1.5V7c0-2.76-2.24-5-5-5s-5 2.24-5 5v4H6c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h13c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2zm-9-4c0-1.66 1.34-3 3-3s3 1.34 3 3v4h-6V7z" Stroke="White" StrokeThickness="1.5" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text="Passwords" FontSize="13" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding FilterByEntryTypeCommand}"
+                                CommandParameter="CreditCard"
+                                Classes="liquid-glass"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left"
+                                Height="36"
+                                CornerRadius="0"
+                                Background="{DynamicResource ContentBackgroundBrush}"
+                                Foreground="{DynamicResource PrimaryTextBrush}"
+                                Margin="6,1">
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
+                                <Path Data="M3 6h18v12H3z M3 10h18" Stroke="White" StrokeThickness="1.5" StrokeLineCap="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text="Credit Cards" FontSize="13" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding FilterByEntryTypeCommand}"
+                                CommandParameter="BankAccount"
+                                Classes="liquid-glass"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left"
+                                Height="36"
+                                CornerRadius="0"
+                                Background="{DynamicResource ContentBackgroundBrush}"
+                                Foreground="{DynamicResource PrimaryTextBrush}"
+                                Margin="6,1">
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
+                                <Path Data="M3 5h18v14H3z" Stroke="White" StrokeThickness="1.5" StrokeLineCap="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text="Bank Accounts" FontSize="13" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding FilterByEntryTypeCommand}"
+                                CommandParameter="Identity"
+                                Classes="liquid-glass"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left"
+                                Height="36"
+                                CornerRadius="0"
+                                Background="{DynamicResource ContentBackgroundBrush}"
+                                Foreground="{DynamicResource PrimaryTextBrush}"
+                                Margin="6,1">
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
+                                <Path Data="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" Stroke="White" StrokeThickness="1.5" StrokeLineCap="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text="Identity Documents" FontSize="13" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding FilterByEntryTypeCommand}"
+                                CommandParameter="ApiKey"
+                                Classes="liquid-glass"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left"
+                                Height="36"
+                                CornerRadius="0"
+                                Background="{DynamicResource ContentBackgroundBrush}"
+                                Foreground="{DynamicResource PrimaryTextBrush}"
+                                Margin="6,1">
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
+                                <Path Data="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" Stroke="White" StrokeThickness="1.5" StrokeLineCap="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text="API Keys" FontSize="13" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding FilterByEntryTypeCommand}"
+                                CommandParameter="WiFi"
+                                Classes="liquid-glass"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left"
+                                Height="36"
+                                CornerRadius="0"
+                                Background="{DynamicResource ContentBackgroundBrush}"
+                                Foreground="{DynamicResource PrimaryTextBrush}"
+                                Margin="6,1">
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
+                                <Path Data="M1 11.5a11.43 11.43 0 0 1 22 0 M5 13a7 7 0 0 1 14 0 M12 20h.01 M9 17a3 3 0 0 1 6 0" Stroke="White" StrokeThickness="1.5" StrokeLineCap="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text="WiFi Networks" FontSize="13" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding FilterByEntryTypeCommand}"
+                                CommandParameter="Contact"
+                                Classes="liquid-glass"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left"
+                                Height="36"
+                                CornerRadius="0"
+                                Background="{DynamicResource ContentBackgroundBrush}"
+                                Foreground="{DynamicResource PrimaryTextBrush}"
+                                Margin="6,1">
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
+                                <Path Data="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" Stroke="White" StrokeThickness="1.5" StrokeLineCap="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text="Contacts" FontSize="13" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </ItemsControl>
+                </StackPanel>
+                
+                <!-- Categories Dropdown (Collapsible) -->
+                <StackPanel Spacing="4" Margin="0,0,0,12" IsVisible="{Binding !IsSidebarCollapsed}">
+                    <ToggleButton x:Name="CategoryDropdownToggle"
+                                  Classes="category-filter"
+                                  HorizontalAlignment="Stretch"
+                                  HorizontalContentAlignment="Left"
+                                  Height="36"
+                                  Margin="6,0">
+                        <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                            <Path Grid.Column="0" Data="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" Stroke="White" StrokeThickness="1.5" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center" Margin="6,0,8,0"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="CATEGORIES"
+                                       FontSize="12"
+                                       FontWeight="Bold"
+                                       Foreground="White"
+                                       VerticalAlignment="Center"/>
+                            <Path Grid.Column="2"
+                                  Data="M6 9 L12 15 L18 9"
+                                  Stroke="White"
+                                  StrokeThickness="2"
+                                  StrokeLineCap="Round"
+                                  StrokeJoin="Round"
+                                  Width="12"
+                                  Height="12"
+                                  Stretch="Uniform"
+                                  VerticalAlignment="Center"
+                                  Margin="4,0,8,0">
+                                <Path.RenderTransform>
+                                    <RotateTransform Angle="0"/>
+                                </Path.RenderTransform>
+                                <Path.Styles>
+                                    <Style Selector="Path">
+                                        <Setter Property="RenderTransform">
+                                            <RotateTransform Angle="0"/>
+                                        </Setter>
+                                    </Style>
+                                    <Style Selector="ToggleButton:checked Path">
+                                        <Setter Property="RenderTransform">
+                                            <RotateTransform Angle="180"/>
+                                        </Setter>
+                                    </Style>
+                                </Path.Styles>
+                            </Path>
+                            <Button Grid.Column="3"
+                                    Command="{Binding ManageCategoriesCommand}"
+                                    Classes="copy-btn"
+                                    Width="22"
+                                    Height="22"
+                                    Padding="0"
+                                    Margin="0,0,10,0"
+                                    HorizontalAlignment="Right"
+                                    ToolTip.Tip="Manage Categories">
+                                <Path Data="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" Stroke="White" StrokeThickness="1.5" Width="12" Height="12" Stretch="Uniform"/>
+                            </Button>
+                        </Grid>
+                    </ToggleButton>
+
+                    <Grid IsVisible="{Binding IsChecked, ElementName=CategoryDropdownToggle}">
+                        <Border x:Name="CategoryHighlightSource" Background="Transparent">
+                            <ItemsControl ItemsSource="{Binding Categories}"
+                                          ItemTemplate="{StaticResource CategoryItemTemplate}" />
+                        </Border>
+
+                        <Border x:Name="CategoryHighlight"
+                                Height="38"
+                                VerticalAlignment="Top"
+                                HorizontalAlignment="Stretch"
+                                Margin="{Binding CategoryHighlightMargin}"
+                                Opacity="{Binding CategoryHighlightOpacity}"
+                                RenderTransformOrigin="0.5,0.5"
+                                IsHitTestVisible="False">
+                            <Border.Transitions>
+                                <Transitions>
+                                    <ThicknessTransition Property="Margin" Duration="0:0:0.18" Easing="CubicEaseOut"/>
+                                    <DoubleTransition Property="Opacity" Duration="0:0:0.12" Easing="CubicEaseOut"/>
+                                </Transitions>
+                            </Border.Transitions>
+                            <Border.RenderTransform>
+                                <TranslateTransform X="{Binding CategoryHighlightOffset}">
+                                    <TranslateTransform.Transitions>
+                                        <Transitions>
+                                            <DoubleTransition Property="X" Duration="0:0:0.10" Easing="CubicEaseOut"/>
+                                        </Transitions>
+                                    </TranslateTransform.Transitions>
+                                </TranslateTransform>
+                            </Border.RenderTransform>
+                            <Grid IsHitTestVisible="False" ClipToBounds="True">
+                                <Border CornerRadius="8"
+                                        Margin="0"
+                                        Opacity="0"/>
+                                <Border CornerRadius="8"
+                                        Opacity="0.72">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                            <GradientStop Color="#00FFFFFF" Offset="0"/>
+                                            <GradientStop Color="#28FFFFFF" Offset="{Binding CategoryHighlightLightLeft}"/>
+                                            <GradientStop Color="#88FFFFFF" Offset="{Binding CategoryHighlightSheenInnerLeft}"/>
+                                            <GradientStop Color="#C6FFFFFF" Offset="{Binding CategoryHighlightLightShift}"/>
+                                            <GradientStop Color="#88FFFFFF" Offset="{Binding CategoryHighlightSheenInnerRight}"/>
+                                            <GradientStop Color="#28FFFFFF" Offset="{Binding CategoryHighlightLightRight}"/>
+                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </StackPanel>
+                
+                <!-- Flagged Passwords and Recovery Section -->
+                <StackPanel Spacing="{StaticResource Space6}" IsVisible="{Binding !IsSidebarCollapsed}">
+                    <Button Command="{Binding ShowFlaggedPasswordsCommand}"
+                            Classes="liquid-glass"
+                            Background="{DynamicResource ContentBackgroundBrush}"
+                            Foreground="{DynamicResource ControlForegroundBrush}"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Height="32"
+                            FontSize="11"
+                            CornerRadius="4"
+                            Margin="12,6,12,6">
+                        <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space6}">
+                            <TextBlock Text="Flagged Passwords" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding FlaggedCredentialCount}"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       VerticalAlignment="Center"
+                                       Margin="8,0,0,0"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- PhantomRecovery Integration Section -->
+                    <Border Background="Transparent"
+                            Margin="0,6,0,6"
+                            Padding="12,0">
+                        <TextBlock Text="RECOVERY"
+                                   FontSize="11"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                    </Border>
+
+                    <Button Command="{Binding ToggleRecoveryPanelCommand}"
+                            Classes="liquid-glass"
+                            Background="{DynamicResource ContentBackgroundBrush}"
+                            Foreground="{DynamicResource ControlForegroundBrush}"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Height="32"
+                            FontSize="11"
+                            CornerRadius="4"
+                            Margin="12,0,12,3">
+                        <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space6}">
+                            <TextBlock Text="📦" FontSize="14" VerticalAlignment="Center"/>
+                            <TextBlock Text="Recovery Panel" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Command="{Binding OpenPhantomRecoveryCommand}"
+                            Classes="liquid-glass"
+                            Background="{DynamicResource ContentBackgroundBrush}"
+                            Foreground="{DynamicResource ControlForegroundBrush}"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Height="32"
+                            FontSize="11"
+                            CornerRadius="4"
+                            Margin="12,0,12,12">
+                        <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space6}">
+                            <TextBlock Text="🔄" FontSize="14" VerticalAlignment="Center"/>
+                            <TextBlock Text="Recovery Window" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </Border>
+    
+</UserControl>

@@ -1,0 +1,7 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PhantomVault.UI.Controls.GelMagnifyHighlightBar">
+  <Border x:Name="Root" Background="Transparent" />
+</UserControl>
+
+

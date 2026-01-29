@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?xaml-comp compile="true" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- PhantomVault Obscura Theme Colors -->
+    <Color x:Key="Primary">#1E1E2E</Color>
+    <Color x:Key="Secondary">#2A2A3E</Color>
+    <Color x:Key="Tertiary">#6C5CE7</Color>
+
+    <Color x:Key="White">White</Color>
+    <Color x:Key="Black">Black</Color>
+    <Color x:Key="Gray100">#E8EAF0</Color>
+    <Color x:Key="Gray200">#B0B8C0</Color>
+    <Color x:Key="Gray300">#808890</Color>
+    <Color x:Key="Gray400">#606870</Color>
+    <Color x:Key="Gray500">#505860</Color>
+    <Color x:Key="Gray600">#404850</Color>
+    <Color x:Key="Gray900">#1A1A26</Color>
+    <Color x:Key="Gray950">#141419</Color>
+
+    <!-- Status Colors -->
+    <Color x:Key="Success">#51CF66</Color>
+    <Color x:Key="Warning">#FFD93D</Color>
+    <Color x:Key="Danger">#FF6B6B</Color>
+
+</ResourceDictionary>

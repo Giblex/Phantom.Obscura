@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PhantomVault.UI.Views.FrontPageWindow"
+        Title="Welcome" Width="400" Height="280"
+    WindowStartupLocation="CenterScreen"
+    Classes="animated-window">
+    
+    <Grid RowDefinitions="*,Auto">
+        <!-- Main Content -->
+        <Border Grid.Row="0" Padding="20">
+            <StackPanel Spacing="14" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <!-- Centered logo tile: use the high-resolution PNG asset and scale the tile relative to the window -->
+                <Border Classes="liquid-glass-tile"
+                        HorizontalAlignment="Center" VerticalAlignment="Center" Effect="{DynamicResource FrontPageTileBaseShadow}"
+                        MinWidth="240" MinHeight="120" MaxWidth="900" MaxHeight="260" Padding="12">
+                    <Grid>
+                        <Image Source="avares://PhantomVault.UI/Assets/images/Phantom Obscura Title + Logo.png"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" Stretch="Uniform"
+                               MaxWidth="860" MaxHeight="220" />
+                    </Grid>
+                </Border>
+
+                <TextBlock Text="Welcome to Phantom Vault" FontSize="26" FontWeight="Bold" HorizontalAlignment="Center" />
+                <TextBlock Text="Your secure USB password manager" HorizontalAlignment="Center" />
+            </StackPanel>
+        </Border>
+
+        <!-- Footer with centered buttons -->
+        <Border Grid.Row="1" Background="{DynamicResource FooterBackgroundBrush}" Padding="20,12">
+            <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
+                <Button Content="New" Command="{Binding ContinueCommand}" 
+                        Classes="liquid-glass primary"
+                        Width="160" Height="40" 
+                        ToolTip.Tip="Create a new vault"/>
+                <Button Content="Access" Command="{Binding OpenVaultCommand}" 
+                        Classes="liquid-glass"
+                        Width="160" Height="40"
+                        ToolTip.Tip="Open an existing vault"/>
+                <Button Content="Help" Command="{Binding HelpCommand}" 
+                        Classes="liquid-glass"
+                        Width="160" Height="40"
+                        ToolTip.Tip="View help documentation"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

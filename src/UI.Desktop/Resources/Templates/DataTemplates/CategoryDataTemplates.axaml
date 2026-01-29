@@ -1,0 +1,33 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <!-- Category Item Template (Sidebar) -->
+    <DataTemplate x:Key="CategoryItemTemplate">
+        <ToggleButton Command="{Binding $parent[Window].DataContext.SelectCategoryCommand}"
+                      CommandParameter="{Binding Name}"
+                      Classes="secondary category-filter"
+                      HorizontalAlignment="Stretch"
+                      HorizontalContentAlignment="Left"
+                      Height="38"
+                      IsChecked="{Binding IsActive, Mode=TwoWay}"
+                      AutomationProperties.Name="{Binding Name, StringFormat='Category: {0} ({1} items)'}"
+                      Margin="0,2">
+            <StackPanel Orientation="Horizontal" Spacing="8" Margin="16,0,0,0">
+                <!-- Category color bar (slightly inset) -->
+                <Border Width="6" Height="20" CornerRadius="3" VerticalAlignment="Center">
+                    <Border.Background>
+                        <Binding Path="TileColor" Converter="{StaticResource HexToBrushConverter}"/>
+                    </Border.Background>
+                </Border>
+                <TextBlock Text="{Binding Name}"
+                           VerticalAlignment="Center"
+                           Foreground="White"/>
+                <TextBlock Text="{Binding Count}"
+                           Foreground="White"
+                           VerticalAlignment="Center"
+                           Margin="4,0,0,0"/>
+            </StackPanel>
+        </ToggleButton>
+    </DataTemplate>
+    
+</ResourceDictionary>

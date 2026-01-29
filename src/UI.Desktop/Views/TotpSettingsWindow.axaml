@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:PhantomVault.UI.Views"
+        xmlns:vm="using:PhantomVault.UI.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="520" d:DesignHeight="620"
+        x:Class="PhantomVault.UI.Views.TotpSettingsWindow"
+        x:DataType="vm:TotpSettingsViewModel"
+        Title="TOTP Authenticator"
+        Width="520" Height="620"
+        MinWidth="480" MinHeight="520"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource WindowBackgroundBrush}">
+
+    <Design.DataContext>
+        <vm:TotpSettingsViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        <!-- Header -->
+        <Border Grid.Row="0" 
+                Background="{DynamicResource HeaderBackgroundBrush}" 
+                Padding="24,20">
+            <StackPanel Spacing="{StaticResource Space.Xs}">
+                <TextBlock Text="TOTP Authenticator" 
+                           FontSize="20" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource HeaderTextBrush}"/>
+                <TextBlock Text="Two-factor authentication using time-based codes" 
+                           FontSize="13" 
+                           Foreground="{DynamicResource HeaderMutedTextBrush}"/>
+            </StackPanel>
+        </Border>
+        
+        <!-- Content -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="30,20,30,30">
+            <StackPanel Spacing="0" Margin="0,0,30,60">
+                
+                <!-- Enable Toggle -->
+                <Border Background="{DynamicResource CardBackgroundBrush}"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{DynamicResource Radius.Lg}"
+                        Padding="16"
+                        Margin="0,0,0,16"
+                        Classes="mfa-card delay-0 show">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <StackPanel Grid.Column="0" Spacing="{StaticResource Space.Xs}">
+                            <TextBlock Text="Enable TOTP" FontSize="{StaticResource Type.Body.Size}" FontWeight="Medium" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <TextBlock Text="Require authenticator code on unlock"
+                                       FontSize="{StaticResource Type.Small.Size}"
+                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                        </StackPanel>
+                        <ToggleSwitch Grid.Column="1" 
+                                      IsChecked="{Binding IsTotpEnabled, Mode=TwoWay}"
+                                      IsEnabled="{Binding HasTotpSecret}"
+                                      VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+                
+                <!-- Setup Section - Only show when no secret exists -->
+                <Border Background="{DynamicResource CardBackgroundBrush}"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{DynamicResource Radius.Lg}"
+                        Padding="16"
+                        Margin="0,0,0,16"
+                        IsVisible="{Binding !HasTotpSecret}"
+                        Classes="mfa-card delay-1 show">
+                    <StackPanel Spacing="{StaticResource Space.Md}">
+                        <TextBlock Text="Setup" FontSize="{StaticResource Type.Body.Size}" FontWeight="Medium" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <TextBlock Text="Generate a secret and add it to your authenticator app (Google Authenticator, Authy, Microsoft Authenticator, etc.)"
+                                   FontSize="{StaticResource Type.Small.Size}"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   TextWrapping="Wrap"/>
+                        
+                        <Button Command="{Binding GenerateTotpSecretCommand}"
+                                Classes="ripple-effect"
+                                HorizontalAlignment="Stretch"
+                                Height="42">
+                            <TextBlock Text="Generate Secret" FontSize="{StaticResource Type.Body.Size}"/>
+                        </Button>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Secret Display - Only show when secret exists -->
+                <Border Background="{DynamicResource CardBackgroundBrush}"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{DynamicResource Radius.Lg}"
+                        Padding="16"
+                        Margin="0,0,0,16"
+                        IsVisible="{Binding HasTotpSecret}"
+                        Classes="mfa-card delay-1 show">
+                    <StackPanel Spacing="{StaticResource Space.Md}">
+                        <TextBlock Text="Your Secret Key" FontSize="{StaticResource Type.Body.Size}" FontWeight="Medium" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <TextBlock Text="Enter this key manually or scan the QR code in your authenticator app"
+                                   FontSize="{StaticResource Type.Small.Size}"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   TextWrapping="Wrap"/>
+                        
+                        <!-- Secret Key Display -->
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Border Grid.Column="0"
+                                    Background="{DynamicResource ControlBackgroundBrush}"
+                                    CornerRadius="{DynamicResource Radius.Sm}"
+                                    Padding="12,10">
+                                <TextBlock Text="{Binding TotpSecret}"
+                                           FontFamily="Consolas, Courier New"
+                                           FontSize="{StaticResource Type.Body.Size}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"
+                                           VerticalAlignment="Center"/>
+                            </Border>
+                            <Button Grid.Column="1"
+                                    Command="{Binding CopySecretCommand}"
+                                    Classes="liquid-glass"
+                                    Width="40"
+                                    Margin="8,0,0,0"
+                                    ToolTip.Tip="Copy to clipboard">
+                                <TextBlock Text="☷" FontSize="16"/>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Verification - Only show when secret exists -->
+                <Border Background="{DynamicResource CardBackgroundBrush}"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{DynamicResource Radius.Lg}"
+                        Padding="16"
+                        Margin="0,0,0,16"
+                        IsVisible="{Binding HasTotpSecret}"
+                        Classes="mfa-card delay-2 show">
+                    <StackPanel Spacing="{StaticResource Space.Md}">
+                        <TextBlock Text="Verify Setup" FontSize="{StaticResource Type.Body.Size}" FontWeight="Medium" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <TextBlock Text="Enter the 6-digit code from your authenticator to verify"
+                                   FontSize="{StaticResource Type.Small.Size}"
+                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                        
+                        <TextBox Text="{Binding TestCode, Mode=TwoWay}"
+                                 Watermark="000000"
+                                 MaxLength="6"
+                                 Height="48"
+                                 FontSize="20"
+                                 FontFamily="Consolas, Courier New"
+                                 HorizontalContentAlignment="Center"
+                                 LetterSpacing="{StaticResource Space.Xs}"
+                                 Classes="totp-input"/>
+                        
+                        <Button Command="{Binding VerifyTotpCodeCommand}"
+                                Classes="ripple-effect"
+                                HorizontalAlignment="Stretch"
+                                Height="42">
+                            <TextBlock Text="Verify Code" FontSize="{StaticResource Type.Body.Size}"/>
+                        </Button>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Remove TOTP -->
+                <Border Background="{DynamicResource CardBackgroundBrush}"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{DynamicResource Radius.Lg}"
+                        Padding="16"
+                        Margin="0,0,0,16"
+                        IsVisible="{Binding HasTotpSecret}"
+                        Classes="mfa-card delay-3 show">
+                    <StackPanel Spacing="{StaticResource Space.Md}">
+                        <TextBlock Text="Remove TOTP" FontSize="{StaticResource Type.Body.Size}" FontWeight="Medium" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <TextBlock Text="This will disable two-factor authentication for your vault"
+                                   FontSize="{StaticResource Type.Small.Size}"
+                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                        
+                        <Button Command="{Binding RemoveTotpSecretCommand}"
+                                Classes="liquid-glass ripple-effect"
+                                HorizontalAlignment="Stretch"
+                                Height="42">
+                            <TextBlock Text="Remove TOTP" FontSize="{StaticResource Type.Body.Size}"/>
+                        </Button>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Status Message -->
+                <Border Background="{DynamicResource InfoBackgroundBrush}"
+                        CornerRadius="{DynamicResource Radius.Lg}"
+                        Padding="16"
+                        Margin="0,16,0,0"
+                        IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                        Classes="status-message show">
+                    <TextBlock Text="{Binding StatusMessage}"
+                               FontSize="{StaticResource Type.Small.Size}"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+        
+        <!-- Footer -->
+        <Border Grid.Row="2" 
+                Background="{DynamicResource CardBackgroundBrush}" 
+                Padding="24,16">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="{StaticResource Space.Md}">
+                <Button Content="Close" 
+                        Classes="liquid-glass"
+                        Width="100"
+                        Click="CloseButton_Click"/>
+            </StackPanel>
+        </Border>
+        
+        <!-- Loading Overlay - DISABLED: Causes stuck 'Processing...' screen -->
+        <!-- <Border Grid.RowSpan="3"
+                Background="{DynamicResource OverlayBackgroundBrush}"
+                IsVisible="{Binding IsBusy}">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="16">
+                <ProgressBar IsIndeterminate="True" Width="200"/>
+                <TextBlock Text="Processing..." Foreground="White" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border> -->
+    </Grid>
+</views:ThemeAwareWindow>
+
+
+
+
+
+

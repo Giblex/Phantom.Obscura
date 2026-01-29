@@ -1,0 +1,64 @@
+{
+  "$schema": "./policy_schema.json",
+  "version": "1.0",
+  "description": "Safe default policy for new PhantomVault users - minimal restrictions with security recommendations",
+  "usb": {
+    "required": false,
+    "requireRemovable": false,
+    "identityMode": "Any",
+    "volumeLabel": null,
+    "allowedSerials": [],
+    "requiredKeyIds": [],
+    "minStandard": "USB2"
+  },
+  "manifest": {
+    "signatureVerificationEnabled": false,
+    "trustedPublicKeysBase64": [],
+    "allowUnsignedManifests": true,
+    "requireEncryptedManifest": true
+  },
+  "desktop": {
+    "syncToLocalEnabled": false,
+    "syncPath": "",
+    "encryptLocalSync": true
+  },
+  "security": {
+    "requireMfa": false,
+    "requirePassphrase": true,
+    "requireKeyfile": false,
+    "allowBiometrics": true,
+    "sessionTimeoutMinutes": 15,
+    "autoLockOnMinimize": false,
+    "autoLockOnScreenLock": true,
+    "autoLockOnIdle": true,
+    "idleTimeoutMinutes": 5,
+    "maxFailedAttempts": 5,
+    "throttleUnlockAttempts": true
+  },
+  "crypto": {
+    "algorithm": "AES-256-GCM",
+    "usePostQuantum": false,
+    "argon2Iterations": 3,
+    "argon2Memory": 65536,
+    "argon2Parallelism": 4
+  },
+  "audit": {
+    "enabled": true,
+    "logAllAccess": false,
+    "logFailedUnlocks": true,
+    "logCredentialAccess": true,
+    "maxAuditLogSize": 10485760
+  },
+  "backup": {
+    "autoBackupEnabled": false,
+    "backupIntervalHours": 24,
+    "maxBackupCount": 5,
+    "encryptBackups": true
+  },
+  "recommendations": {
+    "enableUsbBinding": "Consider enabling USB binding for hardware-backed security",
+    "enablePostQuantum": "Enable post-quantum cryptography for future-proof encryption",
+    "enableMfa": "Multi-factor authentication significantly improves security",
+    "reduceSessionTimeout": "Shorter session timeouts improve security in shared environments"
+  }
+}

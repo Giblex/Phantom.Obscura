@@ -1,0 +1,255 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PhantomVault.UI.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="750" d:DesignHeight="650"
+        x:Class="PhantomVault.UI.Views.SecurityCheckScreen"
+        x:DataType="vm:SecurityCheckScreenViewModel"
+        Title="Security Check"
+        Width="750" Height="650"
+        MinWidth="600" MinHeight="500"
+        WindowStartupLocation="CenterScreen"
+        CanResize="True"
+        Background="{DynamicResource WindowBackgroundBrush}" Icon="avares://PhantomVault.UI/Assets/images/Parent Icon.ico"
+        FontFamily="{DynamicResource DefaultFontFamily}"
+        FontSize="{DynamicResource DefaultFontSize}">
+
+    <Design.DataContext>
+        <vm:SecurityCheckScreenViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="0">
+        
+        <!-- Header -->
+        <Border Grid.Row="0" Background="{DynamicResource HeaderBackgroundBrush}" Padding="20,12">
+            <StackPanel Spacing="6" MaxWidth="700">
+                <TextBlock Text="Welcome to Your Vault"
+                           FontSize="20"
+                           FontWeight="SemiBold"
+                           HorizontalAlignment="Center"/>
+                
+                <TextBlock Text="Running security checks to ensure your vault is safe..."
+                           FontSize="14"
+                           Foreground="{DynamicResource SecondaryTextBrush}"
+                           HorizontalAlignment="Center"
+                           TextWrapping="Wrap"
+                           TextAlignment="Center"
+                           MaxWidth="600"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Main Content -->
+        <ScrollViewer Grid.Row="1" 
+                      Padding="40,20,40,20" 
+                      VerticalScrollBarVisibility="Auto" 
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Spacing="20" Margin="0,0,0,20">
+                
+                <!-- Current Check Name -->
+                <StackPanel Spacing="8" IsVisible="{Binding IsRunningChecks}">
+                    <TextBlock Text="Current Check:"
+                               FontSize="13"
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               HorizontalAlignment="Center"/>
+                    
+                    <TextBlock Text="{Binding CurrentCheckName}"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Progress Bar -->
+                <StackPanel Spacing="10">
+                    <ProgressBar Value="{Binding PercentComplete}"
+                                 Minimum="0"
+                                 Maximum="100"
+                                 Height="8"
+                                 IsIndeterminate="False"
+                                 Foreground="{DynamicResource AccentBrush}"/>
+                    
+                    <TextBlock Text="{Binding PercentComplete, StringFormat='{}{0}% complete'}"
+                               FontSize="13"
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Status Message -->
+                <Border Background="{DynamicResource FooterBackgroundBrush}" 
+                        Padding="20,15"
+                        CornerRadius="6"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1">
+                    <TextBlock Text="{Binding StatusMessage}"
+                               FontSize="14"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center"/>
+                </Border>
+
+                <!-- Results Section (visible when checks complete) -->
+                <StackPanel Spacing="15" IsVisible="{Binding ChecksComplete}">
+                    
+                    <!-- Success Indicator -->
+                    <Border Background="{DynamicResource SuccessBackgroundBrush}"
+                            Padding="15,10"
+                            CornerRadius="6"
+                            BorderBrush="{DynamicResource SuccessBrush}"
+                            BorderThickness="1"
+                            HorizontalAlignment="Center"
+                            IsVisible="{Binding ChecksSuccessful}">
+                        <TextBlock Text="{Binding ChecksPassedText}"
+                                   FontSize="15"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource SuccessBrush}"/>
+                    </Border>
+
+                    <!-- Failure Indicator -->
+                    <Border Background="{DynamicResource ErrorBackgroundBrush}"
+                            Padding="15,10"
+                            CornerRadius="6"
+                            BorderBrush="{DynamicResource ErrorBrush}"
+                            BorderThickness="1"
+                            HorizontalAlignment="Center"
+                            IsVisible="{Binding !ChecksSuccessful}">
+                        <TextBlock Text="{Binding ChecksPassedText}"
+                                   FontSize="15"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource ErrorBrush}"/>
+                    </Border>
+
+                    <!-- Detailed Check Results -->
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Security Check Details:"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource AccentBrush}"/>
+                        
+                        <Border Background="{DynamicResource FooterBackgroundBrush}"
+                                Padding="15"
+                                CornerRadius="6"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1">
+                            <TextBlock Text="{Binding DetailedCheckResults}"
+                                       FontSize="12"
+                                       FontFamily="Segoe UI Semibold"
+                                       TextWrapping="Wrap"
+                                       LineHeight="18"/>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Errors (if any) -->
+                    <StackPanel Spacing="8" IsVisible="{Binding HasErrors}">
+                        <TextBlock Text="Errors:"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource ErrorBrush}"/>
+                        
+                        <Border Background="{DynamicResource ErrorBackgroundBrush}"
+                                Padding="12"
+                                CornerRadius="6"
+                                BorderBrush="{DynamicResource ErrorBrush}"
+                                BorderThickness="1">
+                            <TextBlock Text="{Binding ErrorsText}"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource ErrorBrush}"
+                                       TextWrapping="Wrap"/>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Warnings (if any) -->
+                    <StackPanel Spacing="8" IsVisible="{Binding HasWarnings}">
+                        <TextBlock Text="Warnings:"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource WarningBrush}"/>
+                        
+                        <Border Background="{DynamicResource WarningBackgroundBrush}"
+                                Padding="12"
+                                CornerRadius="6"
+                                BorderBrush="{DynamicResource WarningBrush}"
+                                BorderThickness="1">
+                            <TextBlock Text="{Binding WarningsText}"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource WarningBrush}"
+                                       TextWrapping="Wrap"/>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- USB Drive Info (if available) -->
+                    <StackPanel Spacing="8" IsVisible="{Binding HasUsbDriveInfo}">
+                        <TextBlock Text="USB Drive Information:"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource SuccessBrush}"/>
+                        
+                        <Border Background="{DynamicResource SuccessBackgroundBrush}"
+                                Padding="12"
+                                CornerRadius="6"
+                                BorderBrush="{DynamicResource SuccessBrush}"
+                                BorderThickness="1">
+                            <StackPanel Spacing="5">
+                                <TextBlock FontSize="12" FontFamily="Segoe UI Semibold" Foreground="{DynamicResource SuccessBrush}">
+                                    <Run Text="Format: "/>
+                                    <Run Text="{Binding UsbDriveFormat}" FontWeight="SemiBold"/>
+                                </TextBlock>
+                                <TextBlock FontSize="12" FontFamily="Segoe UI Semibold" Foreground="{DynamicResource SuccessBrush}">
+                                    <Run Text="Total Size: "/>
+                                    <Run Text="{Binding UsbDriveTotalSizeFormatted}" FontWeight="SemiBold"/>
+                                </TextBlock>
+                                <TextBlock FontSize="12" FontFamily="Segoe UI Semibold" Foreground="{DynamicResource SuccessBrush}">
+                                    <Run Text="Free Space: "/>
+                                    <Run Text="{Binding UsbDriveFreeSpaceFormatted}" FontWeight="SemiBold"/>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Action Buttons -->
+        <Border Grid.Row="2" Background="{DynamicResource FooterBackgroundBrush}" Padding="25,10">
+            <StackPanel Orientation="Horizontal" 
+                        HorizontalAlignment="Center"
+                        Spacing="15">
+                
+                <!-- Continue Button (visible when checks pass) -->
+                <Button Command="{Binding ContinueCommand}"
+                        Width="140"
+                        Height="40"
+                        FontSize="15"
+                        FontWeight="Bold"
+                        Classes="liquid-glass primary"
+                        IsVisible="{Binding ChecksSuccessful}"
+                        ToolTip.Tip="All security checks passed successfully.">
+                    <TextBlock Text="Continue" TextAlignment="Center"/>
+                </Button>
+
+                <!-- Retry Button (visible when checks fail) -->
+                <Button Command="{Binding RetryCommand}"
+                        Width="130"
+                        Height="36"
+                        Classes="liquid-glass"
+                        FontSize="14"
+                        IsVisible="{Binding !ChecksSuccessful}"
+                        ToolTip.Tip="Some checks failed. Click to re-run the security checks.">
+                    <TextBlock Text="Retry"/>
+                </Button>
+
+                <!-- Cancel Button -->
+                <Button Command="{Binding CancelCommand}"
+                        Width="130"
+                        Height="36"
+                        Classes="liquid-glass"
+                        
+                        FontSize="14"
+                        IsVisible="{Binding !IsRunningChecks}"
+                        ToolTip.Tip="Cancel and return to the previous screen.">
+                    <TextBlock Text="Cancel"/>
+                </Button>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

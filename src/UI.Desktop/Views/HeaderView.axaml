@@ -1,0 +1,233 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:Giblex.Controls"
+             xmlns:dcontrols="clr-namespace:PhantomVault.UI.Desktop.Controls"
+             mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="70"
+             x:Class="PhantomVault.UI.Views.HeaderView">
+    
+    <Border Classes="header-surface"
+            Background="{DynamicResource HeaderBackgroundBrush}" 
+            Padding="{StaticResource DialogPadding}"
+            BorderBrush="{DynamicResource ControlBorderBrush}"
+            BorderThickness="0,0,0,1"
+            CornerRadius="0,0,12,12"
+            ClipToBounds="True"
+            Effect="{x:Null}">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+            
+            <!-- Left: Logo and Title -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="{StaticResource Space12}" VerticalAlignment="Center">
+                <Image Source="avares://PhantomVault.UI/Assets/images/Icon Transparent background.png" Width="48" Height="48" VerticalAlignment="Center"/>
+                <StackPanel Spacing="2">
+                    <TextBlock Text="PhantomObscura" 
+                               FontSize="16" 
+                               FontWeight="Bold"
+                               Foreground="{DynamicResource HeaderTextBrush}"/>
+                    <TextBlock Text="{Binding VaultName}" 
+                               FontSize="11" 
+                               Classes="header-muted"/>
+                </StackPanel>
+            </StackPanel>
+            
+            <!-- Center: Search Box and View Toggle -->
+            <Grid Grid.Column="1" ColumnDefinitions="*,Auto" Margin="30,0" VerticalAlignment="Center">
+                <Border Grid.Column="0"
+                        Background="{DynamicResource ControlBackgroundBrush}"
+                        BorderBrush="#33000000"
+                        BorderThickness="1"
+                        CornerRadius="20"
+                        MinWidth="320"
+                        MaxWidth="700"
+                        Margin="0,0,12,0">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <dcontrols:SvgIcon Grid.Column="0"
+                               IconName="Assets/SVG/Current/Search.svg"
+                               Width="16"
+                               Height="16"
+                               Margin="12,0,0,0"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
+                        <TextBox Grid.Column="1"
+                                 Text="{Binding SearchText}"
+                                 Watermark="Search credentials..."
+                                 BorderThickness="0"
+                                 Background="Transparent"
+                                 Foreground="{DynamicResource PrimaryTextBrush}"
+                                 Padding="8,8"
+                                 FontSize="13">
+                            <InputElement.KeyBindings>
+                                <KeyBinding Gesture="Escape" Command="{Binding ClearSearchCommand}"/>
+                            </InputElement.KeyBindings>
+                        </TextBox>
+                        <Button Grid.Column="2"
+                                Command="{Binding ClearSearchCommand}"
+                                Classes="liquid-glass"
+                                Width="30"
+                                Height="30"
+                                MinWidth="30"
+                                MinHeight="30"
+                                Padding="0"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Margin="0,0,4,0"
+                                ToolTip.Tip="Clear search"
+                                IsVisible="{Binding HasSearchText}">
+                            <dcontrols:SvgIcon IconName="Assets/SVG/x.svg" Width="14" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <controls:LiquidGlassButton Grid.Column="1"
+                        Command="{Binding ToggleViewModeCommand}"
+                        WidthOverride="42"
+                        HeightOverride="36"
+                        CornerRadiusValue="8"
+                        PaddingOverride="0"
+                        ToolTipText="Toggle list/grid view"
+                        IsVisible="{Binding !IsShowingSecureTrash}">
+                    <controls:LiquidGlassButton.ButtonContent>
+                        <TextBlock Text="{Binding ViewModeIcon}" FontSize="16" Foreground="{DynamicResource PrimaryTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </controls:LiquidGlassButton.ButtonContent>
+                </controls:LiquidGlassButton>
+            </Grid>
+            
+            <!-- Right: Action Buttons -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                <!-- Actions Menu Button -->
+                <Button x:Name="ActionsMenuButton"
+                        Classes="liquid-glass icon"
+                        Width="44"
+                        Height="44"
+                        MinWidth="44"
+                        MinHeight="44"
+                        Padding="0"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"
+                        CornerRadius="{StaticResource Radius.Lg}"
+                        ToolTip.Tip="Actions menu">
+                    <Button.Flyout>
+                        <Flyout Placement="BottomEdgeAlignedRight">
+                            <Border Background="{DynamicResource ContentBackgroundBrush}" 
+                                    CornerRadius="{StaticResource Radius.Lg}" 
+                                    Padding="8" 
+                                    MinWidth="240">
+                                <StackPanel Spacing="4">
+                                    <!-- Add Credential Section -->
+                                    <TextBlock Text="ADD NEW" 
+                                               FontSize="11" 
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               Margin="8,4,8,4"/>
+                                    <Button x:Name="AddButton"
+                                            Command="{Binding AddCredentialCommand}"
+                                            Classes="liquid-glass"
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            Padding="12,10">
+                                        <StackPanel Orientation="Horizontal" Spacing="12">
+                                            <dcontrols:SvgIcon IconName="Assets/SVG/Current/Add.svg" Width="18" Height="18"/>
+                                            <TextBlock Text="New Credential" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Command="{Binding AddLoginCredentialCommand}"
+                                            Classes="liquid-glass"
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            Padding="12,8">
+                                        <TextBlock Text="→ Login / Password" FontSize="12"/>
+                                    </Button>
+                                    <Button Command="{Binding AddCreditCardCommand}"
+                                            Classes="liquid-glass"
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            Padding="12,8">
+                                        <TextBlock Text="→ Credit Card" FontSize="12"/>
+                                    </Button>
+                                    <Button Command="{Binding AddBankAccountCommand}"
+                                            Classes="liquid-glass"
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            Padding="12,8">
+                                        <TextBlock Text="→ Bank Account" FontSize="12"/>
+                                    </Button>
+                                    <Button Command="{Binding AddIdentityCommand}"
+                                            Classes="liquid-glass"
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            Padding="12,8">
+                                        <TextBlock Text="→ Identity / Document" FontSize="12"/>
+                                    </Button>
+                                    <Button Command="{Binding AddSecureNoteCommand}"
+                                            Classes="liquid-glass"
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            Padding="12,8">
+                                        <TextBlock Text="→ Secure Note" FontSize="12"/>
+                                    </Button>
+                                    
+                                    <Separator Margin="0,8" Background="{DynamicResource ControlBorderBrush}"/>
+                                    
+                                    <!-- Actions Section -->
+                                    <TextBlock Text="ACTIONS" 
+                                               FontSize="11" 
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               Margin="8,4,8,4"/>
+                                    <Button x:Name="PasswordGeneratorButton"
+                                            Classes="liquid-glass"
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            Padding="12,10">
+                                        <StackPanel Orientation="Horizontal" Spacing="12">
+                                            <dcontrols:SvgIcon IconName="Assets/SVG/Current/Key.svg" Width="18" Height="18"/>
+                                            <TextBlock Text="Password Generator" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Command="{Binding ToggleSecurityDashboardCommand}"
+                                            Classes="liquid-glass"
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            Padding="12,10">
+                                        <StackPanel Orientation="Horizontal" Spacing="12">
+                                            <dcontrols:SvgIcon IconName="Assets/SVG/Current/Security.svg" Width="18" Height="18"/>
+                                            <TextBlock Text="Security Dashboard" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Command="{Binding LockCommand}"
+                                            Classes="liquid-glass"
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            Padding="12,10">
+                                        <StackPanel Orientation="Horizontal" Spacing="12">
+                                            <dcontrols:SvgIcon IconName="Assets/SVG/Current/lock.svg" Width="18" Height="18"/>
+                                            <TextBlock Text="Lock Vault" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+                        </Flyout>
+                    </Button.Flyout>
+                    <dcontrols:SvgIcon IconName="Assets/SVG/Current/Drop menu.svg" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Button>
+
+                <!-- Settings Button (Separate) -->
+                <Button x:Name="SettingsButton"
+                        Classes="liquid-glass icon"
+                        Width="44"
+                        Height="44"
+                        MinWidth="44"
+                        MinHeight="44"
+                        Padding="0"
+                        CornerRadius="{StaticResource Radius.Lg}"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"
+                        ToolTip.Tip="Vault settings">
+                    <dcontrols:SvgIcon IconName="Assets/SVG/Current/Settings.svg" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Border>
+    
+</UserControl>

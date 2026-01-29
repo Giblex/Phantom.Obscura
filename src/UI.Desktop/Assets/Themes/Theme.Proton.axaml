@@ -1,0 +1,222 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Proton Theme - Deep purples inspired by ProtonMail/ProtonVPN -->
+    <!-- Dark theme with vibrant purple accents -->
+    
+    <!-- Deep Purple Scale -->
+    <Color x:Key="Color.Navy900">#16141F</Color>
+    <Color x:Key="Color.Navy800">#1C1A29</Color>
+    <Color x:Key="Color.Navy700">#252336</Color>
+    <Color x:Key="Color.Navy600">#2E2B42</Color>
+    <Color x:Key="Color.Navy500">#3B3852</Color>
+    <Color x:Key="Color.Navy400">#4A4665</Color>
+    
+    <!-- Purple Tinted Greys -->
+    <Color x:Key="Color.LightGrey100">#2E2B42</Color>
+    <Color x:Key="Color.LightGrey200">#252336</Color>
+    <Color x:Key="Color.LightGrey300">#1C1A29</Color>
+    <Color x:Key="Color.LightGrey400">#16141F</Color>
+    
+    <!-- Text Colors -->
+    <Color x:Key="Color.TextPrimary">#FFFFFF</Color>
+    <Color x:Key="Color.TextMuted">#9D99B3</Color>
+    <Color x:Key="Color.TextOnDark">#FFFFFF</Color>
+    <Color x:Key="Color.TextOnLight">#FFFFFF</Color>
+    
+    <!-- Accent Colors - Proton Purple -->
+    <Color x:Key="Color.Accent">#6D4AFF</Color>
+    <Color x:Key="Color.AccentHover">#7C5CFF</Color>
+    <Color x:Key="Color.AccentDim">#8B6EFF</Color>
+    
+    <!-- Secondary Colors -->
+    <Color x:Key="Color.ProtonPurple">#6D4AFF</Color>
+    <Color x:Key="Color.ProtonPink">#FF50C8</Color>
+    <Color x:Key="Color.ProtonBlue">#4DA7F0</Color>
+    <Color x:Key="Color.ProtonGreen">#1EA885</Color>
+    
+    <!-- Semantic Colors -->
+    <Color x:Key="Color.Success">#1EA885</Color>
+    <Color x:Key="Color.Warning">#FF9F00</Color>
+    <Color x:Key="Color.Danger">#F5385A</Color>
+    <Color x:Key="Color.Info">#4DA7F0</Color>
+
+    <!-- ═══════════════════════ LEGACY BRUSHES ═══════════════════════ -->
+    
+    <!-- Main window background - light pastel purple -->
+    <LinearGradientBrush x:Key="WindowBackgroundBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#E8E4F3" Offset="0"/>
+        <GradientStop Color="#DED8EB" Offset="0.5"/>
+        <GradientStop Color="#D4CEE3" Offset="1"/>
+    </LinearGradientBrush>
+    
+    <!-- Header - pastel dark purple gradient -->
+    <LinearGradientBrush x:Key="HeaderBackgroundBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#7B6BA3" Offset="0"/>
+        <GradientStop Color="#6856A8" Offset="0.5"/>
+        <GradientStop Color="#7B6BA3" Offset="1"/>
+    </LinearGradientBrush>
+    
+    <SolidColorBrush x:Key="FooterBackgroundBrush" Color="#D4CEE3"/>
+    <!-- Content - light pastel purple -->
+    <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#E8E4F3"/>
+    <!-- Cards - slightly darker pastel -->
+    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#DED8EB"/>
+    <!-- Settings panels - darker than background -->
+    <SolidColorBrush x:Key="SettingsPanelBackgroundBrush" Color="#C8BFDB"/>
+    <SolidColorBrush x:Key="SettingsPanelBorderBrush" Color="#B8A8D8"/>
+    <SolidColorBrush x:Key="TileGlassBrush">#EEDED8EB</SolidColorBrush>
+    <SolidColorBrush x:Key="TileGapBrush" Color="#D4CEE3"/>
+    
+    <!-- Proton purple accents -->
+    <SolidColorBrush x:Key="AccentBrush" Color="#6D4AFF"/>
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#7C5CFF"/>
+    <SolidColorBrush x:Key="SecondaryAccentBrush" Color="#8B6EFF"/>
+    
+    <!-- Text colors - black for light background, white for header -->
+    <Color x:Key="PrimaryTextColor">#000000</Color>
+    <SolidColorBrush x:Key="PrimaryTextBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="ControlForegroundBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="HeaderTextBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="HeaderMutedTextBrush" Color="#D8D0F0"/>
+    <SolidColorBrush x:Key="FooterTextBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="FooterMutedTextBrush" Color="#666666"/>
+    <SolidColorBrush x:Key="SecondaryTextBrush" Color="#333333"/>
+    <SolidColorBrush x:Key="MutedTextBrush" Color="#666666"/>
+    <SolidColorBrush x:Key="DisabledTextBrush" Color="#999999"/>
+    
+    <!-- Header buttons - purple tinted -->
+    <SolidColorBrush x:Key="HeaderButtonBackgroundBrush" Color="#3B3852"/>
+    <SolidColorBrush x:Key="HeaderButtonHoverBrush" Color="#4A4665"/>
+    <SolidColorBrush x:Key="HeaderButtonPressedBrush" Color="#2E2B42"/>
+    <SolidColorBrush x:Key="HeaderButtonForegroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="HeaderButtonBorderBrush" Color="#556D4AFF"/>
+    
+    <!-- Controls - light with purple tint -->
+    <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#FFFFFF"/>
+    <!-- SUBTLER: Barely visible hover (was #F5F5F5) -->
+    <SolidColorBrush x:Key="ControlHoverBrush" Color="#FAFAFA"/>
+    <SolidColorBrush x:Key="InputBackgroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="InputForegroundBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="TextSelectionBrush" Color="#60D4C8F8"/>
+    <SolidColorBrush x:Key="TextCaretBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="ControlBorderBrush" Color="#B8A8D8"/>
+    <SolidColorBrush x:Key="OverlayBackgroundBrush" Color="#DDD4CEE3"/>
+    <SolidColorBrush x:Key="ReadOnlyFieldBackgroundBrush" Color="#F0ECF9"/>
+    <SolidColorBrush x:Key="ReadOnlyFieldForegroundBrush" Color="#735F9A"/>
+    <SolidColorBrush x:Key="CategoryPanelBackgroundBrush" Color="#DED8EB"/>
+
+    <!-- High contrast border (invisible in normal mode, will be visible in high contrast themes) -->
+    <SolidColorBrush x:Key="HighContrastBorderBrush" Color="#00000000"/>
+
+    <!-- TextBox/Input Brushes - SUBTLER: Barely visible hover states -->
+    <SolidColorBrush x:Key="TextBoxBackgroundBrush" Color="#FFFFFF"/>
+    <!-- SUBTLER: Barely noticeable hover (was #F8F6FC) -->
+    <SolidColorBrush x:Key="TextBoxBackgroundHoverBrush" Color="#FCFBFD"/>
+    <!-- SUBTLER: Subtle focus (was #F5F2FB) -->
+    <SolidColorBrush x:Key="TextBoxBackgroundFocusedBrush" Color="#F9F8FC"/>
+    <SolidColorBrush x:Key="TextBoxBackgroundDisabledBrush" Color="#F0ECF9"/>
+    <SolidColorBrush x:Key="TextBoxBorderBrush" Color="#B8A8D8"/>
+    <SolidColorBrush x:Key="TextBoxBorderHoverBrush" Color="#9B87C8"/>
+    <SolidColorBrush x:Key="TextBoxBorderFocusedBrush" Color="#6D4AFF"/>
+    <SolidColorBrush x:Key="TextBrush" Color="#000000"/>
+    
+    <!-- Dialog/Window Brushes -->
+    <SolidColorBrush x:Key="DialogBackgroundBrush" Color="#F0ECF9"/>
+    <SolidColorBrush x:Key="DialogBorderBrush" Color="#B8A8D8"/>
+    
+    <!-- Button Text Brushes -->
+    <SolidColorBrush x:Key="ButtonForegroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ButtonAccentForegroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ButtonSecondaryForegroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ButtonDisabledForegroundBrush" Color="#6B6680"/>
+    
+    <!-- Content Area Text -->
+    <SolidColorBrush x:Key="ContentTextBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="ContentSecondaryTextBrush" Color="#333333"/>
+    <SolidColorBrush x:Key="ContentMutedTextBrush" Color="#666666"/>
+    <SolidColorBrush x:Key="CardTextBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="CardSecondaryTextBrush" Color="#333333"/>
+    
+    <!-- Input/Form Text -->
+    <SolidColorBrush x:Key="InputTextBrush" Color="#000000"/>
+    <!-- Lighter placeholder for better hierarchy (PRIORITY 13) -->
+    <SolidColorBrush x:Key="InputPlaceholderBrush" Color="#8A9AAA"/>
+    <SolidColorBrush x:Key="LabelTextBrush" Color="#000000"/>
+
+    <!-- Popup/Flyout/Dropdown Brushes - COMPLETE with all states -->
+    <SolidColorBrush x:Key="FlyoutPresenterBackground" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="PopupBackgroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="SystemControlBackgroundChromeMediumLowBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="SystemControlForegroundBaseHighBrush" Color="#000000"/>
+
+    <!-- ComboBox item states - SUBTLER: Barely visible highlights -->
+    <SolidColorBrush x:Key="ComboBoxItemBackground" Color="#FFFFFF"/>
+    <!-- SUBTLER: Barely noticeable hover (was #F5F2FB) -->
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver" Color="#FCFBFD"/>
+    <!-- SUBTLER: Subtle pressed/selected (was #EDE8F7) -->
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundPressed" Color="#F9F8FC"/>
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected" Color="#F9F8FC"/>
+    <SolidColorBrush x:Key="ComboBoxItemForeground" Color="#000000"/>
+    <SolidColorBrush x:Key="ComboBoxItemForegroundPointerOver" Color="#000000"/>
+    <SolidColorBrush x:Key="ComboBoxItemForegroundPressed" Color="#000000"/>
+    <SolidColorBrush x:Key="ComboBoxItemForegroundSelected" Color="#000000"/>
+    <SolidColorBrush x:Key="ComboBoxItemForegroundDisabled" Color="#999999"/>
+    
+    <!-- List/Item Text -->
+    <SolidColorBrush x:Key="ListItemTextBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="ListItemSecondaryTextBrush" Color="#666666"/>
+    <SolidColorBrush x:Key="ListItemSelectedTextBrush" Color="#000000"/>
+    
+    <SolidColorBrush x:Key="ButtonWhiteBackgroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="SeparatorBrush" Color="#3B3852"/>
+    
+    <!-- Card separator line (transparent unless high contrast) -->
+    <SolidColorBrush x:Key="CardSeparatorBrush" Color="#00000000"/>
+    
+    <!-- Quick filter - light purple glass -->
+    <SolidColorBrush x:Key="QuickFilterGlassBrush" Color="#00000000"/>
+    <SolidColorBrush x:Key="QuickFilterGlassHoverBrush" Color="#20FFFFFF"/>
+    <SolidColorBrush x:Key="QuickFilterGlassActiveBrush" Color="#40FFFFFF"/>
+    <SolidColorBrush x:Key="QuickFilterGlassActiveHoverBrush" Color="#50FFFFFF"/>
+    <SolidColorBrush x:Key="QuickFilterGlassBorderBrush" Color="#30FFFFFF"/>
+    <SolidColorBrush x:Key="QuickFilterGlassActiveBorderBrush" Color="#45FFFFFF"/>
+    
+    <!-- Semantic colors -->
+    <SolidColorBrush x:Key="SuccessBrush" Color="#1EA885"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="#FF9F00"/>
+    <SolidColorBrush x:Key="ErrorBrush" Color="#F5385A"/>
+    <SolidColorBrush x:Key="SuccessBackgroundBrush" Color="#1A2F2A"/>
+    <SolidColorBrush x:Key="WarningBackgroundBrush" Color="#2F2A1A"/>
+    <SolidColorBrush x:Key="ErrorBackgroundBrush" Color="#2F1A20"/>
+    <SolidColorBrush x:Key="InfoBackgroundBrush" Color="#1A252F"/>
+    
+    <FontFamily x:Key="MainFontFamily">Segoe UI</FontFamily>
+    
+    <Color x:Key="GlobalShadowColor">#00000000</Color>
+    <Color x:Key="HeaderAccentColor">#6D4AFF</Color>
+    
+    <!-- No shadows - flat Proton style -->
+    <DropShadowEffect x:Key="DarkSubtleDropShadow" Color="#00000000" Opacity="0" BlurRadius="0"/>
+    <DropShadowEffect x:Key="SubtleDropShadow" Color="#00000000" Opacity="0" BlurRadius="0"/>
+    <DropShadowEffect x:Key="DarkButtonShadow" Color="#00000000" Opacity="0" BlurRadius="0"/>
+    <DropShadowEffect x:Key="DarkButtonShadowHover" Color="#00000000" Opacity="0" BlurRadius="0"/>
+    <DropShadowEffect x:Key="DarkButtonShadowPressed" Color="#00000000" Opacity="0" BlurRadius="0"/>
+    <DropShadowEffect x:Key="HoverMenuDropShadow" Color="#00000000" Opacity="0" BlurRadius="0"/>
+    <DropShadowEffect x:Key="TileActiveShadow" Color="#00000000" Opacity="0" BlurRadius="0"/>
+    <DropShadowEffect x:Key="TileActiveShadowPressed" Color="#00000000" Opacity="0" BlurRadius="0"/>
+    <DropShadowEffect x:Key="FrontPageTileBaseShadow" Color="#00000000" Opacity="0" BlurRadius="0"/>
+    <DropShadowEffect x:Key="FooterGroundedShadow" Color="#00000000" Opacity="0" BlurRadius="0"/>
+    
+    <BoxShadows x:Key="SlideOutPanelShadow">-20 0 40 -5 #55000000</BoxShadows>
+    <BoxShadows x:Key="FlaggedPanelShadow">-16 0 32 -4 #50000000</BoxShadows>
+    
+    <!-- Purple overlay gradient -->
+    <LinearGradientBrush x:Key="TileOverlayBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#206D4AFF" Offset="0"/>
+        <GradientStop Color="#108B6EFF" Offset="0.5"/>
+        <GradientStop Color="#00FFFFFF" Offset="1"/>
+    </LinearGradientBrush>
+
+</ResourceDictionary>

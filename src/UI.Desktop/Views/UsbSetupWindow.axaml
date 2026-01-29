@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PhantomVault.UI.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="600"
+    x:Class="PhantomVault.UI.Views.UsbSetupWindow"
+        x:DataType="vm:UsbSetupViewModel"
+            Title="USB Drive Setup"
+        Width="820" Height="600"
+        MinWidth="700" MinHeight="500"
+        WindowStartupLocation="CenterScreen"
+        CanResize="True"
+        Background="{DynamicResource WindowBackgroundBrush}" Icon="avares://PhantomVault.UI/Assets/images/Parent Icon.ico" FontFamily="Segoe UI">
+
+    <Design.DataContext>
+        <vm:UsbSetupViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="0">
+        
+        <!-- Header -->
+        <Border Grid.Row="0" Background="{DynamicResource HeaderBackgroundBrush}" Padding="15,8">
+            <StackPanel Spacing="8">
+                <TextBlock Text="USB Drive Setup"
+                           FontSize="22"
+                           FontWeight="Bold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"
+                           HorizontalAlignment="Center"/>
+                
+                <TextBlock Text="Select a USB drive for your vault"
+                           FontSize="13"
+                           Foreground="{DynamicResource SecondaryTextBrush}"
+                           HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Main Content -->
+        <ScrollViewer Grid.Row="1" Padding="32,20,32,30" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Spacing="25" MaxWidth="980" HorizontalAlignment="Center" Margin="0,0,0,120">
+                
+                <!-- Instructions -->
+                <Border Background="{DynamicResource ControlBackgroundBrush}"
+                        Padding="15"
+                        CornerRadius="{StaticResource Radius.Md}"
+                        BorderBrush="{DynamicResource AccentBrush}"
+                        BorderThickness="1">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Important"
+                                   FontSize="13"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        
+                        <TextBlock FontSize="11"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   TextWrapping="Wrap"
+                                   LineHeight="16">
+                            Your vault will be stored on the USB drive. Make sure:<LineBreak/>
+                            • The drive has at least 100 MB free space<LineBreak/>
+                            • The drive is not write-protected<LineBreak/>
+                            • You have backup access to this drive<LineBreak/>
+                            <LineBreak/>
+                            Phantom Vault will create a "vault.manifest" file on the drive.
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <!-- Drive Selection -->
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Available USB Drives"
+                               FontSize="15"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    
+                    <TextBlock Text="Select the drive where your vault will be stored"
+                               FontSize="{StaticResource Type.Small.Size}"
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               Margin="0,0,0,8"/>
+
+                    <!-- Drive ComboBox -->
+                    <ComboBox ItemsSource="{Binding Drives}" 
+                              SelectedValue="{Binding SelectedDrive, Mode=TwoWay}"
+                              MaxWidth="840"
+                              Height="36"
+                              HorizontalAlignment="Stretch"
+                              FontSize="13"
+                              ToolTip.Tip="Select the USB drive where your vault will be stored. Ensure it has at least 100 MB free space.">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" Padding="5"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <!-- Refresh and Browse Buttons -->
+                    <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,8,0,0">
+                        <Button Command="{Binding RefreshCommand}"
+                                Classes="liquid-glass"
+                                Width="120"
+                                Height="36"
+                                FontSize="13"
+                                ToolTip.Tip="Refresh the list of available USB drives. Use this if you just plugged in a drive.">
+                            <TextBlock Text="Refresh" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Button>
+
+                        <Button Command="{Binding BrowseCommand}"
+                                Classes="liquid-glass"
+                                Width="100"
+                                Height="32"
+                                FontSize="13"
+                                ToolTip.Tip="Browse for a custom folder location instead of using a USB drive.">
+                            <TextBlock Text="Browse..." HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Selected Drive Info -->
+                <StackPanel Spacing="10" 
+                IsVisible="{Binding SelectedDrive, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                HorizontalAlignment="Stretch">
+                    <TextBlock Text="Selected Drive Information"
+                               FontSize="{StaticResource Type.Body.Size}"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    
+                            <Border Background="{DynamicResource FooterBackgroundBrush}"
+                            Padding="15"
+                            CornerRadius="{StaticResource Radius.Md}"
+                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                            BorderThickness="1"
+                            HorizontalAlignment="Stretch" MaxWidth="920">
+                        <StackPanel Spacing="8">
+                            <TextBlock FontSize="{StaticResource Type.Small.Size}" Foreground="{DynamicResource SecondaryTextBrush}">
+                                <Run Text="Path:"/>
+                                <Run Text="{Binding SelectedDrive}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            </TextBlock>
+                            <TextBlock FontSize="{StaticResource Type.Small.Size}" Foreground="{DynamicResource SecondaryTextBrush}">
+                                <Run Text="Total Size:"/>
+                                <Run Text="{Binding SelectedDriveTotalSize}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            </TextBlock>
+                            <TextBlock FontSize="{StaticResource Type.Small.Size}" Foreground="{DynamicResource SecondaryTextBrush}">
+                                <Run Text="Free Space:"/>
+                                <Run Text="{Binding SelectedDriveFreeSpace}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            </TextBlock>
+                            <TextBlock FontSize="{StaticResource Type.Small.Size}" Foreground="{DynamicResource SecondaryTextBrush}">
+                                <Run Text="Format:"/>
+                                <Run Text="{Binding SelectedDriveFormat}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Status Message -->
+                <Border Background="{DynamicResource FooterBackgroundBrush}"
+                        Padding="15,12"
+                        CornerRadius="{StaticResource Radius.Md}"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"
+                        IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                    <TextBlock Text="{Binding StatusMessage}"
+                               FontSize="{StaticResource Type.Small.Size}"
+                               Foreground="{DynamicResource WarningBrush}"
+                               TextWrapping="Wrap"/>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Action Buttons -->
+        <Border Grid.Row="2" Background="{DynamicResource FooterBackgroundBrush}" Padding="25,10">
+            <StackPanel Orientation="Horizontal" 
+                        HorizontalAlignment="Center"
+                        Spacing="15">
+                
+                <!-- Go Back Button -->
+                <Button Click="GoBack_Click"
+                        Classes="liquid-glass"
+                        Width="140"
+                        Height="42"
+                        FontSize="{StaticResource Type.Body.Size}"
+                        ToolTip.Tip="Return to the previous screen without saving changes.">
+                    <TextBlock Text="Go Back" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Button>
+
+                <!-- Continue Button -->
+                <Button Command="{Binding ContinueCommand}"
+                        Width="130"
+                        Height="38"
+                        FontSize="15"
+                        FontWeight="SemiBold"
+                        Classes="liquid-glass primary"
+                        ToolTip.Tip="Continue to vault configuration with the selected USB drive.">
+                    <TextBlock Text="Continue" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Button>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
+
+

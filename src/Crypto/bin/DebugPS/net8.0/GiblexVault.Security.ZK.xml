@@ -1,0 +1,121 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>GiblexVault.Security.ZK</name>
+    </assembly>
+    <members>
+        <member name="T:GiblexVault.Security.ZK.Container.GvContainerZk">
+            <summary>
+            Zero-knowledge encrypted container format. Stores multiple files with
+            per-entry DEKs wrapped by a container encryption key (CEK) derived from the master key.
+            </summary>
+        </member>
+        <member name="M:GiblexVault.Security.ZK.Container.GvContainerZk.AddFile(System.String,System.Byte[],GiblexVault.Security.ZK.Models.EngineOptions,System.String,System.String)">
+            <summary>
+            Adds a file to the container using streaming to avoid loading the entire file into memory.
+            </summary>
+        </member>
+        <member name="P:GiblexVault.Security.ZK.GvZkJsonContext.ByteArray">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:GiblexVault.Security.ZK.GvZkJsonContext.AadPreview">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:GiblexVault.Security.ZK.GvZkJsonContext.HeaderDocDto">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:GiblexVault.Security.ZK.GvZkJsonContext.CipherSuite">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:GiblexVault.Security.ZK.GvZkJsonContext.KdfParams">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:GiblexVault.Security.ZK.GvZkJsonContext.Int32">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:GiblexVault.Security.ZK.GvZkJsonContext.String">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:GiblexVault.Security.ZK.GvZkJsonContext.Default">
+            <summary>
+            The default <see cref="T:System.Text.Json.Serialization.JsonSerializerContext"/> associated with a default <see cref="T:System.Text.Json.JsonSerializerOptions"/> instance.
+            </summary>
+        </member>
+        <member name="P:GiblexVault.Security.ZK.GvZkJsonContext.GeneratedSerializerOptions">
+            <summary>
+            The source-generated options associated with this context.
+            </summary>
+        </member>
+        <member name="M:GiblexVault.Security.ZK.GvZkJsonContext.#ctor">
+            <inheritdoc/>
+        </member>
+        <member name="M:GiblexVault.Security.ZK.GvZkJsonContext.#ctor(System.Text.Json.JsonSerializerOptions)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GiblexVault.Security.ZK.GvZkJsonContext.GetTypeInfo(System.Type)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GiblexVault.Security.ZK.Primitives.Aead.CreateAesGcm(System.Byte[])">
+            <summary>
+            Creates an AesGcm instance for reuse across multiple encrypt/decrypt calls.
+            Caller is responsible for disposing the instance.
+            </summary>
+        </member>
+        <member name="M:GiblexVault.Security.ZK.Primitives.Aead.CreateXChaChaKey(System.Byte[])">
+            <summary>
+            Creates an NSec Key instance for reuse across multiple XChaCha20 calls.
+            Caller is responsible for disposing the instance.
+            </summary>
+        </member>
+        <member name="M:GiblexVault.Security.ZK.Primitives.Aead.EncryptWithAesGcm(System.Security.Cryptography.AesGcm,System.Byte[],System.Byte[],System.Byte[])">
+            <summary>
+            Encrypts using a pre-created AesGcm instance (for AES-256-GCM).
+            </summary>
+        </member>
+        <member name="M:GiblexVault.Security.ZK.Primitives.Aead.EncryptWithKey(NSec.Cryptography.Key,System.Byte[],System.Byte[],System.Byte[])">
+            <summary>
+            Encrypts using a pre-created NSec Key instance (for XChaCha20-Poly1305).
+            </summary>
+        </member>
+        <member name="M:GiblexVault.Security.ZK.Primitives.Aead.DecryptWithAesGcm(System.Security.Cryptography.AesGcm,System.Byte[],System.Byte[],System.Byte[])">
+            <summary>
+            Decrypts using a pre-created AesGcm instance (for AES-256-GCM).
+            </summary>
+        </member>
+        <member name="M:GiblexVault.Security.ZK.Primitives.Aead.DecryptWithKey(NSec.Cryptography.Key,System.Byte[],System.Byte[],System.Byte[])">
+            <summary>
+            Decrypts using a pre-created NSec Key instance (for XChaCha20-Poly1305).
+            </summary>
+        </member>
+        <member name="T:GiblexVault.Security.ZK.Util.KeyProtector.FileKeyProtector">
+            <summary>
+            Prototype file-backed key protector for non-Windows platforms.
+            It stores a random envelope key in a file under the application's
+            data folder and uses AES-GCM to wrap/unwrap small secrets. This is
+            provided as a pragmatic fallback for platforms without DPAPI.
+            </summary>
+        </member>
+        <member name="T:GiblexVault.Security.ZK.Util.KeyProtector.IKeyProtector">
+            <summary>
+            Abstraction for sealing/unsealing small secrets. Implementations
+            may use platform-provided secure storage (DPAPI) or an application
+            managed envelope. This is a prototype abstraction to enable
+            cross-platform sealing strategies.
+            </summary>
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,331 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PhantomVault.UI.ViewModels.Settings"
+             x:Class="PhantomVault.UI.Views.Settings.AdvancedSettingsView"
+             x:DataType="vm:AdvancedSettingsViewModel">
+    <StackPanel Spacing="20" Margin="0,0,30,60">
+        <TextBlock Text="Advanced Settings" 
+                   FontSize="{StaticResource Type.H3.Size}" 
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+        
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Lg}" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="VeraCrypt Integration" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <TextBlock Text="Enable VeraCrypt container mounting for additional security" 
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+
+                <CheckBox Content="Enable VeraCrypt integration" 
+                          ToolTip.Tip="Mount vault files from VeraCrypt containers"/>
+
+                <StackPanel Spacing="8">
+                    <TextBlock Text="VeraCrypt executable path:" 
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <Grid ColumnDefinitions="*,Auto,Auto">
+                        <TextBox Grid.Column="0" 
+                                 Margin="0,0,10,0"
+                                 Text="{Binding VeraCryptPath}"
+                                 Watermark="C:\Program Files\VeraCrypt\VeraCrypt.exe"/>
+                        <Button Grid.Column="1" 
+                                Content="Browse..." 
+                                Command="{Binding BrowseVeraCryptCommand}"
+                                Width="100"
+                                Margin="0,0,10,0"/>
+                        <Button Grid.Column="2" 
+                                Content="Auto-Detect" 
+                                Command="{Binding AutoDetectVeraCryptCommand}"
+                                Width="100"/>
+                    </Grid>
+                </StackPanel>
+
+                <Button Content="Download VeraCrypt" 
+                        Width="180" 
+                        HorizontalAlignment="Left"
+                        Command="{Binding DownloadVeraCryptCommand}"
+                        Classes="liquid-glass"
+                        ToolTip.Tip="Open VeraCrypt website"/>
+            </StackPanel>
+        </Border>
+
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Lg}" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Developer Tools" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <CheckBox Content="Enable debug logging" 
+                          ToolTip.Tip="Log detailed information for troubleshooting"/>
+
+                <CheckBox Content="Show diagnostic information" 
+                          ToolTip.Tip="Display technical details in UI"/>
+
+                <Button Content="View Application Logs" 
+                        Width="180" 
+                        HorizontalAlignment="Left"
+                        Command="{Binding ViewLogsCommand}"
+                        Classes="liquid-glass"/>
+
+                <Button Content="Export Diagnostic Report" 
+                        Width="180" 
+                        HorizontalAlignment="Left"
+                        Command="{Binding ExportDiagnosticReportCommand}"
+                        Classes="liquid-glass"
+                        ToolTip.Tip="Generate report for support"/>
+
+                <Button Content="Open Log Folder" 
+                        Width="180" 
+                        HorizontalAlignment="Left"
+                        Command="{Binding OpenLogFolderCommand}"
+                        Classes="liquid-glass"/>
+            </StackPanel>
+        </Border>
+
+        <!-- PhantomRecovery Developer Mode -->
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource Brush.Accent}"
+                BorderThickness="2" 
+                CornerRadius="{StaticResource Radius.Lg}" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="🔧 PhantomRecovery Developer Mode" 
+                               FontSize="{StaticResource Type.Body.Size}" 
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource Brush.Accent}"/>
+                    <TextBlock Text="Enable testing features for PhantomRecovery integration" 
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               FontSize="12"/>
+                </StackPanel>
+                
+                <CheckBox Content="Enable Developer Mode" 
+                          IsChecked="{Binding IsRecoveryDeveloperModeEnabled}"
+                          ToolTip.Tip="Use simulated USB paths and default credentials for testing"
+                          FontWeight="SemiBold"/>
+
+                <!-- Developer Mode Options (visible when enabled) -->
+                <Border IsVisible="{Binding IsRecoveryDeveloperModeEnabled}"
+                        Background="{DynamicResource ContentBackgroundBrush}"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        Padding="15"
+                        Margin="0,5,0,0">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Developer Settings" 
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+                        <CheckBox Content="Skip USB binding checks" 
+                                  IsChecked="{Binding SkipUsbBindingCheck}"
+                                  ToolTip.Tip="Bypass USB requirements for testing"/>
+
+                        <CheckBox Content="Verbose logging" 
+                                  IsChecked="{Binding RecoveryVerboseLogging}"
+                                  ToolTip.Tip="Enable detailed debug logs for recovery operations"/>
+
+                        <Separator Margin="0,5"/>
+
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Developer Paths" 
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Vault Path:" 
+                                           FontSize="11"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <TextBox Text="{Binding RecoveryDeveloperVaultPath}" 
+                                         IsReadOnly="True"
+                                         FontSize="10"
+                                         FontFamily="Consolas"
+                                         Background="{DynamicResource InputBackgroundBrush}"/>
+                            </StackPanel>
+
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Simulated USB Path:" 
+                                           FontSize="11"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <TextBox Text="{Binding RecoveryDeveloperUsbPath}" 
+                                         IsReadOnly="True"
+                                         FontSize="10"
+                                         FontFamily="Consolas"
+                                         Background="{DynamicResource InputBackgroundBrush}"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <Border Background="{DynamicResource WarningBackgroundBrush}"
+                                BorderBrush="{DynamicResource WarningBrush}"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="10"
+                                Margin="0,5,0,0">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="ℹ️ Developer Credentials" 
+                                           FontWeight="SemiBold"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource WarningBrush}"/>
+                                <TextBlock Text="Master Secret: dev-phantom-recovery-master-2025" 
+                                           FontSize="10"
+                                           FontFamily="Consolas"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <TextBlock Text="Recovery PIN: 1234" 
+                                           FontSize="10"
+                                           FontFamily="Consolas"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Lg}" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Privacy &amp; Security" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <CheckBox Content="Enable privacy mode" 
+                          ToolTip.Tip="Hide sensitive information from screenshots"/>
+
+                <CheckBox Content="Redact logs" 
+                          IsChecked="True"
+                          ToolTip.Tip="Remove sensitive data from diagnostic logs"/>
+
+                <CheckBox Content="Block remote debugging" 
+                          IsChecked="True"
+                          ToolTip.Tip="Prevent external debugger attachment"/>
+
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Session timeout (minutes):" 
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <TextBox Width="100" 
+                             HorizontalAlignment="Left"
+                             Text="30"
+                             ToolTip.Tip="Force logout after inactivity"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Lg}" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Advanced Security Options" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <CheckBox Content="Auto-lock on minimize" 
+                          ToolTip.Tip="Lock vault when window is minimized"/>
+
+                <CheckBox Content="Auto-lock on screen lock" 
+                          IsChecked="True"
+                          ToolTip.Tip="Lock vault when Windows is locked"/>
+
+                <CheckBox Content="Clear clipboard on lock" 
+                          IsChecked="True"
+                          ToolTip.Tip="Automatically clear clipboard when locking"/>
+
+                <CheckBox Content="Require unlock to show window" 
+                          ToolTip.Tip="Show unlock prompt before displaying vault"/>
+
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Failed unlock attempts before lockout:" 
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <ComboBox Width="150" 
+                              HorizontalAlignment="Left"
+                              SelectedIndex="2">
+                        <ComboBoxItem Content="3 attempts"/>
+                        <ComboBoxItem Content="5 attempts"/>
+                        <ComboBoxItem Content="10 attempts"/>
+                        <ComboBoxItem Content="Unlimited"/>
+                    </ComboBox>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Lg}" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Data Management" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <TextBlock Text="Clear cached data, temp files, and search indexes" 
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+
+                <Button Content="Clear Cache" 
+                        Width="150" 
+                        HorizontalAlignment="Left"
+                        Command="{Binding ClearCacheCommand}"
+                        Classes="liquid-glass"/>
+
+                <Button Content="Rebuild Search Index" 
+                        Width="180" 
+                        HorizontalAlignment="Left"
+                        Command="{Binding RebuildSearchIndexCommand}"
+                        Classes="liquid-glass"/>
+            </StackPanel>
+        </Border>
+
+        <Border BorderBrush="{DynamicResource DangerBrush}" 
+                BorderThickness="2" 
+                CornerRadius="{StaticResource Radius.Lg}" 
+                Padding="20"
+                Background="{DynamicResource DangerBackgroundBrush}">
+            <StackPanel Spacing="15">
+                <TextBlock Text="⚠ Danger Zone" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource DangerBrush}"/>
+                
+                <TextBlock Text="These actions cannot be undone. Use with extreme caution." 
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource DangerBrush}"/>
+
+                <Button Content="Clear All Vault Data" 
+                        Width="180" 
+                        HorizontalAlignment="Left"
+                        Command="{Binding ClearAllVaultDataCommand}"
+                        Classes="danger"
+                        ToolTip.Tip="⚠ WARNING: This will permanently delete all vault contents"/>
+
+                <Button Content="Reset to Factory Defaults" 
+                        Width="200" 
+                        HorizontalAlignment="Left"
+                        Command="{Binding ResetToDefaultsCommand}"
+                        Classes="danger"
+                        ToolTip.Tip="⚠ Reset all settings to defaults"/>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

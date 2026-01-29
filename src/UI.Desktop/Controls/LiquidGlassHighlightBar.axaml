@@ -1,0 +1,101 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PhantomVault.UI.Controls.LiquidGlassHighlightBar"
+             x:Name="RootControl">
+  <Grid>
+    <Border HorizontalAlignment="Stretch"
+      Height="{Binding BarHeight, RelativeSource={RelativeSource AncestorType=UserControl}}"
+      CornerRadius="{Binding BarCornerRadius, RelativeSource={RelativeSource AncestorType=UserControl}}"
+      Margin="0,-8,0,-8"
+            Background="Transparent">
+      <Border.Effect>
+        <DropShadowEffect Color="#101A2C"
+         BlurRadius="22"
+                           Opacity="0.34"/>
+      </Border.Effect>
+
+      <Grid x:Name="ParallaxLayer"
+            ClipToBounds="True"
+            RenderTransformOrigin="0.5,0.5">
+        <Grid.RenderTransform>
+          <TranslateTransform />
+        </Grid.RenderTransform>
+
+        <!-- Base gradient layer -->
+        <Border CornerRadius="{Binding #RootControl.BarCornerRadius}"
+                Opacity="0.85">
+          <Border.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+              <GradientStop Offset="0" Color="#52FFFFFF"/>
+              <GradientStop Offset="0.35" Color="#2C8AD6F0"/>
+              <GradientStop Offset="0.7" Color="#1C4E8CC8"/>
+              <GradientStop Offset="1" Color="#1224377E"/>
+            </LinearGradientBrush>
+          </Border.Background>
+        </Border>
+
+        <!-- Noise texture layer -->
+        <Border CornerRadius="{Binding #RootControl.BarCornerRadius}"
+                Opacity="0.16">
+          <Border.Background>
+            <ImageBrush Source="avares://PhantomVault.UI/Assets/noise_128.png"
+                        Stretch="None"
+                        TileMode="Tile"
+                        AlignmentX="Left"
+                        AlignmentY="Top"
+                        DestinationRect="0,0,80,80"/>
+          </Border.Background>
+        </Border>
+
+        <!-- Inner highlight with adjusted corner radius for margin -->
+        <Border CornerRadius="{Binding #RootControl.BarCornerRadius}"
+                Margin="2"
+                Opacity="0.65">
+          <Border.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+              <GradientStop Offset="0" Color="#A8FFFFFF"/>
+              <GradientStop Offset="0.4" Color="#44FFFFFF"/>
+              <GradientStop Offset="0.75" Color="#118AD6FF"/>
+              <GradientStop Offset="1" Color="#0A325270"/>
+            </LinearGradientBrush>
+          </Border.Background>
+        </Border>
+
+        <!-- Sheen highlight layer -->
+        <Border CornerRadius="{Binding #RootControl.BarCornerRadius}"
+                Margin="4,6,4,3"
+                Opacity="0.78">
+          <Border.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+              <GradientStop Offset="0" Color="#C0FFFFFF"/>
+              <GradientStop Offset="0.45" Color="#66FFFFFF"/>
+              <GradientStop Offset="0.85" Color="#05FFFFFF"/>
+            </LinearGradientBrush>
+          </Border.Background>
+          <Border.OpacityMask>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+              <GradientStop Offset="0" Color="#00000000"/>
+              <GradientStop Offset="0.25" Color="#FF000000"/>
+              <GradientStop Offset="0.75" Color="#88000000"/>
+              <GradientStop Offset="1" Color="#00000000"/>
+            </LinearGradientBrush>
+          </Border.OpacityMask>
+        </Border>
+
+        <!-- Outer border accent -->
+        <Border CornerRadius="{Binding #RootControl.BarCornerRadius}"
+                BorderThickness="0.8"
+                BorderBrush="#1E80C0FF"/>
+
+        <!-- Shadow border -->
+        <Border CornerRadius="{Binding #RootControl.BarCornerRadius}"
+                BorderThickness="1.4"
+                BorderBrush="#16203360"/>
+      </Grid>
+    </Border>
+
+    <ContentPresenter HorizontalAlignment="Stretch"
+                      VerticalAlignment="Stretch"
+                      Content="{Binding Content, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+  </Grid>
+</UserControl>

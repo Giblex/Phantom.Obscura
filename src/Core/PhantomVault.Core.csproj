@@ -1,0 +1,62 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <!-- Enable nullable reference types and treat warnings as errors for stronger code quality. -->
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Produce deterministic builds to aid reproducibility and security auditing. -->
+    <Deterministic>true</Deterministic>
+    <!-- Allow unsafe code for memory pinning and zeroization -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Generate XML documentation file for IntelliSense and API docs -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- CS1591: Missing XML comment for publicly visible type or member - Temporarily suppressed -->
+    <!-- CS0618: Obsolete method usage - Some internal uses of deprecated methods are intentional -->
+    <!-- CS1573, CS1574, CS1571: XML documentation parameter mismatches - Fix in future refactor -->
+    <!-- TODO: Add XML documentation comments for all public APIs -->
+    <!-- TODO: Fix XML documentation parameter mismatches -->
+    <NoWarn>$(NoWarn);1591;CS0618;CS1573;CS1574;CS1571</NoWarn>
+    <!-- SECURITY: Embed build metadata for integrity verification -->
+    <VersionPrefix>1.0.0</VersionPrefix>
+    <InformationalVersion>$(VersionPrefix)+$(SourceRevisionId)</InformationalVersion>
+  </PropertyGroup>
+
+  <!-- Embed build timestamp and git commit hash as assembly metadata -->
+  <Target Name="AddBuildMetadata" BeforeTargets="CoreCompile">
+    <PropertyGroup>
+      <BuildDate>$([System.DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"))</BuildDate>
+    </PropertyGroup>
+    <ItemGroup>
+      <AssemblyMetadata Include="BuildDate" Value="$(BuildDate)" />
+      <AssemblyMetadata Include="BuildConfiguration" Value="$(Configuration)" />
+    </ItemGroup>
+  </Target>
+  <ItemGroup>
+    <!-- Argon2 implementation used for memory‑hard password derivation. Using
+      Isopoh.Cryptography.Argon2 which supports modern .NET and is actively maintained -->
+    <PackageReference Include="Isopoh.Cryptography.Argon2" Version="2.0.0" />
+    <!-- BouncyCastle for post-quantum cryptography (ML-KEM/Kyber) -->
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
+  <!-- Windows Runtime helpers to bridge WinRT async operations from Windows Hello APIs into Tasks -->
+  <PackageReference Include="System.Runtime.WindowsRuntime" Version="4.7.0" />
+    <PackageReference Include="System.Management" Version="8.0.0" />
+    <PackageReference Include="KeePassLib.Standard" Version="2.57.1" />
+    <!-- Yubico SDK for YubiKey integration -->
+    <PackageReference Include="Yubico.YubiKey" Version="1.12.0" />
+    <!-- System.Security.Cryptography.Algorithms provides AES‑GCM support. -->
+    <!-- Serilog for structured logging -->
+    <PackageReference Include="Serilog" Version="4.2.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Reference to zero-knowledge vault security library -->
+    <ProjectReference Include="..\Crypto\GiblexVault.Security.ZK.csproj" />
+    <!-- Link shared policy engine files from /Policies to ensure enforcement is compiled into Core -->
+    <Compile Include="..\..\Policies\ObscuraPolicy.cs" Link="Policies\ObscuraPolicy.cs" />
+    <Compile Include="..\..\Policies\PolicyEngine.cs" Link="Policies\PolicyEngine.cs" />
+    <Compile Include="..\..\Policies\PolicySynchronizer.cs" Link="Policies\PolicySynchronizer.cs" />
+    <Compile Include="..\..\Policies\PolicyViolationException.cs" Link="Policies\PolicyViolationException.cs" />
+    <Compile Include="..\..\Policies\UsbKeyFile.cs" Link="Policies\UsbKeyFile.cs" />
+  </ItemGroup>
+</Project>

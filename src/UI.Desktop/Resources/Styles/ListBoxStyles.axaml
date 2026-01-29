@@ -1,0 +1,11 @@
+<Styles xmlns="https://github.com/avaloniaui"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Shadow handling moved to theme files (Dark.axaml, Light.axaml, HighContrast.axaml) -->
+    <!-- This allows themes to control shadow presence/intensity on ListBoxItems without defensive overrides -->
+    <!-- Dark theme: Shadows enabled for depth perception -->
+    <!-- Light theme: Shadows at 0% opacity (flat design) -->
+    <!-- HighContrast theme: All shadows disabled, strong borders instead -->
+
+</Styles>
+

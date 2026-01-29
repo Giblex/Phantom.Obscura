@@ -1,0 +1,203 @@
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:views="clr-namespace:PhantomVault.UI.Views"
+        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="700"
+        x:Class="PhantomVault.UI.Views.IconDownloaderWindow"
+        Width="600" Height="700"
+        MinWidth="500" MinHeight="600"
+    Title="Flaticon Icon Downloader"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Foreground="{DynamicResource PrimaryTextBrush}"
+        CanResize="True">
+    
+    <views:ThemeAwareWindow.Styles>
+        <StyleInclude Source="avares://PhantomVault.UI/Assets/Themes/PhantomTheme.Dark.axaml"/>
+    </views:ThemeAwareWindow.Styles>
+
+    <DockPanel Margin="20" LastChildFill="True">
+        
+        <!-- Footer - Docked to bottom FIRST to reserve space -->
+        <Border DockPanel.Dock="Bottom"
+                Background="{DynamicResource ControlBackgroundBrush}"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="0,15,0,0"
+                Margin="0,15,0,0">
+            <StackPanel Spacing="10">
+                <!-- Cache Info -->
+                <TextBlock Text="{Binding CacheInfo}"
+                           FontSize="10"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           HorizontalAlignment="Center"/>
+                
+                <!-- Action Buttons -->
+                <Grid ColumnDefinitions="*,10,*">
+                    <Button Grid.Column="0"
+                            Command="{Binding ClearCacheCommand}"
+                            Classes="liquid-glass"
+                            Height="35">
+                        <TextBlock Text="Clear Cache" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
+                    <Button Grid.Column="2"
+                            Command="{Binding CloseCommand}"
+                            Classes="primary"
+                            Height="35">
+                        <TextBlock Text="Close" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
+                </Grid>
+            </StackPanel>
+        </Border>
+        
+        <!-- Header with Security Warning - Docked to top -->
+        <StackPanel DockPanel.Dock="Top" Spacing="15">
+            
+            <!-- Title -->
+            <TextBlock Text="Download Icons from Flaticon"
+                       FontSize="18"
+                       FontWeight="Bold"
+                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+            
+            <!-- Security Status -->
+            <Border Background="{DynamicResource ControlBackgroundBrush}"
+                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="15">
+                <StackPanel Spacing="10">
+                    <!-- Internet Status Indicator -->
+                    <Grid ColumnDefinitions="Auto,*">
+                        <Border Grid.Column="0"
+                                Background="{Binding InternetStatusColor}"
+                                Width="12"
+                                Height="12"
+                                CornerRadius="6"
+                                VerticalAlignment="Center"
+                                Margin="0,0,12,0"/>
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding InternetStatusText}" 
+                                   FontSize="13" 
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    </Grid>
+                    
+                    <!-- Security Message -->
+                    <TextBlock Text="Secure Mode: HTTPS-only | No cookies | No tracking | Auto-disconnect"
+                               FontSize="10"
+                               Foreground="{DynamicResource SuccessBrush}"
+                               TextWrapping="Wrap"/>
+                    
+                    <!-- Internet Controls -->
+                    <Grid ColumnDefinitions="Auto,10,*">
+                        <Button Grid.Column="0"
+                                Command="{Binding EnableInternetCommand}"
+                                IsEnabled="{Binding !IsInternetEnabled}"
+                                Classes="success"
+                                Height="35">
+                            <TextBlock Text="Enable Internet" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Button>
+                        <Button Grid.Column="2"
+                                Command="{Binding DisableInternetCommand}"
+                                IsEnabled="{Binding IsInternetEnabled}"
+                                Classes="danger"
+                                Height="35">
+                            <TextBlock Text="Disable Internet" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Button>
+                    </Grid>
+                </StackPanel>
+            </Border>
+            
+            <!-- Search Box -->
+            <Border Background="{DynamicResource ControlBackgroundBrush}"
+                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="10">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBox Grid.Column="0"
+                             Text="{Binding SearchQuery}"
+                             Watermark="Search for icons (e.g., 'social media', 'finance', 'security')..."
+                             BorderThickness="0"
+                             Background="Transparent"
+                             VerticalContentAlignment="Center"/>
+                    <Button Grid.Column="1"
+                            Command="{Binding SearchIconsCommand}"
+                            IsEnabled="{Binding IsInternetEnabled}"
+                            Classes="primary"
+                            Width="100"
+                            Height="30">
+                        <TextBlock Text="Search" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
+                </Grid>
+            </Border>
+            
+            <!-- Status Message -->
+            <TextBlock Text="{Binding StatusMessage}"
+                       FontSize="11"
+                       Foreground="{DynamicResource MutedTextBrush}"
+                       TextWrapping="Wrap"
+                       IsVisible="{Binding !!StatusMessage}"/>
+        </StackPanel>
+        
+        <!-- Results ScrollViewer - Fills remaining space -->
+        <ScrollViewer Margin="0,15,0,0"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Margin="0,0,0,0">
+                <ItemsControl ItemsSource="{Binding SearchResults}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="15"
+                                    Margin="0,0,0,10">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <!-- Icon Preview -->
+                                <Border Grid.Column="0"
+                                        Background="{DynamicResource AccentBrush}"
+                                        Width="48"
+                                        Height="48"
+                                        CornerRadius="6"
+                                        Margin="0,0,15,0">
+                                    <TextBlock Text="{Binding PreviewEmoji}"
+                                               FontSize="28"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"/>
+                                </Border>
+                                
+                                <!-- Icon Info -->
+                                <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Name}"
+                                               FontSize="13"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    <TextBlock Text="{Binding Category}"
+                                               FontSize="10"
+                                               Foreground="{DynamicResource MutedTextBrush}"/>
+                                </StackPanel>
+                                
+                                <!-- Download Button -->
+                                <Button Grid.Column="2"
+                                        Command="{Binding $parent[Window].DataContext.DownloadIconCommand}"
+                                        CommandParameter="{Binding}"
+                                        Classes="primary"
+                                        Width="100"
+                                        Height="35">
+                                    <TextBlock Text="Download" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Button>
+                            </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+        
+    </DockPanel>
+</views:ThemeAwareWindow>
+
+

@@ -1,0 +1,12 @@
+{
+    "dotnet.defaultSolution": "PhantomVault.sln",
+    "C_Cpp.files.exclude": {
+        "**/*.axaml": true,
+        "**/*.xaml": true
+    },
+    "files.associations": {
+        "*.axaml": "xml",
+        "*.xaml": "xml"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
+}

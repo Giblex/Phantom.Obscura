@@ -1,0 +1,403 @@
+[22:58:42] [WRN] Policy enforcement bypass enabled (dev mode)
+LogHost: Initializing to normal mode (.cctor)
+[RecoveryDeveloperMode] Initialized
+  Vault Path: C:\Users\Main\AppData\Local\PhantomRecoveryVault_Dev
+  USB Path: C:\Users\Main\AppData\Local\PhantomRecovery_SimulatedUSB
+[RecoveryDev] Developer mode enabled for PhantomRecovery integration
+[RuntimeThemeService] Applied theme: ClassicDark
+[2026-01-06 22:58:43] [ThemeManager] ApplyTheme(Dark) - Current style count: 12
+[2026-01-06 22:58:43] [ThemeManager] ApplyTheme(Dark) - Current style count: 12
+[2026-01-06 22:58:43] [ThemeManager] Styles snapshot (before theme change): 12 entries
+[2026-01-06 22:58:43] [ThemeManager] Styles snapshot (before theme change): 12 entries
+[2026-01-06 22:58:43] [ThemeManager]   [0] FluentTheme
+[2026-01-06 22:58:43] [ThemeManager]   [0] FluentTheme
+[2026-01-06 22:58:43] [ThemeManager]   [1] Styles
+[2026-01-06 22:58:43] [ThemeManager]   [1] Styles
+[2026-01-06 22:58:43] [ThemeManager]   [2] Styles
+[2026-01-06 22:58:43] [ThemeManager]   [2] Styles
+[2026-01-06 22:58:43] [ThemeManager]   [3] Styles
+[2026-01-06 22:58:43] [ThemeManager]   [3] Styles
+[2026-01-06 22:58:43] [ThemeManager]   [4] Style
+[2026-01-06 22:58:43] [ThemeManager]   [4] Style
+[2026-01-06 22:58:43] [ThemeManager]   [5] Style
+[2026-01-06 22:58:43] [ThemeManager]   [5] Style
+[2026-01-06 22:58:43] [ThemeManager]   [6] Style
+[2026-01-06 22:58:43] [ThemeManager]   [6] Style
+[2026-01-06 22:58:43] [ThemeManager]   [7] Style
+[2026-01-06 22:58:43] [ThemeManager]   [7] Style
+[2026-01-06 22:58:43] [ThemeManager]   [8] Style
+[2026-01-06 22:58:43] [ThemeManager]   [8] Style
+[2026-01-06 22:58:43] [ThemeManager]   [9] Style
+[2026-01-06 22:58:43] [ThemeManager]   [9] Style
+[2026-01-06 22:58:43] [ThemeManager]   [10] Style
+[2026-01-06 22:58:43] [ThemeManager]   [10] Style
+[2026-01-06 22:58:43] [ThemeManager]   [11] Style
+[2026-01-06 22:58:43] [ThemeManager]   [11] Style
+[2026-01-06 22:58:43] [ThemeManager] Removed 0 theme overlay(s)
+[2026-01-06 22:58:43] [ThemeManager] Removed 0 theme overlay(s)
+[2026-01-06 22:58:43] [ThemeManager] Set RequestedThemeVariant to Dark (RuntimeTheme active: False)
+[2026-01-06 22:58:43] [ThemeManager] Set RequestedThemeVariant to Dark (RuntimeTheme active: False)
+[2026-01-06 22:58:43] [ThemeManager] Adding PhantomTheme from avares://PhantomVault.UI/Assets/Themes/PhantomTheme.Dark.axaml
+[2026-01-06 22:58:43] [ThemeManager] Adding PhantomTheme from avares://PhantomVault.UI/Assets/Themes/PhantomTheme.Dark.axaml
+[2026-01-06 22:58:43] [ThemeManager] Failed to load PhantomTheme: Exception has been thrown by the target of an invocation.
+[2026-01-06 22:58:43] [ThemeManager] Failed to load PhantomTheme: Exception has been thrown by the target of an invocation.
+[2026-01-06 22:58:43] [ThemeManager] Stack trace:    at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at System.Reflection.MethodBase.Invoke(Object obj, Object[] parameters)
+   at Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(IServiceProvider sp, Uri uri, Uri baseUri)
+   at Avalonia.Markup.Xaml.Styling.StyleInclude.get_Loaded()
+   at Avalonia.Markup.Xaml.Styling.StyleInclude.Avalonia.Controls.IResourceProvider.AddOwner(IResourceHost owner)
+   at Avalonia.Styling.Styles.InternalAdd(IList items, IResourceHost owner)
+   at Avalonia.Styling.Styles.OnCollectionChanged(Object sender, NotifyCollectionChangedEventArgs e)
+   at Avalonia.Collections.AvaloniaList`1.NotifyAdd(T item, Int32 index)
+   at Avalonia.Collections.AvaloniaList`1.Add(T item)
+   at Avalonia.Styling.Styles.Add(IStyle item)
+   at PhantomVault.UI.Services.ThemeManagerService.ApplyTheme(AppTheme theme) in G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\Services\ThemeManagerService.cs:line 218
+[2026-01-06 22:58:43] [ThemeManager] Stack trace:    at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at System.Reflection.MethodBase.Invoke(Object obj, Object[] parameters)
+   at Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(IServiceProvider sp, Uri uri, Uri baseUri)
+   at Avalonia.Markup.Xaml.Styling.StyleInclude.get_Loaded()
+   at Avalonia.Markup.Xaml.Styling.StyleInclude.Avalonia.Controls.IResourceProvider.AddOwner(IResourceHost owner)
+   at Avalonia.Styling.Styles.InternalAdd(IList items, IResourceHost owner)
+   at Avalonia.Styling.Styles.OnCollectionChanged(Object sender, NotifyCollectionChangedEventArgs e)
+   at Avalonia.Collections.AvaloniaList`1.NotifyAdd(T item, Int32 index)
+   at Avalonia.Collections.AvaloniaList`1.Add(T item)
+   at Avalonia.Styling.Styles.Add(IStyle item)
+   at PhantomVault.UI.Services.ThemeManagerService.ApplyTheme(AppTheme theme) in G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\Services\ThemeManagerService.cs:line 218
+[2026-01-06 22:58:43] [ThemeManager] Forced UI refresh on all windows
+[2026-01-06 22:58:43] [ThemeManager] Forced UI refresh on all windows
+[2026-01-06 22:58:43] [ThemeManager] ActualThemeVariant: Dark
+[2026-01-06 22:58:43] [ThemeManager] ActualThemeVariant: Dark
+[2026-01-06 22:58:43] [ThemeManager] Dumping active brush resources...
+[2026-01-06 22:58:43] [ThemeManager] Dumping active brush resources...
+[2026-01-06 22:58:43] [ThemeManager] TextSelectionBrush: <missing>
+[2026-01-06 22:58:43] [ThemeManager] TextSelectionBrush: <missing>
+[2026-01-06 22:58:43] [ThemeManager] TextCaretBrush: <missing>
+[2026-01-06 22:58:43] [ThemeManager] TextCaretBrush: <missing>
+[2026-01-06 22:58:43] [ThemeManager] QuickFilterGlassHoverBrush: <missing>
+[2026-01-06 22:58:43] [ThemeManager] QuickFilterGlassHoverBrush: <missing>
+[2026-01-06 22:58:43] [ThemeManager] QuickFilterGlassActiveBrush: <missing>
+[2026-01-06 22:58:43] [ThemeManager] QuickFilterGlassActiveBrush: <missing>
+[2026-01-06 22:58:43] [ThemeManager] QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-06 22:58:43] [ThemeManager] QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-06 22:58:43] [ThemeManager] LiquidGlassButtonForeground: <missing>
+[2026-01-06 22:58:43] [ThemeManager] LiquidGlassButtonForeground: <missing>
+[2026-01-06 22:58:43] [ThemeManager] InputForegroundBrush: <missing>
+[2026-01-06 22:58:43] [ThemeManager] InputForegroundBrush: <missing>
+[2026-01-06 22:58:43] [ThemeManager] Inspecting resources within StyleInclude: avares://PhantomVault.UI/Assets/Themes/PhantomTheme.Dark.axaml
+[2026-01-06 22:58:43] [ThemeManager] Inspecting resources within StyleInclude: avares://PhantomVault.UI/Assets/Themes/PhantomTheme.Dark.axaml
+[2026-01-06 22:58:43] [ThemeManager] Error applying theme: Exception has been thrown by the target of an invocation.
+[2026-01-06 22:58:43] [ThemeManager] Error applying theme: Exception has been thrown by the target of an invocation.
+[2026-01-06 22:58:43] [ThemeManager] Stack trace:    at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at System.Reflection.MethodBase.Invoke(Object obj, Object[] parameters)
+   at Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(IServiceProvider sp, Uri uri, Uri baseUri)
+   at Avalonia.Markup.Xaml.Styling.StyleInclude.get_Loaded()
+   at PhantomVault.UI.Services.ThemeManagerService.DumpActiveBrushes() in G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\Services\ThemeManagerService.cs:line 423
+   at PhantomVault.UI.Services.ThemeManagerService.ApplyTheme(AppTheme theme) in G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\Services\ThemeManagerService.cs:line 260
+[2026-01-06 22:58:43] [ThemeManager] Stack trace:    at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at System.Reflection.MethodBase.Invoke(Object obj, Object[] parameters)
+   at Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(IServiceProvider sp, Uri uri, Uri baseUri)
+   at Avalonia.Markup.Xaml.Styling.StyleInclude.get_Loaded()
+   at PhantomVault.UI.Services.ThemeManagerService.DumpActiveBrushes() in G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\Services\ThemeManagerService.cs:line 423
+   at PhantomVault.UI.Services.ThemeManagerService.ApplyTheme(AppTheme theme) in G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\Services\ThemeManagerService.cs:line 260
+[RuntimeThemeService] Applied ClassicDark to window: Welcome to Phantom Vault
+[VaultViewModel] Auto-inject service initialized
+[ICON-MGR] FindIconPathForCredential - Title: 'GitHub', Url: 'https://github.com'
+[ICON-MGR] Icons directory: G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons
+[ICON-MGR] Extracted domain from URL: 'github'
+[ICON-MGR] Search terms: github
+[ICON-MGR] TryMatchIcon - terms: github
+[ICON-MGR] Index match for term: 'github' -> 'G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\github.png'
+[ICON-MGR] ✅ FOUND 'G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\github.png' for term 'github'
+[ICON-MGR] FindIconPathForCredential - Title: 'Gmail', Url: 'https://gmail.com'
+[ICON-MGR] Icons directory: G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons
+[ICON-MGR] Extracted domain from URL: 'gmail'
+[ICON-MGR] Search terms: gmail
+[ICON-MGR] TryMatchIcon - terms: gmail
+[ICON-MGR] Index match for term: 'gmail' -> 'G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\gmail.png'
+[ICON-MGR] ✅ FOUND 'G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\gmail.png' for term 'gmail'
+[ICON-MGR] FindIconPathForCredential - Title: 'Bank of America', Url: 'https://bankofamerica.com'
+[ICON-MGR] Icons directory: G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons
+[ICON-MGR] Extracted domain from URL: 'bankofamerica'
+[ICON-MGR] Search terms: bank of america, bankofamerica, bank
+[ICON-MGR] TryMatchIcon - terms: bank of america, bankofamerica, bank
+[ICON-MGR] Index match for term: 'bank of america' -> 'G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\Bank of America.png'
+[ICON-MGR] ✅ FOUND 'G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\Bank of America.png' for term 'bank of america'
+[ICON-MGR] FindIconPathForCredential - Title: 'Amazon', Url: 'https://amazon.com'
+[ICON-MGR] Icons directory: G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons
+[ICON-MGR] Extracted domain from URL: 'amazon'
+[ICON-MGR] Search terms: amazon
+[ICON-MGR] TryMatchIcon - terms: amazon
+[ICON-MGR] Index match for term: 'amazon' -> 'G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\Amazon.png'
+[ICON-MGR] ✅ FOUND 'G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\Amazon.png' for term 'amazon'
+[ICON-MGR] FindIconPathForCredential - Title: 'Netflix', Url: 'https://netflix.com'
+[ICON-MGR] Icons directory: G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons
+[ICON-MGR] Extracted domain from URL: 'netflix'
+[ICON-MGR] Search terms: netflix
+[ICON-MGR] TryMatchIcon - terms: netflix
+[ICON-MGR] Index match for term: 'netflix' -> 'G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\Netflix.png'
+[ICON-MGR] ✅ FOUND 'G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\Netflix.png' for term 'netflix'
+[ICON-MGR] FindIconPathForCredential - Title: 'Visa Platinum', Url: ''
+[ICON-MGR] Icons directory: G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons
+[ICON-MGR] Search terms: visa platinum, visa
+[ICON-MGR] TryMatchIcon - terms: visa platinum, visa
+[ICON-MGR] Index match for term: 'visa' -> 'G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\Visa.png'
+[ICON-MGR] ✅ FOUND 'G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\Visa.png' for term 'visa'
+[ICON-MGR] FindIconPathForCredential - Title: 'Home WiFi', Url: ''
+[ICON-MGR] Icons directory: G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons
+[ICON-MGR] Search terms: home wifi, home
+[ICON-MGR] TryMatchIcon - terms: home wifi, home
+[ICON-MGR] Index match for term: 'home' -> 'G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PO UI\OS\UI\home.png'
+[ICON-MGR] ✅ FOUND 'G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PO UI\OS\UI\home.png' for term 'home'
+[ICON-MGR] FindIconPathForCredential - Title: 'Passport - Alex Rivera', Url: ''
+[ICON-MGR] Icons directory: G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons
+[ICON-MGR] Search terms: passport - alex rivera, passport
+[ICON-MGR] TryMatchIcon - terms: passport - alex rivera, passport
+[ICON-MGR] ❌ No icon found for this credential
+[ICON-MGR] FindIconPathForCredential - Title: 'Azure Production API', Url: ''
+[ICON-MGR] Icons directory: G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons
+[ICON-MGR] Search terms: azure production api, azure
+[ICON-MGR] TryMatchIcon - terms: azure production api, azure
+[ICON-MGR] Index match for term: 'azure' -> 'G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\Azure.png'
+[ICON-MGR] ✅ FOUND 'G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\Azure.png' for term 'azure'
+[ICON-MGR] FindIconPathForCredential - Title: 'Emergency Contact - Taylor Lee', Url: ''
+[ICON-MGR] Icons directory: G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons
+[ICON-MGR] Search terms: emergency contact - taylor lee, emergency
+[ICON-MGR] TryMatchIcon - terms: emergency contact - taylor lee, emergency
+[ICON-MGR] ❌ No icon found for this credential
+MessageBus: Listening to PhantomVault.UI.ViewModels.NavigateToVaultWithFilterMessage:
+VaultWindow constructor start
+[Binding]An error occurred binding 'Text' to 'FocusedArtifact.Label' at 'FocusedArtifact': 'Value is null.' (TextBlock #38139549)
+[Binding]An error occurred binding 'Text' to 'FocusedArtifact.Status' at 'FocusedArtifact': 'Value is null.' (TextBlock #2295787)
+[Binding]An error occurred binding 'Text' to 'FocusedArtifact.Type' at 'FocusedArtifact': 'Value is null.' (TextBlock #51741033)
+[Binding]An error occurred binding 'Text' to 'FocusedArtifact.Source' at 'FocusedArtifact': 'Value is null.' (TextBlock #30274111)
+[Binding]An error occurred binding 'Text' to 'FocusedArtifact.CreatedAt' at 'FocusedArtifact': 'Value is null.' (TextBlock #58119881)
+[Binding]An error occurred binding 'Text' to 'FocusedArtifact.Sha256Hex' at 'FocusedArtifact': 'Value is null.' (TextBlock #10089924)
+[RecoveryDev] InitializeRecoveryView started
+[RecoveryDev] Using developer mode configuration
+[RecoveryDev] Creating vault with USB binding at: C:\Users\Main\AppData\Local\PhantomRecovery_SimulatedUSB
+VaultWindow constructor end
+[Binding]An error occurred binding 'IsVisible' to 'IsShowingCategoryLanding' at 'IsShowingCategoryLanding': 'Could not find a matching property accessor for 'IsShowingCategoryLanding' on 'PhantomVault.UI.ViewModels.CategoryLandingViewModel'.' (CategoryLandingView #2913837)
+[Binding]An error occurred binding 'Background' to 'SelectedCredential.IconBackgroundBrush' at 'SelectedCredential': 'Value is null.' (Border #20746639)
+[Binding]An error occurred binding 'Source' to 'SelectedCredential.AutoDetectedIconBitmap' at 'SelectedCredential': 'Value is null.' (Image #2756184)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasAutoDetectedIcon' at 'SelectedCredential': 'Value is null.' (Image #2756184)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.IconText' at 'SelectedCredential': 'Value is null.' (TextBlock #63101423)
+[Binding]An error occurred binding 'IsVisible' to '!SelectedCredential.HasAutoDetectedIcon' at 'SelectedCredential': 'Value is null.' (TextBlock #63101423)
+[Binding]An error occurred binding '(unknown)' to 'SelectedCredential.Title' at 'SelectedCredential': 'Value is null.' (TextBlock #13855222)
+[Binding]An error occurred binding '(unknown)' to 'SelectedCredential.Username' at 'SelectedCredential': 'Value is null.' (TextBlock #38712671)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.FavoriteIcon' at 'SelectedCredential': 'Value is null.' (TextBlock #33022957)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.IsPasswordEntry' at 'SelectedCredential': 'Value is null.' (StackPanel #57613851)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasUsername' at 'SelectedCredential': 'Value is null.' (StackPanel #36210358)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.Username' at 'SelectedCredential': 'Value is null.' (TextBox #20649961)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasPassword' at 'SelectedCredential': 'Value is null.' (StackPanel #887969)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.Password' at 'SelectedCredential': 'Value is null.' (TextBox #51631922)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.IsWiFiEntry' at 'SelectedCredential': 'Value is null.' (StackPanel #60794620)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasWiFiSSID' at 'SelectedCredential': 'Value is null.' (StackPanel #25417198)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.WiFiSSID' at 'SelectedCredential': 'Value is null.' (TextBox #39330387)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasWiFiSecurity' at 'SelectedCredential': 'Value is null.' (StackPanel #63823040)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.WiFiSecurityType' at 'SelectedCredential': 'Value is null.' (TextBox #18429167)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasWiFiBssid' at 'SelectedCredential': 'Value is null.' (StackPanel #20553842)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.WiFiBSSID' at 'SelectedCredential': 'Value is null.' (TextBox #31644779)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasWiFiPassword' at 'SelectedCredential': 'Value is null.' (StackPanel #32051341)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.MaskedWiFiPassword' at 'SelectedCredential': 'Value is null.' (TextBox #16367560)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.IsCreditCardEntry' at 'SelectedCredential': 'Value is null.' (StackPanel #26486770)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasCardholderName' at 'SelectedCredential': 'Value is null.' (StackPanel #65053610)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.CardholderName' at 'SelectedCredential': 'Value is null.' (TextBox #4707407)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasCardNumber' at 'SelectedCredential': 'Value is null.' (StackPanel #45223855)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.MaskedCardNumber' at 'SelectedCredential': 'Value is null.' (TextBox #42366666)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasCardType' at 'SelectedCredential': 'Value is null.' (StackPanel #25428204)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.CardType' at 'SelectedCredential': 'Value is null.' (TextBox #45755680)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasCardExpiry' at 'SelectedCredential': 'Value is null.' (StackPanel #15114481)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.CardExpiryText' at 'SelectedCredential': 'Value is null.' (TextBox #9147936)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasCardCVV' at 'SelectedCredential': 'Value is null.' (StackPanel #12603125)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.MaskedCardCVV' at 'SelectedCredential': 'Value is null.' (TextBox #15222565)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasCardPIN' at 'SelectedCredential': 'Value is null.' (StackPanel #10984535)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.MaskedCardPIN' at 'SelectedCredential': 'Value is null.' (TextBox #2785358)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasCardBillingAddress' at 'SelectedCredential': 'Value is null.' (StackPanel #61723690)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.CardBillingAddress' at 'SelectedCredential': 'Value is null.' (TextBox #25068230)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.IsBankAccountEntry' at 'SelectedCredential': 'Value is null.' (StackPanel #33631792)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasBankName' at 'SelectedCredential': 'Value is null.' (StackPanel #39820598)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.BankName' at 'SelectedCredential': 'Value is null.' (TextBox #62775401)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasBankAccountType' at 'SelectedCredential': 'Value is null.' (StackPanel #38187048)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.BankAccountType' at 'SelectedCredential': 'Value is null.' (TextBox #28107703)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasBankAccountNumber' at 'SelectedCredential': 'Value is null.' (StackPanel #55288684)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.MaskedBankAccountNumber' at 'SelectedCredential': 'Value is null.' (TextBox #51642735)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasBankRoutingNumber' at 'SelectedCredential': 'Value is null.' (StackPanel #25650430)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.MaskedBankRoutingNumber' at 'SelectedCredential': 'Value is null.' (TextBox #62131436)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasBankIban' at 'SelectedCredential': 'Value is null.' (StackPanel #50549297)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.MaskedBankIban' at 'SelectedCredential': 'Value is null.' (TextBox #22312013)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasBankSwift' at 'SelectedCredential': 'Value is null.' (StackPanel #1933894)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.MaskedBankSwift' at 'SelectedCredential': 'Value is null.' (TextBox #66590397)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasBankBranchCode' at 'SelectedCredential': 'Value is null.' (StackPanel #4707453)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.BankBranchCode' at 'SelectedCredential': 'Value is null.' (TextBox #62442668)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasBankBranchAddress' at 'SelectedCredential': 'Value is null.' (StackPanel #9181869)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.BankBranchAddress' at 'SelectedCredential': 'Value is null.' (TextBox #25113108)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.IsIdentityEntry' at 'SelectedCredential': 'Value is null.' (StackPanel #49805148)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasIdDocumentType' at 'SelectedCredential': 'Value is null.' (StackPanel #7685202)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.IdDocumentType' at 'SelectedCredential': 'Value is null.' (TextBox #18521632)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasIdNumber' at 'SelectedCredential': 'Value is null.' (StackPanel #23857263)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.IdNumber' at 'SelectedCredential': 'Value is null.' (TextBox #53390183)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasIdIssuingCountry' at 'SelectedCredential': 'Value is null.' (StackPanel #65411368)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.IdIssuingCountry' at 'SelectedCredential': 'Value is null.' (TextBox #63829484)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasIdIssuingState' at 'SelectedCredential': 'Value is null.' (StackPanel #2805716)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.IdIssuingState' at 'SelectedCredential': 'Value is null.' (TextBox #25936457)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasIdIssueDate' at 'SelectedCredential': 'Value is null.' (StackPanel #20478258)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.IdIssueDateText' at 'SelectedCredential': 'Value is null.' (TextBox #48126200)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasIdExpiryDate' at 'SelectedCredential': 'Value is null.' (StackPanel #5908098)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.IdExpiryDateText' at 'SelectedCredential': 'Value is null.' (TextBox #8793912)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.IsApiKeyEntry' at 'SelectedCredential': 'Value is null.' (StackPanel #41218308)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasApiKeyValue' at 'SelectedCredential': 'Value is null.' (StackPanel #50348619)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.MaskedApiKeyValue' at 'SelectedCredential': 'Value is null.' (TextBox #51706359)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasApiEnvironment' at 'SelectedCredential': 'Value is null.' (StackPanel #45863669)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.ApiEnvironment' at 'SelectedCredential': 'Value is null.' (TextBox #23969675)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasApiEndpoint' at 'SelectedCredential': 'Value is null.' (StackPanel #62495522)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.ApiEndpoint' at 'SelectedCredential': 'Value is null.' (TextBox #28972513)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasApiDocumentation' at 'SelectedCredential': 'Value is null.' (StackPanel #65072241)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.ApiDocumentationUrl' at 'SelectedCredential': 'Value is null.' (TextBox #36360186)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.IsContactEntry' at 'SelectedCredential': 'Value is null.' (StackPanel #59493923)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasContactName' at 'SelectedCredential': 'Value is null.' (StackPanel #54278420)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.ContactFullName' at 'SelectedCredential': 'Value is null.' (TextBox #34475894)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasContactEmail' at 'SelectedCredential': 'Value is null.' (StackPanel #41084016)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.ContactEmail' at 'SelectedCredential': 'Value is null.' (TextBox #39471019)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasContactPhone' at 'SelectedCredential': 'Value is null.' (StackPanel #43035983)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.ContactPhone' at 'SelectedCredential': 'Value is null.' (TextBox #63362562)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasContactCompany' at 'SelectedCredential': 'Value is null.' (StackPanel #32093935)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.ContactCompany' at 'SelectedCredential': 'Value is null.' (TextBox #49471932)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasContactJobTitle' at 'SelectedCredential': 'Value is null.' (StackPanel #47803537)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.ContactJobTitle' at 'SelectedCredential': 'Value is null.' (TextBox #46881303)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasContactAddress' at 'SelectedCredential': 'Value is null.' (StackPanel #39289205)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.ContactAddress' at 'SelectedCredential': 'Value is null.' (TextBox #28309076)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasUrl' at 'SelectedCredential': 'Value is null.' (StackPanel #11333852)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.Url' at 'SelectedCredential': 'Value is null.' (TextBox #24768686)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasGroup' at 'SelectedCredential': 'Value is null.' (StackPanel #51928949)
+[Binding]An error occurred binding '(unknown)' to 'SelectedCredential.Group' at 'SelectedCredential': 'Value is null.' (TextBlock #6804902)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasNotes' at 'SelectedCredential': 'Value is null.' (StackPanel #61826715)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.Notes' at 'SelectedCredential': 'Value is null.' (TextBox #41907998)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.Created' at 'SelectedCredential': 'Value is null.' (TextBlock #16397525)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.LastModified' at 'SelectedCredential': 'Value is null.' (TextBlock #53131185)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.TagsText' at 'SelectedCredential': 'Value is null.' (TextBlock #8658696)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.ExpiryText' at 'SelectedCredential': 'Value is null.' (TextBlock #3956716)
+[Binding]An error occurred binding 'Background' to 'SelectedTrashItem.Payload.IconBackgroundBrush' at 'SelectedTrashItem': 'Value is null.' (Border #65050486)
+[Binding]An error occurred binding 'Source' to 'SelectedTrashItem.Payload.AutoDetectedIconBitmap' at 'SelectedTrashItem': 'Value is null.' (Image #34598031)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedTrashItem.Payload.HasAutoDetectedIcon' at 'SelectedTrashItem': 'Value is null.' (Image #34598031)
+[Binding]An error occurred binding 'Text' to 'SelectedTrashItem.Payload.IconText' at 'SelectedTrashItem': 'Value is null.' (TextBlock #56140680)
+[Binding]An error occurred binding 'IsVisible' to '!SelectedTrashItem.Payload.HasAutoDetectedIcon' at 'SelectedTrashItem': 'Value is null.' (TextBlock #56140680)
+[Binding]An error occurred binding '(unknown)' to 'SelectedTrashItem.Payload.Title' at 'SelectedTrashItem': 'Value is null.' (TextBlock #45556885)
+[Binding]An error occurred binding '(unknown)' to 'SelectedTrashItem.Payload.Username' at 'SelectedTrashItem': 'Value is null.' (TextBlock #62957461)
+[Binding]An error occurred binding '(unknown)' to 'SelectedTrashItem.Payload.Username' at 'SelectedTrashItem': 'Value is null.' (TextBlock #8069227)
+[Binding]An error occurred binding '(unknown)' to 'SelectedTrashItem.Payload.Password' at 'SelectedTrashItem': 'Value is null.' (TextBlock #60416193)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedTrashItem.Payload.HasUrl' at 'SelectedTrashItem': 'Value is null.' (StackPanel #19990073)
+[Binding]An error occurred binding '(unknown)' to 'SelectedTrashItem.Payload.Url' at 'SelectedTrashItem': 'Value is null.' (TextBlock #10140379)
+[Binding]An error occurred binding 'Text' to 'SelectedTrashItem.OriginalGroup' at 'SelectedTrashItem': 'Value is null.' (TextBlock #10361753)
+[Binding]An error occurred binding 'Text' to 'SelectedTrashItem.DeletedUtc' at 'SelectedTrashItem': 'Value is null.' (TextBlock #33995674)
+[Binding]An error occurred binding 'Text' to 'SelectedTrashItem.ScheduledPurgeLabel' at 'SelectedTrashItem': 'Value is null.' (TextBlock #2186211)
+[Binding]An error occurred binding '(unknown)' to 'SelectedCredential.Title' at 'SelectedCredential': 'Value is null.' (TextBlock #16214940)
+[Binding]An error occurred binding 'Background' to 'SelectedCredential.IconBackgroundBrush' at 'SelectedCredential': 'Value is null.' (Border #18673758)
+[Binding]An error occurred binding 'Source' to 'SelectedCredential.AutoDetectedIconBitmap' at 'SelectedCredential': 'Value is null.' (Image #36179397)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasAutoDetectedIcon' at 'SelectedCredential': 'Value is null.' (Image #36179397)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.IconText' at 'SelectedCredential': 'Value is null.' (TextBlock #997409)
+[Binding]An error occurred binding 'IsVisible' to '!SelectedCredential.HasAutoDetectedIcon' at 'SelectedCredential': 'Value is null.' (TextBlock #997409)
+[Binding]An error occurred binding '(unknown)' to 'SelectedCredential.Title' at 'SelectedCredential': 'Value is null.' (TextBlock #56022647)
+[Binding]An error occurred binding '(unknown)' to 'SelectedCredential.Username' at 'SelectedCredential': 'Value is null.' (TextBlock #38320876)
+[Binding]An error occurred binding 'Value' to 'SelectedCredential.Username' at 'SelectedCredential': 'Value is null.' (CopyableField #Root)
+[Binding]An error occurred binding 'Value' to 'SelectedCredential.Password' at 'SelectedCredential': 'Value is null.' (CopyableField #Root)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasUrl' at 'SelectedCredential': 'Value is null.' (StackPanel #14793173)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.Url' at 'SelectedCredential': 'Value is null.' (TextBox #57396337)
+[Binding]An error occurred binding 'Text' to 'EditViewModel.WindowTitle' at 'EditViewModel': 'Value is null.' (TextBlock #57269561)
+[Binding]An error occurred binding 'Command' to 'EditViewModel.SaveCommand' at 'EditViewModel': 'Value is null.' (Button #3060505)
+[Binding]An error occurred binding 'Text' to 'EditViewModel.SaveButtonText' at 'EditViewModel': 'Value is null.' (TextBlock #46574342)
+[RuntimeThemeService] Applied ClassicDark to window: PhantomVault - My Secure Vault
+[RecoveryDev] Vault created with USB binding successfully
+[Binding]An error occurred binding 'Text' to 'FocusedArtifact.Label' at 'FocusedArtifact': 'Value is null.' (TextBlock #38139549)
+[Binding]An error occurred binding 'Text' to 'FocusedArtifact.Status' at 'FocusedArtifact': 'Value is null.' (TextBlock #2295787)
+[Binding]An error occurred binding 'Text' to 'FocusedArtifact.Type' at 'FocusedArtifact': 'Value is null.' (TextBlock #51741033)
+[Binding]An error occurred binding 'Text' to 'FocusedArtifact.Source' at 'FocusedArtifact': 'Value is null.' (TextBlock #30274111)
+[Binding]An error occurred binding 'Text' to 'FocusedArtifact.CreatedAt' at 'FocusedArtifact': 'Value is null.' (TextBlock #58119881)
+[Binding]An error occurred binding 'Text' to 'FocusedArtifact.Sha256Hex' at 'FocusedArtifact': 'Value is null.' (TextBlock #10089924)
+[RecoveryDev] Adding fake recovery entries for developer mode
+[SvgIconService] Failed to fetch icon 'refresh-cw': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'copy': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'shield': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'refresh-cw': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'alert-triangle': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'clock': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'alert-triangle': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'shield': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'alert-circle': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'download': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'database': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'key': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'database': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'clock': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'shield': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'alert-circle': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'alert-triangle': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'shield': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'copy': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'key': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'alert-triangle': Response status code does not indicate success: 404 (Not Found).
+[RecoveryDev] Creating 20 fake recovery entries
+[RecoveryDev] Would add: [Master Keys] PhantomVault Master Key #1 (Recovery Key)
+[RecoveryDev] Would add: [Master Keys] PhantomVault Master Key #2 (Recovery Key)
+[RecoveryDev] Would add: [Master Keys] Emergency Recovery Code (Recovery Code)
+[RecoveryDev] Would add: [Hardware Keys] YubiKey 5 NFC (Hardware Token)
+[RecoveryDev] Would add: [Hardware Keys] Titan Security Key (Hardware Token)
+[RecoveryDev] Would add: [Backup Codes] Google Account Recovery (Backup Codes)
+[RecoveryDev] Would add: [Backup Codes] GitHub 2FA Codes (Backup Codes)
+[RecoveryDev] Would add: [Backup Codes] Microsoft Account Recovery (Backup Codes)
+[RecoveryDev] Would add: [SSH Keys] Production Server Key (SSH Private Key)
+[RecoveryDev] Would add: [SSH Keys] Git Repository Key (SSH Private Key)
+[RecoveryDev] Would add: [Certificates] Code Signing Certificate (X.509 Certificate)
+[RecoveryDev] Would add: [Certificates] SSL/TLS Certificate (X.509 Certificate)
+[RecoveryDev] Would add: [Recovery Phrases] Crypto Wallet Seed (BIP39 Seed Phrase)
+[RecoveryDev] Would add: [Recovery Phrases] Password Manager Seed (Recovery Phrase)
+[RecoveryDev] Would add: [API Keys] AWS Root Account (API Credentials)
+[RecoveryDev] Would add: [API Keys] Stripe Production API (API Key)
+[RecoveryDev] Would add: [Emergency Contacts] Security Team Lead (Contact)
+[RecoveryDev] Would add: [Emergency Contacts] Legal Counsel (Contact)
+[RecoveryDev] Would add: [Vault Access] Safe Deposit Box #247 (Physical Access)
+[RecoveryDev] Would add: [Vault Access] Home Safe Combination (Physical Access)
+[RecoveryDev] Fake entries added successfully (logged only - actual implementation requires vault API integration)
+[RecoveryDev] RecoveryView initialized successfully
+[Control] PlatformImpl is null, couldn't handle input. (PopupRoot #33109117)
+[ENTRY-TYPE-INIT] EntryType=Identity, IsCreditCard=False, IsBankAccount=False, IsIdentity=True
+[ADD/EDIT VM] Constructor: _existingCredential=, EntryType=Identity, IsCreditCardEntry=False
+[ADD/EDIT VM] Constructor: _existingCredential=, EntryType=Identity, IsCreditCardEntry=False
+[ADD/EDIT VM] After RaisePropertyChanged: IsCreditCardEntry=False, IsPasswordEntry=False
+[INIT] Creating OpenIconPickerCommand...
+[INIT] OpenIconPickerCommand created. OwnerWindow = NULL
+[INIT] SetOwnerWindow called with: AddEditCredentialWindow
+[INIT] Owner window is now: SET
+[INIT] SetOwnerWindow called with: AddEditCredentialWindow
+[INIT] Owner window is now: SET
+[RuntimeThemeService] Applied ClassicDark to window: Add Credential
+[AUTO-DETECT] UpdateAutoDetectedIcon called - Title: '', Url: ''
+[AUTO-DETECT] Calling FindIconPathForCredential...
+[ICON-MGR] FindIconPathForCredential - Title: '', Url: ''
+[ICON-MGR] Icons directory: G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons
+[ICON-MGR] Both title and URL are empty - returning null
+[AUTO-DETECT] IconManager returned: 'null'
+[AUTO-DETECT] ❌ No icon path returned
+[AUTO-DETECT] Final state - HasAutoDetectedIcon: False, IconInitials: '?'
+[RuntimeThemeService] Applied ClassicDark to window: Password Generator
+[Binding]An error occurred binding 'IsVisible' to 'HasWeakPasswords' at 'HasWeakPasswords': 'Could not find a matching property accessor for 'HasWeakPasswords' on 'PhantomVault.UI.ViewModels.VaultViewModel'.' (Border #31510915)
+[Binding]An error occurred binding 'IsVisible' to 'HasBreachedPasswords' at 'HasBreachedPasswords': 'Could not find a matching property accessor for 'HasBreachedPasswords' on 'PhantomVault.UI.ViewModels.VaultViewModel'.' (Border #15162782)
+[ICON-MGR] TryMatchIcon - terms: emergency contact - taylor lee, emergency
+[ICON-MGR] TryMatchIcon - terms: emergency contact - taylor lee, emergency
+[ICON-MGR] TryMatchIcon - terms: emergency contact - taylor lee, emergency
+[ICON-MGR] TryMatchIcon - terms: emergency contact - taylor lee, emergency
+[RuntimeThemeService] Applied ClassicDark to window: Welcome to Phantom Vault
+[SvgIconService] Failed to fetch icon 'alert-circle': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'copy': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'alert-triangle': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'shield': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'key': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'clock': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'database': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'shield': Response status code does not indicate success: 404 (Not Found).
+[App] Shutdown requested - cleaning up resources
+[App] Shutdown requested - cleaning up resources
+[App] Application exiting - cleaning up spawned processes
+[App] Application exiting - cleaning up spawned processes
+[App] Spawned processes cleaned up successfully

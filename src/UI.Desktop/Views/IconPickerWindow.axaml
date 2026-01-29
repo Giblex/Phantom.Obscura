@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:PhantomVault.UI.ViewModels"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:views="clr-namespace:PhantomVault.UI.Views"
+    mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="700"
+    x:Class="PhantomVault.UI.Views.IconPickerWindow"
+        x:DataType="vm:IconPickerViewModel"
+        Title="Choose Icon"
+        Width="600" Height="700"
+        MinWidth="500" MinHeight="600"
+        WindowStartupLocation="CenterOwner"
+        CanResize="True"
+        Background="{DynamicResource WindowBackgroundBrush}">
+    <InputElement.KeyBindings>
+    <KeyBinding Gesture="Escape" Command="{Binding CloseCommand}"/>
+    </InputElement.KeyBindings>
+
+    <Design.DataContext>
+        <vm:IconPickerViewModel/>
+    </Design.DataContext>
+
+    <views:ThemeAwareWindow.Styles>
+        <!-- Scoped styles for icon grid buttons (make them smaller, squarer, darker on hover, and better active coloring) -->
+        <Style Selector="Button.secondary">
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <!-- Hover: darker background for hover menu buttons; use theme HoverMenuDropShadow so both light and dark themes apply shadows -->
+        <Style Selector="Button.secondary:pointerover">
+            <Setter Property="Background" Value="{DynamicResource HeaderBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+            <Setter Property="Effect" Value="{DynamicResource HoverMenuDropShadow}"/>
+        </Style>
+
+        <!-- Pressed / active: accent coloring and shadow -->
+        <Style Selector="Button.secondary:pressed">
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Effect" Value="{DynamicResource HoverMenuDropShadow}"/>
+        </Style>
+
+        <!-- Focused (keyboard) appearance similar to active -->
+        <Style Selector="Button.secondary:focus">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+        </Style>
+    </views:ThemeAwareWindow.Styles>
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+        
+        <!-- Header -->
+        <Border Grid.Row="0" 
+                Background="{DynamicResource HeaderBackgroundBrush}" 
+                Padding="20,15">
+            <StackPanel Spacing="5">
+                <TextBlock Text="Icon Picker"
+                           FontSize="20"
+                           FontWeight="Bold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <TextBlock Text="Choose or search for an icon"
+                           FontSize="13"
+                           Foreground="{DynamicResource MutedTextBrush}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Search Box -->
+    <Border Grid.Row="1"
+                Background="{DynamicResource ControlBackgroundBrush}"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                BorderThickness="0,1,0,1"
+                Padding="20,15">
+            <Grid ColumnDefinitions="*,Auto">
+        <TextBox x:Name="SearchBox" Grid.Column="0"
+                         Text="{Binding SearchText}"
+                         Watermark="Search icons... (e.g., 'social', 'finance', 'security')"
+                         Height="40"
+                         FontSize="14"/>
+                <Button Grid.Column="1"
+                        Content="✕"
+                        Command="{Binding ClearSearchCommand}"
+                        Classes="liquid-glass"
+                        Width="40"
+                        Height="40"
+                        Margin="8,0,0,0"
+                        ToolTip.Tip="Clear search"/>
+            </Grid>
+        </Border>
+
+        <!-- Icon Grid -->
+        <ScrollViewer Grid.Row="2" Padding="20" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Spacing="20">
+                
+                <!-- Current Selection -->
+                <Border Background="{DynamicResource ControlBackgroundBrush}"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="15"
+                        IsVisible="{Binding SelectedIcon, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                    <StackPanel Spacing="15">
+                        <TextBlock Text="Current Selection"
+                                   FontSize="13"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        
+                        <!-- Icon Preview -->
+                        <Border Width="64"
+                                Height="64"
+                                CornerRadius="8"
+                                HorizontalAlignment="Left"
+                                Background="{DynamicResource ControlBackgroundBrush}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1">
+                            <Image Source="{Binding SelectedIcon}" 
+                                   Width="48"
+                                   Height="48"
+                                   Stretch="Uniform"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- Available Icons Grid -->
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Available Icons"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    
+                    <ItemsControl ItemsSource="{Binding AvailableIconPaths}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Command="{Binding Path=DataContext.SelectIconCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                        CommandParameter="{Binding}"
+                                        Classes="liquid-glass" 
+                                        Width="56" 
+                                        Height="56" 
+                                        Margin="4" 
+                                        Padding="4"
+                                        ToolTip.Tip="{Binding}">
+                                    <Image Source="{Binding}" 
+                                           Width="40" 
+                                           Height="40" 
+                                           Stretch="Uniform"/>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Footer Actions -->
+        <Border Grid.Row="3" 
+                Background="{DynamicResource HeaderBackgroundBrush}"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="20,15">
+            <Grid ColumnDefinitions="*,Auto,Auto">
+                <TextBlock Grid.Column="0"
+                           Text="{Binding StatusMessage}"
+                           FontSize="12"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           VerticalAlignment="Center"/>
+                
+                <Button Grid.Column="1"
+                        Command="{Binding ConfirmCommand}"
+                        Content="✓ Use This Icon"
+                        Classes="accent"
+                        Width="140"
+                        Margin="0,0,8,0"/>
+                
+                <Button Grid.Column="2"
+                        Command="{Binding CancelCommand}"
+                        Content="Cancel"
+                        Classes="liquid-glass"
+                        Width="80"/>
+            </Grid>
+        </Border>
+
+    </Grid>
+</views:ThemeAwareWindow>
+
+

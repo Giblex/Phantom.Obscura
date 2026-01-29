@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:PhantomVault.UI.ViewModels"
+    xmlns:views="clr-namespace:PhantomVault.UI.Views"
+    xmlns:controls="clr-namespace:Giblex.Controls"
+    x:Class="PhantomVault.UI.Views.DuplicateReviewDialog"
+        Title="Review Duplicate Credentials" 
+        Width="900" Height="600" 
+        CanResize="True" 
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource WindowBackgroundBrush}">
+
+    <Design.DataContext>
+        <vm:DuplicateReviewViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+        
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,16">
+            <TextBlock Text="🔍 Duplicate Credentials Detected" 
+                      FontSize="20" 
+                      FontWeight="Bold"/>
+            <TextBlock Text="{Binding DuplicateSummary}" 
+                      FontSize="13" 
+                      Foreground="#888"
+                      TextWrapping="Wrap"/>
+            <Separator Margin="0,8"/>
+        </StackPanel>
+
+        <!-- Duplicate List -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding DuplicateItems}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border BorderBrush="#444" 
+                               BorderThickness="1" 
+                               CornerRadius="6" 
+                               Padding="12" 
+                               Margin="0,0,0,12"
+                               Background="{DynamicResource CardBackgroundBrush}">
+                            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto,*">
+                                
+                                <!-- Match Type Header -->
+                                <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" 
+                                           Orientation="Horizontal" 
+                                           Spacing="8" 
+                                           Margin="0,0,0,12">
+                                    <TextBlock Text="{Binding MatchTypeIcon}" FontSize="16"/>
+                                    <TextBlock Text="{Binding MatchTypeText}" 
+                                              FontWeight="SemiBold" 
+                                              FontSize="14"/>
+                                </StackPanel>
+
+                                <!-- Existing Credential (Left) -->
+                                <Border Grid.Row="1" Grid.Column="0" 
+                                       BorderBrush="#555" 
+                                       BorderThickness="1" 
+                                       CornerRadius="4" 
+                                       Padding="10"
+                                       Background="{DynamicResource ExistingCredentialBrush}">
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="📌 Existing in Vault" 
+                                                  FontWeight="Bold" 
+                                                  FontSize="12" 
+                                                  Foreground="#4CAF50"/>
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="{Binding ExistingTitle}" 
+                                                      FontWeight="SemiBold" 
+                                                      FontSize="14"/>
+                                            <TextBlock>
+                                                <Run Text="👤 " FontSize="11"/>
+                                                <Run Text="{Binding ExistingUsername}" FontSize="11"/>
+                                            </TextBlock>
+                                            <TextBlock>
+                                                <Run Text="🔐 " FontSize="11"/>
+                                                <Run Text="{Binding ExistingPasswordPreview}" FontSize="11" FontFamily="Consolas"/>
+                                            </TextBlock>
+                                            <TextBlock>
+                                                <Run Text="🌐 " FontSize="11"/>
+                                                <Run Text="{Binding ExistingUrl}" FontSize="11" Foreground="#64B5F6"/>
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding ExistingModified}" 
+                                                      FontSize="10" 
+                                                      Foreground="#999"
+                                                      Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- VS Separator -->
+                                <TextBlock Grid.Row="1" Grid.Column="1" 
+                                          Text="⚡" 
+                                          FontSize="20" 
+                                          VerticalAlignment="Center" 
+                                          HorizontalAlignment="Center" 
+                                          Margin="12,0"/>
+
+                                <!-- New Credential (Right) -->
+                                <Border Grid.Row="1" Grid.Column="2" 
+                                       BorderBrush="#555" 
+                                       BorderThickness="1" 
+                                       CornerRadius="4" 
+                                       Padding="10"
+                                       Background="{DynamicResource NewCredentialBrush}">
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="✨ New from Import" 
+                                                  FontWeight="Bold" 
+                                                  FontSize="12" 
+                                                  Foreground="#2196F3"/>
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="{Binding NewTitle}" 
+                                                      FontWeight="SemiBold" 
+                                                      FontSize="14"/>
+                                            <TextBlock>
+                                                <Run Text="👤 " FontSize="11"/>
+                                                <Run Text="{Binding NewUsername}" FontSize="11"/>
+                                            </TextBlock>
+                                            <TextBlock>
+                                                <Run Text="🔐 " FontSize="11"/>
+                                                <Run Text="{Binding NewPasswordPreview}" FontSize="11" FontFamily="Consolas"/>
+                                            </TextBlock>
+                                            <TextBlock>
+                                                <Run Text="🌐 " FontSize="11"/>
+                                                <Run Text="{Binding NewUrl}" FontSize="11" Foreground="#64B5F6"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Action Buttons -->
+                                <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" 
+                                           Orientation="Horizontal" 
+                                           HorizontalAlignment="Center" 
+                                           Spacing="12" 
+                                           Margin="0,12,0,0">
+                                    <Button Content="⬅️ Keep Existing" 
+                                           Width="140" 
+                                           Command="{Binding $parent[Window].DataContext.KeepExistingCommand}"
+                                           CommandParameter="{Binding}"
+                                           Classes="liquid-glass compact"/>
+                                    <Button Content="➡️ Keep New" 
+                                           Width="140" 
+                                           Command="{Binding $parent[Window].DataContext.KeepNewCommand}"
+                                           CommandParameter="{Binding}"
+                                           Classes="liquid-glass compact primary"/>
+                                    <Button Content="📥 Keep Both" 
+                                           Width="140" 
+                                           Command="{Binding $parent[Window].DataContext.KeepBothCommand}"
+                                           CommandParameter="{Binding}"
+                                           Classes="liquid-glass compact"/>
+                                    <TextBlock Text="{Binding ChoiceIndicator}" 
+                                              FontWeight="Bold" 
+                                              FontSize="13" 
+                                              VerticalAlignment="Center"
+                                              Margin="12,0,0,0"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!-- Footer Actions -->
+        <Border Grid.Row="2" 
+               BorderBrush="#444" 
+               BorderThickness="0,1,0,0" 
+               Padding="0,16,0,0" 
+               Margin="0,16,0,0">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                
+                <!-- Quick Actions -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                    <controls:LiquidGlassButton Content="⬅️ Keep All Existing" 
+                           WidthOverride="150" 
+                           Command="{Binding KeepAllExistingCommand}"/>
+                    <controls:LiquidGlassButton Content="➡️ Keep All New" 
+                           WidthOverride="150" 
+                           Command="{Binding KeepAllNewCommand}"/>
+                </StackPanel>
+
+                <!-- Dialog Buttons -->
+                <StackPanel Grid.Column="2" Grid.ColumnSpan="2" 
+                           Orientation="Horizontal" 
+                           HorizontalAlignment="Right" 
+                           Spacing="12">
+                    <controls:LiquidGlassButton Content="Cancel Import" 
+                           WidthOverride="120" 
+                           Command="{Binding CancelCommand}"/>
+                    <controls:LiquidGlassButton Content="Apply Choices" 
+                           WidthOverride="120" 
+                           Command="{Binding ApplyCommand}"
+                           IsPrimary="True"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+
+    <views:ThemeAwareWindow.Styles>
+        <Style Selector="Button.action-button">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="8,6"/>
+        </Style>
+        <Style Selector="Button.action-button.primary">
+            <Setter Property="Background" Value="#2196F3"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="Button.primary">
+            <Setter Property="Background" Value="#4CAF50"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+    </views:ThemeAwareWindow.Styles>
+</views:ThemeAwareWindow>

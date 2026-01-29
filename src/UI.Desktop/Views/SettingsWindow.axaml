@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:views="clr-namespace:PhantomVault.UI.Views"
+    xmlns:settings="clr-namespace:PhantomVault.UI.Views.Settings"
+    x:Class="PhantomVault.UI.Views.SettingsWindow"
+    Title="Settings" Width="700" Height="750"
+    MinWidth="650" MinHeight="700"
+    WindowStartupLocation="CenterOwner"
+    Background="{DynamicResource WindowBackgroundBrush}"
+    Classes="animated-window">
+    
+    <TabControl Margin="10" TabStripPlacement="Left">
+        
+        <!-- Theme Settings Tab -->
+        <TabItem Header="Theme">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" 
+                          HorizontalScrollBarVisibility="Disabled">
+                <Border Padding="20">
+                    <StackPanel Spacing="15">
+        <!-- Theme Settings Content -->
+        <TextBlock Text="Theme Settings" 
+                   FontSize="20" 
+                   FontWeight="Bold"
+                   Foreground="{DynamicResource PrimaryTextBrush}"
+                   Margin="0,0,0,10"/>
+        <Border BorderBrush="{DynamicResource ControlBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Md}" 
+                Padding="15">
+            <StackPanel Spacing="10">
+                <CheckBox Content="Dark theme" 
+                          IsChecked="{Binding IsDarkTheme, Mode=TwoWay}" 
+                          ToolTip.Tip="Enable dark mode for the application"/>
+                <Button Content="Toggle Theme" 
+                        Command="{Binding ToggleThemeCommand}" 
+                        Width="140" 
+                        Height="36"
+                        Classes="liquid-glass"
+                        HorizontalAlignment="Left"/>
+            </StackPanel>
+        </Border>
+                    </StackPanel>
+                </Border>
+            </ScrollViewer>
+        </TabItem>
+
+        <!-- VeraCrypt Tab -->
+        <TabItem Header="VeraCrypt">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" 
+                          HorizontalScrollBarVisibility="Disabled">
+                <Border Padding="20">
+                    <StackPanel Spacing="15">
+        <TextBlock Text="VeraCrypt Integration" 
+                   FontSize="20" 
+                   FontWeight="Bold"
+                   Foreground="{DynamicResource PrimaryTextBrush}"
+                   Margin="0,0,0,10"/>
+        <Border BorderBrush="{DynamicResource ControlBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Md}" 
+                Padding="15">
+            <StackPanel Spacing="10">
+                <TextBlock Text="Configure VeraCrypt encryption settings and integration options" 
+                           FontSize="12"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
+                <Button Content="Configure VeraCrypt Settings" 
+                        Click="OpenVeraCryptSettings_Click"
+                        Width="220" 
+                        Height="36"
+                        Classes="liquid-glass"
+                        HorizontalAlignment="Left"
+                        ToolTip.Tip="Open detailed VeraCrypt configuration and integration settings"/>
+            </StackPanel>
+        </Border>
+                    </StackPanel>
+                </Border>
+            </ScrollViewer>
+        </TabItem>
+
+        <!-- Defence Tab -->
+        <TabItem Header="Defence">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" 
+                          HorizontalScrollBarVisibility="Disabled">
+                <Border Padding="20">
+                    <StackPanel Spacing="15">
+        <TextBlock Text="Defence Automations" 
+                   FontSize="20" 
+                   FontWeight="Bold"
+                   Foreground="{DynamicResource PrimaryTextBrush}"
+                   Margin="0,0,0,10"/>
+        <Border BorderBrush="{DynamicResource ControlBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Md}" 
+                Padding="15">
+            <StackPanel Spacing="10">
+                <TextBlock Text="Configure automated defence responses to detected threats" 
+                           FontSize="12"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"
+                           Margin="0,0,0,6"/>
+                
+                <CheckBox Content="Require Phantom Key / extra checks on new devices"
+                          IsChecked="{Binding IsNewDeviceProtectionEnabled, Mode=TwoWay}"
+                          ToolTip.Tip="When enabled, new device fingerprints trigger additional authentication requirements"/>
+                
+                <CheckBox Content="Open in Safe (read-only) mode if tampering suspected"
+                          IsChecked="{Binding IsIntegritySafeModeEnabled, Mode=TwoWay}"
+                          ToolTip.Tip="When enabled, integrity mismatches force read-only mode to prevent data corruption"/>
+                
+                <CheckBox Content="Limit rapid copy-to-clipboard of secrets"
+                          IsChecked="{Binding IsClipboardGuardEnabled, Mode=TwoWay}"
+                          ToolTip.Tip="When enabled, excessive clipboard operations trigger cooldowns and warnings"/>
+                
+                <CheckBox Content="Limit repeated vault exports in short time"
+                          IsChecked="{Binding IsExportGuardEnabled, Mode=TwoWay}"
+                          ToolTip.Tip="When enabled, frequent export operations may trigger read-only mode"/>
+                
+                <CheckBox Content="Detect and respond to abnormal session behaviour"
+                          IsChecked="{Binding IsBehaviourDeviationProtectionEnabled, Mode=TwoWay}"
+                          ToolTip.Tip="When enabled, unusual patterns trigger delays and data scrubbing"/>
+            </StackPanel>
+        </Border>
+                    </StackPanel>
+                </Border>
+            </ScrollViewer>
+        </TabItem>
+
+        <!-- Password Security Tab -->
+        <TabItem Header="Password Security">
+            <settings:PasswordSecurityView DataContext="{Binding PasswordSecurityViewModel}"/>
+        </TabItem>
+
+        <!-- Authentication Tab -->
+        <TabItem Header="Authentication">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" 
+                          HorizontalScrollBarVisibility="Disabled">
+                <Border Padding="20">
+                    <StackPanel Spacing="15">
+        <TextBlock Text="Authentication Methods" 
+                   FontSize="20" 
+                   FontWeight="Bold"
+                   Foreground="{DynamicResource PrimaryTextBrush}"
+                   Margin="0,0,0,10"/>
+                
+        <!-- Windows Hello -->
+        <Border BorderBrush="{DynamicResource ControlBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Md}" 
+                Padding="15">
+            <StackPanel Spacing="10">
+                <TextBlock Text="Windows Hello" 
+                           FontSize="16" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <TextBlock Text="Use biometric authentication (fingerprint, face recognition) to unlock your vault" 
+                           FontSize="12"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
+                <Button Content="Configure Windows Hello" 
+                        Click="OpenWindowsHelloSettings_Click"
+                        Width="200" 
+                        Height="36"
+                        Classes="liquid-glass"
+                        HorizontalAlignment="Left"
+                        ToolTip.Tip="Set up biometric authentication for vault access"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Passkeys -->
+        <Border BorderBrush="{DynamicResource ControlBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Md}" 
+                Padding="15">
+            <StackPanel Spacing="10">
+                <TextBlock Text="Passkey Authentication" 
+                           FontSize="16" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <TextBlock Text="Use hardware security keys (YubiKey, Titan Key) for passwordless vault access" 
+                           FontSize="12"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
+                <Button Content="Configure Passkeys" 
+                        Click="OpenPasskeySettings_Click"
+                        Width="200" 
+                        Height="36"
+                        Classes="liquid-glass"
+                        HorizontalAlignment="Left"
+                        ToolTip.Tip="Set up WebAuthn/FIDO2 hardware keys for authentication"/>
+            </StackPanel>
+        </Border>
+
+        <!-- TOTP Authenticator -->
+        <Border BorderBrush="{DynamicResource ControlBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Md}" 
+                Padding="15">
+            <StackPanel Spacing="10">
+                <TextBlock Text="TOTP Authenticator" 
+                           FontSize="16" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <TextBlock Text="Add two-factor authentication using time-based one-time passwords" 
+                           FontSize="12"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
+                <Button Content="Configure TOTP" 
+                        Click="OpenTotpSettings_Click"
+                        Width="200" 
+                        Height="36"
+                        Classes="liquid-glass"
+                        HorizontalAlignment="Left"
+                        ToolTip.Tip="Set up TOTP 2FA with Google Authenticator, Microsoft Authenticator, or similar apps"/>
+            </StackPanel>
+        </Border>
+                    </StackPanel>
+                </Border>
+            </ScrollViewer>
+        </TabItem>
+
+        <!-- Accessibility Tab -->
+        <TabItem Header="Accessibility">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" 
+                          HorizontalScrollBarVisibility="Disabled">
+                <Border Padding="20">
+                    <StackPanel Spacing="15">
+        <TextBlock Text="Accessibility Settings" 
+                   FontSize="20" 
+                   FontWeight="Bold"
+                   Foreground="{DynamicResource PrimaryTextBrush}"
+                   Margin="0,0,0,10"/>
+        <Border BorderBrush="{DynamicResource AccentBrush}"
+                BorderThickness="2"
+                CornerRadius="{StaticResource Radius.Lg}"
+                Padding="20"
+                Background="{DynamicResource CardBackgroundBrush}">
+            <StackPanel Spacing="15">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <TextBlock Text="♿" FontSize="24" VerticalAlignment="Center"/>
+                    <TextBlock Text="Customize Your Experience" 
+                               FontSize="16" 
+                               FontWeight="SemiBold" 
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+                <TextBlock Text="Customize language, themes, UI scaling, view preferences, keyboard shortcuts, and accessibility features" 
+                           FontSize="12"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
+                <Button Content="Open Accessibility Settings" 
+                        Click="OpenAccessibilitySettings_Click"
+                        Width="240" 
+                        Height="36"
+                        Classes="liquid-glass"
+                        HorizontalAlignment="Left"
+                        ToolTip.Tip="Configure language, themes, UI scale, keyboard shortcuts, and more"/>
+            </StackPanel>
+        </Border>
+                    </StackPanel>
+                </Border>
+            </ScrollViewer>
+        </TabItem>
+
+    </TabControl>
+</views:ThemeAwareWindow>

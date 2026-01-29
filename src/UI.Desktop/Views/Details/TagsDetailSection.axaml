@@ -1,0 +1,36 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:PhantomVault.UI.Converters"
+             x:Class="PhantomVault.UI.Views.Details.TagsDetailSection">
+    
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://PhantomVault.UI/Resources/Converters/ConverterResources.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    
+    <!-- Tags -->
+    <StackPanel Spacing="6">
+        <TextBlock Text="Tags" 
+                   FontSize="13" 
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource MutedTextBrush}"/>
+        <Border Background="{DynamicResource InputBackgroundBrush}"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                BorderThickness="1"
+                Padding="10,8"
+                CornerRadius="4"
+                MinHeight="36">
+            <TextBlock Text="{Binding SelectedCredential.TagsText}" 
+                       Foreground="{DynamicResource InputForegroundBrush}"
+                       TextWrapping="Wrap"
+                       VerticalAlignment="Center">
+                <TextBlock.Effect>
+                    <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                </TextBlock.Effect>
+            </TextBlock>
+        </Border>
+    </StackPanel>
+</UserControl>

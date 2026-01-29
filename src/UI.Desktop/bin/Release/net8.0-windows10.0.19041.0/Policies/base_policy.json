@@ -1,0 +1,93 @@
+{
+  "policyId": "OBSCURA-BASE-1",
+  "version": "3.0.0",
+
+  "usb": {
+    "required": true,
+    "identityMode": "Any",
+    "requireRemovable": true,
+    "allowHotSwap": false,
+    "volumeLabel": null,
+    "allowedSerials": [],
+    "requiredKeyIds": [],
+    "trustedDeviceIds": [],
+    "minStandard": "USB3",
+    "minCapacityGB": 0,
+    "onRemoval": "LockAndZero",
+    "requireRemountForSensitiveOps": true,
+    "requireAttestationFile": false,
+    "pollIntervalSeconds": 5
+  },
+
+  "desktop": {
+    "allowDesktopSync": false,
+    "allowMultipleDevices": false,
+    "deviceBindingMode": "None",
+    "trustedDeviceFingerprints": [],
+    "maxConcurrentSessions": 1,
+    "requireDeviceRegistration": false,
+    
+    "allowDebuggers": false,
+    "allowScreenCapture": true,
+    "allowClipboardAccess": true,
+    "requireSecureBoot": false,
+    "requireTpm": false,
+    "blockVirtualMachines": false,
+    
+    "maxIdleMinutes": 15,
+    "maxSessionDurationMinutes": 480,
+    "requireReauthOnWake": true,
+    "sessionTerminationMode": "Lock",
+    
+    "allowCloudSync": false,
+    "allowedSyncDomains": [],
+    "requireSslPinning": true
+  },
+
+  "manifest": {
+    "minVersion": "1.0.0",
+    "maxVersion": "2.0.0",
+    "enforceExactVersion": false,
+    "requiredVersion": null,
+    
+    "requireSignature": true,
+    "signatureAlgorithm": "ECDSA-P256",
+    "requireTimestamp": false,
+    "requireCounterSignature": false,
+    "trustedSignerKeyIds": [],
+    
+    "requireChainOfTrust": true,
+    "allowSelfSigned": false,
+    "maxSignatureAgeHours": 0,
+    
+    "requireIntegrityCheck": true,
+    "allowRollback": false,
+    "requireUpdateChannel": false,
+    "allowedUpdateChannels": [],
+    
+    "requireDeviceBinding": false,
+    "requireUsbBinding": false,
+    "requiredFields": [],
+    
+    "requireDualFactor": false,
+    "allowPassphraseOnly": true
+  },
+
+  "sync": {
+    "enforceCrossPolicyValidation": true,
+    "requireAllPoliciesActive": true,
+    "enforcementOrder": "Sequential",
+    
+    "validateDeviceBindingConsistency": true,
+    "validateUsbManifestBinding": true,
+    "validateSignatureConsistency": true,
+    
+    "onPolicyConflict": "MostRestrictive",
+    "onPolicySyncFailure": "Fail",
+    "allowPolicyOverride": false,
+    
+    "logAllPolicyChecks": true,
+    "requireAuditTrail": true,
+    "auditRetentionDays": 90
+  }
+}

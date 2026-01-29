@@ -1,0 +1,770 @@
+[18:12:47] [WRN] ⚠️ DEBUG MODE: Policy signature verification skipped for development
+LogHost: Initializing to normal mode (.cctor)
+[RecoveryDeveloperMode] Initialized
+  Vault Path: C:\Users\Main\AppData\Local\PhantomRecoveryVault_Dev
+  USB Path: C:\Users\Main\AppData\Local\PhantomRecovery_SimulatedUSB
+[RecoveryDev] Developer mode enabled for PhantomRecovery integration
+[RuntimeThemeService] Applied theme: ClassicDark
+[2026-01-15 18:12:47] [ThemeManager] ApplyTheme(Dark) - Current style count: 12
+[2026-01-15 18:12:47] [ThemeManager] ApplyTheme(Dark) - Current style count: 12
+[2026-01-15 18:12:47] [ThemeManager] Styles snapshot (before theme change): 12 entries
+[2026-01-15 18:12:47] [ThemeManager] Styles snapshot (before theme change): 12 entries
+[2026-01-15 18:12:47] [ThemeManager]   [0] FluentTheme
+[2026-01-15 18:12:47] [ThemeManager]   [0] FluentTheme
+[2026-01-15 18:12:47] [ThemeManager]   [1] Styles
+[2026-01-15 18:12:47] [ThemeManager]   [1] Styles
+[2026-01-15 18:12:47] [ThemeManager]   [2] Styles
+[2026-01-15 18:12:47] [ThemeManager]   [2] Styles
+[2026-01-15 18:12:47] [ThemeManager]   [3] Styles
+[2026-01-15 18:12:47] [ThemeManager]   [3] Styles
+[2026-01-15 18:12:47] [ThemeManager]   [4] Style
+[2026-01-15 18:12:47] [ThemeManager]   [4] Style
+[2026-01-15 18:12:47] [ThemeManager]   [5] Style
+[2026-01-15 18:12:47] [ThemeManager]   [5] Style
+[2026-01-15 18:12:47] [ThemeManager]   [6] Style
+[2026-01-15 18:12:47] [ThemeManager]   [6] Style
+[2026-01-15 18:12:47] [ThemeManager]   [7] Style
+[2026-01-15 18:12:47] [ThemeManager]   [7] Style
+[2026-01-15 18:12:47] [ThemeManager]   [8] Style
+[2026-01-15 18:12:47] [ThemeManager]   [8] Style
+[2026-01-15 18:12:47] [ThemeManager]   [9] Style
+[2026-01-15 18:12:47] [ThemeManager]   [9] Style
+[2026-01-15 18:12:47] [ThemeManager]   [10] Style
+[2026-01-15 18:12:47] [ThemeManager]   [10] Style
+[2026-01-15 18:12:47] [ThemeManager]   [11] Style
+[2026-01-15 18:12:47] [ThemeManager]   [11] Style
+[2026-01-15 18:12:47] [ThemeManager] Removed 0 theme overlay(s)
+[2026-01-15 18:12:47] [ThemeManager] Removed 0 theme overlay(s)
+[2026-01-15 18:12:47] [ThemeManager] Set RequestedThemeVariant to Dark (RuntimeTheme active: False)
+[2026-01-15 18:12:47] [ThemeManager] Set RequestedThemeVariant to Dark (RuntimeTheme active: False)
+[2026-01-15 18:12:47] [ThemeManager] Adding PhantomTheme from avares://PhantomVault.UI/Assets/Themes/PhantomTheme.Dark.axaml
+[2026-01-15 18:12:47] [ThemeManager] Adding PhantomTheme from avares://PhantomVault.UI/Assets/Themes/PhantomTheme.Dark.axaml
+[2026-01-15 18:12:47] [ThemeManager] PhantomTheme overlay added successfully. Current style count: 13
+[2026-01-15 18:12:47] [ThemeManager] PhantomTheme overlay added successfully. Current style count: 13
+[2026-01-15 18:12:47] [ThemeManager] Styles snapshot (after adding PhantomTheme): 13 entries
+[2026-01-15 18:12:47] [ThemeManager] Styles snapshot (after adding PhantomTheme): 13 entries
+[2026-01-15 18:12:47] [ThemeManager]   [0] FluentTheme
+[2026-01-15 18:12:47] [ThemeManager]   [0] FluentTheme
+[2026-01-15 18:12:47] [ThemeManager]   [1] Styles
+[2026-01-15 18:12:47] [ThemeManager]   [1] Styles
+[2026-01-15 18:12:47] [ThemeManager]   [2] Styles
+[2026-01-15 18:12:47] [ThemeManager]   [2] Styles
+[2026-01-15 18:12:47] [ThemeManager]   [3] Styles
+[2026-01-15 18:12:47] [ThemeManager]   [3] Styles
+[2026-01-15 18:12:47] [ThemeManager]   [4] Style
+[2026-01-15 18:12:47] [ThemeManager]   [4] Style
+[2026-01-15 18:12:47] [ThemeManager]   [5] Style
+[2026-01-15 18:12:47] [ThemeManager]   [5] Style
+[2026-01-15 18:12:47] [ThemeManager]   [6] Style
+[2026-01-15 18:12:47] [ThemeManager]   [6] Style
+[2026-01-15 18:12:47] [ThemeManager]   [7] Style
+[2026-01-15 18:12:47] [ThemeManager]   [7] Style
+[2026-01-15 18:12:47] [ThemeManager]   [8] Style
+[2026-01-15 18:12:47] [ThemeManager]   [8] Style
+[2026-01-15 18:12:47] [ThemeManager]   [9] Style
+[2026-01-15 18:12:47] [ThemeManager]   [9] Style
+[2026-01-15 18:12:47] [ThemeManager]   [10] Style
+[2026-01-15 18:12:47] [ThemeManager]   [10] Style
+[2026-01-15 18:12:47] [ThemeManager]   [11] Style
+[2026-01-15 18:12:47] [ThemeManager]   [11] Style
+[2026-01-15 18:12:47] [ThemeManager]   [12] StyleInclude -> avares://PhantomVault.UI/Assets/Themes/PhantomTheme.Dark.axaml
+[2026-01-15 18:12:47] [ThemeManager]   [12] StyleInclude -> avares://PhantomVault.UI/Assets/Themes/PhantomTheme.Dark.axaml
+[2026-01-15 18:12:47] [ThemeManager] Forced UI refresh on all windows
+[2026-01-15 18:12:47] [ThemeManager] Forced UI refresh on all windows
+[2026-01-15 18:12:47] [ThemeManager] ActualThemeVariant: Dark
+[2026-01-15 18:12:47] [ThemeManager] ActualThemeVariant: Dark
+[2026-01-15 18:12:47] [ThemeManager] Dumping active brush resources...
+[2026-01-15 18:12:47] [ThemeManager] Dumping active brush resources...
+[2026-01-15 18:12:47] [ThemeManager] TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager] TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager] TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager] TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager] QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager] QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager] QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager] QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager] QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager] QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager] LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager] LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager] InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager] InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager] Inspecting resources within StyleInclude: avares://PhantomVault.UI/Assets/Themes/PhantomTheme.Dark.axaml
+[2026-01-15 18:12:47] [ThemeManager] Inspecting resources within StyleInclude: avares://PhantomVault.UI/Assets/Themes/PhantomTheme.Dark.axaml
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: ImmutableSolidColorBrush
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: ImmutableSolidColorBrush
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: ImmutableSolidColorBrush
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: ImmutableSolidColorBrush
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: ImmutableSolidColorBrush
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: ImmutableSolidColorBrush
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: ImmutableSolidColorBrush
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: ImmutableSolidColorBrush
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: ImmutableSolidColorBrush
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: ImmutableSolidColorBrush
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: ImmutableSolidColorBrush
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: ImmutableSolidColorBrush
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: ImmutableSolidColorBrush
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: ImmutableSolidColorBrush
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]   Style.Resources snapshot:
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextSelectionBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     TextCaretBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     QuickFilterGlassActiveHoverBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     LiquidGlassButtonForeground: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[2026-01-15 18:12:47] [ThemeManager]     InputForegroundBrush: <missing>
+[RuntimeThemeService] Applied ClassicDark to window: Welcome to Phantom Vault
+[VaultViewModel] Auto-inject service initialized
+[ICON-MGR] FindIconPathForCredential - Title: 'GitHub', Url: 'https://github.com'
+[ICON-MGR] Icons directory: O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons
+[ICON-MGR] Extracted domain from URL: 'github'
+[ICON-MGR] Search terms: github
+[ICON-MGR] TryMatchIcon - terms: github
+[ICON-MGR] Index match for term: 'github' -> 'O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\github.png'
+[ICON-MGR] ✅ FOUND 'O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\github.png' for term 'github'
+[ICON-MGR] FindIconPathForCredential - Title: 'Gmail', Url: 'https://gmail.com'
+[ICON-MGR] Icons directory: O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons
+[ICON-MGR] Extracted domain from URL: 'gmail'
+[ICON-MGR] Search terms: gmail
+[ICON-MGR] TryMatchIcon - terms: gmail
+[ICON-MGR] Index match for term: 'gmail' -> 'O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\gmail.png'
+[ICON-MGR] ✅ FOUND 'O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\gmail.png' for term 'gmail'
+[ICON-MGR] FindIconPathForCredential - Title: 'Bank of America', Url: 'https://bankofamerica.com'
+[ICON-MGR] Icons directory: O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons
+[ICON-MGR] Extracted domain from URL: 'bankofamerica'
+[ICON-MGR] Search terms: bank of america, bankofamerica, bank
+[ICON-MGR] TryMatchIcon - terms: bank of america, bankofamerica, bank
+[ICON-MGR] Index match for term: 'bank of america' -> 'O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\Bank of America.png'
+[ICON-MGR] ✅ FOUND 'O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\Bank of America.png' for term 'bank of america'
+[ICON-MGR] FindIconPathForCredential - Title: 'Amazon', Url: 'https://amazon.com'
+[ICON-MGR] Icons directory: O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons
+[ICON-MGR] Extracted domain from URL: 'amazon'
+[ICON-MGR] Search terms: amazon
+[ICON-MGR] TryMatchIcon - terms: amazon
+[ICON-MGR] Index match for term: 'amazon' -> 'O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\Amazon.png'
+[ICON-MGR] ✅ FOUND 'O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\Amazon.png' for term 'amazon'
+[ICON-MGR] FindIconPathForCredential - Title: 'Netflix', Url: 'https://netflix.com'
+[ICON-MGR] Icons directory: O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons
+[ICON-MGR] Extracted domain from URL: 'netflix'
+[ICON-MGR] Search terms: netflix
+[ICON-MGR] TryMatchIcon - terms: netflix
+[ICON-MGR] Index match for term: 'netflix' -> 'O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\Netflix.png'
+[ICON-MGR] ✅ FOUND 'O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\Netflix.png' for term 'netflix'
+[ICON-MGR] FindIconPathForCredential - Title: 'Visa Platinum', Url: ''
+[ICON-MGR] Icons directory: O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons
+[ICON-MGR] Search terms: visa platinum, visa
+[ICON-MGR] TryMatchIcon - terms: visa platinum, visa
+[ICON-MGR] Index match for term: 'visa' -> 'O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\Visa.png'
+[ICON-MGR] ✅ FOUND 'O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\Visa.png' for term 'visa'
+[ICON-MGR] FindIconPathForCredential - Title: 'Home WiFi', Url: ''
+[ICON-MGR] Icons directory: O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons
+[ICON-MGR] Search terms: home wifi, home
+[ICON-MGR] TryMatchIcon - terms: home wifi, home
+[ICON-MGR] Index match for term: 'home' -> 'O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PO UI\OS\UI\home.png'
+[ICON-MGR] ✅ FOUND 'O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PO UI\OS\UI\home.png' for term 'home'
+[ICON-MGR] FindIconPathForCredential - Title: 'Passport - Alex Rivera', Url: ''
+[ICON-MGR] Icons directory: O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons
+[ICON-MGR] Search terms: passport - alex rivera, passport
+[ICON-MGR] TryMatchIcon - terms: passport - alex rivera, passport
+[ICON-MGR] ❌ No icon found for this credential
+[ICON-MGR] FindIconPathForCredential - Title: 'Azure Production API', Url: ''
+[ICON-MGR] Icons directory: O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons
+[ICON-MGR] Search terms: azure production api, azure
+[ICON-MGR] TryMatchIcon - terms: azure production api, azure
+[ICON-MGR] Index match for term: 'azure' -> 'O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\Azure.png'
+[ICON-MGR] ✅ FOUND 'O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\Azure.png' for term 'azure'
+[ICON-MGR] FindIconPathForCredential - Title: 'Emergency Contact - Taylor Lee', Url: ''
+[ICON-MGR] Icons directory: O:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons
+[ICON-MGR] Search terms: emergency contact - taylor lee, emergency
+[ICON-MGR] TryMatchIcon - terms: emergency contact - taylor lee, emergency
+[ICON-MGR] ❌ No icon found for this credential
+MessageBus: Listening to PhantomVault.UI.ViewModels.NavigateToVaultWithFilterMessage:
+VaultWindow constructor start
+[Binding]An error occurred binding 'Text' to 'FocusedArtifact.Label' at 'FocusedArtifact': 'Value is null.' (TextBlock #37176370)
+[Binding]An error occurred binding 'Text' to 'FocusedArtifact.Status' at 'FocusedArtifact': 'Value is null.' (TextBlock #58496003)
+[Binding]An error occurred binding 'Text' to 'FocusedArtifact.Type' at 'FocusedArtifact': 'Value is null.' (TextBlock #40555804)
+[Binding]An error occurred binding 'Text' to 'FocusedArtifact.Source' at 'FocusedArtifact': 'Value is null.' (TextBlock #63794726)
+[Binding]An error occurred binding 'Text' to 'FocusedArtifact.CreatedAt' at 'FocusedArtifact': 'Value is null.' (TextBlock #67021971)
+[Binding]An error occurred binding 'Text' to 'FocusedArtifact.Sha256Hex' at 'FocusedArtifact': 'Value is null.' (TextBlock #60070541)
+[RecoveryDev] InitializeRecoveryView started
+[RecoveryDev] Using developer mode configuration
+[RecoveryDev] Creating vault with USB binding at: C:\Users\Main\AppData\Local\PhantomRecovery_SimulatedUSB
+VaultWindow constructor end
+[Binding]An error occurred binding 'IsVisible' to 'IsShowingCategoryLanding' at 'IsShowingCategoryLanding': 'Could not find a matching property accessor for 'IsShowingCategoryLanding' on 'PhantomVault.UI.ViewModels.CategoryLandingViewModel'.' (CategoryLandingView #8511124)
+[Binding]An error occurred binding 'Background' to 'SelectedCredential.IconBackgroundBrush' at 'SelectedCredential': 'Value is null.' (Border #22363169)
+[Binding]An error occurred binding 'Source' to 'SelectedCredential.AutoDetectedIconBitmap' at 'SelectedCredential': 'Value is null.' (Image #66586256)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasAutoDetectedIcon' at 'SelectedCredential': 'Value is null.' (Image #66586256)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.IconText' at 'SelectedCredential': 'Value is null.' (TextBlock #21672534)
+[Binding]An error occurred binding 'IsVisible' to '!SelectedCredential.HasAutoDetectedIcon' at 'SelectedCredential': 'Value is null.' (TextBlock #21672534)
+[Binding]An error occurred binding '(unknown)' to 'SelectedCredential.Title' at 'SelectedCredential': 'Value is null.' (TextBlock #56923890)
+[Binding]An error occurred binding '(unknown)' to 'SelectedCredential.Username' at 'SelectedCredential': 'Value is null.' (TextBlock #16815167)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.FavoriteIcon' at 'SelectedCredential': 'Value is null.' (TextBlock #10399457)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.IsPasswordEntry' at 'SelectedCredential': 'Value is null.' (StackPanel #37049726)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasUsername' at 'SelectedCredential': 'Value is null.' (StackPanel #48237819)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.Username' at 'SelectedCredential': 'Value is null.' (TextBox #14949248)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasPassword' at 'SelectedCredential': 'Value is null.' (StackPanel #55296748)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.Password' at 'SelectedCredential': 'Value is null.' (TextBox #49851635)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.IsWiFiEntry' at 'SelectedCredential': 'Value is null.' (StackPanel #25986579)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasWiFiSSID' at 'SelectedCredential': 'Value is null.' (StackPanel #24538164)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.WiFiSSID' at 'SelectedCredential': 'Value is null.' (TextBox #41434269)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasWiFiSecurity' at 'SelectedCredential': 'Value is null.' (StackPanel #6593974)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.WiFiSecurityType' at 'SelectedCredential': 'Value is null.' (TextBox #64349884)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasWiFiBssid' at 'SelectedCredential': 'Value is null.' (StackPanel #44958086)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.WiFiBSSID' at 'SelectedCredential': 'Value is null.' (TextBox #17726332)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasWiFiPassword' at 'SelectedCredential': 'Value is null.' (StackPanel #37594824)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.MaskedWiFiPassword' at 'SelectedCredential': 'Value is null.' (TextBox #25281933)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.IsCreditCardEntry' at 'SelectedCredential': 'Value is null.' (StackPanel #36227361)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasCardholderName' at 'SelectedCredential': 'Value is null.' (StackPanel #48735147)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.CardholderName' at 'SelectedCredential': 'Value is null.' (TextBox #55232825)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasCardNumber' at 'SelectedCredential': 'Value is null.' (StackPanel #44673844)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.MaskedCardNumber' at 'SelectedCredential': 'Value is null.' (TextBox #61811587)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasCardType' at 'SelectedCredential': 'Value is null.' (StackPanel #30599431)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.CardType' at 'SelectedCredential': 'Value is null.' (TextBox #62634808)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasCardExpiry' at 'SelectedCredential': 'Value is null.' (StackPanel #40254682)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.CardExpiryText' at 'SelectedCredential': 'Value is null.' (TextBox #39403796)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasCardCVV' at 'SelectedCredential': 'Value is null.' (StackPanel #37590927)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.MaskedCardCVV' at 'SelectedCredential': 'Value is null.' (TextBox #24966259)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasCardPIN' at 'SelectedCredential': 'Value is null.' (StackPanel #13900702)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.MaskedCardPIN' at 'SelectedCredential': 'Value is null.' (TextBox #52215086)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasCardBillingAddress' at 'SelectedCredential': 'Value is null.' (StackPanel #14071989)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.CardBillingAddress' at 'SelectedCredential': 'Value is null.' (TextBox #66089339)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.IsBankAccountEntry' at 'SelectedCredential': 'Value is null.' (StackPanel #51636249)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasBankName' at 'SelectedCredential': 'Value is null.' (StackPanel #21786680)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.BankName' at 'SelectedCredential': 'Value is null.' (TextBox #19890688)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasBankAccountType' at 'SelectedCredential': 'Value is null.' (StackPanel #533016)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.BankAccountType' at 'SelectedCredential': 'Value is null.' (TextBox #43174312)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasBankAccountNumber' at 'SelectedCredential': 'Value is null.' (StackPanel #7458393)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.MaskedBankAccountNumber' at 'SelectedCredential': 'Value is null.' (TextBox #150098)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasBankRoutingNumber' at 'SelectedCredential': 'Value is null.' (StackPanel #42313251)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.MaskedBankRoutingNumber' at 'SelectedCredential': 'Value is null.' (TextBox #4821305)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasBankIban' at 'SelectedCredential': 'Value is null.' (StackPanel #25070509)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.MaskedBankIban' at 'SelectedCredential': 'Value is null.' (TextBox #17445353)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasBankSwift' at 'SelectedCredential': 'Value is null.' (StackPanel #34087372)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.MaskedBankSwift' at 'SelectedCredential': 'Value is null.' (TextBox #9613768)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasBankBranchCode' at 'SelectedCredential': 'Value is null.' (StackPanel #29115678)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.BankBranchCode' at 'SelectedCredential': 'Value is null.' (TextBox #9559684)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasBankBranchAddress' at 'SelectedCredential': 'Value is null.' (StackPanel #36136939)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.BankBranchAddress' at 'SelectedCredential': 'Value is null.' (TextBox #41410938)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.IsIdentityEntry' at 'SelectedCredential': 'Value is null.' (StackPanel #65951706)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasIdDocumentType' at 'SelectedCredential': 'Value is null.' (StackPanel #40487987)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.IdDocumentType' at 'SelectedCredential': 'Value is null.' (TextBox #58301484)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasIdNumber' at 'SelectedCredential': 'Value is null.' (StackPanel #24799725)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.IdNumber' at 'SelectedCredential': 'Value is null.' (TextBox #62620703)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasIdIssuingCountry' at 'SelectedCredential': 'Value is null.' (StackPanel #16465207)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.IdIssuingCountry' at 'SelectedCredential': 'Value is null.' (TextBox #58613401)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasIdIssuingState' at 'SelectedCredential': 'Value is null.' (StackPanel #50065064)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.IdIssuingState' at 'SelectedCredential': 'Value is null.' (TextBox #28738379)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasIdIssueDate' at 'SelectedCredential': 'Value is null.' (StackPanel #46107371)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.IdIssueDateText' at 'SelectedCredential': 'Value is null.' (TextBox #43709551)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasIdExpiryDate' at 'SelectedCredential': 'Value is null.' (StackPanel #50812736)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.IdExpiryDateText' at 'SelectedCredential': 'Value is null.' (TextBox #22190917)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.IsApiKeyEntry' at 'SelectedCredential': 'Value is null.' (StackPanel #52633830)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasApiKeyValue' at 'SelectedCredential': 'Value is null.' (StackPanel #35481869)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.MaskedApiKeyValue' at 'SelectedCredential': 'Value is null.' (TextBox #55459103)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasApiEnvironment' at 'SelectedCredential': 'Value is null.' (StackPanel #30150461)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.ApiEnvironment' at 'SelectedCredential': 'Value is null.' (TextBox #26268286)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasApiEndpoint' at 'SelectedCredential': 'Value is null.' (StackPanel #47356423)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.ApiEndpoint' at 'SelectedCredential': 'Value is null.' (TextBox #10665089)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasApiDocumentation' at 'SelectedCredential': 'Value is null.' (StackPanel #58565908)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.ApiDocumentationUrl' at 'SelectedCredential': 'Value is null.' (TextBox #46218087)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.IsContactEntry' at 'SelectedCredential': 'Value is null.' (StackPanel #52677538)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasContactName' at 'SelectedCredential': 'Value is null.' (StackPanel #39022190)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.ContactFullName' at 'SelectedCredential': 'Value is null.' (TextBox #6680818)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasContactEmail' at 'SelectedCredential': 'Value is null.' (StackPanel #4275415)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.ContactEmail' at 'SelectedCredential': 'Value is null.' (TextBox #10764357)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasContactPhone' at 'SelectedCredential': 'Value is null.' (StackPanel #66606563)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.ContactPhone' at 'SelectedCredential': 'Value is null.' (TextBox #26422489)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasContactCompany' at 'SelectedCredential': 'Value is null.' (StackPanel #59846864)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.ContactCompany' at 'SelectedCredential': 'Value is null.' (TextBox #15757807)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasContactJobTitle' at 'SelectedCredential': 'Value is null.' (StackPanel #1314015)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.ContactJobTitle' at 'SelectedCredential': 'Value is null.' (TextBox #39326408)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasContactAddress' at 'SelectedCredential': 'Value is null.' (StackPanel #31322449)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.ContactAddress' at 'SelectedCredential': 'Value is null.' (TextBox #54090402)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasUrl' at 'SelectedCredential': 'Value is null.' (StackPanel #19246436)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.Url' at 'SelectedCredential': 'Value is null.' (TextBox #15457470)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasGroup' at 'SelectedCredential': 'Value is null.' (StackPanel #530245)
+[Binding]An error occurred binding '(unknown)' to 'SelectedCredential.Group' at 'SelectedCredential': 'Value is null.' (TextBlock #51004605)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasNotes' at 'SelectedCredential': 'Value is null.' (StackPanel #4046652)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.Notes' at 'SelectedCredential': 'Value is null.' (TextBox #59343389)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.Created' at 'SelectedCredential': 'Value is null.' (TextBlock #43222211)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.LastModified' at 'SelectedCredential': 'Value is null.' (TextBlock #11338242)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.TagsText' at 'SelectedCredential': 'Value is null.' (TextBlock #45982442)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.ExpiryText' at 'SelectedCredential': 'Value is null.' (TextBlock #33877299)
+[Binding]An error occurred binding 'Background' to 'SelectedTrashItem.Payload.IconBackgroundBrush' at 'SelectedTrashItem': 'Value is null.' (Border #13474867)
+[Binding]An error occurred binding 'Source' to 'SelectedTrashItem.Payload.AutoDetectedIconBitmap' at 'SelectedTrashItem': 'Value is null.' (Image #17722413)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedTrashItem.Payload.HasAutoDetectedIcon' at 'SelectedTrashItem': 'Value is null.' (Image #17722413)
+[Binding]An error occurred binding 'Text' to 'SelectedTrashItem.Payload.IconText' at 'SelectedTrashItem': 'Value is null.' (TextBlock #34737395)
+[Binding]An error occurred binding 'IsVisible' to '!SelectedTrashItem.Payload.HasAutoDetectedIcon' at 'SelectedTrashItem': 'Value is null.' (TextBlock #34737395)
+[Binding]An error occurred binding '(unknown)' to 'SelectedTrashItem.Payload.Title' at 'SelectedTrashItem': 'Value is null.' (TextBlock #10349436)
+[Binding]An error occurred binding '(unknown)' to 'SelectedTrashItem.Payload.Username' at 'SelectedTrashItem': 'Value is null.' (TextBlock #55593128)
+[Binding]An error occurred binding '(unknown)' to 'SelectedTrashItem.Payload.Username' at 'SelectedTrashItem': 'Value is null.' (TextBlock #52175844)
+[Binding]An error occurred binding '(unknown)' to 'SelectedTrashItem.Payload.Password' at 'SelectedTrashItem': 'Value is null.' (TextBlock #3401846)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedTrashItem.Payload.HasUrl' at 'SelectedTrashItem': 'Value is null.' (StackPanel #64026642)
+[Binding]An error occurred binding '(unknown)' to 'SelectedTrashItem.Payload.Url' at 'SelectedTrashItem': 'Value is null.' (TextBlock #34762131)
+[Binding]An error occurred binding 'Text' to 'SelectedTrashItem.OriginalGroup' at 'SelectedTrashItem': 'Value is null.' (TextBlock #41552307)
+[Binding]An error occurred binding 'Text' to 'SelectedTrashItem.DeletedUtc' at 'SelectedTrashItem': 'Value is null.' (TextBlock #10293730)
+[Binding]An error occurred binding 'Text' to 'SelectedTrashItem.ScheduledPurgeLabel' at 'SelectedTrashItem': 'Value is null.' (TextBlock #28485797)
+[Binding]An error occurred binding '(unknown)' to 'SelectedCredential.Title' at 'SelectedCredential': 'Value is null.' (TextBlock #56555210)
+[Binding]An error occurred binding 'Background' to 'SelectedCredential.IconBackgroundBrush' at 'SelectedCredential': 'Value is null.' (Border #13827559)
+[Binding]An error occurred binding 'Source' to 'SelectedCredential.AutoDetectedIconBitmap' at 'SelectedCredential': 'Value is null.' (Image #46290527)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasAutoDetectedIcon' at 'SelectedCredential': 'Value is null.' (Image #46290527)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.IconText' at 'SelectedCredential': 'Value is null.' (TextBlock #57144672)
+[Binding]An error occurred binding 'IsVisible' to '!SelectedCredential.HasAutoDetectedIcon' at 'SelectedCredential': 'Value is null.' (TextBlock #57144672)
+[Binding]An error occurred binding '(unknown)' to 'SelectedCredential.Title' at 'SelectedCredential': 'Value is null.' (TextBlock #50970824)
+[Binding]An error occurred binding '(unknown)' to 'SelectedCredential.Username' at 'SelectedCredential': 'Value is null.' (TextBlock #46529281)
+[Binding]An error occurred binding 'Value' to 'SelectedCredential.Username' at 'SelectedCredential': 'Value is null.' (CopyableField #Root)
+[Binding]An error occurred binding 'Value' to 'SelectedCredential.Password' at 'SelectedCredential': 'Value is null.' (CopyableField #Root)
+[Binding]An error occurred binding 'IsVisible' to 'SelectedCredential.HasUrl' at 'SelectedCredential': 'Value is null.' (StackPanel #16387448)
+[Binding]An error occurred binding 'Text' to 'SelectedCredential.Url' at 'SelectedCredential': 'Value is null.' (TextBox #52314908)
+[Binding]An error occurred binding 'Text' to 'EditViewModel.WindowTitle' at 'EditViewModel': 'Value is null.' (TextBlock #20515029)
+[Binding]An error occurred binding 'Command' to 'EditViewModel.SaveCommand' at 'EditViewModel': 'Value is null.' (Button #45837677)
+[Binding]An error occurred binding 'Text' to 'EditViewModel.SaveButtonText' at 'EditViewModel': 'Value is null.' (TextBlock #21864360)
+[RuntimeThemeService] Applied ClassicDark to window: PhantomVault - My Secure Vault
+[RecoveryDev] Vault created with USB binding successfully
+[Binding]An error occurred binding 'Text' to 'FocusedArtifact.Label' at 'FocusedArtifact': 'Value is null.' (TextBlock #37176370)
+[Binding]An error occurred binding 'Text' to 'FocusedArtifact.Status' at 'FocusedArtifact': 'Value is null.' (TextBlock #58496003)
+[Binding]An error occurred binding 'Text' to 'FocusedArtifact.Type' at 'FocusedArtifact': 'Value is null.' (TextBlock #40555804)
+[Binding]An error occurred binding 'Text' to 'FocusedArtifact.Source' at 'FocusedArtifact': 'Value is null.' (TextBlock #63794726)
+[Binding]An error occurred binding 'Text' to 'FocusedArtifact.CreatedAt' at 'FocusedArtifact': 'Value is null.' (TextBlock #67021971)
+[Binding]An error occurred binding 'Text' to 'FocusedArtifact.Sha256Hex' at 'FocusedArtifact': 'Value is null.' (TextBlock #60070541)
+[RecoveryDev] Adding fake recovery entries for developer mode
+[SvgIconService] Failed to fetch icon 'search': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'lock': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'x': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'key': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'plus': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'key': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'x': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'lock': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'shield': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'plus': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'shield': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'key': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'key': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'copy': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'shield': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'refresh-cw': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'database': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'settings': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'shield': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'alert-circle': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'copy': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'alert-triangle': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'shield': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'alert-triangle': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'alert-triangle': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'download': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'clock': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'plus': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'shield': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'lock': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'shield': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'key': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'settings': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'refresh-cw': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'alert-triangle': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'copy': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'database': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'alert-circle': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'key': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'alert-triangle': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'clock': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'shield': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'alert-circle': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'database': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'clock': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'shield': Response status code does not indicate success: 404 (Not Found).
+[RecoveryDev] Creating 20 fake recovery entries
+[RecoveryDev] Would add: [Master Keys] PhantomVault Master Key #1 (Recovery Key)
+[RecoveryDev] Would add: [Master Keys] PhantomVault Master Key #2 (Recovery Key)
+[RecoveryDev] Would add: [Master Keys] Emergency Recovery Code (Recovery Code)
+[RecoveryDev] Would add: [Hardware Keys] YubiKey 5 NFC (Hardware Token)
+[RecoveryDev] Would add: [Hardware Keys] Titan Security Key (Hardware Token)
+[RecoveryDev] Would add: [Backup Codes] Google Account Recovery (Backup Codes)
+[RecoveryDev] Would add: [Backup Codes] GitHub 2FA Codes (Backup Codes)
+[RecoveryDev] Would add: [Backup Codes] Microsoft Account Recovery (Backup Codes)
+[RecoveryDev] Would add: [SSH Keys] Production Server Key (SSH Private Key)
+[RecoveryDev] Would add: [SSH Keys] Git Repository Key (SSH Private Key)
+[RecoveryDev] Would add: [Certificates] Code Signing Certificate (X.509 Certificate)
+[RecoveryDev] Would add: [Certificates] SSL/TLS Certificate (X.509 Certificate)
+[RecoveryDev] Would add: [Recovery Phrases] Crypto Wallet Seed (BIP39 Seed Phrase)
+[RecoveryDev] Would add: [Recovery Phrases] Password Manager Seed (Recovery Phrase)
+[RecoveryDev] Would add: [API Keys] AWS Root Account (API Credentials)
+[RecoveryDev] Would add: [API Keys] Stripe Production API (API Key)
+[RecoveryDev] Would add: [Emergency Contacts] Security Team Lead (Contact)
+[RecoveryDev] Would add: [Emergency Contacts] Legal Counsel (Contact)
+[RecoveryDev] Would add: [Vault Access] Safe Deposit Box #247 (Physical Access)
+[RecoveryDev] Would add: [Vault Access] Home Safe Combination (Physical Access)
+[RecoveryDev] Fake entries added successfully (logged only - actual implementation requires vault API integration)
+[RecoveryDev] RecoveryView initialized successfully
+[SvgIconService] Failed to fetch icon 'search': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'settings': Response status code does not indicate success: 404 (Not Found).
+[ICON-MGR] TryMatchIcon - terms: emergency contact - taylor lee, emergency
+[ICON-MGR] TryMatchIcon - terms: emergency contact - taylor lee, emergency
+[ICON-MGR] TryMatchIcon - terms: emergency contact - taylor lee, emergency
+[ICON-MGR] TryMatchIcon - terms: emergency contact - taylor lee, emergency
+[RuntimeThemeService] Applied ClassicDark to window: Welcome to Phantom Vault
+[SvgIconService] Failed to fetch icon 'shield': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'key': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'settings': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'shield': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'alert-triangle': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'database': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'copy': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'shield': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'clock': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'alert-circle': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'key': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'lock': Response status code does not indicate success: 404 (Not Found).
+[SvgIconService] Failed to fetch icon 'plus': Response status code does not indicate success: 404 (Not Found).
+[App] Shutdown requested - cleaning up resources
+[App] Shutdown requested - cleaning up resources
+[App] Application exiting - cleaning up spawned processes
+[App] Application exiting - cleaning up spawned processes
+[App] Spawned processes cleaned up successfully

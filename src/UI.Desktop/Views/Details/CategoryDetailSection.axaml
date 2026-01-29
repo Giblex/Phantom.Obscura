@@ -1,0 +1,40 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:PhantomVault.UI.Converters"
+             x:Class="PhantomVault.UI.Views.Details.CategoryDetailSection">
+    
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://PhantomVault.UI/Resources/Converters/ConverterResources.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    
+    <!-- Category/Group -->
+    <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasGroup}">
+        <TextBlock Text="Category" 
+                   FontSize="13" 
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource MutedTextBrush}"/>
+        <Border Background="{DynamicResource InputBackgroundBrush}"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                BorderThickness="1"
+                Height="36"
+                Padding="10,8"
+                CornerRadius="4">
+            <TextBlock Foreground="{DynamicResource InputForegroundBrush}"
+                       VerticalAlignment="Center">
+                <TextBlock.Effect>
+                    <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                </TextBlock.Effect>
+                <TextBlock.Text>
+                    <MultiBinding Converter="{StaticResource PrivacyMaskConverter}">
+                        <Binding Path="SelectedCredential.Group"/>
+                        <Binding Path="PrivacyModeEnabled"/>
+                    </MultiBinding>
+                </TextBlock.Text>
+            </TextBlock>
+        </Border>
+    </StackPanel>
+</UserControl>

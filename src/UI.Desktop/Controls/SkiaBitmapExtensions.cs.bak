@@ -1,0 +1,21 @@
+using Avalonia.Media.Imaging;
+using Avalonia.Skia;
+using SkiaSharp;
+
+namespace Giblex.Controls;
+
+public static class SkiaBitmapExtensions
+{
+    public static SKImage? ToSKImage(this Bitmap bmp)
+    {
+        // Avalonia.Skia provides a way to get an SKBitmap via a pixel snapshot
+        using var locked = bmp.Lock();
+        var info = new SKImageInfo(locked.Size.Width, locked.Size.Height,
+            SKColorType.Bgra8888, SKAlphaType.Premul);
+
+        // Wrap the locked memory; copy into an SKBitmap for safety
+        var skBmp = new SKBitmap(info);
+        skBmp.InstallPixels(info, locked.Address, locked.RowBytes);
+        return SKImage.FromBitmap(skBmp);
+    }
+}

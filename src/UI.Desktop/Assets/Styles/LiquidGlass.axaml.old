@@ -1,0 +1,129 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+<Style Selector="Button.liquid-glass">
+  <!-- Geometry -->
+  <Setter Property="CornerRadius" Value="10"/>
+  <Setter Property="BorderThickness" Value="1"/>
+  <Setter Property="FontWeight" Value="SemiBold"/>
+  <Setter Property="Foreground" Value="#EAF1FA"/>
+  <Setter Property="Cursor" Value="Hand"/>
+
+  <!-- Depth -->
+  <Setter Property="BoxShadow">
+    <BoxShadows>
+      <BoxShadow Blur="28" Offset="0,14" Color="#80000000"/>
+    </BoxShadows>
+  </Setter>
+
+  <Setter Property="Template">
+    <ControlTemplate>
+      <Grid ClipToBounds="False">
+
+        <!-- Backdrop blur = real glass (best-effort per platform/backend) -->
+        <Border CornerRadius="{TemplateBinding CornerRadius}"
+                ClipToBounds="True">
+          <Border.BackdropFilter>
+            <BackdropFilter>
+              <Blur Radius="16"/>
+            </BackdropFilter>
+          </Border.BackdropFilter>
+        </Border>
+
+        <!-- Base body -->
+        <Border CornerRadius="{TemplateBinding CornerRadius}"
+                BorderThickness="{TemplateBinding BorderThickness}"
+                BorderBrush="#45FFFFFF">
+          <Border.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+              <GradientStop Color="#2BFFFFFF" Offset="0"/>
+              <GradientStop Color="#14FFFFFF" Offset="0.55"/>
+              <GradientStop Color="#0DFFFFFF" Offset="1"/>
+            </LinearGradientBrush>
+          </Border.Background>
+        </Border>
+
+        <!-- Inner rim -->
+        <Border Margin="1"
+                CornerRadius="{TemplateBinding CornerRadius}"
+                BorderThickness="1"
+                BorderBrush="#18FFFFFF"
+                Opacity="0.95"/>
+
+        <!-- Liquid sheen (moves with pointer via attached props) -->
+        <Border Name="Sheen"
+                CornerRadius="{TemplateBinding CornerRadius}"
+                Opacity="0.90"
+                RenderTransformOrigin="0.5,0.5">
+          <Border.RenderTransform>
+            <TranslateTransform
+              X="{Binding $parent[Button].(Giblex.Controls.LiquidGlassButton.SheenX)}"
+              Y="{Binding $parent[Button].(Giblex.Controls.LiquidGlassButton.SheenY)}"/>
+          </Border.RenderTransform>
+          <Border.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+              <GradientStop Color="#24FFFFFF" Offset="0"/>
+              <GradientStop Color="#0AFFFFFF" Offset="0.38"/>
+              <GradientStop Color="#00FFFFFF" Offset="0.75"/>
+            </LinearGradientBrush>
+          </Border.Background>
+        </Border>
+
+        <!-- Specular top highlight -->
+        <Border Height="18"
+                VerticalAlignment="Top"
+                CornerRadius="{TemplateBinding CornerRadius}"
+                Opacity="0.90">
+          <Border.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+              <GradientStop Color="#22FFFFFF" Offset="0"/>
+              <GradientStop Color="#00FFFFFF" Offset="1"/>
+            </LinearGradientBrush>
+          </Border.Background>
+        </Border>
+
+        <!-- Content -->
+        <ContentPresenter Margin="{TemplateBinding Padding}"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"/>
+
+        <!-- Disabled overlay -->
+        <Border Name="DisabledMask"
+                IsVisible="False"
+                CornerRadius="{TemplateBinding CornerRadius}"
+                Background="#66000000"/>
+      </Grid>
+
+      <ControlTemplate.Triggers>
+        <!-- Hover: brighter rim + more lift -->
+        <Setter Selector="Button.liquid-glass:pointerover"
+                Property="BoxShadow">
+          <BoxShadows>
+            <BoxShadow Blur="36" Offset="0,18" Color="#8A000000"/>
+          </BoxShadows>
+        </Setter>
+
+        <!-- Pressed: sink slightly -->
+        <Setter Selector="Button.liquid-glass:pressed" Property="Opacity" Value="0.96"/>
+
+        <Setter Selector="Button.liquid-glass:pressed"
+                Property="BoxShadow">
+          <BoxShadows>
+            <BoxShadow Blur="18" Offset="0,8" Color="#78000000"/>
+          </BoxShadows>
+        </Setter>
+
+        <!-- Disabled -->
+        <Setter Selector="Button.liquid-glass:disabled /template/ Border#DisabledMask"
+                Property="IsVisible" Value="True"/>
+        <Setter Selector="Button.liquid-glass:disabled" Property="Opacity" Value="0.75"/>
+      </ControlTemplate.Triggers>
+    </ControlTemplate>
+  </Setter>
+</Style>
+
+<!-- Primary variant: slightly “cleaner/brighter glass chip” -->
+<Style Selector="Button.liquid-glass.primary">
+  <Setter Property="BorderBrush" Value="#60FFFFFF"/>
+</Style>
+</Styles>

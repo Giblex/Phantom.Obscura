@@ -1,0 +1,399 @@
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PhantomVault.UI.ViewModels"
+        xmlns:views="clr-namespace:PhantomVault.UI.Views"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="650"
+        x:Class="PhantomVault.UI.Views.InstallerWindow"
+        x:DataType="vm:InstallerViewModel"
+        Title="PhantomVault Setup"
+        Width="820" Height="680"
+        MinWidth="700" MinHeight="550"
+        WindowStartupLocation="CenterScreen"
+        CanResize="True"
+        Icon="avares://PhantomVault.UI/Assets/images/Parent Icon.ico"
+        FontFamily="Segoe UI"
+        Background="{DynamicResource WindowBackgroundBrush}">
+
+    <Design.DataContext>
+        <vm:InstallerViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        
+        <!-- Header Section -->
+        <Border Grid.Row="0" Background="{DynamicResource HeaderBackgroundBrush}" Padding="20,16">
+            <StackPanel HorizontalAlignment="Center" Spacing="8">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="12">
+                    <Image Source="avares://PhantomVault.UI/Assets/images/Parent Icon.ico"
+                           Width="48" Height="48" VerticalAlignment="Center"/>
+                    <TextBlock Text="PhantomVault Setup"
+                               FontSize="28"
+                               FontWeight="Bold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+                
+                <TextBlock Text="Configure your security components for maximum protection"
+                           FontSize="{StaticResource Type.Body.Size}"
+                           Foreground="{DynamicResource SecondaryTextBrush}"
+                           HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Main Content -->
+        <ScrollViewer Grid.Row="1" 
+                      Padding="30,20"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Spacing="24" MaxWidth="700" HorizontalAlignment="Center">
+                
+                <!-- Step Indicator -->
+                <Border Background="{DynamicResource CardBackgroundBrush}" 
+                        CornerRadius="{StaticResource Radius.Xl}" 
+                        Padding="20,16"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="{Binding CurrentStepTitle}"
+                                   FontSize="{StaticResource Type.H3.Size}"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        
+                        <ProgressBar Value="{Binding StepProgress}"
+                                     Minimum="0" Maximum="100"
+                                     Height="8"
+                                     Foreground="{DynamicResource AccentBrush}"
+                                     Background="{DynamicResource ControlBackgroundBrush}"/>
+                        
+                        <TextBlock Text="{Binding StepDescription}"
+                                   FontSize="13"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- VeraCrypt Installation Section -->
+                <Border Background="{DynamicResource CardBackgroundBrush}" 
+                        CornerRadius="{StaticResource Radius.Xl}" 
+                        Padding="24,20"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1">
+                    <StackPanel Spacing="16">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <Border Width="48" Height="48" CornerRadius="{StaticResource Radius.Lg}" 
+                                    Background="{DynamicResource AccentBrush}" 
+                                    HorizontalAlignment="Left">
+                                <TextBlock Text="🔒" FontSize="{StaticResource Type.H2.Size}" 
+                                           HorizontalAlignment="Center" 
+                                           VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="VeraCrypt Encryption"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                <TextBlock Text="Military-grade disk encryption for your vault"
+                                           FontSize="{StaticResource Type.Small.Size}"
+                                           Foreground="{DynamicResource MutedTextBrush}"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Status Badge -->
+                        <Border CornerRadius="{StaticResource Radius.Md}" 
+                                Padding="12,8"
+                                HorizontalAlignment="Left"
+                                Background="{Binding VeraCryptStatusBackground}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="{Binding VeraCryptStatusIcon}" FontSize="16"/>
+                                <TextBlock Text="{Binding VeraCryptStatusText}"
+                                           FontSize="13"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Description -->
+                        <TextBlock TextWrapping="Wrap"
+                                   FontSize="13"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   LineHeight="20">
+                            VeraCrypt provides additional security by creating encrypted containers for your vault.
+                            This is recommended for USB-portable vaults and provides protection even if your device is lost or stolen.
+                        </TextBlock>
+
+                        <!-- Installation Options -->
+                        <StackPanel Spacing="12" IsVisible="{Binding !IsVeraCryptInstalled}">
+                            <Separator Background="{DynamicResource ControlBorderBrush}" Height="1" Margin="0,8"/>
+                            
+                            <TextBlock Text="Installation Options"
+                                       FontSize="{StaticResource Type.Body.Size}"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+                            <!-- Download and Install Option -->
+                            <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                    CornerRadius="{StaticResource Radius.Lg}"
+                                    Padding="16,12"
+                                    BorderBrush="{DynamicResource AccentBrush}"
+                                    BorderThickness="2">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel Grid.Column="0" Spacing="4">
+                                        <TextBlock Text="Automatic Installation (Recommended)"
+                                                   FontSize="{StaticResource Type.Body.Size}"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                        <TextBlock Text="Download and install VeraCrypt automatically from the official source"
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   Foreground="{DynamicResource MutedTextBrush}"
+                                                   TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding DownloadSizeText}"
+                                                   FontSize="11"
+                                                   Foreground="{DynamicResource AccentBrush}"
+                                                   IsVisible="{Binding DownloadSizeText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                    </StackPanel>
+                                    
+                                    <Button Grid.Column="1"
+                                            Command="{Binding DownloadAndInstallVeraCryptCommand}"
+                                            Content="Install VeraCrypt"
+                                            Width="140" Height="36"
+                                            FontWeight="SemiBold"
+                                            Classes="liquid-glass primary"
+                                            IsEnabled="{Binding !IsInstalling}"
+                                            VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- Browse for Existing Installation -->
+                            <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                    CornerRadius="{StaticResource Radius.Lg}"
+                                    Padding="16,12">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel Grid.Column="0" Spacing="4">
+                                        <TextBlock Text="Manual Selection"
+                                                   FontSize="{StaticResource Type.Body.Size}"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                        <TextBlock Text="Browse to an existing VeraCrypt installation"
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                                    </StackPanel>
+                                    
+                                    <Button Grid.Column="1"
+                                            Command="{Binding BrowseVeraCryptCommand}"
+                                            Content="Browse..."
+                                            Width="140" Height="36"
+                                            Classes="liquid-glass"
+                                            IsEnabled="{Binding !IsInstalling}"
+                                            VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- Download from Website Option -->
+                            <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                    CornerRadius="{StaticResource Radius.Lg}"
+                                    Padding="16,12">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel Grid.Column="0" Spacing="4">
+                                        <TextBlock Text="Download from Website"
+                                                   FontSize="{StaticResource Type.Body.Size}"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                        <TextBlock Text="Open VeraCrypt's official download page"
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                                    </StackPanel>
+                                    
+                                    <Button Grid.Column="1"
+                                            Command="{Binding OpenVeraCryptWebsiteCommand}"
+                                            Content="Open Website"
+                                            Width="140" Height="36"
+                                            Classes="liquid-glass"
+                                            IsEnabled="{Binding !IsInstalling}"
+                                            VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Installation Progress -->
+                        <StackPanel Spacing="12" IsVisible="{Binding IsInstalling}">
+                            <Separator Background="{DynamicResource ControlBorderBrush}" Height="1" Margin="0,8"/>
+                            
+                            <TextBlock Text="{Binding InstallationStatus}"
+                                       FontSize="{StaticResource Type.Body.Size}"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            
+                            <ProgressBar Value="{Binding InstallationProgress}"
+                                         Minimum="0" Maximum="100"
+                                         Height="12"
+                                         Foreground="{DynamicResource AccentBrush}"
+                                         IsIndeterminate="{Binding IsProgressIndeterminate}"/>
+                            
+                            <TextBlock Text="{Binding InstallationDetails}"
+                                       FontSize="{StaticResource Type.Small.Size}"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       TextWrapping="Wrap"/>
+                            
+                            <Button Command="{Binding CancelInstallationCommand}"
+                                    Content="Cancel"
+                                    Width="100" Height="32"
+                                    Classes="liquid-glass danger"
+                                    HorizontalAlignment="Left"
+                                    IsVisible="{Binding CanCancelInstallation}"/>
+                        </StackPanel>
+
+                        <!-- Already Installed -->
+                        <StackPanel Spacing="8" IsVisible="{Binding IsVeraCryptInstalled}">
+                            <Separator Background="{DynamicResource ControlBorderBrush}" Height="1" Margin="0,8"/>
+                            
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="Path:"
+                                           FontSize="13"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding VeraCryptPath}"
+                                           FontSize="{StaticResource Type.Small.Size}"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis"
+                                           MaxWidth="400"/>
+                            </StackPanel>
+                            
+                            <StackPanel Orientation="Horizontal" Spacing="8"
+                                        IsVisible="{Binding InstalledVeraCryptVersion, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                <TextBlock Text="Version:"
+                                           FontSize="13"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding InstalledVeraCryptVersion}"
+                                           FontSize="{StaticResource Type.Small.Size}"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Optional Components Section -->
+                <Border Background="{DynamicResource CardBackgroundBrush}" 
+                        CornerRadius="{StaticResource Radius.Xl}" 
+                        Padding="24,20"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="Optional Components"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+                        <!-- Windows Hello -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{StaticResource Radius.Lg}"
+                                Padding="16,12">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <TextBlock Grid.Column="0" Text="☝" FontSize="{StaticResource Type.H2.Size}" 
+                                           VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                <StackPanel Grid.Column="1" Spacing="2">
+                                    <TextBlock Text="Windows Hello / Biometrics"
+                                               FontSize="{StaticResource Type.Body.Size}"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    <TextBlock Text="Use fingerprint, face, or PIN for quick unlock"
+                                               FontSize="{StaticResource Type.Small.Size}"
+                                               Foreground="{DynamicResource MutedTextBrush}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding WindowsHelloStatusText}"
+                                               FontSize="{StaticResource Type.Small.Size}"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               VerticalAlignment="Center"/>
+                                    <Border CornerRadius="{StaticResource Radius.Sm}" 
+                                            Padding="8,4"
+                                            Background="{Binding WindowsHelloStatusBackground}">
+                                        <TextBlock Text="{Binding WindowsHelloStatusIcon}" FontSize="{StaticResource Type.Body.Size}"/>
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- YubiKey -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{StaticResource Radius.Lg}"
+                                Padding="16,12">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <TextBlock Grid.Column="0" Text="⌘" FontSize="{StaticResource Type.H2.Size}" 
+                                           VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                <StackPanel Grid.Column="1" Spacing="2">
+                                    <TextBlock Text="YubiKey / Hardware Token"
+                                               FontSize="{StaticResource Type.Body.Size}"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    <TextBlock Text="Physical security key for two-factor authentication"
+                                               FontSize="{StaticResource Type.Small.Size}"
+                                               Foreground="{DynamicResource MutedTextBrush}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding YubiKeyStatusText}"
+                                               FontSize="{StaticResource Type.Small.Size}"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               VerticalAlignment="Center"/>
+                                    <Border CornerRadius="{StaticResource Radius.Sm}" 
+                                            Padding="8,4"
+                                            Background="{Binding YubiKeyStatusBackground}">
+                                        <TextBlock Text="{Binding YubiKeyStatusIcon}" FontSize="{StaticResource Type.Body.Size}"/>
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- Skip Info -->
+                <TextBlock Text="You can skip this setup and configure components later in Settings → Advanced"
+                           FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           HorizontalAlignment="Center"
+                           TextAlignment="Center"
+                           Margin="0,8,0,0"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Footer Actions -->
+        <Border Grid.Row="2"
+                Background="{DynamicResource HeaderBackgroundBrush}"
+                Padding="20,16"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                BorderThickness="0,1,0,0">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+                    <Button Command="{Binding SkipSetupCommand}"
+                            Content="Skip Setup"
+                            Width="120" Height="40"
+                            FontSize="{StaticResource Type.Body.Size}"
+                            Classes="liquid-glass"
+                            IsEnabled="{Binding !IsInstalling}"/>
+                </StackPanel>
+                
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12">
+                    <Button Command="{Binding RefreshStatusCommand}"
+                            Content="↻ Refresh"
+                            Width="100" Height="40"
+                            FontSize="{StaticResource Type.Body.Size}"
+                            Classes="liquid-glass"
+                            ToolTip.Tip="Re-check component installation status"
+                            IsEnabled="{Binding !IsInstalling}"/>
+                    
+                    <Button Command="{Binding ContinueCommand}"
+                            Content="Continue →"
+                            Width="140" Height="40"
+                            FontSize="{StaticResource Type.Body.Size}"
+                            FontWeight="SemiBold"
+                            Classes="liquid-glass primary"
+                            IsEnabled="{Binding CanContinue}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+
+</views:ThemeAwareWindow>
+

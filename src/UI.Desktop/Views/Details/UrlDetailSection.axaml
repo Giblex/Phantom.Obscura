@@ -1,0 +1,46 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:PhantomVault.UI.Converters"
+             x:Class="PhantomVault.UI.Views.Details.UrlDetailSection">
+    
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://PhantomVault.UI/Resources/Converters/ConverterResources.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    
+    <!-- URL -->
+    <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasUrl}">
+        <TextBlock Text="Website" 
+                   FontSize="13" 
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource MutedTextBrush}"/>
+        <Grid ColumnDefinitions="*,Auto">
+            <TextBox Grid.Column="0" 
+                     Text="{Binding SelectedCredential.Url}" 
+                     IsReadOnly="True"
+                     BorderThickness="1"
+                     BorderBrush="{DynamicResource ControlBorderBrush}"
+                     Height="36"
+                     Padding="8,16">
+                <TextBox.Effect>
+                    <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                </TextBox.Effect>
+            </TextBox>
+            <Button Grid.Column="1"
+                    Command="{Binding OpenUrlCommand}"
+                    CommandParameter="{Binding SelectedCredential}"
+                    Classes="liquid-glass"
+                    Width="36"
+                    Height="36"
+                    Padding="6"
+                    Margin="8,0,0,0"
+                    ToolTip.Tip="Open in browser">
+                <TextBlock Text="🌐" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+            </Button>
+        </Grid>
+    </StackPanel>
+</UserControl>
+

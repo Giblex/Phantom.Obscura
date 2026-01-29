@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:PhantomVault.UI.Mobile.ViewModels"
+             x:Class="PhantomVault.UI.Mobile.Views.VaultUnlockPage"
+             x:DataType="vm:VaultUnlockViewModel"
+             Title="Unlock Vault"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{StaticResource PrimaryColor}">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <!-- Colors matching desktop Obscura theme -->
+            <Color x:Key="PrimaryColor">#1E1E2E</Color>
+            <Color x:Key="SecondaryColor">#2A2A3E</Color>
+            <Color x:Key="AccentColor">#6C5CE7</Color>
+            <Color x:Key="SurfaceColor">#252535</Color>
+            <Color x:Key="TextPrimaryColor">#E8EAF0</Color>
+            <Color x:Key="TextSecondaryColor">#B0B8C0</Color>
+            <Color x:Key="ErrorColor">#FF6B6B</Color>
+            <Color x:Key="SuccessColor">#51CF66</Color>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="30,40">
+
+        <!-- Header -->
+        <VerticalStackLayout Grid.Row="0" Spacing="12" Margin="0,0,0,30">
+            <HorizontalStackLayout HorizontalOptions="Center" Spacing="12">
+                <Image Source="phantom_logo.png"
+                       WidthRequest="40"
+                       HeightRequest="40"
+                       VerticalOptions="Center"/>
+                <Label Text="PhantomVault"
+                       FontSize="28"
+                       FontAttributes="Bold"
+                       TextColor="{StaticResource TextPrimaryColor}"
+                       VerticalOptions="Center"/>
+            </HorizontalStackLayout>
+            <Label Text="Enter your password to unlock"
+                   FontSize="14"
+                   TextColor="{StaticResource TextSecondaryColor}"
+                   HorizontalOptions="Center"/>
+        </VerticalStackLayout>
+
+        <!-- Main Content -->
+        <ScrollView Grid.Row="1" VerticalOptions="Center">
+            <VerticalStackLayout Spacing="20">
+
+                <!-- USB Drive Selection -->
+                <Frame BackgroundColor="{StaticResource SurfaceColor}"
+                       BorderColor="Transparent"
+                       CornerRadius="12"
+                       Padding="16">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="USB Vault Drive"
+                               FontSize="13"
+                               TextColor="{StaticResource TextSecondaryColor}"
+                               FontAttributes="Bold"/>
+
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                            <Picker Grid.Column="0"
+                                    ItemsSource="{Binding AvailableDrives}"
+                                    ItemDisplayBinding="{Binding Label}"
+                                    SelectedItem="{Binding SelectedDrive}"
+                                    TextColor="{StaticResource TextPrimaryColor}"
+                                    BackgroundColor="{StaticResource SecondaryColor}"
+                                    FontSize="14">
+                            </Picker>
+
+                            <Button Grid.Column="1"
+                                    Text="Browse"
+                                    Command="{Binding BrowseDriveCommand}"
+                                    BackgroundColor="{StaticResource AccentColor}"
+                                    TextColor="White"
+                                    FontSize="13"
+                                    WidthRequest="80"
+                                    HeightRequest="40"
+                                    CornerRadius="8"/>
+                        </Grid>
+
+                        <!-- Drive Info -->
+                        <Label Text="{Binding DriveInfoText}"
+                               FontSize="12"
+                               TextColor="{StaticResource TextSecondaryColor}"
+                               IsVisible="{Binding HasSelectedDrive}"/>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Password Entry -->
+                <Frame BackgroundColor="{StaticResource SurfaceColor}"
+                       BorderColor="Transparent"
+                       CornerRadius="12"
+                       Padding="16">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Master Password"
+                               FontSize="13"
+                               TextColor="{StaticResource TextSecondaryColor}"
+                               FontAttributes="Bold"/>
+
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                            <Entry Grid.Column="0"
+                                   Text="{Binding Password}"
+                                   Placeholder="Enter your password"
+                                   PlaceholderColor="#606870"
+                                   IsPassword="{Binding IsPasswordMasked}"
+                                   TextColor="{StaticResource TextPrimaryColor}"
+                                   BackgroundColor="{StaticResource SecondaryColor}"
+                                   FontSize="14"
+                                   HeightRequest="45"
+                                   ReturnCommand="{Binding UnlockCommand}"/>
+
+                            <Button Grid.Column="1"
+                                    Text="{Binding PasswordVisibilityIcon}"
+                                    Command="{Binding TogglePasswordVisibilityCommand}"
+                                    BackgroundColor="{StaticResource SecondaryColor}"
+                                    TextColor="{StaticResource TextSecondaryColor}"
+                                    FontSize="18"
+                                    WidthRequest="45"
+                                    HeightRequest="45"
+                                    CornerRadius="8"/>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Keyfile (Optional) -->
+                <Frame BackgroundColor="{StaticResource SurfaceColor}"
+                       BorderColor="Transparent"
+                       CornerRadius="12"
+                       Padding="16"
+                       IsVisible="{Binding ShowKeyfileOption}">
+                    <VerticalStackLayout Spacing="12">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0"
+                                   Text="Keyfile (Optional)"
+                                   FontSize="13"
+                                   TextColor="{StaticResource TextSecondaryColor}"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="Center"/>
+
+                            <Switch Grid.Column="1"
+                                    IsToggled="{Binding UseKeyfile}"
+                                    OnColor="{StaticResource AccentColor}"/>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*,Auto"
+                              ColumnSpacing="10"
+                              IsVisible="{Binding UseKeyfile}">
+                            <Entry Grid.Column="0"
+                                   Text="{Binding KeyfilePath}"
+                                   Placeholder="Select keyfile"
+                                   PlaceholderColor="#606870"
+                                   IsReadOnly="True"
+                                   TextColor="{StaticResource TextPrimaryColor}"
+                                   BackgroundColor="{StaticResource SecondaryColor}"
+                                   FontSize="13"
+                                   HeightRequest="40"/>
+
+                            <Button Grid.Column="1"
+                                    Text="Browse"
+                                    Command="{Binding BrowseKeyfileCommand}"
+                                    BackgroundColor="{StaticResource AccentColor}"
+                                    TextColor="White"
+                                    FontSize="13"
+                                    WidthRequest="80"
+                                    HeightRequest="40"
+                                    CornerRadius="8"/>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Biometric Authentication -->
+                <Button Text="Unlock with Biometrics"
+                        Command="{Binding UnlockWithBiometricsCommand}"
+                        BackgroundColor="{StaticResource SecondaryColor}"
+                        TextColor="{StaticResource TextPrimaryColor}"
+                        BorderColor="{StaticResource AccentColor}"
+                        BorderWidth="1"
+                        FontSize="15"
+                        HeightRequest="50"
+                        CornerRadius="10"
+                        IsVisible="{Binding BiometricsAvailable}"
+                        Margin="0,10,0,0">
+                    <Button.ImageSource>
+                        <FontImageSource Glyph="🔐"
+                                       Size="20"
+                                       Color="{StaticResource AccentColor}"/>
+                    </Button.ImageSource>
+                </Button>
+
+                <!-- Unlock Button -->
+                <Button Text="Unlock Vault"
+                        Command="{Binding UnlockCommand}"
+                        BackgroundColor="{StaticResource AccentColor}"
+                        TextColor="White"
+                        FontSize="16"
+                        FontAttributes="Bold"
+                        HeightRequest="55"
+                        CornerRadius="12"
+                        Margin="0,20,0,0"
+                        IsEnabled="{Binding CanUnlock}">
+                    <Button.Shadow>
+                        <Shadow Brush="{StaticResource AccentColor}"
+                                Opacity="0.4"
+                                Radius="15"
+                                Offset="0,4"/>
+                    </Button.Shadow>
+                </Button>
+
+                <!-- Status/Error Message -->
+                <Frame BackgroundColor="#2E2035"
+                       BorderColor="{StaticResource ErrorColor}"
+                       CornerRadius="8"
+                       Padding="12"
+                       IsVisible="{Binding HasError}">
+                    <Label Text="{Binding ErrorMessage}"
+                           TextColor="{StaticResource ErrorColor}"
+                           FontSize="13"
+                           HorizontalOptions="Center"/>
+                </Frame>
+
+                <!-- Loading Indicator -->
+                <ActivityIndicator IsRunning="{Binding IsBusy}"
+                                 Color="{StaticResource AccentColor}"
+                                 HeightRequest="40"
+                                 WidthRequest="40"
+                                 HorizontalOptions="Center"
+                                 IsVisible="{Binding IsBusy}"/>
+
+                <Label Text="{Binding StatusMessage}"
+                       FontSize="14"
+                       TextColor="{StaticResource TextSecondaryColor}"
+                       HorizontalOptions="Center"
+                       IsVisible="{Binding IsBusy}"/>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Footer -->
+        <VerticalStackLayout Grid.Row="2" Spacing="8" Margin="0,30,0,0">
+            <Label Text="PhantomVault - Zero-Knowledge Security"
+                   FontSize="11"
+                   TextColor="#606870"
+                   HorizontalOptions="Center"/>
+            <Label Text="Your vault is protected by end-to-end encryption"
+                   FontSize="10"
+                   TextColor="#505860"
+                   HorizontalOptions="Center"/>
+        </VerticalStackLayout>
+    </Grid>
+
+</ContentPage>

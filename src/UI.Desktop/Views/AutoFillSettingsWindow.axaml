@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:views="clr-namespace:PhantomVault.UI.Views"
+    x:Class="PhantomVault.UI.Views.AutoFillSettingsWindow"
+        Title="Auto‑Fill Settings" Width="400" Height="300">
+    <Border Padding="15">
+        <StackPanel Spacing="10">
+            <CheckBox Content="Enable auto‑fill" IsChecked="{Binding EnableAutoFill, Mode=TwoWay}" />
+            <StackPanel Orientation="Vertical" Margin="0,5,0,0">
+                <CheckBox Content="Automatically fill username" IsChecked="{Binding InjectUsername, Mode=TwoWay}" />
+                <CheckBox Content="Automatically fill password" IsChecked="{Binding InjectPassword, Mode=TwoWay}" />
+            </StackPanel>
+            <TextBlock Text="Domain whitelist (comma separated):" Margin="0,5,0,0" />
+            <TextBox Text="{Binding DomainWhitelist, Mode=TwoWay}" Height="60" AcceptsReturn="True" />
+            <Button Content="Save" Command="{Binding SaveCommand}" Width="80" HorizontalAlignment="Left" />
+        </StackPanel>
+    </Border>
+</views:ThemeAwareWindow>
+

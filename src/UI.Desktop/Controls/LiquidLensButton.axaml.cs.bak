@@ -1,0 +1,147 @@
+using System;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Media.Imaging;
+using Avalonia.Threading;
+
+namespace Giblex.Controls;
+
+public partial class LiquidLensButton : UserControl
+{
+    public static readonly StyledProperty<string?> ContentProperty =
+        AvaloniaProperty.Register<LiquidLensButton, string?>(nameof(Content));
+
+    public string? Content
+    {
+        get => GetValue(ContentProperty);
+        set => SetValue(ContentProperty, value);
+    }
+
+    public event EventHandler<RoutedEventArgs>? Click;
+
+    private DispatcherTimer? _timer;
+    private DateTime _t0;
+    private DateTime _lastCapture;
+    private bool _hover;
+
+    public LiquidLensButton()
+    {
+        InitializeComponent();
+
+        Btn.Click += (_, e) => Click?.Invoke(this, e);
+
+        Btn.PointerEntered += (_, __) =>
+        {
+            _hover = true;
+            EnsureTimer();
+            CaptureBackdropBestEffort();
+            ShowFallback(false);
+        };
+
+        Btn.PointerMoved += (_, e) =>
+        {
+            var p = e.GetPosition(Btn);
+            Lens.Pointer = p;
+
+            // Throttled capture (cross-platform friendly)
+            // Only recapture if enough time passed (background might change)
+            if ((DateTime.UtcNow - _lastCapture).TotalMilliseconds > 80)
+                CaptureBackdropBestEffort();
+        };
+
+        Btn.PointerExited += (_, __) =>
+        {
+            _hover = false;
+            Lens.Strength = 0;
+        };
+
+        Btn.PointerPressed += (_, __) => Lens.Strength = 1.0;
+        Btn.PointerReleased += (_, __) => Lens.Strength = 0.7;
+    }
+
+    private void EnsureTimer()
+    {
+        if (_timer != null) return;
+
+        _t0 = DateTime.UtcNow;
+        _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) }; // ~60fps while hovered
+        _timer.Tick += (_, __) =>
+        {
+            if (!_hover) return;
+            Lens.Time = (DateTime.UtcNow - _t0).TotalSeconds;
+            Lens.Strength = 0.7; // hover strength baseline
+        };
+        _timer.Start();
+    }
+
+    private void CaptureBackdropBestEffort()
+    {
+        try
+        {
+            var root = TopLevel.GetTopLevel(this)?.Content as Visual;
+            if (root is null)
+            {
+                ShowFallback(true);
+                return;
+            }
+
+            // Capture the whole root (simplest, reliable), then crop the region behind the button.
+            // If you want max performance later: capture only region via translated render.
+            var rootSize = root.Bounds.Size;
+            if (rootSize.Width < 2 || rootSize.Height < 2)
+                return;
+
+            var rtb = new RenderTargetBitmap(new PixelSize((int)rootSize.Width, (int)rootSize.Height));
+            rtb.Render(root);
+
+            // Compute button bounds in root coordinates
+            var top = TopLevel.GetTopLevel(this);
+            if (top is null)
+            {
+                ShowFallback(true);
+                return;
+            }
+
+            var btnTopLeft = Btn.TranslatePoint(new Point(0, 0), root);
+            if (btnTopLeft is null)
+            {
+                ShowFallback(true);
+                return;
+            }
+
+            var srcRect = new PixelRect(
+                (int)btnTopLeft.Value.X,
+                (int)btnTopLeft.Value.Y,
+                (int)Math.Max(1, Btn.Bounds.Width),
+                (int)Math.Max(1, Btn.Bounds.Height)
+            );
+
+            // Clamp to capture bounds
+            srcRect = srcRect.Intersect(new PixelRect(0, 0, rtb.PixelSize.Width, rtb.PixelSize.Height));
+            if (srcRect.Width < 2 || srcRect.Height < 2)
+            {
+                ShowFallback(true);
+                return;
+            }
+
+            // Crop region into a new bitmap for the shader
+            var cropped = new CroppedBitmap(rtb, srcRect);
+
+            Lens.Backdrop = cropped;
+            _lastCapture = DateTime.UtcNow;
+            ShowFallback(false);
+        }
+        catch
+        {
+            // Cross-platform reality: if capture/shader path fails, show normal glass
+            ShowFallback(true);
+        }
+    }
+
+    private void ShowFallback(bool show)
+    {
+        Fallback.IsVisible = show;
+    }
+}

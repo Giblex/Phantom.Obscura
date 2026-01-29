@@ -1,0 +1,49 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PhantomVault.UI.Views.EditForms.BankAccountEditForm">
+    
+    <Border x:Name="BankPanelBorder" Background="Transparent" IsVisible="{Binding IsBankAccountEntry}">
+        <StackPanel x:Name="BankPanel" Spacing="12">
+        <TextBlock Text="Bank Account" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+        <StackPanel Spacing="6">
+            <TextBlock Text="Bank Name" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding BankName}" Height="40" FontSize="14" Watermark="Contoso Bank"/>
+        </StackPanel>
+        <StackPanel Spacing="6">
+            <TextBlock Text="Account Number" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding BankAccountNumber}" PasswordChar="•" Height="40" FontSize="14" Watermark="000123456789"/>
+        </StackPanel>
+        <StackPanel Spacing="6">
+            <TextBlock Text="Routing Number" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding BankRoutingNumber}" PasswordChar="•" Height="40" FontSize="14" Watermark="110000000"/>
+        </StackPanel>
+        <Grid ColumnDefinitions="*,16,*">
+            <StackPanel Grid.Column="0" Spacing="6">
+                <TextBlock Text="IBAN" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                <TextBox Text="{Binding BankIBAN}" PasswordChar="•" Height="40" FontSize="14" Watermark="DE89 3704 0044 0532 0130 00"/>
+            </StackPanel>
+            <StackPanel Grid.Column="2" Spacing="6">
+                <TextBlock Text="SWIFT / BIC" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                <TextBox Text="{Binding BankSWIFT}" PasswordChar="•" Height="40" FontSize="14" Watermark="COBADEFFXXX"/>
+            </StackPanel>
+        </Grid>
+        <StackPanel Spacing="6">
+            <TextBlock Text="Account Type" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding BankAccountType}" Height="40" FontSize="14" Watermark="Checking"/>
+        </StackPanel>
+        <StackPanel Spacing="6">
+            <TextBlock Text="Branch Code" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding BankBranchCode}" Height="40" FontSize="14" Watermark="1234"/>
+        </StackPanel>
+        <StackPanel Spacing="6">
+            <TextBlock Text="Branch Address" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding BankBranchAddress}"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     Height="60"
+                     FontSize="13"
+                     />
+        </StackPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

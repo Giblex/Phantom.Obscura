@@ -1,0 +1,12 @@
+using Avalonia.Controls;
+using Avalonia.Markup.Xaml;
+
+namespace PhantomVault.UI.Views.Details;
+
+public partial class CreditCardDetailView : UserControl
+{
+    public CreditCardDetailView()
+    {
+        AvaloniaXamlLoader.Load(this);
+    }
+}

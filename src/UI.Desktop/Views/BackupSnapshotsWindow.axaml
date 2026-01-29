@@ -1,0 +1,128 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:PhantomVault.UI.ViewModels"
+        x:Class="PhantomVault.UI.Views.BackupSnapshotsWindow"
+        x:DataType="vm:BackupSnapshotsViewModel"
+        Title="Backup Snapshots Manager"
+        Width="800"
+        Height="600"
+        MinWidth="600"
+        MinHeight="400"
+        CanResize="True"
+        Background="{DynamicResource ObscuraCanvasBrush}">
+  <Grid RowDefinitions="Auto,*,Auto">
+    <!-- Header -->
+    <Border Grid.Row="0"
+            Background="{DynamicResource ObscuraSurfaceAltBrush}"
+            BorderBrush="{DynamicResource ObscuraBorderBrush}"
+            BorderThickness="0,0,0,1"
+            Padding="20,16">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Backup Snapshots"
+                     FontSize="20"
+                     FontWeight="SemiBold"/>
+          <TextBlock Text="Manage vault backup snapshots and restoration points"
+                     FontSize="12"
+                     Classes="subtle"/>
+        </StackPanel>
+        <Button Grid.Column="1"
+                Content="Refresh"
+                Classes="secondary"
+                Command="{Binding RefreshCommand}"
+                MinWidth="100"/>
+      </Grid>
+    </Border>
+
+    <!-- Content -->
+    <Grid Grid.Row="1" Margin="20" RowDefinitions="*,Auto">
+      <!-- Snapshots List -->
+      <Border Background="{DynamicResource ObscuraSurfaceBrush}"
+              BorderBrush="{DynamicResource ObscuraBorderBrush}"
+              BorderThickness="1"
+              CornerRadius="12">
+        <Grid RowDefinitions="Auto,*">
+          <Border Grid.Row="0"
+                  Background="{DynamicResource ObscuraSurfaceAltBrush}"
+                  BorderBrush="{DynamicResource ObscuraBorderBrush}"
+                  BorderThickness="0,0,0,1"
+                  Padding="16,12">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+              <TextBlock Text="📅 Date" FontSize="13" FontWeight="SemiBold" Width="160"/>
+              <TextBlock Grid.Column="1" Text="💾 Size" FontSize="13" FontWeight="SemiBold" Width="100"/>
+              <TextBlock Grid.Column="2" Text="📝 Type" FontSize="13" FontWeight="SemiBold" Width="120"/>
+              <TextBlock Grid.Column="3" Text="✓ Status" FontSize="13" FontWeight="SemiBold" Width="100"/>
+              <TextBlock Grid.Column="4" Text="Actions" FontSize="13" FontWeight="SemiBold" Width="200"/>
+            </Grid>
+          </Border>
+
+          <ScrollViewer Grid.Row="1">
+            <ItemsControl ItemsSource="{Binding Snapshots}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Border BorderBrush="{DynamicResource ObscuraBorderBrush}"
+                          BorderThickness="0,0,0,1"
+                          Padding="16,12">
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+                      <TextBlock Text="{Binding CreatedDate}" FontSize="12" Width="160" VerticalAlignment="Center"/>
+                      <TextBlock Grid.Column="1" Text="{Binding SizeFormatted}" FontSize="12" Width="100" VerticalAlignment="Center"/>
+                      <Border Grid.Column="2" Background="{DynamicResource ObscuraAccentBrush}" CornerRadius="6" Padding="8,4" Width="110" Margin="0,0,10,0">
+                        <TextBlock Text="{Binding Type}" FontSize="11" HorizontalAlignment="Center"/>
+                      </Border>
+                      <Border Grid.Column="3" Background="{Binding StatusColor}" CornerRadius="6" Padding="8,4" Width="90" Margin="0,0,10,0">
+                        <TextBlock Text="{Binding Status}" FontSize="11" HorizontalAlignment="Center"/>
+                      </Border>
+                      <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="8" Width="200">
+                        <Button Content="Restore" Classes="secondary" MinWidth="70" Command="{Binding $parent[Window].((vm:BackupSnapshotsViewModel)DataContext).RestoreCommand}" CommandParameter="{Binding}"/>
+                        <Button Content="Delete" Classes="danger" MinWidth="70" Command="{Binding $parent[Window].((vm:BackupSnapshotsViewModel)DataContext).DeleteCommand}" CommandParameter="{Binding}"/>
+                      </StackPanel>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </Grid>
+      </Border>
+
+      <!-- Info Panel -->
+      <Border Grid.Row="1"
+              Background="{DynamicResource ObscuraSurfaceBrush}"
+              BorderBrush="{DynamicResource ObscuraBorderBrush}"
+              BorderThickness="1"
+              CornerRadius="8"
+              Padding="16"
+              Margin="0,16,0,0">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Spacing="4">
+            <TextBlock Text="{Binding SnapshotCount, StringFormat='Total Snapshots: {0}'}" FontSize="12"/>
+            <TextBlock Text="{Binding TotalSize}" FontSize="12" Classes="subtle"/>
+          </StackPanel>
+          <Button Grid.Column="1"
+                  Content="Create Snapshot"
+                  Command="{Binding CreateSnapshotCommand}"
+                  MinWidth="140"/>
+        </Grid>
+      </Border>
+    </Grid>
+
+    <!-- Footer -->
+    <Border Grid.Row="2"
+            Background="{DynamicResource ObscuraSurfaceAltBrush}"
+            BorderBrush="{DynamicResource ObscuraBorderBrush}"
+            BorderThickness="0,1,0,0"
+            Padding="20,12">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Text="{Binding StatusMessage}"
+                   FontSize="12"
+                   VerticalAlignment="Center"
+                   Classes="subtle"/>
+        <Button Grid.Column="1"
+                Content="Close"
+                Classes="secondary"
+                Click="Close_Click"
+                MinWidth="100"/>
+      </Grid>
+    </Border>
+  </Grid>
+</Window>

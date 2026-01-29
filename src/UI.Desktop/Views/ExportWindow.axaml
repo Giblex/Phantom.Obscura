@@ -1,0 +1,111 @@
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:PhantomVault.UI.ViewModels"
+    xmlns:views="clr-namespace:PhantomVault.UI.Views"
+    x:Class="PhantomVault.UI.Views.ExportWindow"
+        x:DataType="vm:ExportViewModel"
+        Title="Export Credentials"
+        Width="650" Height="550"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="{DynamicResource WindowBackgroundBrush}">
+
+    <Design.DataContext>
+        <vm:ExportViewModel/>
+    </Design.DataContext>
+
+    <Border Padding="20" ClipToBounds="True">
+        <StackPanel Spacing="16">
+            <!-- Header -->
+            <TextBlock Text="Export Credentials" FontSize="20" FontWeight="SemiBold"/>
+            
+            <TextBlock Text="Export your credentials to external formats for backup or migration to other password managers." 
+                       TextWrapping="Wrap" 
+                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+
+            <!-- Format Selection -->
+            <StackPanel Spacing="8">
+                <TextBlock Text="Export Format:" FontWeight="SemiBold"/>
+                <ComboBox ItemsSource="{Binding Formats}" 
+                          SelectedValue="{Binding SelectedFormat}" 
+                          Width="250"
+                          HorizontalAlignment="Left"
+                          ToolTip.Tip="Choose the file format for export"/>
+            </StackPanel>
+
+            <!-- Group Filter -->
+            <StackPanel Spacing="8">
+                <TextBlock Text="Filter by Group:" FontWeight="SemiBold"/>
+                <ComboBox ItemsSource="{Binding Groups}" 
+                          SelectedValue="{Binding FilterGroup}" 
+                          Width="250"
+                          HorizontalAlignment="Left"
+                          ToolTip.Tip="Export all credentials or filter by specific group"/>
+            </StackPanel>
+
+            <!-- Security Options -->
+            <StackPanel Spacing="8">
+                <TextBlock Text="Security Options:" FontWeight="SemiBold"/>
+                <CheckBox IsChecked="{Binding IncludePasswords}" 
+                          Content="Include passwords in export"
+                          ToolTip.Tip="Uncheck to export without passwords (for sharing templates or auditing)"/>
+                <TextBlock Text="⚠️ Warning: Exported files are NOT encrypted. Handle with care!" 
+                           Foreground="{DynamicResource WarningBrush}"
+                           FontSize="12"
+                           TextWrapping="Wrap"
+                           Margin="24,4,0,0"
+                           IsVisible="{Binding IncludePasswords}"/>
+            </StackPanel>
+
+            <!-- Destination Selection -->
+            <StackPanel Spacing="8">
+                <TextBlock Text="Destination File:" FontWeight="SemiBold"/>
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBox Grid.Column="0" 
+                             Text="{Binding DestinationFile}" 
+                             IsReadOnly="True" 
+                             Watermark="No destination selected..."
+                             Margin="0,0,8,0"/>
+                    <Button Grid.Column="1" 
+                            Content="Browse..." 
+                            Width="100"
+                            Command="{Binding BrowseCommand}"/>
+                </Grid>
+            </StackPanel>
+
+            <!-- Status -->
+            <Border Background="{DynamicResource HeaderBackgroundBrush}" 
+                    Padding="12" 
+                    CornerRadius="6"
+                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                    BorderThickness="1">
+                <StackPanel Spacing="4">
+                    <TextBlock FontWeight="SemiBold" FontSize="12">
+                        <Run Text="Ready to export "/><Run Text="{Binding CredentialCount}"/><Run Text=" credential(s)"/>
+                    </TextBlock>
+                    <TextBlock Text="{Binding StatusMessage}" 
+                               TextWrapping="Wrap" 
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Action Buttons -->
+            <StackPanel Orientation="Horizontal" 
+                        HorizontalAlignment="Right" 
+                        Spacing="10" 
+                        Margin="0,8,0,0">
+                <Button Content="Start Export" 
+                        Width="150" 
+                        Command="{Binding ExportCommand}"
+                        Classes="accent"
+                        IsEnabled="{Binding !IsExporting}"
+                        ToolTip.Tip="Export credentials to selected file"/>
+                <Button Content="Cancel" 
+                        Width="100" 
+                        Command="{Binding CloseCommand}"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</views:ThemeAwareWindow>
+
+

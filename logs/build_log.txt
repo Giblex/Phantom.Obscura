@@ -1,0 +1,15 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  GiblexVault.Security.ZK -> G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\Crypto\bin\Debug\net8.0\GiblexVault.Security.ZK.dll
+  PhantomVault.Core -> G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\Core\bin\Debug\net8.0\PhantomVault.Core.dll
+  PhantomVault.Platform -> G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\Platform\bin\Debug\net8.0\PhantomVault.Platform.dll
+  PhantomVault.Autofill -> G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\Autofill\bin\Debug\net8.0\PhantomVault.Autofill.dll
+G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\Views\VaultWindow.axaml.cs(83,14): error CS1513: } expected [G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\PhantomVault.UI.csproj]
+
+Build FAILED.
+
+G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\Views\VaultWindow.axaml.cs(83,14): error CS1513: } expected [G:\Users\Giblex\Build Projects\PhantomObscuraV6\src\UI.Desktop\PhantomVault.UI.csproj]
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:04.50

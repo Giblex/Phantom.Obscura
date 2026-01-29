@@ -1,0 +1,13 @@
+{
+  "policyId": "OBSCURA-BASE-1",
+  "version": "1.0.0",
+  "requireUsb": true,
+  "allowDesktopSync": false,
+  "allowDebuggers": false,
+  "signature": {
+    "algorithm": "ECDSA-P256",
+    "hash": "SHA-512",
+    "signedBy": "OBSCURA-ROOT-1",
+    "value": "DaQ/OrSSbub6VCasc2E1FK/f24I6je2o4Ae2H\u002BaR76jsQ40hsIRzqmEYgZwEgchfvVCuX91S0iGg4bap8RYARQ=="
+  }
+}

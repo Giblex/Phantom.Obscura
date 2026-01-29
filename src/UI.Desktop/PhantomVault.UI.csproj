@@ -1,0 +1,125 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+  <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Deterministic>true</Deterministic>
+    <AvaloniaUseCompiledXaml>true</AvaloniaUseCompiledXaml>
+    <UseWpf>false</UseWpf>
+    <!-- Use Avalonia for cross‑platform desktop UI. -->
+
+    <!-- Application Icon (Desktop/Taskbar icon) -->
+    <ApplicationIcon>Assets\images\Parent Icon.ico</ApplicationIcon>
+    <!-- CS1591: Missing XML comment for publicly visible type or member - Temporarily suppressed -->
+    <!-- CS0618: Obsolete method usage - Some internal uses of deprecated methods are intentional -->
+    <!-- CS1573, CS1574, CS1571: XML documentation parameter mismatches - Fix in future refactor -->
+    <!-- CS1998: Async methods without await - Some methods are async for interface consistency -->
+    <!-- CS8625: Nullable reference type warnings - Cleaned up in future refactor -->
+    <!-- TODO: Add XML documentation comments for all public APIs -->
+    <NoWarn>$(NoWarn);1591;CS0618;CS1573;CS1574;CS1571;CS1998;CS8625</NoWarn>
+  </PropertyGroup>
+
+  <!-- Exclude legacy snapshots from the build so they don't register duplicate Avalonia resources -->
+  <ItemGroup>
+    <Compile Remove="Legacy\**\*" />
+    <AvaloniaXaml Remove="Legacy\**\*.axaml" />
+    <AvaloniaResource Remove="Legacy\**\*" />
+    <None Remove="Legacy\**\*" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.9" />
+    <ProjectReference Include="..\Core\PhantomVault.Core.csproj" />
+    <ProjectReference Include="..\Platform\PhantomVault.Platform.csproj" />
+    <ProjectReference Include="..\Crypto\GiblexVault.Security.ZK.csproj" />
+    <ProjectReference Include="..\Autofill\PhantomVault.Autofill.csproj" />
+    <ProjectReference Include="..\..\..\PhantomRecovery\PhantomRecovery.App\PhantomRecovery.App.csproj" />
+    <ProjectReference Include="..\..\..\PhantomRecovery\PhantomRecovery.Core\PhantomRecovery.Core.csproj" />
+    <PackageReference Include="Avalonia" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.9" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Skia" Version="11.3.9" />
+    <PackageReference Include="SkiaSharp" Version="3.119.1" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Svg.Skia" Version="11.0.0" />
+    <PackageReference Include="Avalonia.Xaml.Interactivity" Version="11.3.0.6" />
+    <PackageReference Include="Isopoh.Cryptography.Argon2" Version="2.0.0" />
+    <!-- MVVM Toolkit for ObservableObject and RelayCommand -->
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+    <!-- Serilog for structured logging -->
+    <PackageReference Include="Serilog" Version="4.2.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+    
+    <!-- Embed policy files as resources for runtime verification -->
+    <EmbeddedResource Include="Assets\Policies\root_public.json" />
+    <EmbeddedResource Include="Assets\Policies\obscura_root.crt" />
+    <EmbeddedResource Include="Assets\Policies\base_policy.signed.json" />
+    <None Include="..\..\Policies\base_policy.json" Link="Policies\base_policy.json" CopyToOutputDirectory="PreserveNewest" />
+    
+    <!-- Include all icon and image files -->
+    <AvaloniaResource Include="Assets\images\*.ico" />
+    <AvaloniaResource Include="Assets\images\*.png" />
+    <AvaloniaResource Include="Assets\noise_128.png" />
+    <AvaloniaResource Include="Assets\palette-icon.png" />
+    <!-- Include SVG icons for UI elements (replacing emojis) -->
+    <AvaloniaResource Include="Assets\Icons\*.svg" />
+    <AvaloniaResource Include="Assets\SVG\*.svg" />
+    <AvaloniaResource Include="Assets\SVG\Current\*.svg" />
+    <!-- Include PO UI icons (currently stored under Logos) as AvaloniaResource for avares:// URI access -->
+    <!-- Map physical path Assets\Icons\Logos\PO UI\** to avares://PhantomVault.UI/Assets/Icons/PO UI/** -->
+    <AvaloniaResource Include="Assets\Icons\Logos\PO UI\**\*.png" Link="Assets\Icons\PO UI\%(RecursiveDir)%(Filename)%(Extension)" />
+  <!-- Include OS Icons used in multiple UI controls, including filenames with spaces -->
+  <AvaloniaResource Include="Assets\Icons\OS Icons\**\*.*" />
+    <!-- Include brand logos used for import tiles -->
+    <AvaloniaResource Include="Assets\Icons\Logos\import\**\*.png" />
+    
+    <!-- Include extracted XAML resources for modular UI architecture -->
+    <AvaloniaResource Include="Resources\Tokens\SpacingTokens.axaml" />
+    <AvaloniaResource Include="Resources\Tokens\SizingTokens.axaml" />
+    <AvaloniaResource Include="Resources\Tokens\ThicknessTokens.axaml" />
+    <AvaloniaResource Include="Resources\Converters\ConverterResources.axaml" />
+    <AvaloniaResource Include="Resources\Brushes\SidebarBrushes.axaml" />
+    <AvaloniaResource Include="Resources\Brushes\GlassEffects.axaml" />
+    <AvaloniaResource Include="Resources\Styles\ButtonStyles.axaml" />
+    <AvaloniaResource Include="Resources\Styles\ListBoxStyles.axaml" />
+    <AvaloniaResource Include="Resources\Styles\ToggleButtonStyles.axaml" />
+    <AvaloniaResource Include="Resources\Templates\DataTemplates\CredentialDataTemplates.axaml" />
+    <AvaloniaResource Include="Resources\Templates\DataTemplates\CategoryDataTemplates.axaml" />
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+    <PackageReference Include="ZXing.Net" Version="0.16.9" />
+    <PackageReference Include="ZXing.Net.Bindings.SkiaSharp" Version="0.16.14" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Copy all logo files to output directory for IconManager runtime access -->
+    <None Include="Assets\Icons\Logos\PNG\*.png" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Assets\Icons\Logos\Ico\*.ico" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Assets\Icons\Logos\Circle\*.png" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Assets\Icons\Logos\*.png" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Assets\Icons\Logos\*.svg" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Assets\Icons\Logos\import\**\*.png" CopyToOutputDirectory="PreserveNewest" />
+  <!-- Copy PO UI folder (stored under Logos) so IconManager can enumerate files at runtime -->
+  <None Include="Assets\Icons\Logos\PO UI\**\*.*" CopyToOutputDirectory="PreserveNewest" />
+  <!-- Copy OS Icons to output as well for runtime enumeration -->
+  <None Include="Assets\Icons\OS Icons\**\*.*" CopyToOutputDirectory="PreserveNewest" />
+  <!-- (removed) previously added copy rule for Assets\Icons\Icons\PNG - icons live under Assets\Icons\Logos\PNG -->
+  </ItemGroup>
+
+
+  <Target Name="DumpAvaloniaItems">
+    <Message Text="AvaloniaXaml: @(AvaloniaXaml->'%(Identity)')" Importance="High" />
+    <Message Text="AvaloniaResource: @(AvaloniaResource->'%(Identity)')" Importance="High" />
+  </Target>
+
+</Project>
+
+
+
+
+
+<!-- test marker -->

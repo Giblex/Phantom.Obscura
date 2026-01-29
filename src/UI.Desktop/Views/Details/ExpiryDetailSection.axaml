@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:PhantomVault.UI.Converters"
+             x:Class="PhantomVault.UI.Views.Details.ExpiryDetailSection">
+    
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://PhantomVault.UI/Resources/Converters/ConverterResources.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    
+    <!-- Expiry Date -->
+    <StackPanel Spacing="6">
+        <TextBlock Text="Expiration" 
+                   FontSize="13" 
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource MutedTextBrush}"/>
+        <Border Background="{DynamicResource InputBackgroundBrush}"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                BorderThickness="1"
+                Height="36"
+                Padding="10,8"
+                CornerRadius="4">
+            <TextBlock Text="{Binding SelectedCredential.ExpiryText}"
+                       Foreground="{DynamicResource InputForegroundBrush}"
+                       VerticalAlignment="Center">
+                <TextBlock.Effect>
+                    <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                </TextBlock.Effect>
+            </TextBlock>
+        </Border>
+    </StackPanel>
+</UserControl>

@@ -1,0 +1,178 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PhantomVault.UI.Views.Overlays.SettingsPanelOverlay">
+    
+    <Border Background="{DynamicResource OverlayBackgroundBrush}"
+            IsVisible="{Binding IsSettingsPanelVisible}"
+            IsHitTestVisible="{Binding IsSettingsPanelVisible}">
+
+        <Grid ClipToBounds="True">
+            <!-- Transparent area to close panel -->
+            <Border Background="Transparent" />
+
+            <!-- Settings Panel Container - Slides in from right -->
+            <Canvas ClipToBounds="True" HorizontalAlignment="Right" Width="920">
+                <Border x:Name="SettingsSlideHost"
+                        Canvas.Right="0"
+                        VerticalAlignment="Stretch"
+                        Width="920"
+                        Height="{Binding $parent[Canvas].Bounds.Height}"
+                        Background="{DynamicResource WindowBackgroundBrush}"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1,0,0,0"
+                        BoxShadow="{DynamicResource SlideOutPanelShadow}"
+                        IsVisible="{Binding IsSettingsPanelVisible}">
+                    <Border.Styles>
+                        <Style Selector="Border">
+                            <Setter Property="Canvas.Right" Value="-920"/>
+                            <Setter Property="Opacity" Value="0"/>
+                        </Style>
+                        <Style Selector="Border[IsVisible=True]">
+                            <Setter Property="Canvas.Right" Value="0"/>
+                            <Setter Property="Opacity" Value="1"/>
+                        </Style>
+                    </Border.Styles>
+                    <Border.Transitions>
+                        <Transitions>
+                            <DoubleTransition Property="Canvas.Right" Duration="0:0:0.5" Easing="CubicEaseInOut"/>
+                            <DoubleTransition Property="Opacity" Duration="0:0:0.5" Easing="CubicEaseInOut"/>
+                        </Transitions>
+                    </Border.Transitions>
+
+                    <!-- Settings Panel Content -->
+                <Grid RowDefinitions="Auto,*">
+                    <!-- Header -->
+                    <Border Grid.Row="0" 
+                            Classes="header-surface"
+                            Background="{DynamicResource HeaderBackgroundBrush}" 
+                            Padding="25,20"
+                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                            BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="6">
+                                <TextBlock Text="Settings" 
+                                           FontSize="20" 
+                                           FontWeight="Bold"/>
+                                <TextBlock Text="Configure your vault preferences and appearance" 
+                                           FontSize="13" 
+                                           Classes="header-muted"/>
+                            </StackPanel>
+                            <Button Grid.Column="1"
+                                    Content="✕"
+                                    Command="{Binding CloseSettingsPanelCommand}"
+                                    Classes="header-action"
+                                    Width="36"
+                                    Height="36"
+                                    FontSize="16"
+                                    ToolTip.Tip="Close settings"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Tabbed Content -->
+                    <Grid Grid.Row="1" ColumnDefinitions="220,*">
+                        <!-- Tab Navigation -->
+                        <Border Grid.Column="0"
+                                Background="{DynamicResource CategoryPanelBackgroundBrush}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="0,0,1,0"
+                                Padding="15,20">
+                            <StackPanel Spacing="8">
+                                <Button Command="{Binding ShowGeneralSettingsCommand}"
+                                        Classes="liquid-glass sidebar"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Left"
+                                        Height="40">
+                                    <TextBlock Text="General" VerticalAlignment="Center"/>
+                                </Button>
+                                
+                                <Button Command="{Binding ShowSecuritySettingsCommand}"
+                                        Classes="liquid-glass sidebar"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Left"
+                                        Height="40">
+                                    <TextBlock Text="Security" VerticalAlignment="Center"/>
+                                </Button>
+                                
+                                <Button Command="{Binding ShowThemeSettingsCommand}"
+                                        Classes="liquid-glass sidebar"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Left"
+                                        Height="40">
+                                    <TextBlock Text="Theme" VerticalAlignment="Center"/>
+                                </Button>
+                                
+                                <Button Command="{Binding ShowImportExportSettingsCommand}"
+                                        Classes="liquid-glass sidebar"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Left"
+                                        Height="40">
+                                    <TextBlock Text="Import / Export" VerticalAlignment="Center"/>
+                                </Button>
+                                
+                                <Button Command="{Binding ShowAutoFillSettingsCommand}"
+                                        Classes="liquid-glass sidebar"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Left"
+                                        Height="40">
+                                    <TextBlock Text="Auto-Fill" VerticalAlignment="Center"/>
+                                </Button>
+                                
+                                <Button Command="{Binding ShowBackupSettingsCommand}"
+                                        Classes="liquid-glass sidebar"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Left"
+                                        Height="40">
+                                    <TextBlock Text="Backup" VerticalAlignment="Center"/>
+                                </Button>
+                                
+                                <Button Command="{Binding ShowAccessibilitySettingsCommand}"
+                                        Classes="liquid-glass sidebar"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Left"
+                                        Height="40">
+                                    <TextBlock Text="Accessibility" VerticalAlignment="Center"/>
+                                </Button>
+                                
+                                <Button Command="{Binding ShowAdvancedSettingsCommand}"
+                                        Classes="liquid-glass sidebar"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Left"
+                                        Height="40">
+                                    <TextBlock Text="Advanced" VerticalAlignment="Center"/>
+                                </Button>
+                                
+                                <Button Command="{Binding ShowRubbishBinSettingsCommand}"
+                                        Classes="liquid-glass sidebar"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Left"
+                                        Height="40">
+                                    <TextBlock Text="Secured Rubbish Bin" VerticalAlignment="Center"/>
+                                </Button>
+                                
+                                <Button Command="{Binding ShowPasswordHealthCommand}"
+                                        Classes="liquid-glass sidebar"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Left"
+                                        Height="40">
+                                    <TextBlock Text="Password Health" VerticalAlignment="Center"/>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Tab Content Area -->
+                        <ScrollViewer Grid.Column="1"
+                                     VerticalScrollBarVisibility="Auto"
+                                     HorizontalScrollBarVisibility="Disabled"
+                                     Padding="30,20,20,30">
+                            <ContentControl Content="{Binding SelectedSettingsContent}"
+                                          HorizontalAlignment="Stretch"
+                                          Margin="0,0,20,0"/>
+                        </ScrollViewer>
+                    </Grid>
+                </Grid>
+            </Border>
+            </Canvas>
+        </Grid>
+    </Border>
+    
+</UserControl>

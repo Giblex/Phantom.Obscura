@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:system="clr-namespace:System;assembly=System.Runtime">
+    
+    <!-- Common UI Strings -->
+    <system:String x:Key="Str.Common.Cancel">Cancel</system:String>
+    <system:String x:Key="Str.Common.Save">Save</system:String>
+    <system:String x:Key="Str.Common.Delete">Delete</system:String>
+    <system:String x:Key="Str.Common.Edit">Edit</system:String>
+    <system:String x:Key="Str.Common.Add">Add</system:String>
+    <system:String x:Key="Str.Common.Close">Close</system:String>
+    <system:String x:Key="Str.Common.OK">OK</system:String>
+    <system:String x:Key="Str.Common.Yes">Yes</system:String>
+    <system:String x:Key="Str.Common.No">No</system:String>
+    <system:String x:Key="Str.Common.Search">Search</system:String>
+    <system:String x:Key="Str.Common.Refresh">Refresh</system:String>
+    <system:String x:Key="Str.Common.GoBack">Go Back</system:String>
+    <system:String x:Key="Str.Common.Continue">Continue</system:String>
+    <system:String x:Key="Str.Common.Browse">Browse...</system:String>
+    
+    <!-- Vault Window -->
+    <system:String x:Key="Str.Vault.Title">PhantomVault</system:String>
+    <system:String x:Key="Str.Vault.SearchPlaceholder">Search credentials...</system:String>
+    <system:String x:Key="Str.Vault.AddEntry">Add Entry</system:String>
+    <system:String x:Key="Str.Vault.Lock">Lock</system:String>
+    <system:String x:Key="Str.Vault.Settings">Settings</system:String>
+    <system:String x:Key="Str.Vault.PasswordGenerator">Password Generator</system:String>
+    
+    <!-- Categories -->
+    <system:String x:Key="Str.Categories.All">All</system:String>
+    <system:String x:Key="Str.Categories.Favorites">Favorites</system:String>
+    <system:String x:Key="Str.Categories.Recent">Recent</system:String>
+    <system:String x:Key="Str.Categories.Weak">Weak Passwords</system:String>
+    <system:String x:Key="Str.Categories.Duplicate">Duplicates</system:String>
+    <system:String x:Key="Str.Categories.Manage">Manage Categories</system:String>
+    
+    <!-- Credential Form -->
+    <system:String x:Key="Str.Credential.Title">Title</system:String>
+    <system:String x:Key="Str.Credential.Username">Username / Email</system:String>
+    <system:String x:Key="Str.Credential.Password">Password</system:String>
+    <system:String x:Key="Str.Credential.URL">Website URL</system:String>
+    <system:String x:Key="Str.Credential.Notes">Notes</system:String>
+    <system:String x:Key="Str.Credential.Category">Category</system:String>
+    <system:String x:Key="Str.Credential.Icon">Icon</system:String>
+    <system:String x:Key="Str.Credential.Required">Required</system:String>
+    <system:String x:Key="Str.Credential.Optional">Optional</system:String>
+    <system:String x:Key="Str.Credential.Generate">Generate</system:String>
+    <system:String x:Key="Str.Credential.ShowPassword">Show password</system:String>
+    <system:String x:Key="Str.Credential.HidePassword">Hide password</system:String>
+    
+    <!-- Password Strength -->
+    <system:String x:Key="Str.Password.Strength">Strength:</system:String>
+    <system:String x:Key="Str.Password.Weak">Weak</system:String>
+    <system:String x:Key="Str.Password.Fair">Fair</system:String>
+    <system:String x:Key="Str.Password.Good">Good</system:String>
+    <system:String x:Key="Str.Password.Strong">Strong</system:String>
+    <system:String x:Key="Str.Password.VeryStrong">Very Strong</system:String>
+    
+    <!-- Provision Window -->
+    <system:String x:Key="Str.Provision.Title">Create Your Vault</system:String>
+    <system:String x:Key="Str.Provision.Description">Configure your secure password vault</system:String>
+    <system:String x:Key="Str.Provision.VaultName">Vault Name</system:String>
+    <system:String x:Key="Str.Provision.VaultNameDesc">Choose a name for your vault</system:String>
+    <system:String x:Key="Str.Provision.VolumeSize">Volume Size (MB)</system:String>
+    <system:String x:Key="Str.Provision.VolumeSizeDesc">Size of the encrypted container</system:String>
+    <system:String x:Key="Str.Provision.MasterPassword">Master Password</system:String>
+    <system:String x:Key="Str.Provision.MasterPasswordOptional">Master Password (Optional)</system:String>
+    <system:String x:Key="Str.Provision.CreateVault">Create Vault</system:String>
+    
+    <!-- Welcome Page -->
+    <system:String x:Key="Str.Welcome.GetStarted">Get Started</system:String>
+    <system:String x:Key="Str.Welcome.AccessVault">Access your vault</system:String>
+    
+    <!-- Messages -->
+    <system:String x:Key="Str.Message.RequiredFields">* Required fields</system:String>
+    <system:String x:Key="Str.Message.NoCredentials">No credentials found</system:String>
+    <system:String x:Key="Str.Message.DeleteConfirm">Are you sure you want to delete this credential?</system:String>
+    
+    <!-- ToolTips -->
+    <system:String x:Key="Str.Tip.ClearSearch">Clear search</system:String>
+    <system:String x:Key="Str.Tip.AddCredential">Add new credential</system:String>
+    <system:String x:Key="Str.Tip.LockVault">Lock vault and return</system:String>
+    <system:String x:Key="Str.Tip.PasswordGenerator">Password Generator</system:String>
+    <system:String x:Key="Str.Tip.VaultSettings">Vault settings</system:String>
+    <system:String x:Key="Str.Tip.TogglePassword">Show/Hide password</system:String>
+    
+</ResourceDictionary>
+
+

@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Giblex.Controls"
+             x:Class="Giblex.Controls.LiquidLensButton">
+
+  <Grid>
+    <!-- Real refracted backdrop -->
+    <local:LiquidLensSurface x:Name="Lens"
+                             CornerRadius="10"
+                             IsHitTestVisible="False"/>
+
+    <!-- Glass overlays + content -->
+    <Button x:Name="Btn"
+            Classes="liquid-glass"
+            CornerRadius="10"
+            Padding="18,10">
+      <ContentPresenter Content="{Binding Content, RelativeSource={RelativeSource AncestorType=local:LiquidLensButton}}"/>
+    </Button>
+
+    <!-- Fallback glass (shown if shader/capture fails) -->
+    <Border x:Name="Fallback"
+            CornerRadius="10"
+            Background="#1CFFFFFF"
+            BorderBrush="#35FFFFFF"
+            BorderThickness="1"
+            IsHitTestVisible="False"
+            IsVisible="False"/>
+  </Grid>
+
+</UserControl>

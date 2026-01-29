@@ -1,0 +1,204 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PhantomVault.UI.ViewModels.Settings"
+             x:Class="PhantomVault.UI.Views.Settings.BackupSettingsView"
+             x:DataType="vm:BackupSettingsViewModel">
+    <StackPanel Spacing="20" Margin="0,0,30,60">
+        <TextBlock Text="Backup &amp; Restore" 
+                   FontSize="{StaticResource Type.H3.Size}" 
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+        
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Lg}" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Automated Backup" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <CheckBox Content="Enable automated backups" 
+                          IsChecked="{Binding EnableAutomatedBackups}"
+                          ToolTip.Tip="Automatically backup your vault on a schedule"/>
+                
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Backup frequency:" 
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <ComboBox Width="200" 
+                              HorizontalAlignment="Left"
+                              SelectedIndex="{Binding SelectedFrequency}">
+                        <ComboBoxItem Content="Daily"/>
+                        <ComboBoxItem Content="Weekly"/>
+                        <ComboBoxItem Content="Monthly"/>
+                        <ComboBoxItem Content="On every vault lock"/>
+                    </ComboBox>
+                </StackPanel>
+
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Backup location:" 
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBox Grid.Column="0" 
+                                 Margin="0,0,10,0"
+                                 Text="{Binding BackupLocation}"
+                                 IsReadOnly="True"/>
+                        <Button Grid.Column="1" 
+                                Content="Browse..." 
+                                Command="{Binding BrowseBackupLocationCommand}"
+                                Width="100"/>
+                    </Grid>
+                </StackPanel>
+
+                <CheckBox Content="Encrypt backup files" 
+                          IsChecked="{Binding EncryptBackups}"
+                          ToolTip.Tip="Secure backups with encryption"/>
+
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Keep last:" 
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <ComboBox Width="150" 
+                              HorizontalAlignment="Left"
+                              SelectedIndex="{Binding SelectedRetention}">
+                        <ComboBoxItem Content="5 backups"/>
+                        <ComboBoxItem Content="10 backups"/>
+                        <ComboBoxItem Content="20 backups"/>
+                        <ComboBoxItem Content="50 backups"/>
+                        <ComboBoxItem Content="All backups"/>
+                    </ComboBox>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Lg}" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Manual Backup" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Button Content="Backup Now" 
+                            Width="150"
+                            Command="{Binding BackupNowCommand}"
+                            Classes="primary"
+                            ToolTip.Tip="Create an immediate backup"/>
+                    <Button Content="Restore from Backup" 
+                            Width="150"
+                            Command="{Binding RestoreFromBackupCommand}"
+                            Classes="liquid-glass"
+                            ToolTip.Tip="Restore vault from a previous backup"/>
+                </StackPanel>
+
+                <TextBlock Text="{Binding LastBackupTime, StringFormat='Last backup: {0}'}" 
+                           FontStyle="Italic"
+                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+            </StackPanel>
+        </Border>
+
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Lg}" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Backup History" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <ScrollViewer Height="150" 
+                              HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding BackupHistory}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" 
+                                           FontStyle="Italic"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           Margin="0,2"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <Button Content="Open Backup Folder" 
+                        Width="180" 
+                        HorizontalAlignment="Left"
+                        Command="{Binding OpenBackupFolderCommand}"
+                        Classes="liquid-glass"/>
+            </StackPanel>
+        </Border>
+
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Lg}" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Vault Snapshots" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <CheckBox Content="Enable automatic snapshots" 
+                          ToolTip.Tip="Create snapshots before major operations"/>
+                
+                <TextBlock Text="Snapshots provide instant rollback for recent changes" 
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                
+                <Button Content="Manage Snapshots" 
+                        Width="180" 
+                        HorizontalAlignment="Left"
+                        Command="{Binding ManageSnapshotsCommand}"
+                        Classes="liquid-glass"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Recovery Vault Backup -->
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Lg}" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Recovery Vault Backup" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <CheckBox Content="Back up Recovery vault:" 
+                          IsChecked="{Binding BackupRecoveryVault}"
+                          ToolTip.Tip="Create encrypted backups of your PhantomRecovery vault containing recovery methods and artifacts"/>
+                
+                <TextBlock Text="Recovery vault contains critical recovery keys and methods. Backing it up ensures you can restore vault access if the USB drive is lost or damaged." 
+                           TextWrapping="Wrap"
+                           FontSize="12"
+                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Button Content="Backup Recovery Vault" 
+                            Width="180"
+                            Command="{Binding BackupRecoveryVaultNowCommand}"
+                            IsEnabled="{Binding BackupRecoveryVault}"
+                            Classes="primary"
+                            ToolTip.Tip="Create immediate backup of recovery vault"/>
+                    <Button Content="Restore Recovery Vault" 
+                            Width="180"
+                            Command="{Binding RestoreRecoveryVaultCommand}"
+                            IsEnabled="{Binding BackupRecoveryVault}"
+                            Classes="liquid-glass"
+                            ToolTip.Tip="Restore recovery vault from backup"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>
+

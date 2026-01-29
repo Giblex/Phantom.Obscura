@@ -1,0 +1,201 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Classic Light Theme - Light variant of PhantomVault -->
+    
+    <!-- Light Scale -->
+    <Color x:Key="Color.Navy900">#FDFCF9</Color>
+    <Color x:Key="Color.Navy800">#F6FAFE</Color>
+    <Color x:Key="Color.Navy700">#EFF3FA</Color>
+    <Color x:Key="Color.Navy600">#E6EEF8</Color>
+    <Color x:Key="Color.Navy500">#DCE5F2</Color>
+    <Color x:Key="Color.Navy400">#CBD7E7</Color>
+    
+    <!-- Text Colors -->
+    <Color x:Key="Color.TextPrimary">#1F2933</Color>
+    <Color x:Key="Color.TextMuted">#64748B</Color>
+    <Color x:Key="Color.TextOnDark">#FFFFFF</Color>
+    <Color x:Key="Color.TextOnLight">#1F2933</Color>
+    
+    <!-- Accent Colors - ENHANCED: Brighter, more vibrant blue (was #5F7FA6 - too muted) -->
+    <Color x:Key="Color.Accent">#4A7BB8</Color>
+    <Color x:Key="Color.AccentHover">#5989C8</Color>
+    <Color x:Key="Color.AccentDim">#7AA3D6</Color>
+    
+    <!-- Semantic Colors -->
+    <Color x:Key="Color.Success">#22C55E</Color>
+    <Color x:Key="Color.Warning">#F59E0B</Color>
+    <Color x:Key="Color.Danger">#EF4444</Color>
+    <Color x:Key="Color.Info">#3B82F6</Color>
+
+    <!-- ═══════════════════════ LEGACY BRUSHES ═══════════════════════ -->
+    
+    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#FDFCF9"/>
+    <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#90A5C1"/>
+    <SolidColorBrush x:Key="FooterBackgroundBrush" Color="#8498B4"/>
+    <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#FAFCFF"/>
+    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#EFF3FA"/>
+    <SolidColorBrush x:Key="SettingsPanelBackgroundBrush" Color="#E4EBF5"/>
+    <SolidColorBrush x:Key="SettingsPanelBorderBrush" Color="#C8D5E6"/>
+    <SolidColorBrush x:Key="TileGlassBrush" Color="#00FFFFFF"/>
+    <SolidColorBrush x:Key="TileGapBrush" Color="#F4F7FB"/>
+    
+    <!-- ENHANCED: Brighter accent colors -->
+    <SolidColorBrush x:Key="AccentBrush" Color="#4A7BB8"/>
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#5989C8"/>
+    <SolidColorBrush x:Key="SecondaryAccentBrush" Color="#7AA3D6"/>
+    
+    <Color x:Key="PrimaryTextColor">#000000</Color>
+    <SolidColorBrush x:Key="PrimaryTextBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="ControlForegroundBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="HeaderTextBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="HeaderMutedTextBrush" Color="#CBD5F5"/>
+    <SolidColorBrush x:Key="FooterTextBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="FooterMutedTextBrush" Color="#CBD5F5"/>
+    <SolidColorBrush x:Key="SecondaryTextBrush" Color="#334155"/>
+    <SolidColorBrush x:Key="MutedTextBrush" Color="#64748B"/>
+    <SolidColorBrush x:Key="DisabledTextBrush" Color="#94A3B8"/>
+    
+    <SolidColorBrush x:Key="HeaderButtonBackgroundBrush" Color="#E3E9F2"/>
+    <SolidColorBrush x:Key="HeaderButtonHoverBrush" Color="#DBE3EF"/>
+    <SolidColorBrush x:Key="HeaderButtonPressedBrush" Color="#CED7E6"/>
+    <SolidColorBrush x:Key="HeaderButtonForegroundBrush" Color="#1F2A38"/>
+    <SolidColorBrush x:Key="HeaderButtonBorderBrush" Color="#26000000"/>
+    
+    <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#F1F5FB"/>
+    <!-- SUBTLER: Barely visible hover (was #E5ECF7) -->
+    <SolidColorBrush x:Key="ControlHoverBrush" Color="#EDF2F9"/>
+    <SolidColorBrush x:Key="InputBackgroundBrush" Color="#FCFDFE"/>
+    <SolidColorBrush x:Key="InputForegroundBrush" Color="#1A202C"/>
+    <!-- ENHANCED: Brighter accent-tinted selection -->
+    <SolidColorBrush x:Key="TextSelectionBrush" Color="#604A7BB8"/>
+    <SolidColorBrush x:Key="TextCaretBrush" Color="#1F2A38"/>
+    <!-- ENHANCED: More visible border (was #CAD6E4 - too pale) -->
+    <SolidColorBrush x:Key="ControlBorderBrush" Color="#B8C6DA"/>
+    <SolidColorBrush x:Key="OverlayBackgroundBrush" Color="#40000000"/>
+    <SolidColorBrush x:Key="ReadOnlyFieldBackgroundBrush" Color="#EFF3FA"/>
+    <SolidColorBrush x:Key="ReadOnlyFieldForegroundBrush" Color="#1F2933"/>
+    <SolidColorBrush x:Key="CategoryPanelBackgroundBrush" Color="#FBFDFE"/>
+
+    <!-- High contrast border (invisible in normal mode, will be visible in high contrast themes) -->
+    <SolidColorBrush x:Key="HighContrastBorderBrush" Color="#00000000"/>
+
+    <!-- TextBox/Input Brushes - SUBTLER: Barely visible hover states -->
+    <SolidColorBrush x:Key="TextBoxBackgroundBrush" Color="#FFFFFF"/>
+    <!-- SUBTLER: Barely noticeable hover (was #F8FAFC) -->
+    <SolidColorBrush x:Key="TextBoxBackgroundHoverBrush" Color="#FCFDFE"/>
+    <!-- SUBTLER: Subtle focus (keep white for clarity) -->
+    <SolidColorBrush x:Key="TextBoxBackgroundFocusedBrush" Color="#FAFBFC"/>
+    <SolidColorBrush x:Key="TextBoxBackgroundDisabledBrush" Color="#F0F4F8"/>
+    <!-- ENHANCED: More visible resting border (was #C8D4E0) -->
+    <SolidColorBrush x:Key="TextBoxBorderBrush" Color="#B8C6DA"/>
+    <!-- ENHANCED: Brighter accent border on hover/focus (was #3A5E83) -->
+    <SolidColorBrush x:Key="TextBoxBorderHoverBrush" Color="#4A7BB8"/>
+    <SolidColorBrush x:Key="TextBoxBorderFocusedBrush" Color="#4A7BB8"/>
+    <SolidColorBrush x:Key="TextBrush" Color="#000000"/>
+    
+    <!-- Dialog/Window Brushes - ENHANCED borders -->
+    <SolidColorBrush x:Key="DialogBackgroundBrush" Color="#FCFDFE"/>
+    <!-- ENHANCED: More visible dialog border (was #D4DFED) -->
+    <SolidColorBrush x:Key="DialogBorderBrush" Color="#C2D0E2"/>
+    
+    <!-- Button Text Brushes (white text on dark accent buttons) -->
+    <SolidColorBrush x:Key="ButtonForegroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ButtonAccentForegroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ButtonSecondaryForegroundBrush" Color="#1F2933"/>
+    <SolidColorBrush x:Key="ButtonDisabledForegroundBrush" Color="#94A3B8"/>
+    
+    <!-- Content Area Text (light backgrounds = dark text) -->
+    <SolidColorBrush x:Key="ContentTextBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="ContentSecondaryTextBrush" Color="#333333"/>
+    <SolidColorBrush x:Key="ContentMutedTextBrush" Color="#666666"/>
+    <SolidColorBrush x:Key="CardTextBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="CardSecondaryTextBrush" Color="#333333"/>
+    
+    <!-- Input/Form Text (light input backgrounds = dark text) -->
+    <SolidColorBrush x:Key="InputTextBrush" Color="#000000"/>
+    <!-- Lighter placeholder for better hierarchy (PRIORITY 13) -->
+    <SolidColorBrush x:Key="InputPlaceholderBrush" Color="#8A9AAA"/>
+    <SolidColorBrush x:Key="LabelTextBrush" Color="#000000"/>
+    
+    <!-- List/Item Text (light backgrounds = dark text) -->
+    <SolidColorBrush x:Key="ListItemTextBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="ListItemSecondaryTextBrush" Color="#666666"/>
+    <SolidColorBrush x:Key="ListItemSelectedTextBrush" Color="#000000"/>
+    
+    <SolidColorBrush x:Key="ButtonWhiteBackgroundBrush" Color="#FFFFFF"/>
+    <!-- ENHANCED: More visible separator (was #12000000 - too transparent) -->
+    <SolidColorBrush x:Key="SeparatorBrush" Color="#20000000"/>
+    
+    <!-- Card separator line (transparent unless high contrast) -->
+    <SolidColorBrush x:Key="CardSeparatorBrush" Color="#00000000"/>
+    
+    <SolidColorBrush x:Key="QuickFilterGlassBrush" Color="#00FFFFFF"/>
+    <SolidColorBrush x:Key="QuickFilterGlassHoverBrush" Color="#20FFFFFF"/>
+    <SolidColorBrush x:Key="QuickFilterGlassActiveBrush" Color="#40FFFFFF"/>
+    <SolidColorBrush x:Key="QuickFilterGlassActiveHoverBrush" Color="#50FFFFFF"/>
+    <SolidColorBrush x:Key="QuickFilterGlassBorderBrush" Color="#30FFFFFF"/>
+    <SolidColorBrush x:Key="QuickFilterGlassActiveBorderBrush" Color="#45FFFFFF"/>
+    
+    <!-- Sidebar hover for light theme -->
+    <SolidColorBrush x:Key="SidebarItemHoverBrush" Color="#EEF3FB"/>
+    <SolidColorBrush x:Key="SidebarItemSelectedBrush" Color="#DEE6F4"/>
+    
+    <SolidColorBrush x:Key="SuccessBrush" Color="#22C55E"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="#F59E0B"/>
+    <SolidColorBrush x:Key="ErrorBrush" Color="#EF4444"/>
+    <SolidColorBrush x:Key="SuccessBackgroundBrush" Color="#ECFDF5"/>
+    <SolidColorBrush x:Key="WarningBackgroundBrush" Color="#FFFBEB"/>
+    <SolidColorBrush x:Key="ErrorBackgroundBrush" Color="#FEF2F2"/>
+    <SolidColorBrush x:Key="InfoBackgroundBrush" Color="#EFF6FF"/>
+    
+    <!-- Popup/Flyout/Dropdown Brushes - ENHANCED borders -->
+    <SolidColorBrush x:Key="FlyoutPresenterBackground" Color="#F9FBFE"/>
+    <!-- ENHANCED: More visible borders (was #D6E1F0) -->
+    <SolidColorBrush x:Key="FlyoutBorderThemeBrush" Color="#C2D0E2"/>
+    <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#F9FBFE"/>
+    <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#C2D0E2"/>
+    <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#F9FBFE"/>
+    <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="#C2D0E2"/>
+    <SolidColorBrush x:Key="SystemControlBackgroundChromeMediumLowBrush" Color="#F9FBFE"/>
+    <SolidColorBrush x:Key="SystemControlForegroundBaseHighBrush" Color="#1A202C"/>
+    <SolidColorBrush x:Key="PopupBackgroundBrush" Color="#F9FBFE"/>
+    <!-- ENHANCED: More visible popup border -->
+    <SolidColorBrush x:Key="PopupBorderBrush" Color="#C2D0E2"/>
+    
+    <!-- ComboBoxItem brushes - SUBTLER: Barely visible highlights -->
+    <SolidColorBrush x:Key="ComboBoxItemBackground" Color="#F4F7FC"/>
+    <!-- SUBTLER: Barely noticeable hover (was #ECF2FA) -->
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver" Color="#F1F5FB"/>
+    <!-- SUBTLER: Subtle pressed/selected (was #E1E9F5) -->
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundPressed" Color="#EEF2F9"/>
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected" Color="#EEF2F9"/>
+    <SolidColorBrush x:Key="ComboBoxItemForeground" Color="#1A202C"/>
+    <SolidColorBrush x:Key="ComboBoxItemForegroundPointerOver" Color="#1A202C"/>
+    <SolidColorBrush x:Key="ComboBoxItemForegroundSelected" Color="#1A202C"/>
+    
+    <FontFamily x:Key="MainFontFamily">Segoe UI</FontFamily>
+    
+    <Color x:Key="GlobalShadowColor">#6E7A8E</Color>
+    <Color x:Key="HeaderAccentColor">#90A5C1</Color>
+    
+    <!-- Airier shadows keep elevation readable without heavy contrast -->
+    <DropShadowEffect x:Key="DarkSubtleDropShadow" Color="#6E7A8E" Opacity="0.18" BlurRadius="18" OffsetX="0" OffsetY="4"/>
+    <DropShadowEffect x:Key="SubtleDropShadow" Color="#6E7A8E" Opacity="0.18" BlurRadius="18" OffsetX="0" OffsetY="4"/>
+    <DropShadowEffect x:Key="DarkButtonShadow" Color="#6E7A8E" Opacity="0.2" BlurRadius="20" OffsetX="0" OffsetY="4"/>
+    <DropShadowEffect x:Key="DarkButtonShadowHover" Color="#6E7A8E" Opacity="0.25" BlurRadius="22" OffsetX="0" OffsetY="5"/>
+    <DropShadowEffect x:Key="DarkButtonShadowPressed" Color="#6E7A8E" Opacity="0.12" BlurRadius="10" OffsetX="0" OffsetY="2"/>
+    <DropShadowEffect x:Key="HoverMenuDropShadow" Color="#6E7A8E" Opacity="0.18" BlurRadius="22" OffsetX="0" OffsetY="6"/>
+    <DropShadowEffect x:Key="TileActiveShadow" Color="#6E7A8E" Opacity="0.2" BlurRadius="18" OffsetX="0" OffsetY="4"/>
+    <DropShadowEffect x:Key="TileActiveShadowPressed" Color="#6E7A8E" Opacity="0.12" BlurRadius="10" OffsetX="0" OffsetY="2"/>
+    <DropShadowEffect x:Key="FrontPageTileBaseShadow" Color="#6E7A8E" Opacity="0.18" BlurRadius="18" OffsetX="0" OffsetY="4"/>
+    <DropShadowEffect x:Key="FooterGroundedShadow" Color="#6E7A8E" Opacity="0.22" BlurRadius="16" OffsetX="0" OffsetY="-4"/>
+    
+    <BoxShadows x:Key="SlideOutPanelShadow">-20 0 40 -5 #58000000</BoxShadows>
+    <BoxShadows x:Key="FlaggedPanelShadow">-16 0 32 -4 #55000000</BoxShadows>
+    
+    <LinearGradientBrush x:Key="TileOverlayBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#05FFFFFF" Offset="0"/>
+        <GradientStop Color="#12FFFFFF" Offset="1"/>
+    </LinearGradientBrush>
+
+</ResourceDictionary>

@@ -1,0 +1,3 @@
+using System.Security.Cryptography;
+using System.Text;
+namespace GiblexVault.Security.ZK.Util { public static class DeviceBinding { public static byte[] DeviceSalt(string deviceId, byte[] appSalt) { var data = Encoding.UTF8.GetBytes(deviceId); var combined = new byte[data.Length + appSalt.Length]; Buffer.BlockCopy(data, 0, combined, 0, data.Length); Buffer.BlockCopy(appSalt, 0, combined, data.Length, appSalt.Length); return SHA512.HashData(combined); } } }

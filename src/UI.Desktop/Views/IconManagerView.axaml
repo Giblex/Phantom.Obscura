@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PhantomVault.UI.ViewModels"
+             xmlns:converters="using:PhantomVault.UI.Converters"
+             x:Class="PhantomVault.UI.Views.IconManagerView"
+             x:Name="IconManagerControl">
+    <Design.DataContext>
+        <vm:IconManagerViewModel/>
+    </Design.DataContext>
+
+    <UserControl.Resources>
+        <converters:NullToBoolConverter x:Key="NullToBoolConverter"/>
+        <converters:InvertBoolConverter x:Key="InvertBoolConverter"/>
+        <!-- Local tile background to make icon tiles slightly lighter than the control background -->
+        <SolidColorBrush x:Key="IconTileBackgroundBrush">#5E7584</SolidColorBrush>
+    </UserControl.Resources>
+
+    <DockPanel Margin="20" LastChildFill="True">
+        <!-- Header -->
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource HeaderBackgroundBrush}"
+                Padding="16"
+                CornerRadius="6"
+                Margin="0,0,0,16">
+            <StackPanel Spacing="6">
+                <TextBlock Text="Icon Library Manager"
+                           FontSize="18"
+                           FontWeight="Bold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+                    <Border Grid.Column="0"
+                            Background="{DynamicResource ControlBackgroundBrush}"
+                            CornerRadius="4"
+                            Padding="6,0">
+                        <Grid ColumnDefinitions="Auto,*">
+                            <TextBlock Grid.Column="0" Text="🔍" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBox x:Name="SearchBox"
+                                     Grid.Column="1"
+                                     Text="{Binding SearchText, Mode=TwoWay}"
+                                     Watermark="Search icons..."
+                                     BorderThickness="0"
+                                     Background="Transparent"
+                                     VerticalContentAlignment="Center"/>
+                        </Grid>
+                    </Border>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" Margin="16,0,0,0" VerticalAlignment="Center">
+                        <Button Command="{Binding RefreshCommand}"
+                                Classes="liquid-glass"
+                                Width="110" Height="34">
+                            <TextBlock Text="Refresh" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Button>
+                        <!-- Options dropdown placed as vertical three-dashes: ⋮ -->
+                        <Button Name="OptionsButton" Classes="liquid-glass" Width="40" Height="34" ToolTip.Tip="Options">
+                            <TextBlock Text="⋮" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Button.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Download Icons" Command="{Binding DownloadFlatIconsCommand}"/>
+                                    <MenuItem Header="Import Icons" Command="{Binding ImportIconCommand}"/>
+                                    <MenuItem Header="Open Icons Folder" Command="{Binding OpenIconsFolderCommand}"/>
+                                    <MenuItem Header="Toggle grid view" Command="{Binding ToggleGridViewCommand}"/>
+                                    <MenuItem Header="Show Selected" Command="{Binding RevealIconCommand}" CommandParameter="{Binding SelectedIcon}"/>
+                                </ContextMenu>
+                            </Button.ContextMenu>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- Status footer -->
+        <Border DockPanel.Dock="Bottom"
+                Background="{DynamicResource ControlBackgroundBrush}"
+                Padding="8"
+                CornerRadius="6"
+                Margin="0,8,0,0">
+            <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Grid.Column="0">
+                    <TextBlock Text="{Binding StatusMessage}"
+                               FontSize="11"
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               TextWrapping="Wrap"/>
+                    <Border Width="1" Height="14" Background="{DynamicResource ControlBorderBrush}"/>
+                    <TextBlock Text="{Binding FilteredIconCount, StringFormat='Visible icons: {0}'}"
+                               FontSize="11"
+                               Foreground="{DynamicResource MutedTextBrush}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Grid.Column="1" HorizontalAlignment="Center" Spacing="8" VerticalAlignment="Center">
+                    <Button Command="{Binding PrevPageCommand}" IsEnabled="{Binding IsFirstPage, Converter={StaticResource InvertBoolConverter}}" Classes="liquid-glass" Width="72" Height="30">Prev</Button>
+                    <TextBlock Text="{Binding PageIndicatorText}" VerticalAlignment="Center" Foreground="{DynamicResource MutedTextBrush}" FontSize="12"/>
+                    <Button Command="{Binding NextPageCommand}" IsEnabled="{Binding IsLastPage, Converter={StaticResource InvertBoolConverter}}" Classes="liquid-glass" Width="72" Height="30">Next</Button>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="6">
+                        <TextBlock Text="Page size:" VerticalAlignment="Center" Foreground="{DynamicResource MutedTextBrush}" />
+                        <ComboBox SelectedItem="{Binding PageSize, Mode=TwoWay}" Width="80" ItemsSource="{Binding PageSizeOptions}" />
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Thumbnail preview (top icons) -->
+        <Border Margin="0,0,0,8" CornerRadius="6" Background="{DynamicResource IconTileBackgroundBrush}" Padding="8" DockPanel.Dock="Top">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Height="110">
+                <ItemsControl Name="TopIconsList" ItemsSource="{Binding TopIcons}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Command="{Binding DataContext.ShowVariantsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" MinWidth="80" Height="96" Classes="liquid-glass">
+                                <StackPanel Width="80" Height="96" VerticalAlignment="Top" HorizontalAlignment="Left">
+                                    <Border Width="64" Height="64" CornerRadius="8" Background="{DynamicResource IconTileBackgroundBrush}" HorizontalAlignment="Center">
+                                        <Image Source="{Binding IconBitmap}" Stretch="Uniform" Width="56" Height="56"/>
+                                    </Border>
+                                </StackPanel>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Variant popup shown as a Popup anchored to the clicked TopIcon -->
+        <Popup Name="VariantPopup" IsOpen="{Binding IsVariantPopupOpen, Mode=TwoWay}" Placement="Bottom">
+            <StackPanel>
+                <Polygon Name="CaretTop" Points="0,8 8,0 16,8" Fill="{DynamicResource ControlForegroundBrush}" HorizontalAlignment="Left" Margin="24,0,0,0" IsVisible="False" />
+                <Border Name="VariantBorder" Margin="0,4,0,8" Background="{DynamicResource IconTileBackgroundBrush}" CornerRadius="6" Padding="12" MaxWidth="740" MinWidth="220" Effect="{DynamicResource SubtleDropShadow}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="Variants:" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{DynamicResource MutedTextBrush}"/>
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                            <ItemsControl Name="VariantItemsControl" ItemsSource="{Binding VariantIcons}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding DataContext.ApplyVariantToCategoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Margin="4" Classes="liquid-glass" Focusable="True">
+                                            <StackPanel>
+                                                <Border Width="48" Height="48" CornerRadius="6" Background="{DynamicResource IconTileBackgroundBrush}">
+                                                    <Image Source="{Binding IconBitmap}" Width="40" Height="40" Stretch="Uniform"/>
+                                                </Border>
+                                            </StackPanel>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </StackPanel>
+                </Border>
+                <Polygon Name="CaretBottom" Points="0,0 8,8 16,0" Fill="{DynamicResource ControlForegroundBrush}" HorizontalAlignment="Left" Margin="24,0,0,0" IsVisible="False" />
+            </StackPanel>
+        </Popup>
+
+        <!-- Icon grid -->
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <DataGrid Grid.Row="0" IsVisible="{Binding IsGridView, Converter={StaticResource InvertBoolConverter}}"
+                      ItemsSource="{Binding Icons}"
+                      SelectedItem="{Binding SelectedIcon, Mode=TwoWay}"
+                      IsReadOnly="True"
+                      AutoGenerateColumns="False"
+                      RowHeight="48"
+                      CanUserReorderColumns="False"
+                      CanUserResizeColumns="True"
+                      GridLinesVisibility="Horizontal"
+                      HeadersVisibility="Column"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Auto">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="" Width="48">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border Width="40" Height="40" CornerRadius="6" HorizontalAlignment="Center" VerticalAlignment="Center" Background="{DynamicResource IconTileBackgroundBrush}">
+                                    <Image Source="{Binding IconBitmap}" Stretch="Uniform" Width="28" Height="28"/>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="2*"/>
+                    <DataGridTextColumn Header="Location" Binding="{Binding RelativePath}" Width="3*"/>
+                    <DataGridTextColumn Header="Size" Binding="{Binding SizeDisplay}" Width="*"/>
+                    <DataGridTextColumn Header="Updated" Binding="{Binding LastModifiedDisplay}" Width="*"/>
+                    <DataGridTemplateColumn Header="Actions" Width="Auto">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <Button Command="{Binding DataContext.RevealIconCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            Classes="liquid-glass"
+                                            Width="34" Height="30"
+                                            ToolTip.Tip="Show in Explorer">
+                                        <TextBlock Text="📂" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Button>
+                                    <Button Command="{Binding DataContext.DeleteIconCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            Classes="liquid-glass"
+                                            Width="34" Height="30"
+                                            ToolTip.Tip="Delete icon">
+                                        <TextBlock Text="🗑" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Button>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- Grid view of icons (wrap panel). Visible when IsGridView is true -->
+            <ScrollViewer Grid.Row="0" Padding="20" IsVisible="{Binding IsGridView}" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding GridIcons}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Command="{Binding DataContext.SelectIconCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" MinWidth="72" Height="96" Classes="liquid-glass" Margin="6">
+                                <StackPanel>
+                                    <Border Width="68" Height="68" CornerRadius="8" Background="{DynamicResource IconTileBackgroundBrush}" HorizontalAlignment="Center">
+                                        <Image Source="{Binding IconBitmap}" Width="60" Height="60" Stretch="Uniform"/>
+                                    </Border>
+                                </StackPanel>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <Border Grid.Row="0"
+                    Background="{DynamicResource OverlayBackgroundBrush}"
+                    CornerRadius="6"
+                    IsVisible="{Binding IsBusy}"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    Classes="overlay-fade">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+                    <ProgressBar IsIndeterminate="True" Width="220" Height="8"/>
+                    <TextBlock Text="Working..." FontSize="12" Foreground="{DynamicResource PrimaryTextBrush}" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </DockPanel>
+</UserControl>
+
+
+

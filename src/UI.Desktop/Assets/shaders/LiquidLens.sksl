@@ -1,0 +1,42 @@
+// Liquid lens refraction + subtle chromatic aberration.
+// Inputs: a shader "src" (the captured backdrop), plus uniforms.
+
+uniform shader src;
+uniform float2 uSize;     // pixels
+uniform float2 uPointer;  // pixels (local to control)
+uniform float  uStrength; // 0..1
+uniform float  uTime;     // seconds
+
+half4 main(float2 fragCoord)
+{
+    float2 uv = fragCoord / uSize;
+    float2 p  = uPointer / uSize;
+
+    float2 d = uv - p;
+    d.x *= uSize.x / uSize.y;
+
+    float r = length(d);
+    float lens = exp(-r * 6.0);
+
+    // subtle animated wobble
+    float wobble = sin((uv.x + uTime*0.7) * 40.0) * 0.0015
+                 + cos((uv.y + uTime*0.9) * 34.0) * 0.0015;
+
+    float2 dir = normalize(d + 1e-6);
+    float amount = uStrength * lens * 0.03;
+
+    float2 offset = dir * amount + float2(wobble, -wobble);
+
+    // tiny chromatic aberration
+    float2 ca = offset * 0.35;
+
+    half4 cR = src.eval((uv + ca) * uSize);
+    half4 cG = src.eval((uv + offset) * uSize);
+    half4 cB = src.eval((uv - ca) * uSize);
+
+    half4 outc = half4(cR.r, cG.g, cB.b, 1.0);
+
+    // slight brighten at the lens center
+    outc.rgb = mix(outc.rgb, outc.rgb * 1.08, half(lens * 0.6));
+    return outc;
+}

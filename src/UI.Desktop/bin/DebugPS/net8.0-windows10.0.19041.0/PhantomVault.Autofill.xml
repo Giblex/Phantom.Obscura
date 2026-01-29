@@ -1,0 +1,311 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>PhantomVault.Autofill</name>
+    </assembly>
+    <members>
+        <member name="T:PhantomVault.Core.Services.Autofill.AndroidAutofillService">
+            <summary>
+            Placeholder for when Android-specific code is not being compiled.
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Autofill.AutofillSuggestionProvider">
+            <summary>
+            Provides credential suggestions for autofill based on domain matching and relevance scoring.
+            </summary>
+        </member>
+        <member name="M:PhantomVault.Core.Services.Autofill.AutofillSuggestionProvider.GetSuggestionsForDomainAsync(System.String)">
+            <summary>
+            Gets credential suggestions for a given domain/URL.
+            Returns credentials ordered by relevance (exact match > subdomain > similar domain).
+            </summary>
+        </member>
+        <member name="M:PhantomVault.Core.Services.Autofill.AutofillSuggestionProvider.GetSuggestionsForUsernameAsync(System.String,System.String)">
+            <summary>
+            Gets suggestions for username/email fields based on the current input value.
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Autofill.CredentialSuggestion">
+            <summary>
+            A credential suggestion with relevance scoring.
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Autofill.MatchType">
+            <summary>
+            Type of domain match.
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Autofill.FormFieldDetector">
+            <summary>
+            Detects and classifies form input fields based on HTML attributes, labels, and patterns.
+            Identifies email, username, password, confirmation password, passkey, and 2FA fields.
+            </summary>
+        </member>
+        <member name="M:PhantomVault.Core.Services.Autofill.FormFieldDetector.DetectFieldType(PhantomVault.Core.Services.Autofill.FormFieldInfo)">
+            <summary>
+            Detects the type of a form field based on its attributes.
+            </summary>
+        </member>
+        <member name="M:PhantomVault.Core.Services.Autofill.FormFieldDetector.DetectLoginForm(System.Collections.Generic.IEnumerable{PhantomVault.Core.Services.Autofill.FormFieldInfo})">
+            <summary>
+            Detects all login-related fields in a form.
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Autofill.FormFieldInfo">
+            <summary>
+            Information about a detected form field.
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Autofill.BoundingBox">
+            <summary>
+            Bounding box coordinates for positioning the autofill UI.
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Autofill.FormFieldType">
+            <summary>
+            Type of form field detected.
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Autofill.FormType">
+            <summary>
+            Type of form detected.
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Autofill.LoginFormDetectionResult">
+            <summary>
+            Result of login form detection.
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Autofill.IAutofillProvider">
+            <summary>
+            Abstraction for platform‑specific auto‑fill providers. Each
+            platform (Windows/macOS, Android, iOS) should implement this
+            interface to integrate with the operating system's password
+            auto‑completion framework. Implementations should respect user
+            preferences from the manifest (auto‑fill enabled, username vs
+            password injection, domain whitelist).
+            </summary>
+        </member>
+        <member name="P:PhantomVault.Core.Services.Autofill.IAutofillProvider.IsSupported">
+            <summary>
+            Determines whether the provider is supported on the current
+            platform and properly configured. Should return false if
+            necessary permissions are missing or if auto‑fill cannot be
+            offered.
+            </summary>
+        </member>
+        <member name="M:PhantomVault.Core.Services.Autofill.IAutofillProvider.TryFill(System.String)">
+            <summary>
+            Initiates an auto‑fill operation for the specified domain.
+            Implementations should query the vault for matching
+            credentials and then inject the username and/or password
+            according to user preferences. The method returns true if
+            credentials were filled, false otherwise.
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Autofill.IAutofillVaultContext">
+            <summary>
+            Provides the current vault state for autofill operations so the native
+            messaging host can fail closed when the vault is locked or autofill is
+            disabled in the manifest.
+            </summary>
+        </member>
+        <member name="P:PhantomVault.Core.Services.Autofill.IAutofillVaultContext.IsUnlocked">
+            <summary>
+            True when the vault master key is loaded and the vault is unlocked.
+            </summary>
+        </member>
+        <member name="P:PhantomVault.Core.Services.Autofill.IAutofillVaultContext.CurrentManifest">
+            <summary>
+            The active vault manifest, or null if no vault is loaded.
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Autofill.ICredentialRepository">
+            <summary>
+            Interface for credential storage and retrieval.
+            Implementations should handle encrypted storage of credentials.
+            </summary>
+        </member>
+        <member name="M:PhantomVault.Core.Services.Autofill.ICredentialRepository.GetCredentialsByDomainAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Retrieves credentials matching the specified domain.
+            </summary>
+            <param name="domain">The domain to search for (e.g., "example.com")</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of matching credentials</returns>
+        </member>
+        <member name="M:PhantomVault.Core.Services.Autofill.ICredentialRepository.SaveCredentialAsync(PhantomVault.Core.Models.Credential,System.Threading.CancellationToken)">
+            <summary>
+            Saves a credential to the repository.
+            </summary>
+            <param name="credential">The credential to save</param>
+            <param name="cancellationToken">Cancellation token</param>
+        </member>
+        <member name="M:PhantomVault.Core.Services.Autofill.ICredentialRepository.UpdateCredentialAsync(PhantomVault.Core.Models.Credential,System.Threading.CancellationToken)">
+            <summary>
+            Updates an existing credential.
+            </summary>
+            <param name="credential">The credential to update</param>
+            <param name="cancellationToken">Cancellation token</param>
+        </member>
+        <member name="M:PhantomVault.Core.Services.Autofill.ICredentialRepository.DeleteCredentialAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Deletes a credential from the repository.
+            </summary>
+            <param name="title">The title/ID of the credential to delete</param>
+            <param name="cancellationToken">Cancellation token</param>
+        </member>
+        <member name="M:PhantomVault.Core.Services.Autofill.ICredentialRepository.GetAllCredentialsAsync(System.Threading.CancellationToken)">
+            <summary>
+            Retrieves all stored credentials.
+            </summary>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of all credentials</returns>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Autofill.INativeMessagingHost">
+            <summary>
+            Interface for native messaging host that communicates with browser extensions.
+            Implements the Chrome/Firefox native messaging protocol (stdin/stdout JSON messages).
+            See: https://developer.chrome.com/docs/extensions/develop/concepts/native-messaging
+            </summary>
+        </member>
+        <member name="M:PhantomVault.Core.Services.Autofill.INativeMessagingHost.StartAsync(System.Threading.CancellationToken)">
+            <summary>
+            Starts the native messaging host, listening for messages on stdin.
+            Runs until the browser extension disconnects or an error occurs.
+            </summary>
+            <param name="cancellationToken">Token to cancel the listening loop.</param>
+        </member>
+        <member name="P:PhantomVault.Core.Services.Autofill.INativeMessagingHost.IsRunning">
+            <summary>
+            Gets whether the native messaging host is currently running.
+            </summary>
+        </member>
+        <member name="M:PhantomVault.Core.Services.Autofill.INativeMessagingHost.ValidateOrigin(System.String)">
+            <summary>
+            Validates that a message origin is from an allowed browser extension.
+            Returns true if the origin is in the allowlist, false otherwise.
+            </summary>
+            <param name="origin">The extension origin (e.g., "chrome-extension://abcdef123456")</param>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Autofill.InMemoryCredentialRepository">
+            <summary>
+            In-memory credential repository for testing and development.
+            WARNING: This is NOT persistent and NOT encrypted. 
+            For production, use a KeePass-based or encrypted database implementation.
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Autofill.NativeMessagingHostService">
+            <summary>
+            Native messaging host implementation for browser extension communication.
+            Implements the Chrome/Firefox native messaging protocol:
+            - Reads 4-byte message length (little-endian) from stdin
+            - Reads JSON message body of specified length
+            - Writes 4-byte response length + JSON response to stdout
+            
+            Security:
+            - Validates extension origins against allowlist
+            - Never logs credentials
+            - Validates message structure before processing
+            </summary>
+        </member>
+        <member name="E:PhantomVault.Core.Services.Autofill.NativeMessagingHostService.FormDetected">
+            <summary>
+            Event raised when a form is detected on a webpage.
+            </summary>
+        </member>
+        <member name="E:PhantomVault.Core.Services.Autofill.NativeMessagingHostService.FormSubmitted">
+            <summary>
+            Event raised when a form is submitted (for password capture).
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Autofill.NativeMessagingHostService.NativeMessage">
+            <summary>
+            Native messaging message format
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Autofill.FormDetectedEventArgs">
+            <summary>
+            Event args for form detection.
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Autofill.FormSubmittedEventArgs">
+            <summary>
+            Event args for form submission.
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Autofill.PasswordCaptureService">
+            <summary>
+            Captures new passwords during registration/login and prompts to save or update vault entries.
+            Detects password changes and offers to update existing credentials.
+            </summary>
+        </member>
+        <member name="E:PhantomVault.Core.Services.Autofill.PasswordCaptureService.PasswordCaptured">
+            <summary>
+            Event raised when a new password is detected and ready to be saved.
+            </summary>
+        </member>
+        <member name="E:PhantomVault.Core.Services.Autofill.PasswordCaptureService.PasswordChanged">
+            <summary>
+            Event raised when a password change is detected for an existing credential.
+            </summary>
+        </member>
+        <member name="M:PhantomVault.Core.Services.Autofill.PasswordCaptureService.DetectPasswordSubmissionAsync(System.String,PhantomVault.Core.Services.Autofill.LoginFormDetectionResult,System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+            Detects and captures password submission from a login/registration form.
+            </summary>
+        </member>
+        <member name="M:PhantomVault.Core.Services.Autofill.PasswordCaptureService.SaveCapturedPasswordAsync(PhantomVault.Core.Services.Autofill.PasswordCaptureEventArgs,System.String)">
+            <summary>
+            Saves a captured password to the vault.
+            </summary>
+        </member>
+        <member name="M:PhantomVault.Core.Services.Autofill.PasswordCaptureService.UpdateCredentialPasswordAsync(PhantomVault.Core.Models.Credential,System.String)">
+            <summary>
+            Updates an existing credential with a new password.
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Autofill.PasswordCaptureEventArgs">
+            <summary>
+            Event args for password capture.
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Autofill.PasswordChangeEventArgs">
+            <summary>
+            Event args for password change detection.
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Autofill.CaptureType">
+            <summary>
+            Type of password capture.
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.Autofill.WindowsAutofillService">
+            <summary>
+            Windows desktop autofill provider. 
+            Works in conjunction with the browser extension and native messaging host.
+            Does not implement OS-level autofill (Windows Credential Manager) - 
+            instead provides backend support for browser-based autofill via extension.
+            </summary>
+        </member>
+        <member name="M:PhantomVault.Core.Services.Autofill.WindowsAutofillService.TryFill(System.String)">
+            <summary>
+            Attempts to fill credentials for the specified domain.
+            On Windows desktop, autofill is primarily handled by the browser extension
+            communicating with the native messaging host. This method is provided for
+            programmatic access but browser-based autofill is the recommended approach.
+            </summary>
+        </member>
+        <member name="M:PhantomVault.Core.Services.Autofill.WindowsAutofillService.StartNativeMessagingHostAsync(System.Threading.CancellationToken)">
+            <summary>
+            Starts the native messaging host if available.
+            This allows the browser extension to communicate with PhantomVault.
+            </summary>
+        </member>
+        <member name="P:PhantomVault.Core.Services.Autofill.WindowsAutofillService.IsNativeMessagingHostRunning">
+            <summary>
+            Gets whether the native messaging host is currently running.
+            </summary>
+        </member>
+    </members>
+</doc>

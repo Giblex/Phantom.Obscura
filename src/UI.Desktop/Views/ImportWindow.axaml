@@ -1,0 +1,213 @@
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:PhantomVault.UI.ViewModels"
+    xmlns:views="clr-namespace:PhantomVault.UI.Views"
+    x:Class="PhantomVault.UI.Views.ImportWindow"
+        x:DataType="vm:ImportViewModel"
+        Title="Import Credentials"
+        Width="900" Height="750"
+        MinWidth="700" MinHeight="600"
+        WindowStartupLocation="CenterOwner"
+        CanResize="True"
+        Background="{DynamicResource WindowBackgroundBrush}">
+    <InputElement.KeyBindings>
+    <KeyBinding Gesture="Escape" Command="{Binding CloseCommand}"/>
+    </InputElement.KeyBindings>
+
+    <Design.DataContext>
+        <vm:ImportViewModel/>
+    </Design.DataContext>
+
+    <views:ThemeAwareWindow.Styles>
+        <!-- Consolidated styles for import tiles: keep visuals (background/opacity/focus) here.
+             Animations are performed in code-behind, so do not set RenderTransform in pseudo-classes. -->
+        <Style Selector="Button.import-tile">
+            <!-- Keep transform origin so per-control transforms scale from center. Do NOT set a RenderTransform instance here
+                 because that instance would be shared across controls when declared in XAML, causing all tiles to animate together. -->
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
+            <Setter Property="Opacity" Value="1" />
+            <!-- The Button now uses a ControlTemplate that draws the rounded card; set a card-like default Background here. -->
+            <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}" />
+            <!-- remove visible button stroke so there are no dividing lines between tiles -->
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="14" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <!-- Grid with a translated shadow Border behind the main card to create depth without affecting layout -->
+                        <Grid>
+                            <!-- Shadow layer (translated down/right) -->
+                            <Border CornerRadius="12" Background="{DynamicResource SeparatorBrush}" Opacity="0.08" IsHitTestVisible="False">
+                                <Border.RenderTransform>
+                                    <TranslateTransform X="0" Y="4" />
+                                </Border.RenderTransform>
+                            </Border>
+
+                            <!-- Main card: outer layout border stays fixed for hit-testing; inner CardInner is animated so layout/hit-test bounds don't change -->
+                            <Border x:Name="CardBorder" CornerRadius="12" Background="Transparent" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="0">
+                                <Border x:Name="CardInner" CornerRadius="12" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style Selector="Button.import-tile:pointerover">
+            <!-- Do not change RenderTransform here; code-behind handles scale tweening. -->
+            <Setter Property="Opacity" Value="0.98" />
+            <Setter Property="Background" Value="{DynamicResource ControlHoverBrush}" />
+        </Style>
+
+            <!-- Pressed visual handled in code-behind to avoid style/conflict; removed :pressed setter to prevent opacity/style conflicts during modal file picker. -->
+
+        <Style Selector="Button.import-tile:focus">
+            <!-- Add a subtle focus outline for keyboard users -->
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="BorderThickness" Value="2" />
+        </Style>
+    </views:ThemeAwareWindow.Styles>
+
+    <Grid RowDefinitions="*,Auto">
+        <!-- Scrollable content -->
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <Border Padding="30,25" ClipToBounds="True">
+                <StackPanel Spacing="16">
+            <!-- Header -->
+            <TextBlock Text="Import Credentials" FontSize="20" FontWeight="SemiBold"/>
+            
+            <TextBlock Text="Import credentials from external password managers or export files." 
+                       TextWrapping="Wrap" 
+                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+
+            <!-- Format Selection as tiles -->
+            <StackPanel Spacing="8">
+                <TextBlock Text="Import Format:" FontWeight="SemiBold"/>
+                <ItemsControl x:Name="ImportMethodsList" ItemsSource="{Binding ImportMethods}" Margin="0,6,0,0" HorizontalAlignment="Center">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <!-- WrapPanel provides responsive wrapping; center the panel so items are centered in the window -->
+                            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center" ItemWidth="184" ItemHeight="164"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <!-- Slightly larger tiles for better spacing and visual balance -->
+                            <Button Classes="import-tile" Width="160" Height="140" Margin="0" Padding="0" Command="{Binding DataContext.StartImportCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Name}" PointerEntered="OnPointerEnter" PointerExited="OnPointerLeave" PointerPressed="OnPointerPressed" PointerReleased="OnPointerReleased">
+                                <!-- Content now goes directly into the Button; visual rounded card is drawn by the Button Template -->
+                                <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                                        <Image Source="{Binding IconSource}" Width="56" Height="56" Stretch="Uniform" HorizontalAlignment="Center" />
+                                        <TextBlock Text="{Binding Name}" FontSize="12" TextAlignment="Center" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}" MaxWidth="140" />
+                                    </StackPanel>
+                                </Grid>
+                                <ToolTip.Tip>
+                                    <TextBlock Text="{Binding Name}" />
+                                </ToolTip.Tip>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+
+            <!-- File Selection -->
+            <StackPanel Spacing="8">
+                <TextBlock Text="Source File:" FontWeight="SemiBold"/>
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBox Grid.Column="0" 
+                             Text="{Binding SelectedFile}" 
+                             IsReadOnly="True" 
+                             Watermark="No file selected..."
+                             Margin="0,0,8,0"/>
+                    <Button Grid.Column="1" 
+                            Content="Browse..." 
+                            Width="100"
+                            Command="{Binding BrowseCommand}"/>
+                </Grid>
+            </StackPanel>
+
+            <!-- Status -->
+            <Border Background="{DynamicResource HeaderBackgroundBrush}" 
+                    Padding="12" 
+                    CornerRadius="6"
+                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                    BorderThickness="1">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Status:" FontWeight="SemiBold" FontSize="12"/>
+                    <TextBlock Text="{Binding StatusMessage}" 
+                               TextWrapping="Wrap" 
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Preview -->
+            <StackPanel Spacing="8" IsVisible="{Binding !!PreviewCount}">
+                <TextBlock FontWeight="SemiBold">
+                    <Run Text="Preview ("/><Run Text="{Binding PreviewCount}"/><Run Text=" credential(s) found):"/>
+                </TextBlock>
+                
+                <Border Background="{DynamicResource WindowBackgroundBrush}" 
+                        BorderBrush="{DynamicResource ControlBorderBrush}" 
+                        BorderThickness="1" 
+                        CornerRadius="6"
+                        MaxHeight="200">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding PreviewCredentials}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource ControlBackgroundBrush}" 
+                                            Padding="10" 
+                                            Margin="8"
+                                            CornerRadius="4"
+                                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                                            BorderThickness="1">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold"/>
+                                            <TextBlock Foreground="{DynamicResource SecondaryTextBrush}">
+                                                <Run Text="Username: "/><Run Text="{Binding Username}"/>
+                                            </TextBlock>
+                                            <TextBlock Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11">
+                                                <Run Text="Password: ●●●●●●●●"/>
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding Url}" 
+                                                       Foreground="{DynamicResource MutedTextBrush}" 
+                                                       FontSize="11"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Border>
+            </StackPanel>
+
+                </StackPanel>
+            </Border>
+        </ScrollViewer>
+
+        <!-- Sticky footer with actions -->
+        <Border Grid.Row="1" Background="{DynamicResource HeaderBackgroundBrush}"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                BorderThickness="0,1,0,0" Padding="20,12">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+                <Button Content="Import Credentials" Width="170" Command="{Binding ImportCommand}" Background="{DynamicResource AccentBrush}" IsEnabled="{Binding !IsImporting}"/>
+                <Button Content="Cancel" Width="110" Command="{Binding CloseCommand}" Classes="liquid-glass"/>
+            </StackPanel>
+        </Border>
+        
+        <!-- Importing overlay -->
+        <Border IsVisible="{Binding IsImporting}"
+                Background="{DynamicResource OverlayBackgroundBrush}"
+                ZIndex="10">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
+                <ProgressBar IsIndeterminate="True" Width="260"/>
+                <TextBlock Text="Importing..." Foreground="White" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</views:ThemeAwareWindow>
+
+

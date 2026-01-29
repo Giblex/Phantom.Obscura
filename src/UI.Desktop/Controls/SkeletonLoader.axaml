@@ -1,0 +1,57 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PhantomVault.UI.Desktop.Controls.SkeletonLoader">
+
+    <UserControl.Styles>
+        <Style Selector="Border.skeleton">
+            <Setter Property="Background" Value="#20FFFFFF"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Opacity" Value="0.6"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:1" Easing="SineEaseInOut"/>
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <!-- Pulse animation -->
+        <Style Selector="Border.skeleton">
+            <Style.Animations>
+                <Animation Duration="0:0:1.5" IterationCount="Infinite" PlaybackDirection="Alternate">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="0.3"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="0.7"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+
+        <!-- Skeleton types -->
+        <Style Selector="Border.skeleton.text">
+            <Setter Property="Height" Value="16"/>
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+
+        <Style Selector="Border.skeleton.title">
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="CornerRadius" Value="6"/>
+        </Style>
+
+        <Style Selector="Border.skeleton.circle">
+            <Setter Property="CornerRadius" Value="999"/>
+        </Style>
+
+        <Style Selector="Border.skeleton.card">
+            <Setter Property="Height" Value="120"/>
+            <Setter Property="CornerRadius" Value="12"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Border x:Name="SkeletonBorder"
+            Classes="skeleton"
+            Width="{Binding $parent[UserControl].Width}"
+            Height="{Binding $parent[UserControl].Height}"/>
+
+</UserControl>

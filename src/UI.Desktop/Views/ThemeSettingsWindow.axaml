@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:views="clr-namespace:PhantomVault.UI.Views"
+    x:Class="PhantomVault.UI.Views.ThemeSettingsWindow"
+        Title="Theme Settings"
+        Width="480" Height="340"
+        MinWidth="420" MinHeight="300"
+        WindowStartupLocation="CenterOwner"
+    Background="{DynamicResource WindowBackgroundBrush}">
+    <Grid Margin="16" RowDefinitions="Auto,*,Auto">
+        <!-- Header -->
+        <Border Grid.Row="0" Background="{DynamicResource HeaderBackgroundBrush}" Padding="12,10" CornerRadius="6" Margin="0,0,0,12">
+            <StackPanel Spacing="4">
+                <TextBlock Text="Theme Settings" FontSize="16" FontWeight="SemiBold"/>
+                <TextBlock Text="Customize the look and feel of your vault." FontSize="12" Foreground="{DynamicResource MutedTextBrush}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Content -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="12">
+            <StackPanel Grid.Column="0" Spacing="14">
+                <!-- Runtime Theme Selection -->
+                <StackPanel Spacing="6">
+                    <TextBlock Text="App Theme" FontWeight="SemiBold"/>
+                    <TextBlock Text="Choose a color scheme for the main vault windows." FontSize="12" Foreground="{DynamicResource MutedTextBrush}"/>
+                    <ComboBox 
+                        ItemsSource="{Binding RuntimeThemeNames}" 
+                        SelectedIndex="{Binding SelectedRuntimeThemeIndex, Mode=TwoWay}"
+                        Width="220"
+                        HorizontalAlignment="Left"/>
+                </StackPanel>
+
+                <!-- Light/Dark Toggle -->
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Base Mode" FontWeight="SemiBold"/>
+                    <CheckBox Content="Dark mode" IsChecked="{Binding IsDarkTheme, Mode=TwoWay}" />
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Simple preview swatches reflecting current theme brushes -->
+            <Border Grid.Column="1" Background="{DynamicResource ControlBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10" VerticalAlignment="Top">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Preview" FontSize="12" Foreground="{DynamicResource MutedTextBrush}"/>
+                    <Border Background="{DynamicResource ContentBackgroundBrush}" CornerRadius="4" Padding="8">
+                        <StackPanel Spacing="6">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Border Background="{DynamicResource AccentBrush}" Width="16" Height="16" CornerRadius="3"/>
+                                <TextBlock Text="Accent" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Border Background="{DynamicResource Brush.Card}" Width="16" Height="16" CornerRadius="3" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1"/>
+                                <TextBlock Text="Card" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Border Background="{DynamicResource WindowBackgroundBrush}" Width="16" Height="16" CornerRadius="3" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1"/>
+                                <TextBlock Text="Background" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Footer -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
+            <Button Content="Close" Click="Close_Click" Width="100" Classes="liquid-glass" />
+        </StackPanel>
+    </Grid>
+</views:ThemeAwareWindow>
+

@@ -1,0 +1,68 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:PhantomVault.UI.Converters"
+             x:Class="PhantomVault.UI.Views.Details.CreditCardDetailView">
+    
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://PhantomVault.UI/Resources/Converters/ConverterResources.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    
+    <!-- Credit Card Details -->
+    <StackPanel Spacing="12"
+                IsVisible="{Binding SelectedCredential.IsCreditCardEntry}">
+        <TextBlock Text="Card Details"
+                   FontSize="14"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasCardholderName}">
+            <TextBlock Text="Cardholder" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBox Text="{Binding SelectedCredential.CardholderName}" IsReadOnly="True" Height="36" Padding="8,16"/>
+        </StackPanel>
+        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasCardNumber}">
+            <TextBlock Text="Card Number" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBox Text="{Binding SelectedCredential.MaskedCardNumber}" IsReadOnly="True" Height="36" Padding="8,16">
+                <TextBox.Effect>
+                    <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                </TextBox.Effect>
+            </TextBox>
+        </StackPanel>
+        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasCardType}">
+            <TextBlock Text="Card Type" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBox Text="{Binding SelectedCredential.CardType}" IsReadOnly="True" Height="36" Padding="8,16"/>
+        </StackPanel>
+        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasCardExpiry}">
+            <TextBlock Text="Expiration" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBox Text="{Binding SelectedCredential.CardExpiryText}" IsReadOnly="True" Height="36" Padding="8,16"/>
+        </StackPanel>
+        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasCardCVV}">
+            <TextBlock Text="Security Code" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBox Text="{Binding SelectedCredential.MaskedCardCVV}" IsReadOnly="True" Height="36" Padding="8,16">
+                <TextBox.Effect>
+                    <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                </TextBox.Effect>
+            </TextBox>
+        </StackPanel>
+        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasCardPIN}">
+            <TextBlock Text="PIN" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBox Text="{Binding SelectedCredential.MaskedCardPIN}" IsReadOnly="True" Height="36" Padding="8,16">
+                <TextBox.Effect>
+                    <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                </TextBox.Effect>
+            </TextBox>
+        </StackPanel>
+        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasCardBillingAddress}">
+            <TextBlock Text="Billing Address" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBox Text="{Binding SelectedCredential.CardBillingAddress}"
+                     IsReadOnly="True"
+                     BorderThickness="1"
+                     BorderBrush="{DynamicResource ControlBorderBrush}"
+                     Padding="8,16"
+                     TextWrapping="Wrap"
+                     AcceptsReturn="True"/>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

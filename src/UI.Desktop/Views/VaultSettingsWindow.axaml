@@ -1,0 +1,1840 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:views="clr-namespace:PhantomVault.UI.Views"
+        x:Class="PhantomVault.UI.Views.VaultSettingsWindow"
+        Title="Vault Settings" 
+        Width="1050" 
+        Height="750"
+        MinWidth="950"
+        MinHeight="650"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource WindowBackgroundBrush}">
+    
+    <Grid RowDefinitions="Auto,*,Auto">
+        
+        <!-- Header -->
+        <Border Grid.Row="0" 
+                Background="{DynamicResource HeaderBackgroundBrush}" 
+                Padding="25,20"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                BorderThickness="0,0,0,1">
+            <StackPanel Spacing="6">
+                <TextBlock Text="Vault Settings" 
+                           FontSize="20" 
+                           FontWeight="Bold"
+                           Foreground="#FFFFFF"/>
+                <TextBlock Text="Configure your vault preferences and security options" 
+                           FontSize="13" 
+                           Foreground="#D0D0D0"/>
+            </StackPanel>
+        </Border>
+        
+        <!-- Settings Content -->
+        <Grid Grid.Row="1" ColumnDefinitions="220,*">
+            
+            <!-- Left Sidebar: Category Navigation -->
+            <Border Grid.Column="0"
+                    Background="{DynamicResource ContentBackgroundBrush}"
+                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                    BorderThickness="0,0,1,0"
+                    Padding="15,20">
+                <StackPanel Spacing="8">
+                    <Button Command="{Binding ShowGeneralCommand}"
+                            Classes="liquid-glass sidebar"
+                            HorizontalAlignment="Stretch"
+                            Height="40">
+                        <TextBlock Text="General" VerticalAlignment="Center"/>
+                    </Button>
+                    
+                    <Button Command="{Binding ShowSecurityCommand}"
+                            Classes="liquid-glass sidebar"
+                            HorizontalAlignment="Stretch"
+                            Height="40">
+                        <TextBlock Text="Security" VerticalAlignment="Center"/>
+                    </Button>
+                    
+                    <Button Command="{Binding ShowAutoFillCommand}"
+                            Classes="liquid-glass sidebar"
+                            HorizontalAlignment="Stretch"
+                            Height="40">
+                        <TextBlock Text="Auto-Fill" VerticalAlignment="Center"/>
+                    </Button>
+                    
+                    <Button Command="{Binding ShowImportExportCommand}"
+                            Classes="liquid-glass sidebar"
+                            HorizontalAlignment="Stretch"
+                            Height="40">
+                        <TextBlock Text="Import/Export" VerticalAlignment="Center"/>
+                    </Button>
+                    
+                    <Button Command="{Binding ShowBackupCommand}"
+                            Classes="liquid-glass sidebar"
+                            HorizontalAlignment="Stretch"
+                            Height="40">
+                        <TextBlock Text="Backup" VerticalAlignment="Center"/>
+                    </Button>
+                    
+                    <Button Command="{Binding ShowAccessibilityCommand}"
+                            Classes="liquid-glass sidebar"
+                            HorizontalAlignment="Stretch"
+                            Height="40">
+                        <TextBlock Text="Accessibility" VerticalAlignment="Center"/>
+                    </Button>
+                    
+                    <Button Command="{Binding ShowAdvancedCommand}"
+                            Classes="liquid-glass sidebar"
+                            HorizontalAlignment="Stretch"
+                            Height="40">
+                        <TextBlock Text="Advanced" VerticalAlignment="Center"/>
+                    </Button>
+                    
+                    <Button Command="{Binding ShowSecuredRubbishBinCommand}"
+                            Classes="liquid-glass sidebar"
+                            HorizontalAlignment="Stretch"
+                            Height="40">
+                        <TextBlock Text="Secured Rubbish Bin" VerticalAlignment="Center"/>
+                    </Button>
+                    
+                    <Button Command="{Binding ShowAboutCommand}"
+                            Classes="liquid-glass sidebar"
+                            HorizontalAlignment="Stretch"
+                            Height="40">
+                        <TextBlock Text="About" VerticalAlignment="Center"/>
+                    </Button>
+                </StackPanel>
+            </Border>
+            
+            <!-- Right Content Area -->
+            <ScrollViewer Grid.Column="1"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          Padding="30,20,50,30">
+                <StackPanel Spacing="25" Margin="0,0,0,80">
+                    
+                    <!-- Current Section Title -->
+                    <TextBlock Text="{Binding CurrentSectionTitle}" 
+                               FontSize="18" 
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    
+                    <!-- General Settings (Default View) -->
+                    <StackPanel Spacing="20" IsVisible="{Binding IsShowingGeneral}">
+                        
+                        <!-- Vault Name -->
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Vault Name" 
+                                       FontSize="13" 
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            <TextBox Text="{Binding VaultName}"
+                                     Height="40"
+                                     FontSize="14"/>
+                            <TextBlock Text="Display name for your vault" 
+                                       FontSize="11" 
+                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                        </StackPanel>
+                        
+                        <!-- App Theme (Runtime Theme Selector) -->
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="App Theme" 
+                                       FontSize="13" 
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            <ComboBox ItemsSource="{Binding ThemeSettings.RuntimeThemeNames}"
+                                      SelectedIndex="{Binding ThemeSettings.SelectedRuntimeThemeIndex}"
+                                      Height="40"
+                                      FontSize="14"/>
+                            <TextBlock Text="Changes apply immediately. Choose Classic Dark, Giblex Glass Navy, or Classic Light." 
+                                       FontSize="11" 
+                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                        </StackPanel>
+                        
+                        <!-- Theme -->
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Theme" 
+                                       FontSize="13" 
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            <Grid ColumnDefinitions="*,120">
+                                <ComboBox Grid.Column="0"
+                                          SelectedIndex="{Binding ThemeSelection}"
+                                          Height="40"
+                                          Margin="0,0,12,0"
+                                          FontSize="14">
+                                    <ComboBoxItem Content="Dark Theme"/>
+                                    <ComboBoxItem Content="Light Theme"/>
+                                    <ComboBoxItem Content="System Default"/>
+                                </ComboBox>
+                                <Button Grid.Column="1" 
+                                        Command="{Binding ApplyThemeCommand}" 
+                                        Background="{DynamicResource ContentBackgroundBrush}"
+                                        Classes="liquid-glass" 
+                                        Height="40"
+                                        HorizontalContentAlignment="Center">
+                                    <TextBlock Text="Apply" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                </Button>
+                            </Grid>
+                            <TextBlock Text="Select Dark/Light theme. Click Apply to switch immediately." 
+                                       FontSize="11" 
+                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                        </StackPanel>
+
+                        <!-- Theme & Layout Toggles -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Display Preferences"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <ToggleSwitch Content="Enable dark theme"
+                                              IsChecked="{Binding UseDarkTheme}"
+                                              HorizontalAlignment="Left"
+                                              FontSize="13"/>
+                                <ToggleSwitch Content="Use grid layout inside the vault"
+                                              IsChecked="{Binding UseGridLayout}"
+                                              IsEnabled="{Binding HasVaultContext}"
+                                              HorizontalAlignment="Left"
+                                              FontSize="13"/>
+                                <TextBlock Text="Layout changes apply immediately to the vault when it is open."
+                                           FontSize="10"
+                                           Foreground="{DynamicResource MutedTextBrush}"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Language -->
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Language" 
+                                       FontSize="13" 
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            <ComboBox SelectedIndex="0"
+                                      Height="40"
+                                      FontSize="14">
+                                <ComboBoxItem Content="English"/>
+                                <ComboBoxItem Content="Spanish"/>
+                                <ComboBoxItem Content="French"/>
+                                <ComboBoxItem Content="German"/>
+                            </ComboBox>
+                        </StackPanel>
+                        
+                        <!-- Clipboard Clear Time -->
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Clear Clipboard After" 
+                                       FontSize="13" 
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            <ComboBox SelectedIndex="{Binding ClipboardClearTime}"
+                                      Height="40"
+                                      FontSize="14">
+                                <ComboBoxItem Content="30 seconds"/>
+                                <ComboBoxItem Content="1 minute"/>
+                                <ComboBoxItem Content="2 minutes"/>
+                                <ComboBoxItem Content="5 minutes"/>
+                                <ComboBoxItem Content="Never"/>
+                            </ComboBox>
+                            <TextBlock Text="Automatically clear copied passwords from clipboard" 
+                                       FontSize="11" 
+                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                        </StackPanel>
+                        
+                        <!-- Category Management -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Category Management" 
+                                           FontSize="13" 
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <TextBlock Text="Organize your credentials with custom categories" 
+                                           FontSize="11" 
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           TextWrapping="Wrap"/>
+                                <Button Command="{Binding ManageCategoriesCommand}"
+                                        Background="{DynamicResource ContentBackgroundBrush}"
+                                        Classes="liquid-glass"
+                                        HorizontalAlignment="Left"
+                                        Width="180"
+                                        Height="40"
+                                        Margin="0,8,0,0">
+                                    <TextBlock Text="Manage Categories" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Quick Vault Actions -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Quick Vault Actions"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <TextBlock Text="Jump straight into common vault workflows without closing settings."
+                                           FontSize="11"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           TextWrapping="Wrap"/>
+                                <WrapPanel>
+                                    <Button Command="{Binding OpenAddEntryCommand}"
+                                            Classes="liquid-glass"
+                                            Background="{DynamicResource ContentBackgroundBrush}"
+                                            Height="44"
+                                            MinWidth="200"
+                                            Margin="0,0,10,10"
+                                            IsEnabled="{Binding HasVaultContext}">
+                                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                            <TextBlock Text="➕" FontSize="16" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Add Vault Entry" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Command="{Binding OpenPasswordGeneratorCommand}"
+                                            Classes="liquid-glass"
+                                            Background="{DynamicResource ContentBackgroundBrush}"
+                                            Height="44"
+                                            MinWidth="200"
+                                            Margin="0,0,10,10"
+                                            IsEnabled="{Binding HasVaultContext}">
+                                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                            <TextBlock Text="•" FontSize="16" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Password Generator" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Command="{Binding OpenCategoryManagerCommand}"
+                                            Classes="liquid-glass"
+                                            Background="{DynamicResource ContentBackgroundBrush}"
+                                            Height="44"
+                                            MinWidth="200"
+                                            Margin="0,0,10,10"
+                                            IsEnabled="{Binding HasVaultContext}">
+                                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                            <TextBlock Text="🗂" FontSize="16" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Category Manager" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                </WrapPanel>
+                                <TextBlock Text="Open the vault first to enable quick actions."
+                                           FontSize="10"
+                                           Foreground="{DynamicResource MutedTextBrush}"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Flaticon Icon Downloader moved here from Backup -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15"
+                                VerticalAlignment="Bottom"
+                                Margin="0,10,0,0">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Download Flaticon Icons" 
+                                           FontSize="13" 
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <TextBlock Text="Temporarily enable internet to download professional icons from Flaticon. Connection will be automatically disconnected after download." 
+                                           FontSize="11" 
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           TextWrapping="Wrap"/>
+                                
+                                <!-- Internet Status -->
+                                <Border Background="{DynamicResource WindowBackgroundBrush}"
+                                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="{DynamicResource Radius.Sm}"
+                                        Padding="10">
+                                    <Grid ColumnDefinitions="Auto,*">
+                                        <Border Grid.Column="0"
+                                                Background="{Binding InternetStatusColor}"
+                                                Width="10"
+                                                Height="10"
+                                                CornerRadius="{DynamicResource Radius.Sm}"
+                                                VerticalAlignment="Center"
+                                                Margin="0,0,10,0"/>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding InternetStatusText}" 
+                                                   FontSize="11" 
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    </Grid>
+                                </Border>
+                                
+                                <Button Command="{Binding OpenFlatIconDownloaderCommand}"
+                                        Background="{DynamicResource ContentBackgroundBrush}"
+                                        Classes="liquid-glass"
+                                        HorizontalAlignment="Left"
+                                        Width="200"
+                                        Height="40"
+                                        Margin="0,8,0,0">
+                                    <TextBlock Text="Open Icon Downloader" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Button>
+                                <TextBlock Text="Secure: Temporary HTTPS-only connection | No tracking | Auto-disconnect" 
+                                           FontSize="10" 
+                                           Foreground="{DynamicResource SuccessBrush}"
+                                           TextWrapping="Wrap"
+                                           Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15"
+                                Margin="0,10,0,0">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Manage Local Icon Library"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <TextBlock Text="Review, import, or delete icons stored offline. Changes apply immediately to automatic icon detection."
+                                           FontSize="11"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           TextWrapping="Wrap"/>
+                                <Button Command="{Binding OpenIconManagerCommand}"
+                                        Background="{DynamicResource ContentBackgroundBrush}"
+                                        Classes="liquid-glass"
+                                        HorizontalAlignment="Left"
+                                        Width="200"
+                                        Height="40">
+                                    <TextBlock Text="Open Icon Manager" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Archive and Delete Vault -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="20"
+                                Margin="0,20,0,0"
+                                BorderBrush="{DynamicResource WarningBrush}"
+                                BorderThickness="2">
+                            <StackPanel Spacing="15">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="&#x26A0;&#xFE0F;" FontSize="18"/>
+                                    <TextBlock Text="Vault Management" 
+                                               FontSize="14" 
+                                               FontWeight="Bold"
+                                               Foreground="{DynamicResource WarningBrush}"/>
+                                </StackPanel>
+                                <TextBlock Text="Archive or permanently delete this vault" 
+                                           FontSize="12"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           TextWrapping="Wrap"/>
+                                
+                                <!-- Archive Vault -->
+                                <StackPanel Spacing="10" Margin="0,10,0,0">
+                                    <TextBlock Text="Archive Vault" 
+                                               FontSize="13"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    <TextBlock Text="Create a timestamped backup and mark this vault as archived. You can restore it later." 
+                                               FontSize="11"
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               TextWrapping="Wrap"/>
+                                    <Button Content="Archive This Vault"
+                                            Classes="liquid-glass"
+                                            Height="40"
+                                            Width="220"
+                                            HorizontalAlignment="Left"
+                                            Margin="0,5,0,0"/>
+                                </StackPanel>
+                                
+                                <Separator Height="1" 
+                                          Background="{DynamicResource ControlBorderBrush}"
+                                          Margin="0,10"/>
+                                
+                                <!-- Delete Vault -->
+                                <StackPanel Spacing="10">
+                                    <TextBlock Text="Delete Vault Permanently" 
+                                               FontSize="13"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource DangerBrush}"/>
+                                    <TextBlock FontSize="11"
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               TextWrapping="Wrap">
+                                        <Run Text="⚠️ WARNING:"/>
+                                        <Run Text="This will permanently delete your vault file and all credentials. This action cannot be undone. Make sure you have a backup before proceeding."/>
+                                    </TextBlock>
+                                    <Button Content="Delete Vault Permanently"
+                                            Classes="danger"
+                                            Height="40"
+                                            Width="240"
+                                            HorizontalAlignment="Left"
+                                            Margin="0,5,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                    
+                    <!-- Security Settings -->
+                    <StackPanel Spacing="20" IsVisible="{Binding IsShowingSecurity}">
+                        
+                        <!-- Auto-Lock -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15">
+                            <StackPanel Spacing="12">
+                                <Grid ColumnDefinitions="Auto,*">
+                                    <CheckBox Grid.Column="0"
+                                              IsChecked="{Binding AutoLockEnabled}"
+                                              VerticalAlignment="Center"
+                                              Margin="0,0,12,0"/>
+                                    <TextBlock Grid.Column="1"
+                                               Text="Auto-lock vault after inactivity" 
+                                               FontSize="13" 
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+                                
+                                <StackPanel Spacing="8" IsVisible="{Binding AutoLockEnabled}">
+                                    <TextBlock Text="Lock after:" 
+                                               FontSize="12" 
+                                               Foreground="{DynamicResource MutedTextBrush}"/>
+                                    <ComboBox SelectedIndex="{Binding AutoLockTime}"
+                                              Height="36"
+                                              FontSize="13">
+                                        <ComboBoxItem Content="1 minute"/>
+                                        <ComboBoxItem Content="5 minutes"/>
+                                        <ComboBoxItem Content="15 minutes"/>
+                                        <ComboBoxItem Content="30 minutes"/>
+                                        <ComboBoxItem Content="1 hour"/>
+                                    </ComboBox>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Master Password -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Master Password" 
+                                           FontSize="13" 
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <Button Command="{Binding ChangeMasterPasswordCommand}"
+                                        Background="{DynamicResource ContentBackgroundBrush}"
+                                        Classes="liquid-glass"
+                                        HorizontalAlignment="Left"
+                                        Width="180"
+                                        Height="36">
+                                    <TextBlock Text="Change Master Password"/>
+                                </Button>
+                                <TextBlock Text="Changing your master password will re-encrypt your vault" 
+                                           FontSize="11" 
+                                           Foreground="{DynamicResource WarningBrush}"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Privacy Controls -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Privacy Controls"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <ToggleSwitch Content="Enable privacy mode"
+                                              IsChecked="{Binding PrivacyModeEnabled}"
+                                              HorizontalAlignment="Left"
+                                              FontSize="13"/>
+                                <TextBlock Text="Hides credential details in the vault UI when sharing your screen."
+                                           FontSize="10"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           TextWrapping="Wrap"/>
+                                <ToggleSwitch Content="Redact diagnostic logs"
+                                              IsChecked="{Binding RedactDiagnosticLogs}"
+                                              HorizontalAlignment="Left"
+                                              FontSize="13"/>
+                                <TextBlock Text="Prevents titles and usernames from appearing in debug output and import callbacks."
+                                           FontSize="10"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Secure Rubbish Bin -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Secure Rubbish Bin"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <ToggleSwitch Content="Enable secure trash"
+                                              IsChecked="{Binding SecureTrashEnabled}"
+                                              HorizontalAlignment="Left"
+                                              FontSize="13"/>
+                                <TextBlock Text="Moves deleted entries to an encrypted bin for timed retention before secure wiping."
+                                           FontSize="10"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           TextWrapping="Wrap"/>
+                                <ToggleSwitch Content="Automatically purge after retention period"
+                                              IsChecked="{Binding SecureTrashAutoPurge}"
+                                              HorizontalAlignment="Left"
+                                              FontSize="13"
+                                              IsEnabled="{Binding SecureTrashEnabled}"/>
+                                <Grid ColumnDefinitions="200,*"
+                                      IsEnabled="{Binding SecureTrashEnabled}">
+                                    <TextBlock Grid.Column="0"
+                                               Text="Retention (days)"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               VerticalAlignment="Center"/>
+                                    <NumericUpDown Grid.Column="1"
+                                                   Value="{Binding SecureTrashRetentionDays}"
+                                                   Minimum="1"
+                                                   Maximum="365"
+                                                   Width="150"
+                                                   Margin="12,0,0,0"
+                                                   HorizontalAlignment="Left"
+                                                   Height="40"/>
+                                </Grid>
+                                <Grid ColumnDefinitions="200,*"
+                                      IsEnabled="{Binding SecureTrashEnabled}">
+                                    <TextBlock Grid.Column="0"
+                                               Text="Secure wipe passes"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               VerticalAlignment="Center"/>
+                                    <NumericUpDown Grid.Column="1"
+                                                   Value="{Binding SecureTrashWipePasses}"
+                                                   Minimum="1"
+                                                   Maximum="10"
+                                                   Width="150"
+                                                   Margin="12,0,0,0"
+                                                   HorizontalAlignment="Left"
+                                                   Height="40"/>
+                                </Grid>
+                                <TextBlock Text="Items can be restored until purged. Secure wipe overwrites each field multiple times before deletion."
+                                           FontSize="10"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Two-Factor Authentication -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Two-Factor Authentication" 
+                                           FontSize="13" 
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <TextBlock Text="Add extra security with passkeys, YubiKey or biometrics" 
+                                           FontSize="11" 
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           Margin="0,0,0,8"/>
+                                
+                                <StackPanel Spacing="14" Margin="0,4,0,0">
+                                    <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="{DynamicResource Radius.Lg}"
+                                            Padding="16">
+                                        <StackPanel Spacing="12">
+                                            <Grid ColumnDefinitions="Auto,*">
+                                                <Ellipse Width="10"
+                                                         Height="10"
+                                                         Fill="{Binding PasskeyStatusAccent}"
+                                                         VerticalAlignment="Center"/>
+                                                <StackPanel Grid.Column="1"
+                                                            Orientation="Horizontal"
+                                                            Spacing="8">
+                                                    <TextBlock Text="⌘"
+                                                               FontSize="18"
+                                                               VerticalAlignment="Center"/>
+                                                    <TextBlock Text="Windows Hello Passkey"
+                                                               FontSize="13"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                                               VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            <TextBlock Text="{Binding PasskeyStatusText}"
+                                                       FontSize="13"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                            <TextBlock Text="{Binding PasskeyStatusDetail}"
+                                                       FontSize="11"
+                                                       Foreground="{DynamicResource MutedTextBrush}"
+                                                       TextWrapping="Wrap"/>
+                                            <TextBlock Text="{Binding PasskeyStatusTimestamp}"
+                                                       FontSize="10"
+                                                       Foreground="{DynamicResource SubtleBrush}"/>
+                                            <TextBlock Text="{Binding PasskeyActionHint}"
+                                                       FontSize="10"
+                                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                                       TextWrapping="Wrap"/>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                <Button Command="{Binding ConfigurePasskeyCommand}"
+                                                        IsEnabled="{Binding CanManagePasskeys}"
+                                                        Classes="primary"
+                                                        Height="38"
+                                                        MinWidth="170">
+                                                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                                        <TextBlock Text="Link Windows Hello" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="{DynamicResource Radius.Lg}"
+                                            Padding="16">
+                                        <StackPanel Spacing="12">
+                                            <Grid ColumnDefinitions="Auto,*">
+                                                <Ellipse Width="10"
+                                                         Height="10"
+                                                         Fill="{Binding YubiKeyStatusAccent}"
+                                                         VerticalAlignment="Center"/>
+                                                <StackPanel Grid.Column="1"
+                                                            Orientation="Horizontal"
+                                                            Spacing="8">
+                                                    <TextBlock Text="�"
+                                                               FontSize="18"
+                                                               VerticalAlignment="Center"/>
+                                                    <TextBlock Text="Hardware Token (YubiKey)"
+                                                               FontSize="13"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                                               VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            <TextBlock Text="{Binding YubiKeyStatusText}"
+                                                       FontSize="13"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                            <TextBlock Text="{Binding YubiKeyStatusDetail}"
+                                                       FontSize="11"
+                                                       Foreground="{DynamicResource MutedTextBrush}"
+                                                       TextWrapping="Wrap"/>
+                                            <TextBlock Text="{Binding YubiKeyStatusTimestamp}"
+                                                       FontSize="10"
+                                                       Foreground="{DynamicResource SubtleBrush}"/>
+                                            <TextBlock Text="{Binding YubiKeyActionHint}"
+                                                       FontSize="10"
+                                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                                       TextWrapping="Wrap"/>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                <Button Command="{Binding ConfigureYubiKeyCommand}"
+                                                        Classes="liquid-glass"
+                                                        Height="38"
+                                                        MinWidth="170">
+                                                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                                        <TextBlock Text="Run YubiKey Check" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="{DynamicResource Radius.Lg}"
+                                            Padding="16">
+                                        <StackPanel Spacing="12">
+                                            <Grid ColumnDefinitions="Auto,*">
+                                                <Ellipse Width="10"
+                                                         Height="10"
+                                                         Fill="{Binding TotpStatusAccent}"
+                                                         VerticalAlignment="Center"/>
+                                                <StackPanel Grid.Column="1"
+                                                            Orientation="Horizontal"
+                                                            Spacing="8">
+                                                    <TextBlock Text="&#x23F1;&#xFE0F;"
+                                                               FontSize="18"
+                                                               VerticalAlignment="Center"/>
+                                                    <TextBlock Text="TOTP Authenticator"
+                                                               FontSize="13"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                                               VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            <TextBlock Text="{Binding TotpStatusText}"
+                                                       FontSize="13"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                            <TextBlock Text="{Binding TotpStatusDetail}"
+                                                       FontSize="11"
+                                                       Foreground="{DynamicResource MutedTextBrush}"
+                                                       TextWrapping="Wrap"/>
+                                            <TextBlock Text="{Binding TotpStatusTimestamp}"
+                                                       FontSize="10"
+                                                       Foreground="{DynamicResource SubtleBrush}"/>
+                                            <TextBlock Text="{Binding TotpActionHint}"
+                                                       FontSize="10"
+                                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                                       TextWrapping="Wrap"/>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                                                <Button Command="{Binding ConfigureTotpCommand}"
+                                                        Classes="liquid-glass"
+                                                        Height="38"
+                                                        MinWidth="140">
+                                                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                                        <TextBlock Text="Setup TOTP" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Button>
+                                                <Button Command="{Binding ViewTotpCodesCommand}"
+                                                        IsEnabled="{Binding HasTotpEnabled}"
+                                                        Classes="tertiary"
+                                                        Height="38"
+                                                        MinWidth="140">
+                                                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                                        <TextBlock Text="View Codes" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+
+                                <TextBlock Text="Passkeys provide passwordless authentication using biometrics or PINs"
+                                           FontSize="10"
+                                           Foreground="{DynamicResource SubtleBrush}"
+                                           TextWrapping="Wrap"
+                                           Margin="0,6,0,0"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Password Requirements -->
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="Password Generator Defaults" 
+                                       FontSize="13" 
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            
+                            <Grid ColumnDefinitions="200,*">
+                                <TextBlock Grid.Column="0"
+                                           Text="Default Length" 
+                                           FontSize="12" 
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           VerticalAlignment="Center"/>
+                                <NumericUpDown Grid.Column="1"
+                                               Value="{Binding DefaultPasswordLength}"
+                                               Minimum="8"
+                                               Maximum="128"
+                                               Width="150"
+                                               Margin="12,0,0,0"
+                                               HorizontalAlignment="Left"
+                                               Height="40"/>
+                            </Grid>
+                            
+                            <CheckBox IsChecked="{Binding IncludeUppercase}"
+                                      Content="Include uppercase letters (A-Z)"/>
+                            <CheckBox IsChecked="{Binding IncludeLowercase}"
+                                      Content="Include lowercase letters (a-z)"/>
+                            <CheckBox IsChecked="{Binding IncludeNumbers}"
+                                      Content="Include numbers (0-9)"/>
+                            <CheckBox IsChecked="{Binding IncludeSymbols}"
+                                      Content="Include symbols (!@#$%^&amp;*)"/>
+                        </StackPanel>
+                        
+                    </StackPanel>
+                    
+                    <!-- Auto-Fill Settings -->
+                    <StackPanel Spacing="20" IsVisible="{Binding IsShowingAutoFill}">
+                        
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15">
+                            <StackPanel Spacing="12">
+                                <Grid ColumnDefinitions="Auto,*">
+                                    <CheckBox Grid.Column="0"
+                                              IsChecked="{Binding AutoFillEnabled}"
+                                              VerticalAlignment="Center"
+                                              Margin="0,0,12,0"/>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="Enable Auto-Fill" 
+                                                   FontSize="13" 
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <TextBlock Text="Automatically fill credentials in browsers and applications" 
+                                                   FontSize="11" 
+                                                   Foreground="{DynamicResource MutedTextBrush}"
+                                                   Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                        
+                        <CheckBox IsChecked="{Binding AutoFillOnPageLoad}"
+                                  Content="Auto-fill on page load"
+                                  IsEnabled="{Binding AutoFillEnabled}"/>
+                        
+                        <CheckBox IsChecked="{Binding ShowAutoFillIcon}"
+                                  Content="Show auto-fill icon in input fields"
+                                  IsEnabled="{Binding AutoFillEnabled}"/>
+                        
+                        <!-- Browser Extension Management -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Browser Extension" 
+                                           FontSize="13" 
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <TextBlock Text="Install PhantomVault browser extension for seamless auto-fill" 
+                                           FontSize="11" 
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           TextWrapping="Wrap"/>
+                                
+                                <!-- Extension Status -->
+                                <Border Background="{DynamicResource WindowBackgroundBrush}"
+                                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="{DynamicResource Radius.Sm}"
+                                        Padding="10">
+                                    <Grid ColumnDefinitions="Auto,*">
+                                        <Border Grid.Column="0"
+                                                Background="{Binding ExtensionStatusColor}"
+                                                Width="10"
+                                                Height="10"
+                                                CornerRadius="{DynamicResource Radius.Sm}"
+                                                VerticalAlignment="Center"
+                                                Margin="0,0,10,0"/>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding ExtensionStatusText}" 
+                                                   FontSize="11" 
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    </Grid>
+                                </Border>
+                                
+                                <Grid ColumnDefinitions="*,8,*" Margin="0,8,0,0">
+                                    <Button Grid.Column="0"
+                                            Command="{Binding InstallChromeExtensionCommand}"
+                                            Background="{DynamicResource ContentBackgroundBrush}"
+                                            Classes="liquid-glass"
+                                            HorizontalAlignment="Stretch"
+                                            Height="40">
+                                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                            <TextBlock Text="🌐" FontSize="14" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Install for Chrome" VerticalAlignment="Center" FontSize="12"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Grid.Column="2"
+                                            Command="{Binding InstallFirefoxExtensionCommand}"
+                                            Background="{DynamicResource ContentBackgroundBrush}"
+                                            Classes="liquid-glass"
+                                            HorizontalAlignment="Stretch"
+                                            Height="40">
+                                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                            <TextBlock Text="🦊" FontSize="14" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Install for Firefox" VerticalAlignment="Center" FontSize="12"/>
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Native Messaging Host -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Native Messaging Host" 
+                                           FontSize="13" 
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <TextBlock Text="Required for browser extension to communicate with PhantomVault" 
+                                           FontSize="11" 
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           TextWrapping="Wrap"/>
+                                
+                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                    <Border Grid.Column="0"
+                                            Background="{Binding NativeHostStatusColor}"
+                                            Width="10"
+                                            Height="10"
+                                            Margin="0,0,12,0"
+                                            CornerRadius="{DynamicResource Radius.Sm}"
+                                            VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding NativeHostStatusText}" 
+                                               FontSize="11" 
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               VerticalAlignment="Center"/>
+                                    <Button Grid.Column="2"
+                                            Command="{Binding ConfigureNativeHostCommand}"
+                                            Background="{DynamicResource ContentBackgroundBrush}"
+                                            Classes="liquid-glass"
+                                            Width="120"
+                                            Margin="12,0,0,0"
+                                            Height="36">
+                                        <TextBlock Text="Configure" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                    </Button>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Android Auto-Fill -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Mobile Auto-Fill (Android)" 
+                                           FontSize="13" 
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <TextBlock Text="Enable PhantomVault as your Android auto-fill service" 
+                                           FontSize="11" 
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           TextWrapping="Wrap"/>
+                                <TextBlock Text="• Open Android Settings → System → Languages &amp; input → Auto-fill service" 
+                                           FontSize="10" 
+                                           Foreground="{DynamicResource SubtleBrush}"
+                                           TextWrapping="Wrap"/>
+                                <TextBlock Text="• Select PhantomVault from the list" 
+                                           FontSize="10" 
+                                           Foreground="{DynamicResource SubtleBrush}"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+                        
+                    </StackPanel>
+                    
+                    <!-- Import/Export Settings -->
+                    <StackPanel Spacing="20" IsVisible="{Binding IsShowingImportExport}">
+                        
+                        <!-- Import Section -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Import Credentials" 
+                                           FontSize="13" 
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <TextBlock Text="Import credentials from other password managers (CSV, KeePass, Bitwarden, LastPass, 1Password, Chrome, Edge, Firefox)" 
+                                           FontSize="11" 
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           TextWrapping="Wrap"/>
+                                <Button Command="{Binding OpenImportWindowCommand}"
+                                        Background="{DynamicResource ContentBackgroundBrush}"
+                                        Classes="liquid-glass"
+                                        HorizontalAlignment="Left"
+                                        Width="160"
+                                        Height="40"
+                                        Margin="0,8,0,0">
+                                    <TextBlock Text="Import Credentials" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Export Section -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Export Credentials" 
+                                           FontSize="13" 
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <TextBlock Text="Export your vault data to portable formats for backup or migration" 
+                                           FontSize="11" 
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           TextWrapping="Wrap"/>
+                                <Grid ColumnDefinitions="*,8,*,8,*" Margin="0,8,0,0">
+                                    <Button Grid.Column="0"
+                                            Command="{Binding ExportVaultCommand}"
+                                            Background="{DynamicResource ContentBackgroundBrush}"
+                                            Classes="liquid-glass"
+                                            HorizontalAlignment="Stretch"
+                                            Height="40">
+                                        <TextBlock Text="Export JSON" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Button>
+                                    <Button Grid.Column="2"
+                                            Command="{Binding ExportVaultCsvCommand}"
+                                            Background="{DynamicResource ContentBackgroundBrush}"
+                                            Classes="liquid-glass"
+                                            HorizontalAlignment="Stretch"
+                                            Height="40">
+                                        <TextBlock Text="Export CSV" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Button>
+                                    <Button Grid.Column="4"
+                                            Command="{Binding ExportKeePassCommand}"
+                                            Background="{DynamicResource ContentBackgroundBrush}"
+                                            Classes="liquid-glass"
+                                            HorizontalAlignment="Stretch"
+                                            Height="40">
+                                        <TextBlock Text="Export KeePass" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Button>
+                                </Grid>
+                                <TextBlock Text="⚠ Exported files contain unencrypted passwords. Store them securely!" 
+                                           FontSize="10" 
+                                           Foreground="{DynamicResource WarningBrush}"
+                                           TextWrapping="Wrap"
+                                           Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Border>
+                        
+                    </StackPanel>
+                    
+                    <!-- Backup Settings -->
+                    <StackPanel Spacing="20" IsVisible="{Binding IsShowingBackup}">
+                        
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Vault Backup" 
+                                           FontSize="13" 
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <TextBlock Text="Create a secure encrypted backup of your vault to protect against data loss" 
+                                           FontSize="11" 
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           TextWrapping="Wrap"/>
+                                <Button Command="{Binding CreateBackupCommand}"
+                                        Background="{DynamicResource ContentBackgroundBrush}"
+                                        HorizontalAlignment="Left"
+                                        Width="160"
+                                        Height="40"
+                                        Margin="0,8,0,0">
+                                    <TextBlock Text="Create Backup" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                        
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Restore from Backup" 
+                                           FontSize="13" 
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <TextBlock Text="Restore your vault from a previous encrypted backup file" 
+                                           FontSize="11" 
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           TextWrapping="Wrap"/>
+                                <Button Command="{Binding RestoreBackupCommand}"
+                                        Background="{DynamicResource ContentBackgroundBrush}"
+                                        Classes="liquid-glass"
+                                        HorizontalAlignment="Left"
+                                        Width="160"
+                                        Height="40"
+                                        Margin="0,8,0,0">
+                                    <TextBlock Text="Restore Backup" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                        
+                        <CheckBox IsChecked="{Binding AutoBackupEnabled}"
+                                  Content="Automatic daily backups"/>
+                        
+                    </StackPanel>
+                    
+                    <!-- Advanced Settings -->
+                    <StackPanel Spacing="20" IsVisible="{Binding IsShowingAdvanced}">
+                        
+                        <TextBlock Text="Advanced Options" 
+                                   FontSize="14" 
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource WarningBrush}"/>
+                        
+                        <CheckBox IsChecked="{Binding EnableDebugLogging}"
+                                  Content="Enable debug logging"/>
+                        
+                        <CheckBox IsChecked="{Binding AllowConcurrentSessions}"
+                                  Content="Allow multiple vault sessions"/>
+
+                        <!-- Encryption Settings -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Encryption Settings"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <TextBlock Text="Configure encryption algorithms and key derivation settings"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           TextWrapping="Wrap"/>
+                                
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Primary Encryption Algorithm" 
+                                               FontSize="12" 
+                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    <ComboBox SelectedIndex="{Binding EncryptionAlgorithmIndex}"
+                                              Height="40"
+                                              HorizontalAlignment="Stretch">
+                                        <ComboBoxItem Content="AES-256 (Recommended)"/>
+                                        <ComboBoxItem Content="ChaCha20-Poly1305"/>
+                                        <ComboBoxItem Content="Serpent-256"/>
+                                        <ComboBoxItem Content="Twofish-256"/>
+                                    </ComboBox>
+                                </StackPanel>
+                                
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Key Derivation Function" 
+                                               FontSize="12" 
+                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    <ComboBox SelectedIndex="{Binding KdfAlgorithmIndex}"
+                                              Height="40"
+                                              HorizontalAlignment="Stretch">
+                                        <ComboBoxItem Content="Argon2id (Recommended)"/>
+                                        <ComboBoxItem Content="PBKDF2-HMAC-SHA512"/>
+                                        <ComboBoxItem Content="Scrypt"/>
+                                    </ComboBox>
+                                </StackPanel>
+                                
+                                <StackPanel Spacing="8">
+                                    <Grid ColumnDefinitions="200,*">
+                                        <TextBlock Grid.Column="0"
+                                                   Text="KDF Iterations" 
+                                                   FontSize="12" 
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   VerticalAlignment="Center"/>
+                                        <NumericUpDown Grid.Column="1"
+                                                       Value="{Binding KdfIterations}"
+                                                       Minimum="100000"
+                                                       Maximum="10000000"
+                                                       Increment="100000"
+                                                       Width="180"
+                                                       Margin="12,0,0,0"
+                                                       HorizontalAlignment="Left"
+                                                       Height="40"/>
+                                    </Grid>
+                                    <TextBlock Text="Higher iterations = More secure but slower unlock times" 
+                                               FontSize="10" 
+                                               Foreground="{DynamicResource MutedTextBrush}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- VeraCrypt Integration -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="VeraCrypt Integration"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <TextBlock Text="Configure VeraCrypt executable path and installation"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           TextWrapping="Wrap"/>
+                                
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="VeraCrypt Executable Path" 
+                                               FontSize="12" 
+                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBox Grid.Column="0" 
+                                                 Text="{Binding VeraCryptPath, Mode=TwoWay}" 
+                                                 Watermark="C:\Program Files\VeraCrypt\VeraCrypt.exe"
+                                                 Margin="0,0,8,0"
+                                                 Height="40"/>
+                                        <Button Grid.Column="1" 
+                                                Content="Browse" 
+                                                Command="{Binding BrowseVeraCryptPathCommand}"
+                                                Background="{DynamicResource ContentBackgroundBrush}"
+                                                Classes="liquid-glass"
+                                                Width="100"
+                                                Height="40"/>
+                                    </Grid>
+                                </StackPanel>
+                                
+                                <Grid ColumnDefinitions="*,8,*" Margin="0,8,0,0">
+                                    <Button Grid.Column="0"
+                                            Content="Auto-Detect" 
+                                            Command="{Binding AutoDetectVeraCryptPathCommand}"
+                                            Background="{DynamicResource ContentBackgroundBrush}"
+                                            Classes="liquid-glass"
+                                            HorizontalAlignment="Stretch"
+                                            Height="40"/>
+                                    <Button Grid.Column="2"
+                                            Content="Download VeraCrypt"
+                                            Command="{Binding DownloadVeraCryptCommand}"
+                                            Background="{DynamicResource ContentBackgroundBrush}"
+                                            Classes="liquid-glass"
+                                            HorizontalAlignment="Stretch"
+                                            Height="40"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Clear Vault Data" 
+                                           FontSize="13" 
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource ErrorBrush}"/>
+                                <TextBlock Text="Permanently delete all vault data. This action cannot be undone!" 
+                                           FontSize="11" 
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           TextWrapping="Wrap"/>
+                                <Button Command="{Binding ClearVaultDataCommand}"
+                                        Background="{DynamicResource ContentBackgroundBrush}"
+                                        Classes="liquid-glass"
+                                        HorizontalAlignment="Left"
+                                        Width="140"
+                                        Height="40"
+                                        Margin="0,8,0,0">
+                                    <TextBlock Text="Clear Data" Foreground="{DynamicResource ErrorBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                        
+                    </StackPanel>
+                    
+                    <!-- Accessibility -->
+                    <StackPanel Spacing="20" IsVisible="{Binding IsShowingAccessibility}">
+                        
+                        <!-- Language Settings -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="&#x1F30D;" FontSize="18" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Language"
+                                               FontSize="13"
+                                               FontWeight="SemiBold"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                </StackPanel>
+                                <ComboBox Height="40" Width="300" HorizontalAlignment="Left">
+                                    <ComboBoxItem Content="English" IsSelected="True"/>
+                                    <ComboBoxItem Content="Spanish"/>
+                                    <ComboBoxItem Content="French"/>
+                                    <ComboBoxItem Content="German"/>
+                                    <ComboBoxItem Content="Italian"/>
+                                    <ComboBoxItem Content="Portuguese"/>
+                                    <ComboBoxItem Content="Chinese (Simplified)"/>
+                                    <ComboBoxItem Content="Japanese"/>
+                                    <ComboBoxItem Content="Korean"/>
+                                </ComboBox>
+                                <TextBlock Text="Language changes require application restart"
+                                           FontSize="10"
+                                           Foreground="{DynamicResource MutedTextBrush}"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Theme Skins -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="&#x1F3A8;" FontSize="18" VerticalAlignment="Center"/>
+                                    <TextBlock Text="App Theme"
+                                               FontSize="13"
+                                               FontWeight="SemiBold"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                </StackPanel>
+                                <TextBlock Text="Choose a color scheme for the main vault windows."
+                                           FontSize="11"
+                                           Foreground="{DynamicResource MutedTextBrush}"/>
+                                <ComboBox Height="40" Width="300" HorizontalAlignment="Left"
+                                          ItemsSource="{Binding ThemeSettings.RuntimeThemeNames}"
+                                          SelectedIndex="{Binding ThemeSettings.SelectedRuntimeThemeIndex, Mode=TwoWay}"/>
+                                <ToggleSwitch Content="High Contrast Mode"
+                                              IsChecked="{Binding ThemeSettings.EnableHighContrast}"
+                                              HorizontalAlignment="Left"
+                                              FontSize="13"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- UI Scaling -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="&#x1F50D;" FontSize="18" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Display Scale"
+                                               FontSize="13"
+                                               FontWeight="SemiBold"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                </StackPanel>
+                                <ComboBox Height="40" Width="300" HorizontalAlignment="Left">
+                                    <ComboBoxItem Content="Smaller (80%)"/>
+                                    <ComboBoxItem Content="Small (90%)"/>
+                                    <ComboBoxItem Content="Normal (100%)" IsSelected="True"/>
+                                    <ComboBoxItem Content="Large (110%)"/>
+                                    <ComboBoxItem Content="Larger (125%)"/>
+                                    <ComboBoxItem Content="Extra Large (150%)"/>
+                                </ComboBox>
+                                <TextBlock Text="Changes take effect immediately"
+                                           FontSize="10"
+                                           Foreground="{DynamicResource SuccessBrush}"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- View Preferences -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="&#x1F4CB;" FontSize="18" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Default View Preference"
+                                               FontSize="13"
+                                               FontWeight="SemiBold"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                </StackPanel>
+                                <RadioButton Content="List View (Default)" IsChecked="True" FontSize="13"/>
+                                <RadioButton Content="Grid View" FontSize="13"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Autofill Defaults -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="&#x1F4E7;" FontSize="18" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Autofill Preferences"
+                                               FontSize="13"
+                                               FontWeight="SemiBold"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                </StackPanel>
+                                <TextBlock Text="Default Email/Username"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource MutedTextBrush}"/>
+                                <TextBox Height="40" 
+                                         Width="400" 
+                                         HorizontalAlignment="Left"
+                                         Watermark="user@example.com"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Keyboard Shortcuts -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="⌨️" FontSize="18" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Keyboard Shortcuts"
+                                               FontSize="13"
+                                               FontWeight="SemiBold"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                </StackPanel>
+                                <ToggleSwitch Content="Show keyboard shortcut hints"
+                                              IsChecked="True"
+                                              HorizontalAlignment="Left"
+                                              FontSize="13"/>
+                                <Button Content="View &amp; Customize Shortcuts"
+                                        Height="40"
+                                        Width="250"
+                                        HorizontalAlignment="Left"
+                                        Classes="liquid-glass"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Additional Accessibility -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="♿" FontSize="18" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Additional Features"
+                                               FontSize="13"
+                                               FontWeight="SemiBold"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                </StackPanel>
+                                <ToggleSwitch Content="Reduce motion and animations"
+                                              HorizontalAlignment="Left"
+                                              FontSize="13"/>
+                                <ToggleSwitch Content="Use larger tooltips"
+                                              HorizontalAlignment="Left"
+                                              FontSize="13"/>
+                                <TextBlock Text="Screen reader support: Enabled"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource SuccessBrush}"
+                                           Margin="0,10,0,0"/>
+                            </StackPanel>
+                        </Border>
+                        
+                    </StackPanel>
+                    
+                    <!-- Secured Rubbish Bin -->
+                    <StackPanel Spacing="20" IsVisible="{Binding IsShowingSecuredRubbishBin}">
+                        
+                        <!-- Erasure Method -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Lg}"
+                                Padding="20">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="&#x1F5D1;&#xFE0F;" FontSize="18"/>
+                                    <TextBlock Text="Secure Deletion Method" 
+                                               FontSize="13" 
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                </StackPanel>
+                                <TextBlock Text="Choose how deleted items are permanently erased from your vault" 
+                                           FontSize="12"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           TextWrapping="Wrap"/>
+                                <ComboBox Height="40" 
+                                          Width="400"
+                                          HorizontalAlignment="Left"
+                                          SelectedIndex="0">
+                                    <ComboBoxItem Content="Military-Grade Erasure (DoD 5220.22-M - 7 passes)" />
+                                    <ComboBoxItem Content="Gutmann Method (35 passes)" />
+                                    <ComboBoxItem Content="Enhanced Overwrite (1000+ random passes + encryption)" IsSelected="True"/>
+                                    <ComboBoxItem Content="Standard Secure Erasure (3 passes)" />
+                                    <ComboBoxItem Content="Simple Overwrite (1 pass)" />
+                                </ComboBox>
+                                <TextBlock FontSize="11"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           TextWrapping="Wrap"
+                                           Margin="0,8,0,0">
+                                    <Run Text="Enhanced Overwrite:"/>
+                                    <Run Text="Files are overwritten with thousands of lines of random gibberish, then encrypted multiple times before secure deletion. Most secure option for maximum data protection."/>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Recovery Options -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Lg}"
+                                Padding="20">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="&#x267B;&#xFE0F;" FontSize="18"/>
+                                    <TextBlock Text="Recovery &amp; Retention" 
+                                               FontSize="13" 
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                </StackPanel>
+                                <TextBlock Text="Configure temporary retention before permanent deletion" 
+                                           FontSize="12"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <StackPanel Spacing="10">
+                                    <ToggleSwitch Content="Enable recovery period (items can be restored before permanent deletion)"
+                                                  IsChecked="True"
+                                                  FontSize="13"/>
+                                    <StackPanel Spacing="6" Margin="28,0,0,0">
+                                        <TextBlock Text="Retention period:" 
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <ComboBox Height="36" 
+                                                  Width="250"
+                                                  HorizontalAlignment="Left"
+                                                  SelectedIndex="2">
+                                            <ComboBoxItem Content="1 day" />
+                                            <ComboBoxItem Content="7 days" />
+                                            <ComboBoxItem Content="30 days" IsSelected="True"/>
+                                            <ComboBoxItem Content="90 days" />
+                                        </ComboBox>
+                                    </StackPanel>
+                                    <Button Content="View Deleted Items"
+                                            Classes="liquid-glass"
+                                            Height="36"
+                                            Width="200"
+                                            HorizontalAlignment="Left"
+                                            Margin="28,10,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Auto-Duplicate Detection -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Lg}"
+                                Padding="20">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="&#x1F50D;" FontSize="18"/>
+                                    <TextBlock Text="Duplicate Detection" 
+                                               FontSize="13" 
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                </StackPanel>
+                                <TextBlock Text="Automatically detect and manage duplicate vault entries" 
+                                           FontSize="12"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <StackPanel Spacing="10">
+                                    <ToggleSwitch Content="Automatically detect duplicate entries"
+                                                  IsChecked="True"
+                                                  FontSize="13"/>
+                                    <ToggleSwitch Content="Auto-delete oldest duplicate (keep most recent)"
+                                                  IsChecked="False"
+                                                  FontSize="13"
+                                                  Margin="28,0,0,0"/>
+                                    <TextBlock Text="⚠️ When enabled, oldest duplicates will be automatically moved to rubbish bin" 
+                                               FontSize="11"
+                                               Foreground="{DynamicResource WarningBrush}"
+                                               TextWrapping="Wrap"
+                                               Margin="28,5,0,0"/>
+                                    <Button Content="Scan for Duplicates Now"
+                                            Classes="liquid-glass"
+                                            Height="36"
+                                            Width="220"
+                                            HorizontalAlignment="Left"
+                                            Margin="0,10,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Statistics -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Lg}"
+                                Padding="20">
+                            <StackPanel Spacing="10">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="&#x1F4CA;" FontSize="18"/>
+                                    <TextBlock Text="Deletion Statistics" 
+                                               FontSize="13" 
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                </StackPanel>
+                                <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+                                    <TextBlock Grid.Column="0" 
+                                               Text="Items in rubbish bin:" 
+                                               FontSize="12"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    <TextBlock Grid.Column="1" 
+                                               Text="0" 
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                </Grid>
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Grid.Column="0" 
+                                               Text="Permanently deleted (lifetime):" 
+                                               FontSize="12"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    <TextBlock Grid.Column="1" 
+                                               Text="0" 
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                </Grid>
+                                <Button Content="Empty Rubbish Bin Now"
+                                        Classes="danger"
+                                        Height="36"
+                                        Width="220"
+                                        HorizontalAlignment="Left"
+                                        Margin="0,15,0,0"/>
+                            </StackPanel>
+                        </Border>
+                        
+                    </StackPanel>
+                    
+                    <!-- About -->
+                    <StackPanel Spacing="20" IsVisible="{Binding IsShowingAbout}">
+                        
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Lg}"
+                                Padding="20"
+                                HorizontalAlignment="Center">
+                            <StackPanel Spacing="12" HorizontalAlignment="Center">
+                                <TextBlock Text="🔒" FontSize="48" HorizontalAlignment="Center"/>
+                                <TextBlock Text="PhantomVault" 
+                                           FontSize="22" 
+                                           FontWeight="Bold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"
+                                           HorizontalAlignment="Center"/>
+                                <TextBlock Text="Version 5.0.0" 
+                                           FontSize="13" 
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Secure Password Manager" 
+                                       FontSize="13" 
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock Text="Military-grade encryption • USB-based storage • Offline security" 
+                                       FontSize="11" 
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       HorizontalAlignment="Center"
+                                       TextWrapping="Wrap"
+                                       TextAlignment="Center"/>
+                        </StackPanel>
+                        
+                        <StackPanel Spacing="8" Margin="0,20,0,0">
+                            <Button Background="{DynamicResource ContentBackgroundBrush}"
+                                    Classes="liquid-glass"
+                                    HorizontalAlignment="Center"
+                                    Width="200"
+                                    Height="36">
+                                <TextBlock Text="View License"/>
+                            </Button>
+                            <Button Background="{DynamicResource ContentBackgroundBrush}"
+                                    Classes="liquid-glass"
+                                    HorizontalAlignment="Center"
+                                    Width="200"
+                                    Height="36">
+                                <TextBlock Text="Visit Website"/>
+                            </Button>
+                            <Button Background="{DynamicResource ContentBackgroundBrush}"
+                                    Classes="liquid-glass"
+                                    HorizontalAlignment="Center"
+                                    Width="200"
+                                    Height="36">
+                                <TextBlock Text="Contact Support"/>
+                            </Button>
+                        </StackPanel>
+                        
+                        <TextBlock Text="© 2025 PhantomVault. All rights reserved." 
+                                   FontSize="10" 
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,20,0,0"/>
+                        
+                    </StackPanel>
+                    
+                </StackPanel>
+            </ScrollViewer>
+            
+        </Grid>
+        
+        <!-- Busy Overlay -->
+    <Border Grid.RowSpan="3"
+        Background="{DynamicResource OverlayBackgroundBrush}"
+        IsVisible="{Binding IsBusy}"
+        Classes="overlay-fade">
+            <Border Background="{DynamicResource WindowBackgroundBrush}"
+                    CornerRadius="{StaticResource Radius.Xl}"
+                    Padding="30"
+                    MaxWidth="420"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                    BorderThickness="1">
+                <StackPanel Spacing="16" HorizontalAlignment="Stretch">
+                    <TextBlock Text="{Binding BusyMessage}"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               TextAlignment="Center"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <TextBlock Text="{Binding BusyDetail}"
+                               FontSize="13"
+                               TextAlignment="Center"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding BusyDetail, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                    <ProgressBar Height="6"
+                                 Minimum="0"
+                                 Maximum="100"
+                                 Value="{Binding BusyProgress}"
+                                 IsIndeterminate="{Binding IsBusyIndeterminate}"/>
+                </StackPanel>
+            </Border>
+        </Border>
+
+        <!-- Category Manager Overlay -->
+        <Border x:Name="CategoryManagerOverlay"
+                Grid.RowSpan="3"
+                Background="{DynamicResource OverlayBackgroundBrush}"
+                IsVisible="{Binding IsCategoryManagerPanelVisible}"
+                IsHitTestVisible="{Binding IsCategoryManagerPanelVisible}">
+            <Border.Styles>
+                <Style Selector="Border#CategoryManagerOverlay">
+                    <Setter Property="Opacity" Value="0"/>
+                </Style>
+                <Style Selector="Border#CategoryManagerOverlay[IsVisible=True]">
+                    <Style.Animations>
+                        <Animation Duration="0:0:0.25" FillMode="Forward" Easing="SineEaseOut">
+                            <KeyFrame Cue="0%">
+                                <Setter Property="Opacity" Value="0"/>
+                            </KeyFrame>
+                            <KeyFrame Cue="100%">
+                                <Setter Property="Opacity" Value="1"/>
+                            </KeyFrame>
+                        </Animation>
+                    </Style.Animations>
+                </Style>
+            </Border.Styles>
+            
+            <Grid ClipToBounds="True">
+                <!-- Transparent area to close panel -->
+                <Border Background="Transparent" 
+                        PointerPressed="OnCategoryManagerOverlayBackgroundPressed"/>
+                
+                <!-- Category Manager Container - Slides in from right -->
+                <Border x:Name="CategoryManagerSlideHost" 
+                        HorizontalAlignment="Right"
+                        Width="820"
+                        Tag="{Binding IsCategoryManagerPanelVisible}"
+                        RenderTransformOrigin="0.5,0.5"
+                        Background="{DynamicResource WindowBackgroundBrush}"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1,0,0,0"
+                        BoxShadow="{DynamicResource SlideOutPanelShadow}">
+                    <Border.RenderTransform>
+                        <TranslateTransform X="820"/>
+                    </Border.RenderTransform>
+                    <Border.Styles>
+                        <!-- When Tag (bound to IsCategoryManagerPanelVisible) is true, show panel -->
+                        <Style Selector="Border#CategoryManagerSlideHost[Tag=True]">
+                            <Setter Property="Opacity" Value="1"/>
+                        </Style>
+                        <!-- When Tag is false, hide panel -->
+                        <Style Selector="Border#CategoryManagerSlideHost[Tag=False]">
+                            <Setter Property="Opacity" Value="0"/>
+                        </Style>
+                    </Border.Styles>
+                    
+                    <!-- Category Manager Panel Content -->
+                    <views:CategoryManagerView DataContext="{Binding CategoryManagerViewModel}"/>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Footer with Action Buttons -->
+        <Border Grid.Row="2" 
+                Background="{DynamicResource FooterBackgroundBrush}" 
+                Padding="25,15"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                BorderThickness="0,1,0,0">
+            <Grid ColumnDefinitions="*,Auto,Auto">
+                <TextBlock Grid.Column="0"
+                           Text="{Binding StatusMessage}" 
+                           FontSize="12" 
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           VerticalAlignment="Center"/>
+                
+                <Button Grid.Column="1"
+                        Command="{Binding ResetToDefaultsCommand}"
+                        Background="{DynamicResource ContentBackgroundBrush}"
+                        Classes="liquid-glass"
+                        Width="140"
+                        Height="40"
+                        Margin="0,0,10,0"
+                        Content="Reset Defaults"/>
+                
+                <Button Grid.Column="2"
+                        Command="{Binding CloseCommand}"
+                        Background="{DynamicResource AccentBrush}"
+                        Width="100"
+                        Height="40"
+                        Content="Close"/>
+            </Grid>
+        </Border>
+        
+    </Grid>
+    
+</views:ThemeAwareWindow>

@@ -1,0 +1,1800 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:PhantomVault.UI.Converters"
+    xmlns:controls="clr-namespace:PhantomVault.UI.Controls"
+    xmlns:dcontrols="clr-namespace:PhantomVault.UI.Desktop.Controls"
+    xmlns:views="clr-namespace:PhantomVault.UI.Views"
+    xmlns:details="clr-namespace:PhantomVault.UI.Views.Details"
+    xmlns:editforms="clr-namespace:PhantomVault.UI.Views.EditForms"
+    xmlns:overlays="clr-namespace:PhantomVault.UI.Views.Overlays"
+    xmlns:components="clr-namespace:PhantomVault.UI.Components.Fields"
+    xmlns:nav="clr-namespace:PhantomVault.UI.Components.Navigation"
+    
+        
+        x:Class="PhantomVault.UI.Views.VaultWindow"
+        Title="PhantomVault - My Secure Vault" 
+        Width="1280" 
+        Height="720"
+        MinWidth="1100"
+        MinHeight="600"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Classes="animated-window">
+    
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Design Tokens: Spacing, Sizing, Thickness -->
+                <ResourceInclude Source="avares://PhantomVault.UI/Resources/Tokens/SpacingTokens.axaml" />
+                <ResourceInclude Source="avares://PhantomVault.UI/Resources/Tokens/SizingTokens.axaml" />
+                <ResourceInclude Source="avares://PhantomVault.UI/Resources/Tokens/ThicknessTokens.axaml" />
+                
+                <!-- Converters: All value converters in one place -->
+                <ResourceInclude Source="avares://PhantomVault.UI/Resources/Converters/ConverterResources.axaml" />
+                
+                <!-- Brushes: Color effects and gradients -->
+                <ResourceInclude Source="avares://PhantomVault.UI/Resources/Brushes/SidebarBrushes.axaml" />
+                <ResourceInclude Source="avares://PhantomVault.UI/Resources/Brushes/GlassEffects.axaml" />
+                
+                <!-- Data Templates: Credential tiles and category items -->
+                <ResourceInclude Source="avares://PhantomVault.UI/Resources/Templates/DataTemplates/CredentialDataTemplates.axaml" />
+                <ResourceInclude Source="avares://PhantomVault.UI/Resources/Templates/DataTemplates/CategoryDataTemplates.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+            
+            <!-- Tile overlay: use a very faint white sheen so tiles keep a subtle glass
+                 highlight but nothing that produces a dark cast between items. If you
+                 prefer fully flat, change to Color="Transparent". -->
+            <!-- Temporarily make the tile overlay fully transparent for visual isolation tests.
+                 If this removes the dark seam between tiles, we can reintroduce a much lighter
+                 sheen or adjust layering. -->
+            <SolidColorBrush x:Key="TileOverlayBrush" Color="#00FFFFFF" />
+
+            <!-- Vector copy icon (two stacked rectangles representing clipboard/copy) -->
+            <DrawingImage x:Key="CopyIcon">
+                <DrawingImage.Drawing>
+                    <DrawingGroup>
+                        <GeometryDrawing Brush="{DynamicResource PrimaryTextBrush}" Geometry="M2,6 H10 V14 H2 Z" />
+                        <GeometryDrawing Brush="{DynamicResource PrimaryTextBrush}" Geometry="M6,2 H14 V10 H6 Z" />
+                    </DrawingGroup>
+                </DrawingImage.Drawing>
+            </DrawingImage>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <!-- Styles must go in Window.Styles for Avalonia - keep visual styles separate from resources. -->
+    <Window.Styles>
+        <!-- External Style Includes -->
+        <StyleInclude Source="avares://PhantomVault.UI/Resources/Styles/ButtonStyles.axaml" />
+        <StyleInclude Source="avares://PhantomVault.UI/Resources/Styles/ListBoxStyles.axaml" />
+        <StyleInclude Source="avares://PhantomVault.UI/Resources/Styles/ToggleButtonStyles.axaml" />
+        
+        <!-- Narrow auto-hiding scrollbars for entire VaultWindow -->
+        <Style Selector="ScrollViewer ScrollBar">
+            <Setter Property="Opacity" Value="0"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="ScrollViewer:pointerover ScrollBar">
+            <Setter Property="Opacity" Value="0.6"/>
+        </Style>
+        <Style Selector="ScrollViewer ScrollBar:pointerover">
+            <Setter Property="Opacity" Value="1"/>
+        </Style>
+        <Style Selector="ScrollViewer ScrollBar:pressed">
+            <Setter Property="Opacity" Value="0"/>
+        </Style>
+        <Style Selector="ScrollViewer ScrollBar:vertical">
+            <Setter Property="Width" Value="4"/>
+        </Style>
+        <Style Selector="ScrollViewer ScrollBar:horizontal">
+            <Setter Property="Height" Value="4"/>
+        </Style>
+        
+        <!-- Remove all shadows from copy buttons and other elements -->
+        <Style Selector="Button">
+            <Setter Property="Effect" Value="{x:Null}"/>
+        </Style>
+        <Style Selector="Button /template/ Border">
+            <Setter Property="Effect" Value="{x:Null}"/>
+            <Setter Property="BoxShadow" Value="0 0 0 0 #00000000"/>
+        </Style>
+        
+        <!-- Tile button styles with explicit ControlTemplate so DataTemplate content is always shown.
+             Split styles so list tiles can stretch while grid tiles keep fixed sizing. -->
+        <Style Selector="Button.tile-button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <!-- List tiles: stretch to fill available width, fixed height via template or explicit Height -->
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="MinHeight" Value="{StaticResource TileHeight}" />
+            <Setter Property="MaxHeight" Value="{StaticResource TileHeight}" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}" ClipToBounds="True">
+                            <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style Selector="Button.tile-button-grid">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="CornerRadius" Value="8" />
+            <!-- Grid tiles: sizing handled inside the template (e.g., inner Border Width/Height) -->
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}" ClipToBounds="True">
+                            <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Ensure hovered/pressed states remain transparent -->
+        <Style Selector="Button.tile-button:pointerover, Button.tile-button:pressed, Button.tile-button-grid:pointerover, Button.tile-button-grid:pressed">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+        </Style>
+
+        <!-- Defensive: remove any BoxShadow or Effect that could be applied by base themes
+             to tile buttons or their inner template borders. Keeps tiles visually flat. -->
+        <Style Selector="Button.tile-button /template/ Border">
+            <Setter Property="Effect" Value="{x:Null}" />
+            <Setter Property="BoxShadow" Value="0 0 0 0 #00000000" />
+        </Style>
+
+        <!-- Also ensure any Buttons inside tile-button (e.g., copy icon) do not receive shadows -->
+        <Style Selector="Button.tile-button Button">
+            <Setter Property="Effect" Value="{x:Null}" />
+        </Style>
+
+        <!-- Ensure TextBlocks inside tile buttons have no effect applied -->
+        <Style Selector="Button.tile-button TextBlock">
+            <Setter Property="Effect" Value="{x:Null}" />
+        </Style>
+
+        <!-- Additional defensive overrides scoped to list items (credential tiles)
+             These clear any BoxShadow or Effect that might come from global/base templates
+             while keeping the rest of the app shadows intact. -->
+        <Style Selector="ListBoxItem /template/ Border">
+            <Setter Property="BoxShadow" Value="0 0 0 0 #00000000" />
+            <Setter Property="Effect" Value="{x:Null}" />
+        </Style>
+
+        <Style Selector="ListBoxItem Border">
+            <Setter Property="BoxShadow" Value="0 0 0 0 #00000000" />
+            <Setter Property="Effect" Value="{x:Null}" />
+        </Style>
+
+        <!-- Note: BoxShadow is not a property on Button - template Border override below clears any shadow on button templates. -->
+
+        <Style Selector="ListBoxItem Button /template/ Border">
+            <Setter Property="BoxShadow" Value="0 0 0 0 #00000000" />
+            <Setter Property="Effect" Value="{x:Null}" />
+        </Style>
+
+        <Style Selector="ListBoxItem TextBlock">
+            <Setter Property="Effect" Value="{x:Null}" />
+        </Style>
+
+        <Style Selector="ListBoxItem Image">
+            <Setter Property="Effect" Value="{x:Null}" />
+        </Style>
+
+        <!-- Keyboard accessibility: show a subtle focus outline on tile buttons -->
+        <Style Selector="Button.tile-button:focus, Button.tile-button-grid:focus">
+            <!-- Keep a visual focus indicator but do not change BorderThickness so layout does not shift.
+                 Use BorderBrush only (thickness is controlled in the inner tile Border) -->
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+        </Style>
+
+        <Style Selector="Button.header-action">
+            <Setter Property="Background" Value="{DynamicResource HeaderButtonBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource HeaderButtonBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="TextElement.Foreground" Value="{DynamicResource HeaderButtonForegroundBrush}" />
+            <Setter Property="Effect" Value="{x:Null}" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style Selector="Button.header-action:pointerover">
+            <Setter Property="Background" Value="{DynamicResource HeaderButtonHoverBrush}" />
+        </Style>
+
+        <Style Selector="Button.header-action:pressed">
+            <Setter Property="Background" Value="{DynamicResource HeaderButtonPressedBrush}" />
+        </Style>
+
+        <Style Selector="Button.header-action:focus">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+        </Style>
+
+        <!-- Sidebar quick filter toggles return to their original look. -->
+        <Style Selector="ToggleButton.quick-filter">
+            <Setter Property="FontFamily" Value="{DynamicResource MainFontFamily}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="Height" Value="44" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style Selector="ToggleButton.quick-filter:pointerover">
+            <Setter Property="Background" Value="{DynamicResource QuickFilterGlassHoverBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
+        <Style Selector="ToggleButton.quick-filter:checked">
+            <Setter Property="Background" Value="{DynamicResource QuickFilterGlassActiveBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassActiveBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+        </Style>
+
+        <Style Selector="ToggleButton.quick-filter:checked:pointerover">
+            <Setter Property="Background" Value="{DynamicResource QuickFilterGlassActiveHoverBrush}" />
+        </Style>
+
+        <Style Selector="ToggleButton.category-filter">
+            <Setter Property="FontFamily" Value="{DynamicResource MainFontFamily}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="Height" Value="38" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style Selector="ToggleButton.category-filter:pointerover">
+            <Setter Property="Background" Value="{DynamicResource QuickFilterGlassHoverBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
+        <Style Selector="ToggleButton.category-filter:checked">
+            <Setter Property="Background" Value="{DynamicResource QuickFilterGlassActiveBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassActiveBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+        </Style>
+
+        <Style Selector="ToggleButton.category-filter:checked:pointerover">
+            <Setter Property="Background" Value="{DynamicResource QuickFilterGlassActiveHoverBrush}" />
+        </Style>
+    </Window.Styles>
+    
+    <DockPanel LastChildFill="True">
+        
+        <!-- Footer/Status Bar - Docked to Bottom FIRST -->
+        <views:StatusBarView DockPanel.Dock="Bottom" DataContext="{Binding}" />
+        
+        <!-- Header/Toolbar - Docked to Top -->
+        <views:HeaderView x:Name="HeaderView" DockPanel.Dock="Top" DataContext="{Binding}" />
+        
+        <!-- Key Rotation Banner - Docked below header -->
+        <Border DockPanel.Dock="Top" 
+                Background="{DynamicResource WarningBackgroundBrush}"
+                BorderBrush="{DynamicResource WarningIcon}"
+                BorderThickness="0,0,0,1"
+                Padding="16,12"
+                IsVisible="{Binding IsRotationRequired}">
+            <Border.IsVisible>
+                <MultiBinding Converter="{StaticResource BooleanAndConverter}">
+                    <Binding Path="IsRotationRequired"/>
+                    <Binding Path="!IsRotationBannerDismissed"/>
+                </MultiBinding>
+            </Border.IsVisible>
+            <Grid ColumnDefinitions="Auto,12,*,12,Auto,8,Auto">
+                <!-- Warning Icon -->
+                <Border Grid.Column="0" 
+                        Width="24" Height="24" 
+                        Background="{DynamicResource WarningIcon}"
+                        CornerRadius="{DynamicResource Radius.Xl}">
+                    <TextBlock Text="⚠" 
+                               FontSize="16" 
+                               Foreground="White"
+                               HorizontalAlignment="Center" 
+                               VerticalAlignment="Center"/>
+                </Border>
+                
+                <!-- Message -->
+                <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                    <TextBlock FontWeight="SemiBold" 
+                               Foreground="{DynamicResource WarningBrushDark}"
+                               FontSize="13">
+                        <Run Text="Key Rotation Recommended"/>
+                    </TextBlock>
+                    <TextBlock Foreground="{DynamicResource WarningBrushDarker}" 
+                               FontSize="12">
+                        <Run Text="It has been"/>
+                        <Run Text="{Binding DaysSinceRotation}" FontWeight="Bold"/>
+                        <Run Text="days since your last key rotation. Rotate now to maintain vault security."/>
+                    </TextBlock>
+                </StackPanel>
+                
+                <!-- Rotate Now Button -->
+                <Button Grid.Column="4"
+                        Command="{Binding RotateNowCommand}"
+                        Classes="liquid-glass"
+                        Background="{DynamicResource WarningIcon}"
+                        Foreground="White"
+                        FontWeight="SemiBold"
+                        FontSize="13"
+                        Padding="16,6"
+                        CornerRadius="{DynamicResource Radius.Md}"
+                        BorderThickness="0"
+                        Cursor="Hand"
+                        ToolTip.Tip="Generate new encryption keys for your vault">
+                    <TextBlock Text="Rotate Now"/>
+                </Button>
+                
+                <!-- Dismiss Button -->
+                <Button Grid.Column="6"
+                        Command="{Binding DismissRotationBannerCommand}"
+                        Classes="liquid-glass"
+                        Background="Transparent"
+                        Foreground="{DynamicResource WarningBrushDarker}"
+                        FontSize="18"
+                        Width="24" Height="24"
+                        Padding="0"
+                        CornerRadius="{DynamicResource Radius.Xl}"
+                        BorderThickness="0"
+                        Cursor="Hand"
+                        ToolTip.Tip="Dismiss this banner">
+                    <TextBlock Text="×" 
+                               HorizontalAlignment="Center" 
+                               VerticalAlignment="Center"/>
+                </Button>
+            </Grid>
+        </Border>
+        
+        <!-- Main Content Area -->
+        <Grid>
+            <!-- Category Landing Page -->
+            <views:CategoryLandingView DataContext="{Binding CategoryLandingViewModel}"
+                                      IsVisible="{Binding IsShowingCategoryLanding}"/>
+            
+            <!-- Vault View (Sidebar + Credential List + Detail View) -->
+            <Grid x:Name="VaultGrid" IsVisible="{Binding !IsShowingCategoryLanding}">
+                <Grid.ColumnDefinitions>
+                    <!-- Sidebar column - collapses to icon-only (60px) when collapsed, full (220px) when expanded -->
+                    <ColumnDefinition>
+                        <ColumnDefinition.Width>
+                            <Binding Path="IsSidebarCollapsed" ConverterParameter="80|220">
+                                <Binding.Converter>
+                                    <converters:BoolToGridLengthConverter />
+                                </Binding.Converter>
+                            </Binding>
+                        </ColumnDefinition.Width>
+                    </ColumnDefinition>
+                    <!-- Fixed width prevents resizing when filters change -->
+                    <ColumnDefinition Width="460"
+                                      MinWidth="340"
+                                      MaxWidth="640"/>
+                    <ColumnDefinition Width="*"
+                                      MinWidth="520"/>
+                </Grid.ColumnDefinitions>
+            
+            <!-- Left Sidebar: Categories and Filters -->
+            <views:SidebarView Grid.Column="0" 
+                              DataContext="{Binding}" />
+            
+            
+            <!-- Sidebar Toggle Button (when sidebar is EXPANDED - at right edge of sidebar) -->
+            <Button Grid.Column="0"
+                    Command="{Binding ToggleSidebarCommand}"
+                    Width="36"
+                    Height="36"
+                    Classes="liquid-glass"
+                    ToolTip.Tip="Collapse sidebar"
+                    VerticalAlignment="Top"
+                    HorizontalAlignment="Right"
+                    Margin="0,8,8,0"
+                    ZIndex="100"
+                    IsVisible="{Binding !IsSidebarCollapsed}">
+                <TextBlock Text="◀"
+                           FontSize="16"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"/>
+            </Button>
+
+            <!-- Middle: Credentials List (Column 1 only) -->
+            <views:CredentialListView Grid.Column="1"
+                                     DataContext="{Binding}" 
+                                     IsVisible="{Binding !IsShowingDashboard}" />
+            
+            <!-- Dashboard View (Spans columns 1 and 2 to overlay entire area) -->
+            <views:DashboardView Grid.Column="1" Grid.ColumnSpan="2"
+                                DataContext="{Binding DashboardViewModel}"
+                                IsVisible="{Binding IsShowingDashboard}"
+                                ZIndex="100" />
+            
+        <!-- Resizable GridSplitter between credential list and detail panel -->
+        <GridSplitter Grid.Column="1" 
+                      Grid.ColumnSpan="1"
+                      Width="5"
+                      HorizontalAlignment="Right"
+                      Background="Transparent"
+                      ResizeDirection="Columns"
+                      Cursor="SizeWestEast"
+                      IsVisible="{Binding IsVisible, ElementName=DetailPanel}"/>
+            
+        <!-- Detail View Panel -->
+        <Border x:Name="DetailPanel" Grid.Column="2" 
+                    Background="{DynamicResource WindowBackgroundBrush}"
+                    BorderBrush="{DynamicResource ControlBorderBrush}"
+            BorderThickness="1,0,0,0"
+            Classes="fade-toggle">
+            <Border.IsVisible>
+                <MultiBinding Converter="{StaticResource BooleanAndConverter}">
+                    <Binding Path="!IsShowingDashboard"/>
+                    <Binding Path="$parent[Window].Bounds.Width" Converter="{StaticResource IsWidthAtLeastConverter}" ConverterParameter="1200"/>
+                </MultiBinding>
+            </Border.IsVisible>
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <Grid Margin="32,20,32,20">
+                        <StackPanel IsVisible="{Binding !IsShowingSecureTrash}" Classes="fade-toggle">
+                        <!-- When SelectedCredential is not null -->
+                        <StackPanel Spacing="24" IsVisible="{Binding SelectedCredential, Converter={x:Static ObjectConverters.IsNotNull}}" Classes="fade-toggle">
+                        <!-- Header with Icon on left, text inline to the right - actions pinned top-right -->
+                        <Grid ColumnDefinitions="Auto,16,*,Auto" HorizontalAlignment="Stretch">
+                            <!-- Icon -->
+                            <Border Grid.Column="0" Width="120" Height="120" CornerRadius="60" Background="{Binding SelectedCredential.IconBackgroundBrush}">
+                                <Grid>
+                                    <Image Source="{Binding SelectedCredential.AutoDetectedIconBitmap}"
+                                           Width="108" Height="108" Stretch="Uniform"
+                                           IsVisible="{Binding SelectedCredential.HasAutoDetectedIcon}"/>
+                                    <TextBlock Text="{Binding SelectedCredential.IconText}" FontSize="48" FontWeight="Bold" Foreground="White"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               IsVisible="{Binding !SelectedCredential.HasAutoDetectedIcon}"/>
+                                </Grid>
+                            </Border>
+                            
+                            <!-- Text to the right of icon -->
+                            <StackPanel Grid.Column="2" Spacing="8" VerticalAlignment="Center">
+                                <TextBlock FontSize="32" FontWeight="Bold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"
+                                           TextWrapping="Wrap">
+                                    <TextBlock.Effect>
+                                        <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                                    </TextBlock.Effect>
+                                    <TextBlock.Text>
+                                        <MultiBinding Converter="{StaticResource PrivacyMaskConverter}">
+                                            <Binding Path="SelectedCredential.Title"/>
+                                            <Binding Path="PrivacyModeEnabled"/>
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                                <TextBlock FontSize="18" 
+                                           Foreground="{DynamicResource SecondaryTextBrush}">
+                                    <TextBlock.Effect>
+                                        <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                                    </TextBlock.Effect>
+                                    <TextBlock.Text>
+                                        <MultiBinding Converter="{StaticResource PrivacyMaskConverter}" ConverterParameter="Username">
+                                            <Binding Path="SelectedCredential.Username"/>
+                                            <Binding Path="PrivacyModeEnabled"/>
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </StackPanel>
+
+                            <!-- Action buttons (top-right) -->
+                            <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,0,0,0">
+                                <Button Command="{Binding EditCredentialCommand}"
+                                        CommandParameter="{Binding SelectedCredential}"
+                                        Classes="liquid-glass"
+                                        Width="36" Height="36" MinWidth="0"
+                                        ToolTip.Tip="Edit">
+                                    <TextBlock Text="✎" FontSize="16" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                </Button>
+                                <Button Command="{Binding ToggleFavoriteCommand}"
+                                        CommandParameter="{Binding SelectedCredential}"
+                                        Classes="liquid-glass"
+                                        Width="36" Height="36" MinWidth="0"
+                                        ToolTip.Tip="Toggle favorite">
+                                    <TextBlock Text="{Binding SelectedCredential.FavoriteIcon}" FontSize="16"/>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                        
+                        <!-- Credential Details -->
+                        <StackPanel Spacing="24" Margin="0,16,0,0">
+                            <!-- Login Credentials -->
+                            <details:PasswordDetailView DataContext="{Binding}" />
+
+                            <details:WiFiDetailView DataContext="{Binding}" />
+
+                            <details:CreditCardDetailView DataContext="{Binding}" />
+
+                            <details:BankAccountDetailView DataContext="{Binding}" />
+
+                            <details:IdentityDetailView DataContext="{Binding}" />
+
+                            <details:ApiKeyDetailView DataContext="{Binding}" />
+
+                            <details:ContactDetailView DataContext="{Binding}" />
+
+                            <details:UrlDetailSection DataContext="{Binding}" />
+
+                            <details:CategoryDetailSection DataContext="{Binding}" />
+                            
+                            <details:NotesDetailSection DataContext="{Binding}" />
+                            
+                            <details:MetadataDetailSection DataContext="{Binding}" />
+                            
+                            <details:TagsDetailSection DataContext="{Binding}" />
+                            
+                            <details:ExpiryDetailSection DataContext="{Binding}" />
+                            
+                            <details:DetailActionButtons DataContext="{Binding}" />
+                        </StackPanel>
+                    </StackPanel>
+                    
+                    <!-- Empty State when SelectedCredential is null -->
+                    <StackPanel Spacing="20" 
+                                VerticalAlignment="Center" 
+                                HorizontalAlignment="Center"
+                                Margin="0,120,0,0"
+                                IsVisible="{Binding SelectedCredential, Converter={x:Static ObjectConverters.IsNull}}">
+                        <TextBlock Text="🔍" 
+                                   FontSize="80" 
+                                   HorizontalAlignment="Center" 
+                                   Opacity="0.2"/>
+                        <TextBlock Text="Select an item to view details" 
+                                   FontSize="16" 
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="Click on a credential from the list" 
+                                   FontSize="13" 
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+                        </StackPanel>
+
+                        <!-- Secure trash detail -->
+                        <StackPanel Spacing="24" IsVisible="{Binding IsShowingSecureTrash}">
+                            <StackPanel Spacing="24" IsVisible="{Binding SelectedTrashItem, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                <Grid ColumnDefinitions="Auto,16,*,Auto" HorizontalAlignment="Stretch">
+                                    <Border Grid.Column="0" Width="120" Height="120" CornerRadius="60" Background="{Binding SelectedTrashItem.Payload.IconBackgroundBrush}">
+                                        <Grid>
+                                            <Image Source="{Binding SelectedTrashItem.Payload.AutoDetectedIconBitmap}"
+                                                   Width="108" Height="108" Stretch="Uniform"
+                                                   IsVisible="{Binding SelectedTrashItem.Payload.HasAutoDetectedIcon}"/>
+                                            <TextBlock Text="{Binding SelectedTrashItem.Payload.IconText}" FontSize="48" FontWeight="Bold" Foreground="White"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                       IsVisible="{Binding !SelectedTrashItem.Payload.HasAutoDetectedIcon}"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <StackPanel Grid.Column="2" Spacing="8" VerticalAlignment="Center">
+                                        <TextBlock FontSize="32" FontWeight="Bold"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"
+                                                   TextWrapping="Wrap">
+                                            <TextBlock.Effect>
+                                                <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                                            </TextBlock.Effect>
+                                            <TextBlock.Text>
+                                                <MultiBinding Converter="{StaticResource PrivacyMaskConverter}">
+                                                    <Binding Path="SelectedTrashItem.Payload.Title"/>
+                                                    <Binding Path="PrivacyModeEnabled"/>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                        <TextBlock FontSize="18" Foreground="{DynamicResource SecondaryTextBrush}">
+                                            <TextBlock.Effect>
+                                                <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                                            </TextBlock.Effect>
+                                            <TextBlock.Text>
+                                                <MultiBinding Converter="{StaticResource PrivacyMaskConverter}" ConverterParameter="Username">
+                                                    <Binding Path="SelectedTrashItem.Payload.Username"/>
+                                                    <Binding Path="PrivacyModeEnabled"/>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top" HorizontalAlignment="Right">
+                                        <Button Command="{Binding RecoverTrashItemCommand}"
+                                                CommandParameter="{Binding SelectedTrashItem}"
+                                                Classes="liquid-glass"
+                                                Background="{DynamicResource AccentBrush}"
+                                                Width="140"
+                                                Height="40"
+                                                FontWeight="SemiBold"
+                                                ToolTip.Tip="Restore this entry">
+                                            <TextBlock Text="Recover" FontSize="14" Foreground="White" HorizontalAlignment="Center"/>
+                                        </Button>
+                                        <Button Command="{Binding PurgeTrashItemCommand}"
+                                                CommandParameter="{Binding SelectedTrashItem}"
+                                                Classes="liquid-glass"
+                                                Background="{DynamicResource ErrorBrush}"
+                                                Width="170"
+                                                Height="40"
+                                                FontWeight="SemiBold"
+                                                ToolTip.Tip="Permanently delete this entry">
+                                            <TextBlock Text="Delete Permanently" FontSize="14" Foreground="White" HorizontalAlignment="Center"/>
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+
+                                <StackPanel Spacing="20" Margin="0,16,0,0">
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="Username"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                                BorderThickness="1"
+                                                Height="36"
+                                                Padding="10,8"
+                                                CornerRadius="4">
+                                            <TextBlock Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
+                                                <TextBlock.Effect>
+                                                    <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                                                </TextBlock.Effect>
+                                                <TextBlock.Text>
+                                                    <MultiBinding Converter="{StaticResource PrivacyMaskConverter}" ConverterParameter="Username">
+                                                        <Binding Path="SelectedTrashItem.Payload.Username"/>
+                                                        <Binding Path="PrivacyModeEnabled"/>
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="Password"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                                BorderThickness="1"
+                                                Height="36"
+                                                Padding="10,8"
+                                                CornerRadius="{DynamicResource Radius.Sm}">
+                                            <TextBlock Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
+                                                <TextBlock.Effect>
+                                                    <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                                                </TextBlock.Effect>
+                                                <TextBlock.Text>
+                                                    <MultiBinding Converter="{StaticResource PrivacyMaskConverter}" ConverterParameter="Password">
+                                                        <Binding Path="SelectedTrashItem.Payload.Password"/>
+                                                        <Binding Path="PrivacyModeEnabled"/>
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <StackPanel Spacing="6" IsVisible="{Binding SelectedTrashItem.Payload.HasUrl}">
+                                        <TextBlock Text="Website"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                                BorderThickness="1"
+                                                Height="36"
+                                                Padding="10,8"
+                                                CornerRadius="{DynamicResource Radius.Sm}">
+                                            <TextBlock Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
+                                                <TextBlock.Effect>
+                                                    <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                                                </TextBlock.Effect>
+                                                <TextBlock.Text>
+                                                    <MultiBinding Converter="{StaticResource PrivacyMaskConverter}" ConverterParameter="Url">
+                                                        <Binding Path="SelectedTrashItem.Payload.Url"/>
+                                                        <Binding Path="PrivacyModeEnabled"/>
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="Original group"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                                BorderThickness="1"
+                                                Height="36"
+                                                Padding="10,8"
+                                                CornerRadius="{DynamicResource Radius.Sm}">
+                                            <TextBlock Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                                       Text="{Binding SelectedTrashItem.OriginalGroup}"/>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="Deleted on"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                                BorderThickness="1"
+                                                Height="36"
+                                                Padding="10,8"
+                                                CornerRadius="{DynamicResource Radius.Sm}">
+                                            <TextBlock Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"
+                                                       Text="{Binding SelectedTrashItem.DeletedUtc, StringFormat='{}{0:MMM dd, yyyy HH:mm}'}"/>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="Scheduled purge"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                                BorderThickness="1"
+                                                Height="36"
+                                                Padding="10,8"
+                                                CornerRadius="{DynamicResource Radius.Sm}">
+                                            <TextBlock Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"
+                                                       Text="{Binding SelectedTrashItem.ScheduledPurgeLabel}"/>
+                                        </Border>
+                                    </StackPanel>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Placeholder when no trash item is selected -->
+                            <StackPanel Spacing="20"
+                                        VerticalAlignment="Center"
+                                        HorizontalAlignment="Center"
+                                        Margin="0,120,0,0"
+                                        IsVisible="{Binding SelectedTrashItem, Converter={x:Static ObjectConverters.IsNull}}">
+                                <TextBlock Text="🗑"
+                                           FontSize="80"
+                                           HorizontalAlignment="Center"
+                                           Opacity="0.2"/>
+                                <TextBlock Text="Select a secure bin item"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           HorizontalAlignment="Center"/>
+                                <TextBlock Text="Choose an entry from the rubbish list to recover or delete"
+                                           FontSize="13"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                </ScrollViewer>
+            </Border>
+            
+            </Grid>
+            
+            <!-- Narrow-width Detail Overlay (mobile-style) -->
+            <Border x:Name="MobileDetailOverlay"
+                    Background="Transparent"
+                    Tag="{Binding SelectedCredential, Converter={x:Static ObjectConverters.IsNotNull}}"
+                    IsVisible="{Binding $parent[Window].Bounds.Width, Converter={StaticResource IsWidthLessThanConverter}, ConverterParameter=1200}"
+                    IsHitTestVisible="{Binding SelectedCredential, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <Border.Styles>
+                    <Style Selector="Border#MobileDetailOverlay">
+                        <Setter Property="Opacity" Value="0"/>
+                        <Setter Property="Background" Value="Transparent"/>
+                    </Style>
+                    <Style Selector="Border#MobileDetailOverlay[IsVisible=True][Tag=True]">
+                        <Setter Property="Background" Value="#80000000"/>
+                        <Style.Animations>
+                            <Animation Duration="0:0:0.20" FillMode="Forward" Easing="SineEaseOut">
+                                <KeyFrame Cue="0%">
+                                    <Setter Property="Opacity" Value="0"/>
+                                </KeyFrame>
+                                <KeyFrame Cue="100%">
+                                    <Setter Property="Opacity" Value="1"/>
+                                </KeyFrame>
+                            </Animation>
+                        </Style.Animations>
+                    </Style>
+                    <Style Selector="Border#MobileDetailPanel">
+                        <Setter Property="Margin" Value="0,-12,0,0"/>
+                    </Style>
+                    <Style Selector="Border#MobileDetailOverlay[IsVisible=True] Border#MobileDetailPanel">
+                        <Setter Property="Margin" Value="0,0,0,0"/>
+                    </Style>
+                </Border.Styles>
+                <Grid>
+                    <!-- Backdrop click closes overlay - content stops propagation -->
+                    <Border Background="Transparent" PointerPressed="CloseMobileDetailOverlay_Click"/>
+                    <!-- Fullscreen panel for detail view on narrow widths -->
+                    <Border x:Name="MobileDetailPanel"
+                            Background="{DynamicResource WindowBackgroundBrush}"
+                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                            BorderThickness="0"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch">
+                        <!-- Esc closes overlay -->
+                        <InputElement.KeyBindings>
+                            <KeyBinding Gesture="Escape" Command="{Binding ClearSelectedCredentialCommand}"/>
+                        </InputElement.KeyBindings>
+                        <Border.Transitions>
+                            <Transitions>
+                                <ThicknessTransition Property="Margin" Duration="0:0:0.18" Easing="SineEaseOut"/>
+                            </Transitions>
+                        </Border.Transitions>
+
+                        <Grid RowDefinitions="Auto,*">
+                            <!-- Header -->
+                            <Border Grid.Row="0"
+                                    Background="{DynamicResource HeaderBackgroundBrush}"
+                                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                                    BorderThickness="0,0,0,1"
+                                    CornerRadius="0,0,12,12"
+                                    Padding="16,12">
+                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                    <Button Grid.Column="0"
+                                            Command="{Binding ClearSelectedCredentialCommand}"
+                                            Classes="liquid-glass"
+                                            Width="36" Height="36"
+                                            ToolTip.Tip="Back">
+                                        <TextBlock Text="←" FontSize="16"/>
+                                    </Button>
+                                    <TextBlock Grid.Column="1"
+                                               FontSize="16"
+                                               FontWeight="SemiBold"
+                                               VerticalAlignment="Center"
+                                               Margin="12,0,0,0">
+                                        <TextBlock.Text>
+                                            <MultiBinding Converter="{StaticResource PrivacyMaskConverter}">
+                                                <Binding Path="SelectedCredential.Title"/>
+                                                <Binding Path="PrivacyModeEnabled"/>
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </Grid>
+                            </Border>
+
+                            <!-- Content -->
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" AllowAutoHide="False">
+                                <StackPanel Spacing="{StaticResource Space20}" Margin="20,16,20,24" IsVisible="{Binding SelectedCredential, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                    <!-- Icon and basic info -->
+                                    <Grid ColumnDefinitions="Auto,16,*" VerticalAlignment="Top">
+                                        <Border Grid.Column="0" Width="84" Height="84" CornerRadius="42" Background="{Binding SelectedCredential.IconBackgroundBrush}">
+                                            <Grid>
+                                                <Image Source="{Binding SelectedCredential.AutoDetectedIconBitmap}"
+                                                       Width="72" Height="72" Stretch="Uniform"
+                                                       IsVisible="{Binding SelectedCredential.HasAutoDetectedIcon}"/>
+                                                <TextBlock Text="{Binding SelectedCredential.IconText}" FontSize="34" FontWeight="Bold" Foreground="White"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                           IsVisible="{Binding !SelectedCredential.HasAutoDetectedIcon}"/>
+                                            </Grid>
+                                        </Border>
+                                        <StackPanel Grid.Column="2" Spacing="{StaticResource Space6}" VerticalAlignment="Center">
+                                            <TextBlock FontSize="22" FontWeight="Bold">
+                                                <TextBlock.Text>
+                                                    <MultiBinding Converter="{StaticResource PrivacyMaskConverter}">
+                                                        <Binding Path="SelectedCredential.Title"/>
+                                                        <Binding Path="PrivacyModeEnabled"/>
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
+                                            <TextBlock FontSize="14" Foreground="{DynamicResource SecondaryTextBrush}">
+                                                <TextBlock.Text>
+                                                    <MultiBinding Converter="{StaticResource PrivacyMaskConverter}" ConverterParameter="Username">
+                                                        <Binding Path="SelectedCredential.Username"/>
+                                                        <Binding Path="PrivacyModeEnabled"/>
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Username (read-only) with copy -->
+                                    <components:CopyableField 
+                                        Label="Username" 
+                                        Value="{Binding SelectedCredential.Username}" 
+                                        CopyCommand="{Binding CopyUsernameCommand}" 
+                                        CopyCommandParameter="{Binding SelectedCredential}" 
+                                        ButtonTooltip="Copy username" />
+
+                                    <!-- Password (masked) with copy -->
+                                    <components:CopyableField 
+                                        Label="Password" 
+                                        Value="{Binding SelectedCredential.Password}" 
+                                        IsPassword="True" 
+                                        CopyCommand="{Binding CopyPasswordCommand}" 
+                                        CopyCommandParameter="{Binding SelectedCredential}" 
+                                        ButtonBackground="#4A6B8A" 
+                                        ButtonTooltip="Copy password" />
+
+                                    <!-- URL -->
+                                    <StackPanel Spacing="{StaticResource Space6}" IsVisible="{Binding SelectedCredential.HasUrl}">
+                                        <TextBlock Text="Website" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <TextBox Grid.Column="0" Text="{Binding SelectedCredential.Url}" IsReadOnly="True" Background="{DynamicResource ControlBackgroundBrush}" Foreground="{DynamicResource PrimaryTextBrush}" BorderThickness="1" BorderBrush="{DynamicResource ControlBorderBrush}" Height="36" Padding="10,8"/>
+                                            <Button Grid.Column="1" Command="{Binding OpenUrlCommand}" CommandParameter="{Binding SelectedCredential}" Classes="liquid-glass" Width="36" Height="36" Margin="8,0,0,0" ToolTip.Tip="Open in browser">
+                                                <TextBlock Text="🌐" FontSize="16" VerticalAlignment="Center"/>
+                                            </Button>
+                                        </Grid>
+                                    </StackPanel>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Slide-in Edit Panel Overlay - positioned only over detail panel (Grid.Column 2) -->
+            <Border x:Name="EditPanelOverlay"
+                    Grid.Column="2"
+                    Background="{DynamicResource OverlayBackgroundLightBrush}"
+                    IsVisible="{Binding IsEditPanelVisible}"
+                    IsHitTestVisible="{Binding IsEditPanelVisible}"
+                    ClipToBounds="True">
+                <Border.Styles>
+                    <Style Selector="Border#EditPanelOverlay">
+                        <Setter Property="Opacity" Value="0"/>
+                    </Style>
+                    <Style Selector="Border#EditPanelOverlay[IsVisible=True]">
+                        <Style.Animations>
+                            <Animation Duration="0:0:0.25" FillMode="Forward" Easing="SineEaseOut">
+                                <KeyFrame Cue="0%">
+                                    <Setter Property="Opacity" Value="0"/>
+                                </KeyFrame>
+                                <KeyFrame Cue="100%">
+                                    <Setter Property="Opacity" Value="1"/>
+                                </KeyFrame>
+                            </Animation>
+                        </Style.Animations>
+                    </Style>
+                </Border.Styles>
+                
+                <Grid>
+                    <!-- Transparent area to close panel -->
+                    <Border Background="Transparent" 
+                            PointerPressed="CloseEditPanel_Click"/>
+                    
+                    <!-- Edit Panel Container - Slides in from right, fills entire detail panel area -->
+            <Border x:Name="EditPanelContainer" 
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Tag="{Binding IsEditPanelVisible}">
+                        <!-- Smooth slide animation using Transitions -->
+                        <Border.RenderTransform>
+                            <TranslateTransform X="600"/>
+                        </Border.RenderTransform>
+                        <Border.Transitions>
+                            <Transitions>
+                                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.4" Easing="CubicEaseOut"/>
+                            </Transitions>
+                        </Border.Transitions>
+                        <Border.Styles>
+                            <!-- Default: hidden off-screen to the right -->
+                            <Style Selector="Border#EditPanelContainer">
+                                <Setter Property="RenderTransform" Value="translateX(600px)"/>
+                            </Style>
+                            <!-- When Tag (bound to IsEditPanelVisible) is true, slide into place -->
+                            <Style Selector="Border#EditPanelContainer[Tag=True]">
+                                <Setter Property="RenderTransform" Value="translateX(0px)"/>
+                            </Style>
+                        </Border.Styles>
+                        
+                        <!-- Edit Panel Content -->
+            <Border x:Name="EditPanel"
+                                Background="{DynamicResource WindowBackgroundBrush}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1,0,0,0"
+                                BoxShadow="{DynamicResource SlideOutPanelShadow}">
+                        <!-- Touch/touchpad-friendly scrollbars scoped to this panel -->
+                        <Border.Styles>
+                            <!-- Vertical scrollbar: slim by default, slightly wider and more opaque on hover/press -->
+                            <Style Selector="Border#EditPanel ScrollViewer ScrollBar:vertical">
+                                <Setter Property="Width" Value="6"/>
+                                <Setter Property="Opacity" Value="0.55"/>
+                            </Style>
+                            <Style Selector="Border#EditPanel ScrollViewer ScrollBar:vertical:pointerover">
+                                <Setter Property="Width" Value="8"/>
+                                <Style.Animations>
+                                    <Animation Duration="0:0:0.12" FillMode="Forward" Easing="SineEaseOut">
+                                        <KeyFrame Cue="0%">
+                                            <Setter Property="Opacity" Value="0.55"/>
+                                        </KeyFrame>
+                                        <KeyFrame Cue="100%">
+                                            <Setter Property="Opacity" Value="1"/>
+                                        </KeyFrame>
+                                    </Animation>
+                                </Style.Animations>
+                            </Style>
+                            <Style Selector="Border#EditPanel ScrollViewer ScrollBar:vertical:pressed">
+                                <Setter Property="Width" Value="4"/>
+                                <Setter Property="Opacity" Value="0"/>
+                            </Style>
+                            <!-- Horizontal (not used here, but added for consistency) -->
+                            <Style Selector="Border#EditPanel ScrollViewer ScrollBar:horizontal">
+                                <Setter Property="Height" Value="6"/>
+                                <Setter Property="Opacity" Value="0.55"/>
+                            </Style>
+                            <Style Selector="Border#EditPanel ScrollViewer ScrollBar:horizontal:pointerover">
+                                <Setter Property="Height" Value="8"/>
+                                <Style.Animations>
+                                    <Animation Duration="0:0:0.12" FillMode="Forward" Easing="SineEaseOut">
+                                        <KeyFrame Cue="0%">
+                                            <Setter Property="Opacity" Value="0.55"/>
+                                        </KeyFrame>
+                                        <KeyFrame Cue="100%">
+                                            <Setter Property="Opacity" Value="1"/>
+                                        </KeyFrame>
+                                    </Animation>
+                                </Style.Animations>
+                            </Style>
+                            <Style Selector="Border#EditPanel ScrollViewer ScrollBar:horizontal:pressed">
+                                <Setter Property="Height" Value="4"/>
+                                <Setter Property="Opacity" Value="0"/>
+                            </Style>
+                        </Border.Styles>
+                        
+                        <!-- Edit Form Content -->
+                        <Grid RowDefinitions="Auto,*,Auto">
+                            
+                            <!-- Header -->
+                            <Border Grid.Row="0" 
+                                    Background="{DynamicResource HeaderBackgroundBrush}" 
+                                    Padding="25,20"
+                                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                                    BorderThickness="0,0,0,1"
+                                    CornerRadius="0,0,12,12">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel Grid.Column="0" Spacing="6">
+                                        <TextBlock Text="{Binding EditViewModel.WindowTitle}" 
+                                                   FontSize="20" 
+                                                   FontWeight="Bold"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                        <TextBlock Text="Enter credential details securely" 
+                                                   FontSize="13" 
+                                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1"
+                                            Command="{Binding CloseEditPanelCommand}"
+                                            Classes="liquid-glass"
+                                            Width="36"
+                                            Height="36"
+                                            VerticalAlignment="Top"
+                                            ToolTip.Tip="Close">
+                                        <TextBlock Text="✕" FontSize="16"/>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                            
+                            <!-- Form Content -->
+                            <ScrollViewer x:Name="EditFormScrollViewer"
+                                          Grid.Row="1" 
+                                          VerticalScrollBarVisibility="Visible"
+                                          HorizontalScrollBarVisibility="Disabled"
+                                          HorizontalContentAlignment="Stretch"
+                                          AllowAutoHide="False"
+                                          Padding="25,20">
+                                <StackPanel x:Name="EditFormStack"
+                                            Spacing="20"
+                                            HorizontalAlignment="Stretch"
+                                            MaxWidth="720">
+                                    
+                                    <!-- Title Field -->
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="Title *" 
+                                                   FontSize="13" 
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <TextBox Text="{Binding Title}"
+                                                 Watermark="e.g., GitHub, Gmail, Bank Account"
+                                                 Height="40"
+                                                 FontSize="14"
+                                                 Background="{DynamicResource ControlBackgroundBrush}">
+                                            <TextBox.Styles>
+                                                <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+                                                    <Setter Property="Background" Value="#33FFFFFF"/>
+                                                </Style>
+                                                <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+                                                    <Setter Property="Background" Value="#33FFFFFF"/>
+                                                </Style>
+                                            </TextBox.Styles>
+                                        </TextBox>
+                                        <TextBlock Text="{Binding TitleError}" 
+                                                   FontSize="11" 
+                                                   Foreground="{DynamicResource ErrorBrush}"
+                                                   IsVisible="{Binding HasTitleError}"/>
+                                    </StackPanel>
+                                    
+                                    <!-- Username/Email Field -->
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="Username / Email *" 
+                                                   FontSize="13" 
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <TextBox Text="{Binding Username}"
+                                                 Watermark="username@example.com"
+                                                 Height="40"
+                                                 FontSize="14"
+                                                 Background="{DynamicResource ControlBackgroundBrush}">
+                                            <TextBox.Styles>
+                                                <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+                                                    <Setter Property="Background" Value="#33FFFFFF"/>
+                                                </Style>
+                                                <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+                                                    <Setter Property="Background" Value="#33FFFFFF"/>
+                                                </Style>
+                                            </TextBox.Styles>
+                                        </TextBox>
+                                        <TextBlock Text="{Binding UsernameError}" 
+                                                   FontSize="11" 
+                                                   Foreground="{DynamicResource ErrorBrush}"
+                                                   IsVisible="{Binding HasUsernameError}"/>
+                                    </StackPanel>
+                                    
+                                    <!-- Password Field -->
+                                    <StackPanel Spacing="8">
+                                        <Grid ColumnDefinitions="*,Auto,4,Auto">
+                                            <TextBlock Grid.Column="0"
+                                                       Text="Password *" 
+                                                       FontSize="13" 
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                            <Button Grid.Column="1"
+                                                    Command="{Binding GeneratePasswordCommand}"
+                                                    Classes="liquid-glass"
+                                                    Width="90"
+                                                    Height="26"
+                                                    Padding="10,4"
+                                                    FontSize="11"
+                                                    ToolTip.Tip="Generate strong password">
+                                                <TextBlock Text="Generate" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Button>
+                                            <Button Grid.Column="3"
+                                                    Command="{Binding OpenPasswordGeneratorCommand}"
+                                                    Classes="liquid-glass"
+                                                    Height="26"
+                                                    Width="26"
+                                                    Padding="4"
+                                                    FontSize="11"
+                                                    ToolTip.Tip="Open password generator settings">
+                                                <TextBlock Text="..." FontSize="13"/>
+                                            </Button>
+                                        </Grid>
+
+                                        <Grid>
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBox Grid.Column="0"
+                                                         Text="{Binding Password}"
+                                                         PasswordChar="{Binding PasswordChar}"
+                                                         Watermark="Enter secure password"
+                                                         Height="40"
+                                                         FontSize="14"
+                                                         Padding="12,10"
+                                                         Margin="0,0,8,0"
+                                                         Foreground="{DynamicResource PrimaryTextBrush}"
+                                                         Background="{DynamicResource ControlBackgroundBrush}">
+                                                    <TextBox.Styles>
+                                                        <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+                                                            <Setter Property="Background" Value="#33FFFFFF"/>
+                                                        </Style>
+                                                        <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+                                                            <Setter Property="Background" Value="#33FFFFFF"/>
+                                                        </Style>
+                                                    </TextBox.Styles>
+                                                </TextBox>
+                                                <Button Grid.Column="1"
+                                                        Command="{Binding TogglePasswordVisibilityCommand}"
+                                                        Classes="liquid-glass"
+                                                        Width="40"
+                                                        Height="40"
+                                                        ToolTip.Tip="Show/Hide password">
+                                                    <TextBlock Text="{Binding PasswordVisibilityIcon}" FontSize="16"/>
+                                                </Button>
+                                            </Grid>
+
+                                            <Border HorizontalAlignment="Left"
+                                                    VerticalAlignment="Top"
+                                                    Margin="18,-10,0,0"
+                                                    Padding="8,2"
+                                                    CornerRadius="{DynamicResource Radius.Sm}"
+                                                    Background="{Binding PasswordFlagBackground}"
+                                                    IsVisible="{Binding ShowPasswordFlag}"
+                                                    IsHitTestVisible="False">
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <TextBlock Text="⚑" FontSize="11"/>
+                                                    <TextBlock Text="{Binding PasswordFlagText}"
+                                                               FontSize="11"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </Grid>
+
+                                        <!-- Password Strength Meter -->
+                                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                                CornerRadius="{DynamicResource Radius.Sm}"
+                                                Padding="10,8"
+                                                IsVisible="{Binding HasPassword}">
+                                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                                <TextBlock Grid.Column="0"
+                                                           Text="Strength:" 
+                                                           FontSize="11" 
+                                                           Foreground="{DynamicResource MutedTextBrush}"
+                                                           VerticalAlignment="Center"
+                                                           Margin="0,0,10,0"/>
+                                                <ProgressBar Grid.Column="1"
+                                                             Value="{Binding PasswordStrength}"
+                                                             Maximum="100"
+                                                             Height="8"
+                                                             VerticalAlignment="Center"
+                                                             Foreground="{Binding PasswordStrengthColor}"/>
+                                                <TextBlock Grid.Column="2"
+                                                           Text="{Binding PasswordStrengthText}" 
+                                                           FontSize="11" 
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{Binding PasswordStrengthColor}"
+                                                           VerticalAlignment="Center"
+                                                           Margin="10,0,0,0"/>
+                                            </Grid>
+                                        </Border>
+
+                                        <TextBlock Text="{Binding PasswordError}" 
+                                                   FontSize="11" 
+                                                   Foreground="{DynamicResource ErrorBrush}"
+                                                   IsVisible="{Binding HasPasswordError}"/>
+                                    </StackPanel>
+                                    
+                                    <!-- URL Field -->
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="Website URL" 
+                                                   FontSize="13" 
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <TextBox Text="{Binding Url}"
+                                                 Watermark="https://example.com"
+                                                 Height="40"
+                                                 FontSize="14"
+                                                 Background="{DynamicResource ControlBackgroundBrush}">
+                                            <TextBox.Styles>
+                                                <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+                                                    <Setter Property="Background" Value="#33FFFFFF"/>
+                                                </Style>
+                                                <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+                                                    <Setter Property="Background" Value="#33FFFFFF"/>
+                                                </Style>
+                                            </TextBox.Styles>
+                                        </TextBox>
+                                        <TextBlock Text="Optional - Used for auto-fill and quick access" 
+                                                   FontSize="11" 
+                                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                                    </StackPanel>
+                                    
+                                    <!-- Category Selection -->
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="Category" 
+                                                   FontSize="13" 
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <ComboBox SelectedItem="{Binding SelectedCategory}"
+                                                  ItemsSource="{Binding Categories}"
+                                                  Height="40"
+                                                  FontSize="14">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <Image Source="{Binding Icon, Converter={StaticResource IconPathToBitmapConverter}}" Width="22" Height="22" Stretch="Uniform" IsVisible="{Binding Icon, Converter={StaticResource IconPathExistsConverter}}"/>
+                                                        <TextBlock Text="{Binding Icon}" FontSize="14" IsVisible="{Binding Icon, Converter={StaticResource IconPathExistsConverter}, ConverterParameter=invert}"/>
+                                                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                    </StackPanel>
+                                    
+                                    <!-- Icon/Logo Selection -->
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="Icon / Logo" 
+                                                   FontSize="13" 
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="{DynamicResource Radius.Md}"
+                                                Padding="15"
+                                                Height="100">
+                                            <Border.Styles>
+                                                <Style Selector="Border:pointerover">
+                                                    <Setter Property="Background" Value="#33FFFFFF"/>
+                                                </Style>
+                                            </Border.Styles>
+                                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                                <!-- Current Icon Display -->
+                                                <Border Grid.Column="0"
+                                                        Width="70"
+                                                        Height="70"
+                                                        Background="{DynamicResource ControlBackgroundBrush}"
+                                                        CornerRadius="{DynamicResource Radius.Lg}"
+                                                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                                                        BorderThickness="1">
+                                                    <Image Source="{Binding IconPath}"
+                                                           Width="50"
+                                                           Height="50"
+                                                           Stretch="Uniform"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"/>
+                                                </Border>
+                                                <!-- Icon Info -->
+                                                <StackPanel Grid.Column="1"
+                                                            Margin="15,0,0,0"
+                                                            VerticalAlignment="Center"
+                                                            Spacing="4">
+                                                    <TextBlock Text="Custom icon for this credential" 
+                                                               FontSize="13" 
+                                                               FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                          <TextBlock Text="Click 'Change Icon' to select from library or upload custom" 
+                                                               FontSize="11" 
+                                                               Foreground="{DynamicResource MutedTextBrush}"
+                                                               TextWrapping="Wrap"/>
+                                                </StackPanel>
+                                                
+                                                <!-- Change Icon Button -->
+                                                <Button Grid.Column="2"
+                                                        Command="{Binding PickIconCommand}"
+                                                        Classes="liquid-glass"
+                                                        Width="110"
+                                                        Height="36"
+                                                        VerticalAlignment="Center"
+                                              ToolTip.Tip="Open icon picker">
+                                           <TextBlock Text="Change Icon" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Button>
+                                            </Grid>
+                                        </Border>
+                                    </StackPanel>
+                                    
+                                    <!-- Notes Field -->
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="Notes" 
+                                                   FontSize="13" 
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <TextBox Text="{Binding Notes}"
+                                                 Watermark="Add any additional information..."
+                                                 AcceptsReturn="True"
+                                                 TextWrapping="Wrap"
+                                                 Height="100"
+                                                 FontSize="13"
+                                                 Background="{DynamicResource ControlBackgroundBrush}">
+                                            <TextBox.Styles>
+                                                <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+                                                    <Setter Property="Background" Value="#33FFFFFF"/>
+                                                </Style>
+                                                <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+                                                    <Setter Property="Background" Value="#33FFFFFF"/>
+                                                </Style>
+                                            </TextBox.Styles>
+                                        </TextBox>
+                                    </StackPanel>
+
+                                    <!-- Wi-Fi Details -->
+                                    <editforms:WiFiEditForm DataContext="{Binding}" />
+
+                                    <editforms:CreditCardEditForm DataContext="{Binding}" />
+
+                                    <editforms:BankAccountEditForm DataContext="{Binding}" />
+
+                                    <editforms:IdentityEditForm DataContext="{Binding}" />
+
+                                    <editforms:ApiKeyEditForm DataContext="{Binding}" />
+
+                                    <editforms:ContactEditForm DataContext="{Binding}" />
+
+                                    <!-- Tags -->
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="Tags" 
+                                                   FontSize="13" 
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <TextBox Text="{Binding TagsText}"
+                                                 Watermark="work, personal, important (comma-separated)"
+                                                 Height="40"
+                                                 FontSize="14"
+                                                 Foreground="{DynamicResource PrimaryTextBrush}"
+                                                 Background="{DynamicResource ControlBackgroundBrush}"/>
+                                        <TextBlock Text="Add tags to organize and search credentials easily" 
+                                                   FontSize="11" 
+                                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                                    </StackPanel>
+
+                                    <!-- Expiry Date -->
+                                    <StackPanel Spacing="8">
+                                        <Grid ColumnDefinitions="Auto,*">
+                                            <CheckBox Grid.Column="0"
+                                                      IsChecked="{Binding HasExpiryDate}"
+                                                      VerticalAlignment="Center"
+                                                      Margin="0,0,10,0"/>
+                                            <TextBlock Grid.Column="1"
+                                                       Text="Set expiration date (e.g., for temporary passwords)" 
+                                                       FontSize="13" 
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                                       VerticalAlignment="Center"/>
+                                        </Grid>
+                                        <DatePicker SelectedDate="{Binding ExpiryDate}"
+                                                    Height="40"
+                                                    FontSize="14"
+                                                    IsVisible="{Binding HasExpiryDate}"/>
+                                    </StackPanel>
+
+                                    <!-- Mark as Favorite -->
+                                    <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                            CornerRadius="{DynamicResource Radius.Md}"
+                                            Padding="15,12">
+                                        <Grid ColumnDefinitions="Auto,*">
+                                            <CheckBox Grid.Column="0"
+                                                      IsChecked="{Binding IsFavorite}"
+                                                      VerticalAlignment="Center"
+                                                      Margin="0,0,12,0"/>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="⭐ Mark as Favorite" 
+                                                           FontSize="13" 
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                <TextBlock Text="Quick access from favorites list" 
+                                                           FontSize="11" 
+                                                           Foreground="{DynamicResource MutedTextBrush}"
+                                                           Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                    
+                                </StackPanel>
+                            </ScrollViewer>
+                            
+                            <!-- Footer with Action Buttons -->
+                            <Border Grid.Row="2" 
+                                    Background="{DynamicResource FooterBackgroundBrush}" 
+                                    Padding="25,15"
+                                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                                    BorderThickness="0,1,0,0">
+                                <Grid ColumnDefinitions="*,Auto,Auto">
+                                    <TextBlock Grid.Column="0"
+                                               Text="* Required fields" 
+                                               FontSize="11" 
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               VerticalAlignment="Center"/>
+                                    
+                                    <Button Grid.Column="1"
+                                            Command="{Binding CloseEditPanelCommand}"
+                                            Classes="liquid-glass"
+                                            Width="100"
+                                            Height="40"
+                                            Margin="0,0,10,0"
+                                            Content="Cancel"/>
+                                    
+                                    <Button Grid.Column="2"
+                                            Command="{Binding EditViewModel.SaveCommand}"
+                                            Classes="liquid-glass"
+                                            Background="{DynamicResource AccentBrush}"
+                                            Width="120"
+                                            Height="40"
+                                            FontWeight="Bold">
+                                        <TextBlock Text="{Binding EditViewModel.SaveButtonText}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                            
+                        </Grid>
+                    </Border>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Flagged Passwords Overlay -->
+            <overlays:FlaggedPasswordsOverlay Grid.RowSpan="3" DataContext="{Binding}" />
+
+            <!-- Category Manager Overlay (same behaviour as in settings - slides in from right) -->
+            <overlays:CategoryManagerOverlay Grid.RowSpan="3" DataContext="{Binding}" />
+
+            <!-- Settings Panel Overlay (Slides from right) -->
+            <overlays:SettingsPanelOverlay Grid.ColumnSpan="3" DataContext="{Binding}" />
+
+            <!-- Icon Manager Overlay (Slides from right) -->
+            <overlays:IconManagerOverlay Grid.ColumnSpan="3" DataContext="{Binding}" />
+
+            <!-- Security Dashboard Overlay -->
+            <Border Grid.RowSpan="3"
+                    Grid.ColumnSpan="3"
+                    Background="{DynamicResource OverlayBackgroundBrush}"
+                    IsVisible="{Binding IsSecurityDashboardVisible}"
+                    IsHitTestVisible="{Binding IsSecurityDashboardVisible}">
+                <Border.Styles>
+                    <Style Selector="Border">
+                        <Setter Property="Opacity" Value="0"/>
+                    </Style>
+                    <Style Selector="Border[IsVisible=True]">
+                        <Style.Animations>
+                            <Animation Duration="0:0:0.25" FillMode="Forward" Easing="SineEaseOut">
+                                <KeyFrame Cue="0%">
+                                    <Setter Property="Opacity" Value="0"/>
+                                </KeyFrame>
+                                <KeyFrame Cue="100%">
+                                    <Setter Property="Opacity" Value="1"/>
+                                </KeyFrame>
+                            </Animation>
+                        </Style.Animations>
+                    </Style>
+                </Border.Styles>
+                
+                <Grid ClipToBounds="True">
+                    <!-- Transparent area to close dashboard -->
+                    <Border Background="Transparent" PointerPressed="CloseSecurityDashboard_Click"/>
+                    
+                    <!-- Security Dashboard Panel -->
+                    <Border x:Name="SecurityDashboardPanel"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            MinWidth="1200"
+                            MaxWidth="1400"
+                            MinHeight="700"
+                            MaxHeight="900"
+                            Background="{DynamicResource WindowBackgroundBrush}"
+                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="16"
+                            BoxShadow="0 8 32 0 #40000000"
+                            Padding="0"
+                            Tag="{Binding IsSecurityDashboardVisible}">
+                        <Border.Styles>
+                            <Style Selector="Border#SecurityDashboardPanel">
+                                <Setter Property="Opacity" Value="0"/>
+                            </Style>
+                            <Style Selector="Border#SecurityDashboardPanel[Tag=True]">
+                                <Style.Animations>
+                                    <Animation Duration="0:0:0.3" FillMode="Forward" Easing="CubicEaseOut">
+                                        <KeyFrame Cue="0%">
+                                            <Setter Property="Opacity" Value="0"/>
+                                        </KeyFrame>
+                                        <KeyFrame Cue="100%">
+                                            <Setter Property="Opacity" Value="1"/>
+                                        </KeyFrame>
+                                    </Animation>
+                                </Style.Animations>
+                            </Style>
+                        </Border.Styles>
+                        
+                        <Grid RowDefinitions="Auto,*">
+                            <!-- Header -->
+                            <Border Grid.Row="0"
+                                    Background="{DynamicResource HeaderBackgroundBrush}"
+                                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                                    BorderThickness="0,0,0,1"
+                                    CornerRadius="16,16,0,0"
+                                    Padding="24,20">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel Grid.Column="0" Spacing="6">
+                                        <TextBlock Text="Security Dashboard"
+                                                   FontSize="24"
+                                                   FontWeight="Bold"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                        <TextBlock Text="Comprehensive security analysis and monitoring"
+                                                   FontSize="13"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1"
+                                            Command="{Binding ToggleSecurityDashboardCommand}"
+                                            Classes="liquid-glass"
+                                            Width="36"
+                                            Height="36"
+                                            ToolTip.Tip="Close dashboard">
+                                        <TextBlock Text="✕" FontSize="16"/>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                            
+                            <!-- Dashboard Content -->
+                            <ScrollViewer Grid.Row="1"
+                                         VerticalScrollBarVisibility="Auto"
+                                         HorizontalScrollBarVisibility="Disabled"
+                                         Padding="24,20">
+                                <dcontrols:SecurityDashboard DataContext="{Binding}"/>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Recovery Panel Overlay (Embedded PhantomRecovery) -->
+            <Border Grid.RowSpan="3"
+                    Grid.ColumnSpan="3"
+                    Background="#AA000000"
+                    IsVisible="{Binding IsRecoveryPanelVisible}"
+                    IsHitTestVisible="{Binding IsRecoveryPanelVisible}">
+                <views:RecoveryPanel x:Name="RecoveryPanelControl"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    MinWidth="1000"
+                                    MinHeight="600"
+                                    MaxWidth="1200"
+                                    MaxHeight="800"/>
+            </Border>
+
+            <!-- In-app Lockscreen Overlay - Full screen with centered logo -->
+            <Border Grid.RowSpan="3"
+                    Grid.ColumnSpan="3"
+                    Background="{DynamicResource WindowBackgroundBrush}"
+                    IsVisible="{Binding IsLockscreenVisible}"
+                    IsHitTestVisible="{Binding IsLockscreenVisible}">
+                <Grid>
+                    <!-- Large dimmed PhantomVault logo in center -->
+                    <Image Source="avares://PhantomVault.UI/Assets/images/Icon Transparent background.png"
+                           Width="400"
+                           Height="400"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           Opacity="0.12"/>
+                    
+                    <!-- Lock content centered over logo -->
+                    <StackPanel HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Spacing="20"
+                                MinWidth="420">
+                        
+                        <TextBlock Text="{Binding LockscreenTitle}"
+                                   FontSize="32"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"
+                                   HorizontalAlignment="Center"/>
+
+                        <TextBlock Text="{Binding LockscreenMessage}"
+                                   FontSize="14"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   TextWrapping="Wrap"
+                                   HorizontalAlignment="Center"
+                                   TextAlignment="Center"
+                                   MaxWidth="500"/>
+
+                        <TextBlock Text="{Binding LockscreenError}"
+                                   FontSize="13"
+                                   Foreground="{DynamicResource ErrorTextBrush}"
+                                   TextWrapping="Wrap"
+                                   HorizontalAlignment="Center"
+                                   TextAlignment="Center"
+                                   MaxWidth="500"
+                                   IsVisible="{Binding LockscreenError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                        <!-- PIN unlock (soft lock only) -->
+                        <StackPanel Spacing="12" IsVisible="{Binding PinUnlockAvailable}" MinWidth="380">
+                            <TextBlock Text="PIN" 
+                                       FontSize="13" 
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       HorizontalAlignment="Center"/>
+                            <TextBox Text="{Binding LockscreenPin, Mode=TwoWay}"
+                                     PasswordChar="●"
+                                     Watermark="Enter PIN"
+                                     Background="{DynamicResource ControlBackgroundBrush}"
+                                     Foreground="{DynamicResource PrimaryTextBrush}"
+                                     BorderBrush="{DynamicResource ControlBorderBrush}"
+                                     BorderThickness="1"
+                                     Height="44"
+                                     Padding="14,10"
+                                     FontSize="16"
+                                     HorizontalAlignment="Stretch"/>
+                            <Button Content="Unlock"
+                                    Command="{Binding UnlockWithPinCommand}"
+                                    Classes="liquid-glass"
+                                    HorizontalAlignment="Center"
+                                    Width="200"
+                                    Height="44"
+                                    FontSize="15"
+                                    FontWeight="SemiBold"/>
+                        </StackPanel>
+
+                        <Button Content="Use passphrase instead"
+                                Command="{Binding ShowPassphraseFallbackCommand}"
+                                Classes="liquid-glass"
+                                HorizontalAlignment="Center"
+                                IsVisible="{Binding ShowPassphraseFallbackLink}"
+                                Height="38"
+                                Padding="20,0"
+                                FontSize="13"/>
+
+                        <!-- Password unlock (fallback or when PIN is unavailable) -->
+                        <StackPanel Spacing="12" IsVisible="{Binding ShowPassphraseFallbackSection}" MinWidth="380">
+                            <TextBlock Text="Passphrase" 
+                                       FontSize="13" 
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       HorizontalAlignment="Center"/>
+                            <TextBox Text="{Binding LockscreenPassword, Mode=TwoWay}"
+                                     PasswordChar="●"
+                                     Watermark="Enter passphrase"
+                                     Background="{DynamicResource ControlBackgroundBrush}"
+                                     Foreground="{DynamicResource PrimaryTextBrush}"
+                                     BorderBrush="{DynamicResource ControlBorderBrush}"
+                                     BorderThickness="1"
+                                     Height="44"
+                                     Padding="14,10"
+                                     FontSize="16"
+                                     HorizontalAlignment="Stretch"/>
+                            <Button Content="Unlock"
+                                    Command="{Binding UnlockWithPasswordCommand}"
+                                    Classes="liquid-glass"
+                                    HorizontalAlignment="Center"
+                                    Width="200"
+                                    Height="44"
+                                    FontSize="15"
+                                    FontWeight="SemiBold"/>
+                        </StackPanel>
+
+                        <!-- Developer bypass fallback: never trap user behind a message-only lock -->
+                        <Button Content="Unlock"
+                                Command="{Binding DismissLockscreenCommand}"
+                                Classes="liquid-glass"
+                                HorizontalAlignment="Center"
+                                Width="200"
+                                Height="44"
+                                FontSize="15"
+                                FontWeight="SemiBold"
+                                IsVisible="{Binding ShowLockscreenDismiss}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+            
+        </Grid>
+        
+    </DockPanel>
+    
+</views:ThemeAwareWindow>

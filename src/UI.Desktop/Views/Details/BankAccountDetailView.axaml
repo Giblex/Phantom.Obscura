@@ -1,0 +1,76 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:PhantomVault.UI.Converters"
+             x:Class="PhantomVault.UI.Views.Details.BankAccountDetailView">
+    
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://PhantomVault.UI/Resources/Converters/ConverterResources.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    
+    <!-- Bank Account Details -->
+    <StackPanel Spacing="12"
+                IsVisible="{Binding SelectedCredential.IsBankAccountEntry}">
+        <TextBlock Text="Bank Account"
+                   FontSize="14"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasBankName}">
+            <TextBlock Text="Bank" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                <TextBox Text="{Binding SelectedCredential.BankName}" IsReadOnly="True" Height="36" Padding="8,16"/>
+        </StackPanel>
+        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasBankAccountType}">
+            <TextBlock Text="Account Type" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                <TextBox Text="{Binding SelectedCredential.BankAccountType}" IsReadOnly="True" Height="36" Padding="8,16"/>
+        </StackPanel>
+        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasBankAccountNumber}">
+            <TextBlock Text="Account Number" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                <TextBox Text="{Binding SelectedCredential.MaskedBankAccountNumber}" IsReadOnly="True" Height="36" Padding="8,16">
+                <TextBox.Effect>
+                    <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                </TextBox.Effect>
+            </TextBox>
+        </StackPanel>
+        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasBankRoutingNumber}">
+            <TextBlock Text="Routing Number" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                <TextBox Text="{Binding SelectedCredential.MaskedBankRoutingNumber}" IsReadOnly="True" Height="36" Padding="8,16">
+                <TextBox.Effect>
+                    <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                </TextBox.Effect>
+            </TextBox>
+        </StackPanel>
+        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasBankIban}">
+            <TextBlock Text="IBAN" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                <TextBox Text="{Binding SelectedCredential.MaskedBankIban}" IsReadOnly="True" Height="36" Padding="8,16">
+                <TextBox.Effect>
+                    <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                </TextBox.Effect>
+            </TextBox>
+        </StackPanel>
+        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasBankSwift}">
+            <TextBlock Text="SWIFT / BIC" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                <TextBox Text="{Binding SelectedCredential.MaskedBankSwift}" IsReadOnly="True" Height="36" Padding="8,16">
+                <TextBox.Effect>
+                    <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                </TextBox.Effect>
+            </TextBox>
+        </StackPanel>
+        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasBankBranchCode}">
+            <TextBlock Text="Branch Code" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                <TextBox Text="{Binding SelectedCredential.BankBranchCode}" IsReadOnly="True" Height="36" Padding="8,16"/>
+        </StackPanel>
+        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasBankBranchAddress}">
+            <TextBlock Text="Branch Address" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBox Text="{Binding SelectedCredential.BankBranchAddress}"
+                     IsReadOnly="True"
+                     BorderThickness="1"
+                     BorderBrush="{DynamicResource ControlBorderBrush}"
+                     Padding="8,16"
+                     TextWrapping="Wrap"
+                     AcceptsReturn="True"/>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

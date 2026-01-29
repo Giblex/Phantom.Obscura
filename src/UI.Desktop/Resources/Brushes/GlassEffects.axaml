@@ -1,0 +1,83 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Liquid glass gradients for sidebar quick filters -->
+    <!-- WCAG AA Accessibility: Increased opacity values for better contrast -->
+
+    <!-- Base glass brush - improved visibility (was #18FFFFFF/#08000000) -->
+    <LinearGradientBrush x:Key="QuickFilterGlassBaseBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#30FFFFFF" Offset="0"/>
+        <GradientStop Color="#18000000" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- Hover glass brush - enhanced contrast for better visibility -->
+    <LinearGradientBrush x:Key="QuickFilterGlassHoverBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#60FFFFFF" Offset="0"/>
+        <GradientStop Color="#40FFFFFF" Offset="1"/>
+    </LinearGradientBrush>
+    
+    <!-- Active glass brush - fully visible - bright white/light -->
+    <LinearGradientBrush x:Key="QuickFilterGlassActiveBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#D0FFFFFF" Offset="0"/>
+        <GradientStop Color="#80FFFFFF" Offset="0.58"/>
+        <GradientStop Color="#60FFFFFF" Offset="1"/>
+    </LinearGradientBrush>
+    
+    <!-- Active hover glass brush - brightest state - very light -->
+    <LinearGradientBrush x:Key="QuickFilterGlassActiveHoverBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#F0FFFFFF" Offset="0"/>
+        <GradientStop Color="#C0FFFFFF" Offset="0.55"/>
+        <GradientStop Color="#A0FFFFFF" Offset="1"/>
+    </LinearGradientBrush>
+    
+    <!-- Glass sheen overlay - light reflection effect -->
+    <LinearGradientBrush x:Key="QuickFilterGlassSheenBrush" StartPoint="0.08,0" EndPoint="0.92,1">
+        <GradientStop Color="#00FFFFFF" Offset="0"/>
+        <GradientStop Color="#66FFFFFF" Offset="0.18"/>
+        <GradientStop Color="#22FFFFFF" Offset="0.6"/>
+        <GradientStop Color="#00000000" Offset="1"/>
+    </LinearGradientBrush>
+    
+    <!-- Gel body brush - semi-solid appearance -->
+    <LinearGradientBrush x:Key="QuickFilterGelBodyBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#44FFFFFF" Offset="0"/>
+        <GradientStop Color="#20607F98" Offset="0.28"/>
+        <GradientStop Color="#28607F98" Offset="0.72"/>
+        <GradientStop Color="#5CFFFFFF" Offset="1"/>
+    </LinearGradientBrush>
+    
+    <!-- Gel edge contour - darkens edges for depth -->
+    <LinearGradientBrush x:Key="QuickFilterGelEdgeContourBrush" StartPoint="0,0.5" EndPoint="1,0.5">
+        <GradientStop Color="#281A2536" Offset="0"/>
+        <GradientStop Color="#001A2536" Offset="0.16"/>
+        <GradientStop Color="#001A2536" Offset="0.84"/>
+        <GradientStop Color="#281A2536" Offset="1"/>
+    </LinearGradientBrush>
+    
+    <!-- Gel top highlight - bright highlight at top -->
+    <LinearGradientBrush x:Key="QuickFilterGelTopHighlightBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#CCFFFFFF" Offset="0"/>
+        <GradientStop Color="#66FFFFFF" Offset="0.22"/>
+        <GradientStop Color="#00FFFFFF" Offset="0.55"/>
+    </LinearGradientBrush>
+    
+    <!-- Gel bottom glow - subtle glow at bottom -->
+    <LinearGradientBrush x:Key="QuickFilterGelBottomGlowBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#00162230" Offset="0"/>
+        <GradientStop Color="#00314251" Offset="0.5"/>
+        <GradientStop Color="#66162230" Offset="1"/>
+    </LinearGradientBrush>
+    
+    <!-- Gel refraction - light refraction effect -->
+    <LinearGradientBrush x:Key="QuickFilterGelRefractionBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#005B7F96" Offset="0"/>
+        <GradientStop Color="#3CFFFFFF" Offset="0.34"/>
+        <GradientStop Color="#10607F98" Offset="0.58"/>
+        <GradientStop Color="#00FFFFFF" Offset="1"/>
+    </LinearGradientBrush>
+    
+    <!-- Border brushes -->
+    <SolidColorBrush x:Key="QuickFilterGlassBorderBrush" Color="#44FFFFFF"/>
+    <SolidColorBrush x:Key="QuickFilterGlassActiveBorderBrush" Color="#AA7FA3C3"/>
+    
+</ResourceDictionary>

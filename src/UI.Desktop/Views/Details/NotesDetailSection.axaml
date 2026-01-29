@@ -1,0 +1,33 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:PhantomVault.UI.Converters"
+             x:Class="PhantomVault.UI.Views.Details.NotesDetailSection">
+    
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://PhantomVault.UI/Resources/Converters/ConverterResources.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    
+    <!-- Notes -->
+    <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasNotes}">
+        <TextBlock Text="Notes" 
+                   FontSize="13" 
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource MutedTextBrush}"/>
+        <TextBox Text="{Binding SelectedCredential.Notes}" 
+                 IsReadOnly="True"
+                 BorderThickness="1"
+                 BorderBrush="{DynamicResource ControlBorderBrush}"
+                 Padding="10,8"
+                 MinHeight="70"
+                 AcceptsReturn="True"
+                 TextWrapping="Wrap">
+            <TextBox.Effect>
+                <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+            </TextBox.Effect>
+        </TextBox>
+    </StackPanel>
+</UserControl>

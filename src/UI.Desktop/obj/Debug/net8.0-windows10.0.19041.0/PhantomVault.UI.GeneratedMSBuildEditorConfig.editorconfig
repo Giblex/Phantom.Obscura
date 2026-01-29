@@ -1,0 +1,465 @@
+is_global = true
+build_property.AvaloniaNameGeneratorIsEnabled = true
+build_property.AvaloniaNameGeneratorBehavior = InitializeComponent
+build_property.AvaloniaNameGeneratorDefaultFieldModifier = internal
+build_property.AvaloniaNameGeneratorFilterByPath = *
+build_property.AvaloniaNameGeneratorFilterByNamespace = *
+build_property.AvaloniaNameGeneratorViewFileNamingStrategy = NamespaceAndClassName
+build_property.AvaloniaNameGeneratorAttachDevTools = true
+build_property.MvvmToolkitEnableINotifyPropertyChangingSupport = true
+build_property.TargetFramework = net8.0-windows10.0.19041.0
+build_property.TargetFrameworkIdentifier = .NETCoreApp
+build_property.TargetFrameworkVersion = v8.0
+build_property.TargetPlatformMinVersion = 10.0.19041.0
+build_property.UsingMicrosoftNETSdkWeb = 
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = PhantomVault.UI
+build_property.ProjectDir = O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.CsWinRTAotOptimizerEnabled = true
+build_property.CsWinRTAotExportsEnabled = 
+build_property.CsWinRTRcwFactoryFallbackGeneratorForceOptIn = 
+build_property.CsWinRTRcwFactoryFallbackGeneratorForceOptOut = 
+build_property.CsWinRTCcwLookupTableGeneratorEnabled = true
+build_property.CsWinRTMergeReferencedActivationFactories = 
+build_property.CsWinRTAotWarningLevel = 
+build_property.CsWinRTUseWindowsUIXamlProjections = false
+build_property.EffectiveAnalysisLevelStyle = 8.0
+build_property.EnableCodeStyleSeverity = 
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/App.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Assets/Animations/ModernAnimations.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Assets/Styles/GlobalStyles.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Assets/Styles/LiquidGlass.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Assets/Styles/LiquidGlass.Enhanced.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Assets/Themes/Accents/Accent.CharcoalBlue.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Assets/Themes/Accents/Accent.Default.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Assets/Themes/Accents/Accent.Pastel.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Assets/Themes/PhantomTheme.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Assets/Themes/PhantomTheme.Dark.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Assets/Themes/PhantomTheme.HighContrast.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Assets/Themes/PhantomTheme.Light.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Assets/Themes/Theme.CharcoalPastel.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Assets/Themes/Theme.ClassicDark.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Assets/Themes/Theme.ClassicLight.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Assets/Themes/Theme.GiblexGlassNavy.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Assets/Themes/Theme.ModernSystem.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Assets/Themes/Theme.Natural.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Assets/Themes/Theme.Proton.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Components/Fields/CopyableField.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Components/Navigation/QuickFilterButton.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Controls/EmptyState.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Controls/EnhancedSearchBar.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Controls/GelMagnifyHighlightBar.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Controls/HeroHeader.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Controls/LiquidGlassButton.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Controls/LiquidGlassHighlightBar.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Controls/LoadingSpinner.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Controls/PasswordCaptureToast.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Controls/SecurityDashboard.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Controls/SkeletonLoader.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Controls/SvgIcon.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Controls/ThemeToggleButton.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Controls/ToastNotification.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Controls/ValidationMessage.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Controls/VirtualKeyboard.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Examples/BehaviorAnimationExample.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Resources/Brushes/GlassEffects.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Resources/Brushes/SidebarBrushes.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Resources/Converters/ConverterResources.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Resources/Strings.en-US.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Resources/Strings.es-ES.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Resources/Styles/ButtonStyles.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Resources/Styles/ListBoxStyles.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Resources/Styles/ToggleButtonStyles.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Resources/Templates/DataTemplates/CategoryDataTemplates.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Resources/Templates/DataTemplates/CredentialDataTemplates.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Resources/Tokens/SizingTokens.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Resources/Tokens/SpacingTokens.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Resources/Tokens/ThicknessTokens.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Styles/Animations.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/AboutWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/AccessibilitySettingsWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/AddCategoryDialog.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/AddEditCredentialWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/AddPasswordWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/AutoFillSettingsWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/AutofillSuggestionsWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Autofill/AutofillMiniWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/AutoInjectPromptWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/BackupSnapshotsWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/CategoryLandingView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/CategoryManagerView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/CategoryManagerWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/CredentialListView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/DashboardView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/DecoyPreviewWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Details/ApiKeyDetailView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Details/BankAccountDetailView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Details/CategoryDetailSection.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Details/ContactDetailView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Details/CreditCardDetailView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Details/DetailActionButtons.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Details/ExpiryDetailSection.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Details/IdentityDetailView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Details/MetadataDetailSection.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Details/NotesDetailSection.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Details/PasswordDetailView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Details/TagsDetailSection.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Details/UrlDetailSection.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Details/WiFiDetailView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Dialogs/BackupCredentialsDialog.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Dialogs/KeePassPasswordDialog.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Dialogs/PinSetupDialog.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/DuplicateReviewDialog.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/EditForms/ApiKeyEditForm.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/EditForms/BankAccountEditForm.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/EditForms/ContactEditForm.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/EditForms/CreditCardEditForm.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/EditForms/IdentityEditForm.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/EditForms/WiFiEditForm.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/ExportWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/FrontPageWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/HeaderView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/IconDownloaderWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/IconManagerView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/IconManagerWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/IconPickerWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/ImportExportDialog.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/ImportWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/InstallerWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/KeyboardShortcutsWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/LogViewerWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/MainWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/MergeCredentialsWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Overlays/CategoryManagerOverlay.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Overlays/FlaggedPasswordsOverlay.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Overlays/IconManagerOverlay.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Overlays/SettingsPanelOverlay.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/PasskeySettingsWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/PasswordGeneratorWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/PasswordHealthWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/ProvisionWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/RecoveryPanel.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/SecurityCheckScreen.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/SecuritySettingsWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/SettingsWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Settings/AccessibilitySettingsView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Settings/AdvancedSettingsView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Settings/AutoFillSettingsView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Settings/BackupSettingsView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Settings/GeneralSettingsView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Settings/ImportExportSettingsView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Settings/PasswordHealthView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Settings/PasswordSecurityView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Settings/RubbishBinSettingsView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Settings/SecuritySettingsView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Settings/ThemeSettingsView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/ShareWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/ShortcutsWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/SidebarView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/SignInDialog.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/StatusBarView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/ThemePreviewWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/ThemeSettingsWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/TotpScannerDialog.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/TotpSettingsWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/UsbSetupWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/VaultSettingsWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/VaultUnlockWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/VaultWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/VeraCryptSetupWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/WelcomePage.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/WindowsHelloSettingsWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml

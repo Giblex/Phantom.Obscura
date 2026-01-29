@@ -1,0 +1,179 @@
+using System;
+using System.IO;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
+using Avalonia.Rendering.SceneGraph;
+using Avalonia.Skia;
+using SkiaSharp;
+
+namespace Giblex.Controls;
+
+public class LiquidLensSurface : Control
+{
+    public static readonly StyledProperty<Bitmap?> BackdropProperty =
+        AvaloniaProperty.Register<LiquidLensSurface, Bitmap?>(nameof(Backdrop));
+
+    public Bitmap? Backdrop
+    {
+        get => GetValue(BackdropProperty);
+        set => SetValue(BackdropProperty, value);
+    }
+
+    public static readonly StyledProperty<double> StrengthProperty =
+        AvaloniaProperty.Register<LiquidLensSurface, double>(nameof(Strength), 0);
+
+    public double Strength
+    {
+        get => GetValue(StrengthProperty);
+        set => SetValue(StrengthProperty, value);
+    }
+
+    public static readonly StyledProperty<Point> PointerProperty =
+        AvaloniaProperty.Register<LiquidLensSurface, Point>(nameof(Pointer), new Point(0, 0));
+
+    public Point Pointer
+    {
+        get => GetValue(PointerProperty);
+        set => SetValue(PointerProperty, value);
+    }
+
+    public static readonly StyledProperty<double> TimeProperty =
+        AvaloniaProperty.Register<LiquidLensSurface, double>(nameof(Time), 0);
+
+    public double Time
+    {
+        get => GetValue(TimeProperty);
+        set => SetValue(TimeProperty, value);
+    }
+
+    public static readonly StyledProperty<double> CornerRadiusProperty =
+        AvaloniaProperty.Register<LiquidLensSurface, double>(nameof(CornerRadius), 10);
+
+    public double CornerRadius
+    {
+        get => GetValue(CornerRadiusProperty);
+        set => SetValue(CornerRadiusProperty, value);
+    }
+
+    private static readonly Lazy<SKRuntimeEffect?> Effect = new(() =>
+    {
+        try
+        {
+            // Load SkSL from assets
+            var uri = new Uri("avares://Giblex/Assets/Shaders/LiquidLens.sksl");
+            using var stream = AssetLoader.Open(uri);
+            using var reader = new StreamReader(stream);
+            var sksl = reader.ReadToEnd();
+
+            var result = SKRuntimeEffect.Create(sksl, out var errorText);
+            if (result is null)
+                throw new Exception(errorText);
+
+            return result;
+        }
+        catch
+        {
+            return null;
+        }
+    });
+
+    public override void Render(DrawingContext context)
+    {
+        // If we can’t do the fancy thing, draw nothing (caller will show fallback layer).
+        if (Backdrop is null || Effect.Value is null)
+            return;
+
+        var bounds = Bounds;
+        if (bounds.Width < 2 || bounds.Height < 2)
+            return;
+
+        context.Custom(new LensDrawOp(
+            new Rect(bounds.Size),
+            Backdrop,
+            Effect.Value,
+            Strength,
+            Pointer,
+            Time,
+            CornerRadius
+        ));
+    }
+
+    private sealed class LensDrawOp : ICustomDrawOperation
+    {
+        private readonly Rect _bounds;
+        private readonly Bitmap _backdrop;
+        private readonly SKRuntimeEffect _effect;
+        private readonly double _strength;
+        private readonly Point _pointer;
+        private readonly double _time;
+        private readonly double _cornerRadius;
+
+        public LensDrawOp(Rect bounds, Bitmap backdrop, SKRuntimeEffect effect,
+                          double strength, Point pointer, double time, double cornerRadius)
+        {
+            _bounds = bounds;
+            _backdrop = backdrop;
+            _effect = effect;
+            _strength = strength;
+            _pointer = pointer;
+            _time = time;
+            _cornerRadius = cornerRadius;
+        }
+
+        public void Dispose() { }
+        public bool HitTest(Point p) => _bounds.Contains(p);
+        public Rect Bounds => _bounds;
+
+        public void Render(ImmediateDrawingContext context)
+        {
+            var leaseFeature = context.TryGetFeature<ISkiaSharpApiLeaseFeature>();
+            if (leaseFeature is null)
+                return;
+
+            using var lease = leaseFeature.Lease();
+            var canvas = lease.SkCanvas;
+
+            // Convert Avalonia bitmap to SKImage (snapshot path).
+            // This is not “free”, so we do it only on recapture events (see button wrapper below).
+            using var skImage = _backdrop.ToSKImage();
+            if (skImage is null)
+                return;
+
+            using var srcShader = skImage.ToShader(SKShaderTileMode.Clamp, SKShaderTileMode.Clamp);
+
+            var w = (float)_bounds.Width;
+            var h = (float)_bounds.Height;
+
+            // Uniforms
+            using var builder = new SKRuntimeEffectUniforms(_effect);
+            builder["uSize"] = new SKPoint(w, h);
+            builder["uPointer"] = new SKPoint((float)_pointer.X, (float)_pointer.Y);
+            builder["uStrength"] = (float)Math.Clamp(_strength, 0, 1);
+            builder["uTime"] = (float)_time;
+
+            using var children = new SKRuntimeEffectChildren(_effect);
+            children["src"] = srcShader;
+
+            using var shader = _effect.ToShader(false, builder, children);
+
+            using var paint = new SKPaint { Shader = shader, IsAntialias = true };
+
+            // Rounded clip
+            var rr = new SKRoundRect(
+                new SKRect(0, 0, w, h),
+                (float)_cornerRadius,
+                (float)_cornerRadius
+            );
+
+            canvas.Save();
+            canvas.ClipRoundRect(rr, SKClipOperation.Intersect, true);
+            canvas.DrawRect(new SKRect(0, 0, w, h), paint);
+            canvas.Restore();
+        }
+
+        public bool Equals(ICustomDrawOperation? other) => other is LensDrawOp;
+    }
+}

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:PhantomVault.UI.ViewModels"
+        x:Class="PhantomVault.UI.Views.VaultUnlockWindow"
+        x:DataType="vm:VaultUnlockViewModel"
+        Title="Unlocking Vault"
+        Width="500"
+        Height="300"
+        MinWidth="450"
+        MinHeight="250"
+        CanResize="False"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource WindowBackgroundBrush}">
+
+    <Window.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="30">
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,24">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
+                <Image Source="avares://PhantomVault.UI/Assets/images/Icon Transparent background.png"
+                       Width="32" Height="32" VerticalAlignment="Center"/>
+                <TextBlock Text="Unlocking Your Vault"
+                           FontSize="24"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+            <TextBlock Text="Please wait while we access your secure vault..."
+                       FontSize="14"
+                       Foreground="#B0B8C0"
+                       HorizontalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- Status Content -->
+        <StackPanel Grid.Row="1" 
+                    Spacing="16"
+                    VerticalAlignment="Center">
+            
+            <!-- Progress Indicator with Icon -->
+            <Border Width="70" 
+                    Height="70"
+                    CornerRadius="35"
+                    Background="{DynamicResource AccentBrush}"
+                    HorizontalAlignment="Center"
+                    IsVisible="{Binding IsBusy}">
+                <Image Source="avares://PhantomVault.UI/Assets/images/Icon Transparent background.png"
+                       Width="42" Height="42"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"/>
+            </Border>
+
+            <!-- Status Message -->
+            <TextBlock Text="{Binding Status}"
+                       FontSize="16"
+                       Foreground="{DynamicResource PrimaryTextBrush}"
+                       TextAlignment="Center"
+                       TextWrapping="Wrap"
+                       Margin="0,8,0,0"/>
+
+            <!-- Loading Animation -->
+            <ProgressBar IsIndeterminate="{Binding IsBusy}"
+                         Height="4"
+                         Margin="40,16,40,0"
+                         IsVisible="{Binding IsBusy}"/>
+        </StackPanel>
+
+        <!-- Footer -->
+        <TextBlock Grid.Row="2"
+                   Text="PhantomVault - Zero-Knowledge Security"
+                   FontSize="11"
+                   Foreground="#808890"
+                   HorizontalAlignment="Center"
+                   Margin="0,24,0,0"/>
+    </Grid>
+</Window>

@@ -1,0 +1,102 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PhantomVault.UI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="PhantomVault.UI.Views.CategoryLandingView"
+             x:DataType="vm:CategoryLandingViewModel">
+    
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="TileBackgroundBrush" Color="#2A2A3E" Opacity="0.6"/>
+        <SolidColorBrush x:Key="TileHoverBrush" Color="#2A2A3E" Opacity="0.8"/>
+    </UserControl.Resources>
+    
+    <Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Margin="40,30,40,40"
+                        HorizontalAlignment="Center">
+                
+                <!-- Page Title -->
+                <TextBlock Text="Passwords"
+                           FontSize="36"
+                           FontWeight="Bold"
+                           Foreground="White"
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,30"/>
+                
+                <!-- Category Tiles Grid -->
+                <ItemsControl ItemsSource="{Binding CategoryTiles}"
+                              Width="860"
+                              HorizontalAlignment="Center">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Columns="2"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:CategoryTileViewModel">
+                        <Button Command="{Binding $parent[UserControl].DataContext.NavigateToCategoryCommand}"
+                                CommandParameter="{Binding FilterType}"
+                                Background="{StaticResource TileBackgroundBrush}"
+                                BorderThickness="0"
+                                CornerRadius="12"
+                                Padding="0"
+                                Margin="10"
+                                Height="120"
+                                Width="400"
+                                HorizontalAlignment="Center"
+                                HorizontalContentAlignment="Stretch"
+                                Cursor="Hand">
+                                
+                                <Grid Margin="20">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <!-- Icon Circle -->
+                                    <Border Grid.Column="0"
+                                            Width="50"
+                                            Height="50"
+                                            CornerRadius="25"
+                                            VerticalAlignment="Center"
+                                            Background="{Binding Color}">
+                                        
+                                        <TextBlock Text="{Binding Icon}"
+                                                   FontSize="24"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                    </Border>
+                                    
+                                    <!-- Category Name -->
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding Name}"
+                                               FontSize="18"
+                                               FontWeight="SemiBold"
+                                               Foreground="White"
+                                               VerticalAlignment="Center"
+                                               Margin="16,0,0,0"/>
+                                    
+                                    <!-- Count -->
+                                    <TextBlock Grid.Column="2"
+                                               Text="{Binding Count}"
+                                               FontSize="28"
+                                               FontWeight="Light"
+                                               Foreground="White"
+                                               Opacity="0.6"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+                            </Button>
+                        </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+    
+</UserControl>

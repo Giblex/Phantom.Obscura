@@ -1,0 +1,36 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PhantomVault.UI.Views.EditForms.IdentityEditForm">
+    
+    <Border x:Name="IdentityPanelBorder" Background="Transparent" IsVisible="{Binding IsIdentityEntry}">
+        <StackPanel x:Name="IdentityPanel" Spacing="12">
+        <TextBlock Text="Identity Document" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+        <StackPanel Spacing="6">
+            <TextBlock Text="Document Type" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding IdDocumentType}" Height="40" FontSize="14" Watermark="Driver License"/>
+        </StackPanel>
+        <StackPanel Spacing="6">
+            <TextBlock Text="ID Number" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding IdNumber}" Height="40" FontSize="14" Watermark="ABC123456"/>
+        </StackPanel>
+        <StackPanel Spacing="6">
+            <TextBlock Text="Issuing Country" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding IdIssuingCountry}" Height="40" FontSize="14" Watermark="US"/>
+        </StackPanel>
+        <StackPanel Spacing="6">
+            <TextBlock Text="Issuing State / Province" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding IdIssuingState}" Height="40" FontSize="14" Watermark="CA"/>
+        </StackPanel>
+        <Grid ColumnDefinitions="*,16,*">
+            <StackPanel Grid.Column="0" Spacing="6">
+                <TextBlock Text="Issue Date" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                <DatePicker SelectedDate="{Binding IdIssueDate}" Height="40" FontSize="14"/>
+            </StackPanel>
+            <StackPanel Grid.Column="2" Spacing="6">
+                <TextBlock Text="Expiration Date" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                <DatePicker SelectedDate="{Binding IdExpiryDate}" Height="40" FontSize="14"/>
+            </StackPanel>
+        </Grid>
+        </StackPanel>
+    </Border>
+</UserControl>

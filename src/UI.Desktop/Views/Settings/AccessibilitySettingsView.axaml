@@ -1,0 +1,128 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PhantomVault.UI.ViewModels.Settings"
+             x:Class="PhantomVault.UI.Views.Settings.AccessibilitySettingsView"
+             x:DataType="vm:AccessibilitySettingsViewModel">
+    <StackPanel Spacing="20" Margin="0,0,30,60">
+        <TextBlock Text="Accessibility" 
+                   FontSize="{StaticResource Type.H3.Size}" 
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+        
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Lg}" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Language &amp; Region" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Display language:" 
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <ComboBox Width="250" 
+                              HorizontalAlignment="Left"
+                              SelectedIndex="0">
+                        <ComboBoxItem Content="English (United States)"/>
+                        <ComboBoxItem Content="Español (Spanish)"/>
+                        <ComboBoxItem Content="Français (French)"/>
+                        <ComboBoxItem Content="Deutsch (German)"/>
+                        <ComboBoxItem Content="Italiano (Italian)"/>
+                        <ComboBoxItem Content="Português (Portuguese)"/>
+                        <ComboBoxItem Content="中文 (Chinese Simplified)"/>
+                        <ComboBoxItem Content="日本語 (Japanese)"/>
+                        <ComboBoxItem Content="한국어 (Korean)"/>
+                    </ComboBox>
+                </StackPanel>
+
+                <TextBlock Text="Restart required for language changes to take effect" 
+                           FontStyle="Italic"
+                           Foreground="{DynamicResource WarningBrush}"/>
+            </StackPanel>
+        </Border>
+
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Lg}" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="View Preferences" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Default entry view:" 
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <StackPanel Spacing="5">
+                        <RadioButton Content="List view (compact)" 
+                                     IsChecked="True"
+                                     GroupName="ViewMode"/>
+                        <RadioButton Content="Grid view (tiles)" 
+                                     GroupName="ViewMode"/>
+                        <RadioButton Content="Detailed view (expanded)" 
+                                     GroupName="ViewMode"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <CheckBox Content="Show entry icons" 
+                          IsChecked="{Binding ShowEntryIcons}"
+                          ToolTip.Tip="Display website favicons next to entries"/>
+
+                <CheckBox Content="Show category colors" 
+                          IsChecked="{Binding ShowCategoryColors}"
+                          ToolTip.Tip="Use color indicators for categories"/>
+
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Entry font size:" 
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <ComboBox Width="150" 
+                              HorizontalAlignment="Left"
+                              SelectedIndex="{Binding SelectedFontSize}">
+                        <ComboBoxItem Content="Small"/>
+                        <ComboBoxItem Content="Medium"/>
+                        <ComboBoxItem Content="Large"/>
+                        <ComboBoxItem Content="Extra Large"/>
+                    </ComboBox>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Lg}" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Keyboard &amp; Navigation" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <CheckBox Content="Enable keyboard shortcuts" 
+                          IsChecked="{Binding EnableKeyboardShortcuts}"
+                          ToolTip.Tip="Use keyboard shortcuts for common actions"/>
+
+                <Button Content="Configure Shortcuts" 
+                        Width="180" 
+                        HorizontalAlignment="Left"
+                        Command="{Binding ConfigureShortcutsCommand}"
+                        Classes="liquid-glass"
+                        ToolTip.Tip="Customize keyboard shortcuts"/>
+
+                <CheckBox Content="Focus search on window open" 
+                          IsChecked="{Binding FocusSearchOnOpen}"
+                          ToolTip.Tip="Automatically focus search box when vault opens"/>
+
+                <CheckBox Content="Enable screen reader support" 
+                          IsChecked="{Binding EnableScreenReader}"
+                          ToolTip.Tip="Optimize for screen reader accessibility"/>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>
+

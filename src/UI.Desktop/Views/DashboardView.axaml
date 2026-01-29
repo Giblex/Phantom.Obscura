@@ -1,0 +1,433 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:PhantomVault.UI.Desktop.Controls"
+             xmlns:services="clr-namespace:PhantomVault.Core.Services;assembly=PhantomVault.Core"
+             xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
+             xmlns:behaviors="clr-namespace:PhantomVault.UI.Behaviors"
+             x:Class="PhantomVault.UI.Views.DashboardView"
+             Background="{DynamicResource WindowBackgroundBrush}">
+
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="TileGlassBrush" Color="#1E2A3A" />
+        <SolidColorBrush x:Key="TileBorderBrush" Color="#2D3E55" />
+        <SolidColorBrush x:Key="CardBackgroundBrush" Color="#223044" />
+        <SolidColorBrush x:Key="SurfaceBrush" Color="#27384F" />
+        <SolidColorBrush x:Key="ControlBorderBrush" Color="#33475E" />
+        <SolidColorBrush x:Key="PrimaryTextBrush" Color="White" />
+        <SolidColorBrush x:Key="SecondaryTextBrush" Color="#C8FFFFFF" />
+        <SolidColorBrush x:Key="MutedTextBrush" Color="#88FFFFFF" />
+        <SolidColorBrush x:Key="AccentBrush" Color="#7FC8FF" />
+        <SolidColorBrush x:Key="SuccessBrush" Color="#6EE7A4" />
+        <SolidColorBrush x:Key="WarningBrush" Color="#FFD166" />
+        <SolidColorBrush x:Key="InfoBrush" Color="#88BFFF" />
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Spacing="{StaticResource Space.Xl}" Margin="24">
+
+            <TextBlock Text="Dashboard"
+                       FontSize="28"
+                       FontWeight="Bold"
+                       Foreground="White" />
+
+            <!-- Hero Header -->
+            <Border Background="{DynamicResource TileGlassBrush}"
+                    BorderBrush="{DynamicResource TileBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="{StaticResource Radius.Lg}"
+                    Padding="32,24">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Grid.Column="0" Spacing="8">
+                        <TextBlock Text="Welcome to PhantomVault"
+                                   FontSize="{StaticResource Type.H1.Size}"
+                                   FontWeight="Bold"
+                                   Foreground="White"/>
+                        <TextBlock Text="{Binding WelcomeMessage}"
+                                   FontSize="{StaticResource Type.H3.Size}"
+                                   Foreground="#C8FFFFFF"/>
+                    </StackPanel>
+                    <controls:SvgIcon Grid.Column="1"
+                                      Preset="{x:Static services:IconPreset.Shield}"
+                                      Width="64" Height="64"
+                                      IconColor="White"/>
+                </Grid>
+            </Border>
+
+            <!-- Quick Actions -->
+            <Border Background="{DynamicResource CardBackgroundBrush}"
+                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="{StaticResource Radius.Lg}"
+                    Padding="20,12"
+                    HorizontalAlignment="Stretch">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="Quick Actions"
+                               FontSize="{StaticResource Type.H2.Size}"
+                               FontWeight="SemiBold"
+                               Foreground="White"/>
+                    
+                    <UniformGrid Columns="4" ColumnSpacing="12">
+                        <!-- Add Password -->
+                        <Button Command="{Binding AddPasswordCommand}"
+                                Background="{DynamicResource SurfaceBrush}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="{StaticResource Radius.Md}"
+                            Padding="16,8"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center">
+                            <StackPanel Spacing="8" HorizontalAlignment="Center">
+                                <controls:SvgIcon Preset="{x:Static services:IconPreset.Plus}" Width="32" Height="32" IconColor="White"/>
+                                <TextBlock Text="Add Password" FontSize="{StaticResource Type.Label.Size}" TextAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Password Generator -->
+                        <Button Command="{Binding OpenGeneratorCommand}"
+                                Background="{DynamicResource SurfaceBrush}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="{StaticResource Radius.Md}"
+                            Padding="16,8"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center">
+                            <StackPanel Spacing="8" HorizontalAlignment="Center">
+                                <controls:SvgIcon Preset="{x:Static services:IconPreset.Key}" Width="32" Height="32" IconColor="White"/>
+                                <TextBlock Text="Generate" FontSize="{StaticResource Type.Label.Size}" TextAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Import -->
+                        <Button Command="{Binding OpenImportCommand}"
+                                Background="{DynamicResource SurfaceBrush}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="{StaticResource Radius.Md}"
+                            Padding="16,8"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center">
+                            <StackPanel Spacing="8" HorizontalAlignment="Center">
+                                <controls:SvgIcon Preset="{x:Static services:IconPreset.Upload}" Width="32" Height="32" IconColor="White"/>
+                                <TextBlock Text="Import" FontSize="{StaticResource Type.Label.Size}" TextAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Password Health -->
+                        <Button Command="{Binding OpenPasswordHealthCommand}"
+                                Background="{DynamicResource SurfaceBrush}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="{StaticResource Radius.Md}"
+                            Padding="16,8"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center">
+                            <StackPanel Spacing="8" HorizontalAlignment="Center">
+                                <controls:SvgIcon IconName="activity" Width="32" Height="32" IconColor="White"/>
+                                <TextBlock Text="Health Check" FontSize="{StaticResource Type.Label.Size}" TextAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </UniformGrid>
+                </StackPanel>
+            </Border>
+
+            <!-- Navigation Panel -->
+            <Border Background="{DynamicResource CardBackgroundBrush}"
+                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="{StaticResource Radius.Lg}"
+                    Padding="20">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Navigation"
+                               FontSize="{StaticResource Type.H2.Size}"
+                               FontWeight="SemiBold"
+                               Foreground="White"/>
+                    <StackPanel Spacing="16">
+                        <Button Command="{Binding OpenPasswordsCommand}"
+                                Background="{DynamicResource SurfaceBrush}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="{StaticResource Radius.Md}"
+                                Padding="24"
+                                MinHeight="80"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left">
+                            <TextBlock Text="Passwords" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                        </Button>
+                        <Button Command="{Binding OpenRecoveryCommand}"
+                                Background="{DynamicResource SurfaceBrush}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="{StaticResource Radius.Md}"
+                                Padding="24"
+                                MinHeight="80"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left">
+                            <TextBlock Text="Recovery" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                        </Button>
+                        <Button Command="{Binding OpenPasswordHealthDashboardCommand}"
+                                Background="{DynamicResource SurfaceBrush}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="{StaticResource Radius.Md}"
+                                Padding="24"
+                                MinHeight="80"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left">
+                            <TextBlock Text="Password health" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                        </Button>
+                        <Button Command="{Binding OpenTotpVaultCommand}"
+                                Background="{DynamicResource SurfaceBrush}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="{StaticResource Radius.Md}"
+                                Padding="24"
+                                MinHeight="80"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left">
+                            <TextBlock Text="TOTP vault" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                        </Button>
+                        <Button Command="{Binding LaunchPhantomAttestorCommand}"
+                                Background="{DynamicResource AccentBrush}"
+                                BorderBrush="{DynamicResource AccentBrush}"
+                                BorderThickness="1"
+                                CornerRadius="{StaticResource Radius.Md}"
+                                Padding="24"
+                                MinHeight="80"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <TextBlock Text="🔐" FontSize="24" VerticalAlignment="Center"/>
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Launch PhantomAttestor" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Standalone TOTP app with live sync" Foreground="White" FontSize="12" Opacity="0.8"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding OpenSecurityOptionsCommand}"
+                                Background="{DynamicResource SurfaceBrush}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="{StaticResource Radius.Md}"
+                                Padding="24"
+                                MinHeight="80"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left">
+                            <TextBlock Text="Security options" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Security Dashboard -->
+            <Border Background="{DynamicResource CardBackgroundBrush}"
+                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="{StaticResource Radius.Lg}"
+                    Padding="20">
+                <controls:SecurityDashboard DataContext="{Binding SecurityDashboardViewModel}"/>
+            </Border>
+
+            <!-- Two Column Layout: Recent Activity + Statistics -->
+            <Grid ColumnDefinitions="2*,1*" ColumnSpacing="16">
+                
+                <!-- Recent Activity -->
+                <Border Grid.Column="0"
+                        Background="{DynamicResource CardBackgroundBrush}"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{StaticResource Radius.Lg}"
+                        Padding="20">
+                    <StackPanel Spacing="12">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0"
+                                       Text="Recent Activity"
+                                       FontSize="{StaticResource Type.H3.Size}"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <Button Grid.Column="1"
+                                    Content="View All"
+                                    FontSize="{StaticResource Type.Small.Size}"
+                                    Foreground="{DynamicResource AccentBrush}"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Padding="8,4"
+                                    Command="{Binding ViewAllActivityCommand}"/>
+                        </Grid>
+
+                        <!-- Activity List -->
+                        <ItemsControl ItemsSource="{Binding RecentActivities}" MaxHeight="400">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource SurfaceBrush}"
+                                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="{StaticResource Radius.Sm}"
+                                            Padding="12"
+                                            Margin="0,0,0,8">
+                                        <Grid ColumnDefinitions="Auto,*,Auto">
+                                            <controls:SvgIcon Grid.Column="0"
+                                                              IconName="edit"
+                                                              Width="20" Height="20"
+                                                              IconColor="{DynamicResource AccentBrush}"
+                                                              Margin="0,0,12,0"/>
+                                            <StackPanel Grid.Column="1" Spacing="2">
+                                                <TextBlock Text="{Binding Title}"
+                                                           FontSize="{StaticResource Type.Body.Size}"
+                                                           FontWeight="Medium"
+                                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                <TextBlock Text="{Binding Description}"
+                                                           FontSize="{StaticResource Type.Small.Size}"
+                                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="2"
+                                                       Text="{Binding TimeAgo}"
+                                                       FontSize="{StaticResource Type.Small.Size}"
+                                                       Foreground="{DynamicResource MutedTextBrush}"
+                                                       VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- Empty State -->
+                        <Border IsVisible="{Binding !HasRecentActivity}"
+                                Background="{DynamicResource SurfaceBrush}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="{StaticResource Radius.Sm}"
+                                Padding="32,24">
+                            <StackPanel Spacing="8" HorizontalAlignment="Center">
+                                <controls:SvgIcon Preset="{x:Static services:IconPreset.Clock}" Width="48" Height="48" IconColor="White"/>
+                                <TextBlock Text="No recent activity"
+                                           FontSize="{StaticResource Type.Body.Size}"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           TextAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- Statistics Sidebar -->
+                <StackPanel Grid.Column="1" Spacing="12">
+                    
+                    <!-- Vault Statistics -->
+                    <Border Background="{DynamicResource CardBackgroundBrush}"
+                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource Radius.Lg}"
+                            Padding="16">
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="Statistics"
+                                       FontSize="{StaticResource Type.H4.Size}"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            
+                            <StackPanel Spacing="8">
+                                <!-- Total Credentials -->
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Grid.Column="0"
+                                               Text="Total Credentials"
+                                               FontSize="{StaticResource Type.Body.Size}"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding TotalCredentials}"
+                                               FontSize="{StaticResource Type.Body.Size}"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                </Grid>
+
+                                <!-- Categories -->
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Grid.Column="0"
+                                               Text="Categories"
+                                               FontSize="{StaticResource Type.Body.Size}"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding TotalCategories}"
+                                               FontSize="{StaticResource Type.Body.Size}"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                </Grid>
+
+                                <!-- 2FA Coverage -->
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Grid.Column="0"
+                                               Text="2FA Coverage"
+                                               FontSize="{StaticResource Type.Body.Size}"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding TwoFactorCoverage, StringFormat='{}{0}%'}"
+                                               FontSize="{StaticResource Type.Body.Size}"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource SuccessBrush}"/>
+                                </Grid>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Favorites -->
+                    <Border Background="{DynamicResource CardBackgroundBrush}"
+                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource Radius.Lg}"
+                            Padding="16">
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="Favorites"
+                                       FontSize="{StaticResource Type.H4.Size}"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            
+                            <ItemsControl ItemsSource="{Binding FavoriteCredentials}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding $parent[UserControl].DataContext.OpenCredentialCommand}"
+                                                CommandParameter="{Binding}"
+                                                Background="{DynamicResource SurfaceBrush}"
+                                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="{StaticResource Radius.Sm}"
+                                                Padding="8"
+                                                Margin="0,0,0,8"
+                                                HorizontalAlignment="Stretch"
+                                                HorizontalContentAlignment="Left">
+                                            <Grid ColumnDefinitions="Auto,*">
+                                                <controls:SvgIcon Grid.Column="0"
+                                                                  Preset="{x:Static services:IconPreset.Star}"
+                                                                  Width="16" Height="16"
+                                                                  IconColor="White"
+                                                                  Margin="0,0,8,0"/>
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding Title}"
+                                                           FontSize="{StaticResource Type.Body.Size}"
+                                                           Foreground="{DynamicResource PrimaryTextBrush}"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                            </Grid>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- Empty State -->
+                            <Border IsVisible="{Binding !HasFavorites}"
+                                    Background="{DynamicResource SurfaceBrush}"
+                                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="{StaticResource Radius.Sm}"
+                                    Padding="16">
+                                <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                    <controls:SvgIcon Preset="{x:Static services:IconPreset.Star}" Width="32" Height="32" IconColor="White"/>
+                                    <TextBlock Text="No favorites yet"
+                                               FontSize="{StaticResource Type.Small.Size}"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               TextAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

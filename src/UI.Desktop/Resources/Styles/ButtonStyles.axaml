@@ -1,0 +1,99 @@
+<Styles xmlns="https://github.com/avaloniaui"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Shadow handling moved to theme files (Dark.axaml, Light.axaml, HighContrast.axaml) -->
+    <!-- This allows themes to control shadow presence/intensity without defensive overrides -->
+
+    <!-- Tile button styles - Transparent wrappers for credential tiles -->
+    <!-- List tile variant - stretches to fill available width -->
+    <Style Selector="Button.tile-button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="MinHeight" Value="{StaticResource TileHeight}" />
+        <Setter Property="MaxHeight" Value="{StaticResource TileHeight}" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}" 
+                            BorderBrush="{TemplateBinding BorderBrush}" 
+                            BorderThickness="{TemplateBinding BorderThickness}" 
+                            CornerRadius="{TemplateBinding CornerRadius}" 
+                            ClipToBounds="True">
+                        <ContentPresenter Content="{TemplateBinding Content}" 
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Grid tile variant - fixed sizing -->
+    <Style Selector="Button.tile-button-grid">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}" 
+                            BorderBrush="{TemplateBinding BorderBrush}" 
+                            BorderThickness="{TemplateBinding BorderThickness}" 
+                            CornerRadius="{TemplateBinding CornerRadius}" 
+                            ClipToBounds="True">
+                        <ContentPresenter Content="{TemplateBinding Content}" 
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Ensure hovered/pressed states remain transparent -->
+    <Style Selector="Button.tile-button:pointerover, Button.tile-button:pressed">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    
+    <Style Selector="Button.tile-button-grid:pointerover, Button.tile-button-grid:pressed">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+
+    <!-- Defensive: remove any BoxShadow or Effect that could be applied by base themes -->
+    <Style Selector="Button.tile-button /template/ Border">
+        <Setter Property="Effect" Value="{x:Null}" />
+        <Setter Property="BoxShadow" Value="0 0 0 0 #00000000" />
+    </Style>
+
+    <Style Selector="Button.tile-button Button">
+        <Setter Property="Effect" Value="{x:Null}" />
+    </Style>
+
+    <Style Selector="Button.tile-button TextBlock">
+        <Setter Property="Effect" Value="{x:Null}" />
+    </Style>
+
+    <!-- Header action buttons - used in toolbar -->
+    <Style Selector="Button.header-action">
+        <Setter Property="Background" Value="{DynamicResource HeaderButtonBackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource HeaderButtonBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource HeaderButtonForegroundBrush}" />
+        <Setter Property="Effect" Value="{x:Null}" />
+        <Setter Property="Padding" Value="12,6" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    
+</Styles>

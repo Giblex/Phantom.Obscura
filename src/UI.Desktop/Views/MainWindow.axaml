@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PhantomVault.UI.Views.MainWindow"
+        Title="Phantom Vault"
+        Width="600" Height="200"
+        MinWidth="400" MinHeight="300"
+        Background="{DynamicResource WindowBackgroundBrush}">
+
+    <Window.KeyBindings>
+        <KeyBinding Gesture="Ctrl+U" Command="{Binding UnlockCommand}" />
+        <KeyBinding Gesture="Ctrl+N" Command="{Binding ProvisionCommand}" />
+        <KeyBinding Gesture="F1" Command="{Binding ShowHelpCommand}" />
+    </Window.KeyBindings>
+
+    <!-- Grid to support toast notifications overlay -->
+    <Grid>
+        <DockPanel Margin="10">
+        <Menu DockPanel.Dock="Top">
+            
+            <MenuItem Header="_File">
+                
+                <MenuItem Header="_Home" 
+                          Click="OpenFrontPage_Click"
+                          InputGesture="Ctrl+H"
+                          ToolTip.Tip="Return to home (Ctrl+H)" />
+                
+                <MenuItem Header="_Provision" 
+                          Click="OpenProvisionWindow_Click"
+                          ToolTip.Tip="Create a new vault on USB" />
+                
+                <MenuItem Header="_Unlock Vault" 
+                          Click="OpenVaultUnlockWindow_Click"
+                          InputGesture="Ctrl+U"
+                          ToolTip.Tip="Unlock vault (Ctrl+U)" />
+                
+                <Separator />
+                
+                <MenuItem Header="E_xit" 
+                          Click="Exit_Click"
+                          InputGesture="Alt+F4"
+                          ToolTip.Tip="Exit application (Alt+F4)" />
+            </MenuItem>
+            
+            <MenuItem Header="_Settings">
+                
+                <MenuItem Header="_Theme" 
+                          Click="OpenThemeSettings_Click"
+                          ToolTip.Tip="Change application theme" />
+                
+                <MenuItem Header="_Security" 
+                          Click="OpenSecuritySettings_Click"
+                          ToolTip.Tip="Configure security options" />
+                
+                <MenuItem Header="_Auto Fill" 
+                          Click="OpenAutoFillSettings_Click"
+                          ToolTip.Tip="Configure auto-fill settings" />
+            </MenuItem>
+            
+            <MenuItem Header="_Tools">
+                
+                <MenuItem Header="_Add Password" 
+                          Click="OpenAddPasswordWindow_Click"
+                          ToolTip.Tip="Add new credential" />
+                
+                <MenuItem Header="_USB Setup" 
+                          Click="OpenUsbSetupWindow_Click"
+                          ToolTip.Tip="Configure USB settings" />
+                
+                <MenuItem Header="_Share Credential" 
+                          Click="OpenShareWindow_Click"
+                          ToolTip.Tip="Share password securely" />
+                
+                <MenuItem Header="Password _Health" 
+                          Click="OpenPasswordHealthWindow_Click"
+                          ToolTip.Tip="Check password security" />
+            </MenuItem>
+        </Menu>
+        
+        <StackPanel Orientation="Horizontal" 
+                    Spacing="8" 
+                    DockPanel.Dock="Top"
+                    Margin="0,10,0,0">
+            
+            <TextBlock Text="USB Drive:" 
+                       VerticalAlignment="Center" />
+            
+            <ComboBox ItemsSource="{Binding RemovableDrives}" 
+                      SelectedValue="{Binding SelectedDrive}" 
+                      Width="200"
+                      TabIndex="0"
+                      ToolTip.Tip="Choose USB drive with vault" />
+            
+            <Button Content="Unlock Vault" 
+                    Command="{Binding UnlockCommand}"
+                    TabIndex="1"
+                    ToolTip.Tip="Unlock vault (Ctrl+U)" />
+            
+            <Button Content="Provision New Vault" 
+                    Command="{Binding ProvisionCommand}"
+                    TabIndex="2"
+                    ToolTip.Tip="Create new vault (Ctrl+N)" />
+        </StackPanel>
+        
+        <TextBlock Text="{Binding Status}"
+                   Margin="0,20,0,0"
+                   Foreground="Gray" />
+    </DockPanel>
+
+        <!-- Toast notification container (top layer) -->
+        <Panel x:Name="ToastContainer"
+               ZIndex="9999"
+               IsHitTestVisible="False"/>
+    </Grid>
+</Window>

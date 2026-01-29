@@ -1,0 +1,30 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:converters="clr-namespace:PhantomVault.UI.Converters">
+    
+    <!-- Value Converters - Reusable converter instances -->
+    <converters:BoolToStarBrushConverter x:Key="BoolToStarBrushConverter"/>
+    <converters:WidthToButtonSizeConverter x:Key="WidthToButtonSizeConverter"/>
+    <converters:BoolToOpacityConverter x:Key="BoolToOpacityConverter"/>
+    <converters:HexToBrushConverter x:Key="HexToBrushConverter"/>
+    <converters:HexToForegroundBrushConverter x:Key="HexToForegroundBrushConverter"/>
+    <converters:PrivacyMaskConverter x:Key="PrivacyMaskConverter"/>
+    <converters:PrivacyBlurEffectConverter x:Key="PrivacyBlurEffectConverter"/>
+    <converters:IconPathToBitmapConverter x:Key="IconPathToBitmapConverter"/>
+    <converters:IconPathExistsConverter x:Key="IconPathExistsConverter"/>
+    <converters:InvertBoolConverter x:Key="InvertBoolConverter"/>
+    <converters:BoolToDoubleConverter x:Key="BoolToDoubleConverter"/>
+    <converters:IsWidthAtLeastConverter x:Key="IsWidthAtLeastConverter"/>
+    <converters:BoolToGridLengthConverter x:Key="BoolToGridLengthConverter"/>
+    <converters:IsWidthLessThanConverter x:Key="IsWidthLessThanConverter"/>
+    <converters:CategoryNameToBrushConverter x:Key="CategoryNameToBrushConverter"/>
+    <converters:CategoryNameToForegroundBrushConverter x:Key="CategoryNameToForegroundBrushConverter"/>
+    <converters:BooleanAndConverter x:Key="BooleanAndConverter"/>
+
+    <!-- NEW: Security score and utility converters -->
+    <converters:SecurityScoreToBrushConverter x:Key="SecurityScoreToBrushConverter"/>
+    <converters:IntGreaterThanZeroConverter x:Key="IntGreaterThanZeroConverter"/>
+    <converters:PercentageToWidthConverter x:Key="PercentageToWidthConverter"/>
+
+</ResourceDictionary>
+

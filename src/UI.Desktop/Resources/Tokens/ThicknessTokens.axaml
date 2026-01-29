@@ -1,0 +1,12 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <!-- Common thickness tokens - Standardized padding and margin values -->
+    <Thickness x:Key="ContentPadding">20,16,20,24</Thickness>
+    <Thickness x:Key="DialogPadding">25,20</Thickness>
+    <Thickness x:Key="TilePadding">16,12,10,12</Thickness>
+    <Thickness x:Key="ButtonPadding">10,8</Thickness>
+    <Thickness x:Key="CompactMargin">0,0,0,8</Thickness>
+    
+</ResourceDictionary>
+

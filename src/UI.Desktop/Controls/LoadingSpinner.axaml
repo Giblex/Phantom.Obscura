@@ -1,0 +1,89 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PhantomVault.UI.Controls.LoadingSpinner">
+
+    <!-- Modern loading spinner with ReduceMotion support -->
+    <Grid>
+        <!-- Full rotation spinner (disabled when ReduceMotion is active) -->
+        <Viewbox Width="48" Height="48" x:Name="AnimatedSpinner">
+            <Canvas Width="48" Height="48">
+                <!-- Ring with gradient -->
+                <Path Stroke="{DynamicResource Brush.Accent}"
+                      StrokeThickness="4"
+                      StrokeLineCap="Round"
+                      Data="M 24,4 A 20,20 0 1,1 23.9,4"
+                      Opacity="0.3"/>
+
+                <!-- Animated arc -->
+                <Path x:Name="SpinnerArc"
+                      Stroke="{DynamicResource Brush.Accent}"
+                      StrokeThickness="4"
+                      StrokeLineCap="Round"
+                      Data="M 24,4 A 20,20 0 0,1 44,24"
+                      RenderTransformOrigin="0.5,0.5">
+                    <Path.RenderTransform>
+                        <RotateTransform Angle="0"/>
+                    </Path.RenderTransform>
+                </Path>
+            </Canvas>
+        </Viewbox>
+
+        <!-- Static indicator (shown when ReduceMotion is active) -->
+        <Viewbox Width="48" Height="48" x:Name="StaticSpinner" IsVisible="False">
+            <Canvas Width="48" Height="48">
+                <!-- Static ring -->
+                <Ellipse Width="40" Height="40"
+                         Canvas.Left="4"
+                         Canvas.Top="4"
+                         Stroke="{DynamicResource Brush.Accent}"
+                         StrokeThickness="4"
+                         Opacity="0.6"/>
+
+                <!-- Pulsing dot -->
+                <Ellipse x:Name="PulsingDot"
+                         Width="8"
+                         Height="8"
+                         Canvas.Left="20"
+                         Canvas.Top="20"
+                         Fill="{DynamicResource Brush.Accent}"/>
+            </Canvas>
+        </Viewbox>
+    </Grid>
+
+    <UserControl.Styles>
+        <!-- Smooth continuous rotation for normal mode -->
+        <Style Selector="Path#SpinnerArc">
+            <Style.Animations>
+                <Animation Duration="0:0:1.2"
+                          IterationCount="Infinite"
+                          Easing="LinearEasing">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="(RotateTransform.Angle)" Value="0"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="(RotateTransform.Angle)" Value="360"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+
+        <!-- Gentle pulse for reduced motion mode -->
+        <Style Selector="Ellipse#PulsingDot">
+            <Style.Animations>
+                <Animation Duration="0:0:1.5"
+                          IterationCount="Infinite"
+                          Easing="SineEaseInOut">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="1"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="50%">
+                        <Setter Property="Opacity" Value="0.3"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="1"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+    </UserControl.Styles>
+</UserControl>

@@ -1,0 +1,566 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <!-- ═══════════════════════════════════════════════════════════════════════════════
+         Global Styles - Standardized component styles using DynamicResource tokens
+         All colors referenced via {DynamicResource ...} - NO fixed hex values
+         ═══════════════════════════════════════════════════════════════════════════════ -->
+
+    <!-- ═══════════════════════ BASE TYPOGRAPHY ═══════════════════════ -->
+    
+    <Style Selector="TextBlock">
+        <Setter Property="FontFamily" Value="{DynamicResource MainFontFamily}"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+    </Style>
+    
+    <Style Selector="TextBlock.h1">
+        <Setter Property="FontSize" Value="{DynamicResource Type.H1.Size}"/>
+        <Setter Property="FontWeight" Value="{DynamicResource Type.Weight.Light}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextOnDark}"/>
+    </Style>
+    
+    <Style Selector="TextBlock.h2">
+        <Setter Property="FontSize" Value="{DynamicResource Type.H2.Size}"/>
+        <Setter Property="FontWeight" Value="{DynamicResource Type.Weight.Medium}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}"/>
+    </Style>
+    
+    <Style Selector="TextBlock.h3">
+        <Setter Property="FontSize" Value="{DynamicResource Type.H3.Size}"/>
+        <Setter Property="FontWeight" Value="{DynamicResource Type.Weight.Medium}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}"/>
+    </Style>
+    
+    <Style Selector="TextBlock.body">
+        <Setter Property="FontSize" Value="{DynamicResource Type.Body.Size}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}"/>
+    </Style>
+    
+    <Style Selector="TextBlock.muted">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextMuted}"/>
+    </Style>
+    
+    <Style Selector="TextBlock.small">
+        <Setter Property="FontSize" Value="{DynamicResource Type.Small.Size}"/>
+    </Style>
+    
+    <Style Selector="TextBlock.caption">
+        <Setter Property="FontSize" Value="{DynamicResource Type.Caption.Size}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextMuted}"/>
+    </Style>
+
+    <!-- ═══════════════════════ BUTTONS ═══════════════════════ -->
+    
+    <!-- Base Button -->
+    <Style Selector="Button">
+        <Setter Property="FontFamily" Value="{DynamicResource MainFontFamily}"/>
+        <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="{DynamicResource Thickness.ButtonPadding}"/>
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Md}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="MinHeight" Value="40"/>
+        <Setter Property="MinWidth" Value="100"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    
+    <Style Selector="Button:disabled">
+        <Setter Property="Opacity" Value="0.5"/>
+        <Setter Property="Cursor" Value="Arrow"/>
+    </Style>
+    
+    <!-- Primary Button (Teal accent) -->
+    <Style Selector="Button.primary">
+        <Setter Property="Background" Value="{DynamicResource Brush.Accent}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Navy900}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+    
+    <!-- Secondary Button (Translucent) -->
+    <Style Selector="Button.secondary">
+        <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.BorderSoft}"/>
+    </Style>
+    
+    <!-- Ghost Button (Minimal) -->
+    <Style Selector="Button.ghost">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.BorderSoft}"/>
+    </Style>
+    
+    <!-- Danger Button -->
+    <Style Selector="Button.danger">
+        <Setter Property="Background" Value="{DynamicResource Brush.Danger}"/>
+        <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <!-- Copy Button (liquid glass icon button) -->
+    <Style Selector="Button.copy-btn">
+        <Setter Property="MinHeight" Value="28"/>
+        <Setter Property="MinWidth" Value="28"/>
+        <Setter Property="Padding" Value="4"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Panel>
+                    <Border Name="BaseBorder"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            BorderBrush="#40FFFFFF"
+                            ClipToBounds="True">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                <GradientStop Color="#28FFFFFF" Offset="0"/>
+                                <GradientStop Color="#18FFFFFF" Offset="0.55"/>
+                                <GradientStop Color="#10FFFFFF" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                    </Border>
+                    <ContentPresenter Content="{TemplateBinding Content}"
+                                      Margin="{TemplateBinding Padding}"
+                                      HorizontalContentAlignment="Center"
+                                      VerticalContentAlignment="Center"/>
+                </Panel>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+    <!-- ═══════════════════════ CARDS / PANELS ═══════════════════════ -->
+    
+    <!-- Standard Card -->
+    <Style Selector="Border.card">
+        <Setter Property="Background" Value="{DynamicResource Brush.Card}"/>
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Lg}"/>
+        <Setter Property="Padding" Value="{DynamicResource Thickness.CardPadding}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.BorderSoft}"/>
+        <Setter Property="BoxShadow" Value="{DynamicResource Shadow.Card}"/>
+    </Style>
+    
+    <!-- Glass Card (translucent "glass-ish") -->
+    <Style Selector="Border.glass-card">
+        <Setter Property="Background" Value="{DynamicResource Brush.GlassGradient}"/>
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Lg}"/>
+        <Setter Property="Padding" Value="{DynamicResource Thickness.CardPadding}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.GlassBorder}"/>
+        <Setter Property="BoxShadow" Value="{DynamicResource Shadow.Glass}"/>
+    </Style>
+    
+    <!-- Surface Card (elevated surface) -->
+    <Style Selector="Border.surface-card">
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface}"/>
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Lg}"/>
+        <Setter Property="Padding" Value="{DynamicResource Thickness.CardPadding}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.BorderSoft}"/>
+        <Setter Property="BoxShadow" Value="{DynamicResource Shadow.Soft}"/>
+    </Style>
+    
+    <!-- Panel (section container) -->
+    <Style Selector="Border.panel">
+        <Setter Property="Background" Value="{DynamicResource Brush.Navy700}"/>
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Md}"/>
+        <Setter Property="Padding" Value="{DynamicResource Thickness.CardPaddingSm}"/>
+    </Style>
+
+    <!-- ═══════════════════════ INPUTS ═══════════════════════ -->
+    
+    <!-- TextBox -->
+    <Style Selector="TextBox">
+        <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource InputForegroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.BorderSoft}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Sm}"/>
+        <Setter Property="Padding" Value="12,10"/>
+        <Setter Property="MinHeight" Value="40"/>
+        <Setter Property="FontFamily" Value="{DynamicResource MainFontFamily}"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    
+    <Style Selector="TextBox:focus">
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
+        <Setter Property="BorderThickness" Value="2"/>
+    </Style>
+
+    <Style Selector="TextBox:focus-visible">
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.FocusRing}"/>
+        <Setter Property="BorderThickness" Value="2"/>
+    </Style>
+
+    <Style Selector="TextBox:pointerover">
+        <Setter Property="BorderBrush" Value="#66888888"/>
+    </Style>
+
+    <Style Selector="TextBox:focus:pointerover">
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.FocusRing}"/>
+        <Setter Property="BorderThickness" Value="2"/>
+    </Style>
+
+    <Style Selector="TextBox:disabled">
+        <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}"/>
+    </Style>
+
+    <!-- TextBox Error State (use with Classes="error") -->
+    <Style Selector="TextBox.error">
+        <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}"/>
+        <Setter Property="BorderThickness" Value="2"/>
+    </Style>
+
+    <Style Selector="TextBox.error:focus-visible">
+        <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}"/>
+    </Style>
+
+    <!-- TextBox Watermark/Placeholder styling -->
+    <Style Selector="TextBox /template/ TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
+        <Setter Property="FontSize" Value="13"/>
+    </Style>
+
+    <Style Selector="TextBox[AcceptsReturn=True] /template/ TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
+    </Style>
+    
+    <!-- TextBox idle/empty state - show placeholder text -->
+    <Style Selector="TextBox:empty /template/ TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
+        <Setter Property="Opacity" Value="0.7"/>
+    </Style>
+
+    <!-- ComboBox -->
+    <Style Selector="ComboBox">
+        <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource InputForegroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.BorderSoft}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Sm}"/>
+        <Setter Property="Padding" Value="12,10"/>
+        <Setter Property="MinHeight" Value="40"/>
+    </Style>
+    
+    <Style Selector="ComboBox:pointerover">
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.AccentHover}"/>
+    </Style>
+
+    <Style Selector="ComboBox:focus">
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
+        <Setter Property="BorderThickness" Value="2"/>
+    </Style>
+
+    <Style Selector="ComboBox:focus-visible">
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.FocusRing}"/>
+        <Setter Property="BorderThickness" Value="2"/>
+    </Style>
+
+    <Style Selector="ComboBox:focus:pointerover">
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.FocusRing}"/>
+        <Setter Property="BorderThickness" Value="2"/>
+    </Style>
+
+    <!-- ComboBox text and content styling - simplified to use InputForegroundBrush -->
+    <Style Selector="ComboBox /template/ ContentPresenter">
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource InputForegroundBrush}"/>
+    </Style>
+
+    <Style Selector="ComboBox /template/ ToggleButton">
+        <Setter Property="Foreground" Value="{DynamicResource InputForegroundBrush}"/>
+    </Style>
+
+    <!-- ComboBox Popup/Dropdown styling -->
+    <Style Selector="ComboBox /template/ Popup Border">
+        <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.BorderSoft}"/>
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Sm}"/>
+    </Style>
+
+    <Style Selector="ComboBox /template/ Popup ListBox">
+        <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
+    </Style>
+    
+    <Style Selector="ComboBoxItem">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource InputForegroundBrush}"/>
+        <Setter Property="Padding" Value="12,10"/>
+        <Setter Property="MinHeight" Value="40"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="ComboBoxItem TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource InputForegroundBrush}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="ComboBoxItem TextPresenter">
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource InputForegroundBrush}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- In some theme/templates, popup containers are ListBoxItem rather than ComboBoxItem -->
+    <Style Selector="ComboBox /template/ Popup ListBoxItem">
+        <Setter Property="Foreground" Value="{DynamicResource InputForegroundBrush}"/>
+    </Style>
+
+    <Style Selector="ComboBox /template/ Popup ListBoxItem TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource InputForegroundBrush}"/>
+    </Style>
+
+    <Style Selector="ComboBox /template/ Popup ListBoxItem TextPresenter">
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource InputForegroundBrush}"/>
+    </Style>
+    
+    <Style Selector="ComboBoxItem:pointerover">
+        <Setter Property="Background" Value="{DynamicResource ControlHoverBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource InputForegroundBrush}"/>
+    </Style>
+
+    <Style Selector="ComboBoxItem:focus-visible">
+        <Setter Property="Background" Value="{DynamicResource ControlHoverBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+
+    <Style Selector="ComboBoxItem:selected">
+        <Setter Property="Background" Value="{DynamicResource Brush.Accent}"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <Style Selector="ComboBoxItem:selected:pointerover">
+        <Setter Property="Background" Value="{DynamicResource Brush.AccentHover}"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+    </Style>
+
+    <Style Selector="ComboBoxItem:selected TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+    </Style>
+
+    <!-- ComboBox Watermark/Placeholder styling -->
+    <Style Selector="ComboBox /template/ TextBlock.watermark">
+        <Setter Property="Foreground" Value="{DynamicResource InputPlaceholderBrush}"/>
+        <Setter Property="FontSize" Value="13"/>
+    </Style>
+
+    <!-- DatePicker -->
+    <Style Selector="DatePicker">
+        <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource InputForegroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.BorderSoft}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Sm}"/>
+        <Setter Property="Padding" Value="12,10"/>
+        <Setter Property="MinHeight" Value="40"/>
+    </Style>
+
+    <Style Selector="DatePicker:pointerover">
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.AccentHover}"/>
+    </Style>
+
+    <Style Selector="DatePicker:focus">
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
+        <Setter Property="BorderThickness" Value="2"/>
+    </Style>
+
+    <Style Selector="DatePicker:focus-visible">
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.FocusRing}"/>
+        <Setter Property="BorderThickness" Value="2"/>
+    </Style>
+
+    <Style Selector="DatePicker:focus:pointerover">
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.FocusRing}"/>
+        <Setter Property="BorderThickness" Value="2"/>
+    </Style>
+
+    <!-- CheckBox -->
+    <Style Selector="CheckBox">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+        <Setter Property="Padding" Value="8,6"/>
+        <Setter Property="MinHeight" Value="24"/>
+    </Style>
+
+    <Style Selector="CheckBox:pointerover /template/ Border#NormalRectangle">
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.AccentHover}"/>
+    </Style>
+
+    <Style Selector="CheckBox:focus-visible /template/ Border#NormalRectangle">
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.FocusRing}"/>
+        <Setter Property="BorderThickness" Value="2"/>
+    </Style>
+
+    <Style Selector="CheckBox:checked /template/ Border#NormalRectangle">
+        <Setter Property="Background" Value="{DynamicResource Brush.Accent}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
+    </Style>
+
+    <Style Selector="CheckBox:checked:pointerover /template/ Border#NormalRectangle">
+        <Setter Property="Background" Value="{DynamicResource Brush.AccentHover}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.AccentHover}"/>
+    </Style>
+
+    <!-- RadioButton -->
+    <Style Selector="RadioButton">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+        <Setter Property="Padding" Value="8,6"/>
+        <Setter Property="MinHeight" Value="24"/>
+    </Style>
+
+    <Style Selector="RadioButton:pointerover /template/ Border#OuterBorder">
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.AccentHover}"/>
+    </Style>
+
+    <Style Selector="RadioButton:focus-visible /template/ Border#OuterBorder">
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.FocusRing}"/>
+        <Setter Property="BorderThickness" Value="2"/>
+    </Style>
+
+    <Style Selector="RadioButton:checked /template/ Ellipse#CheckGlyph">
+        <Setter Property="Fill" Value="{DynamicResource Brush.Accent}"/>
+    </Style>
+
+    <Style Selector="RadioButton:checked /template/ Border#OuterBorder">
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
+    </Style>
+
+    <Style Selector="RadioButton:checked:pointerover /template/ Border#OuterBorder">
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.AccentHover}"/>
+    </Style>
+
+    <Style Selector="RadioButton:checked:pointerover /template/ Ellipse#CheckGlyph">
+        <Setter Property="Fill" Value="{DynamicResource Brush.AccentHover}"/>
+    </Style>
+
+    <!-- ToggleSwitch -->
+    <Style Selector="ToggleSwitch">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+        <Setter Property="MinHeight" Value="32"/>
+        <Setter Property="MinWidth" Value="52"/>
+    </Style>
+
+    <Style Selector="ToggleSwitch:pointerover /template/ Border#SwitchKnob">
+        <Setter Property="Background" Value="{DynamicResource Brush.AccentHover}"/>
+    </Style>
+
+    <Style Selector="ToggleSwitch:focus-visible /template/ Border#OuterBorder">
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.FocusRing}"/>
+        <Setter Property="BorderThickness" Value="2"/>
+    </Style>
+
+    <Style Selector="ToggleSwitch:checked /template/ Border#SwitchKnobBounds">
+        <Setter Property="Background" Value="{DynamicResource Brush.Accent}"/>
+    </Style>
+
+    <Style Selector="ToggleSwitch:checked:pointerover /template/ Border#SwitchKnobBounds">
+        <Setter Property="Background" Value="{DynamicResource Brush.AccentHover}"/>
+    </Style>
+
+    <!-- ═══════════════════════ NAVIGATION / TOP BAR ═══════════════════════ -->
+    
+    <!-- Nav Bar Container -->
+    <Style Selector="Border.nav-bar">
+        <Setter Property="Background" Value="{DynamicResource Brush.NavGradient}"/>
+        <Setter Property="Padding" Value="24,16"/>
+    </Style>
+    
+    <!-- Nav Item -->
+    <Style Selector="Button.nav-item">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextOnDark}"/>
+        <Setter Property="Padding" Value="16,8"/>
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Sm}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="MinWidth" Value="0"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+    </Style>
+    
+    <Style Selector="Button.nav-item.active">
+        <Setter Property="Background" Value="{DynamicResource QuickFilterGlassActiveBrush}"/>
+    </Style>
+
+    <!-- ═══════════════════════ PILL BADGE ═══════════════════════ -->
+    
+    <Style Selector="Border.pill-badge">
+        <Setter Property="Background" Value="{DynamicResource QuickFilterGlassActiveBrush}"/>
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Pill}"/>
+        <Setter Property="Padding" Value="12,6"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.BorderSoft}"/>
+    </Style>
+    
+    <Style Selector="Border.pill-badge TextBlock">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextOnDark}"/>
+    </Style>
+
+    <!-- ═══════════════════════ HERO SECTION ═══════════════════════ -->
+    
+    <Style Selector="Border.hero">
+        <Setter Property="Background" Value="{DynamicResource Brush.HeroGradient}"/>
+        <Setter Property="Padding" Value="{DynamicResource Thickness.SectionPadding}"/>
+    </Style>
+    
+    <Style Selector="TextBlock.hero-title">
+        <Setter Property="FontSize" Value="{DynamicResource Type.H1.Size}"/>
+        <Setter Property="FontWeight" Value="{DynamicResource Type.Weight.Light}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextOnDark}"/>
+        <Setter Property="LetterSpacing" Value="8"/>
+    </Style>
+    
+    <Style Selector="TextBlock.hero-subtitle">
+        <Setter Property="FontSize" Value="{DynamicResource Type.Body.Size}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextMuted}"/>
+    </Style>
+
+    <!-- ═══════════════════════ SEPARATORS ═══════════════════════ -->
+    
+    <Style Selector="Separator">
+        <Setter Property="Background" Value="{DynamicResource SeparatorBrush}"/>
+        <Setter Property="Height" Value="1"/>
+    </Style>
+
+    <!-- ═══════════════════════ SCROLLBAR ═══════════════════════ -->
+    
+    <Style Selector="ScrollViewer">
+        <Setter Property="HorizontalScrollBarVisibility" Value="Disabled"/>
+        <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+    </Style>
+
+    <!-- ═══════════════════════ STATUS INDICATORS ═══════════════════════ -->
+    
+    <Style Selector="Ellipse.status-dot">
+        <Setter Property="Width" Value="8"/>
+        <Setter Property="Height" Value="8"/>
+        <Setter Property="Fill" Value="{DynamicResource Brush.Accent}"/>
+    </Style>
+    
+    <Style Selector="Ellipse.status-dot.success">
+        <Setter Property="Fill" Value="{DynamicResource Brush.Success}"/>
+    </Style>
+    
+    <Style Selector="Ellipse.status-dot.warning">
+        <Setter Property="Fill" Value="{DynamicResource Brush.Warning}"/>
+    </Style>
+    
+    <Style Selector="Ellipse.status-dot.danger">
+        <Setter Property="Fill" Value="{DynamicResource Brush.Danger}"/>
+    </Style>
+
+</Styles>

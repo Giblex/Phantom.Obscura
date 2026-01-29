@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PhantomVault.UI.Views.EditForms.ApiKeyEditForm">
+    
+    <Border x:Name="ApiKeyPanelBorder" Background="Transparent" IsVisible="{Binding IsApiKeyEntry}">
+        <StackPanel x:Name="ApiKeyPanel" Spacing="12">
+        <TextBlock Text="API Credential" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+        <StackPanel Spacing="6">
+            <TextBlock Text="API Key" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding ApiKeyValue}" Height="40" FontSize="14" Watermark="sk_live_..."/>
+        </StackPanel>
+        <StackPanel Spacing="6">
+            <TextBlock Text="Endpoint" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding ApiEndpoint}" Height="40" FontSize="14" Watermark="https://api.example.com"/>
+        </StackPanel>
+        <StackPanel Spacing="6">
+            <TextBlock Text="Environment" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding ApiEnvironment}" Height="40" FontSize="14" Watermark="Production"/>
+        </StackPanel>
+        <StackPanel Spacing="6">
+            <TextBlock Text="Documentation URL" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding ApiDocumentationUrl}" Height="40" FontSize="14" Watermark="https://docs.example.com"/>
+        </StackPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

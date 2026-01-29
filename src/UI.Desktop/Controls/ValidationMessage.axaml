@@ -1,0 +1,51 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:PhantomVault.UI.Desktop.Controls"
+             x:Class="PhantomVault.UI.Desktop.Controls.ValidationMessage">
+
+    <UserControl.Styles>
+        <Style Selector="Border.validation-message">
+            <Setter Property="Background" Value="#20F48771"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="Margin" Value="0,4,0,0"/>
+        </Style>
+
+        <Style Selector="TextBlock.validation-text">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+
+        <Style Selector="Border.validation-success">
+            <Setter Property="Background" Value="#20B8E6C8"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}"/>
+        </Style>
+
+        <Style Selector="TextBlock.validation-success">
+            <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Border x:Name="ValidationBorder"
+            Classes="validation-message"
+            IsVisible="{Binding Message, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+            <!-- Error/Success Icon -->
+            <controls:SvgIcon x:Name="ValidationIcon"
+                              Preset="AlertCircle"
+                              Width="14" Height="14"
+                              IconColor="{DynamicResource ErrorBrush}"
+                              VerticalAlignment="Center"/>
+
+            <!-- Message Text -->
+            <TextBlock x:Name="MessageText"
+                       Classes="validation-text"
+                       Text="{Binding Message, RelativeSource={RelativeSource FindAncestor, AncestorType=UserControl}}"
+                       VerticalAlignment="Center"/>
+        </StackPanel>
+    </Border>
+
+</UserControl>

@@ -1,0 +1,315 @@
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\.msCoverageSourceRootsMapping_PhantomVault.Core.Tests
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\testhost.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\testhost.exe
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\xunit.runner.visualstudio.dotnetcore.testadapter.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\xunit.runner.reporters.netcoreapp10.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\xunit.runner.utility.netcoreapp10.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\PhantomVault.Core.Tests.deps.json
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\PhantomVault.Core.Tests.runtimeconfig.json
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\PhantomVault.Core.Tests.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\PhantomVault.Core.Tests.pdb
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\BouncyCastle.Cryptography.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Isopoh.Cryptography.Argon2.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Isopoh.Cryptography.Blake2b.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Isopoh.Cryptography.SecureArray.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.VisualStudio.CodeCoverage.Shim.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.Configuration.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.Configuration.Abstractions.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.Configuration.Binder.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.Configuration.FileExtensions.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.Configuration.Json.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.DependencyInjection.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.FileProviders.Abstractions.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.FileProviders.Physical.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.FileSystemGlobbing.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.Logging.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.Logging.Abstractions.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.Logging.Configuration.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.Logging.Console.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.Options.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.Options.ConfigurationExtensions.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.Primitives.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.TestPlatform.CoreUtilities.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.TestPlatform.PlatformAbstractions.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.TestPlatform.CommunicationUtilities.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.TestPlatform.CrossPlatEngine.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.TestPlatform.Utilities.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.VisualStudio.TestPlatform.Common.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Newtonsoft.Json.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\NSec.Cryptography.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\System.Formats.Cbor.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\System.Security.Cryptography.ProtectedData.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\xunit.abstractions.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\xunit.assert.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\xunit.core.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\xunit.execution.dotnet.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Yubico.Core.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Yubico.DotNetPolyfills.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Yubico.YubiKey.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\cs\Microsoft.TestPlatform.CoreUtilities.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\cs\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\de\Microsoft.TestPlatform.CoreUtilities.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\de\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\es\Microsoft.TestPlatform.CoreUtilities.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\es\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\fr\Microsoft.TestPlatform.CoreUtilities.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\fr\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\it\Microsoft.TestPlatform.CoreUtilities.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\it\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ja\Microsoft.TestPlatform.CoreUtilities.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ja\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ko\Microsoft.TestPlatform.CoreUtilities.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ko\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\pl\Microsoft.TestPlatform.CoreUtilities.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\pl\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\pt-BR\Microsoft.TestPlatform.CoreUtilities.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\pt-BR\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ru\Microsoft.TestPlatform.CoreUtilities.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ru\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\tr\Microsoft.TestPlatform.CoreUtilities.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\tr\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\zh-Hans\Microsoft.TestPlatform.CoreUtilities.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\zh-Hans\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\zh-Hant\Microsoft.TestPlatform.CoreUtilities.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\zh-Hant\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\cs\Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\cs\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\cs\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\de\Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\de\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\de\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\es\Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\es\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\es\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\fr\Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\fr\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\fr\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\it\Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\it\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\it\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ja\Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ja\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ja\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ko\Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ko\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ko\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\pl\Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\pl\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\pl\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\pt-BR\Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\pt-BR\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\pt-BR\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ru\Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ru\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ru\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\tr\Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\tr\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\tr\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\zh-Hans\Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\zh-Hans\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\zh-Hans\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\zh-Hant\Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\zh-Hant\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\zh-Hant\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\linux-arm\native\libsodium.so
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\linux-arm64\native\libsodium.so
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\linux-musl-x64\native\libsodium.so
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\linux-x64\native\libsodium.so
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\osx-arm64\native\libsodium.dylib
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\osx-x64\native\libsodium.dylib
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\win-x64\native\libsodium.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\win-x86\native\libsodium.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\linux-arm64\native\libYubico.NativeShims.so
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\linux-x64\native\libYubico.NativeShims.so
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\osx-arm64\native\libYubico.NativeShims.dylib
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\osx-x64\native\libYubico.NativeShims.dylib
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\win-arm64\native\Yubico.NativeShims.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\win-x64\native\Yubico.NativeShims.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\win-x86\native\Yubico.NativeShims.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\GiblexVault.Security.ZK.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\PhantomVault.Core.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\PhantomVault.Core.pdb
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\GiblexVault.Security.ZK.pdb
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\bin\Release\net8.0\GiblexVault.Security.ZK.xml
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\obj\Release\net8.0\PhantomVault.Core.Tests.csproj.AssemblyReference.cache
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\obj\Release\net8.0\PhantomVault.Core.Tests.GeneratedMSBuildEditorConfig.editorconfig
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\obj\Release\net8.0\PhantomVault.Core.Tests.AssemblyInfoInputs.cache
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\obj\Release\net8.0\PhantomVault.Core.Tests.AssemblyInfo.cs
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\obj\Release\net8.0\PhantomVault.Core.Tests.csproj.CoreCompileInputs.cache
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\obj\Release\net8.0\PhantomVault.Core.Tests.sourcelink.json
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\obj\Release\net8.0\PhantomV.0B02EA65.Up2Date
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\obj\Release\net8.0\PhantomVault.Core.Tests.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\obj\Release\net8.0\refint\PhantomVault.Core.Tests.dll
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\obj\Release\net8.0\PhantomVault.Core.Tests.pdb
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\obj\Release\net8.0\PhantomVault.Core.Tests.genruntimeconfig.cache
+g:\Users\Giblex\Builds\PhantomObscuraV5\tests\PhantomVault.Core.Tests\obj\Release\net8.0\ref\PhantomVault.Core.Tests.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\.msCoverageSourceRootsMapping_PhantomVault.Core.Tests
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\obj\Release\net8.0\PhantomVault.Core.Tests.csproj.AssemblyReference.cache
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\obj\Release\net8.0\PhantomVault.Core.Tests.GeneratedMSBuildEditorConfig.editorconfig
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\obj\Release\net8.0\PhantomVault.Core.Tests.AssemblyInfoInputs.cache
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\obj\Release\net8.0\PhantomVault.Core.Tests.AssemblyInfo.cs
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\obj\Release\net8.0\PhantomVault.Core.Tests.csproj.CoreCompileInputs.cache
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\obj\Release\net8.0\PhantomVault.Core.Tests.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\obj\Release\net8.0\refint\PhantomVault.Core.Tests.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\obj\Release\net8.0\PhantomVault.Core.Tests.pdb
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\testhost.exe
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\testhost.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\xunit.runner.visualstudio.dotnetcore.testadapter.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\xunit.runner.reporters.netcoreapp10.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\xunit.runner.utility.netcoreapp10.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\PhantomVault.Core.Tests.deps.json
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\PhantomVault.Core.Tests.runtimeconfig.json
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\PhantomVault.Core.Tests.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\PhantomVault.Core.Tests.pdb
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\BouncyCastle.Cryptography.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Isopoh.Cryptography.Argon2.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Isopoh.Cryptography.Blake2b.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Isopoh.Cryptography.SecureArray.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\KeePassLib.Standard.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.AspNetCore.Cryptography.Internal.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.AspNetCore.DataProtection.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.AspNetCore.DataProtection.Abstractions.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.AspNetCore.DataProtection.Extensions.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.VisualStudio.CodeCoverage.Shim.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.Configuration.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.Configuration.Abstractions.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.Configuration.Binder.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.Configuration.FileExtensions.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.Configuration.Json.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.DependencyInjection.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.Diagnostics.Abstractions.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.FileProviders.Abstractions.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.FileProviders.Physical.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.FileSystemGlobbing.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.Hosting.Abstractions.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.Logging.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.Logging.Abstractions.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.Logging.Configuration.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.Logging.Console.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.Options.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.Options.ConfigurationExtensions.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Extensions.Primitives.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.TestPlatform.CoreUtilities.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.TestPlatform.PlatformAbstractions.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.TestPlatform.CommunicationUtilities.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.TestPlatform.CrossPlatEngine.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.TestPlatform.Utilities.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.VisualStudio.TestPlatform.Common.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Microsoft.Win32.SystemEvents.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Newtonsoft.Json.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\NSec.Cryptography.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Serilog.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Serilog.Sinks.Console.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Serilog.Sinks.File.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ICSharpCode.SharpZipLib.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\System.CodeDom.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\System.Drawing.Common.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\System.Formats.Cbor.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\System.Management.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\System.Runtime.WindowsRuntime.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\System.Security.Cryptography.Pkcs.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\System.Security.Cryptography.ProtectedData.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\System.Security.Cryptography.Xml.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\xunit.abstractions.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\xunit.assert.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\xunit.core.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\xunit.execution.dotnet.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Yubico.Core.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Yubico.DotNetPolyfills.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\Yubico.YubiKey.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\cs\Microsoft.TestPlatform.CoreUtilities.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\cs\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\de\Microsoft.TestPlatform.CoreUtilities.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\de\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\es\Microsoft.TestPlatform.CoreUtilities.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\es\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\fr\Microsoft.TestPlatform.CoreUtilities.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\fr\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\it\Microsoft.TestPlatform.CoreUtilities.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\it\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ja\Microsoft.TestPlatform.CoreUtilities.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ja\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ko\Microsoft.TestPlatform.CoreUtilities.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ko\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\pl\Microsoft.TestPlatform.CoreUtilities.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\pl\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\pt-BR\Microsoft.TestPlatform.CoreUtilities.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\pt-BR\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ru\Microsoft.TestPlatform.CoreUtilities.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ru\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\tr\Microsoft.TestPlatform.CoreUtilities.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\tr\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\zh-Hans\Microsoft.TestPlatform.CoreUtilities.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\zh-Hans\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\zh-Hant\Microsoft.TestPlatform.CoreUtilities.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\zh-Hant\Microsoft.VisualStudio.TestPlatform.ObjectModel.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\cs\Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\cs\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\cs\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\de\Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\de\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\de\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\es\Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\es\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\es\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\fr\Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\fr\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\fr\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\it\Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\it\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\it\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ja\Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ja\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ja\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ko\Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ko\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ko\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\pl\Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\pl\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\pl\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\pt-BR\Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\pt-BR\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\pt-BR\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ru\Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ru\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\ru\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\tr\Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\tr\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\tr\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\zh-Hans\Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\zh-Hans\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\zh-Hans\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\zh-Hant\Microsoft.TestPlatform.CommunicationUtilities.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\zh-Hant\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\zh-Hant\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\linux-arm\native\libsodium.so
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\linux-arm64\native\libsodium.so
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\linux-musl-x64\native\libsodium.so
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\linux-x64\native\libsodium.so
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\osx-arm64\native\libsodium.dylib
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\osx-x64\native\libsodium.dylib
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\win-x64\native\libsodium.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\win-x86\native\libsodium.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\win\lib\net8.0\Microsoft.Win32.SystemEvents.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\win\lib\net8.0\System.Management.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\win\lib\netcoreapp3.0\System.Runtime.WindowsRuntime.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\win\lib\net8.0\System.Security.Cryptography.Pkcs.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\linux-arm64\native\libYubico.NativeShims.so
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\linux-x64\native\libYubico.NativeShims.so
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\osx-arm64\native\libYubico.NativeShims.dylib
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\osx-x64\native\libYubico.NativeShims.dylib
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\win-arm64\native\Yubico.NativeShims.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\win-x64\native\Yubico.NativeShims.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\runtimes\win-x86\native\Yubico.NativeShims.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\GiblexVault.Security.ZK.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\PhantomVault.Core.dll
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\PhantomVault.Core.pdb
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\GiblexVault.Security.ZK.pdb
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\bin\Release\net8.0\GiblexVault.Security.ZK.xml
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\obj\Release\net8.0\PhantomV.0B02EA65.Up2Date
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\obj\Release\net8.0\PhantomVault.Core.Tests.genruntimeconfig.cache
+O:\Users\Giblex\Build Projects\PhantomObscuraV6\tests\PhantomVault.Core.Tests\obj\Release\net8.0\ref\PhantomVault.Core.Tests.dll

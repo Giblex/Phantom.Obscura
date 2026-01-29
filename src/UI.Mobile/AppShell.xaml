@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="PhantomVault.UI.Mobile.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:views="clr-namespace:PhantomVault.UI.Mobile.Views"
+    Shell.FlyoutBehavior="Disabled"
+    Shell.NavBarIsVisible="False"
+    Shell.BackgroundColor="#1E1E2E">
+
+    <!-- Main vault unlock page -->
+    <ShellContent
+        Title="Unlock"
+        ContentTemplate="{DataTemplate views:VaultUnlockPage}"
+        Route="VaultUnlockPage" />
+
+</Shell>

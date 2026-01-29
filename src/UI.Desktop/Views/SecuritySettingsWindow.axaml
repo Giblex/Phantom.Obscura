@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:PhantomVault.UI.Views"
+        x:Class="PhantomVault.UI.Views.SecuritySettingsWindow"
+        Title="Security Settings" Width="520" Height="600"
+        MinWidth="460" MinHeight="500"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Classes="animated-window">
+    <ScrollViewer>
+        <Border Padding="20">
+            <StackPanel Spacing="16" Name="ContentPanel">
+            <!-- Basic Security Settings -->
+            <Border Background="{DynamicResource ContentBackgroundBrush}"
+                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="15"
+                    Name="BasicSecuritySection">
+                <Border.Styles>
+                    <Style Selector="Border#BasicSecuritySection">
+                        <Setter Property="Opacity" Value="0"/>
+                    </Style>
+                    <Style Selector="Border#BasicSecuritySection[IsVisible=True]">
+                        <Style.Animations>
+                            <Animation Duration="0:0:0.4" Delay="0:0:0.05" FillMode="Forward" Easing="0.16,1,0.3,1">
+                                <KeyFrame Cue="0%">
+                                    <Setter Property="Opacity" Value="0"/>
+                                </KeyFrame>
+                                <KeyFrame Cue="100%">
+                                    <Setter Property="Opacity" Value="1"/>
+                                </KeyFrame>
+                            </Animation>
+                        </Style.Animations>
+                    </Style>
+                </Border.Styles>
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Basic Security" 
+                               FontSize="16" 
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <CheckBox Content="Require hardware token" 
+                              IsChecked="{Binding RequireHardwareToken, Mode=TwoWay}"/>
+                    <CheckBox Content="Require keyfile" 
+                              IsChecked="{Binding RequireKeyfile, Mode=TwoWay}"/>
+                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <TextBlock Text="Idle timeout (minutes):" 
+                                   VerticalAlignment="Center" 
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <TextBox Text="{Binding IdleTimeoutMinutes, Mode=TwoWay}" Width="60"/>
+                    </StackPanel>
+                    <Button Content="{Binding SaveButtonText}" 
+                            Command="{Binding SaveCommand}" 
+                            Width="120" 
+                            Height="36"
+                            IsEnabled="{Binding !IsBusy}"
+                            HorizontalAlignment="Left">
+                        <Button.Styles>
+                            <Style Selector="Button">
+                                <Style.Animations>
+                                    <Animation Duration="0:0:0.2" FillMode="Forward" Easing="SineEaseInOut">
+                                        <KeyFrame Cue="0%">
+                                            <Setter Property="Opacity" Value="1"/>
+                                        </KeyFrame>
+                                        <KeyFrame Cue="100%">
+                                            <Setter Property="Opacity" Value="1"/>
+                                        </KeyFrame>
+                                    </Animation>
+                                </Style.Animations>
+                            </Style>
+                        </Button.Styles>
+                    </Button>
+                </StackPanel>
+            </Border>
+
+            <!-- Defence Automations -->
+            <Border Background="{DynamicResource ContentBackgroundBrush}"
+                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="15"
+                    Name="DefenceSection">
+                <Border.Styles>
+                    <Style Selector="Border#DefenceSection">
+                        <Setter Property="Opacity" Value="0"/>
+                    </Style>
+                    <Style Selector="Border#DefenceSection[IsVisible=True]">
+                        <Style.Animations>
+                            <Animation Duration="0:0:0.4" Delay="0:0:0.1" FillMode="Forward" Easing="0.16,1,0.3,1">
+                                <KeyFrame Cue="0%">
+                                    <Setter Property="Opacity" Value="0"/>
+                                </KeyFrame>
+                                <KeyFrame Cue="100%">
+                                    <Setter Property="Opacity" Value="1"/>
+                                </KeyFrame>
+                            </Animation>
+                        </Style.Animations>
+                    </Style>
+                </Border.Styles>
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Defence Automations" 
+                               FontSize="16" 
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <TextBlock Text="Configure automated defence responses to detected threats" 
+                               FontSize="12"
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,6"/>
+                    
+                    <CheckBox Content="Require Phantom Key / extra checks on new devices"
+                              IsChecked="{Binding IsNewDeviceProtectionEnabled, Mode=TwoWay}"
+                              ToolTip.Tip="When enabled, new device fingerprints trigger additional authentication requirements"/>
+                    
+                    <CheckBox Content="Open in Safe (read-only) mode if tampering suspected"
+                              IsChecked="{Binding IsIntegritySafeModeEnabled, Mode=TwoWay}"
+                              ToolTip.Tip="When enabled, integrity mismatches force read-only mode to prevent data corruption"/>
+                    
+                    <CheckBox Content="Limit rapid copy-to-clipboard of secrets"
+                              IsChecked="{Binding IsClipboardGuardEnabled, Mode=TwoWay}"
+                              ToolTip.Tip="When enabled, excessive clipboard operations trigger cooldowns and warnings"/>
+                    
+                    <CheckBox Content="Limit repeated vault exports in short time"
+                              IsChecked="{Binding IsExportGuardEnabled, Mode=TwoWay}"
+                              ToolTip.Tip="When enabled, frequent export operations may trigger read-only mode"/>
+                    
+                    <CheckBox Content="Detect and respond to abnormal session behaviour"
+                              IsChecked="{Binding IsBehaviourDeviationProtectionEnabled, Mode=TwoWay}"
+                              ToolTip.Tip="When enabled, unusual patterns trigger delays and data scrubbing"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Decoy Vault Protection -->
+            <Border Background="{DynamicResource ContentBackgroundBrush}"
+                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="15"
+                    Name="DecoySection">
+                <Border.Styles>
+                    <Style Selector="Border#DecoySection">
+                        <Setter Property="Opacity" Value="0"/>
+                    </Style>
+                    <Style Selector="Border#DecoySection[IsVisible=True]">
+                        <Style.Animations>
+                            <Animation Duration="0:0:0.4" Delay="0:0:0.15" FillMode="Forward" Easing="0.16,1,0.3,1">
+                                <KeyFrame Cue="0%">
+                                    <Setter Property="Opacity" Value="0"/>
+                                </KeyFrame>
+                                <KeyFrame Cue="100%">
+                                    <Setter Property="Opacity" Value="1"/>
+                                </KeyFrame>
+                            </Animation>
+                        </Style.Animations>
+                    </Style>
+                </Border.Styles>
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Decoy Vault Protection"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <TextBlock TextWrapping="Wrap"
+                               FontSize="12"
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               Margin="0,0,0,6">
+                        <Run Text="Automatically switch to a fake vault containing realistic decoy credentials when tampering is detected"/>
+                        <LineBreak/>
+                        <Run Text="(debuggers, DLL injection, memory manipulation). This protects your real data while making the attack appear successful."/>
+                    </TextBlock>
+
+                    <!-- Auto-activate toggle -->
+                    <CheckBox IsChecked="{Binding AutoActivateDecoyOnTamper, Mode=TwoWay}"
+                              FontWeight="SemiBold">
+                        <TextBlock TextWrapping="Wrap">
+                            <Run Text="Activate decoy vault on tamper detection "/>
+                            <Run Text="(Recommended)" Foreground="{DynamicResource AccentBrush}"/>
+                        </TextBlock>
+                    </CheckBox>
+
+                    <!-- Credential count slider -->
+                    <StackPanel Spacing="8" IsEnabled="{Binding AutoActivateDecoyOnTamper}" Opacity="{Binding AutoActivateDecoyOnTamper, Converter={StaticResource BoolToOpacityConverter}}">
+                        <TextBlock Text="Number of decoy credentials:" FontSize="12" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <Slider Minimum="10" Maximum="50"
+                                Value="{Binding DecoyCredentialCount, Mode=TwoWay}"
+                                TickFrequency="5"
+                                IsSnapToTickEnabled="True"
+                                TickPlacement="BottomRight"/>
+                        <TextBlock Text="{Binding DecoyCredentialCount, StringFormat='Generate {0} fake credentials'}"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                    </StackPanel>
+
+                    <!-- Logging toggle -->
+                    <CheckBox IsChecked="{Binding LogDecoyActivation, Mode=TwoWay}"
+                              IsEnabled="{Binding AutoActivateDecoyOnTamper}"
+                              Opacity="{Binding AutoActivateDecoyOnTamper, Converter={StaticResource BoolToOpacityConverter}}">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Log decoy activation events" FontSize="12"/>
+                            <TextBlock Text="⚠️ May alert sophisticated attackers who check logs"
+                                       FontSize="10"
+                                       Foreground="{DynamicResource WarningBrush}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </CheckBox>
+
+                    <!-- Status indicator -->
+                    <Border Background="{DynamicResource WarningBrush}"
+                            Padding="12"
+                            CornerRadius="6"
+                            IsVisible="{Binding IsDecoyCurrentlyActive}">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="⚠" FontSize="20" VerticalAlignment="Center" Foreground="White"/>
+                            <TextBlock Text="DECOY VAULT CURRENTLY ACTIVE"
+                                       FontWeight="SemiBold"
+                                       FontSize="13"
+                                       VerticalAlignment="Center"
+                                       Foreground="White"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Action buttons -->
+                    <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,4,0,0">
+                        <Button Content="Preview Decoy Vault"
+                                Command="{Binding PreviewDecoyVaultCommand}"
+                                IsEnabled="{Binding AutoActivateDecoyOnTamper}"
+                                Opacity="{Binding AutoActivateDecoyOnTamper, Converter={StaticResource BoolToOpacityConverter}}"
+                                ToolTip.Tip="Generate and preview fake credentials without activating decoy mode"
+                                Padding="12,8"
+                                FontSize="12"/>
+
+                        <Button Content="Deactivate Decoy"
+                                Command="{Binding DeactivateDecoyCommand}"
+                                IsVisible="{Binding IsDecoyCurrentlyActive}"
+                                Background="{DynamicResource ErrorBrush}"
+                                Foreground="White"
+                                ToolTip.Tip="Return to real vault (requires re-authentication)"
+                                Padding="12,8"
+                                FontSize="12"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+        </Border>
+    </ScrollViewer>
+</views:ThemeAwareWindow>
+

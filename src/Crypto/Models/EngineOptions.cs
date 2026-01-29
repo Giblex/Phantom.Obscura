@@ -1,0 +1,1 @@
+namespace GiblexVault.Security.ZK.Models; public record EngineOptions(EncryptionProfile Profile, int ArgonOpsLimit = 6, int ArgonMemMiB = 64, int ArgonParallelism = 1, int ChunkSizeBytes = 1024 * 1024, CipherSuite Suite = CipherSuite.Aes256Gcm, int TargetUnlockMs = 800);

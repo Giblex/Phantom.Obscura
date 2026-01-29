@@ -1,0 +1,230 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PhantomVault.UI.ViewModels.Settings"
+             x:Class="PhantomVault.UI.Views.Settings.RubbishBinSettingsView"
+             x:DataType="vm:RubbishBinSettingsViewModel">
+    <StackPanel Spacing="20" Margin="0,0,30,60">
+        <TextBlock Text="Secured Rubbish Bin" 
+                   FontSize="{StaticResource Type.H3.Size}" 
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+        
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Lg}" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Secure Deletion Method" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <TextBlock Text="Choose how deleted entries are permanently erased" 
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Erasure method:" 
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <ComboBox Width="300" 
+                              HorizontalAlignment="Left"
+                              SelectedIndex="{Binding SelectedErasureMethod}"
+                              x:Name="ErasureMethodCombo">
+                        <ComboBoxItem Content="Simple (1-pass)" 
+                                      Tag="Fast, single overwrite"/>
+                        <ComboBoxItem Content="Standard (3-pass)" 
+                                      Tag="Balanced security and speed"/>
+                        <ComboBoxItem Content="DoD 5220.22-M (7-pass)" 
+                                      Tag="US Department of Defense standard"/>
+                        <ComboBoxItem Content="Gutmann (35-pass)" 
+                                      Tag="Maximum security, very slow"/>
+                        <ComboBoxItem Content="Enhanced (1000+ passes)" 
+                                      Tag="Extreme paranoia mode"/>
+                    </ComboBox>
+                </StackPanel>
+
+                <Border Background="{DynamicResource InfoBackgroundBrush}" 
+                        BorderBrush="{DynamicResource InfoBrush}" 
+                        BorderThickness="1" 
+                        CornerRadius="{StaticResource Radius.Sm}" 
+                        Padding="12">
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="DoD 5220.22-M (7-pass)" 
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource InfoBrush}"/>
+                        <TextBlock Text="US Department of Defense standard. Overwrites data 7 times with specific patterns. Provides high security with reasonable performance. Recommended for most users."
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Lg}" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Recovery &amp; Retention" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <CheckBox Content="Enable recovery period" 
+                          IsChecked="True"
+                          x:Name="EnableRecoveryCheckBox"
+                          ToolTip.Tip="Allow recovery of deleted items for a limited time"/>
+
+                <StackPanel Spacing="8" IsEnabled="{Binding #EnableRecoveryCheckBox.IsChecked}">
+                    <TextBlock Text="Retention period:" 
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <ComboBox Width="200" 
+                              HorizontalAlignment="Left"
+                              SelectedIndex="2">
+                        <ComboBoxItem Content="1 day"/>
+                        <ComboBoxItem Content="7 days"/>
+                        <ComboBoxItem Content="30 days (Recommended)"/>
+                        <ComboBoxItem Content="90 days"/>
+                        <ComboBoxItem Content="1 year"/>
+                    </ComboBox>
+                </StackPanel>
+
+                <TextBlock Text="After the retention period, items are permanently erased using the selected method" 
+                           TextWrapping="Wrap"
+                           FontStyle="Italic"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,10,0,0">
+                    <Button Content="Restore Shadow Snapshot"
+                            Command="{Binding RestoreShadowSnapshotCommand}"
+                            Classes="liquid-glass"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Lg}" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Auto-Duplicate Detection" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <TextBlock Text="Automatically identify and manage duplicate entries" 
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+
+                <CheckBox Content="Enable duplicate detection" 
+                          x:Name="EnableDuplicateDetection"
+                          ToolTip.Tip="Scan for duplicate entries automatically"/>
+
+                <CheckBox Content="Auto-delete duplicates" 
+                          IsEnabled="{Binding #EnableDuplicateDetection.IsChecked}"
+                          ToolTip.Tip="Automatically move duplicates to bin"/>
+
+                <StackPanel Spacing="8" IsEnabled="{Binding #EnableDuplicateDetection.IsChecked}">
+                    <TextBlock Text="Scan frequency:" 
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <ComboBox Width="200" 
+                              HorizontalAlignment="Left"
+                              SelectedIndex="1">
+                        <ComboBoxItem Content="Daily"/>
+                        <ComboBoxItem Content="Weekly"/>
+                        <ComboBoxItem Content="Monthly"/>
+                        <ComboBoxItem Content="Manual only"/>
+                    </ComboBox>
+                </StackPanel>
+
+                <Button Content="Scan for Duplicates Now" 
+                        Width="200" 
+                        HorizontalAlignment="Left"
+                        Command="{Binding ScanForDuplicatesCommand}"
+                        Classes="liquid-glass"/>
+            </StackPanel>
+        </Border>
+
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Lg}" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Bin Statistics" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <Grid RowDefinitions="Auto,Auto,Auto" 
+                      ColumnDefinitions="Auto,*" 
+                      ColumnSpacing="15" 
+                      RowSpacing="10">
+                    <TextBlock Grid.Row="0" Grid.Column="0" 
+                               Text="Items in bin:" 
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" 
+                               Text="{Binding ItemsInBin}" 
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    
+                    <TextBlock Grid.Row="1" Grid.Column="0" 
+                               Text="Total size:" 
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" 
+                               Text="{Binding TotalSize}" 
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    
+                    <TextBlock Grid.Row="2" Grid.Column="0" 
+                               Text="Oldest item:" 
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <TextBlock Grid.Row="2" Grid.Column="1" 
+                               Text="{Binding OldestItem}" 
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </Grid>
+
+                <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,10,0,0">
+                    <Button Content="View Deleted Items" 
+                            Width="150"
+                            Command="{Binding ViewDeletedItemsCommand}"
+                            Classes="liquid-glass"/>
+                    <Button Content="Empty Bin Now" 
+                            Width="150"
+                            Command="{Binding EmptyBinCommand}"
+                            Classes="danger"
+                            ToolTip.Tip="⚠ Permanently erase all items using selected method"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Lg}" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Automatic Cleanup" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <CheckBox Content="Auto-empty bin on vault close" 
+                          ToolTip.Tip="Permanently erase all deleted items when closing vault"/>
+
+                <CheckBox Content="Prompt before permanent deletion" 
+                          IsChecked="True"
+                          ToolTip.Tip="Show confirmation dialog before erasing items"/>
+
+                <TextBlock Text="⚠ WARNING: Permanent deletion using secure erasure cannot be undone" 
+                           TextWrapping="Wrap"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource WarningBrush}"/>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>
+

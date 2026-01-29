@@ -1,0 +1,224 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Natural Theme - MODERNIZED: Terracotta, Sage, and Contemporary Earth Tones (2025) -->
+    <!-- Warm, organic palette inspired by modern design trends -->
+
+    <!-- Modern Warm Brown Scale (richer, less yellow) -->
+    <Color x:Key="Color.Navy900">#3A2E29</Color>
+    <Color x:Key="Color.Navy800">#493B35</Color>
+    <Color x:Key="Color.Navy700">#5A4A43</Color>
+    <Color x:Key="Color.Navy600">#6B5A51</Color>
+    <Color x:Key="Color.Navy500">#7C6B60</Color>
+    <Color x:Key="Color.Navy400">#8D7C6F</Color>
+
+    <!-- Modern Neutral Scale (warmer off-whites) -->
+    <Color x:Key="Color.LightGrey100">#F7F4F0</Color>
+    <Color x:Key="Color.LightGrey200">#EDE8E1</Color>
+    <Color x:Key="Color.LightGrey300">#E1DCD3</Color>
+    <Color x:Key="Color.LightGrey400">#D5CFC4</Color>
+
+    <!-- Text Colors -->
+    <Color x:Key="Color.TextPrimary">#2B2520</Color>
+    <Color x:Key="Color.TextMuted">#6B5A51</Color>
+    <Color x:Key="Color.TextOnDark">#F7F4F0</Color>
+    <Color x:Key="Color.TextOnLight">#2B2520</Color>
+
+    <!-- Accent Colors - Modern Terracotta (trending 2025) -->
+    <Color x:Key="Color.Accent">#C97664</Color>
+    <Color x:Key="Color.AccentHover">#D68976</Color>
+    <Color x:Key="Color.AccentDim">#E29B88</Color>
+
+    <!-- Secondary Modern Earth Colors -->
+    <Color x:Key="Color.Terracotta">#C97664</Color>
+    <Color x:Key="Color.SageGreen">#8FA88A</Color>
+    <Color x:Key="Color.WarmSand">#D4C5AE</Color>
+    <Color x:Key="Color.ClayBrown">#A37661</Color>
+    
+    <!-- Semantic Colors (modernized natural tones) -->
+    <Color x:Key="Color.Success">#7A9B68</Color>
+    <Color x:Key="Color.Warning">#D9A94E</Color>
+    <Color x:Key="Color.Danger">#C97664</Color>
+    <Color x:Key="Color.Info">#6B8FA0</Color>
+
+    <!-- ═══════════════════════ LEGACY BRUSHES ═══════════════════════ -->
+    
+    <!-- MODERNIZED: Main window background - richer warm brown -->
+    <LinearGradientBrush x:Key="WindowBackgroundBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#493B35" Offset="0"/>
+        <GradientStop Color="#3A2E29" Offset="0.5"/>
+        <GradientStop Color="#322823" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- MODERNIZED: Header - contemporary warm brown -->
+    <LinearGradientBrush x:Key="HeaderBackgroundBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#5A4A43" Offset="0"/>
+        <GradientStop Color="#493B35" Offset="0.5"/>
+        <GradientStop Color="#5A4A43" Offset="1"/>
+    </LinearGradientBrush>
+
+    <SolidColorBrush x:Key="FooterBackgroundBrush" Color="#3A2E29"/>
+    <!-- MODERNIZED: Content - warmer off-white -->
+    <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#F7F4F0"/>
+    <!-- MODERNIZED: Cards - subtle warm neutral -->
+    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#EDE8E1"/>
+    <!-- MODERNIZED: Settings panels - warm sand tone -->
+    <SolidColorBrush x:Key="SettingsPanelBackgroundBrush" Color="#D5CFC4"/>
+    <SolidColorBrush x:Key="SettingsPanelBorderBrush" Color="#D4C5AE"/>
+    <SolidColorBrush x:Key="TileGlassBrush">#EEEDE8E1</SolidColorBrush>
+    <SolidColorBrush x:Key="TileGapBrush" Color="#E1DCD3"/>
+    
+    <!-- MODERNIZED: Terracotta accents (trending 2025) -->
+    <SolidColorBrush x:Key="AccentBrush" Color="#C97664"/>
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#D68976"/>
+    <SolidColorBrush x:Key="SecondaryAccentBrush" Color="#8FA88A"/>
+    
+    <!-- Text colors - updated for modern palette -->
+    <Color x:Key="PrimaryTextColor">#000000</Color>
+    <SolidColorBrush x:Key="PrimaryTextBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="ControlForegroundBrush" Color="#2B2520"/>
+    <SolidColorBrush x:Key="HeaderTextBrush" Color="#F7F4F0"/>
+    <SolidColorBrush x:Key="HeaderMutedTextBrush" Color="#D4C5AE"/>
+    <SolidColorBrush x:Key="FooterTextBrush" Color="#F7F4F0"/>
+    <SolidColorBrush x:Key="FooterMutedTextBrush" Color="#A89880"/>
+    <SolidColorBrush x:Key="SecondaryTextBrush" Color="#493B35"/>
+    <SolidColorBrush x:Key="MutedTextBrush" Color="#6B5A51"/>
+    <SolidColorBrush x:Key="DisabledTextBrush" Color="#9A8A7A"/>
+    
+    <!-- MODERNIZED: Header buttons - warm brown -->
+    <SolidColorBrush x:Key="HeaderButtonBackgroundBrush" Color="#6B5A51"/>
+    <SolidColorBrush x:Key="HeaderButtonHoverBrush" Color="#7C6B60"/>
+    <SolidColorBrush x:Key="HeaderButtonPressedBrush" Color="#5A4A43"/>
+    <SolidColorBrush x:Key="HeaderButtonForegroundBrush" Color="#F7F4F0"/>
+    <SolidColorBrush x:Key="HeaderButtonBorderBrush" Color="#55C97664"/>
+    
+    <!-- Controls - warm white with modern borders -->
+    <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#FFFFFF"/>
+    <!-- SUBTLER: Barely visible hover (was #F7F4F0) -->
+    <SolidColorBrush x:Key="ControlHoverBrush" Color="#FCFBFA"/>
+    <SolidColorBrush x:Key="InputBackgroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="InputForegroundBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="TextSelectionBrush" Color="#60C97664"/>
+    <SolidColorBrush x:Key="TextCaretBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="ControlBorderBrush" Color="#D4C5AE"/>
+    <SolidColorBrush x:Key="OverlayBackgroundBrush" Color="#DD3A2E29"/>
+    <SolidColorBrush x:Key="ReadOnlyFieldBackgroundBrush" Color="#EDE8E1"/>
+    <SolidColorBrush x:Key="ReadOnlyFieldForegroundBrush" Color="#493B35"/>
+    <SolidColorBrush x:Key="CategoryPanelBackgroundBrush" Color="#E1DCD3"/>
+
+    <!-- High contrast border (invisible in normal mode, will be visible in high contrast themes) -->
+    <SolidColorBrush x:Key="HighContrastBorderBrush" Color="#00000000"/>
+
+    <!-- TextBox/Input Brushes - SUBTLER: Barely visible hover states -->
+    <SolidColorBrush x:Key="TextBoxBackgroundBrush" Color="#FFFFFF"/>
+    <!-- SUBTLER: Barely noticeable hover (was #F7F4F0) -->
+    <SolidColorBrush x:Key="TextBoxBackgroundHoverBrush" Color="#FCFBFA"/>
+    <!-- SUBTLER: Subtle focus (was #FFFFFF, no change needed) -->
+    <SolidColorBrush x:Key="TextBoxBackgroundFocusedBrush" Color="#FAF9F7"/>
+    <SolidColorBrush x:Key="TextBoxBackgroundDisabledBrush" Color="#EDE8E1"/>
+    <SolidColorBrush x:Key="TextBoxBorderBrush" Color="#D4C5AE"/>
+    <SolidColorBrush x:Key="TextBoxBorderHoverBrush" Color="#C97664"/>
+    <SolidColorBrush x:Key="TextBoxBorderFocusedBrush" Color="#C97664"/>
+    <SolidColorBrush x:Key="TextBrush" Color="#000000"/>
+    
+    <!-- Dialog/Window Brushes - modernized -->
+    <SolidColorBrush x:Key="DialogBackgroundBrush" Color="#F7F4F0"/>
+    <SolidColorBrush x:Key="DialogBorderBrush" Color="#D4C5AE"/>
+    
+    <!-- Button Text Brushes - modernized -->
+    <SolidColorBrush x:Key="ButtonForegroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ButtonAccentForegroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ButtonSecondaryForegroundBrush" Color="#2B2520"/>
+    <SolidColorBrush x:Key="ButtonDisabledForegroundBrush" Color="#9A8A7A"/>
+    
+    <!-- Content Area Text -->
+    <SolidColorBrush x:Key="ContentTextBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="ContentSecondaryTextBrush" Color="#333333"/>
+    <SolidColorBrush x:Key="ContentMutedTextBrush" Color="#666666"/>
+    <SolidColorBrush x:Key="CardTextBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="CardSecondaryTextBrush" Color="#333333"/>
+    
+    <!-- Input/Form Text -->
+    <SolidColorBrush x:Key="InputTextBrush" Color="#000000"/>
+    <!-- Lighter placeholder for better hierarchy (PRIORITY 13) -->
+    <SolidColorBrush x:Key="InputPlaceholderBrush" Color="#8A9AAA"/>
+    <SolidColorBrush x:Key="LabelTextBrush" Color="#000000"/>
+
+    <!-- Popup/Flyout/Dropdown Brushes - warm off-white for light theme -->
+    <SolidColorBrush x:Key="FlyoutPresenterBackground" Color="#F7F4F0"/>
+    <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#F7F4F0"/>
+    <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#F7F4F0"/>
+    <SolidColorBrush x:Key="PopupBackgroundBrush" Color="#F7F4F0"/>
+    <SolidColorBrush x:Key="SystemControlBackgroundChromeMediumLowBrush" Color="#F7F4F0"/>
+    <SolidColorBrush x:Key="SystemControlForegroundBaseHighBrush" Color="#2B2520"/>
+
+    <!-- ComboBox item states - SUBTLER: Barely visible highlights -->
+    <SolidColorBrush x:Key="ComboBoxItemBackground" Color="#F7F4F0"/>
+    <!-- SUBTLER: Barely noticeable hover (was #EDE8E1) -->
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver" Color="#F3F0EC"/>
+    <!-- SUBTLER: Subtle pressed/selected (was #E1DCD3) -->
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundPressed" Color="#F0EDE8"/>
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected" Color="#F0EDE8"/>
+    <SolidColorBrush x:Key="ComboBoxItemForeground" Color="#2B2520"/>
+    <SolidColorBrush x:Key="ComboBoxItemForegroundPointerOver" Color="#2B2520"/>
+    <SolidColorBrush x:Key="ComboBoxItemForegroundPressed" Color="#2B2520"/>
+    <SolidColorBrush x:Key="ComboBoxItemForegroundSelected" Color="#2B2520"/>
+    <SolidColorBrush x:Key="ComboBoxItemForegroundDisabled" Color="#9A8A7A"/>
+    
+    <!-- List/Item Text -->
+    <SolidColorBrush x:Key="ListItemTextBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="ListItemSecondaryTextBrush" Color="#666666"/>
+    <SolidColorBrush x:Key="ListItemSelectedTextBrush" Color="#000000"/>
+    
+    <SolidColorBrush x:Key="ButtonWhiteBackgroundBrush" Color="#FFFFFF"/>
+    <!-- MODERNIZED: Separator with modern sand tone -->
+    <SolidColorBrush x:Key="SeparatorBrush" Color="#D4C5AE"/>
+    
+    <!-- Card separator line (transparent unless high contrast) -->
+    <SolidColorBrush x:Key="CardSeparatorBrush" Color="#00000000"/>
+    
+    <!-- Quick filter -->
+    <SolidColorBrush x:Key="QuickFilterGlassBrush" Color="#00000000"/>
+    <SolidColorBrush x:Key="QuickFilterGlassHoverBrush" Color="#20FFFFFF"/>
+    <SolidColorBrush x:Key="QuickFilterGlassActiveBrush" Color="#40FFFFFF"/>
+    <SolidColorBrush x:Key="QuickFilterGlassActiveHoverBrush" Color="#50FFFFFF"/>
+    <SolidColorBrush x:Key="QuickFilterGlassBorderBrush" Color="#30FFFFFF"/>
+    <SolidColorBrush x:Key="QuickFilterGlassActiveBorderBrush" Color="#45FFFFFF"/>
+    
+    <!-- Semantic colors - modernized -->
+    <SolidColorBrush x:Key="SuccessBrush" Color="#7A9B68"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="#D9A94E"/>
+    <SolidColorBrush x:Key="ErrorBrush" Color="#C97664"/>
+    <SolidColorBrush x:Key="SuccessBackgroundBrush" Color="#E8F0E4"/>
+    <SolidColorBrush x:Key="WarningBackgroundBrush" Color="#FDF5E6"/>
+    <SolidColorBrush x:Key="ErrorBackgroundBrush" Color="#FAE8E4"/>
+    <SolidColorBrush x:Key="InfoBackgroundBrush" Color="#E4F0F4"/>
+    
+    <FontFamily x:Key="MainFontFamily">Segoe UI</FontFamily>
+    
+    <Color x:Key="GlobalShadowColor">#00000000</Color>
+    <!-- MODERNIZED: Header accent with terracotta -->
+    <Color x:Key="HeaderAccentColor">#C97664</Color>
+    
+    <!-- No shadows - flat natural aesthetic -->
+    <DropShadowEffect x:Key="DarkSubtleDropShadow" Color="#00000000" Opacity="0" BlurRadius="0"/>
+    <DropShadowEffect x:Key="SubtleDropShadow" Color="#00000000" Opacity="0" BlurRadius="0"/>
+    <DropShadowEffect x:Key="DarkButtonShadow" Color="#00000000" Opacity="0" BlurRadius="0"/>
+    <DropShadowEffect x:Key="DarkButtonShadowHover" Color="#00000000" Opacity="0" BlurRadius="0"/>
+    <DropShadowEffect x:Key="DarkButtonShadowPressed" Color="#00000000" Opacity="0" BlurRadius="0"/>
+    <DropShadowEffect x:Key="HoverMenuDropShadow" Color="#00000000" Opacity="0" BlurRadius="0"/>
+    <DropShadowEffect x:Key="TileActiveShadow" Color="#00000000" Opacity="0" BlurRadius="0"/>
+    <DropShadowEffect x:Key="TileActiveShadowPressed" Color="#00000000" Opacity="0" BlurRadius="0"/>
+    <DropShadowEffect x:Key="FrontPageTileBaseShadow" Color="#00000000" Opacity="0" BlurRadius="0"/>
+    <DropShadowEffect x:Key="FooterGroundedShadow" Color="#00000000" Opacity="0" BlurRadius="0"/>
+    
+    <BoxShadows x:Key="SlideOutPanelShadow">-20 0 40 -5 #50000000</BoxShadows>
+    <BoxShadows x:Key="FlaggedPanelShadow">-16 0 32 -4 #48000000</BoxShadows>
+    
+    <!-- MODERNIZED: Terracotta & sage overlay gradient -->
+    <LinearGradientBrush x:Key="TileOverlayBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#20C97664" Offset="0"/>
+        <GradientStop Color="#108FA88A" Offset="0.5"/>
+        <GradientStop Color="#00FFFFFF" Offset="1"/>
+    </LinearGradientBrush>
+
+</ResourceDictionary>
