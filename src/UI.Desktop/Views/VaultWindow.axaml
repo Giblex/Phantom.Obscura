@@ -410,7 +410,7 @@
             <!-- Vault View (Sidebar + Credential List + Detail View) -->
             <Grid x:Name="VaultGrid" IsVisible="{Binding !IsShowingCategoryLanding}">
                 <Grid.ColumnDefinitions>
-                    <!-- Sidebar column - collapses to icon-only (60px) when collapsed, full (220px) when expanded -->
+                    <!-- Sidebar column - collapses to icon-only (80px) when collapsed, full (220px) when expanded -->
                     <ColumnDefinition>
                         <ColumnDefinition.Width>
                             <Binding Path="IsSidebarCollapsed" ConverterParameter="80|220">
@@ -430,37 +430,31 @@
             
             <!-- Left Sidebar: Categories and Filters -->
             <views:SidebarView Grid.Column="0" 
-                              DataContext="{Binding}" />
-            
-            
-            <!-- Sidebar Toggle Button (when sidebar is EXPANDED - at right edge of sidebar) -->
-            <Button Grid.Column="0"
-                    Command="{Binding ToggleSidebarCommand}"
-                    Width="36"
-                    Height="36"
-                    Classes="liquid-glass"
-                    ToolTip.Tip="Collapse sidebar"
-                    VerticalAlignment="Top"
-                    HorizontalAlignment="Right"
-                    Margin="0,8,8,0"
-                    ZIndex="100"
-                    IsVisible="{Binding !IsSidebarCollapsed}">
-                <TextBlock Text="◀"
-                           FontSize="16"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center"/>
-            </Button>
+                              DataContext="{Binding}">
+                <views:SidebarView.Transitions>
+                    <Transitions>
+                        <DoubleTransition Property="Width" Duration="0:0:0.5" Easing="CubicEaseInOut"/>
+                    </Transitions>
+                </views:SidebarView.Transitions>
+            </views:SidebarView>
 
             <!-- Middle: Credentials List (Column 1 only) -->
             <views:CredentialListView Grid.Column="1"
                                      DataContext="{Binding}" 
-                                     IsVisible="{Binding !IsShowingDashboard}" />
+                                     IsVisible="{Binding !IsShowingDashboard}"
+                                     IsHitTestVisible="{Binding !IsShowingDashboard}" />
             
             <!-- Dashboard View (Spans columns 1 and 2 to overlay entire area) -->
-            <views:DashboardView Grid.Column="1" Grid.ColumnSpan="2"
-                                DataContext="{Binding DashboardViewModel}"
-                                IsVisible="{Binding IsShowingDashboard}"
-                                ZIndex="100" />
+            <!-- Wrapped in Panel to force complete recreation on visibility changes -->
+            <Panel Grid.Column="1" Grid.ColumnSpan="2"
+                   ZIndex="100"
+                   IsVisible="{Binding IsShowingDashboard}"
+                   IsHitTestVisible="{Binding IsShowingDashboard}"
+                   Background="{DynamicResource WindowBackgroundBrush}"
+                   ClipToBounds="True">
+                <views:DashboardView DataContext="{Binding DashboardViewModel}"
+                                    IsVisible="{Binding $parent[Panel].IsVisible}"/>
+            </Panel>
             
         <!-- Resizable GridSplitter between credential list and detail panel -->
         <GridSplitter Grid.Column="1" 
@@ -827,6 +821,7 @@
             
             <!-- Narrow-width Detail Overlay (mobile-style) -->
             <Border x:Name="MobileDetailOverlay"
+                    Grid.ColumnSpan="3"
                     Background="Transparent"
                     Tag="{Binding SelectedCredential, Converter={x:Static ObjectConverters.IsNotNull}}"
                     IsVisible="{Binding $parent[Window].Bounds.Width, Converter={StaticResource IsWidthLessThanConverter}, ConverterParameter=1200}"
@@ -977,18 +972,23 @@
                 </Grid>
             </Border>
 
-            <!-- Slide-in Edit Panel Overlay - positioned only over detail panel (Grid.Column 2) -->
+            <!-- Slide-in Edit Panel Overlay - spans all columns for maximum visibility -->
             <Border x:Name="EditPanelOverlay"
-                    Grid.Column="2"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="3"
+                    ZIndex="200"
                     Background="{DynamicResource OverlayBackgroundLightBrush}"
                     IsVisible="{Binding IsEditPanelVisible}"
                     IsHitTestVisible="{Binding IsEditPanelVisible}"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
                     ClipToBounds="True">
                 <Border.Styles>
                     <Style Selector="Border#EditPanelOverlay">
                         <Setter Property="Opacity" Value="0"/>
                     </Style>
                     <Style Selector="Border#EditPanelOverlay[IsVisible=True]">
+                        <Setter Property="Opacity" Value="1"/>
                         <Style.Animations>
                             <Animation Duration="0:0:0.25" FillMode="Forward" Easing="SineEaseOut">
                                 <KeyFrame Cue="0%">
@@ -1009,8 +1009,9 @@
                     
                     <!-- Edit Panel Container - Slides in from right, fills entire detail panel area -->
             <Border x:Name="EditPanelContainer" 
-                HorizontalAlignment="Stretch"
+                HorizontalAlignment="Right"
                 VerticalAlignment="Stretch"
+                Width="600"
                 Tag="{Binding IsEditPanelVisible}">
                         <!-- Smooth slide animation using Transitions -->
                         <Border.RenderTransform>
@@ -1040,17 +1041,17 @@
                                 BoxShadow="{DynamicResource SlideOutPanelShadow}">
                         <!-- Touch/touchpad-friendly scrollbars scoped to this panel -->
                         <Border.Styles>
-                            <!-- Vertical scrollbar: slim by default, slightly wider and more opaque on hover/press -->
+                            <!-- Vertical scrollbar: always visible for better UX -->
                             <Style Selector="Border#EditPanel ScrollViewer ScrollBar:vertical">
-                                <Setter Property="Width" Value="6"/>
-                                <Setter Property="Opacity" Value="0.55"/>
+                                <Setter Property="Width" Value="8"/>
+                                <Setter Property="Opacity" Value="1"/>
                             </Style>
                             <Style Selector="Border#EditPanel ScrollViewer ScrollBar:vertical:pointerover">
-                                <Setter Property="Width" Value="8"/>
+                                <Setter Property="Width" Value="10"/>
                                 <Style.Animations>
                                     <Animation Duration="0:0:0.12" FillMode="Forward" Easing="SineEaseOut">
                                         <KeyFrame Cue="0%">
-                                            <Setter Property="Opacity" Value="0.55"/>
+                                            <Setter Property="Opacity" Value="1"/>
                                         </KeyFrame>
                                         <KeyFrame Cue="100%">
                                             <Setter Property="Opacity" Value="1"/>
@@ -1059,20 +1060,20 @@
                                 </Style.Animations>
                             </Style>
                             <Style Selector="Border#EditPanel ScrollViewer ScrollBar:vertical:pressed">
-                                <Setter Property="Width" Value="4"/>
-                                <Setter Property="Opacity" Value="0"/>
+                                <Setter Property="Width" Value="10"/>
+                                <Setter Property="Opacity" Value="1"/>
                             </Style>
                             <!-- Horizontal (not used here, but added for consistency) -->
                             <Style Selector="Border#EditPanel ScrollViewer ScrollBar:horizontal">
-                                <Setter Property="Height" Value="6"/>
-                                <Setter Property="Opacity" Value="0.55"/>
+                                <Setter Property="Height" Value="8"/>
+                                <Setter Property="Opacity" Value="1"/>
                             </Style>
                             <Style Selector="Border#EditPanel ScrollViewer ScrollBar:horizontal:pointerover">
-                                <Setter Property="Height" Value="8"/>
+                                <Setter Property="Height" Value="10"/>
                                 <Style.Animations>
                                     <Animation Duration="0:0:0.12" FillMode="Forward" Easing="SineEaseOut">
                                         <KeyFrame Cue="0%">
-                                            <Setter Property="Opacity" Value="0.55"/>
+                                            <Setter Property="Opacity" Value="1"/>
                                         </KeyFrame>
                                         <KeyFrame Cue="100%">
                                             <Setter Property="Opacity" Value="1"/>
@@ -1081,24 +1082,24 @@
                                 </Style.Animations>
                             </Style>
                             <Style Selector="Border#EditPanel ScrollViewer ScrollBar:horizontal:pressed">
-                                <Setter Property="Height" Value="4"/>
-                                <Setter Property="Opacity" Value="0"/>
+                                <Setter Property="Height" Value="10"/>
+                                <Setter Property="Opacity" Value="1"/>
                             </Style>
                         </Border.Styles>
                         
                         <!-- Edit Form Content -->
-                        <Grid RowDefinitions="Auto,*,Auto">
+                        <Grid RowDefinitions="Auto,*,Auto" DataContext="{Binding EditViewModel}">
                             
                             <!-- Header -->
                             <Border Grid.Row="0" 
                                     Background="{DynamicResource HeaderBackgroundBrush}" 
-                                    Padding="25,20"
+                                    Padding="25,20,10,20"
                                     BorderBrush="{DynamicResource ControlBorderBrush}"
                                     BorderThickness="0,0,0,1"
                                     CornerRadius="0,0,12,12">
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <StackPanel Grid.Column="0" Spacing="6">
-                                        <TextBlock Text="{Binding EditViewModel.WindowTitle}" 
+                                    <StackPanel Grid.Column="0" Spacing="6" Margin="0,0,15,0">
+                                        <TextBlock Text="{Binding WindowTitle}" 
                                                    FontSize="20" 
                                                    FontWeight="Bold"
                                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
@@ -1107,11 +1108,12 @@
                                                    Foreground="{DynamicResource MutedTextBrush}"/>
                                     </StackPanel>
                                     <Button Grid.Column="1"
-                                            Command="{Binding CloseEditPanelCommand}"
+                                            Command="{Binding $parent[Grid].DataContext.CloseEditPanelCommand}"
                                             Classes="liquid-glass"
                                             Width="36"
                                             Height="36"
                                             VerticalAlignment="Top"
+                                            Margin="0,0,15,0"
                                             ToolTip.Tip="Close">
                                         <TextBlock Text="✕" FontSize="16"/>
                                     </Button>
@@ -1125,11 +1127,14 @@
                                           HorizontalScrollBarVisibility="Disabled"
                                           HorizontalContentAlignment="Stretch"
                                           AllowAutoHide="False"
-                                          Padding="25,20">
+                                          Padding="20,20,600,170">
                                 <StackPanel x:Name="EditFormStack"
                                             Spacing="20"
                                             HorizontalAlignment="Stretch"
                                             MaxWidth="720">
+                                    
+                                    <!-- Password Entry Fields -->
+                                    <StackPanel Spacing="20" IsVisible="{Binding IsPasswordEntry}">
                                     
                                     <!-- Title Field -->
                                     <StackPanel Spacing="8">
@@ -1158,7 +1163,7 @@
                                     </StackPanel>
                                     
                                     <!-- Username/Email Field -->
-                                    <StackPanel Spacing="8">
+                                    <StackPanel Spacing="8" IsVisible="{Binding ShowPasswordFields}">
                                         <TextBlock Text="Username / Email *" 
                                                    FontSize="13" 
                                                    FontWeight="SemiBold"
@@ -1184,7 +1189,7 @@
                                     </StackPanel>
                                     
                                     <!-- Password Field -->
-                                    <StackPanel Spacing="8">
+                                    <StackPanel Spacing="8" IsVisible="{Binding ShowPasswordFields}">
                                         <Grid ColumnDefinitions="*,Auto,4,Auto">
                                             <TextBlock Grid.Column="0"
                                                        Text="Password *" 
@@ -1297,7 +1302,7 @@
                                     </StackPanel>
                                     
                                     <!-- URL Field -->
-                                    <StackPanel Spacing="8">
+                                    <StackPanel Spacing="8" IsVisible="{Binding ShowPasswordFields}">
                                         <TextBlock Text="Website URL" 
                                                    FontSize="13" 
                                                    FontWeight="SemiBold"
@@ -1322,7 +1327,7 @@
                                     </StackPanel>
                                     
                                     <!-- Category Selection -->
-                                    <StackPanel Spacing="8">
+                                    <StackPanel Spacing="8" IsVisible="{Binding ShowCategorySelector}">
                                         <TextBlock Text="Category" 
                                                    FontSize="13" 
                                                    FontWeight="SemiBold"
@@ -1344,7 +1349,7 @@
                                     </StackPanel>
                                     
                                     <!-- Icon/Logo Selection -->
-                                    <StackPanel Spacing="8">
+                                    <StackPanel Spacing="8" IsVisible="{Binding ShowIconSelector}">
                                         <TextBlock Text="Icon / Logo" 
                                                    FontSize="13" 
                                                    FontWeight="SemiBold"
@@ -1428,6 +1433,9 @@
                                             </TextBox.Styles>
                                         </TextBox>
                                     </StackPanel>
+                                    
+                                    </StackPanel>
+                                    <!-- End Password Entry Fields -->
 
                                     <!-- Wi-Fi Details -->
                                     <editforms:WiFiEditForm DataContext="{Binding}" />
@@ -1510,29 +1518,39 @@
                                     Padding="25,15"
                                     BorderBrush="{DynamicResource ControlBorderBrush}"
                                     BorderThickness="0,1,0,0">
-                                <Grid ColumnDefinitions="*,Auto,Auto">
+                                <Grid ColumnDefinitions="*,Auto,Auto,Auto">
                                     <TextBlock Grid.Column="0"
                                                Text="* Required fields" 
                                                FontSize="11" 
                                                Foreground="{DynamicResource MutedTextBrush}"
                                                VerticalAlignment="Center"/>
-                                    
+
                                     <Button Grid.Column="1"
-                                            Command="{Binding CloseEditPanelCommand}"
+                                            Command="{Binding $parent[Grid].DataContext.DeleteCredentialCommand}"
+                                            CommandParameter="{Binding $parent[Grid].DataContext.SelectedCredential}"
+                                            Classes="liquid-glass danger"
+                                            Width="110"
+                                            Height="40"
+                                            Margin="0,0,10,0"
+                                            IsVisible="{Binding $parent[Grid].DataContext.SelectedCredential, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                            Content="Delete"/>
+                                    
+                                    <Button Grid.Column="2"
+                                            Command="{Binding $parent[Grid].DataContext.CloseEditPanelCommand}"
                                             Classes="liquid-glass"
                                             Width="100"
                                             Height="40"
                                             Margin="0,0,10,0"
                                             Content="Cancel"/>
                                     
-                                    <Button Grid.Column="2"
-                                            Command="{Binding EditViewModel.SaveCommand}"
+                                    <Button Grid.Column="3"
+                                            Command="{Binding SaveCommand}"
                                             Classes="liquid-glass"
                                             Background="{DynamicResource AccentBrush}"
                                             Width="120"
                                             Height="40"
                                             FontWeight="Bold">
-                                        <TextBlock Text="{Binding EditViewModel.SaveButtonText}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding SaveButtonText}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Button>
                                 </Grid>
                             </Border>
@@ -1544,16 +1562,16 @@
             </Border>
 
             <!-- Flagged Passwords Overlay -->
-            <overlays:FlaggedPasswordsOverlay Grid.RowSpan="3" DataContext="{Binding}" />
+            <overlays:FlaggedPasswordsOverlay Grid.RowSpan="3" Grid.ColumnSpan="3" DataContext="{Binding}" />
 
             <!-- Category Manager Overlay (same behaviour as in settings - slides in from right) -->
-            <overlays:CategoryManagerOverlay Grid.RowSpan="3" DataContext="{Binding}" />
+            <overlays:CategoryManagerOverlay Grid.RowSpan="3" Grid.ColumnSpan="3" DataContext="{Binding}" />
 
             <!-- Settings Panel Overlay (Slides from right) -->
-            <overlays:SettingsPanelOverlay Grid.ColumnSpan="3" DataContext="{Binding}" />
+            <overlays:SettingsPanelOverlay Grid.RowSpan="3" Grid.ColumnSpan="3" DataContext="{Binding}" />
 
             <!-- Icon Manager Overlay (Slides from right) -->
-            <overlays:IconManagerOverlay Grid.ColumnSpan="3" DataContext="{Binding}" />
+            <overlays:IconManagerOverlay Grid.RowSpan="3" Grid.ColumnSpan="3" DataContext="{Binding}" />
 
             <!-- Security Dashboard Overlay -->
             <Border Grid.RowSpan="3"
@@ -1655,21 +1673,6 @@
                         </Grid>
                     </Border>
                 </Grid>
-            </Border>
-
-            <!-- Recovery Panel Overlay (Embedded PhantomRecovery) -->
-            <Border Grid.RowSpan="3"
-                    Grid.ColumnSpan="3"
-                    Background="#AA000000"
-                    IsVisible="{Binding IsRecoveryPanelVisible}"
-                    IsHitTestVisible="{Binding IsRecoveryPanelVisible}">
-                <views:RecoveryPanel x:Name="RecoveryPanelControl"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    MinWidth="1000"
-                                    MinHeight="600"
-                                    MaxWidth="1200"
-                                    MaxHeight="800"/>
             </Border>
 
             <!-- In-app Lockscreen Overlay - Full screen with centered logo -->

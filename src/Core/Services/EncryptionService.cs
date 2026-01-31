@@ -116,7 +116,7 @@ namespace PhantomVault.Core.Services
                 }
                 var config = new Argon2Config
                 {
-                    Type = Isopoh.Cryptography.Argon2.Argon2Type.DataIndependentAddressing, // Argon2id
+                    Type = Isopoh.Cryptography.Argon2.Argon2Type.HybridAddressing, // Argon2id
                     Version = Argon2Version.Nineteen,
                     TimeCost = iterations,
                     MemoryCost = memoryCostKb,

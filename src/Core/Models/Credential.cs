@@ -103,6 +103,7 @@ namespace PhantomVault.Core.Models
 
         // API key fields (EntryType.ApiKey)
         public string ApiKeyValue { get; set; } = string.Empty;
+        public string ApiKeyType { get; set; } = string.Empty;
         public string ApiEndpoint { get; set; } = string.Empty;
         public string ApiEnvironment { get; set; } = string.Empty; // Production, Staging, Development
         public string ApiDocumentationUrl { get; set; } = string.Empty;

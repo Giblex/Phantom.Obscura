@@ -3121,6 +3121,41 @@
             Registers a copy event and checks for excessive copying.
             </summary>
         </member>
+        <member name="T:PhantomVault.Core.Services.Security.ClipboardHistoryExclusion">
+            <summary>
+            Provides functionality to exclude clipboard data from Windows Clipboard History.
+            Windows 10 version 1809+ stores clipboard history which can expose sensitive data.
+            This service uses special clipboard formats to prevent history storage.
+            </summary>
+        </member>
+        <member name="M:PhantomVault.Core.Services.Security.ClipboardHistoryExclusion.IsSupported">
+            <summary>
+            Checks if clipboard history exclusion is supported on this platform.
+            Only supported on Windows 10 version 1809 and later.
+            </summary>
+        </member>
+        <member name="M:PhantomVault.Core.Services.Security.ClipboardHistoryExclusion.CopyWithExclusion(System.String)">
+            <summary>
+            Copies text to clipboard while excluding it from Windows Clipboard History.
+            The data will still be available for immediate paste but won't appear in
+            clipboard history (Win+V) or be synced across devices.
+            </summary>
+            <param name="text">The text to copy to clipboard.</param>
+            <returns>True if the operation succeeded.</returns>
+        </member>
+        <member name="M:PhantomVault.Core.Services.Security.ClipboardHistoryExclusion.CopyWithExclusionAndAutoClearAsync(System.String,System.TimeSpan)">
+            <summary>
+            Copies text to clipboard with exclusion and schedules automatic clearing.
+            </summary>
+            <param name="text">The text to copy.</param>
+            <param name="clearAfter">Time after which to clear the clipboard.</param>
+            <returns>True if the initial copy succeeded.</returns>
+        </member>
+        <member name="M:PhantomVault.Core.Services.Security.ClipboardHistoryExclusion.ClearClipboard">
+            <summary>
+            Clears the clipboard contents.
+            </summary>
+        </member>
         <member name="T:PhantomVault.Core.Services.Security.CrashDumpSuppression">
             <summary>
             Prevents crash dumps from being generated to protect sensitive data in memory.
@@ -3865,6 +3900,42 @@
             </summary>
             <returns>String describing detected VM environment or "Physical Machine"</returns>
         </member>
+        <member name="T:PhantomVault.Core.Services.Security.WindowProtectionService">
+            <summary>
+            Provides window-level security protections including screenshot prevention
+            and screen capture blocking. Uses Windows Display Affinity API to exclude
+            the window from screen captures, screenshots, and screen sharing.
+            </summary>
+        </member>
+        <member name="M:PhantomVault.Core.Services.Security.WindowProtectionService.EnableScreenshotProtection(System.IntPtr)">
+            <summary>
+            Enables screenshot and screen capture protection for the specified window.
+            The window will appear black in screenshots, screen recordings, and screen sharing.
+            Requires Windows 10 version 2004 (build 19041) or later.
+            </summary>
+            <param name="windowHandle">Native window handle (HWND)</param>
+            <returns>True if protection was enabled successfully</returns>
+        </member>
+        <member name="M:PhantomVault.Core.Services.Security.WindowProtectionService.DisableScreenshotProtection(System.IntPtr)">
+            <summary>
+            Disables screenshot and screen capture protection for the specified window.
+            </summary>
+            <param name="windowHandle">Native window handle (HWND)</param>
+            <returns>True if protection was disabled successfully</returns>
+        </member>
+        <member name="M:PhantomVault.Core.Services.Security.WindowProtectionService.IsScreenshotProtectionEnabled(System.IntPtr)">
+            <summary>
+            Checks if screenshot protection is currently enabled for the specified window.
+            </summary>
+            <param name="windowHandle">Native window handle (HWND)</param>
+            <returns>True if protection is active</returns>
+        </member>
+        <member name="M:PhantomVault.Core.Services.Security.WindowProtectionService.IsSupported">
+            <summary>
+            Checks if the current platform supports screenshot protection.
+            </summary>
+            <returns>True if running on Windows</returns>
+        </member>
         <member name="T:PhantomVault.Core.Services.SharingService">
             <summary>
             Implements a hybrid encryption scheme for securely sharing
@@ -4081,6 +4152,61 @@
             <summary>
             Computes a stable key for the manifest based on its full path.
             Uses SHA256 hash of the normalized path.
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.UpdateService">
+            <summary>
+            Provides secure application update checking and download functionality.
+            All updates are verified using Ed25519 signatures before installation.
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.UpdateService.UpdateInfo">
+            <summary>
+            Update check result containing version info and download details.
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.UpdateService.DownloadProgress">
+            <summary>
+            Update download progress information.
+            </summary>
+        </member>
+        <member name="M:PhantomVault.Core.Services.UpdateService.#ctor(System.String,System.String)">
+            <summary>
+            Creates a new UpdateService instance.
+            </summary>
+            <param name="currentVersion">Current application version (e.g., "1.0.0").</param>
+            <param name="updateManifestUrl">URL to the update manifest JSON file.</param>
+        </member>
+        <member name="M:PhantomVault.Core.Services.UpdateService.CheckForUpdateAsync(System.Threading.CancellationToken)">
+            <summary>
+            Checks for available updates.
+            </summary>
+            <param name="cancellationToken">Cancellation token.</param>
+            <returns>Update information if available, null otherwise.</returns>
+        </member>
+        <member name="M:PhantomVault.Core.Services.UpdateService.DownloadUpdateAsync(PhantomVault.Core.Services.UpdateService.UpdateInfo,System.String,System.IProgress{PhantomVault.Core.Services.UpdateService.DownloadProgress},System.Threading.CancellationToken)">
+            <summary>
+            Downloads an update file to the specified path with progress reporting.
+            </summary>
+            <param name="updateInfo">Update information from CheckForUpdateAsync.</param>
+            <param name="destinationPath">Path to save the downloaded file.</param>
+            <param name="progress">Progress reporter.</param>
+            <param name="cancellationToken">Cancellation token.</param>
+            <returns>True if download and verification succeeded.</returns>
+        </member>
+        <member name="M:PhantomVault.Core.Services.UpdateService.VerifyFileHashAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Verifies a downloaded file against its expected SHA-256 hash.
+            </summary>
+        </member>
+        <member name="M:PhantomVault.Core.Services.UpdateService.IsNewerVersion(System.String,System.String)">
+            <summary>
+            Compares two semantic version strings to determine if newVersion is newer.
+            </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.UpdateService.UpdateManifest">
+            <summary>
+            Internal model for parsing update manifest JSON.
             </summary>
         </member>
         <member name="T:PhantomVault.Core.Services.UsbBindingService">
@@ -4373,6 +4499,49 @@
             Includes timeout logic, exit code mapping, and retry mechanisms for robustness.
             VeraCrypt is optional - the service gracefully handles cases where it's not installed.
             </summary>
+        </member>
+        <member name="T:PhantomVault.Core.Services.VeraCryptService.BinaryVerificationResult">
+            <summary>
+            Result of binary integrity verification.
+            </summary>
+        </member>
+        <member name="F:PhantomVault.Core.Services.VeraCryptService.BinaryVerificationResult.Verified">
+            <summary>Binary is verified and trusted.</summary>
+        </member>
+        <member name="F:PhantomVault.Core.Services.VeraCryptService.BinaryVerificationResult.SignatureValid">
+            <summary>Binary is signed with a valid Authenticode signature.</summary>
+        </member>
+        <member name="F:PhantomVault.Core.Services.VeraCryptService.BinaryVerificationResult.NotInstalled">
+            <summary>Binary is not installed or not found.</summary>
+        </member>
+        <member name="F:PhantomVault.Core.Services.VeraCryptService.BinaryVerificationResult.HashMismatch">
+            <summary>Binary hash does not match known good values.</summary>
+        </member>
+        <member name="F:PhantomVault.Core.Services.VeraCryptService.BinaryVerificationResult.SignatureInvalid">
+            <summary>Binary has no valid Authenticode signature.</summary>
+        </member>
+        <member name="F:PhantomVault.Core.Services.VeraCryptService.BinaryVerificationResult.VerificationFailed">
+            <summary>Verification could not be performed.</summary>
+        </member>
+        <member name="M:PhantomVault.Core.Services.VeraCryptService.VerifyBinaryIntegrity">
+            <summary>
+            Verifies the integrity of the VeraCrypt binary using SHA-256 hash and/or Authenticode signature.
+            This helps ensure the binary has not been tampered with.
+            </summary>
+            <returns>Verification result indicating trust level.</returns>
+        </member>
+        <member name="M:PhantomVault.Core.Services.VeraCryptService.GetBinaryHash">
+            <summary>
+            Gets the SHA-256 hash of the VeraCrypt binary for manual verification.
+            </summary>
+            <returns>Hex-encoded SHA-256 hash, or null if not installed.</returns>
+        </member>
+        <member name="M:PhantomVault.Core.Services.VeraCryptService.AddTrustedHash(System.String)">
+            <summary>
+            Adds a trusted hash to the known good hashes list.
+            This allows users to trust specific VeraCrypt versions they have verified.
+            </summary>
+            <param name="sha256Hash">The SHA-256 hash to trust (hex-encoded).</param>
         </member>
         <member name="M:PhantomVault.Core.Services.VeraCryptService.MapExitCodeToMessage(System.Int32,System.String,System.String)">
             <summary>

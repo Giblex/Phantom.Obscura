@@ -2133,6 +2133,7 @@ namespace PhantomVault.UI.ViewModels
         private async Task AddCredentialWithTypeAsync(string entryTypeValue)
         {
             Core.Models.EntryType entryType = Core.Models.EntryType.Password;
+            var isSecureNote = false;
 
             // Map string names to EntryType enum
             if (!string.IsNullOrEmpty(entryTypeValue))
@@ -2167,11 +2168,18 @@ namespace PhantomVault.UI.ViewModels
                         case "secure note":
                         case "note":
                             entryType = Core.Models.EntryType.Password; // Notes use Password type with empty password
+                            isSecureNote = true;
                             break;
                         case "software license":
                         case "license":
                         case "api key":
                         case "api":
+                        case "sdk":
+                        case "sdk key":
+                        case "secret":
+                        case "token":
+                        case "private key":
+                        case "public key":
                             entryType = Core.Models.EntryType.ApiKey;
                             break;
                         case "wifi password":
@@ -2191,34 +2199,25 @@ namespace PhantomVault.UI.ViewModels
                 EntryType = entryType
             };
 
-            // Open dialog window for adding new credentials
-            var viewModel = new AddEditCredentialViewModel(newCredential, (credential) =>
+            if (isSecureNote)
+            {
+                newCredential.Group = "Secure Notes";
+            }
+
+            // Open overlay panel for adding new credentials
+            EditViewModel = new AddEditCredentialViewModel(newCredential, (credential) =>
             {
                 OnCredentialSaved(credential);
+                CloseEditPanel();
             });
             
-            var window = new AddEditCredentialWindow
-            {
-                DataContext = viewModel
-            };
-            
-            if (_ownerWindow != null)
-            {
-                viewModel.SetOwnerWindow(window);
-            }
+            IsEditPanelVisible = true;
 
             // Set the entry type filter to match what we're adding
             SetEntryType(entryTypeValue);
             StatusMessage = $"Adding new {entryTypeValue ?? entryType.ToString()} entry";
             
-            if (_ownerWindow != null)
-            {
-                await window.ShowDialog(_ownerWindow);
-            }
-            else
-            {
-                window.Show();
-            }
+            await Task.CompletedTask;
         }
 
         private async Task EditCredentialAsync(CredentialViewModel credentialVm)
@@ -2245,26 +2244,17 @@ namespace PhantomVault.UI.ViewModels
                 ? "Editing credential"
                 : $"Editing: {editingTitle}";
 
-            // Open dialog window for editing
-            var viewModel = new AddEditCredentialViewModel(credentialVm.GetCredential(), (credential) =>
+            // Open overlay panel for editing instead of dialog
+            EditViewModel = new AddEditCredentialViewModel(credentialVm.GetCredential(), (credential) =>
             {
                 OnCredentialSaved(credential);
+                CloseEditPanel();
             });
             
-            var window = new AddEditCredentialWindow
-            {
-                DataContext = viewModel
-            };
+            IsEditPanelVisible = true;
             
-            if (_ownerWindow != null)
-            {
-                viewModel.SetOwnerWindow(window);
-                await window.ShowDialog(_ownerWindow);
-            }
-            else
-            {
-                window.Show();
-            }
+            // Window-based editing removed - now using overlay panel
+            await Task.CompletedTask;
         }
 
         public void CloseEditPanel()
@@ -2667,7 +2657,12 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                var viewModel = new TotpScannerViewModel();
+                // Pre-populate with credential info
+                var viewModel = new TotpScannerViewModel
+                {
+                    Issuer = SelectedCredential.Title,
+                    AccountName = SelectedCredential.Username
+                };
                 var dialog = new TotpScannerDialog(viewModel)
                 {
                     Title = "Add TOTP to " + SelectedCredential.Title
@@ -2897,7 +2892,17 @@ namespace PhantomVault.UI.ViewModels
 
         private void ShowDashboard()
         {
-            IsShowingDashboard = true;
+            // FORCE COMPLETE VIEW DESTRUCTION AND RECREATION
+            // Step 1: Hide dashboard view to unload from visual tree
+            IsShowingDashboard = false;
+            
+            // Step 2: Force UI thread to process the visibility change
+            System.Threading.Tasks.Task.Delay(1).Wait();
+            
+            // Step 3: Clear all old data completely
+            DashboardViewModel.ClearDashboard();
+            
+            // Step 4: Clear all other view states
             IsShowingAll = false;
             IsShowingPasswords = false;
             IsShowingFavorites = false;
@@ -2913,6 +2918,12 @@ namespace PhantomVault.UI.ViewModels
             
             // Always collapse sidebar in dashboard view
             IsSidebarCollapsed = true;
+            
+            // Step 5: Show dashboard view (forces re-render with clean state)
+            IsShowingDashboard = true;
+            
+            // Step 6: Load fresh data
+            _ = DashboardViewModel.LoadDashboardDataAsync();
         }
 
         private void ShowPasswords()
@@ -2932,9 +2943,11 @@ namespace PhantomVault.UI.ViewModels
             IsShowingSecureTrash = false;
             SetActiveCategory(null);
             SelectedTrashItem = null;
-            
+            CurrentViewTitle = "Passwords";
+            IsSidebarCollapsed = false;  // Expand sidebar to show full navigation
             
             FilterByEntryType("Password");
+            ApplyFilters();
         }
         
         private void ShowAll()
@@ -3436,10 +3449,10 @@ namespace PhantomVault.UI.ViewModels
         
         private void ToggleSidebar()
         {
-            // Don't allow sidebar toggle when on dashboard
-            if (IsShowingDashboard)
+            // Don't allow sidebar expansion when on dashboard
+            if (IsShowingDashboard && IsSidebarCollapsed)
             {
-                StatusMessage = "Sidebar toggle disabled in dashboard view";
+                StatusMessage = "Sidebar cannot be expanded in dashboard view";
                 return;
             }
             
@@ -4301,6 +4314,18 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Closes the recovery panel
+        /// </summary>
+        public void CloseRecoveryPanel()
+        {
+            if (IsRecoveryPanelVisible)
+            {
+                IsRecoveryPanelVisible = false;
+                StatusMessage = "Recovery panel closed";
+            }
+        }
+
         public void DismissFlaggedPasswordsPanel()
         {
             CloseFlaggedPasswordsPanel();
@@ -4571,7 +4596,7 @@ namespace PhantomVault.UI.ViewModels
         {
             EnsureVaultVisible();
             IsPasswordHealthPanelVisible = true;
-            IsSidebarCollapsed = true;
+            IsSidebarCollapsed = false;  // Expand sidebar
 
             var healthVm = new PasswordHealthViewModel(new PhantomVault.Core.Services.PasswordHealthService());
             foreach (var cred in _credentials)
@@ -4849,6 +4874,12 @@ namespace PhantomVault.UI.ViewModels
 
             if (action.ShouldExitApplication)
             {
+                if (_isDeveloperBypassMode)
+                {
+                    Debug.WriteLine("[Security] Exit suppressed in developer bypass mode.");
+                    return;
+                }
+
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     Environment.Exit(1);

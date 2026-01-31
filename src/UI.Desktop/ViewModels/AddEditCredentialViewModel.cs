@@ -40,6 +40,25 @@ namespace PhantomVault.UI.ViewModels
         private DateTimeOffset? _expiryDate;
         private CategoryViewModel? _selectedCategory;
         private ObservableCollection<CategoryViewModel> _categories = new();
+        private readonly IReadOnlyList<string> _identityTypeOptions = new List<string>
+        {
+            "Passport",
+            "Driver Licence",
+            "Medicare Card",
+            "Birth Certificate",
+            "Proof of Age Card",
+            "Concession Card",
+            "Citizenship Certificate"
+        };
+        private readonly IReadOnlyList<string> _apiKeyTypeOptions = new List<string>
+        {
+            "API Key",
+            "SDK Key",
+            "Secret",
+            "Token",
+            "Private Key",
+            "Public Key"
+        };
 
         // Icon auto-detection properties
         private string? _autoDetectedIconPath;
@@ -169,6 +188,16 @@ namespace PhantomVault.UI.ViewModels
             _isContactEntry = entryType == EntryType.Contact;
             _isTotpEntry = entryType == EntryType.TotpGenerator;
 
+            if (_isIdentityEntry && string.IsNullOrWhiteSpace(IdDocumentType))
+            {
+                IdDocumentType = _identityTypeOptions.FirstOrDefault() ?? string.Empty;
+            }
+
+            if (_isApiKeyEntry && string.IsNullOrWhiteSpace(ApiKeyType))
+            {
+                ApiKeyType = _apiKeyTypeOptions.FirstOrDefault() ?? string.Empty;
+            }
+
             Debug.WriteLine($"[ENTRY-TYPE-INIT] EntryType={entryType}, IsCreditCard={_isCreditCardEntry}, IsBankAccount={_isBankAccountEntry}, IsIdentity={_isIdentityEntry}");
             Console.WriteLine($"[ADD/EDIT VM] Constructor: _existingCredential={_existingCredential?.Title ?? "NULL"}, EntryType={entryType}, IsCreditCardEntry={_isCreditCardEntry}");
             System.Diagnostics.Trace.WriteLine($"[ADD/EDIT VM] Constructor: _existingCredential={_existingCredential?.Title ?? "NULL"}, EntryType={entryType}, IsCreditCardEntry={_isCreditCardEntry}");
@@ -188,6 +217,10 @@ namespace PhantomVault.UI.ViewModels
             this.RaisePropertyChanged(nameof(ShowPasswordStrength));
             this.RaisePropertyChanged(nameof(ShowPasswordVisibilityToggle));
             this.RaisePropertyChanged(nameof(PasswordLabelText));
+            this.RaisePropertyChanged(nameof(IsSecureNoteEntry));
+            this.RaisePropertyChanged(nameof(ShowPasswordFields));
+            this.RaisePropertyChanged(nameof(ShowCategorySelector));
+            this.RaisePropertyChanged(nameof(ShowIconSelector));
             
             Console.WriteLine($"[ADD/EDIT VM] After RaisePropertyChanged: IsCreditCardEntry={IsCreditCardEntry}, IsPasswordEntry={IsPasswordEntry}");
 
@@ -349,10 +382,10 @@ namespace PhantomVault.UI.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _isTotpEntry, value);
         }
 
-        public bool ShowPasswordField => IsPasswordEntry || IsWiFiEntry;
-        public bool ShowPasswordGenerator => IsPasswordEntry;
-        public bool ShowPasswordStrength => IsPasswordEntry;
-        public bool ShowPasswordVisibilityToggle => IsPasswordEntry || IsWiFiEntry;
+        public bool ShowPasswordField => (IsPasswordEntry && !IsSecureNoteEntry) || IsWiFiEntry;
+        public bool ShowPasswordGenerator => IsPasswordEntry && !IsSecureNoteEntry;
+        public bool ShowPasswordStrength => IsPasswordEntry && !IsSecureNoteEntry;
+        public bool ShowPasswordVisibilityToggle => (IsPasswordEntry && !IsSecureNoteEntry) || IsWiFiEntry;
         public string PasswordLabelText => IsWiFiEntry ? "Network Password *" : "Password *";
 
         /// <summary>
@@ -434,7 +467,18 @@ namespace PhantomVault.UI.ViewModels
         public CategoryViewModel? SelectedCategory
         {
             get => _selectedCategory;
-            set => this.RaiseAndSetIfChanged(ref _selectedCategory, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _selectedCategory, value);
+                this.RaisePropertyChanged(nameof(IsSecureNoteEntry));
+                this.RaisePropertyChanged(nameof(ShowPasswordFields));
+                this.RaisePropertyChanged(nameof(ShowCategorySelector));
+                this.RaisePropertyChanged(nameof(ShowIconSelector));
+                this.RaisePropertyChanged(nameof(ShowPasswordField));
+                this.RaisePropertyChanged(nameof(ShowPasswordGenerator));
+                this.RaisePropertyChanged(nameof(ShowPasswordStrength));
+                this.RaisePropertyChanged(nameof(ShowPasswordVisibilityToggle));
+            }
         }
 
         public ObservableCollection<CategoryViewModel> Categories
@@ -442,6 +486,16 @@ namespace PhantomVault.UI.ViewModels
             get => _categories;
             set => this.RaiseAndSetIfChanged(ref _categories, value);
         }
+
+        public IReadOnlyList<string> IdentityTypeOptions => _identityTypeOptions;
+        public IReadOnlyList<string> ApiKeyTypeOptions => _apiKeyTypeOptions;
+
+        public bool IsSecureNoteEntry => string.Equals(SelectedCategory?.Name ?? _existingCredential?.Group,
+            "Secure Notes", StringComparison.OrdinalIgnoreCase);
+
+        public bool ShowPasswordFields => IsPasswordEntry && !IsSecureNoteEntry;
+        public bool ShowCategorySelector => !IsSecureNoteEntry;
+        public bool ShowIconSelector => !IsSecureNoteEntry;
 
         // Validation errors
         public string TitleError
@@ -634,7 +688,24 @@ namespace PhantomVault.UI.ViewModels
         public string IdDocumentType
         {
             get => _existingCredential?.IdDocumentType ?? string.Empty;
-            set { if (_existingCredential != null) { _existingCredential.IdDocumentType = value; this.RaisePropertyChanged(); } }
+            set
+            {
+                if (_existingCredential != null)
+                {
+                    _existingCredential.IdDocumentType = value;
+                    this.RaisePropertyChanged();
+                    this.RaisePropertyChanged(nameof(IdNumberLabel));
+                    this.RaisePropertyChanged(nameof(IdNumberWatermark));
+                    this.RaisePropertyChanged(nameof(IdIssuingCountryLabel));
+                    this.RaisePropertyChanged(nameof(IdIssuingStateLabel));
+                    this.RaisePropertyChanged(nameof(IdIssuingCountryWatermark));
+                    this.RaisePropertyChanged(nameof(IdIssuingStateWatermark));
+                    this.RaisePropertyChanged(nameof(ShowIdIssuingCountry));
+                    this.RaisePropertyChanged(nameof(ShowIdIssuingState));
+                    this.RaisePropertyChanged(nameof(ShowIdIssueDate));
+                    this.RaisePropertyChanged(nameof(ShowIdExpiryDate));
+                }
+            }
         }
         public string IdNumber
         {
@@ -661,6 +732,69 @@ namespace PhantomVault.UI.ViewModels
             get => _existingCredential?.IdExpiryDate;
             set { if (_existingCredential != null) { _existingCredential.IdExpiryDate = value; this.RaisePropertyChanged(); } }
         }
+
+        public string IdNumberLabel => GetIdentityTypeKey() switch
+        {
+            "passport" => "Passport Number",
+            "driver licence" => "Licence Number",
+            "medicare card" => "Medicare Number",
+            "birth certificate" => "Registration Number",
+            "proof of age card" => "Card Number",
+            "concession card" => "Card Number",
+            "citizenship certificate" => "Certificate Number",
+            _ => "ID Number"
+        };
+
+        public string IdNumberWatermark => GetIdentityTypeKey() switch
+        {
+            "passport" => "N1234567",
+            "driver licence" => "12345678",
+            "medicare card" => "1234 56789 0",
+            "birth certificate" => "2024/123456",
+            "proof of age card" => "PA123456",
+            "concession card" => "HCC 123 456 789",
+            "citizenship certificate" => "20240123456",
+            _ => "ABC123456"
+        };
+
+        public string IdIssuingCountryLabel => "Issuing Country";
+        public string IdIssuingStateLabel => GetIdentityTypeKey() switch
+        {
+            "birth certificate" => "Issuing State / Registry",
+            _ => "Issuing State / Province"
+        };
+
+        public string IdIssuingCountryWatermark => "Australia";
+        public string IdIssuingStateWatermark => "NSW";
+
+        public bool ShowIdIssuingCountry => GetIdentityTypeKey() switch
+        {
+            "driver licence" => false,
+            "medicare card" => false,
+            "proof of age card" => false,
+            "concession card" => false,
+            _ => true
+        };
+
+        public bool ShowIdIssuingState => GetIdentityTypeKey() switch
+        {
+            "passport" => false,
+            _ => true
+        };
+
+        public bool ShowIdIssueDate => GetIdentityTypeKey() switch
+        {
+            "medicare card" => false,
+            "proof of age card" => false,
+            "concession card" => false,
+            _ => true
+        };
+
+        public bool ShowIdExpiryDate => GetIdentityTypeKey() switch
+        {
+            "birth certificate" => false,
+            _ => true
+        };
 
         // WiFi properties
         public string WiFiSSID
@@ -690,6 +824,11 @@ namespace PhantomVault.UI.ViewModels
         {
             get => _existingCredential?.ApiKeyValue ?? string.Empty;
             set { if (_existingCredential != null) { _existingCredential.ApiKeyValue = value; this.RaisePropertyChanged(); } }
+        }
+        public string ApiKeyType
+        {
+            get => _existingCredential?.ApiKeyType ?? string.Empty;
+            set { if (_existingCredential != null) { _existingCredential.ApiKeyType = value; this.RaisePropertyChanged(); } }
         }
         public string ApiEndpoint
         {
@@ -794,6 +933,11 @@ namespace PhantomVault.UI.ViewModels
             _categories.Add(new CategoryViewModel { Name = "Personal", Icon = "👤" });
         }
 
+        private string GetIdentityTypeKey()
+        {
+            return (IdDocumentType ?? string.Empty).Trim().ToLowerInvariant();
+        }
+
         private bool ValidateForm()
         {
             bool isValid = true;
@@ -804,7 +948,7 @@ namespace PhantomVault.UI.ViewModels
                 isValid = false;
             }
 
-            if (IsPasswordEntry)
+            if (IsPasswordEntry && !IsSecureNoteEntry)
             {
                 if (string.IsNullOrWhiteSpace(Username))
                 {
@@ -872,6 +1016,14 @@ namespace PhantomVault.UI.ViewModels
                 credential.IconColor = string.Empty;
             }
             credential.Group = SelectedCategory?.Name ?? "Logins";
+
+            if (IsSecureNoteEntry)
+            {
+                credential.Username = string.Empty;
+                credential.Password = string.Empty;
+                credential.Url = string.Empty;
+                credential.Group = "Secure Notes";
+            }
 
             // Parse tags
             if (!string.IsNullOrWhiteSpace(TagsText))
@@ -943,6 +1095,7 @@ namespace PhantomVault.UI.ViewModels
 
                 // API Key fields
                 credential.ApiKeyValue = _existingCredential.ApiKeyValue;
+                credential.ApiKeyType = _existingCredential.ApiKeyType;
                 credential.ApiEndpoint = _existingCredential.ApiEndpoint;
                 credential.ApiEnvironment = _existingCredential.ApiEnvironment;
                 credential.ApiDocumentationUrl = _existingCredential.ApiDocumentationUrl;

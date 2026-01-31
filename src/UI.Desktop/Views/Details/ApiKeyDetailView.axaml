@@ -18,6 +18,10 @@
                    FontSize="14"
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource SecondaryTextBrush}"/>
+        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasApiKeyType}">
+            <TextBlock Text="Key Type" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBox Text="{Binding SelectedCredential.ApiKeyType}" IsReadOnly="True" Height="36" Padding="10,8"/>
+        </StackPanel>
         <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasApiKeyValue}">
             <TextBlock Text="API Key" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
             <TextBox Text="{Binding SelectedCredential.MaskedApiKeyValue}" IsReadOnly="True" Height="36" Padding="10,8">

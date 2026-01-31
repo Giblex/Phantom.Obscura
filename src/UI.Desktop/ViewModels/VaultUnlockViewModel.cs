@@ -32,6 +32,7 @@ namespace PhantomVault.UI.ViewModels
 
     private bool _isBusy;
     private string _status = "Searching for vault...";
+    private int _progressPercent;
     private Window? _ownerWindow;
 
     public VaultUnlockViewModel(
@@ -69,6 +70,15 @@ namespace PhantomVault.UI.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _status, value);
         }
 
+        /// <summary>
+        /// Unlock progress percentage (0-100) for visual progress bar.
+        /// </summary>
+        public int ProgressPercent
+        {
+            get => _progressPercent;
+            private set => this.RaiseAndSetIfChanged(ref _progressPercent, value);
+        }
+
         public void SetOwnerWindow(Window window)
         {
             _ownerWindow = window;
@@ -84,6 +94,7 @@ namespace PhantomVault.UI.ViewModels
 
             try
             {
+                ProgressPercent = 5;
                 Status = "Validating vault location...";
 
                 // Validate USB path
@@ -110,6 +121,7 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
+                ProgressPercent = 15;
                 Status = "Searching for vault manifest...";
 
                 // Get the first manifest file
@@ -140,6 +152,7 @@ namespace PhantomVault.UI.ViewModels
                 }
 
                 // CRITICAL: Require authentication before opening vault
+                ProgressPercent = 25;
                 Status = "Authentication required...";
                 var password = await PromptForPasswordAsync();
                 if (string.IsNullOrEmpty(password))
@@ -152,13 +165,15 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
+                ProgressPercent = 40;
                 Status = "Initializing vault services...";
 
                 // Create services for vault window
                 var encryptionService = new EncryptionService();
                 var manifestService = new ManifestService(encryptionService);
 
-                Status = "Validating passphrase...";
+                ProgressPercent = 55;
+                Status = "Validating passphrase (deriving key)...";
 
                 // CRITICAL: Validate passphrase by attempting to decrypt the manifest
                 try
@@ -182,6 +197,7 @@ namespace PhantomVault.UI.ViewModels
                     // Check for additional auth requirements from manifest
                     if (testManifest.RequiresTotp && !string.IsNullOrEmpty(testManifest.TotpSecret))
                     {
+                        ProgressPercent = 70;
                         Status = "TOTP verification required...";
                         var totpCode = await PromptForTotpAsync();
                         if (string.IsNullOrEmpty(totpCode) || !ValidateTotpCode(testManifest.TotpSecret, totpCode))
@@ -232,6 +248,7 @@ namespace PhantomVault.UI.ViewModels
                 var idleLockService = new IdleLockService(TimeSpan.FromMinutes(15));
                 var zkVaultService = new Core.Services.ZeroKnowledge.ZkVaultService();
 
+                ProgressPercent = 85;
                 Status = "Opening vault...";
 
             // Create and show vault window - pass the validated password
@@ -249,12 +266,18 @@ namespace PhantomVault.UI.ViewModels
             // Set the manifest context with the validated password
             vaultViewModel.SetManifestContext(manifestPath, password, null);
 
+                ProgressPercent = 95;
+                Status = "Preparing vault interface...";
+
                 var vaultWindow = new VaultWindow
                 {
                     DataContext = vaultViewModel
                 };
 
                 vaultViewModel.SetOwnerWindow(vaultWindow);
+
+                ProgressPercent = 100;
+                Status = "Vault unlocked!";
                 vaultWindow.Show();
 
                 // Zero out the password after use

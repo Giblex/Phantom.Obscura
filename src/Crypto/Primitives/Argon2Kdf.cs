@@ -17,8 +17,8 @@ namespace GiblexVault.Security.ZK.Primitives
             {
                 var cfg = new Argon2Config
                 {
-                    // Argon2id (data-independent addressing)
-                    Type = Argon2Type.DataIndependentAddressing,
+                    // Argon2id (hybrid addressing: data-independent for first pass, data-dependent thereafter)
+                    Type = Argon2Type.HybridAddressing,
                     Version = Argon2Version.Nineteen,
                     TimeCost = Math.Max(1, p.Ops),
                     MemoryCost = Math.Max(8, p.MemMiB) * 1024,

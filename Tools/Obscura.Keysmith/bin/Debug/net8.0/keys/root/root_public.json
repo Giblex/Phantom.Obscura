@@ -1,7 +1,0 @@
-{
-  "keyId": "OBSCURA-ROOT-1",
-  "algorithm": "ECDSA-P256",
-  "format": "SubjectPublicKeyInfo",
-  "publicKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE\u002BXN7F7fULY\u002BHbBuFXv66kXAGGKtR4IKWsv0n93bxBTy49msxVNmiEZz0oWyUrnV2sweZSlGlAwwSZAxdMCQGHw==",
-  "createdAt": "2025-12-10T13:17:53.4377695Z"
-}

@@ -285,15 +285,19 @@
         <Setter Property="Foreground" Value="{DynamicResource InputForegroundBrush}"/>
     </Style>
 
-    <!-- ComboBox Popup/Dropdown styling -->
+    <!-- ComboBox Popup/Dropdown styling - FORCE OVERRIDE -->
     <Style Selector="ComboBox /template/ Popup Border">
-        <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
+        <Setter Property="Background" Value="#35475B"/>
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.BorderSoft}"/>
         <Setter Property="CornerRadius" Value="{DynamicResource Radius.Sm}"/>
     </Style>
 
     <Style Selector="ComboBox /template/ Popup ListBox">
-        <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
+        <Setter Property="Background" Value="#35475B"/>
+    </Style>
+    
+    <Style Selector="ComboBox /template/ Popup ScrollViewer">
+        <Setter Property="Background" Value="#35475B"/>
     </Style>
     
     <Style Selector="ComboBoxItem">

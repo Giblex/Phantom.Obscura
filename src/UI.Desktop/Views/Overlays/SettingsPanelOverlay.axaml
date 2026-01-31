@@ -11,33 +11,40 @@
             <Border Background="Transparent" />
 
             <!-- Settings Panel Container - Slides in from right -->
-            <Canvas ClipToBounds="True" HorizontalAlignment="Right" Width="920">
-                <Border x:Name="SettingsSlideHost"
-                        Canvas.Right="0"
-                        VerticalAlignment="Stretch"
-                        Width="920"
-                        Height="{Binding $parent[Canvas].Bounds.Height}"
-                        Background="{DynamicResource WindowBackgroundBrush}"
-                        BorderBrush="{DynamicResource ControlBorderBrush}"
-                        BorderThickness="1,0,0,0"
-                        BoxShadow="{DynamicResource SlideOutPanelShadow}"
-                        IsVisible="{Binding IsSettingsPanelVisible}">
-                    <Border.Styles>
-                        <Style Selector="Border">
-                            <Setter Property="Canvas.Right" Value="-920"/>
-                            <Setter Property="Opacity" Value="0"/>
-                        </Style>
-                        <Style Selector="Border[IsVisible=True]">
-                            <Setter Property="Canvas.Right" Value="0"/>
-                            <Setter Property="Opacity" Value="1"/>
-                        </Style>
-                    </Border.Styles>
-                    <Border.Transitions>
-                        <Transitions>
-                            <DoubleTransition Property="Canvas.Right" Duration="0:0:0.5" Easing="CubicEaseInOut"/>
-                            <DoubleTransition Property="Opacity" Duration="0:0:0.5" Easing="CubicEaseInOut"/>
-                        </Transitions>
-                    </Border.Transitions>
+            <Border x:Name="SettingsSlideHost"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Stretch"
+                    Width="920"
+                    Background="{DynamicResource WindowBackgroundBrush}"
+                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                    BorderThickness="1,0,0,0"
+                    BoxShadow="{DynamicResource SlideOutPanelShadow}"
+                    RenderTransformOrigin="1,0.5">
+                <Border.IsVisible>
+                    <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                        <Binding Path="IsSettingsPanelVisible"/>
+                    </MultiBinding>
+                </Border.IsVisible>
+                <Border.RenderTransform>
+                    <TranslateTransform X="0" />
+                </Border.RenderTransform>
+                <Border.Styles>
+                    <Style Selector="Border">
+                        <Setter Property="RenderTransform">
+                            <TranslateTransform X="920" />
+                        </Setter>
+                    </Style>
+                    <Style Selector="Border[IsVisible=true]">
+                        <Setter Property="RenderTransform">
+                            <TranslateTransform X="0" />
+                        </Setter>
+                    </Style>
+                </Border.Styles>
+                <Border.Transitions>
+                    <Transitions>
+                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.7" Easing="CubicEaseOut"/>
+                    </Transitions>
+                </Border.Transitions>
 
                     <!-- Settings Panel Content -->
                 <Grid RowDefinitions="Auto,*">
@@ -60,9 +67,12 @@
                             <Button Grid.Column="1"
                                     Content="✕"
                                     Command="{Binding CloseSettingsPanelCommand}"
-                                    Classes="header-action"
-                                    Width="36"
-                                    Height="36"
+                                    Classes="copy-btn"
+                                    Width="32"
+                                    Height="32"
+                                    Padding="0"
+                                    HorizontalContentAlignment="Center"
+                                    VerticalContentAlignment="Center"
                                     FontSize="16"
                                     ToolTip.Tip="Close settings"/>
                         </Grid>
@@ -78,7 +88,7 @@
                                 Padding="15,20">
                             <StackPanel Spacing="8">
                                 <Button Command="{Binding ShowGeneralSettingsCommand}"
-                                        Classes="liquid-glass sidebar"
+                                        Classes="liquid-glass"
                                         HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Left"
                                         Height="40">
@@ -86,7 +96,7 @@
                                 </Button>
                                 
                                 <Button Command="{Binding ShowSecuritySettingsCommand}"
-                                        Classes="liquid-glass sidebar"
+                                        Classes="liquid-glass"
                                         HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Left"
                                         Height="40">
@@ -94,7 +104,7 @@
                                 </Button>
                                 
                                 <Button Command="{Binding ShowThemeSettingsCommand}"
-                                        Classes="liquid-glass sidebar"
+                                        Classes="liquid-glass"
                                         HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Left"
                                         Height="40">
@@ -102,7 +112,7 @@
                                 </Button>
                                 
                                 <Button Command="{Binding ShowImportExportSettingsCommand}"
-                                        Classes="liquid-glass sidebar"
+                                        Classes="liquid-glass"
                                         HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Left"
                                         Height="40">
@@ -110,7 +120,7 @@
                                 </Button>
                                 
                                 <Button Command="{Binding ShowAutoFillSettingsCommand}"
-                                        Classes="liquid-glass sidebar"
+                                        Classes="liquid-glass"
                                         HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Left"
                                         Height="40">
@@ -118,7 +128,7 @@
                                 </Button>
                                 
                                 <Button Command="{Binding ShowBackupSettingsCommand}"
-                                        Classes="liquid-glass sidebar"
+                                        Classes="liquid-glass"
                                         HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Left"
                                         Height="40">
@@ -126,7 +136,7 @@
                                 </Button>
                                 
                                 <Button Command="{Binding ShowAccessibilitySettingsCommand}"
-                                        Classes="liquid-glass sidebar"
+                                        Classes="liquid-glass"
                                         HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Left"
                                         Height="40">
@@ -134,7 +144,7 @@
                                 </Button>
                                 
                                 <Button Command="{Binding ShowAdvancedSettingsCommand}"
-                                        Classes="liquid-glass sidebar"
+                                        Classes="liquid-glass"
                                         HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Left"
                                         Height="40">
@@ -142,7 +152,7 @@
                                 </Button>
                                 
                                 <Button Command="{Binding ShowRubbishBinSettingsCommand}"
-                                        Classes="liquid-glass sidebar"
+                                        Classes="liquid-glass"
                                         HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Left"
                                         Height="40">
@@ -150,7 +160,7 @@
                                 </Button>
                                 
                                 <Button Command="{Binding ShowPasswordHealthCommand}"
-                                        Classes="liquid-glass sidebar"
+                                        Classes="liquid-glass"
                                         HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Left"
                                         Height="40">
@@ -171,7 +181,6 @@
                     </Grid>
                 </Grid>
             </Border>
-            </Canvas>
         </Grid>
     </Border>
     

@@ -7,7 +7,22 @@
         Height="650"
         WindowStartupLocation="CenterOwner"
         CanResize="False"
-        Background="{DynamicResource WindowBackgroundBrush}">
+        Background="{DynamicResource WindowBackgroundBrush}"
+        BorderBrush="{DynamicResource ControlBorderBrush}"
+        BorderThickness="1">
+
+    <Window.Styles>
+        <!-- FORCE blue dropdown background for ComboBox with HARDCODED values -->
+        <Style Selector="ComboBox /template/ Popup Border">
+            <Setter Property="Background" Value="#35475B"/>
+        </Style>
+        <Style Selector="ComboBox /template/ Popup ListBox">
+            <Setter Property="Background" Value="#35475B"/>
+        </Style>
+        <Style Selector="ComboBox /template/ Popup ScrollViewer">
+            <Setter Property="Background" Value="#35475B"/>
+        </Style>
+    </Window.Styles>
 
     <Grid RowDefinitions="Auto,*,Auto" Margin="20">
         <!-- Header -->
@@ -26,8 +41,7 @@
             <StackPanel Spacing="20">
                 <!-- QR Code Scanner Section -->
                 <Border Background="{DynamicResource CardBackgroundBrush}"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="0"
                         CornerRadius="8"
                         Padding="16">
                     <StackPanel Spacing="12">
@@ -38,7 +52,8 @@
                         
                         <!-- Camera Preview (Placeholder - will be implemented with ZXing.Net) -->
                         <Border Height="250"
-                                Background="{DynamicResource ControlBorderBrush}"
+                                Background="{DynamicResource ControlBackgroundBrush}"
+                                BorderThickness="0"
                                 CornerRadius="6"
                                 ClipToBounds="True">
                             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12">
@@ -52,7 +67,7 @@
                                            Foreground="{DynamicResource MutedTextBrush}"/>
                                 <Button Content="Start Camera"
                                         Command="{Binding StartCameraCommand}"
-                                        Classes="primary-btn"
+                                        Classes="liquid-glass"
                                         HorizontalAlignment="Center"
                                         Padding="16,8"/>
                             </StackPanel>
@@ -68,8 +83,7 @@
 
                 <!-- Manual Entry Section -->
                 <Border Background="{DynamicResource CardBackgroundBrush}"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="0"
                         CornerRadius="8"
                         Padding="16">
                     <StackPanel Spacing="12">
@@ -86,7 +100,10 @@
                             <TextBox Text="{Binding Issuer}"
                                      Watermark="Enter service name"
                                      Height="36"
-                                     Padding="10"/>
+                                     Padding="10"
+                                     Background="{DynamicResource ControlBackgroundBrush}"
+                                     Foreground="{DynamicResource PrimaryTextBrush}"
+                                     BorderThickness="0"/>
                         </StackPanel>
 
                         <!-- Account Name -->
@@ -97,7 +114,10 @@
                             <TextBox Text="{Binding AccountName}"
                                      Watermark="Enter account identifier"
                                      Height="36"
-                                     Padding="10"/>
+                                     Padding="10"
+                                     Background="{DynamicResource ControlBackgroundBrush}"
+                                     Foreground="{DynamicResource PrimaryTextBrush}"
+                                     BorderThickness="0"/>
                         </StackPanel>
 
                         <!-- Secret Key -->
@@ -109,7 +129,10 @@
                                      Watermark="Enter Base32 secret (e.g., JBSWY3DPEHPK3PXP)"
                                      Height="36"
                                      Padding="10"
-                                     FontFamily="Consolas,Courier New,monospace"/>
+                                     FontFamily="Consolas,Courier New,monospace"
+                                     Background="{DynamicResource ControlBackgroundBrush}"
+                                     Foreground="{DynamicResource PrimaryTextBrush}"
+                                     BorderThickness="0"/>
                             <TextBlock Text="{Binding SecretValidationMessage}"
                                        FontSize="11"
                                        Foreground="{Binding SecretValidationColor}"
@@ -117,8 +140,10 @@
                         </StackPanel>
 
                         <!-- Advanced Settings (Collapsible) -->
-                        <Expander Header="Advanced Settings" IsExpanded="False">
-                            <StackPanel Spacing="12" Margin="0,12,0,0">
+                        <Expander Header="Advanced Settings" 
+                                  IsExpanded="False"
+                                  Foreground="{DynamicResource PrimaryTextBrush}">
+                            <StackPanel Spacing="12" Margin="0,12,0,0" HorizontalAlignment="Center">
                                 <!-- Digits -->
                                 <StackPanel Spacing="6">
                                     <TextBlock Text="Code Length"
@@ -126,7 +151,10 @@
                                                Foreground="{DynamicResource MutedTextBrush}"/>
                                     <ComboBox SelectedItem="{Binding Digits}"
                                               Width="100"
-                                              HorizontalAlignment="Left">
+                                              HorizontalAlignment="Left"
+                                              Background="{DynamicResource ControlBackgroundBrush}"
+                                              Foreground="{DynamicResource PrimaryTextBrush}"
+                                              BorderThickness="0">
                                         <ComboBoxItem Content="6" />
                                         <ComboBoxItem Content="7" />
                                         <ComboBoxItem Content="8" />
@@ -143,7 +171,10 @@
                                                    Maximum="60"
                                                    Increment="15"
                                                    Width="100"
-                                                   HorizontalAlignment="Left"/>
+                                                   HorizontalAlignment="Left"
+                                                   Background="{DynamicResource ControlBackgroundBrush}"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"
+                                                   BorderThickness="0"/>
                                 </StackPanel>
 
                                 <!-- Algorithm -->
@@ -153,7 +184,10 @@
                                                Foreground="{DynamicResource MutedTextBrush}"/>
                                     <ComboBox SelectedItem="{Binding Algorithm}"
                                               Width="120"
-                                              HorizontalAlignment="Left">
+                                              HorizontalAlignment="Left"
+                                              Background="{DynamicResource ControlBackgroundBrush}"
+                                              Foreground="{DynamicResource PrimaryTextBrush}"
+                                              BorderThickness="0">
                                         <ComboBoxItem Content="SHA1" />
                                         <ComboBoxItem Content="SHA256" />
                                         <ComboBoxItem Content="SHA512" />
@@ -165,10 +199,8 @@
                 </Border>
 
                 <!-- Preview Code -->
-                <Border Background="{DynamicResource AccentBrush}"
-                        Opacity="0.1"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource AccentBrush}"
+                <Border Background="{DynamicResource CardBackgroundBrush}"
+                        BorderThickness="0"
                         CornerRadius="8"
                         Padding="16"
                         IsVisible="{Binding HasValidSecret}">
@@ -176,18 +208,18 @@
                         <TextBlock Text="Preview Code"
                                    FontSize="13"
                                    FontWeight="SemiBold"
-                                   Foreground="{DynamicResource AccentBrush}"/>
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
                         <TextBlock Text="{Binding PreviewCode}"
                                    FontSize="28"
                                    FontWeight="Bold"
                                    FontFamily="Consolas,Courier New,monospace"
                                    LetterSpacing="4"
                                    HorizontalAlignment="Center"
-                                   Foreground="{DynamicResource AccentBrush}"/>
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
                         <TextBlock Text="{Binding PreviewTimeRemaining, StringFormat='Refreshes in {0} seconds'}"
                                    FontSize="11"
                                    HorizontalAlignment="Center"
-                                   Foreground="{DynamicResource AccentBrush}"/>
+                                   Foreground="{DynamicResource MutedTextBrush}"/>
                     </StackPanel>
                 </Border>
             </StackPanel>
@@ -204,7 +236,7 @@
             <Button Grid.Column="1"
                     Content="Cancel"
                     Command="{Binding CancelCommand}"
-                    Classes="secondary-btn"
+                    Classes="liquid-glass"
                     Width="100"
                     Height="36"
                     Margin="0,0,12,0"/>
@@ -212,7 +244,7 @@
             <Button Grid.Column="2"
                     Content="Add TOTP"
                     Command="{Binding SaveCommand}"
-                    Classes="primary-btn"
+                    Classes="liquid-glass"
                     Width="120"
                     Height="36"
                     IsEnabled="{Binding CanSave}"/>

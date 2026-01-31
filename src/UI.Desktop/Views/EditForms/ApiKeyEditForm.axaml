@@ -6,6 +6,13 @@
         <StackPanel x:Name="ApiKeyPanel" Spacing="12">
         <TextBlock Text="API Credential" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
         <StackPanel Spacing="6">
+            <TextBlock Text="Key Type" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <ComboBox ItemsSource="{Binding ApiKeyTypeOptions}"
+                      SelectedItem="{Binding ApiKeyType}"
+                      Height="40"
+                      FontSize="14"/>
+        </StackPanel>
+        <StackPanel Spacing="6">
             <TextBlock Text="API Key" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
             <TextBox Text="{Binding ApiKeyValue}" Height="40" FontSize="14" Watermark="sk_live_..."/>
         </StackPanel>

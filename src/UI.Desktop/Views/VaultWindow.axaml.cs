@@ -10,6 +10,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.VisualTree;
 using Avalonia.Controls.Primitives;
 using Microsoft.Extensions.DependencyInjection;
+using PhantomVault.Core.Services.Security;
 using PhantomVault.UI.Controls;
 using PhantomVault.UI.Services;
 using PhantomVault.UI.ViewModels;
@@ -101,6 +102,9 @@ namespace PhantomVault.UI.Views
                 headerView.SettingsRequested += (s, e) => OpenSettings_Click(s, e);
             }
 
+            // Enable screenshot protection when window is opened
+            this.Opened += VaultWindow_Opened;
+
             // Wire up RecoveryPanel close event
             var recoveryPanel = this.FindControl<Views.RecoveryPanel>("RecoveryPanelControl");
             if (recoveryPanel != null)
@@ -122,6 +126,43 @@ namespace PhantomVault.UI.Views
 #if DEBUG
             System.Diagnostics.Debug.WriteLine("VaultWindow constructor end");
 #endif
+        }
+
+        private void VaultWindow_Opened(object? sender, EventArgs e)
+        {
+            // Apply screenshot protection to prevent screen capture of vault contents
+            // This makes the window appear black in screenshots, screen recordings, and screen sharing
+            try
+            {
+                if (WindowProtectionService.IsSupported())
+                {
+                    var platformHandle = this.TryGetPlatformHandle();
+                    if (platformHandle != null)
+                    {
+                        var hwnd = platformHandle.Handle;
+                        if (WindowProtectionService.EnableScreenshotProtection(hwnd))
+                        {
+#if DEBUG
+                            System.Diagnostics.Debug.WriteLine("Screenshot protection enabled for VaultWindow");
+#endif
+                        }
+                        else
+                        {
+#if DEBUG
+                            System.Diagnostics.Debug.WriteLine("Failed to enable screenshot protection for VaultWindow");
+#endif
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+#if DEBUG
+                System.Diagnostics.Debug.WriteLine($"Error enabling screenshot protection: {ex.Message}");
+#else
+                _ = ex; // Suppress unused variable warning
+#endif
+            }
         }
 
         private void VaultWindow_DataContextChanged(object? sender, EventArgs e)
@@ -663,8 +704,8 @@ namespace PhantomVault.UI.Views
         {
             if (DataContext is VaultViewModel vm)
             {
-                // Toggle recovery panel off to hide it
-                vm.ToggleRecoveryPanelCommand?.Execute(Unit.Default);
+                // Directly close the recovery panel
+                vm.CloseRecoveryPanel();
             }
         }
     }

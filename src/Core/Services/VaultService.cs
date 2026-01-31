@@ -4,6 +4,8 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using PhantomVault.Core.Options;
 using System.Linq;
 
@@ -245,11 +247,29 @@ namespace PhantomVault.Core.Services
             {
                 if (!string.IsNullOrEmpty(passphrase))
                 {
-                    await process.StandardInput.WriteAsync(passphrase).ConfigureAwait(false);
+                    // Convert to char array for secure handling, matching CreateVaultAsync behavior
+                    var passphraseChars = passphrase.ToCharArray();
+                    try
+                    {
+                        await process.StandardInput.WriteLineAsync(passphraseChars).ConfigureAwait(false);
+                        await process.StandardInput.FlushAsync().ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        // Zero out the char array to minimize exposure in memory
+                        if (passphraseChars != null)
+                        {
+                            CryptographicOperations.ZeroMemory(MemoryMarshal.AsBytes(passphraseChars.AsSpan()));
+                        }
+                    }
                 }
                 process.StandardInput.Close();
             }
             catch { /* best effort */ }
+
+            // Clear local reference to passphrase parameter (though the string itself can't be wiped)
+            passphrase = null!;
+
             using (cancellationToken.Register(() => process.Kill(true)))
             {
                 await process.WaitForExitAsync(cancellationToken);

@@ -32,6 +32,9 @@
                             Width="32"
                             Height="32"
                             FontSize="16"
+                            Padding="0"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"
                             Click="Close_Click"
                             ToolTip.Tip="Close Recovery Panel"/>
                 </Grid>

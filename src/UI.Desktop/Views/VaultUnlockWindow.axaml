@@ -11,7 +11,9 @@
         MinHeight="250"
         CanResize="False"
         WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource WindowBackgroundBrush}">
+        Background="{DynamicResource WindowBackgroundBrush}"
+        AutomationProperties.Name="Vault Unlock Progress Window"
+        AutomationProperties.HelpText="This window shows the progress of unlocking your secure vault">
 
     <Window.Styles>
         <Style Selector="TextBlock">
@@ -61,13 +63,31 @@
                        Foreground="{DynamicResource PrimaryTextBrush}"
                        TextAlignment="Center"
                        TextWrapping="Wrap"
-                       Margin="0,8,0,0"/>
+                       Margin="0,8,0,0"
+                       AutomationProperties.Name="Unlock Status"
+                       AutomationProperties.LiveSetting="Assertive"/>
 
-            <!-- Loading Animation -->
-            <ProgressBar IsIndeterminate="{Binding IsBusy}"
-                         Height="4"
-                         Margin="40,16,40,0"
-                         IsVisible="{Binding IsBusy}"/>
+            <!-- Progress Bar with Percentage -->
+            <StackPanel Spacing="8" Margin="40,16,40,0" IsVisible="{Binding IsBusy}"
+                        AutomationProperties.Name="Unlock Progress">
+                <Grid ColumnDefinitions="*,Auto">
+                    <ProgressBar Grid.Column="0"
+                                 Value="{Binding ProgressPercent}"
+                                 Maximum="100"
+                                 Height="6"
+                                 CornerRadius="3"
+                                 Foreground="{DynamicResource AccentBrush}"
+                                 AutomationProperties.Name="Unlock progress bar"/>
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding ProgressPercent, StringFormat={}{0}%}"
+                               FontSize="12"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               VerticalAlignment="Center"
+                               Margin="10,0,0,0"
+                               AutomationProperties.Name="Progress percentage"
+                               AutomationProperties.LiveSetting="Polite"/>
+                </Grid>
+            </StackPanel>
         </StackPanel>
 
         <!-- Footer -->

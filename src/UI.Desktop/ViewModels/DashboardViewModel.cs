@@ -83,6 +83,18 @@ namespace PhantomVault.UI.ViewModels
             set => this.RaiseAndSetIfChanged(ref _hasFavorites, value);
         }
 
+        public void ClearDashboard()
+        {
+            WelcomeMessage = string.Empty;
+            TotalCredentials = 0;
+            TotalCategories = 0;
+            TwoFactorCoverage = 0;
+            HasRecentActivity = false;
+            HasFavorites = false;
+            RecentActivities.Clear();
+            FavoriteCredentials.Clear();
+        }
+
         public ObservableCollection<ActivityItem> RecentActivities { get; }
         public ObservableCollection<Credential> FavoriteCredentials { get; }
 
@@ -103,7 +115,7 @@ namespace PhantomVault.UI.ViewModels
 
         public SecurityDashboardViewModel? SecurityDashboardViewModel { get; private set; }
 
-        private async Task LoadDashboardDataAsync()
+        public async Task LoadDashboardDataAsync()
         {
             try
             {

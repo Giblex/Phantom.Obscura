@@ -273,11 +273,13 @@ namespace PhantomVault.UI.ViewModels
 
         // API key details
         public string ApiKeyValue => _credential.ApiKeyValue;
+        public string ApiKeyType => _credential.ApiKeyType;
         public string MaskedApiKeyValue => MaskApiKey(ApiKeyValue);
         public string ApiEndpoint => _credential.ApiEndpoint;
         public string ApiEnvironment => _credential.ApiEnvironment;
         public string ApiDocumentationUrl => _credential.ApiDocumentationUrl;
         public bool HasApiKeyValue => !string.IsNullOrWhiteSpace(ApiKeyValue);
+        public bool HasApiKeyType => !string.IsNullOrWhiteSpace(ApiKeyType);
         public bool HasApiEndpoint => !string.IsNullOrWhiteSpace(ApiEndpoint);
 
         // TOTP authenticator details
@@ -314,11 +316,56 @@ namespace PhantomVault.UI.ViewModels
                     _totpSecondsRemaining = value;
                     this.RaisePropertyChanged();
                     this.RaisePropertyChanged(nameof(TotpProgressPercent));
+                    this.RaisePropertyChanged(nameof(TotpTimerArcPath));
                 }
             }
         }
 
         public double TotpProgressPercent => TotpTimeStep > 0 ? (double)TotpSecondsRemaining / TotpTimeStep * 100 : 0;
+        
+        /// <summary>
+        /// Gets the SVG path data for the circular timer arc that decreases clockwise as time runs out.
+        /// </summary>
+        public string TotpTimerArcPath
+        {
+            get
+            {
+                if (TotpSecondsRemaining <= 0 || TotpTimeStep <= 0)
+                    return "";
+
+                const double centerX = 20;
+                const double centerY = 20;
+                const double radius = 16;
+
+                // Calculate progress (0.0 to 1.0)
+                double progress = (double)TotpSecondsRemaining / TotpTimeStep;
+                double angleDegrees = progress * 360.0;
+
+                if (angleDegrees >= 360)
+                {
+                    // Full circle
+                    return $"M {centerX},{centerY - radius} A {radius},{radius} 0 1,1 {centerX - 0.01},{centerY - radius}";
+                }
+
+                // Convert to radians (start at top, 12 o'clock)
+                double angleRadians = (angleDegrees - 90) * Math.PI / 180.0;
+                
+                // Calculate end point
+                double endX = centerX + radius * Math.Cos(angleRadians);
+                double endY = centerY + radius * Math.Sin(angleRadians);
+
+                // Start point at top
+                double startX = centerX;
+                double startY = centerY - radius;
+
+                // Large arc flag
+                int largeArcFlag = angleDegrees > 180 ? 1 : 0;
+
+                // Create arc path (sweep clockwise)
+                return $"M {startX},{startY} A {radius},{radius} 0 {largeArcFlag},1 {endX},{endY}";
+            }
+        }
+        
         public bool HasApiEnvironment => !string.IsNullOrWhiteSpace(ApiEnvironment);
         public bool HasApiDocumentation => !string.IsNullOrWhiteSpace(ApiDocumentationUrl);
 
@@ -461,11 +508,13 @@ namespace PhantomVault.UI.ViewModels
             this.RaisePropertyChanged(nameof(HasIdIssueDate));
             this.RaisePropertyChanged(nameof(HasIdExpiryDate));
             this.RaisePropertyChanged(nameof(ApiKeyValue));
+            this.RaisePropertyChanged(nameof(ApiKeyType));
             this.RaisePropertyChanged(nameof(MaskedApiKeyValue));
             this.RaisePropertyChanged(nameof(ApiEndpoint));
             this.RaisePropertyChanged(nameof(ApiEnvironment));
             this.RaisePropertyChanged(nameof(ApiDocumentationUrl));
             this.RaisePropertyChanged(nameof(HasApiKeyValue));
+            this.RaisePropertyChanged(nameof(HasApiKeyType));
             this.RaisePropertyChanged(nameof(HasApiEndpoint));
             this.RaisePropertyChanged(nameof(HasApiEnvironment));
             this.RaisePropertyChanged(nameof(HasApiDocumentation));
@@ -533,7 +582,7 @@ namespace PhantomVault.UI.ViewModels
                 EntryType.ApiKey =>
                 (
                     MaskApiKey(_credential.ApiKeyValue),
-                    BuildJoinedParts(_credential.ApiEnvironment, _credential.ApiEndpoint)
+                    BuildJoinedParts(_credential.ApiKeyType, _credential.ApiEnvironment)
                 ),
                 EntryType.Contact =>
                 (

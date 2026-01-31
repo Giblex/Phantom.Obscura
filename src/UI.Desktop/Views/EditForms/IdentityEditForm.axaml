@@ -6,27 +6,30 @@
         <StackPanel x:Name="IdentityPanel" Spacing="12">
         <TextBlock Text="Identity Document" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
         <StackPanel Spacing="6">
-            <TextBlock Text="Document Type" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding IdDocumentType}" Height="40" FontSize="14" Watermark="Driver License"/>
+            <TextBlock Text="ID Type" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <ComboBox ItemsSource="{Binding IdentityTypeOptions}"
+                      SelectedItem="{Binding IdDocumentType}"
+                      Height="40"
+                      FontSize="14"/>
         </StackPanel>
         <StackPanel Spacing="6">
-            <TextBlock Text="ID Number" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding IdNumber}" Height="40" FontSize="14" Watermark="ABC123456"/>
+            <TextBlock Text="{Binding IdNumberLabel}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding IdNumber}" Height="40" FontSize="14" Watermark="{Binding IdNumberWatermark}"/>
         </StackPanel>
-        <StackPanel Spacing="6">
-            <TextBlock Text="Issuing Country" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding IdIssuingCountry}" Height="40" FontSize="14" Watermark="US"/>
+        <StackPanel Spacing="6" IsVisible="{Binding ShowIdIssuingCountry}">
+            <TextBlock Text="{Binding IdIssuingCountryLabel}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding IdIssuingCountry}" Height="40" FontSize="14" Watermark="{Binding IdIssuingCountryWatermark}"/>
         </StackPanel>
-        <StackPanel Spacing="6">
-            <TextBlock Text="Issuing State / Province" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding IdIssuingState}" Height="40" FontSize="14" Watermark="CA"/>
+        <StackPanel Spacing="6" IsVisible="{Binding ShowIdIssuingState}">
+            <TextBlock Text="{Binding IdIssuingStateLabel}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding IdIssuingState}" Height="40" FontSize="14" Watermark="{Binding IdIssuingStateWatermark}"/>
         </StackPanel>
         <Grid ColumnDefinitions="*,16,*">
-            <StackPanel Grid.Column="0" Spacing="6">
+            <StackPanel Grid.Column="0" Spacing="6" IsVisible="{Binding ShowIdIssueDate}">
                 <TextBlock Text="Issue Date" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
                 <DatePicker SelectedDate="{Binding IdIssueDate}" Height="40" FontSize="14"/>
             </StackPanel>
-            <StackPanel Grid.Column="2" Spacing="6">
+            <StackPanel Grid.Column="2" Spacing="6" IsVisible="{Binding ShowIdExpiryDate}">
                 <TextBlock Text="Expiration Date" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
                 <DatePicker SelectedDate="{Binding IdExpiryDate}" Height="40" FontSize="14"/>
             </StackPanel>
