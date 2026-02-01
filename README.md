@@ -1,6 +1,6 @@
-# PhantomVault V6 - Zero-Knowledge Password Manager
+# Phantom Obscura - Zero-Knowledge Password Manager
 
-**PhantomVault** is a hardened, security-first password manager built with .NET 8 and Avalonia UI. It combines zero-knowledge encryption, USB-portable vault storage, post-quantum cryptographic primitives, optional VeraCrypt container integration, and **integrated PhantomAttestor TOTP vault** for maximum security.
+**Phantom Obscura** is a hardened, security-first password manager built with .NET 8 and Avalonia UI. It combines zero-knowledge encryption, USB-portable vault storage, post-quantum cryptographic primitives, optional VeraCrypt container integration, and **integrated Phantom Attestor TOTP vault** for maximum security.
 
 ## 🔒 Security Architecture
 
