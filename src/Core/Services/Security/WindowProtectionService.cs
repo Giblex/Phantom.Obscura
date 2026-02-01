@@ -44,19 +44,44 @@ public static class WindowProtectionService
 
         try
         {
+#if DEBUG
+            System.Diagnostics.Debug.WriteLine($"[WindowProtectionService] Calling SetWindowDisplayAffinity with WDA_EXCLUDEFROMCAPTURE (0x{WDA_EXCLUDEFROMCAPTURE:X}) on HWND {windowHandle}");
+#endif
             // Try WDA_EXCLUDEFROMCAPTURE first (Windows 10 2004+)
             // This makes the window appear black in captures while still visible to user
             if (SetWindowDisplayAffinity(windowHandle, WDA_EXCLUDEFROMCAPTURE))
             {
+#if DEBUG
+                GetWindowDisplayAffinity(windowHandle, out uint verifyAffinity);
+                System.Diagnostics.Debug.WriteLine($"[WindowProtectionService] SUCCESS - Current affinity after enable: 0x{verifyAffinity:X}");
+#endif
                 return true;
             }
 
             // Fallback to WDA_MONITOR for older Windows 10 versions
             // This also prevents capture but may have different visual behavior
-            return SetWindowDisplayAffinity(windowHandle, WDA_MONITOR);
+#if DEBUG
+            System.Diagnostics.Debug.WriteLine($"[WindowProtectionService] WDA_EXCLUDEFROMCAPTURE failed, trying WDA_MONITOR (0x{WDA_MONITOR:X})");
+#endif
+            bool result = SetWindowDisplayAffinity(windowHandle, WDA_MONITOR);
+#if DEBUG
+            if (result)
+            {
+                GetWindowDisplayAffinity(windowHandle, out uint verifyAffinity);
+                System.Diagnostics.Debug.WriteLine($"[WindowProtectionService] SUCCESS with WDA_MONITOR - Current affinity: 0x{verifyAffinity:X}");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[WindowProtectionService] FAILED - Both WDA_EXCLUDEFROMCAPTURE and WDA_MONITOR failed");
+            }
+#endif
+            return result;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+#if DEBUG
+            System.Diagnostics.Debug.WriteLine($"[WindowProtectionService] EXCEPTION in EnableScreenshotProtection: {ex.Message}");
+#endif
             return false;
         }
     }
@@ -80,10 +105,31 @@ public static class WindowProtectionService
 
         try
         {
-            return SetWindowDisplayAffinity(windowHandle, WDA_NONE);
+#if DEBUG
+            GetWindowDisplayAffinity(windowHandle, out uint beforeAffinity);
+            System.Diagnostics.Debug.WriteLine($"[WindowProtectionService] Current affinity BEFORE disable: 0x{beforeAffinity:X}");
+            System.Diagnostics.Debug.WriteLine($"[WindowProtectionService] Calling SetWindowDisplayAffinity with WDA_NONE (0x{WDA_NONE:X}) on HWND {windowHandle}");
+#endif
+            bool result = SetWindowDisplayAffinity(windowHandle, WDA_NONE);
+#if DEBUG
+            if (result)
+            {
+                GetWindowDisplayAffinity(windowHandle, out uint afterAffinity);
+                System.Diagnostics.Debug.WriteLine($"[WindowProtectionService] SUCCESS - Current affinity after disable: 0x{afterAffinity:X} (should be 0x0)");
+            }
+            else
+            {
+                int errorCode = Marshal.GetLastWin32Error();
+                System.Diagnostics.Debug.WriteLine($"[WindowProtectionService] FAILED - SetWindowDisplayAffinity returned false, Win32 Error: {errorCode}");
+            }
+#endif
+            return result;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+#if DEBUG
+            System.Diagnostics.Debug.WriteLine($"[WindowProtectionService] EXCEPTION in DisableScreenshotProtection: {ex.Message}");
+#endif
             return false;
         }
     }

@@ -299,6 +299,9 @@ build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 [O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/EditForms/CreditCardEditForm.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/EditForms/EditFormContentPanel.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
 [O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/EditForms/IdentityEditForm.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
@@ -369,9 +372,6 @@ build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
 [O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/ProvisionWindow.axaml]
-build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
-
-[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/RecoveryPanel.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
 [O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/SecurityCheckScreen.axaml]

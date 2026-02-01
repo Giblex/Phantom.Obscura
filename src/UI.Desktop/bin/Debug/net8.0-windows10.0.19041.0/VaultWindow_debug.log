@@ -265,3 +265,569 @@
 [2026-01-31T19:16:54.9548030+11:00] PropertyChanged: FilteredCount -> 4
 [2026-01-31T19:16:55.2076814+11:00] PropertyChanged: FilteredCount -> 4
 [2026-01-31T19:16:55.3709865+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T20:31:47.9637964+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T20:31:47.9712755+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T20:31:48.8137705+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T20:31:48.9324019+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T20:31:51.2363614+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T20:31:51.4280879+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T20:31:51.5863584+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T20:32:23.7776707+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T20:37:58.8228939+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T20:37:58.8279668+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T20:37:59.2146598+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T20:37:59.3569921+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T20:38:01.2777549+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T20:38:01.3938804+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T20:38:01.4814101+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T20:40:04.3098726+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T20:40:04.3150643+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T20:40:04.7733502+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T20:40:04.8105441+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T20:45:38.0559301+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T20:45:38.0600136+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T20:45:38.5396328+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T20:45:38.6204698+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T20:46:06.0384122+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T20:46:06.1704394+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T20:46:06.2653649+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T20:47:10.8824845+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T20:47:10.8869044+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T20:47:11.3499719+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T20:47:11.3888615+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T20:48:27.5337746+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T20:48:27.5389078+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T20:48:28.0233180+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T20:48:28.1064694+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T20:48:35.2749556+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T20:48:35.3736266+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T20:48:35.4361495+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T20:48:38.2718556+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T20:49:00.5059636+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T20:51:25.2535220+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T20:51:25.2580109+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T20:51:25.6059752+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T20:51:25.6409379+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T20:51:31.0986442+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:11:25.2230384+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T21:11:25.2283387+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T21:11:25.6994904+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T21:11:25.8862585+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T21:11:37.0766213+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:11:37.1490801+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:11:37.2394270+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:11:39.6423994+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:13:37.1269822+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T21:13:37.1328936+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T21:13:37.5922367+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T21:13:37.6755606+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T21:15:27.2388175+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T21:15:27.2432508+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T21:15:27.6211160+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T21:15:27.7580310+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T21:16:43.2539217+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T21:16:43.2615713+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T21:16:43.8024002+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T21:16:43.8454895+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T21:16:52.0037481+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:16:52.1492650+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:16:52.2461408+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:19:20.2822705+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T21:19:20.2862791+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T21:19:20.8154365+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T21:19:20.8607120+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T21:33:19.9040003+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T21:33:19.9113708+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T21:33:20.4049985+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T21:33:20.4408472+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T21:33:39.6850452+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:33:53.5641550+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:33:53.6422514+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:33:53.6983617+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:33:56.8058148+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:33:56.8540317+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:33:56.9089389+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:33:57.4246548+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:33:57.4740171+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:33:57.5175868+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:33:58.6073823+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:34:02.4520745+11:00] PropertyChanged: FilteredCount -> 3
+[2026-01-31T21:34:03.1352148+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T21:34:04.3232842+11:00] PropertyChanged: FilteredCount -> 3
+[2026-01-31T21:40:50.1633237+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T21:40:50.1679149+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T21:40:50.7385341+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T21:40:50.8177463+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T21:41:02.8962021+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:41:02.9353399+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:41:02.9949290+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:42:57.4300295+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T21:42:57.4335804+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T21:42:57.9111633+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T21:42:58.0716335+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T21:43:03.9541296+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:43:07.2059281+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:45:42.1356860+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T21:45:42.1402313+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T21:45:42.6048511+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T21:45:42.6739449+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T21:45:56.6013405+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:45:56.6465555+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:45:56.7229877+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:48:08.1052747+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T21:48:08.1120213+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T21:48:08.5903241+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T21:48:08.6214468+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T21:48:13.8469025+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:49:32.5454239+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T21:49:32.5507255+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T21:49:32.9708701+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T21:49:33.1169601+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T21:49:41.5788572+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:49:44.8319679+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:49:44.8792466+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:49:44.9943273+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:52:36.9565999+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T21:52:36.9607715+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T21:52:37.3726707+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T21:52:37.5350255+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T21:52:40.6021970+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:52:43.6749210+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:52:43.7984519+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:52:43.9660395+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:52:45.9917579+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:54:57.7904138+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T21:54:57.7953705+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T21:54:58.3365914+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T21:54:58.3855593+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T21:55:08.0899887+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:55:08.1517812+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:55:08.2358802+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:56:06.9720759+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T21:56:06.9766718+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T21:56:07.4413985+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T21:56:07.5054092+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T21:56:11.9771596+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:56:18.1089233+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:56:18.2603330+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:56:18.3482780+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:57:10.4208754+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T21:57:10.4271990+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T21:57:10.9108901+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T21:57:10.9712431+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T21:57:18.2756598+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:57:18.3502511+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:57:18.4336669+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:58:35.4522129+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T21:58:35.4560159+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T21:58:35.8460488+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T21:58:35.9054612+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T21:58:47.6368389+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:58:47.6760451+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:58:47.7395572+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T21:58:50.7574965+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T22:00:12.3762585+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T22:00:12.3819704+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T22:00:12.8301051+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T22:00:12.8936545+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T22:05:23.1937198+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T22:05:23.2031933+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T22:05:23.8012004+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T22:05:23.8444376+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T22:05:29.3502313+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T22:06:44.4934921+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T22:06:44.4974069+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T22:06:44.8739141+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T22:06:44.9175242+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T22:07:12.4714006+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T22:33:23.9903065+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T22:33:23.9968968+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T22:33:24.4083375+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T22:33:24.4382800+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T22:33:42.7952282+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T22:33:42.8913577+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T22:33:42.9662737+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T22:41:05.0407188+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T22:41:05.0452135+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T22:41:05.3823588+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T22:41:05.4181798+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T22:48:47.2532032+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T22:48:47.2574059+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T22:48:47.6735379+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T22:48:47.7137455+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T23:20:59.4846713+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T23:20:59.4890861+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T23:20:59.8712880+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T23:21:00.0515164+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T23:21:02.3653628+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T23:21:02.4648517+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T23:21:02.5610590+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T23:26:12.9803971+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T23:26:12.9856258+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T23:26:13.3528386+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T23:26:13.3850108+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T23:30:38.8108757+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T23:30:38.8151832+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T23:30:39.2274758+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T23:30:39.2638910+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T23:32:12.2341007+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T23:32:12.2713456+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T23:32:12.3200694+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T23:35:21.2070817+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T23:35:21.2113900+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T23:35:21.6779349+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T23:35:21.8403684+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T23:50:57.8720797+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T23:50:57.8765146+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T23:50:58.2917576+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T23:50:58.4108550+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T23:55:02.4765991+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-01-31T23:55:02.4809285+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-01-31T23:55:02.8662506+11:00] PropertyChanged: FilteredCount -> 0
+[2026-01-31T23:55:02.9293475+11:00] PropertyChanged: FilteredCount -> 10
+[2026-01-31T23:55:15.8687662+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T23:55:15.9057859+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T23:55:15.9562163+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T23:57:15.0832412+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T23:57:45.0656407+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T23:57:45.1105317+11:00] PropertyChanged: FilteredCount -> 4
+[2026-01-31T23:57:45.1741409+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T00:01:01.0932318+11:00] PropertyChanged: FilteredCount -> 2
+[2026-02-01T00:01:01.8310327+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T00:01:07.9475487+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T00:01:07.9823195+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T00:01:21.9991156+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:01:26.8093291+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:01:27.8566596+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:01:29.3911814+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:01:31.4468995+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:01:32.4440759+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:01:57.6987895+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:02:07.7770970+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:02:07.7783263+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:02:07.7790949+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:02:07.7797147+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:02:07.7803146+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:02:07.7808737+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:02:07.7814133+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:02:08.7865478+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:02:14.5983046+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:02:15.9238896+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:02:15.9244869+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:02:15.9248493+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:02:19.8193802+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:02:54.0927531+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:02:54.4765010+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:02:56.3257007+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:02:56.7214999+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:02:57.9749194+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:02:58.3729950+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:03:00.1849083+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:03:00.5602357+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:03:02.3094716+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:03:02.7053242+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:03:05.1196064+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:03:05.5001201+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:03:07.3152437+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:03:07.7078543+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:03:08.6546899+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:03:08.6553734+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:03:49.6504326+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:07:11.3343538+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T00:07:11.3354993+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T00:07:11.4994369+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:07:11.5402408+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T00:07:17.7319484+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:07:17.7329903+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:07:17.7759478+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T00:07:17.9409790+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T00:07:18.0430166+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T00:07:18.1393969+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T00:07:53.0543474+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:07:53.0577670+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:07:53.0586758+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:11:51.7525934+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T00:11:51.7565753+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T00:11:52.1345507+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:11:52.1660262+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T00:12:13.0749035+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T00:12:13.1126206+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T00:12:13.1697948+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T00:12:24.8112853+11:00] PropertyChanged: FilteredCount -> 2
+[2026-02-01T00:12:25.7575672+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T00:12:25.8045749+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T00:12:25.8446538+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T00:12:35.2172588+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T00:16:40.7473714+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T00:16:40.7524795+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T00:16:41.2426834+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:16:41.4465277+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T00:20:02.9356202+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T00:20:02.9431595+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T00:20:03.3654961+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T00:20:03.5938514+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T00:20:23.0773000+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T00:20:23.1361816+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T00:20:23.2053701+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T00:21:04.0799144+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T00:21:04.1283089+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T00:21:04.1520280+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:24:18.4443274+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T07:24:18.4509016+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T07:24:19.0246416+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T07:24:19.1245828+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T07:24:21.4016742+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:24:21.5369664+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:24:21.6558517+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:28:58.0551076+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T07:28:58.0591037+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T07:28:58.5143432+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T07:28:58.6182090+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T07:29:01.2500470+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:29:01.3741690+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:29:01.4740220+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:33:14.2220269+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T07:33:14.2303415+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T07:33:14.8624819+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T07:33:15.0502254+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T07:33:23.4349696+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:33:23.5471981+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:33:23.6134083+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:37:16.5893373+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T07:37:16.5952793+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T07:37:17.0975149+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T07:37:17.1627029+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T07:37:20.0042231+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:37:20.1348696+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:37:20.2508256+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:41:18.2111269+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T07:41:18.2177978+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T07:41:18.8294270+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T07:41:18.9369315+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T07:41:22.0284079+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:41:22.2250884+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:41:22.4294130+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:42:06.0445357+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:44:00.0395408+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T07:44:00.0445090+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T07:44:00.5004728+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T07:44:00.5659208+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T07:44:03.0764394+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:44:03.2461185+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:44:03.4020607+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:45:38.0052192+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T07:45:38.0064478+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T07:45:38.1741479+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T07:45:38.2171823+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T07:45:41.7686214+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:45:41.8673280+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:45:41.9094672+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:51:42.9227135+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T07:51:42.9288169+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T07:51:43.5218552+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T07:51:43.6924384+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T07:51:45.5728633+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:51:45.7119945+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:51:45.8433016+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:53:35.1910708+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T07:53:35.1978015+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T07:53:35.6587468+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T07:53:35.8367487+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T07:53:38.1796949+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:53:38.3391211+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:53:38.4644929+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:55:57.5939166+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T07:55:57.6000198+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T07:55:58.1128628+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T07:55:58.2859219+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T07:55:59.8978008+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:56:00.0511348+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:56:00.1585119+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:57:49.6852625+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T07:57:49.6908882+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T07:57:50.2870482+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T07:57:50.3926520+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T07:57:52.9438165+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:57:53.0835374+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:57:53.1899845+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:59:42.9828819+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T07:59:42.9869229+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T07:59:43.5222619+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T07:59:43.7870527+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T07:59:46.8423263+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:59:47.0287454+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T07:59:47.2045811+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:03:03.9692819+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T08:03:03.9760436+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T08:03:04.6782760+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T08:03:04.7299356+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T08:03:06.7552613+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:03:06.9206120+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:03:07.0426611+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:05:48.5039889+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T08:05:48.5081922+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T08:05:48.9371064+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T08:05:48.9986106+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T08:05:50.9672576+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:05:51.1000922+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:05:51.2015314+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:16:17.6346682+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T08:16:17.6393761+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T08:16:18.1049931+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T08:16:18.1639445+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T08:19:05.9896069+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:19:06.1389880+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:19:06.2456391+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:24:23.0535377+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T08:24:23.0575961+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T08:24:23.5380908+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T08:24:23.7643671+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T08:24:27.0250670+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:24:27.1772621+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:24:27.3245643+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:28:30.2255462+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T08:28:30.2295618+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T08:28:30.6609715+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T08:28:30.8255488+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T08:28:35.9974710+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:28:36.1339015+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:28:36.2525258+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:31:17.4607712+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T08:31:17.4650465+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T08:31:18.0731594+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T08:31:18.1786526+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T08:31:20.4222318+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:31:20.6093955+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:31:20.7375746+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:34:12.7788264+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T08:34:12.7830939+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T08:34:13.4031006+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T08:34:13.4467678+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T08:34:16.7948635+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:34:17.1409580+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:34:17.4072852+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:40:48.2131923+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T08:40:48.2174867+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T08:40:48.8040119+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T08:40:48.8693455+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T08:40:51.8039204+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:40:52.0194674+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:40:52.2006326+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:42:51.0539756+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T08:42:51.0587886+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T08:42:51.4058164+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T08:42:51.4728686+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T08:42:54.6959110+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:42:54.8372237+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:42:54.9513364+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:44:51.5521706+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T08:44:51.5562357+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T08:44:51.8981221+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T08:44:52.0957610+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T08:44:54.4583586+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:44:54.5869874+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:44:54.6898228+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:47:03.6360591+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T08:47:03.6398789+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T08:47:04.1035769+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T08:47:04.2597476+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T08:47:08.4777371+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:47:08.6189476+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:47:08.7231699+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:49:55.5707188+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T08:49:55.5751637+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T08:49:56.0567201+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T08:49:56.2388543+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T08:49:58.2452754+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:49:58.3850407+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T08:49:58.4898093+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T09:51:01.6004318+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T09:51:01.6080106+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T09:51:02.0506915+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T09:51:02.0858824+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T09:51:04.7763413+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T09:51:04.8787320+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T09:51:05.0082396+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T09:55:07.3690338+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T09:55:07.3750853+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T09:55:07.8136610+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T09:55:07.8520816+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T09:55:09.9053119+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T09:55:10.0332624+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T09:55:10.1474940+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T09:57:59.0549408+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T09:57:59.0600666+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T09:57:59.5602433+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T09:57:59.6338212+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T09:58:02.8693668+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T09:58:03.0017316+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T09:58:03.0714195+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T10:01:19.2005902+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T10:01:19.2051527+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T10:01:19.6478175+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T10:01:19.9023018+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T10:01:22.1236089+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T10:01:22.2970409+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T10:01:22.4387611+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T10:03:26.0933313+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T10:03:26.1024692+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T10:03:26.6154905+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T10:03:26.6952093+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T10:05:28.8139649+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T10:05:28.8208971+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T10:05:29.2925370+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T10:05:29.5065784+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T10:10:53.8079692+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T10:10:53.8143257+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T10:10:54.3085656+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T10:10:54.3918225+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T10:10:58.6685644+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T10:10:58.7659322+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T10:10:58.9292887+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T10:13:53.2070265+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T10:13:53.2106855+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T10:13:53.7856316+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T10:13:53.9701718+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T10:13:55.8439392+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T10:13:56.0096444+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T10:13:56.1385809+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T10:22:39.3695453+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T10:22:39.3749592+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T10:22:39.8850859+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T10:22:39.9179462+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T10:23:58.0282504+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T10:23:58.1544009+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T10:23:58.2414523+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T10:40:15.9769245+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T10:40:15.9817416+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T10:40:16.5092781+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T10:40:16.7073592+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T10:40:19.8734044+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T10:40:20.0930078+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T10:40:20.2204099+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T10:44:02.8213659+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T10:44:02.8264724+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T10:44:03.3463616+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T10:44:03.5136779+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T10:44:05.0570716+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T10:44:05.2211573+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T10:44:05.3534769+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T10:44:32.1925986+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T10:44:32.1938636+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T10:44:32.4384039+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T10:44:32.4608094+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T10:45:02.2025355+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T10:45:02.2420637+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T10:45:02.2976623+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T10:45:11.3008405+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T10:47:36.9590529+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T10:47:36.9639302+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T10:47:37.4637137+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T10:47:37.5476111+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T10:53:11.3862496+11:00] VaultWindow constructed. Found AddToggle=False, AddPopup=False
+[2026-02-01T10:53:11.3903636+11:00] DataContext attached. Filtered=0, SelectedSettingsContent=<null>
+[2026-02-01T10:53:11.9108482+11:00] PropertyChanged: FilteredCount -> 0
+[2026-02-01T10:53:12.1044449+11:00] PropertyChanged: FilteredCount -> 10
+[2026-02-01T10:53:14.7140578+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T10:53:14.9014993+11:00] PropertyChanged: FilteredCount -> 4
+[2026-02-01T10:53:15.0884078+11:00] PropertyChanged: FilteredCount -> 4

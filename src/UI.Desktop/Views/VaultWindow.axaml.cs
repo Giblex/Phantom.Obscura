@@ -132,25 +132,41 @@ namespace PhantomVault.UI.Views
         {
             // Apply screenshot protection to prevent screen capture of vault contents
             // This makes the window appear black in screenshots, screen recordings, and screen sharing
+            // Check user settings and apply the appropriate state
             try
             {
+                var settings = PhantomVault.UI.Services.SettingsService.Load();
                 if (WindowProtectionService.IsSupported())
                 {
                     var platformHandle = this.TryGetPlatformHandle();
                     if (platformHandle != null)
                     {
                         var hwnd = platformHandle.Handle;
-                        if (WindowProtectionService.EnableScreenshotProtection(hwnd))
+                        
+                        if (settings.EnableScreenshotProtection)
                         {
+                            if (WindowProtectionService.EnableScreenshotProtection(hwnd))
+                            {
 #if DEBUG
-                            System.Diagnostics.Debug.WriteLine("Screenshot protection enabled for VaultWindow");
+                                System.Diagnostics.Debug.WriteLine("Screenshot protection ENABLED on window open");
 #endif
+                            }
+                            else
+                            {
+#if DEBUG
+                                System.Diagnostics.Debug.WriteLine("Failed to enable screenshot protection on window open");
+#endif
+                            }
                         }
                         else
                         {
+                            // Explicitly disable if user has it turned off
+                            if (WindowProtectionService.DisableScreenshotProtection(hwnd))
+                            {
 #if DEBUG
-                            System.Diagnostics.Debug.WriteLine("Failed to enable screenshot protection for VaultWindow");
+                                System.Diagnostics.Debug.WriteLine("Screenshot protection DISABLED on window open (per user settings)");
 #endif
+                            }
                         }
                     }
                 }
@@ -158,7 +174,7 @@ namespace PhantomVault.UI.Views
             catch (Exception ex)
             {
 #if DEBUG
-                System.Diagnostics.Debug.WriteLine($"Error enabling screenshot protection: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error applying screenshot protection: {ex.Message}");
 #else
                 _ = ex; // Suppress unused variable warning
 #endif
@@ -206,6 +222,18 @@ namespace PhantomVault.UI.Views
             if (sender is ViewModels.VaultViewModel vm && e.PropertyName == nameof(vm.EditViewModel))
             {
                 HandleEditViewModelChanged(vm.EditViewModel);
+            }
+
+            // Handle screenshot protection toggle
+            if (sender is ViewModels.VaultViewModel vm3 && e.PropertyName == nameof(vm3.EnableScreenshotProtection))
+            {
+                // Capture the value immediately to avoid re-reading from disk
+                var enableProtection = vm3.EnableScreenshotProtection;
+                var msg = $"[VaultWindow] PropertyChanged: EnableScreenshotProtection = {enableProtection}";
+                Console.WriteLine(msg);
+                System.IO.File.AppendAllText("O:\\screenshot_log.txt", msg + "\n");
+                // Ensure UI thread execution
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => UpdateScreenshotProtection(enableProtection));
             }
 
             // Log when FilteredCount updates so we can see when ApplyFilters populates the UI
@@ -697,6 +725,72 @@ namespace PhantomVault.UI.Views
             if (sender is Button button && button.Flyout != null)
             {
                 button.Flyout.ShowAt(button);
+            }
+        }
+
+        private void UpdateScreenshotProtection(bool enable)
+        {
+#if DEBUG
+            System.Diagnostics.Debug.WriteLine($"UpdateScreenshotProtection called with enable={enable}");
+#endif
+            try
+            {
+                var platformHandle = this.TryGetPlatformHandle();
+                if (platformHandle != null)
+                {
+                    var hwnd = platformHandle.Handle;
+#if DEBUG
+                    System.Diagnostics.Debug.WriteLine($"Window handle obtained: {hwnd}");
+                    var wasEnabled = WindowProtectionService.IsScreenshotProtectionEnabled(hwnd);
+                    System.Diagnostics.Debug.WriteLine($"Current state BEFORE change: {(wasEnabled ? "PROTECTED" : "UNPROTECTED")}");
+#endif
+                    if (enable)
+                    {
+                        if (WindowProtectionService.EnableScreenshotProtection(hwnd))
+                        {
+#if DEBUG
+                            var isEnabled = WindowProtectionService.IsScreenshotProtectionEnabled(hwnd);
+                            System.Diagnostics.Debug.WriteLine($"✓ Screenshot protection ENABLED successfully. Verified state: {(isEnabled ? "PROTECTED" : "UNPROTECTED")}");
+#endif
+                        }
+                        else
+                        {
+#if DEBUG
+                            System.Diagnostics.Debug.WriteLine("✗ Failed to enable screenshot protection");
+#endif
+                        }
+                    }
+                    else
+                    {
+                        if (WindowProtectionService.DisableScreenshotProtection(hwnd))
+                        {
+#if DEBUG
+                            var isEnabled = WindowProtectionService.IsScreenshotProtectionEnabled(hwnd);
+                            System.Diagnostics.Debug.WriteLine($"✓ Screenshot protection DISABLED successfully. Verified state: {(isEnabled ? "PROTECTED" : "UNPROTECTED")}");
+#endif
+                        }
+                        else
+                        {
+#if DEBUG
+                            System.Diagnostics.Debug.WriteLine("✗ Failed to disable screenshot protection");
+#endif
+                        }
+                    }
+                }
+                else
+                {
+#if DEBUG
+                    System.Diagnostics.Debug.WriteLine("✗ Could not get platform handle");
+#endif
+                }
+            }
+            catch (Exception ex)
+            {
+#if DEBUG
+                System.Diagnostics.Debug.WriteLine($"Error updating screenshot protection: {ex.Message}");
+#else
+                _ = ex;
+#endif
             }
         }
 

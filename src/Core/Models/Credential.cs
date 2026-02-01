@@ -96,6 +96,7 @@ namespace PhantomVault.Core.Models
         // Identity document fields (EntryType.Identity)
         public string IdDocumentType { get; set; } = string.Empty; // Passport, Driver's License, Medicare, etc.
         public string IdNumber { get; set; } = string.Empty;
+        public string IdCardNumber { get; set; } = string.Empty; // Card/License number for physical documents
         public string IdIssuingCountry { get; set; } = string.Empty;
         public string IdIssuingState { get; set; } = string.Empty;
         public DateTimeOffset? IdIssueDate { get; set; }

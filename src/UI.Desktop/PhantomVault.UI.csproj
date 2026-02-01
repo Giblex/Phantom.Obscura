@@ -27,6 +27,11 @@
     <AvaloniaXaml Remove="Legacy\**\*.axaml" />
     <AvaloniaResource Remove="Legacy\**\*" />
     <None Remove="Legacy\**\*" />
+    <!-- Exclude PhantomRecovery integration files until project reference is fixed -->
+    <Compile Remove="Services\IntegratedRecoveryService.cs" />
+    <Compile Remove="Services\RecoveryDeveloperMode.cs" />
+    <Compile Remove="Views\RecoveryPanel.axaml.cs" />
+    <AvaloniaXaml Remove="Views\RecoveryPanel.axaml" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.9" />
@@ -35,8 +40,8 @@
     <ProjectReference Include="..\Platform\PhantomVault.Platform.csproj" />
     <ProjectReference Include="..\Crypto\GiblexVault.Security.ZK.csproj" />
     <ProjectReference Include="..\Autofill\PhantomVault.Autofill.csproj" />
-    <ProjectReference Include="..\..\..\PhantomRecovery\PhantomRecovery.App\PhantomRecovery.App.csproj" />
-    <ProjectReference Include="..\..\..\PhantomRecovery\PhantomRecovery.Core\PhantomRecovery.Core.csproj" />
+    <!-- <ProjectReference Include="..\..\..\PhantomRecovery\PhantomRecovery.App\PhantomRecovery.App.csproj" /> -->
+    <!-- <ProjectReference Include="..\..\..\PhantomRecovery\PhantomRecovery.Core\PhantomRecovery.Core.csproj" /> -->
     <PackageReference Include="Avalonia" Version="11.3.9" />
     <PackageReference Include="Avalonia.Desktop" Version="11.3.9" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.9" />

@@ -976,62 +976,28 @@
             <Border x:Name="EditPanelOverlay"
                     Grid.Column="0"
                     Grid.ColumnSpan="3"
-                    ZIndex="200"
+                    ZIndex="999"
                     Background="{DynamicResource OverlayBackgroundLightBrush}"
+                    Opacity="1"
                     IsVisible="{Binding IsEditPanelVisible}"
                     IsHitTestVisible="{Binding IsEditPanelVisible}"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
-                    ClipToBounds="True">
-                <Border.Styles>
-                    <Style Selector="Border#EditPanelOverlay">
-                        <Setter Property="Opacity" Value="0"/>
-                    </Style>
-                    <Style Selector="Border#EditPanelOverlay[IsVisible=True]">
-                        <Setter Property="Opacity" Value="1"/>
-                        <Style.Animations>
-                            <Animation Duration="0:0:0.25" FillMode="Forward" Easing="SineEaseOut">
-                                <KeyFrame Cue="0%">
-                                    <Setter Property="Opacity" Value="0"/>
-                                </KeyFrame>
-                                <KeyFrame Cue="100%">
-                                    <Setter Property="Opacity" Value="1"/>
-                                </KeyFrame>
-                            </Animation>
-                        </Style.Animations>
-                    </Style>
-                </Border.Styles>
+                    ClipToBounds="False">
                 
                 <Grid>
                     <!-- Transparent area to close panel -->
                     <Border Background="Transparent" 
-                            PointerPressed="CloseEditPanel_Click"/>
+                            PointerPressed="CloseEditPanel_Click"
+                            ZIndex="0"/>
                     
                     <!-- Edit Panel Container - Slides in from right, fills entire detail panel area -->
             <Border x:Name="EditPanelContainer" 
                 HorizontalAlignment="Right"
                 VerticalAlignment="Stretch"
-                Width="600"
+                Width="{Binding ElementName=DetailPanel, Path=Bounds.Width}"
+                ZIndex="1"
                 Tag="{Binding IsEditPanelVisible}">
-                        <!-- Smooth slide animation using Transitions -->
-                        <Border.RenderTransform>
-                            <TranslateTransform X="600"/>
-                        </Border.RenderTransform>
-                        <Border.Transitions>
-                            <Transitions>
-                                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.4" Easing="CubicEaseOut"/>
-                            </Transitions>
-                        </Border.Transitions>
-                        <Border.Styles>
-                            <!-- Default: hidden off-screen to the right -->
-                            <Style Selector="Border#EditPanelContainer">
-                                <Setter Property="RenderTransform" Value="translateX(600px)"/>
-                            </Style>
-                            <!-- When Tag (bound to IsEditPanelVisible) is true, slide into place -->
-                            <Style Selector="Border#EditPanelContainer[Tag=True]">
-                                <Setter Property="RenderTransform" Value="translateX(0px)"/>
-                            </Style>
-                        </Border.Styles>
                         
                         <!-- Edit Panel Content -->
             <Border x:Name="EditPanel"
@@ -1099,7 +1065,7 @@
                                     CornerRadius="0,0,12,12">
                                 <Grid ColumnDefinitions="*,Auto">
                                     <StackPanel Grid.Column="0" Spacing="6" Margin="0,0,15,0">
-                                        <TextBlock Text="{Binding WindowTitle}" 
+                                        <TextBlock Text="Add/Edit Credentials" 
                                                    FontSize="20" 
                                                    FontWeight="Bold"
                                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
@@ -1108,33 +1074,35 @@
                                                    Foreground="{DynamicResource MutedTextBrush}"/>
                                     </StackPanel>
                                     <Button Grid.Column="1"
-                                            Command="{Binding $parent[Grid].DataContext.CloseEditPanelCommand}"
+                                            Command="{Binding $parent[Window].DataContext.CloseEditPanelCommand}"
                                             Classes="liquid-glass"
-                                            Width="36"
-                                            Height="36"
+                                            Width="32"
+                                            Height="32"
+                                            CornerRadius="8"
+                                            Padding="0"
                                             VerticalAlignment="Top"
                                             Margin="0,0,15,0"
                                             ToolTip.Tip="Close">
-                                        <TextBlock Text="✕" FontSize="16"/>
+                                        <dcontrols:SvgIcon IconName="Assets/SVG/x.svg" Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Button>
                                 </Grid>
                             </Border>
                             
                             <!-- Form Content -->
                             <ScrollViewer x:Name="EditFormScrollViewer"
-                                          Grid.Row="1" 
-                                          VerticalScrollBarVisibility="Visible"
+                                          Grid.Row="1"
+                                          VerticalScrollBarVisibility="Auto"
                                           HorizontalScrollBarVisibility="Disabled"
                                           HorizontalContentAlignment="Stretch"
                                           AllowAutoHide="False"
-                                          Padding="20,20,600,170">
+                                          Padding="30,10,30,250">
                                 <StackPanel x:Name="EditFormStack"
-                                            Spacing="20"
+                                            Spacing="10"
                                             HorizontalAlignment="Stretch"
-                                            MaxWidth="720">
+                                            MaxWidth="590">
                                     
                                     <!-- Password Entry Fields -->
-                                    <StackPanel Spacing="20" IsVisible="{Binding IsPasswordEntry}">
+                                    <StackPanel Spacing="14" IsVisible="{Binding IsPasswordEntry}">
                                     
                                     <!-- Title Field -->
                                     <StackPanel Spacing="8">
@@ -1199,22 +1167,24 @@
                                             <Button Grid.Column="1"
                                                     Command="{Binding GeneratePasswordCommand}"
                                                     Classes="liquid-glass"
-                                                    Width="90"
-                                                    Height="26"
-                                                    Padding="10,4"
+                                                    Width="36"
+                                                    Height="36"
+                                                    CornerRadius="6"
+                                                    Padding="0"
                                                     FontSize="11"
                                                     ToolTip.Tip="Generate strong password">
-                                                <TextBlock Text="Generate" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                <dcontrols:SvgIcon IconName="Assets/SVG/Current/Generate dice.svg" Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             </Button>
                                             <Button Grid.Column="3"
                                                     Command="{Binding OpenPasswordGeneratorCommand}"
                                                     Classes="liquid-glass"
-                                                    Height="26"
-                                                    Width="26"
-                                                    Padding="4"
+                                                    Height="36"
+                                                    Width="36"
+                                                    CornerRadius="6"
+                                                    Padding="0"
                                                     FontSize="11"
                                                     ToolTip.Tip="Open password generator settings">
-                                                <TextBlock Text="..." FontSize="13"/>
+                                                <dcontrols:SvgIcon IconName="Assets/SVG/Current/Settings gear.svg" Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             </Button>
                                         </Grid>
 
@@ -1242,10 +1212,12 @@
                                                 <Button Grid.Column="1"
                                                         Command="{Binding TogglePasswordVisibilityCommand}"
                                                         Classes="liquid-glass"
-                                                        Width="40"
-                                                        Height="40"
+                                                        Width="36"
+                                                        Height="36"
+                                                        CornerRadius="6"
+                                                        Padding="0"
                                                         ToolTip.Tip="Show/Hide password">
-                                                    <TextBlock Text="{Binding PasswordVisibilityIcon}" FontSize="16"/>
+                                                    <dcontrols:SvgIcon IconName="{Binding PasswordVisibilitySvgIcon}" Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                                 </Button>
                                             </Grid>
 
@@ -1400,11 +1372,13 @@
                                                 <Button Grid.Column="2"
                                                         Command="{Binding PickIconCommand}"
                                                         Classes="liquid-glass"
-                                                        Width="110"
-                                                        Height="36"
+                                                        Width="32"
+                                                        Height="32"
+                                                        CornerRadius="6"
+                                                        Padding="0"
                                                         VerticalAlignment="Center"
-                                              ToolTip.Tip="Open icon picker">
-                                           <TextBlock Text="Change Icon" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        ToolTip.Tip="Open icon picker">
+                                                    <dcontrols:SvgIcon IconName="Assets/SVG/Current/Colour pallet.svg" Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                                 </Button>
                                             </Grid>
                                         </Border>
@@ -1451,7 +1425,7 @@
                                     <editforms:ContactEditForm DataContext="{Binding}" />
 
                                     <!-- Tags -->
-                                    <StackPanel Spacing="8">
+                                    <StackPanel Spacing="8" Margin="0,0,0,0">
                                         <TextBlock Text="Tags" 
                                                    FontSize="13" 
                                                    FontWeight="SemiBold"
@@ -1526,20 +1500,22 @@
                                                VerticalAlignment="Center"/>
 
                                     <Button Grid.Column="1"
-                                            Command="{Binding $parent[Grid].DataContext.DeleteCredentialCommand}"
-                                            CommandParameter="{Binding $parent[Grid].DataContext.SelectedCredential}"
+                                            Command="{Binding $parent[Window].DataContext.DeleteCredentialCommand}"
+                                            CommandParameter="{Binding $parent[Window].DataContext.SelectedCredential}"
                                             Classes="liquid-glass danger"
-                                            Width="110"
-                                            Height="40"
+                                            Width="90"
+                                            Height="36"
+                                            CornerRadius="8"
                                             Margin="0,0,10,0"
-                                            IsVisible="{Binding $parent[Grid].DataContext.SelectedCredential, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                            IsVisible="{Binding $parent[Window].DataContext.SelectedCredential, Converter={x:Static ObjectConverters.IsNotNull}}"
                                             Content="Delete"/>
                                     
                                     <Button Grid.Column="2"
-                                            Command="{Binding $parent[Grid].DataContext.CloseEditPanelCommand}"
+                                            Command="{Binding $parent[Window].DataContext.CloseEditPanelCommand}"
                                             Classes="liquid-glass"
-                                            Width="100"
-                                            Height="40"
+                                            Width="80"
+                                            Height="36"
+                                            CornerRadius="8"
                                             Margin="0,0,10,0"
                                             Content="Cancel"/>
                                     
@@ -1547,8 +1523,9 @@
                                             Command="{Binding SaveCommand}"
                                             Classes="liquid-glass"
                                             Background="{DynamicResource AccentBrush}"
-                                            Width="120"
-                                            Height="40"
+                                            Width="100"
+                                            Height="36"
+                                            CornerRadius="8"
                                             FontWeight="Bold">
                                         <TextBlock Text="{Binding SaveButtonText}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Button>

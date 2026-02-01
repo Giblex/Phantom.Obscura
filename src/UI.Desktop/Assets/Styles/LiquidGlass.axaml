@@ -26,8 +26,6 @@
   <Setter Property="FontWeight" Value="SemiBold"/>
   <Setter Property="Foreground" Value="#FFFFFF"/>
   <Setter Property="Cursor" Value="Hand"/>
-  <Setter Property="MinHeight" Value="40"/>
-  <Setter Property="Padding" Value="16,8"/>
   <Setter Property="Background" Value="#04FFFFFF"/>
   <Setter Property="HorizontalContentAlignment" Value="Center"/>
   <Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -38,7 +36,7 @@
   </Setter>
   <Setter Property="Effect">
     <Setter.Value>
-      <DropShadowEffect BlurRadius="16" OffsetX="5" OffsetY="4" Color="#35000000">
+      <DropShadowEffect BlurRadius="20" OffsetX="8" OffsetY="6" Color="#45000000">
         <DropShadowEffect.Transitions>
           <Transitions>
             <DoubleTransition Property="BlurRadius" Duration="0:0:0.18"/>
@@ -110,36 +108,6 @@
               <GradientStop Color="#18A0C8E8" Offset="0.5"/>
               <GradientStop Color="#00000000" Offset="1"/>
             </RadialGradientBrush>
-          </Border.Background>
-        </Border>
-
-        <!-- LAYER 2.5: Refraction streak simulating light bending -->
-        <Border CornerRadius="{TemplateBinding CornerRadius}"
-                Opacity="0.35"
-                Margin="0"
-                IsHitTestVisible="False"
-                ClipToBounds="True">
-          <Border.Background>
-            <LinearGradientBrush StartPoint="0%,0%" EndPoint="70%,100%">
-              <GradientStop Color="#35B8D5EF" Offset="0"/>
-              <GradientStop Color="#188FB5DF" Offset="0.3"/>
-              <GradientStop Color="#00000000" Offset="0.6"/>
-            </LinearGradientBrush>
-          </Border.Background>
-        </Border>
-        
-        <!-- LAYER 2.6: Secondary refraction for 3D depth -->
-        <Border CornerRadius="{TemplateBinding CornerRadius}"
-                Opacity="0.25"
-                Margin="0"
-                IsHitTestVisible="False"
-                ClipToBounds="True">
-          <Border.Background>
-            <LinearGradientBrush StartPoint="100%,0%" EndPoint="30%,100%">
-              <GradientStop Color="#00000000" Offset="0"/>
-              <GradientStop Color="#20A0C8E8" Offset="0.5"/>
-              <GradientStop Color="#00000000" Offset="1"/>
-            </LinearGradientBrush>
           </Border.Background>
         </Border>
 

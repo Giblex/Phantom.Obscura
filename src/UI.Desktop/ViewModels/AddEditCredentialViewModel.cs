@@ -89,6 +89,7 @@ namespace PhantomVault.UI.ViewModels
         private bool _isPasswordVisible;
         private char _passwordChar = '●';
         private string _passwordVisibilityIcon = "👁";
+        private string _passwordVisibilitySvgIcon = "Assets/SVG/Current/Visible eye.svg";
 
         private int _passwordStrength;
         private string _passwordStrengthText = string.Empty;
@@ -551,6 +552,12 @@ namespace PhantomVault.UI.ViewModels
             set => this.RaiseAndSetIfChanged(ref _passwordVisibilityIcon, value);
         }
 
+        public string PasswordVisibilitySvgIcon
+        {
+            get => _passwordVisibilitySvgIcon;
+            set => this.RaiseAndSetIfChanged(ref _passwordVisibilitySvgIcon, value);
+        }
+
         // Password strength
         public bool HasPassword => !string.IsNullOrEmpty(Password);
 
@@ -711,6 +718,11 @@ namespace PhantomVault.UI.ViewModels
         {
             get => _existingCredential?.IdNumber ?? string.Empty;
             set { if (_existingCredential != null) { _existingCredential.IdNumber = value; this.RaisePropertyChanged(); } }
+        }
+        public string IdCardNumber
+        {
+            get => _existingCredential?.IdCardNumber ?? string.Empty;
+            set { if (_existingCredential != null) { _existingCredential.IdCardNumber = value; this.RaisePropertyChanged(); } }
         }
         public string IdIssuingCountry
         {
@@ -1083,6 +1095,7 @@ namespace PhantomVault.UI.ViewModels
                 // Identity fields
                 credential.IdDocumentType = _existingCredential.IdDocumentType;
                 credential.IdNumber = _existingCredential.IdNumber;
+                credential.IdCardNumber = _existingCredential.IdCardNumber;
                 credential.IdIssuingCountry = _existingCredential.IdIssuingCountry;
                 credential.IdIssuingState = _existingCredential.IdIssuingState;
                 credential.IdIssueDate = _existingCredential.IdIssueDate;
@@ -1133,6 +1146,7 @@ namespace PhantomVault.UI.ViewModels
             IsPasswordVisible = !IsPasswordVisible;
             PasswordChar = IsPasswordVisible ? '\0' : '●';
             PasswordVisibilityIcon = IsPasswordVisible ? "🙈" : "👁";
+            PasswordVisibilitySvgIcon = IsPasswordVisible ? "Assets/SVG/Current/Hidden eye.svg" : "Assets/SVG/Current/Visible eye.svg";
         }
 
         private void GeneratePassword()

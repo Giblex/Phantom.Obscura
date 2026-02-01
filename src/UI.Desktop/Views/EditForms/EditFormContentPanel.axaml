@@ -1,0 +1,294 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:PhantomVault.UI.Converters"
+             xmlns:editforms="clr-namespace:PhantomVault.UI.Views.EditForms"
+             x:Class="PhantomVault.UI.Views.EditForms.EditFormContentPanel">
+    
+    <StackPanel x:Name="EditFormStack" Spacing="20">
+        
+        <!-- Title Field -->
+        <StackPanel Spacing="8">
+            <TextBlock Text="Title *" 
+                       FontSize="13" 
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding Title}"
+                     Watermark="e.g., GitHub, Gmail, Bank Account"
+                     Height="40"
+                     FontSize="14"
+                     Background="{DynamicResource ReadOnlyFieldBackgroundBrush}">
+                <TextBox.Styles>
+                    <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+                        <Setter Property="Background" Value="#33FFFFFF"/>
+                    </Style>
+                    <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+                        <Setter Property="Background" Value="#33FFFFFF"/>
+                    </Style>
+                </TextBox.Styles>
+            </TextBox>
+            <TextBlock Text="{Binding TitleError}" 
+                       FontSize="11" 
+                       Foreground="{DynamicResource ErrorBrush}"
+                       IsVisible="{Binding HasTitleError}"/>
+        </StackPanel>
+        
+        <!-- Username/Email Field -->
+        <StackPanel Spacing="8">
+            <TextBlock Text="Username / Email *" 
+                       FontSize="13" 
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding Username}"
+                     Watermark="username@example.com"
+                     Height="40"
+                     FontSize="14"
+                     Background="{DynamicResource ReadOnlyFieldBackgroundBrush}">
+                <TextBox.Styles>
+                    <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+                        <Setter Property="Background" Value="#33FFFFFF"/>
+                    </Style>
+                    <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+                        <Setter Property="Background" Value="#33FFFFFF"/>
+                    </Style>
+                </TextBox.Styles>
+            </TextBox>
+            <TextBlock Text="{Binding UsernameError}" 
+                       FontSize="11" 
+                       Foreground="{DynamicResource ErrorBrush}"
+                       IsVisible="{Binding HasUsernameError}"/>
+        </StackPanel>
+        
+        <!-- Password Field -->
+        <StackPanel Spacing="8">
+            <Grid ColumnDefinitions="*,Auto,4,Auto">
+                <TextBlock Grid.Column="0"
+                           Text="Password *" 
+                           FontSize="13" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                <Button Grid.Column="1"
+                        Command="{Binding GeneratePasswordCommand}"
+                        Classes="secondary"
+                        Width="90"
+                        Height="26"
+                        Padding="10,4"
+                        FontSize="11"
+                        ToolTip.Tip="Generate strong password">
+                    <TextBlock Text="Generate" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Button>
+                <Button Grid.Column="3"
+                        Command="{Binding OpenPasswordGeneratorCommand}"
+                        Classes="secondary"
+                        Height="26"
+                        Width="26"
+                        Padding="4"
+                        FontSize="11"
+                        ToolTip.Tip="Open password generator settings">
+                    <TextBlock Text="..." FontSize="13"/>
+                </Button>
+            </Grid>
+
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBox Grid.Column="0"
+                         Text="{Binding Password}"
+                         PasswordChar="{Binding PasswordChar}"
+                         Watermark="Enter secure password"
+                         Height="40"
+                         FontSize="14"
+                         Padding="12,10,45,10"
+                         Background="{DynamicResource ReadOnlyFieldBackgroundBrush}">
+                    <TextBox.Styles>
+                        <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+                            <Setter Property="Background" Value="#33FFFFFF"/>
+                        </Style>
+                        <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+                            <Setter Property="Background" Value="#33FFFFFF"/>
+                        </Style>
+                    </TextBox.Styles>
+                </TextBox>
+                <Button Grid.Column="1"
+                        Command="{Binding TogglePasswordVisibilityCommand}"
+                        Classes="secondary"
+                        Width="36"
+                        Height="36"
+                        Margin="-40,2,4,2"
+                        ToolTip.Tip="Show/Hide password">
+                    <TextBlock Text="{Binding PasswordVisibilityIcon}" FontSize="16"/>
+                </Button>
+            </Grid>
+
+            <!-- Password Strength Meter -->
+            <Border Background="{DynamicResource ControlBackgroundBrush}"
+                    CornerRadius="4"
+                    Padding="10,8"
+                    IsVisible="{Binding HasPassword}">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <TextBlock Grid.Column="0"
+                               Text="Strength:" 
+                               FontSize="11" 
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               VerticalAlignment="Center"
+                               Margin="0,0,10,0"/>
+                    <ProgressBar Grid.Column="1"
+                                 Value="{Binding PasswordStrength}"
+                                 Maximum="100"
+                                 Height="8"
+                                 VerticalAlignment="Center"
+                                 Foreground="{Binding PasswordStrengthColor}"/>
+                    <TextBlock Grid.Column="2"
+                               Text="{Binding PasswordStrengthText}" 
+                               FontSize="11" 
+                               FontWeight="SemiBold"
+                               Foreground="{Binding PasswordStrengthColor}"
+                               VerticalAlignment="Center"
+                               Margin="10,0,0,0"/>
+                </Grid>
+            </Border>
+
+            <TextBlock Text="{Binding PasswordError}" 
+                       FontSize="11" 
+                       Foreground="{DynamicResource ErrorBrush}"
+                       IsVisible="{Binding HasPasswordError}"/>
+        </StackPanel>
+        
+        <!-- URL Field -->
+        <StackPanel Spacing="8">
+            <TextBlock Text="Website URL" 
+                       FontSize="13" 
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding Url}"
+                     Watermark="https://example.com"
+                     Height="40"
+                     FontSize="14"
+                     Background="{DynamicResource ReadOnlyFieldBackgroundBrush}">
+                <TextBox.Styles>
+                    <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+                        <Setter Property="Background" Value="#33FFFFFF"/>
+                    </Style>
+                    <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+                        <Setter Property="Background" Value="#33FFFFFF"/>
+                    </Style>
+                </TextBox.Styles>
+            </TextBox>
+            <TextBlock Text="Optional - Used for auto-fill and quick access" 
+                       FontSize="11" 
+                       Foreground="{DynamicResource MutedTextBrush}"/>
+        </StackPanel>
+        
+        <!-- Category Selection -->
+        <StackPanel Spacing="8">
+            <TextBlock Text="Category" 
+                       FontSize="13" 
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <ComboBox SelectedItem="{Binding SelectedCategory}"
+                      ItemsSource="{Binding Categories}"
+                      Height="40"
+                      FontSize="14">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </StackPanel>
+        
+        <!-- Icon/Logo Selection -->
+        <StackPanel Spacing="8">
+            <TextBlock Text="Icon / Logo" 
+                       FontSize="13" 
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <Border Background="{DynamicResource ReadOnlyFieldBackgroundBrush}"
+                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="15"
+                    Height="100">
+                <Border.Styles>
+                    <Style Selector="Border:pointerover">
+                        <Setter Property="Background" Value="#33FFFFFF"/>
+                    </Style>
+                </Border.Styles>
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <!-- Current Icon Display -->
+                    <Border Grid.Column="0"
+                            Width="70"
+                            Height="70"
+                            Background="{DynamicResource ControlBackgroundBrush}"
+                            CornerRadius="8"
+                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                            BorderThickness="1">
+                        <Image Source="{Binding IconPath}"
+                               Width="50"
+                               Height="50"
+                               Stretch="Uniform"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
+                    </Border>
+                    <!-- Icon Info -->
+                    <StackPanel Grid.Column="1"
+                                Margin="15,0,0,0"
+                                VerticalAlignment="Center"
+                                Spacing="4">
+                        <TextBlock Text="Custom icon for this credential" 
+                                   FontSize="13" 
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        <TextBlock Text="Click 'Change Icon' to select from library or upload custom" 
+                                   FontSize="11" 
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                    
+                    <!-- Change Icon Button -->
+                    <Button Grid.Column="2"
+                            Command="{Binding PickIconCommand}"
+                            Classes="secondary"
+                            Width="110"
+                            Height="36"
+                            VerticalAlignment="Center"
+                            ToolTip.Tip="Open icon picker">
+                        <TextBlock Text="Change Icon" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
+                </Grid>
+            </Border>
+        </StackPanel>
+        
+        <!-- Type-Specific Forms -->
+        <editforms:CreditCardEditForm/>
+        <editforms:BankAccountEditForm/>
+        <editforms:IdentityEditForm/>
+        <editforms:WiFiEditForm/>
+        <editforms:ApiKeyEditForm/>
+        <editforms:ContactEditForm/>
+        
+        <!-- Notes Field -->
+        <StackPanel Spacing="8">
+            <TextBlock Text="Notes" 
+                       FontSize="13" 
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding Notes}"
+                     Watermark="Add any additional information..."
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     Height="100"
+                     FontSize="13"
+                     Background="{DynamicResource ReadOnlyFieldBackgroundBrush}">
+                <TextBox.Styles>
+                    <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+                        <Setter Property="Background" Value="#33FFFFFF"/>
+                    </Style>
+                    <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+                        <Setter Property="Background" Value="#33FFFFFF"/>
+                    </Style>
+                </TextBox.Styles>
+            </TextBox>
+        </StackPanel>
+        
+    </StackPanel>
+</UserControl>

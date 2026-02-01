@@ -241,6 +241,7 @@ namespace PhantomVault.UI.ViewModels
             AddApiKeyCommand = ReactiveCommand.CreateFromTask(async () => await AddCredentialWithTypeAsync("API Key"));
             AddSoftwareLicenseCommand = ReactiveCommand.CreateFromTask(async () => await AddCredentialWithTypeAsync("Software License"));
             AddWiFiPasswordCommand = ReactiveCommand.CreateFromTask(async () => await AddCredentialWithTypeAsync("WiFi Password"));
+            AddContactCommand = ReactiveCommand.CreateFromTask(async () => await AddCredentialWithTypeAsync("Contact"));
             DashboardViewModel = new DashboardViewModel();
             DashboardViewModel.NavigateToFilter = NavigateToVaultWithFilter;
             EditCredentialCommand = ReactiveCommand.CreateFromTask<CredentialViewModel>(EditCredentialAsync);
@@ -1090,6 +1091,159 @@ namespace PhantomVault.UI.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _isShowingSecureTrash, value);
         }
 
+        public bool EnableScreenshotProtection
+        {
+            get
+            {
+                var settings = SettingsService.Load();
+                return settings.EnableScreenshotProtection;
+            }
+            set
+            {
+                var msg = $"[VaultViewModel] EnableScreenshotProtection setter called with value: {value}";
+                Console.WriteLine(msg);
+                System.IO.File.AppendAllText("O:\\screenshot_log.txt", msg + "\n");
+                
+                var settings = SettingsService.Load();
+                settings.EnableScreenshotProtection = value;
+                SettingsService.Save(settings);
+                
+                var msg2 = $"[VaultViewModel] Settings saved. Verifying: {settings.EnableScreenshotProtection}";
+                Console.WriteLine(msg2);
+                System.IO.File.AppendAllText("O:\\screenshot_log.txt", msg2 + "\n");
+                
+                this.RaisePropertyChanged();
+            }
+        }
+
+        public bool RequireHardwareToken
+        {
+            get
+            {
+                var settings = SettingsService.Load();
+                return settings.RequireHardwareToken;
+            }
+            set
+            {
+                var settings = SettingsService.Load();
+                settings.RequireHardwareToken = value;
+                SettingsService.Save(settings);
+                this.RaisePropertyChanged();
+            }
+        }
+
+        public bool RequireKeyfile
+        {
+            get
+            {
+                var settings = SettingsService.Load();
+                return settings.RequireKeyfile;
+            }
+            set
+            {
+                var settings = SettingsService.Load();
+                settings.RequireKeyfile = value;
+                SettingsService.Save(settings);
+                this.RaisePropertyChanged();
+            }
+        }
+
+        public int IdleTimeoutMinutes
+        {
+            get
+            {
+                var settings = SettingsService.Load();
+                return settings.IdleTimeoutMinutes;
+            }
+            set
+            {
+                var settings = SettingsService.Load();
+                settings.IdleTimeoutMinutes = value;
+                SettingsService.Save(settings);
+                this.RaisePropertyChanged();
+            }
+        }
+
+        public bool AutoCopyTotpWithPassword
+        {
+            get
+            {
+                var settings = SettingsService.Load();
+                return settings.AutoCopyTotpWithPassword;
+            }
+            set
+            {
+                var settings = SettingsService.Load();
+                settings.AutoCopyTotpWithPassword = value;
+                SettingsService.Save(settings);
+                this.RaisePropertyChanged();
+            }
+        }
+
+        public bool EnableDecoyVault
+        {
+            get
+            {
+                var settings = SettingsService.Load();
+                return settings.EnableDecoyVault;
+            }
+            set
+            {
+                var settings = SettingsService.Load();
+                settings.EnableDecoyVault = value;
+                SettingsService.Save(settings);
+                this.RaisePropertyChanged();
+            }
+        }
+
+        public int DecoyCredentialCount
+        {
+            get
+            {
+                var settings = SettingsService.Load();
+                return settings.DecoyCredentialCount;
+            }
+            set
+            {
+                var settings = SettingsService.Load();
+                settings.DecoyCredentialCount = value;
+                SettingsService.Save(settings);
+                this.RaisePropertyChanged();
+            }
+        }
+
+        public bool DecoyReadOnlyMode
+        {
+            get
+            {
+                var settings = SettingsService.Load();
+                return settings.DecoyReadOnlyMode;
+            }
+            set
+            {
+                var settings = SettingsService.Load();
+                settings.DecoyReadOnlyMode = value;
+                SettingsService.Save(settings);
+                this.RaisePropertyChanged();
+            }
+        }
+
+        public bool DecoyLogActivations
+        {
+            get
+            {
+                var settings = SettingsService.Load();
+                return settings.DecoyLogActivations;
+            }
+            set
+            {
+                var settings = SettingsService.Load();
+                settings.DecoyLogActivations = value;
+                SettingsService.Save(settings);
+                this.RaisePropertyChanged();
+            }
+        }
+
         public Thickness QuickFilterHighlightMargin
         {
             get => _quickFilterHighlightMargin;
@@ -1460,6 +1614,7 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> AddApiKeyCommand { get; }
         public ReactiveCommand<Unit, Unit> AddSoftwareLicenseCommand { get; }
         public ReactiveCommand<Unit, Unit> AddWiFiPasswordCommand { get; }
+        public ReactiveCommand<Unit, Unit> AddContactCommand { get; }
         public ReactiveCommand<CredentialViewModel, Unit> EditCredentialCommand { get; }
         public ReactiveCommand<CredentialViewModel, Unit> DeleteCredentialCommand { get; }
         public ReactiveCommand<CredentialViewModel, Unit> CopyPasswordCommand { get; }
@@ -2186,6 +2341,11 @@ namespace PhantomVault.UI.ViewModels
                         case "wifi":
                             entryType = Core.Models.EntryType.WiFi;
                             break;
+                        case "contact":
+                        case "personal info":
+                        case "personal information":
+                            entryType = Core.Models.EntryType.Contact;
+                            break;
                         default:
                             entryType = Core.Models.EntryType.Password;
                             break;
@@ -2205,6 +2365,7 @@ namespace PhantomVault.UI.ViewModels
             }
 
             // Open overlay panel for adding new credentials
+            CloseAllOverlays(); // Close any other open overlays
             EditViewModel = new AddEditCredentialViewModel(newCredential, (credential) =>
             {
                 OnCredentialSaved(credential);
@@ -2245,6 +2406,7 @@ namespace PhantomVault.UI.ViewModels
                 : $"Editing: {editingTitle}";
 
             // Open overlay panel for editing instead of dialog
+            CloseAllOverlays(); // Close any other open overlays
             EditViewModel = new AddEditCredentialViewModel(credentialVm.GetCredential(), (credential) =>
             {
                 OnCredentialSaved(credential);
@@ -2261,6 +2423,19 @@ namespace PhantomVault.UI.ViewModels
         {
             IsEditPanelVisible = false;
             EditViewModel = null;
+        }
+
+        /// <summary>
+        /// Closes all overlay panels to ensure only one is visible at a time
+        /// </summary>
+        private void CloseAllOverlays()
+        {
+            IsEditPanelVisible = false;
+            IsCategoryManagerPanelVisible = false;
+            IsPasswordHealthPanelVisible = false;
+            IsFlaggedPanelVisible = false;
+            _isRecoveryPanelVisible = false;
+            IsSettingsPanelVisible = false;
         }
 
         private void OnCredentialSaved(Credential credential)
@@ -3336,6 +3511,7 @@ namespace PhantomVault.UI.ViewModels
                         var manifest = _manifestService.ReadManifest(manifestPath, null, null);
 
                         // Use the panel overlay instead of window - pass null for passphrase, keyfile explicitly
+                        CloseAllOverlays(); // Close any other open overlays
                         var categoryVm = new CategoryManagerViewModel(_manifestService, manifest, manifestPath, this, passphrase: null, keyfilePath: manifest.KeyfilePath);
                         AttachCategoryManagerViewModel(categoryVm);
                         IsCategoryManagerPanelVisible = true;
@@ -3395,6 +3571,7 @@ namespace PhantomVault.UI.ViewModels
                                 var manifest = _manifestService.ReadManifest(manifestPath, string.IsNullOrEmpty(providedPass) ? null : providedPass, string.IsNullOrEmpty(providedKeyfile) ? null : providedKeyfile);
 
                                 // Use panel overlay instead of window
+                                CloseAllOverlays(); // Close any other open overlays
                                 var categoryVm = new CategoryManagerViewModel(_manifestService, manifest, manifestPath, this, providedPass, providedKeyfile);
                                 AttachCategoryManagerViewModel(categoryVm);
                                 IsCategoryManagerPanelVisible = true;
@@ -3415,6 +3592,7 @@ namespace PhantomVault.UI.ViewModels
                 else
                 {
                     // No manifest found; still open a manager synced to the current sidebar categories
+                    CloseAllOverlays(); // Close any other open overlays
                     var categoryVm = new CategoryManagerViewModel(this);
                     AttachCategoryManagerViewModel(categoryVm);
                     IsCategoryManagerPanelVisible = true;
@@ -4241,6 +4419,7 @@ namespace PhantomVault.UI.ViewModels
             }
 
             UpdateFlaggedCredentials(flaggedSnapshot);
+            CloseAllOverlays(); // Close any other open overlays
             IsFlaggedPanelVisible = true;
             StatusMessage = "Reviewing flagged passwords";
         }
@@ -4274,6 +4453,8 @@ namespace PhantomVault.UI.ViewModels
                     "PhantomRecoveryVault"
                 );
 
+                // PhantomRecovery integration temporarily disabled
+                /*
                 var options = new PhantomRecovery.App.Integration.VaultLaunchOptions
                 {
                     VaultPath = recoveryPath,
@@ -4284,7 +4465,8 @@ namespace PhantomVault.UI.ViewModels
                 };
 
                 await PhantomRecovery.App.Integration.PhantomObscuraBridge.ShowVaultAsync(_ownerWindow, options);
-                StatusMessage = "PhantomRecovery opened";
+                */
+                StatusMessage = "PhantomRecovery temporarily unavailable";
             }
             catch (Exception ex)
             {
@@ -4423,6 +4605,7 @@ namespace PhantomVault.UI.ViewModels
 
         private void OpenSettingsPanel()
         {
+            CloseAllOverlays(); // Close any other open overlays
             ShowGeneralSettings(); // Default to General tab
             IsSettingsPanelVisible = true;
             StatusMessage = "Settings opened";
@@ -4594,6 +4777,7 @@ namespace PhantomVault.UI.ViewModels
 
         private void OpenPasswordHealthPanel()
         {
+            CloseAllOverlays(); // Close any other open overlays
             EnsureVaultVisible();
             IsPasswordHealthPanelVisible = true;
             IsSidebarCollapsed = false;  // Expand sidebar

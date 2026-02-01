@@ -63,6 +63,48 @@ namespace PhantomVault.UI.Services
         /// </summary>
         public bool AutoCopyTotpWithPassword { get; set; } = false;
 
+        /// <summary>
+        /// Enable screenshot protection (window appears black in screenshots/recordings).
+        /// </summary>
+        public bool EnableScreenshotProtection { get; set; } = true;
+
+        // ===== Security Settings =====
+
+        /// <summary>
+        /// Require hardware token for vault authentication.
+        /// </summary>
+        public bool RequireHardwareToken { get; set; } = false;
+
+        /// <summary>
+        /// Require keyfile for vault authentication.
+        /// </summary>
+        public bool RequireKeyfile { get; set; } = false;
+
+        /// <summary>
+        /// Idle timeout in minutes before auto-lock.
+        /// </summary>
+        public int IdleTimeoutMinutes { get; set; } = 15;
+
+        /// <summary>
+        /// Enable decoy vault protection.
+        /// </summary>
+        public bool EnableDecoyVault { get; set; } = false;
+
+        /// <summary>
+        /// Number of fake credentials to generate for decoy vault.
+        /// </summary>
+        public int DecoyCredentialCount { get; set; } = 20;
+
+        /// <summary>
+        /// Enable read-only mode when decoy vault is active.
+        /// </summary>
+        public bool DecoyReadOnlyMode { get; set; } = true;
+
+        /// <summary>
+        /// Log decoy vault activation events.
+        /// </summary>
+        public bool DecoyLogActivations { get; set; } = true;
+
         // ===== Window State Settings =====
 
         /// <summary>
@@ -224,6 +266,10 @@ namespace PhantomVault.UI.Services
                 Directory.CreateDirectory(SettingsDir);
                 var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(SettingsPath, json);
+#if DEBUG
+                System.Diagnostics.Debug.WriteLine($"[SettingsService] Settings saved to {SettingsPath}");
+                System.Diagnostics.Debug.WriteLine($"[SettingsService] EnableScreenshotProtection in file: {settings.EnableScreenshotProtection}");
+#endif
             }
             catch (Exception ex)
             {

@@ -115,22 +115,11 @@
                                     MinWidth="240">
                                 <StackPanel Spacing="4">
                                     <!-- Add Credential Section -->
-                                    <TextBlock Text="ADD NEW" 
-                                               FontSize="11" 
+                                    <TextBlock Text="Add Credential" 
+                                               FontSize="14" 
                                                FontWeight="SemiBold"
-                                               Foreground="{DynamicResource MutedTextBrush}"
-                                               Margin="8,4,8,4"/>
-                                    <Button x:Name="AddButton"
-                                            Command="{Binding AddCredentialCommand}"
-                                            Classes="liquid-glass"
-                                            HorizontalAlignment="Stretch"
-                                            HorizontalContentAlignment="Left"
-                                            Padding="12,10">
-                                        <StackPanel Orientation="Horizontal" Spacing="12">
-                                            <dcontrols:SvgIcon IconName="Assets/SVG/Current/Add.svg" Width="18" Height="18"/>
-                                            <TextBlock Text="New Credential" VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                    </Button>
+                                               Foreground="{DynamicResource PrimaryTextBrush}"
+                                               Margin="12,8,12,12"/>
                                     <Button Command="{Binding AddLoginCredentialCommand}"
                                             Classes="liquid-glass"
                                             HorizontalAlignment="Stretch"
@@ -165,6 +154,27 @@
                                             HorizontalContentAlignment="Left"
                                             Padding="12,8">
                                         <TextBlock Text="→ Secure Note" FontSize="12"/>
+                                    </Button>
+                                    <Button Command="{Binding AddWiFiPasswordCommand}"
+                                            Classes="liquid-glass"
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            Padding="12,8">
+                                        <TextBlock Text="→ WiFi Network" FontSize="12"/>
+                                    </Button>
+                                    <Button Command="{Binding AddApiKeyCommand}"
+                                            Classes="liquid-glass"
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            Padding="12,8">
+                                        <TextBlock Text="→ API Key" FontSize="12"/>
+                                    </Button>
+                                    <Button Command="{Binding AddContactCommand}"
+                                            Classes="liquid-glass"
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            Padding="12,8">
+                                        <TextBlock Text="→ Contact / Personal Info" FontSize="12"/>
                                     </Button>
                                     
                                     <Separator Margin="0,8" Background="{DynamicResource ControlBorderBrush}"/>

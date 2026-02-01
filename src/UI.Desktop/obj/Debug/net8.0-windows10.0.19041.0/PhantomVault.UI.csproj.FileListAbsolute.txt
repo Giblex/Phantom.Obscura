@@ -1,6 +1,3 @@
-O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\PhantomRecovery.App.deps.json
-O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\PhantomRecovery.App.runtimeconfig.json
-O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\PhantomRecovery.App.exe
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Policies\base_policy.json
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\0ad.png
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Assets\Icons\Logos\PNG\123sport-Logo-tumb.png
@@ -4486,11 +4483,8 @@ O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-w
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Avalonia.OpenGL.dll
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Avalonia.Vulkan.dll
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Avalonia.dll
-O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Avalonia.Controls.ColorPicker.dll
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Avalonia.Controls.DataGrid.dll
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Avalonia.Desktop.dll
-O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Avalonia.Diagnostics.dll
-O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Avalonia.Fonts.Inter.dll
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Avalonia.FreeDesktop.dll
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Avalonia.Native.dll
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Avalonia.ReactiveUI.dll
@@ -4498,7 +4492,6 @@ O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-w
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Avalonia.Skia.dll
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Avalonia.Svg.Skia.dll
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Avalonia.Themes.Fluent.dll
-O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Avalonia.Themes.Simple.dll
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Avalonia.Win32.Automation.dll
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Avalonia.Win32.dll
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Avalonia.X11.dll
@@ -4513,8 +4506,6 @@ O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-w
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Isopoh.Cryptography.Blake2b.dll
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Isopoh.Cryptography.SecureArray.dll
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\KeePassLib.Standard.dll
-O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Konscious.Security.Cryptography.Argon2.dll
-O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Konscious.Security.Cryptography.Blake2.dll
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\MicroCom.Runtime.dll
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Microsoft.AspNetCore.Cryptography.Internal.dll
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Microsoft.AspNetCore.DataProtection.dll
@@ -4610,8 +4601,6 @@ O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-w
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\Microsoft.Windows.SDK.NET.dll
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\WinRT.Runtime.dll
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\GiblexVault.Security.ZK.dll
-O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\PhantomRecovery.App.dll
-O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\PhantomRecovery.Core.dll
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\PhantomVault.Autofill.dll
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\PhantomVault.Core.dll
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\PhantomVault.Platform.dll
@@ -4623,8 +4612,6 @@ O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-w
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\GiblexVault.Security.ZK.xml
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\PhantomVault.Autofill.pdb
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\PhantomVault.Autofill.xml
-O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\PhantomRecovery.App.pdb
-O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\bin\Debug\net8.0-windows10.0.19041.0\PhantomRecovery.Core.pdb
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\obj\Debug\net8.0-windows10.0.19041.0\PhantomVault.UI.csproj.AssemblyReference.cache
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\obj\Debug\net8.0-windows10.0.19041.0\Avalonia\Resources.Inputs.cache
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\UI.Desktop\obj\Debug\net8.0-windows10.0.19041.0\Avalonia\resources

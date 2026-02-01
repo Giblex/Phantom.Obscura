@@ -2,6 +2,23 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="PhantomVault.UI.Views.EditForms.IdentityEditForm">
     
+    <UserControl.Styles>
+        <!-- Remove yellow validation border from DatePicker -->
+        <Style Selector="DatePicker:focus /template/ Border#Background">
+            <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrush}"/>
+        </Style>
+        <Style Selector="DatePicker:pointerover /template/ Border#Background">
+            <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrushPointerOver}"/>
+        </Style>
+        <!-- Center text in DatePicker -->
+        <Style Selector="DatePicker /template/ Button#PART_PickerPresenter">
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="DatePicker /template/ Button#PART_PickerPresenter TextBlock">
+            <Setter Property="TextAlignment" Value="Center"/>
+        </Style>
+    </UserControl.Styles>
+    
     <Border x:Name="IdentityPanelBorder" Background="Transparent" IsVisible="{Binding IsIdentityEntry}">
         <StackPanel x:Name="IdentityPanel" Spacing="12">
         <TextBlock Text="Identity Document" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -15,6 +32,10 @@
         <StackPanel Spacing="6">
             <TextBlock Text="{Binding IdNumberLabel}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
             <TextBox Text="{Binding IdNumber}" Height="40" FontSize="14" Watermark="{Binding IdNumberWatermark}"/>
+        </StackPanel>
+        <StackPanel Spacing="6">
+            <TextBlock Text="Card Number" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding IdCardNumber}" Height="40" FontSize="14" Watermark="Enter card or document number"/>
         </StackPanel>
         <StackPanel Spacing="6" IsVisible="{Binding ShowIdIssuingCountry}">
             <TextBlock Text="{Binding IdIssuingCountryLabel}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>

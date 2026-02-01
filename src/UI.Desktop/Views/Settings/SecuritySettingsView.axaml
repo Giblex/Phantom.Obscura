@@ -105,6 +105,29 @@
             </StackPanel>
         </Border>
 
+        <!-- Screenshot Protection -->
+        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{DynamicResource Radius.Lg}" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Screenshot Protection" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <CheckBox Content="Enable screenshot protection" 
+                          IsChecked="{Binding $parent[Window].DataContext.EnableScreenshotProtection, Mode=TwoWay}"
+                          ToolTip.Tip="When enabled, the vault window appears black in screenshots and screen recordings"/>
+                
+                <TextBlock Text="This security feature prevents credential exposure through screenshots, screen recordings, and screen sharing. When enabled, the vault window will be hidden from screen capture tools."
+                           FontSize="{StaticResource Type.Small.Size}" 
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+
         <!-- Decoy Vault Section -->
         <Border Background="{DynamicResource SettingsPanelBackgroundBrush}"
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}"

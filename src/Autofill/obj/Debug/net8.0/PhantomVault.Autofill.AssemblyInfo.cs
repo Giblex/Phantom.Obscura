@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("PhantomVault Autofill Services for Android, Windows, and Browser Integration")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+73597426f7c50226ca5fc4b88c1bf900022dbc50")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a690552b5f14fd805b01fa74e56bc86f8b69a2d4")]
 [assembly: System.Reflection.AssemblyProductAttribute("PhantomVault.Autofill")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PhantomVault.Autofill")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
