@@ -1258,37 +1258,6 @@ This is a personal project, but feedback and suggestions are welcome through Git
 3. Keep backups of critical credentials in multiple secure locations
 4. Monitor the audit log for suspicious activity
 
-### Known Security Considerations
-
-**Cipher Stacking (5-Layer Encryption)**:
-- ⚠️ Currently marked as "Coming Soon" - NOT implemented
-- Multiple encryption layers don't necessarily increase security
-- Current single-layer AES-256-GCM is actually the better approach
-- Cipher stacking can introduce vulnerabilities without clear benefit
-
-**TOTP Usage**:
-- ✅ Used correctly for manifest-vault authentication synchronization
-- ❌ Should NOT be used for deriving encryption keys (low entropy)
-- Current implementation: TOTP for validation only, Argon2id for key derivation
-
-**CBC Mode Concerns**:
-- ⚠️ Any use of AES-CBC should be avoided (unauthenticated mode)
-- ✅ Current implementation uses AES-256-GCM (authenticated encryption)
-- Recommendation: Stick with AEAD ciphers (GCM, ChaCha20-Poly1305) exclusively
-
-**Malware Detection**:
-- ⚠️ Debugger/memory scanner detection is best-effort only
-- Can be bypassed by sophisticated attackers
-- Decoy vault provides defense-in-depth, not primary security
-- Primary security relies on strong encryption at rest
-
-**Recommended Configuration**:
-- Use AES-256-GCM (current default) ✅
-- Avoid enabling "5-layer encryption" if/when implemented ❌
-- Rely on Argon2id + keyfiles for key derivation ✅
-- Treat TOTP as authentication only, not crypto primitive ✅
-- Consider decoy vault as deterrent, not absolute protection ⚠️
-
 ## License
 
 See LICENSE file for details.
@@ -1304,7 +1273,7 @@ See LICENSE file for details.
 
 ---
 
-**Version**: 6.0.0 (January 2026)
+**Version**: 1.0.3 (January 2026)
 **Status**: Active Development  
 **Platform**: .NET 8, Avalonia UI 11.x  
 **Components**: PhantomVault (Password Manager) + PhantomAttestor (TOTP Vault)
