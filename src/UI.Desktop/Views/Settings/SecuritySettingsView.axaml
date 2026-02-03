@@ -12,7 +12,9 @@
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
                 CornerRadius="{StaticResource Radius.Lg}" 
-                Padding="20">
+                Padding="20"
+                MaxWidth="750"
+                HorizontalAlignment="Stretch">
             <StackPanel Spacing="15">
                 <TextBlock Text="Authentication" 
                            FontSize="{StaticResource Type.Body.Size}" 
@@ -80,7 +82,9 @@
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
                 CornerRadius="{DynamicResource Radius.Lg}" 
-                Padding="20">
+                Padding="20"
+                MaxWidth="750"
+                HorizontalAlignment="Stretch">
             <StackPanel Spacing="15">
                 <TextBlock Text="Clipboard Security" 
                            FontSize="{StaticResource Type.Body.Size}" 
@@ -110,7 +114,9 @@
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
                 CornerRadius="{DynamicResource Radius.Lg}" 
-                Padding="20">
+                Padding="20"
+                MaxWidth="750"
+                HorizontalAlignment="Stretch">
             <StackPanel Spacing="15">
                 <TextBlock Text="Screenshot Protection" 
                            FontSize="{StaticResource Type.Body.Size}" 
@@ -133,7 +139,9 @@
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="{DynamicResource Radius.Lg}"
-                Padding="20">
+                Padding="20"
+                MaxWidth="750"
+                HorizontalAlignment="Stretch">
             <StackPanel Spacing="15">
                 <TextBlock Text="Decoy Vault Protection"
                            FontSize="{StaticResource Type.Body.Size}"
@@ -200,7 +208,9 @@
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="{DynamicResource Radius.Lg}"
-                Padding="20">
+                Padding="20"
+                MaxWidth="750"
+                HorizontalAlignment="Stretch">
             <StackPanel Spacing="15">
                 <TextBlock Text="Master Password"
                            FontSize="{StaticResource Type.Body.Size}"
@@ -220,7 +230,9 @@
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
                 CornerRadius="{DynamicResource Radius.Lg}" 
-                Padding="20">
+                Padding="20"
+                MaxWidth="750"
+                HorizontalAlignment="Stretch">
             <StackPanel Spacing="15">
                 <TextBlock Text="Multi-Factor Authentication" 
                            FontSize="{StaticResource Type.Body.Size}" 

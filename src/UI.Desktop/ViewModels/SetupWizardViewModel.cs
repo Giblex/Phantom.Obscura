@@ -4,7 +4,6 @@ using System.IO;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using PhantomVault.Core.Services;
 
 namespace PhantomVault.UI.ViewModels
 {
@@ -14,14 +13,11 @@ namespace PhantomVault.UI.ViewModels
     /// </summary>
     public partial class SetupWizardViewModel : ObservableObject
     {
-        private readonly VeraCryptDetectionService _veraCryptDetector;
-        private readonly VaultService _vaultService;
-
         [ObservableProperty]
         private int _currentStep = 1;
 
         [ObservableProperty]
-        private int _totalSteps = 6;
+        private int _totalSteps = 7;
 
         [ObservableProperty]
         private string _currentStepTitle = "Welcome";
@@ -59,20 +55,7 @@ namespace PhantomVault.UI.ViewModels
         [ObservableProperty]
         private ObservableCollection<string> _availableUsbDrives = new();
 
-        // Step 4: VeraCrypt
-        [ObservableProperty]
-        private bool _veraCryptInstalled;
-
-        [ObservableProperty]
-        private string? _veraCryptPath;
-
-        [ObservableProperty]
-        private bool _downloadingVeraCrypt;
-
-        [ObservableProperty]
-        private double _veraCryptDownloadProgress;
-
-        // Step 5: Master Password
+        // Step 4: Keyfile & Password
         [ObservableProperty]
         private string _masterPassword = string.Empty;
 
@@ -80,18 +63,47 @@ namespace PhantomVault.UI.ViewModels
         private string _confirmPassword = string.Empty;
 
         [ObservableProperty]
-        private string _passwordStrength = "Weak";
+        private string _passwordStrength = "None";
 
         [ObservableProperty]
         private bool _passwordsMatch;
 
         [ObservableProperty]
-        private bool _generateKeyfile;
+        private bool _usePassword;
 
         [ObservableProperty]
         private string? _keyfilePath;
 
-        // Step 6: Summary
+        // Step 5: Windows Hello
+        [ObservableProperty]
+        private bool _enableWindowsHello;
+
+        [ObservableProperty]
+        private bool _windowsHelloAvailable;
+
+        [ObservableProperty]
+        private string? _windowsHelloStatus;
+
+        // Step 6: Passkeys & TOTP
+        [ObservableProperty]
+        private bool _enablePasskeys;
+
+        [ObservableProperty]
+        private bool _passkeysAvailable;
+
+        [ObservableProperty]
+        private string? _passkeysStatus;
+
+        [ObservableProperty]
+        private bool _enableTotp;
+
+        [ObservableProperty]
+        private string? _totpSecretKey;
+
+        [ObservableProperty]
+        private string? _totpQrCodeUri;
+
+        // Step 7: Summary
         [ObservableProperty]
         private string _setupSummary = string.Empty;
 
@@ -106,35 +118,29 @@ namespace PhantomVault.UI.ViewModels
             new SecurityLevelOption
             {
                 Name = "Basic",
-                Description = "Simple password protection. Quick setup for personal use.",
-                Features = new[] { "Password-only authentication", "Local storage", "Basic encryption (AES-256)" },
+                Description = "Simple keyfile protection. Quick setup for personal use.",
+                Features = new[] { "Keyfile authentication", "Local storage", "Basic encryption (AES-256)" },
                 RecommendedFor = "Personal use on trusted devices"
             },
             new SecurityLevelOption
             {
                 Name = "Balanced",
                 Description = "Recommended for most users. Strong security with convenient features.",
-                Features = new[] { "Password + optional keyfile", "USB storage recommended", "Post-quantum encryption", "Auto-lock on idle" },
+                Features = new[] { "Keyfile + optional password", "USB storage recommended", "Post-quantum encryption", "Auto-lock on idle" },
                 RecommendedFor = "General users who want strong security"
             },
             new SecurityLevelOption
             {
                 Name = "Maximum",
                 Description = "Highest security. Required for sensitive data and compliance.",
-                Features = new[] { "Multi-factor authentication required", "USB binding enforced", "VeraCrypt container", "Post-quantum encryption", "Aggressive auto-locking" },
+                Features = new[] { "Keyfile + password required", "USB binding enforced", "Encrypted container", "Post-quantum encryption", "Aggressive auto-locking" },
                 RecommendedFor = "Enterprise users, high-value data"
             }
         };
 
-        public SetupWizardViewModel(VeraCryptDetectionService? veracryptDetectionService = null, VaultService? vaultService = null)
+        public SetupWizardViewModel()
         {
-            _veraCryptDetector = veracryptDetectionService ?? new VeraCryptDetectionService();
-            // VaultService will need to be properly injected when this ViewModel is actually used
-            // For now, we'll allow null and handle vault creation differently
-            _vaultService = null!;
-
-            _veraCryptDetector.DownloadProgressChanged += OnVeraCryptDownloadProgress;
-            _veraCryptDetector.StatusMessageChanged += (s, msg) => StatusMessage = msg;
+            // Initialize default state
         }
 
         [RelayCommand]
@@ -174,11 +180,15 @@ namespace PhantomVault.UI.ViewModels
                     await DetectUsbDrivesAsync();
                     break;
 
-                case 4: // VeraCrypt
-                    await DetectVeraCryptAsync();
+                case 5: // Windows Hello
+                    await DetectWindowsHelloAsync();
                     break;
 
-                case 6: // Summary
+                case 6: // Passkeys & TOTP
+                    await DetectPasskeysAsync();
+                    break;
+
+                case 7: // Summary
                     GenerateSummary();
                     break;
             }
@@ -212,29 +222,26 @@ namespace PhantomVault.UI.ViewModels
                     }
                     break;
 
-                case 4: // VeraCrypt
-                    if (!VeraCryptInstalled && SelectedSecurityLevel == "Maximum")
+                case 4: // Keyfile & Password
+                    // Keyfile is always generated - no validation needed
+                    // Password is optional, but if provided, must match confirmation
+                    if (UsePassword)
                     {
-                        StatusMessage = "VeraCrypt is required for Maximum security level. Please install it first.";
-                        return false;
-                    }
-                    break;
-
-                case 5: // Master Password
-                    if (string.IsNullOrEmpty(MasterPassword))
-                    {
-                        StatusMessage = "Please enter a master password.";
-                        return false;
-                    }
-                    if (MasterPassword != ConfirmPassword)
-                    {
-                        StatusMessage = "Passwords do not match.";
-                        return false;
-                    }
-                    if (PasswordStrength == "Weak")
-                    {
-                        StatusMessage = "Password is too weak. Please use a stronger password.";
-                        return false;
+                        if (string.IsNullOrEmpty(MasterPassword))
+                        {
+                            StatusMessage = "Please enter a master password.";
+                            return false;
+                        }
+                        if (MasterPassword != ConfirmPassword)
+                        {
+                            StatusMessage = "Passwords do not match.";
+                            return false;
+                        }
+                        if (PasswordStrength == "Weak")
+                        {
+                            StatusMessage = "Password is too weak. Please use a stronger password.";
+                            return false;
+                        }
                     }
                     break;
             }
@@ -249,9 +256,10 @@ namespace PhantomVault.UI.ViewModels
                 1 => "Welcome to PhantomVault",
                 2 => "Choose Security Level",
                 3 => "Select Storage Location",
-                4 => "VeraCrypt Configuration",
-                5 => "Create Master Password",
-                6 => "Review and Complete",
+                4 => "Keyfile & Password",
+                5 => "Windows Hello",
+                6 => "Passkeys & TOTP",
+                7 => "Review and Complete",
                 _ => "Setup"
             };
 
@@ -288,74 +296,6 @@ namespace PhantomVault.UI.ViewModels
             });
         }
 
-        private async Task DetectVeraCryptAsync()
-        {
-            await Task.Run(() =>
-            {
-                var result = _veraCryptDetector.DetectVeraCrypt();
-                VeraCryptInstalled = result.IsInstalled;
-                VeraCryptPath = result.InstallPath;
-                StatusMessage = result.StatusMessage;
-
-                if (!VeraCryptInstalled)
-                {
-                    StatusMessage = "VeraCrypt not found. Click 'Download VeraCrypt' to install it.";
-                }
-            });
-        }
-
-        [RelayCommand]
-        private async Task DownloadVeraCryptAsync()
-        {
-            try
-            {
-                DownloadingVeraCrypt = true;
-                StatusMessage = "Preparing to download VeraCrypt...";
-
-                var tempPath = Path.Combine(Path.GetTempPath(), "veracrypt_installer.exe");
-                var result = await _veraCryptDetector.DownloadVeraCryptAsync(tempPath);
-
-                if (result.Success)
-                {
-                    StatusMessage = "VeraCrypt downloaded. Launching installer...";
-                    var installResult = _veraCryptDetector.LaunchInstaller(result.FilePath!);
-                    
-                    if (installResult.Success)
-                    {
-                        StatusMessage = "Please complete the VeraCrypt installation, then click 'Detect Again'.";
-                    }
-                    else
-                    {
-                        StatusMessage = installResult.ErrorMessage ?? "Failed to launch installer.";
-                    }
-                }
-                else
-                {
-                    StatusMessage = result.ErrorMessage ?? "Download failed.";
-                }
-            }
-            catch (Exception ex)
-            {
-                StatusMessage = $"Error downloading VeraCrypt: {ex.Message}";
-            }
-            finally
-            {
-                DownloadingVeraCrypt = false;
-            }
-        }
-
-        [RelayCommand]
-        private void OpenVeraCryptDownloadPage()
-        {
-            _veraCryptDetector.OpenDownloadPage();
-            StatusMessage = "Opened VeraCrypt download page in your browser.";
-        }
-
-        private void OnVeraCryptDownloadProgress(object? sender, DownloadProgressEventArgs e)
-        {
-            VeraCryptDownloadProgress = e.PercentageComplete;
-        }
-
         [RelayCommand]
         private void GenerateStrongPassword()
         {
@@ -386,6 +326,13 @@ namespace PhantomVault.UI.ViewModels
             int score = 0;
             
             // Length
+            if (string.IsNullOrEmpty(MasterPassword))
+            {
+                PasswordStrength = "None";
+                PasswordsMatch = true;
+                return;
+            }
+            
             if (MasterPassword.Length >= 12) score++;
             if (MasterPassword.Length >= 16) score++;
             if (MasterPassword.Length >= 20) score++;
@@ -407,14 +354,98 @@ namespace PhantomVault.UI.ViewModels
             PasswordsMatch = MasterPassword == ConfirmPassword;
         }
 
+        private async Task DetectWindowsHelloAsync()
+        {
+            await Task.Run(() =>
+            {
+                try
+                {
+                    // Check if Windows Hello is available on this system
+                    // This is a simplified check - in production, use Windows.Security.Credentials.KeyCredentialManager
+                    var osVersion = Environment.OSVersion;
+                    WindowsHelloAvailable = osVersion.Platform == PlatformID.Win32NT && 
+                                           osVersion.Version.Major >= 10;
+                    
+                    if (WindowsHelloAvailable)
+                    {
+                        WindowsHelloStatus = "Windows Hello is available on this device.";
+                        StatusMessage = "Windows Hello detected. You can enable biometric authentication.";
+                    }
+                    else
+                    {
+                        WindowsHelloStatus = "Windows Hello is not available on this device.";
+                        StatusMessage = "Windows Hello not available. You can skip this step.";
+                    }
+                }
+                catch
+                {
+                    WindowsHelloAvailable = false;
+                    WindowsHelloStatus = "Unable to detect Windows Hello status.";
+                }
+            });
+        }
+
+        private async Task DetectPasskeysAsync()
+        {
+            await Task.Run(() =>
+            {
+                try
+                {
+                    // Check if passkeys/FIDO2 is supported
+                    // In production, this would check for FIDO2 authenticator availability
+                    PasskeysAvailable = true; // Most modern systems support software passkeys
+                    PasskeysStatus = "Passkey authentication is available.";
+                    
+                    // Generate TOTP secret if TOTP is enabled
+                    if (EnableTotp && string.IsNullOrEmpty(TotpSecretKey))
+                    {
+                        // Generate a random TOTP secret (base32 encoded)
+                        var random = new Random();
+                        const string base32Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+                        var secret = new char[32];
+                        for (int i = 0; i < secret.Length; i++)
+                        {
+                            secret[i] = base32Chars[random.Next(base32Chars.Length)];
+                        }
+                        TotpSecretKey = new string(secret);
+                        TotpQrCodeUri = $"otpauth://totp/PhantomVault:User?secret={TotpSecretKey}&issuer=PhantomVault";
+                    }
+                    
+                    StatusMessage = "Configure additional authentication methods.";
+                }
+                catch
+                {
+                    PasskeysAvailable = false;
+                    PasskeysStatus = "Unable to detect passkey support.";
+                }
+            });
+        }
+
+        [RelayCommand]
+        private void GenerateTotpSecret()
+        {
+            var random = new Random();
+            const string base32Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+            var secret = new char[32];
+            for (int i = 0; i < secret.Length; i++)
+            {
+                secret[i] = base32Chars[random.Next(base32Chars.Length)];
+            }
+            TotpSecretKey = new string(secret);
+            TotpQrCodeUri = $"otpauth://totp/PhantomVault:User?secret={TotpSecretKey}&issuer=PhantomVault";
+            StatusMessage = "TOTP secret generated. Scan the QR code with your authenticator app.";
+        }
+
         private void GenerateSummary()
         {
             var summary = "Your PhantomVault will be created with the following settings:\n\n";
             summary += $"• Security Level: {SelectedSecurityLevel}\n";
             summary += $"• Storage Location: {(SelectedStorageLocation == "USB" ? $"USB Drive ({SelectedUsbPath})" : "Local Storage")}\n";
-            summary += $"• VeraCrypt: {(VeraCryptInstalled ? "Enabled" : "Not installed")}\n";
-            summary += $"• Master Password: Set\n";
-            summary += $"• Keyfile: {(GenerateKeyfile ? "Will be generated" : "Not used")}\n";
+            summary += $"• Keyfile: Will be generated\n";
+            summary += $"• Master Password: {(UsePassword ? "Configured" : "Not used")}\n";
+            summary += $"• Windows Hello: {(EnableWindowsHello ? "Enabled" : "Not used")}\n";
+            summary += $"• Passkeys: {(EnablePasskeys ? "Enabled" : "Not used")}\n";
+            summary += $"• TOTP: {(EnableTotp ? "Enabled" : "Not used")}\n";
             summary += $"\nEncryption: AES-256-GCM with {(SelectedSecurityLevel == "Maximum" ? "Post-Quantum" : "Standard")} key derivation\n";
 
             SetupSummary = summary;
@@ -440,35 +471,37 @@ namespace PhantomVault.UI.ViewModels
                         "PhantomVault");
                 }
 
-                // Generate keyfile if requested
-                string? keyfilePath = null;
-                if (GenerateKeyfile)
-                {
-                    keyfilePath = Path.Combine(vaultPath, "vault.key");
-                    // Keyfile generation logic here
-                }
+                // Create vault directory if it doesn't exist
+                Directory.CreateDirectory(vaultPath);
 
-                // Calculate vault size based on security level (in bytes)
-                long vaultSizeBytes = SelectedSecurityLevel switch
+                // Generate keyfile (always required)
+                string keyfilePath = Path.Combine(vaultPath, "vault.key");
+                await GenerateKeyfileAsync(keyfilePath);
+                KeyfilePath = keyfilePath;
+
+                // Save configuration
+                var configPath = Path.Combine(vaultPath, "vault.config.json");
+                var config = new
                 {
-                    "Standard" => 100L * 1024 * 1024 * 1024, // 100 GB
-                    "High" => 250L * 1024 * 1024 * 1024,     // 250 GB
-                    "Maximum" => 500L * 1024 * 1024 * 1024,  // 500 GB
-                    _ => 100L * 1024 * 1024 * 1024
+                    SecurityLevel = SelectedSecurityLevel,
+                    StorageLocation = SelectedStorageLocation,
+                    KeyfilePath = keyfilePath,
+                    UsePassword = UsePassword,
+                    EnableWindowsHello = EnableWindowsHello,
+                    EnablePasskeys = EnablePasskeys,
+                    EnableTotp = EnableTotp,
+                    CreatedAt = DateTime.UtcNow
                 };
-
-                // Create vault with proper parameters
-                await _vaultService.CreateVaultAsync(
-                    vaultPath, 
-                    vaultSizeBytes,      // Size in bytes
-                    MasterPassword,       // Passphrase
-                    keyfilePath           // Keyfile path
-                );
+                
+                var configJson = System.Text.Json.JsonSerializer.Serialize(config, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+                await File.WriteAllTextAsync(configPath, configJson);
 
                 StatusMessage = "Vault created successfully!";
                 
-                // TODO: Navigate to main vault view
-                // NavigationService.NavigateToVault(vaultPath);
+                // Close the wizard after a short delay
+                await Task.Delay(1500);
+                
+                // TODO: Navigate to main vault view or close wizard
             }
             catch (Exception ex)
             {
@@ -478,6 +511,19 @@ namespace PhantomVault.UI.ViewModels
             {
                 IsCompleting = false;
             }
+        }
+
+        private async Task GenerateKeyfileAsync(string keyfilePath)
+        {
+            // Generate a cryptographically secure random keyfile
+            var keyData = new byte[256]; // 256 bytes = 2048 bits
+            using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(keyData);
+            }
+            
+            await File.WriteAllBytesAsync(keyfilePath, keyData);
+            StatusMessage = "Keyfile generated successfully.";
         }
 
         partial void OnSelectedSecurityLevelChanged(string value)

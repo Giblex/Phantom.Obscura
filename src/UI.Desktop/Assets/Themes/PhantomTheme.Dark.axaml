@@ -5,8 +5,9 @@
         <Style.Resources>
             <!-- Lightened background for better visibility matching VaultWindow -->
             <SolidColorBrush x:Key="WindowBackgroundBrush">#35475B</SolidColorBrush>
-            <SolidColorBrush x:Key="HeaderBackgroundBrush">#2D2D30</SolidColorBrush>
-            <SolidColorBrush x:Key="FooterBackgroundBrush">#252526</SolidColorBrush>
+            <!-- Lightened header/footer backgrounds for better content visibility -->
+            <SolidColorBrush x:Key="HeaderBackgroundBrush">#384858</SolidColorBrush>
+            <SolidColorBrush x:Key="FooterBackgroundBrush">#2D3D4D</SolidColorBrush>
             <SolidColorBrush x:Key="ContentBackgroundBrush">#272F43</SolidColorBrush>
             <!-- Dark acrylic-style tile base and overlay used by list/grid entries -->
             <SolidColorBrush x:Key="TileGlassBrush">#AA1F2937</SolidColorBrush>
@@ -15,6 +16,8 @@
                 <GradientStop Color="#33FFFFFF" Offset="0" />
                 <GradientStop Color="#00FFFFFF" Offset="1" />
             </LinearGradientBrush>
+            <!-- Card background - lighter for better content visibility -->
+            <SolidColorBrush x:Key="CardBackgroundBrush">#3F526B</SolidColorBrush>
             <!-- Slightly duller blues for buttons (subtler, less saturated) -->
             <!-- FIXED: Enhanced accent color hierarchy with 25% brightness increase on hover -->
             <SolidColorBrush x:Key="AccentBrush">#6B8CAE</SolidColorBrush>
@@ -38,7 +41,8 @@
             <!-- FIXED: WCAG AA compliant text contrast (4.5:1 minimum) -->
             <SolidColorBrush x:Key="MutedTextBrush">#C0C8D0</SolidColorBrush>
             <SolidColorBrush x:Key="DisabledTextBrush">#909AA4</SolidColorBrush>
-            <SolidColorBrush x:Key="ControlBackgroundBrush">#1E2530</SolidColorBrush>
+            <!-- Lightened control background for better content visibility in setup wizards -->
+            <SolidColorBrush x:Key="ControlBackgroundBrush">#2A3544</SolidColorBrush>
             <!-- FIXED: Visible borders for depth perception -->
             <SolidColorBrush x:Key="ControlBorderBrush">#FFFFFF15</SolidColorBrush>
             

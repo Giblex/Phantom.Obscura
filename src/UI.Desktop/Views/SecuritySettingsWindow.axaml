@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="clr-namespace:PhantomVault.UI.Views"
         x:Class="PhantomVault.UI.Views.SecuritySettingsWindow"
-        Title="Security Settings" Width="520" Height="600"
-        MinWidth="460" MinHeight="500"
+        Title="Security Settings" Width="750" Height="600"
+        MinWidth="650" MinHeight="500"
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource WindowBackgroundBrush}"
         Classes="animated-window">
@@ -17,6 +17,8 @@
                     BorderThickness="1"
                     CornerRadius="8"
                     Padding="15"
+                    MaxWidth="750"
+                    HorizontalAlignment="Stretch"
                     Name="BasicSecuritySection">
                 <Border.Styles>
                     <Style Selector="Border#BasicSecuritySection">
@@ -78,6 +80,8 @@
             <Border Background="{DynamicResource ContentBackgroundBrush}"
                     BorderBrush="{DynamicResource ControlBorderBrush}"
                     BorderThickness="1"
+                    MaxWidth="750"
+                    HorizontalAlignment="Stretch"
                     CornerRadius="8"
                     Padding="15"
                     Name="DefenceSection">
@@ -137,6 +141,8 @@
                     BorderThickness="1"
                     CornerRadius="8"
                     Padding="15"
+                    MaxWidth="750"
+                    HorizontalAlignment="Stretch"
                     Name="DecoySection">
                 <Border.Styles>
                     <Style Selector="Border#DecoySection">

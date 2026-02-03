@@ -12,7 +12,7 @@
         MinWidth="700" MinHeight="550"
         WindowStartupLocation="CenterScreen"
         CanResize="True"
-        Icon="avares://PhantomVault.UI/Assets/images/Parent Icon.ico"
+        Icon="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Parent Icon.ico"
         FontFamily="Segoe UI"
         Background="{DynamicResource WindowBackgroundBrush}">
 
@@ -26,7 +26,7 @@
         <Border Grid.Row="0" Background="{DynamicResource HeaderBackgroundBrush}" Padding="20,16">
             <StackPanel HorizontalAlignment="Center" Spacing="8">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="12">
-                    <Image Source="avares://PhantomVault.UI/Assets/images/Parent Icon.ico"
+                    <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Parent Icon.ico"
                            Width="48" Height="48" VerticalAlignment="Center"/>
                     <TextBlock Text="PhantomVault Setup"
                                FontSize="28"

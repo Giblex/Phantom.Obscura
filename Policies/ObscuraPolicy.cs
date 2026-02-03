@@ -48,7 +48,7 @@ public sealed class ObscuraPolicy
         public string[] TrustedDeviceFingerprints { get; init; } = Array.Empty<string>();
         public int MaxConcurrentSessions { get; init; } = 1;
         public bool RequireDeviceRegistration { get; init; } = false;
-        
+
         // Security Features
         public bool AllowDebuggers { get; init; }
         public bool AllowScreenCapture { get; init; } = true;
@@ -56,13 +56,22 @@ public sealed class ObscuraPolicy
         public bool RequireSecureBoot { get; init; } = false;
         public bool RequireTpm { get; init; } = false;
         public bool BlockVirtualMachines { get; init; } = false;
-        
+
+        // AI Protection (Shadow AI Defense)
+        public bool AllowAiAccess { get; init; } = false;  // Master switch - default OFF
+        public bool BlockClipboardToAi { get; init; } = true;  // Block clipboard to AI contexts
+        public bool BlockAutofillToAi { get; init; } = true;  // Block autofill to AI chat interfaces
+        public bool EnableAiSafeView { get; init; } = false;  // Masked secrets mode
+        public string[] BlockedAiDomains { get; init; } = Array.Empty<string>();  // Custom blocked domains
+        public bool LogAiAccessAttempts { get; init; } = true;  // Audit AI access attempts
+        public bool RequireAiConsentPrompt { get; init; } = true;  // Require explicit consent
+
         // Session Controls
         public int MaxIdleMinutes { get; init; } = 15;  // 0 = no limit
         public int MaxSessionDurationMinutes { get; init; } = 480;  // 0 = no limit (8 hours default)
         public bool RequireReauthOnWake { get; init; } = true;
         public string SessionTerminationMode { get; init; } = "Lock";  // Lock | LockAndZero | Close
-        
+
         // Network & Sync
         public bool AllowCloudSync { get; init; } = false;
         public string[] AllowedSyncDomains { get; init; } = Array.Empty<string>();
@@ -186,7 +195,18 @@ public sealed class ObscuraPolicy
                 RequireSecureBoot = root.GetProperty("desktop").TryGetProperty("requireSecureBoot", out var rsb) && rsb.GetBoolean(),
                 RequireTpm = root.GetProperty("desktop").TryGetProperty("requireTpm", out var rt) && rt.GetBoolean(),
                 BlockVirtualMachines = root.GetProperty("desktop").TryGetProperty("blockVirtualMachines", out var bvm) && bvm.GetBoolean(),
-                
+
+                // AI Protection
+                AllowAiAccess = root.GetProperty("desktop").TryGetProperty("allowAiAccess", out var aaa) && aaa.GetBoolean(),
+                BlockClipboardToAi = root.GetProperty("desktop").TryGetProperty("blockClipboardToAi", out var bcta) ? bcta.GetBoolean() : true,
+                BlockAutofillToAi = root.GetProperty("desktop").TryGetProperty("blockAutofillToAi", out var bata) ? bata.GetBoolean() : true,
+                EnableAiSafeView = root.GetProperty("desktop").TryGetProperty("enableAiSafeView", out var easv) && easv.GetBoolean(),
+                BlockedAiDomains = root.GetProperty("desktop").TryGetProperty("blockedAiDomains", out var bad)
+                    ? bad.EnumerateArray().Select(x => x.GetString()!).ToArray()
+                    : Array.Empty<string>(),
+                LogAiAccessAttempts = root.GetProperty("desktop").TryGetProperty("logAiAccessAttempts", out var laaa) ? laaa.GetBoolean() : true,
+                RequireAiConsentPrompt = root.GetProperty("desktop").TryGetProperty("requireAiConsentPrompt", out var racp) ? racp.GetBoolean() : true,
+
                 MaxIdleMinutes = root.GetProperty("desktop").TryGetProperty("maxIdleMinutes", out var mim) ? mim.GetInt32() : 15,
                 MaxSessionDurationMinutes = root.GetProperty("desktop").TryGetProperty("maxSessionDurationMinutes", out var msdm) ? msdm.GetInt32() : 480,
                 RequireReauthOnWake = root.GetProperty("desktop").TryGetProperty("requireReauthOnWake", out var rrow) ? rrow.GetBoolean() : true,

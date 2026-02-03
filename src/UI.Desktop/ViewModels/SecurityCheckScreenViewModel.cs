@@ -19,6 +19,9 @@ namespace PhantomVault.UI.ViewModels
 
         private bool _isRunningChecks;
         private string _currentCheckName = "Initializing...";
+        private string _currentCheckDisplay = "Initializing...";
+        private bool _currentCheckPassed;
+        private bool _currentCheckFailed;
         private int _percentComplete;
         private string _statusMessage = "Starting security checks...";
         private bool _checksComplete;
@@ -61,6 +64,24 @@ namespace PhantomVault.UI.ViewModels
         {
             get => _currentCheckName;
             set => this.RaiseAndSetIfChanged(ref _currentCheckName, value);
+        }
+
+        public string CurrentCheckDisplay
+        {
+            get => _currentCheckDisplay;
+            set => this.RaiseAndSetIfChanged(ref _currentCheckDisplay, value);
+        }
+
+        public bool CurrentCheckPassed
+        {
+            get => _currentCheckPassed;
+            set => this.RaiseAndSetIfChanged(ref _currentCheckPassed, value);
+        }
+
+        public bool CurrentCheckFailed
+        {
+            get => _currentCheckFailed;
+            set => this.RaiseAndSetIfChanged(ref _currentCheckFailed, value);
         }
 
         public int PercentComplete
@@ -210,13 +231,34 @@ namespace PhantomVault.UI.ViewModels
                         CurrentCheckName = update.CurrentCheck;
                         PercentComplete = update.PercentComplete;
 
+                        // Format display with status
                         if (update.IsComplete)
                         {
                             StatusMessage = "All checks complete!";
+                            CurrentCheckDisplay = "All checks complete!";
+                            CurrentCheckPassed = false;
+                            CurrentCheckFailed = false;
+                        }
+                        else if (update.CheckFailed)
+                        {
+                            CurrentCheckDisplay = $"{update.CurrentCheck}: Failed";
+                            StatusMessage = $"Check failed: {update.CurrentCheck}";
+                            CurrentCheckPassed = false;
+                            CurrentCheckFailed = true;
+                        }
+                        else if (update.CheckPassed && update.PercentComplete > 0)
+                        {
+                            CurrentCheckDisplay = $"{update.CurrentCheck}: Passed";
+                            StatusMessage = $"Running check: {update.CurrentCheck}...";
+                            CurrentCheckPassed = true;
+                            CurrentCheckFailed = false;
                         }
                         else
                         {
+                            CurrentCheckDisplay = $"{update.CurrentCheck}...";
                             StatusMessage = $"Running check: {update.CurrentCheck}...";
+                            CurrentCheckPassed = false;
+                            CurrentCheckFailed = false;
                         }
                     });
                 });

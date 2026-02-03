@@ -96,6 +96,66 @@ namespace PhantomVault.Core.Services
             return credentialId;
         }
 
+        /// <summary>
+        /// Relying party allowlist. Empty = deny all (secure default).
+        /// Must be explicitly populated to allow passkey authentication.
+        /// </summary>
+        private readonly System.Collections.Generic.HashSet<string> _rpAllowlist = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Adds a relying party to the allowlist.
+        /// Passkey authentication will be rejected for RPs not in this list.
+        /// </summary>
+        public void AddToRpAllowlist(string rpId)
+        {
+            if (!string.IsNullOrWhiteSpace(rpId))
+            {
+                lock (_rpAllowlist)
+                {
+                    _rpAllowlist.Add(rpId.ToLowerInvariant());
+                }
+            }
+        }
+
+        /// <summary>
+        /// Removes a relying party from the allowlist.
+        /// </summary>
+        public void RemoveFromRpAllowlist(string rpId)
+        {
+            if (!string.IsNullOrWhiteSpace(rpId))
+            {
+                lock (_rpAllowlist)
+                {
+                    _rpAllowlist.Remove(rpId.ToLowerInvariant());
+                }
+            }
+        }
+
+        /// <summary>
+        /// Clears the entire RP allowlist.
+        /// </summary>
+        public void ClearRpAllowlist()
+        {
+            lock (_rpAllowlist)
+            {
+                _rpAllowlist.Clear();
+            }
+        }
+
+        /// <summary>
+        /// Checks if an RP is in the allowlist.
+        /// </summary>
+        public bool IsRpAllowed(string rpId)
+        {
+            if (string.IsNullOrWhiteSpace(rpId))
+                return false;
+
+            lock (_rpAllowlist)
+            {
+                return _rpAllowlist.Contains(rpId.ToLowerInvariant());
+            }
+        }
+
         public async Task<bool> AuthenticateAsync(byte[] credentialId, string rpId, byte[] challenge)
         {
             if (credentialId == null || credentialId.Length == 0)
@@ -113,28 +173,56 @@ namespace PhantomVault.Core.Services
                 throw new ArgumentException("Challenge cannot be empty", nameof(challenge));
             }
 
+            // SECURITY: Validate RP is in allowlist BEFORE any crypto operations
+            // Empty allowlist = deny all (secure default, prevents phishing)
+            lock (_rpAllowlist)
+            {
+                if (_rpAllowlist.Count == 0)
+                {
+                    throw new UnauthorizedAccessException(
+                        $"Relying party '{rpId}' is not in the allowlist. No RPs are currently allowed. " +
+                        "Add trusted relying parties to the allowlist first.");
+                }
+
+                if (!_rpAllowlist.Contains(rpId.ToLowerInvariant()))
+                {
+                    throw new UnauthorizedAccessException(
+                        $"Relying party '{rpId}' is not in the allowlist. " +
+                        "This may be a phishing attempt. Only authenticate with trusted relying parties.");
+                }
+            }
+
             var bridge = WindowsHello ?? throw new PlatformNotSupportedException("Windows Hello is not available on this device.");
             await bridge.EnsureAvailableAsync().ConfigureAwait(false);
 
             // First verify the user with Windows Hello
-            var userVerified = await bridge.PromptForVerificationAsync($"Unlock {rpId} with Windows Hello.").ConfigureAwait(false);
-            
+            // SECURITY: Display the RP ID to the user so they can verify it's legitimate
+            var userVerified = await bridge.PromptForVerificationAsync(
+                $"Sign in to: {rpId}\n\nVerify this is the site you intended to sign in to.").ConfigureAwait(false);
+
             if (!userVerified)
             {
                 return false;
             }
-            
+
             // Load the stored credential and verify it matches
             var storedCredential = await LoadCredentialKeyAsync(credentialId).ConfigureAwait(false);
             if (storedCredential == null)
             {
-                throw new InvalidOperationException("No matching credential found for the provided credential ID.");
+                throw new UnauthorizedAccessException(
+                    "No matching credential found for the provided credential ID. " +
+                    "The credential may have been deleted or never registered.");
             }
-            
-            // Verify the relying party ID matches
+
+            // SECURITY: Verify the relying party ID matches EXACTLY
+            // This prevents credential substitution attacks
+            // Use ordinal comparison for security (no locale-dependent matching)
             if (!string.Equals(storedCredential.Value.RpId, rpId, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException("Relying party ID does not match the registered credential.");
+                throw new UnauthorizedAccessException(
+                    $"Relying party ID mismatch. " +
+                    $"Credential was registered for '{storedCredential.Value.RpId}' but request is for '{rpId}'. " +
+                    "This may be a credential substitution attack. Authentication denied.");
             }
             
             // Generate a signature over the challenge using the stored private key

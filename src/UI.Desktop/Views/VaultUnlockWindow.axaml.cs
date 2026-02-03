@@ -15,7 +15,8 @@ namespace PhantomVault.UI.Views
             DataContext = viewModel;
             viewModel.SetOwnerWindow(this);
 
-            // Automatically start unlock process when window opens
+            // Start vault unlock process when window opens
+            // (Will auto-unlock with keyfile if available, otherwise prompt for password)
             Opened += async (s, e) =>
             {
                 await viewModel.UnlockVaultAsync();

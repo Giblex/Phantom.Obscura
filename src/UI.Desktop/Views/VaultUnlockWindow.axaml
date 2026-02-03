@@ -25,7 +25,7 @@
         <!-- Header -->
         <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,24">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
-                <Image Source="avares://PhantomVault.UI/Assets/images/Icon Transparent background.png"
+                <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
                        Width="32" Height="32" VerticalAlignment="Center"/>
                 <TextBlock Text="Unlocking Your Vault"
                            FontSize="24"
@@ -51,7 +51,7 @@
                     Background="{DynamicResource AccentBrush}"
                     HorizontalAlignment="Center"
                     IsVisible="{Binding IsBusy}">
-                <Image Source="avares://PhantomVault.UI/Assets/images/Icon Transparent background.png"
+                <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
                        Width="42" Height="42"
                        HorizontalAlignment="Center"
                        VerticalAlignment="Center"/>

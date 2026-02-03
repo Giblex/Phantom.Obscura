@@ -43,6 +43,18 @@ namespace PhantomVault.Core.Models
         public bool UseVeraCrypt { get; set; } = true;
 
         /// <summary>
+        /// Auto-generated VeraCrypt password stored encrypted in the manifest.
+        /// When the user doesn't provide a password during provisioning, the app
+        /// generates a cryptographically secure random password for the VeraCrypt
+        /// container, encrypts it with the manifest encryption key, and stores it here.
+        /// This allows transparent VeraCrypt usage without requiring user password entry.
+        /// The value is Base64-encoded encrypted data containing nonce, tag, and ciphertext.
+        /// </summary>
+        [JsonPropertyName("veraCryptPasswordEncrypted")]
+        public string? VeraCryptPasswordEncryptedBase64 { get; set; }
+            = null;
+
+        /// <summary>
         /// Size of the container in bytes. This field is recorded only to
         /// verify that the expected container exists; actual storage
         /// allocations are handled by the underlying encryption tool.
@@ -441,6 +453,43 @@ namespace PhantomVault.Core.Models
         /// </summary>
         [JsonPropertyName("encryptedBackupSigningKey")]
         public string? EncryptedBackupSigningKeyBase64 { get; set; } = null;
+
+        // ============================================================================
+        // SECURITY METADATA (v4.0+)
+        // Explicit threat model, AI protection, supply-chain evidence, and compliance
+        // ============================================================================
+
+        /// <summary>
+        /// Explicit threat model metadata for hostile-environment vault operation.
+        /// Makes security assumptions first-class for UI warnings, AI auditing, and compliance.
+        /// Designed for zero-trust environments where no component is trusted by default.
+        /// </summary>
+        [JsonPropertyName("threatModel")]
+        public ThreatModelMetadata? ThreatModel { get; set; } = null;
+
+        /// <summary>
+        /// AI-aware access policy that actively defends against AI leakage.
+        /// Blocks clipboard sharing to AI contexts, prevents autofill to AI chat interfaces,
+        /// and supports AI-safe view mode with masked secrets.
+        /// </summary>
+        [JsonPropertyName("aiAccessPolicy")]
+        public AIAccessPolicy? AiAccessPolicy { get; set; } = null;
+
+        /// <summary>
+        /// Supply chain evidence capture for forensic analysis.
+        /// Stores hashes of tools that accessed the vault, optional known-good fingerprint,
+        /// and access history. No scanning or monitoring - just evidence capture.
+        /// </summary>
+        [JsonPropertyName("supplyChainEvidence")]
+        public SupplyChainEvidence? SupplyChainEvidence { get; set; } = null;
+
+        /// <summary>
+        /// Security capabilities manifest for compliance documentation.
+        /// Exposes provable design capabilities for audit responses, investor decks,
+        /// and enterprise pilots. No dashboards - just provable design.
+        /// </summary>
+        [JsonPropertyName("securityCapabilities")]
+        public SecurityCapabilitiesManifest? SecurityCapabilities { get; set; } = null;
     }
 
     /// <summary>

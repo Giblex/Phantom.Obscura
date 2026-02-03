@@ -469,6 +469,8 @@ namespace PhantomVault.Core.Services
         public string CurrentCheck { get; set; } = string.Empty;
         public int PercentComplete { get; set; }
         public bool IsComplete { get; set; }
+        public bool CheckPassed { get; set; } = true;
+        public bool CheckFailed { get; set; } = false;
     }
 
     /// <summary>

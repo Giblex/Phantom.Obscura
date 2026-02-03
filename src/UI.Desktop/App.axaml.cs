@@ -82,7 +82,8 @@ namespace PhantomVault.UI
             services.AddSingleton<PasskeyService>();
             services.AddSingleton<IPasskeyService>(sp => sp.GetRequiredService<PasskeyService>());
             services.AddSingleton<ManifestService>();
-            services.AddSingleton<IUsbDetector, UsbDetector>();
+            services.AddSingleton<UsbDetector>();
+            services.AddSingleton<IUsbDetector>(sp => sp.GetRequiredService<UsbDetector>());
             services.AddSingleton<UsbBindingService>();
             services.AddSingleton<SecureBackupManager>();
             services.AddSingleton<TotpService>();

@@ -91,7 +91,7 @@
         <!-- LAYER 2: Spherical highlight for curved glass reflection -->
         <Border Name="Sheen"
                 CornerRadius="{TemplateBinding CornerRadius}"
-                Opacity="0.45"
+                Opacity="0.35"
                 Margin="0"
                 IsHitTestVisible="False"
                 ClipToBounds="True">
@@ -103,9 +103,9 @@
           </Border.Transitions>
           <Border.Background>
             <RadialGradientBrush Center="30%,25%" RadiusX="60%" RadiusY="50%">
-              <GradientStop Color="#48E8F4FF" Offset="0"/>
-              <GradientStop Color="#30C8E0F5" Offset="0.2"/>
-              <GradientStop Color="#18A0C8E8" Offset="0.5"/>
+              <GradientStop Color="#38E8F4FF" Offset="0"/>
+              <GradientStop Color="#20C8E0F5" Offset="0.2"/>
+              <GradientStop Color="#10A0C8E8" Offset="0.5"/>
               <GradientStop Color="#00000000" Offset="1"/>
             </RadialGradientBrush>
           </Border.Background>
@@ -128,15 +128,15 @@
         
         <!-- LAYER 2.8: Bottom/right shadow for 3D depth -->
         <Border CornerRadius="{TemplateBinding CornerRadius}"
-                Opacity="0.4"
+                Opacity="0.65"
                 Margin="0"
                 IsHitTestVisible="False"
                 ClipToBounds="True">
           <Border.Background>
             <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
               <GradientStop Color="#00000000" Offset="0"/>
-              <GradientStop Color="#00000000" Offset="0.6"/>
-              <GradientStop Color="#20272F43" Offset="1"/>
+              <GradientStop Color="#00000000" Offset="0.5"/>
+              <GradientStop Color="#40272F43" Offset="1"/>
             </LinearGradientBrush>
           </Border.Background>
         </Border>

@@ -15,7 +15,7 @@
                         HorizontalAlignment="Center" VerticalAlignment="Center" Effect="{DynamicResource FrontPageTileBaseShadow}"
                         MinWidth="240" MinHeight="120" MaxWidth="900" MaxHeight="260" Padding="12">
                     <Grid>
-                        <Image Source="avares://PhantomVault.UI/Assets/images/Phantom Obscura Title + Logo.png"
+                        <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Phantom Obscura Title + Logo.png"
                                HorizontalAlignment="Center" VerticalAlignment="Center" Stretch="Uniform"
                                MaxWidth="860" MaxHeight="220" />
                     </Grid>

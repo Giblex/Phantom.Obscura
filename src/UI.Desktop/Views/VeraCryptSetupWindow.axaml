@@ -13,7 +13,7 @@
         MaxWidth="800" MaxHeight="850"
         WindowStartupLocation="CenterScreen"
         CanResize="True"
-    Background="{DynamicResource WindowBackgroundBrush}" Icon="avares://PhantomVault.UI/Assets/images/Parent Icon.ico" FontFamily="Segoe UI">
+    Background="{DynamicResource WindowBackgroundBrush}" Icon="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Parent Icon.ico" FontFamily="Segoe UI">
 
     <Design.DataContext>
         <vm:VeraCryptSetupWindowViewModel/>

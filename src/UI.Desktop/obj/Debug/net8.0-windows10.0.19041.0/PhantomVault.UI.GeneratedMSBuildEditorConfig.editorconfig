@@ -8,8 +8,6 @@ build_property.AvaloniaNameGeneratorViewFileNamingStrategy = NamespaceAndClassNa
 build_property.AvaloniaNameGeneratorAttachDevTools = true
 build_property.MvvmToolkitEnableINotifyPropertyChangingSupport = true
 build_property.TargetFramework = net8.0-windows10.0.19041.0
-build_property.TargetFrameworkIdentifier = .NETCoreApp
-build_property.TargetFrameworkVersion = v8.0
 build_property.TargetPlatformMinVersion = 10.0.19041.0
 build_property.UsingMicrosoftNETSdkWeb = 
 build_property.ProjectTypeGuids = 
@@ -28,9 +26,6 @@ build_property.CsWinRTRcwFactoryFallbackGeneratorForceOptOut =
 build_property.CsWinRTCcwLookupTableGeneratorEnabled = true
 build_property.CsWinRTMergeReferencedActivationFactories = 
 build_property.CsWinRTAotWarningLevel = 
-build_property.CsWinRTUseWindowsUIXamlProjections = false
-build_property.EffectiveAnalysisLevelStyle = 8.0
-build_property.EnableCodeStyleSeverity = 
 
 [O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/App.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
@@ -374,6 +369,9 @@ build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 [O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/ProvisionWindow.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/RecoveryWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
 [O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/SecurityCheckScreen.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
@@ -414,6 +412,9 @@ build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
 [O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/Settings/ThemeSettingsView.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/SetupWizardWindow.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
 [O:/Users/Giblex/Build Projects/Phantom.Obscura/src/UI.Desktop/Views/ShareWindow.axaml]

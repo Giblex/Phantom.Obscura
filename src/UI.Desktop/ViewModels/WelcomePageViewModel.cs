@@ -23,9 +23,10 @@ namespace PhantomVault.UI.ViewModels
         private readonly DialogService _dialogService;
         private Window? _ownerWindow;
 
-        public event EventHandler? NavigateToUsbSetup;
         public event EventHandler<string>? NavigateToSecurityCheck;
-#pragma warning disable CS0067 // event is raised in debug only; suppress unused-event warning
+        public event EventHandler? NavigateToSetupWizard;
+#pragma warning disable CS0067 // events may only be raised in debug or legacy flows; suppress unused-event warning
+        public event EventHandler? NavigateToUsbSetup;
         public event EventHandler? DeveloperBypassRequested;
         public event EventHandler? OpenInstallerRequested;
 #pragma warning restore CS0067
@@ -163,16 +164,11 @@ namespace PhantomVault.UI.ViewModels
 
         private async Task GetStartedAsync()
         {
-            // Navigate to USB setup window to begin vault creation
-            await _dialogService.ShowInfoAsync(
-                "Create New Vault",
-                "You'll be guided through the process of creating a new secure vault on a USB drive.",
-                _ownerWindow);
+            // Navigate to setup wizard for first-time users
+            StatusMessage = "Starting setup wizard...";
+            await Task.Delay(300);
 
-            StatusMessage = "Starting vault setup...";
-            await Task.Delay(500);
-
-            NavigateToUsbSetup?.Invoke(this, EventArgs.Empty);
+            NavigateToSetupWizard?.Invoke(this, EventArgs.Empty);
         }
 
         private async Task OpenExistingVaultAsync()

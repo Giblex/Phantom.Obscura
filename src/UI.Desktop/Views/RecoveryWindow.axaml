@@ -1,0 +1,523 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PhantomVault.UI.ViewModels"
+        xmlns:domain="using:PhantomVault.Core.Models.DomainStores"
+        x:Class="PhantomVault.UI.Views.RecoveryWindow"
+        Title="Phantom Recovery"
+        Width="600" Height="500"
+        MinWidth="500" MinHeight="400"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Classes="animated-window">
+
+    <Design.DataContext>
+        <vm:RecoveryViewModel/>
+    </Design.DataContext>
+
+    <Window.Styles>
+        <!-- Recovery-specific styles -->
+        <Style Selector="Border.step-card">
+            <Setter Property="Background" Value="{DynamicResource ContentBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="24"/>
+        </Style>
+
+        <Style Selector="TextBlock.step-title">
+            <Setter Property="FontSize" Value="24"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+
+        <Style Selector="TextBlock.step-description">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="0,0,0,16"/>
+        </Style>
+
+        <Style Selector="Border.warning-banner">
+            <Setter Property="Background" Value="#3D2A1A"/>
+            <Setter Property="BorderBrush" Value="#FF9800"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16,12"/>
+            <Setter Property="Margin" Value="0,0,0,16"/>
+        </Style>
+
+        <Style Selector="Border.error-banner">
+            <Setter Property="Background" Value="#3D1A1A"/>
+            <Setter Property="BorderBrush" Value="#F44336"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16,12"/>
+            <Setter Property="Margin" Value="0,0,0,16"/>
+        </Style>
+
+        <Style Selector="Border.success-banner">
+            <Setter Property="Background" Value="#1A3D1A"/>
+            <Setter Property="BorderBrush" Value="#4CAF50"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16,12"/>
+            <Setter Property="Margin" Value="0,0,0,16"/>
+        </Style>
+
+        <Style Selector="Border.domain-card">
+            <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <Style Selector="Border.domain-card:pointerover">
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
+        </Style>
+
+        <Style Selector="Border.domain-card.disabled">
+            <Setter Property="Opacity" Value="0.5"/>
+            <Setter Property="Cursor" Value="Arrow"/>
+        </Style>
+
+        <Style Selector="TextBlock.countdown">
+            <Setter Property="FontSize" Value="64"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+        </Style>
+
+        <Style Selector="ProgressBar.countdown-progress">
+            <Setter Property="Height" Value="8"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Margin" Value="0,16,0,0"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        <!-- Header -->
+        <Border Grid.Row="0"
+                Background="{DynamicResource HeaderBackgroundBrush}"
+                Padding="24,16">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <!-- Logo/Icon -->
+                <Border Grid.Column="0"
+                        Width="48" Height="48"
+                        Background="{DynamicResource Brush.Accent}"
+                        CornerRadius="8"
+                        Margin="0,0,16,0">
+                    <TextBlock Text="R"
+                               FontSize="24"
+                               FontWeight="Bold"
+                               Foreground="White"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
+                </Border>
+
+                <!-- Title -->
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="Phantom Recovery"
+                               FontSize="20"
+                               FontWeight="SemiBold"/>
+                    <TextBlock Text="Secure domain recovery wizard"
+                               FontSize="12"
+                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                </StackPanel>
+
+                <!-- Step indicator -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                    <Border Width="8" Height="8" CornerRadius="4"
+                            Background="{DynamicResource Brush.Accent}"/>
+                    <Border Width="8" Height="8" CornerRadius="4"
+                            Background="{DynamicResource ControlBorderBrush}"/>
+                    <Border Width="8" Height="8" CornerRadius="4"
+                            Background="{DynamicResource ControlBorderBrush}"/>
+                    <Border Width="8" Height="8" CornerRadius="4"
+                            Background="{DynamicResource ControlBorderBrush}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main Content -->
+        <ScrollViewer Grid.Row="1" Padding="24">
+            <Border Classes="step-card">
+                <Panel>
+                <!-- Step: Welcome -->
+                <StackPanel IsVisible="{Binding CurrentStep, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:RecoveryStep.Welcome}}">
+                    <TextBlock Classes="step-title" Text="Recovery Mode"/>
+                    <TextBlock Classes="step-description">
+                        <Run Text="This wizard will help you recover access to your vault if you've lost your password. "/>
+                        <LineBreak/><LineBreak/>
+                        <Run Text="You will need one of your recovery codes to proceed. Recovery codes are one-time use only."/>
+                    </TextBlock>
+
+                    <!-- Warning about recovery -->
+                    <Border Classes="warning-banner">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Important Security Information" FontWeight="SemiBold" Foreground="#FF9800"/>
+                            <TextBlock TextWrapping="Wrap" Foreground="#FFE0B2">
+                                <Run Text="Recovery will restore access to ONE domain at a time. "/>
+                                <Run Text="You cannot recover all domains simultaneously. "/>
+                                <Run Text="After recovery, you will be required to change your password."/>
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Device warning if present -->
+                    <Border Classes="warning-banner" IsVisible="{Binding HasDeviceWarning}">
+                        <TextBlock Text="{Binding DeviceWarning}" TextWrapping="Wrap" Foreground="#FFE0B2"/>
+                    </Border>
+
+                    <!-- Remaining codes info -->
+                    <Border Background="{DynamicResource ControlBackgroundBrush}"
+                            CornerRadius="8" Padding="16" Margin="0,0,0,16">
+                        <Grid ColumnDefinitions="Auto,*">
+                            <TextBlock Grid.Column="0" Text="Recovery Codes Remaining:"
+                                       VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{Binding RemainingCodes}"
+                                       FontSize="24" FontWeight="Bold"
+                                       Foreground="{DynamicResource Brush.Accent}"
+                                       HorizontalAlignment="Right"/>
+                        </Grid>
+                    </Border>
+
+                    <Button Content="Begin Recovery"
+                            Command="{Binding StartRecoveryCommand}"
+                            Classes="liquid-glass primary"
+                            HorizontalAlignment="Center"
+                            Width="200" Height="44"/>
+                </StackPanel>
+
+                <!-- Step: Enter Code -->
+                <StackPanel IsVisible="{Binding CurrentStep, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:RecoveryStep.EnterCode}}">
+                    <TextBlock Classes="step-title" Text="Enter Recovery Code"/>
+                    <TextBlock Classes="step-description"
+                               Text="Enter one of your recovery codes. Codes are case-insensitive and dashes are optional."/>
+
+                    <!-- Error display -->
+                    <Border Classes="error-banner" IsVisible="{Binding HasError}">
+                        <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" Foreground="#FFCDD2"/>
+                    </Border>
+
+                    <!-- Code input -->
+                    <StackPanel Spacing="8" Margin="0,0,0,24">
+                        <TextBlock Text="Recovery Code" FontWeight="SemiBold"/>
+                        <TextBox Text="{Binding RecoveryCode, Mode=TwoWay}"
+                                 Watermark="XXXX-XXXX-XXXX-XXXX"
+                                 FontFamily="Consolas, monospace"
+                                 FontSize="18"
+                                 LetterSpacing="2"
+                                 HorizontalContentAlignment="Center"
+                                 MaxLength="24"
+                                 Classes="liquid-glass"/>
+                    </StackPanel>
+
+                    <!-- Failed attempts warning -->
+                    <Border Classes="warning-banner" IsVisible="{Binding FailedAttempts}">
+                        <TextBlock Foreground="#FFE0B2">
+                            <Run Text="Failed attempts: "/>
+                            <Run Text="{Binding FailedAttempts}" FontWeight="Bold"/>
+                        </TextBlock>
+                    </Border>
+
+                    <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
+                        <Button Content="Cancel"
+                                Command="{Binding AbortRecoveryCommand}"
+                                Classes="liquid-glass"
+                                Width="120"/>
+                        <Button Content="Validate"
+                                Command="{Binding ValidateCodeCommand}"
+                                Classes="liquid-glass primary"
+                                Width="120"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Step: Waiting Delay -->
+                <StackPanel IsVisible="{Binding CurrentStep, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:RecoveryStep.WaitingDelay}}"
+                            HorizontalAlignment="Center">
+                    <TextBlock Classes="step-title" Text="Security Delay" HorizontalAlignment="Center"/>
+                    <TextBlock Classes="step-description" HorizontalAlignment="Center" TextAlignment="Center"
+                               Text="For your protection, there is a mandatory delay before recovery proceeds. This gives you time to abort if you're being coerced."/>
+
+                    <!-- Big countdown -->
+                    <TextBlock Classes="countdown" Text="{Binding DelaySecondsRemaining}"/>
+                    <TextBlock Text="seconds remaining"
+                               HorizontalAlignment="Center"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               Margin="0,0,0,24"/>
+
+                    <!-- Progress bar -->
+                    <ProgressBar Classes="countdown-progress"
+                                 Minimum="0"
+                                 Maximum="{Binding TotalDelaySeconds}"
+                                 Value="{Binding DelaySecondsRemaining}"
+                                 Width="300"/>
+
+                    <!-- Abort button -->
+                    <Button Content="Abort Recovery"
+                            Command="{Binding AbortRecoveryCommand}"
+                            Classes="liquid-glass"
+                            HorizontalAlignment="Center"
+                            Width="160"
+                            Margin="0,32,0,0"/>
+
+                    <TextBlock Text="Press Abort if you are being forced to recover"
+                               HorizontalAlignment="Center"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               FontSize="12"
+                               Margin="0,8,0,0"/>
+                </StackPanel>
+
+                <!-- Step: Select Domain -->
+                <StackPanel IsVisible="{Binding CurrentStep, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:RecoveryStep.SelectDomain}}">
+                    <TextBlock Classes="step-title" Text="Select Domain to Recover"/>
+                    <TextBlock Classes="step-description"
+                               Text="Choose which domain you need to recover. You can only recover one domain per recovery code."/>
+
+                    <!-- Domain cards -->
+                    <Grid ColumnDefinitions="*,*" Margin="0,8,0,24">
+                        <!-- Obscura Domain -->
+                        <Border Grid.Column="0" Classes="domain-card"
+                                IsEnabled="{Binding CanSelectObscura}">
+                            <Button Command="{Binding SelectDomainCommand}"
+                                    CommandParameter="{x:Static domain:CryptoDomain.Obscura}"
+                                    IsEnabled="{Binding CanSelectObscura}"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Padding="0">
+                                <StackPanel Spacing="8">
+                                    <Border Width="48" Height="48"
+                                            Background="#2196F3" CornerRadius="8">
+                                        <TextBlock Text="O" FontSize="24" FontWeight="Bold"
+                                                   Foreground="White"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="Obscura" FontWeight="SemiBold"
+                                               HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Credentials &amp; Passwords"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"
+                                               HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{Binding ObscuraStatus}"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource Brush.Accent}"
+                                               HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Border>
+
+                        <!-- Attestor Domain -->
+                        <Border Grid.Column="1" Classes="domain-card"
+                                IsEnabled="{Binding CanSelectAttestor}">
+                            <Button Command="{Binding SelectDomainCommand}"
+                                    CommandParameter="{x:Static domain:CryptoDomain.Attestor}"
+                                    IsEnabled="{Binding CanSelectAttestor}"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Padding="0">
+                                <StackPanel Spacing="8">
+                                    <Border Width="48" Height="48"
+                                            Background="#9C27B0" CornerRadius="8">
+                                        <TextBlock Text="A" FontSize="24" FontWeight="Bold"
+                                                   Foreground="White"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="Attestor" FontWeight="SemiBold"
+                                               HorizontalAlignment="Center"/>
+                                    <TextBlock Text="TOTP, Passkeys, Keys"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"
+                                               HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{Binding AttestorStatus}"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource Brush.Accent}"
+                                               HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Border>
+                    </Grid>
+
+                    <Button Content="Cancel Recovery"
+                            Command="{Binding AbortRecoveryCommand}"
+                            Classes="liquid-glass"
+                            HorizontalAlignment="Center"
+                            Width="160"/>
+                </StackPanel>
+
+                <!-- Step: Complete -->
+                <StackPanel IsVisible="{Binding CurrentStep, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:RecoveryStep.Complete}}"
+                            HorizontalAlignment="Center">
+                    <Border Width="80" Height="80"
+                            Background="#4CAF50" CornerRadius="40"
+                            HorizontalAlignment="Center"
+                            Margin="0,0,0,16">
+                        <TextBlock Text="✓" FontSize="48" Foreground="White"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+                    </Border>
+
+                    <TextBlock Classes="step-title" Text="Recovery Complete" HorizontalAlignment="Center"/>
+
+                    <Border Classes="success-banner">
+                        <TextBlock Text="{Binding CompletionMessage}"
+                                   TextWrapping="Wrap"
+                                   Foreground="#C8E6C9"/>
+                    </Border>
+
+                    <!-- Rekey warning -->
+                    <Border Classes="warning-banner" IsVisible="{Binding RekeyRequired}">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Password Change Required" FontWeight="SemiBold" Foreground="#FF9800"/>
+                            <TextBlock TextWrapping="Wrap" Foreground="#FFE0B2">
+                                You must change your password immediately. This is mandatory after recovery to ensure security.
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center" Margin="0,16,0,0">
+                        <Button Content="View Audit Log"
+                                Command="{Binding ViewAuditHistoryCommand}"
+                                Classes="liquid-glass"
+                                Width="140"/>
+                        <Button Content="Close"
+                                Command="{Binding CompleteRecoveryCommand}"
+                                Classes="liquid-glass primary"
+                                Width="140"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Step: Aborted -->
+                <StackPanel IsVisible="{Binding CurrentStep, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:RecoveryStep.Aborted}}"
+                            HorizontalAlignment="Center">
+                    <Border Width="80" Height="80"
+                            Background="#FF9800" CornerRadius="40"
+                            HorizontalAlignment="Center"
+                            Margin="0,0,0,16">
+                        <TextBlock Text="!" FontSize="48" Foreground="White"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+                    </Border>
+
+                    <TextBlock Classes="step-title" Text="Recovery Aborted" HorizontalAlignment="Center"/>
+                    <TextBlock Classes="step-description" HorizontalAlignment="Center" TextAlignment="Center">
+                        The recovery process was cancelled. No changes were made to your vault.
+                    </TextBlock>
+
+                    <Button Content="Close"
+                            Click="CloseWindow_Click"
+                            Classes="liquid-glass primary"
+                            HorizontalAlignment="Center"
+                            Width="140"
+                            Margin="0,16,0,0"/>
+                </StackPanel>
+
+                <!-- Step: Error -->
+                <StackPanel IsVisible="{Binding CurrentStep, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:RecoveryStep.Error}}"
+                            HorizontalAlignment="Center">
+                    <Border Width="80" Height="80"
+                            Background="#F44336" CornerRadius="40"
+                            HorizontalAlignment="Center"
+                            Margin="0,0,0,16">
+                        <TextBlock Text="✕" FontSize="48" Foreground="White"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+                    </Border>
+
+                    <TextBlock Classes="step-title" Text="Recovery Failed" HorizontalAlignment="Center"/>
+
+                    <Border Classes="error-banner">
+                        <TextBlock Text="{Binding ErrorMessage}"
+                                   TextWrapping="Wrap"
+                                   Foreground="#FFCDD2"/>
+                    </Border>
+
+                    <Button Content="Close"
+                            Click="CloseWindow_Click"
+                            Classes="liquid-glass primary"
+                            HorizontalAlignment="Center"
+                            Width="140"
+                            Margin="0,16,0,0"/>
+                </StackPanel>
+
+                <!-- Step: Audit History -->
+                <StackPanel IsVisible="{Binding CurrentStep, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:RecoveryStep.AuditHistory}}">
+                    <TextBlock Classes="step-title" Text="Recovery Audit Log"/>
+                    <TextBlock Classes="step-description"
+                               Text="All recovery attempts are logged with tamper-evident hash chaining."/>
+
+                    <ListBox ItemsSource="{Binding AuditHistory}"
+                             MaxHeight="250"
+                             Background="Transparent">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Padding="8" Margin="0,2">
+                                    <Grid ColumnDefinitions="Auto,*,Auto">
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding StatusIcon}"
+                                                   FontSize="16"
+                                                   Margin="0,0,12,0"
+                                                   VerticalAlignment="Center"/>
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{Binding DisplayText}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}"
+                                                       FontSize="11"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="2"
+                                                   Text="{Binding Id}"
+                                                   FontSize="10"
+                                                   FontFamily="Consolas"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                   VerticalAlignment="Center"
+                                                   MaxWidth="80"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <Button Content="Back"
+                            Click="BackToComplete_Click"
+                            Classes="liquid-glass"
+                            HorizontalAlignment="Center"
+                            Width="140"
+                            Margin="0,16,0,0"/>
+                </StackPanel>
+                </Panel>
+            </Border>
+        </ScrollViewer>
+
+        <!-- Footer -->
+        <Border Grid.Row="2"
+                Background="{DynamicResource FooterBackgroundBrush}"
+                Padding="24,12">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0"
+                           Text="{Binding StatusMessage}"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           VerticalAlignment="Center"/>
+
+                <!-- Busy indicator -->
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            Spacing="8"
+                            IsVisible="{Binding IsBusy}">
+                    <Border Width="16" Height="16"
+                            BorderBrush="{DynamicResource Brush.Accent}"
+                            BorderThickness="2"
+                            CornerRadius="8"/>
+                    <TextBlock Text="Processing..."
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

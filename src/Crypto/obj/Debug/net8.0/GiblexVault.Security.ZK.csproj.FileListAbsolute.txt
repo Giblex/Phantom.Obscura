@@ -7,6 +7,7 @@ O:\Users\Giblex\Build Projects\Phantom.Obscura\src\Crypto\obj\Debug\net8.0\Gible
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\Crypto\obj\Debug\net8.0\GiblexVault.Security.ZK.AssemblyInfoInputs.cache
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\Crypto\obj\Debug\net8.0\GiblexVault.Security.ZK.AssemblyInfo.cs
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\Crypto\obj\Debug\net8.0\GiblexVault.Security.ZK.csproj.CoreCompileInputs.cache
+O:\Users\Giblex\Build Projects\Phantom.Obscura\src\Crypto\obj\Debug\net8.0\GiblexVault.Security.ZK.sourcelink.json
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\Crypto\obj\Debug\net8.0\GiblexVault.Security.ZK.dll
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\Crypto\obj\Debug\net8.0\refint\GiblexVault.Security.ZK.dll
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\Crypto\obj\Debug\net8.0\GiblexVault.Security.ZK.xml

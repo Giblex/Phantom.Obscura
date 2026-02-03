@@ -64,6 +64,7 @@ namespace PhantomVault.UI.ViewModels
         private string? _vaultFilePath; // Path to vault.pvault file inside mounted container
         private string? _vaultPassword; // Cached password for vault operations
         private string? _vaultKeyfilePath; // Cached keyfile path for vault operations
+        private string? _veraCryptPassword; // Cached VeraCrypt container password (may differ from vault password)
         private ObservableCollection<string> _items = new();
         private ObservableCollection<CredentialViewModel> _credentials = new();
         private ObservableCollection<CredentialViewModel> _filteredCredentials = new();
@@ -93,6 +94,7 @@ namespace PhantomVault.UI.ViewModels
         private bool _privacyModeEnabled;
         private bool _isPasswordHealthPanelVisible;
         private string _viewModeIcon = "☰";
+        private string _gridViewIconPath = "Assets/SVG/Current/Grid.svg"; // Start in list view, show grid icon to toggle TO grid
         private bool _isGridView = false;
         private bool _isDarkTheme = true;
         private bool _isEditPanelVisible = false;
@@ -1362,6 +1364,12 @@ namespace PhantomVault.UI.ViewModels
         {
             get => _viewModeIcon;
             set => this.RaiseAndSetIfChanged(ref _viewModeIcon, value);
+        }
+
+        public string GridViewIconPath
+        {
+            get => _gridViewIconPath;
+            set => this.RaiseAndSetIfChanged(ref _gridViewIconPath, value);
         }
 
         public bool IsGridView
@@ -3455,11 +3463,12 @@ namespace PhantomVault.UI.ViewModels
         /// <param name="manifestPath">Path to the vault manifest file.</param>
         /// <param name="password">The vault password.</param>
         /// <param name="keyfilePath">Optional path to the keyfile.</param>
-        internal void SetManifestContext(string manifestPath, string? password, string? keyfilePath)
+        internal void SetManifestContext(string manifestPath, string? password, string? keyfilePath, string? veraCryptPassword = null)
         {
             // Store the credentials for later use
             _vaultPassword = password;
             _vaultKeyfilePath = keyfilePath;
+            _veraCryptPassword = veraCryptPassword; // Store separate VeraCrypt password if provided
 
             // Persist re-auth context for in-app lock/unlock.
             _manifestPath = manifestPath;
@@ -3621,6 +3630,7 @@ namespace PhantomVault.UI.ViewModels
             }
 
             ViewModeIcon = ViewModeIcon == "☰" ? "▦" : "☰";
+            GridViewIconPath = IsGridView ? "Assets/SVG/Current/Grid.svg" : "Assets/SVG/Current/List.svg";
             IsGridView = !IsGridView;
             StatusMessage = ViewModeIcon == "☰" ? "List view" : "Grid view";
         }
@@ -4147,7 +4157,9 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                string mountPath = await _vaultService.MountVaultAsync(_containerAbsPath, "Vault", password);
+                // Use VeraCrypt password if available, otherwise use vault password
+                string passwordForMount = _veraCryptPassword ?? password;
+                string mountPath = await _vaultService.MountVaultAsync(_containerAbsPath, "Vault", passwordForMount);
                 await LoadAsync(mountPath, password, _reauthKeyfilePath);
 
                 ExitLockedState();

@@ -19,7 +19,7 @@
             
             <!-- Left: Logo and Title -->
             <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="{StaticResource Space12}" VerticalAlignment="Center">
-                <Image Source="avares://PhantomVault.UI/Assets/images/Icon Transparent background.png" Width="48" Height="48" VerticalAlignment="Center"/>
+                <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png" Width="48" Height="48" VerticalAlignment="Center"/>
                 <StackPanel Spacing="2">
                     <TextBlock Text="PhantomObscura" 
                                FontSize="16" 
@@ -40,7 +40,7 @@
                         CornerRadius="20"
                         MinWidth="320"
                         MaxWidth="700"
-                        Margin="0,0,12,0">
+                        Margin="0,0,1,0">
                     <Grid ColumnDefinitions="Auto,*,Auto">
                         <dcontrols:SvgIcon Grid.Column="0"
                                IconName="Assets/SVG/Current/Search.svg"
@@ -81,14 +81,14 @@
 
                 <controls:LiquidGlassButton Grid.Column="1"
                         Command="{Binding ToggleViewModeCommand}"
-                        WidthOverride="42"
-                        HeightOverride="36"
-                        CornerRadiusValue="8"
-                        PaddingOverride="0"
+                        WidthOverride="44"
+                        HeightOverride="44"
+                        CornerRadiusValue="12"
+                        PaddingOverride="8,12,8,8"
                         ToolTipText="Toggle list/grid view"
                         IsVisible="{Binding !IsShowingSecureTrash}">
                     <controls:LiquidGlassButton.ButtonContent>
-                        <TextBlock Text="{Binding ViewModeIcon}" FontSize="16" Foreground="{DynamicResource PrimaryTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <dcontrols:SvgIcon IconName="{Binding GridViewIconPath}" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </controls:LiquidGlassButton.ButtonContent>
                 </controls:LiquidGlassButton>
             </Grid>

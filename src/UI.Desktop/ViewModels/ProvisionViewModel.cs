@@ -302,6 +302,21 @@ namespace PhantomVault.UI.ViewModels
 
                     // Password is optional - use null if empty
                     var passwordToUse = string.IsNullOrEmpty(Passphrase) ? null : Passphrase;
+                    
+                    // Generate auto-password for VeraCrypt if user didn't provide one
+                    string? veraCryptAutoPassword = null;
+                    string veraCryptPasswordToUse;
+                    if (UseVeraCrypt && string.IsNullOrEmpty(passwordToUse))
+                    {
+                        // Generate a cryptographically secure 64-character password for VeraCrypt
+                        veraCryptAutoPassword = GenerateSecurePassword(64);
+                        veraCryptPasswordToUse = veraCryptAutoPassword;
+                    }
+                    else
+                    {
+                        veraCryptPasswordToUse = passwordToUse ?? string.Empty;
+                    }
+                    
                     byte[]? passkeyCredentialId = null;
                     // Generate ML-KEM-768 key pair for post-quantum hybrid encryption FIRST
                     // This happens before container creation so we can store it properly
@@ -332,43 +347,64 @@ namespace PhantomVault.UI.ViewModels
 
                     if (UseVeraCrypt)
                     {
-                        // Step 1: Create VeraCrypt container for outer layer encryption
-                        Status = "Creating VeraCrypt container (outer encryption layer)...";
+                        // Step 1: Create encrypted vault file first (in temp location)
+                        Status = "Creating zero-knowledge encrypted password vault...";
                         Progress = 0.1;
+                        string tempVaultPath = Path.Combine(Path.GetTempPath(), $"phantom_vault_{Guid.NewGuid():N}.pvault");
+                        var vaultProgress = new Progress<double>(p => Progress = 0.1 + (p * 0.3)); // 10-40%
+                        await CreateHybridEncryptedDatabaseAsync(tempVaultPath, passwordToUse, KeyfilePath, kemSharedSecretForVault, vaultProgress);
+
+                        // Step 2: Save the ML-KEM private key next to the vault file
+                        Status = "Securing post-quantum encryption keys...";
+                        Progress = 0.4;
+                        string tempKemPath = Path.Combine(Path.GetTempPath(), $"phantom_kem_{Guid.NewGuid():N}.key");
+                        await SaveKemPrivateKeyAsync(tempKemPath, kemPrivateKey, passwordToUse, KeyfilePath);
+
+                        // Step 3: Read both files into memory
+                        byte[] vaultBytes = await File.ReadAllBytesAsync(tempVaultPath);
+                        byte[] kemBytes = await File.ReadAllBytesAsync(tempKemPath);
+
+                        // Step 4: Create a combined payload (vault file + kem key)
+                        // Format: [vault size: 8 bytes][vault data][kem data]
+                        Status = "Packaging vault data...";
+                        Progress = 0.5;
+                        byte[] combinedData = new byte[8 + vaultBytes.Length + kemBytes.Length];
+                        BitConverter.GetBytes((long)vaultBytes.Length).CopyTo(combinedData, 0);
+                        vaultBytes.CopyTo(combinedData, 8);
+                        kemBytes.CopyTo(combinedData, 8 + vaultBytes.Length);
+
+                        // Step 5: Write combined data to a temp file
+                        string tempCombinedPath = Path.Combine(Path.GetTempPath(), $"phantom_combined_{Guid.NewGuid():N}.dat");
+                        await File.WriteAllBytesAsync(tempCombinedPath, combinedData);
+
+                        // Step 6: Create encrypted container around the combined data
+                        Status = "Creating encrypted container (outer encryption layer)...";
+                        Progress = 0.55;
                         var containerFileName = $"{encryptedName}.hc";
                         containerPath = Path.Combine(phantomPath, "containers", containerFileName);
                         Directory.CreateDirectory(Path.GetDirectoryName(containerPath)!);
-                        var containerProgress = new Progress<double>(p => Progress = 0.1 + (p * 0.25)); // 10-35%
-                        await _vaultService.CreateVaultAsync(containerPath, containerSizeBytes, passwordToUse, KeyfilePath, containerProgress);
+                        var containerProgress = new Progress<double>(p => Progress = 0.55 + (p * 0.3)); // 55-85%
+                        
+                        // Create container with the exact size of our combined data
+                        await _vaultService.CreateVaultAsync(containerPath, combinedData.Length, veraCryptPasswordToUse, KeyfilePath, containerProgress);
 
-                        // Step 2: Mount the container temporarily to create encrypted file inside
-                        Status = "Mounting container...";
-                        Progress = 0.35;
-                        string mountName = $"PhantomVault_{Guid.NewGuid():N}";
-                        string mountPath = await _vaultService.MountVaultAsync(containerPath, mountName, passwordToUse ?? string.Empty, KeyfilePath);
+                        // Step 7: Store the vault path for later use
+                        vaultPath = tempVaultPath; // Reference for manifest
+                        kemKeyPath = tempKemPath;  // Reference for manifest
+
+                        // Step 8: Clean up temporary files
                         try
                         {
-                            // Step 3: Create zero-knowledge encrypted password database inside mounted container
-                            Status = "Creating zero-knowledge encrypted password vault (inner encryption layer)...";
-                            Progress = 0.45;
-                            var vaultFileName = "vault.pvault";
-                            vaultPath = Path.Combine(mountPath, vaultFileName);
-                            var vaultProgress = new Progress<double>(p => Progress = 0.45 + (p * 0.25));
-                            await CreateHybridEncryptedDatabaseAsync(vaultPath, passwordToUse, KeyfilePath, kemSharedSecretForVault, vaultProgress);
+                            if (File.Exists(tempVaultPath)) File.Delete(tempVaultPath);
+                            if (File.Exists(tempKemPath)) File.Delete(tempKemPath);
+                            if (File.Exists(tempCombinedPath)) File.Delete(tempCombinedPath);
+                            Array.Clear(vaultBytes, 0, vaultBytes.Length);
+                            Array.Clear(kemBytes, 0, kemBytes.Length);
+                            Array.Clear(combinedData, 0, combinedData.Length);
+                        }
+                        catch { /* best effort cleanup */ }
 
-                            // Step 3.5: Save the ML-KEM private key inside the mounted container
-                            Status = "Securing post-quantum encryption keys...";
-                            Progress = 0.7;
-                            kemKeyPath = Path.Combine(mountPath, "kem.key");
-                            await SaveKemPrivateKeyAsync(kemKeyPath, kemPrivateKey, passwordToUse, KeyfilePath);
-                        }
-                        finally
-                        {
-                            // Step 4: Dismount the container (use returned mount path/letter)
-                            Status = "Securing vault...";
-                            Progress = 0.8;
-                            await _vaultService.DismountVaultAsync(mountPath);
-                        }
+                        Progress = 0.85;
                     }
                     else
                     {
@@ -510,6 +546,23 @@ namespace PhantomVault.UI.ViewModels
                     var encryptedPrivateKeyResult = encryptionService.Encrypt(kemPrivateKey, kek, aad);
                     string encryptedPrivateKeyBase64 = PhantomVault.Core.Utils.HybridKeyDerivation.SerializeEncryptionResult(encryptedPrivateKeyResult);
 
+                    // Encrypt auto-generated VeraCrypt password if it was created
+                    string? veraCryptPasswordEncryptedBase64 = null;
+                    if (veraCryptAutoPassword != null)
+                    {
+                        byte[] veraCryptPasswordBytes = System.Text.Encoding.UTF8.GetBytes(veraCryptAutoPassword);
+                        byte[] vcAad = System.Text.Encoding.UTF8.GetBytes("VeraCrypt-AutoPassword");
+                        var encryptedVcPasswordResult = encryptionService.Encrypt(veraCryptPasswordBytes, kek, vcAad);
+                        veraCryptPasswordEncryptedBase64 = PhantomVault.Core.Utils.HybridKeyDerivation.SerializeEncryptionResult(encryptedVcPasswordResult);
+                        
+                        // Wipe sensitive data
+                        CryptographicOperations.ZeroMemory(veraCryptPasswordBytes);
+                        CryptographicOperations.ZeroMemory(encryptedVcPasswordResult.Ciphertext);
+                        CryptographicOperations.ZeroMemory(encryptedVcPasswordResult.Nonce);
+                        CryptographicOperations.ZeroMemory(encryptedVcPasswordResult.Tag);
+                        CryptographicOperations.ZeroMemory(vcAad);
+                    }
+
                     // Wipe transient encryption buffers now that they have been serialized
                     CryptographicOperations.ZeroMemory(encryptedPrivateKeyResult.Ciphertext);
                     CryptographicOperations.ZeroMemory(encryptedPrivateKeyResult.Nonce);
@@ -538,7 +591,9 @@ namespace PhantomVault.UI.ViewModels
                         // Phase 2: Store KEM ciphertext (for DEK derivation) and encrypted private key
                         KemCiphertextBase64 = Convert.ToBase64String(kemCiphertextForManifest!),
                         KemPrivateKeyEncryptedBase64 = encryptedPrivateKeyBase64,
-                        SaltBase64 = manifestSaltBase64
+                        SaltBase64 = manifestSaltBase64,
+                        // Store encrypted auto-generated VeraCrypt password if applicable
+                        VeraCryptPasswordEncryptedBase64 = veraCryptPasswordEncryptedBase64
                     };
                     if (UseTotp)
                     {
@@ -645,6 +700,11 @@ namespace PhantomVault.UI.ViewModels
             get => _useVeraCrypt;
             set => this.RaiseAndSetIfChanged(ref _useVeraCrypt, value);
         }
+
+        /// <summary>
+        /// Checks if VeraCrypt is installed on the system.
+        /// </summary>
+        public bool IsVeraCryptInstalled => _veraCryptService.IsVeraCryptInstalled();
 
         /// <summary>
         /// Creates a hybrid encrypted password vault database using zero-knowledge cryptography.
@@ -1712,6 +1772,28 @@ namespace PhantomVault.UI.ViewModels
             };
 
             SettingsService.Save(settings);
+        }
+
+        /// <summary>
+        /// Generates a cryptographically secure random password for automatic VeraCrypt authentication.
+        /// </summary>
+        private static string GenerateSecurePassword(int length)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[]{}|;:,.<>?";
+            var passwordBytes = new byte[length];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(passwordBytes);
+            }
+            
+            var password = new char[length];
+            for (int i = 0; i < length; i++)
+            {
+                password[i] = chars[passwordBytes[i] % chars.Length];
+            }
+            
+            CryptographicOperations.ZeroMemory(passwordBytes);
+            return new string(password);
         }
 
         #endregion

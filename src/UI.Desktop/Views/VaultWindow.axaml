@@ -54,8 +54,24 @@
             <DrawingImage x:Key="CopyIcon">
                 <DrawingImage.Drawing>
                     <DrawingGroup>
-                        <GeometryDrawing Brush="{DynamicResource PrimaryTextBrush}" Geometry="M2,6 H10 V14 H2 Z" />
-                        <GeometryDrawing Brush="{DynamicResource PrimaryTextBrush}" Geometry="M6,2 H14 V10 H6 Z" />
+                        <GeometryDrawing Brush="{DynamicResource PrimaryTextBrush}" Geometry="M3,8 H13 V18 H3 Z" />
+                        <GeometryDrawing Brush="{DynamicResource PrimaryTextBrush}" Geometry="M8,3 H18 V13 H8 Z" />
+                    </DrawingGroup>
+                </DrawingImage.Drawing>
+            </DrawingImage>
+
+            <!-- Grid view icon - simplified 2x2 grid -->
+            <DrawingImage x:Key="GridViewIcon">
+                <DrawingImage.Drawing>
+                    <DrawingGroup>
+                        <!-- Top-left square -->
+                        <GeometryDrawing Brush="{DynamicResource PrimaryTextBrush}" Geometry="M2,2 H9 V9 H2 Z" />
+                        <!-- Top-right square -->
+                        <GeometryDrawing Brush="{DynamicResource PrimaryTextBrush}" Geometry="M11,2 H18 V9 H11 Z" />
+                        <!-- Bottom-left square -->
+                        <GeometryDrawing Brush="{DynamicResource PrimaryTextBrush}" Geometry="M2,11 H9 V18 H2 Z" />
+                        <!-- Bottom-right square -->
+                        <GeometryDrawing Brush="{DynamicResource PrimaryTextBrush}" Geometry="M11,11 H18 V18 H11 Z" />
                     </DrawingGroup>
                 </DrawingImage.Drawing>
             </DrawingImage>
@@ -1660,7 +1676,7 @@
                     IsHitTestVisible="{Binding IsLockscreenVisible}">
                 <Grid>
                     <!-- Large dimmed PhantomVault logo in center -->
-                    <Image Source="avares://PhantomVault.UI/Assets/images/Icon Transparent background.png"
+                    <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
                            Width="400"
                            Height="400"
                            HorizontalAlignment="Center"

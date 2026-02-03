@@ -278,7 +278,8 @@ namespace PhantomVault.Core.Services
             using var fs = new FileStream(containerPath, FileMode.Create, FileAccess.Write, FileShare.None);
             fs.SetLength(sizeBytes);
 
-            var args = $"/create \"{containerPath}\" /size {sizeBytes} /encryption AES /hash SHA-512 /filesystem none /quiet";
+            // VeraCrypt command-line requires /stdin with password (or empty password) even when using keyfile
+            var args = $"/create \"{containerPath}\" /size {sizeBytes} /encryption AES /hash SHA-512 /filesystem none /quiet /stdin";
             
             // Add keyfile if provided
             if (!string.IsNullOrEmpty(keyfilePath))
@@ -286,13 +287,41 @@ namespace PhantomVault.Core.Services
                 args += $" /keyfile \"{keyfilePath}\"";
             }
             
-            // Use /stdin only if password is provided
-            if (!string.IsNullOrEmpty(password))
+            bool hasPassword = !string.IsNullOrEmpty(password);
+
+            // Debug logging
+            var logPath = Path.Combine(Path.GetTempPath(), $"veracrypt_debug_{DateTime.Now:yyyyMMdd_HHmmss}.log");
+            try
             {
-                args += " /stdin";
+                var exePath = !string.IsNullOrEmpty(_veraCryptPath) ? _veraCryptPath : _exeName;
+                await File.WriteAllTextAsync(logPath, $"=== VeraCrypt Debug Log ==={Environment.NewLine}");
+                await File.AppendAllTextAsync(logPath, $"Timestamp: {DateTime.Now:yyyy-MM-dd HH:mm:ss}{Environment.NewLine}");
+                await File.AppendAllTextAsync(logPath, $"VeraCrypt Path: {exePath}{Environment.NewLine}");
+                await File.AppendAllTextAsync(logPath, $"Container Path: {containerPath}{Environment.NewLine}");
+                await File.AppendAllTextAsync(logPath, $"Size: {sizeBytes} bytes{Environment.NewLine}");
+                await File.AppendAllTextAsync(logPath, $"Keyfile: {keyfilePath ?? "(none)"}{Environment.NewLine}");
+                await File.AppendAllTextAsync(logPath, $"Has Password: {hasPassword}{Environment.NewLine}");
+                await File.AppendAllTextAsync(logPath, $"Password Length: {(password != null ? password.Length.ToString() : "null")}{Environment.NewLine}");
+                await File.AppendAllTextAsync(logPath, $"Full Command: {exePath} {args}{Environment.NewLine}{Environment.NewLine}");
             }
+            catch { /* Ignore logging errors */ }
             
-            return await RunProcessWithPasswordAsync(args, password, cancellationToken, DefaultCreateTimeout).ConfigureAwait(false);
+            var result = await RunProcessWithPasswordAsync(args, password ?? string.Empty, cancellationToken, DefaultCreateTimeout).ConfigureAwait(false);
+
+            // Log result
+            try
+            {
+                await File.AppendAllTextAsync(logPath, $"=== Process Completed ==={Environment.NewLine}");
+                await File.AppendAllTextAsync(logPath, $"Exit Code: {result.ExitCode}{Environment.NewLine}{Environment.NewLine}");
+                await File.AppendAllTextAsync(logPath, $"=== STDOUT ==={Environment.NewLine}");
+                await File.AppendAllTextAsync(logPath, string.IsNullOrEmpty(result.StdOut) ? "(empty)" : result.StdOut);
+                await File.AppendAllTextAsync(logPath, $"{Environment.NewLine}{Environment.NewLine}=== STDERR ==={Environment.NewLine}");
+                await File.AppendAllTextAsync(logPath, string.IsNullOrEmpty(result.StdErr) ? "(empty)" : result.StdErr);
+                await File.AppendAllTextAsync(logPath, Environment.NewLine);
+            }
+            catch { /* Ignore logging errors */ }
+
+            return result;
         }
 
         public Task<VeraCryptResult> MountVolumeAsync(string containerPath, char driveLetter, ReadOnlySpan<char> password, CancellationToken cancellationToken = default)
@@ -687,12 +716,12 @@ namespace PhantomVault.Core.Services
 
             try
             {
-                if (!string.IsNullOrEmpty(password))
-                {
-                    await proc.StandardInput.WriteLineAsync(password).ConfigureAwait(false);
-                    await proc.StandardInput.FlushAsync().ConfigureAwait(false);
-                    proc.StandardInput.Close();
-                }
+                // Always write to stdin since we're using /stdin flag
+                // For keyfile-only mode, send empty password
+                var passwordToWrite = string.IsNullOrEmpty(password) ? string.Empty : password;
+                await proc.StandardInput.WriteLineAsync(passwordToWrite).ConfigureAwait(false);
+                await proc.StandardInput.FlushAsync().ConfigureAwait(false);
+                proc.StandardInput.Close();
 
                 var stdoutTask = proc.StandardOutput.ReadToEndAsync();
                 var stderrTask = proc.StandardError.ReadToEndAsync();

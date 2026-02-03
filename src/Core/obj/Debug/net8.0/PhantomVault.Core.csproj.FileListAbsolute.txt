@@ -10,6 +10,7 @@ O:\Users\Giblex\Build Projects\Phantom.Obscura\src\Core\obj\Debug\net8.0\Phantom
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\Core\obj\Debug\net8.0\PhantomVault.Core.AssemblyInfoInputs.cache
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\Core\obj\Debug\net8.0\PhantomVault.Core.AssemblyInfo.cs
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\Core\obj\Debug\net8.0\PhantomVault.Core.csproj.CoreCompileInputs.cache
+O:\Users\Giblex\Build Projects\Phantom.Obscura\src\Core\obj\Debug\net8.0\PhantomVault.Core.sourcelink.json
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\Core\obj\Debug\net8.0\PhantomV.9A7E8B29.Up2Date
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\Core\obj\Debug\net8.0\PhantomVault.Core.dll
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\Core\obj\Debug\net8.0\refint\PhantomVault.Core.dll

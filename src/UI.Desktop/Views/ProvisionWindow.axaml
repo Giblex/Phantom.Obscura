@@ -13,7 +13,8 @@
     MaxWidth="1400" MaxHeight="1100"
         WindowStartupLocation="CenterScreen"
         CanResize="True"
-        Icon="avares://PhantomVault.UI/Assets/images/Parent Icon.ico" FontFamily="Segoe UI">
+        Background="{DynamicResource ContentBackgroundBrush}"
+        Icon="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Parent Icon.ico" FontFamily="Segoe UI">
 
     <Design.DataContext>
         <vm:ProvisionViewModel/>
@@ -31,7 +32,7 @@
         </Grid.KeyBindings>
         
         <!-- Header -->
-        <Border Grid.Row="0" Background="{DynamicResource HeaderBackgroundBrush}" Padding="15,8">
+        <Border Grid.Row="0" Background="{DynamicResource ContentBackgroundBrush}" Padding="15,8">
             <StackPanel Spacing="{StaticResource Space.Sm}">
             <TextBlock Text="Create Your Vault"
                            FontSize="22"
@@ -117,7 +118,7 @@
                                        Foreground="{DynamicResource MutedTextBrush}"
                                        Margin="0,0,0,8"/>
                             
-                            <Grid MaxWidth="920" HorizontalAlignment="Center">
+                            <Grid HorizontalAlignment="Stretch" Margin="0,0,0,0">
             <TextBox Name="PasswordTextBox"
                                          Text="{Binding Passphrase, Mode=TwoWay}"
                                          Height="36"
@@ -173,7 +174,7 @@
                                        FontWeight="SemiBold"
                                        />
                             
-                            <Grid MaxWidth="920" HorizontalAlignment="Center">
+                            <Grid HorizontalAlignment="Stretch" Margin="0,0,0,0">
             <TextBox Name="ConfirmPasswordTextBox"
                                          Text="{Binding ConfirmPassphrase, Mode=TwoWay}"
                                          Height="36"
@@ -232,7 +233,61 @@
                                        Margin="0,0,0,0" HorizontalAlignment="Center"/>
                         </StackPanel>
 
-                            <StackPanel Margin="0,10,0,0"><CheckBox Content="Use VeraCrypt outer container" IsChecked="{Binding UseVeraCrypt, Mode=TwoWay}" ToolTip.Tip="When disabled, the vault will use only zero-knowledge encryption without a VeraCrypt volume."/></StackPanel>
+                        <!-- VeraCrypt Outer Container Option -->
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                Padding="20"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                BorderBrush="{DynamicResource AccentBrush}"
+                                BorderThickness="1">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <TextBlock Text="🔐" FontSize="20" VerticalAlignment="Center"/>
+                                    <TextBlock Text="VeraCrypt Outer Container"
+                                               FontSize="16"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                                
+                                <TextBlock FontSize="{StaticResource Type.Small.Size}"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           TextWrapping="Wrap"
+                                           LineHeight="18">
+                                    VeraCrypt adds an additional encrypted container layer around your vault for maximum security.<LineBreak/>
+                                    <LineBreak/>
+                                    <Bold>Enabled (Recommended):</Bold> Two layers - VeraCrypt outer container + zero-knowledge inner vault<LineBreak/>
+                                    <Bold>Disabled:</Bold> Single layer - zero-knowledge encryption only<LineBreak/>
+                                    <LineBreak/>
+                                    <Run Foreground="{DynamicResource MutedTextBrush}" FontSize="11">Note: VeraCrypt must be installed on your system. Download from https://www.veracrypt.fr</Run>
+                                </TextBlock>
+                                
+                                <!-- VeraCrypt Not Installed Warning -->
+                                <Border Background="{DynamicResource ErrorBackgroundBrush}"
+                                        BorderBrush="{DynamicResource ErrorBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        Padding="12,10"
+                                        IsVisible="{Binding !IsVeraCryptInstalled}">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <TextBlock Text="⚠️" FontSize="16" VerticalAlignment="Center"/>
+                                        <TextBlock FontSize="{StaticResource Type.Small.Size}"
+                                                   Foreground="{DynamicResource ErrorBrush}"
+                                                   TextWrapping="Wrap"
+                                                   VerticalAlignment="Center">
+                                            <Bold>VeraCrypt Not Detected</Bold><LineBreak/>
+                                            VeraCrypt is not installed. You can continue with single-layer encryption or install VeraCrypt first.
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Border>
+                                
+                                <CheckBox Content="Use VeraCrypt outer container (Recommended)"
+                                          IsChecked="{Binding UseVeraCrypt, Mode=TwoWay}"
+                                          FontSize="{StaticResource Type.Body.Size}"
+                                          FontWeight="SemiBold"
+                                          Margin="0,5,0,0"/>
+                            </StackPanel>
+                        </Border>
+
     <!-- Keyfile Section (REQUIRED) -->
                         <StackPanel Spacing="10">
             <TextBlock Text="Keyfile (Required)"
@@ -446,7 +501,7 @@
                         </Border>
 
                         <!-- CSV Import (Future) -->
-                        <Border Background="{DynamicResource FooterBackgroundBrush}"
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
                                 Padding="20"
                                 CornerRadius="{StaticResource Radius.Md}"
                                 BorderBrush="{DynamicResource ControlBorderBrush}"
@@ -628,7 +683,7 @@
                         IsVisible="{Binding Status, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
             <TextBlock Text="{Binding Status}"
                                FontSize="{StaticResource Type.Small.Size}"
-                               Foreground="{DynamicResource WarningBrush}"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
                                TextWrapping="Wrap"
                                HorizontalAlignment="Center"/>
                 </Border>
@@ -639,7 +694,7 @@
                             Spacing="15">
                     
                     <!-- Go Back Button -->
-                    <Button Click="GoBack_Click"
+                    <Button Command="{Binding GoBackCommand}"
                             Width="140"
                             Height="42"
                             FontSize="{StaticResource Type.Body.Size}"
@@ -655,6 +710,7 @@
                             Height="42"
                             FontSize="15"
                             FontWeight="SemiBold"
+                            Classes="liquid-glass"
                             ToolTip.Tip="Create your encrypted vault with the configured settings"
                             AutomationProperties.Name="Create vault"
                             AutomationProperties.HelpText="Create your secure vault with the current configuration">

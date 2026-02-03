@@ -13,6 +13,7 @@ O:\Users\Giblex\Build Projects\Phantom.Obscura\src\Autofill\obj\Debug\net8.0\Pha
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\Autofill\obj\Debug\net8.0\PhantomVault.Autofill.AssemblyInfoInputs.cache
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\Autofill\obj\Debug\net8.0\PhantomVault.Autofill.AssemblyInfo.cs
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\Autofill\obj\Debug\net8.0\PhantomVault.Autofill.csproj.CoreCompileInputs.cache
+O:\Users\Giblex\Build Projects\Phantom.Obscura\src\Autofill\obj\Debug\net8.0\PhantomVault.Autofill.sourcelink.json
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\Autofill\obj\Debug\net8.0\PhantomV.2F736390.Up2Date
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\Autofill\obj\Debug\net8.0\PhantomVault.Autofill.dll
 O:\Users\Giblex\Build Projects\Phantom.Obscura\src\Autofill\obj\Debug\net8.0\refint\PhantomVault.Autofill.dll

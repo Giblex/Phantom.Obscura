@@ -12,7 +12,7 @@
         MinWidth="600" MinHeight="400"
         WindowStartupLocation="CenterScreen"
         CanResize="True"
-        Icon="avares://PhantomVault.UI/Assets/images/Parent Icon.ico"
+        Icon="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Parent Icon.ico"
         FontFamily="Segoe UI"
         Background="{DynamicResource WindowBackgroundBrush}">
 
@@ -53,7 +53,7 @@
                         ClipToBounds="True"
                         HorizontalAlignment="Center" VerticalAlignment="Center"
                         MinWidth="280" MinHeight="160" MaxWidth="920" MaxHeight="260" Padding="0">
-                        <Image Source="avares://PhantomVault.UI/Assets/images/Phantom Obscura Title + Logo.png"
+                        <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Phantom Obscura Title + Logo.png"
                                Stretch="Uniform" MaxWidth="880" MaxHeight="220" Margin="12"
                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
@@ -75,7 +75,7 @@
                         BorderThickness="2">
                     <TextBlock Text="{Binding StatusMessage}"
                                FontSize="{StaticResource Type.Label.Size}"
-                               Foreground="#FFC107"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
                                FontWeight="Medium"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"/>

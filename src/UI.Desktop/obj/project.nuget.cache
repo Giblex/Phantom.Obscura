@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "1ElRoW5LTn0=",
+  "dgSpecHash": "EBnz9YMiPoM=",
   "success": true,
   "projectFilePath": "O:\\Users\\Giblex\\Build Projects\\Phantom.Obscura\\src\\UI.Desktop\\PhantomVault.UI.csproj",
   "expectedPackageFiles": [
@@ -112,7 +112,7 @@
     "C:\\Users\\Main\\.nuget\\packages\\yubico.yubikey\\1.12.0\\yubico.yubikey.1.12.0.nupkg.sha512",
     "C:\\Users\\Main\\.nuget\\packages\\zxing.net\\0.16.9\\zxing.net.0.16.9.nupkg.sha512",
     "C:\\Users\\Main\\.nuget\\packages\\zxing.net.bindings.skiasharp\\0.16.14\\zxing.net.bindings.skiasharp.0.16.14.nupkg.sha512",
-    "C:\\Users\\Main\\.nuget\\packages\\microsoft.windows.sdk.net.ref\\10.0.19041.57\\microsoft.windows.sdk.net.ref.10.0.19041.57.nupkg.sha512"
+    "C:\\Users\\Main\\.nuget\\packages\\microsoft.windows.sdk.net.ref\\10.0.19041.56\\microsoft.windows.sdk.net.ref.10.0.19041.56.nupkg.sha512"
   ],
   "logs": []
 }

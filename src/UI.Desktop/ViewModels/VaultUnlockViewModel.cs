@@ -1,11 +1,13 @@
 using System;
 using System.IO;
 using System.Reactive;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using ReactiveUI;
+using PhantomVault.Core.Models;
 using PhantomVault.Core.Services;
 using PhantomVault.Core.Services.ZeroKnowledge;
 using PhantomVault.UI.Services;
@@ -25,7 +27,7 @@ namespace PhantomVault.UI.ViewModels
     private readonly DialogService _dialogService;
     private readonly VaultLockDurationService _vaultLockDurationService;
     private readonly SecureTrashService _secureTrashService;
-    private readonly IVeraCryptService _veraCryptService;
+    private readonly EncryptionService _encryptionService;
     private readonly IconManager _iconManager;
     private readonly UsbDetector _usbDetector;
     private readonly UnlockThrottleService _throttleService;
@@ -40,7 +42,7 @@ namespace PhantomVault.UI.ViewModels
         DialogService dialogService,
         VaultLockDurationService vaultLockDurationService,
         SecureTrashService secureTrashService,
-        IVeraCryptService veraCryptService,
+        EncryptionService encryptionService,
         IconManager iconManager,
         UsbDetector usbDetector)
     {
@@ -48,32 +50,53 @@ namespace PhantomVault.UI.ViewModels
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
         _vaultLockDurationService = vaultLockDurationService ?? throw new ArgumentNullException(nameof(vaultLockDurationService));
         _secureTrashService = secureTrashService ?? throw new ArgumentNullException(nameof(secureTrashService));
-        _veraCryptService = veraCryptService ?? throw new ArgumentNullException(nameof(veraCryptService));
+        _encryptionService = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
         _iconManager = iconManager ?? throw new ArgumentNullException(nameof(iconManager));
         _usbDetector = usbDetector ?? throw new ArgumentNullException(nameof(usbDetector));
         _throttleService = new UnlockThrottleService();
-
-        UnlockCommand = ReactiveCommand.CreateFromTask(UnlockVaultAsync);
     }
 
-        public ReactiveCommand<Unit, Unit> UnlockCommand { get; }
-
-        public bool IsBusy
+    /// <summary>
+    /// Searches for a keyfile (.key) on the USB drive.
+    /// </summary>
+    private string? FindKeyfileOnDrive(string drivePath)
+    {
+        var searchPaths = new[]
         {
-            get => _isBusy;
-            private set => this.RaiseAndSetIfChanged(ref _isBusy, value);
+            Path.Combine(drivePath, ".phantom"),
+            drivePath,
+            Path.Combine(drivePath, "keys")
+        };
+
+        foreach (var searchPath in searchPaths)
+        {
+            if (!Directory.Exists(searchPath))
+                continue;
+
+            var keyFiles = Directory.GetFiles(searchPath, "*.key", SearchOption.TopDirectoryOnly);
+            if (keyFiles.Length > 0)
+                return keyFiles[0];
         }
 
-        public string Status
-        {
-            get => _status;
-            private set => this.RaiseAndSetIfChanged(ref _status, value);
-        }
+        return null;
+    }
 
-        /// <summary>
-        /// Unlock progress percentage (0-100) for visual progress bar.
-        /// </summary>
-        public int ProgressPercent
+    public bool IsBusy
+    {
+        get => _isBusy;
+        private set => this.RaiseAndSetIfChanged(ref _isBusy, value);
+    }
+
+    public string Status
+    {
+        get => _status;
+        private set => this.RaiseAndSetIfChanged(ref _status, value);
+    }
+
+    /// <summary>
+    /// Unlock progress percentage (0-100) for visual progress bar.
+    /// </summary>
+    public int ProgressPercent
         {
             get => _progressPercent;
             private set => this.RaiseAndSetIfChanged(ref _progressPercent, value);
@@ -151,34 +174,68 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // CRITICAL: Require authentication before opening vault
-                ProgressPercent = 25;
-                Status = "Authentication required...";
-                var password = await PromptForPasswordAsync();
-                if (string.IsNullOrEmpty(password))
+                // Check for keyfile-only authentication (auto-unlock)
+                var keyfilePath = FindKeyfileOnDrive(_usbPath);
+                string? password = null;
+                
+                // Create services for vault window
+                var encryptionService = new EncryptionService();
+                var manifestService = new ManifestService(encryptionService);
+                
+                if (!string.IsNullOrEmpty(keyfilePath))
                 {
-                    await _dialogService.ShowErrorAsync(
-                        "Authentication Required",
-                        "A passphrase is required to unlock the vault.",
-                        _ownerWindow);
-                    CloseAndReturnToWelcome();
-                    return;
+                    // Try keyfile-only authentication first (no password prompt)
+                    ProgressPercent = 25;
+                    Status = "Authenticating with keyfile...";
+                    
+                    try
+                    {
+                        // Try to read manifest with keyfile only (empty password)
+                        var keyfileTestManifest = manifestService.ReadManifest(manifestPath, string.Empty, keyfilePath);
+                        if (keyfileTestManifest != null)
+                        {
+                            // Keyfile-only authentication successful!
+                            password = string.Empty;
+                            Status = "Authenticated with keyfile";
+                        }
+                    }
+                    catch
+                    {
+                        // Keyfile-only failed, will fall back to password prompt
+                    }
+                }
+                
+                // If keyfile auth failed or no keyfile, prompt for password
+                if (password == null)
+                {
+                    // CRITICAL: Require authentication before opening vault
+                    ProgressPercent = 25;
+                    Status = "Authentication required...";
+                    password = await PromptForPasswordAsync();
+                    if (string.IsNullOrEmpty(password))
+                    {
+                        await _dialogService.ShowErrorAsync(
+                            "Authentication Required",
+                            "A passphrase is required to unlock the vault.",
+                            _ownerWindow);
+                        CloseAndReturnToWelcome();
+                        return;
+                    }
                 }
 
                 ProgressPercent = 40;
                 Status = "Initializing vault services...";
 
-                // Create services for vault window
-                var encryptionService = new EncryptionService();
-                var manifestService = new ManifestService(encryptionService);
-
                 ProgressPercent = 55;
                 Status = "Validating passphrase (deriving key)...";
 
                 // CRITICAL: Validate passphrase by attempting to decrypt the manifest
+                VaultManifest? testManifest = null;
+                string? veraCryptPasswordToUse = null;
+                
                 try
                 {
-                    var testManifest = manifestService.ReadManifest(manifestPath, password, null);
+                    testManifest = manifestService.ReadManifest(manifestPath, password, keyfilePath);
                     if (testManifest == null)
                     {
                         // Register failed attempt for throttling
@@ -192,6 +249,55 @@ namespace PhantomVault.UI.ViewModels
                             _ownerWindow);
                         CloseAndReturnToWelcome();
                         return;
+                    }
+                    
+                    // Check if there's an auto-generated VeraCrypt password stored in manifest
+                    if (testManifest.UseVeraCrypt && !string.IsNullOrEmpty(testManifest.VeraCryptPasswordEncryptedBase64))
+                    {
+                        // Decrypt the auto-generated VeraCrypt password
+                        try
+                        {
+                            // Derive KEK using same method as provisioning
+                            string combinedSecret = password ?? string.Empty;
+                            if (!string.IsNullOrEmpty(testManifest.KeyfilePath) && File.Exists(testManifest.KeyfilePath))
+                            {
+                                byte[] keyfileBytes = File.ReadAllBytes(testManifest.KeyfilePath);
+                                combinedSecret = combinedSecret + Convert.ToBase64String(keyfileBytes);
+                                PhantomVault.Core.Utils.HybridKeyDerivation.ZeroMemory(keyfileBytes);
+                            }
+
+                            byte[] manifestSalt = Convert.FromBase64String(testManifest.SaltBase64);
+                            byte[] kek = encryptionService.DeriveKey(combinedSecret.AsSpan(), manifestSalt);
+                            PhantomVault.Core.Utils.HybridKeyDerivation.ZeroMemory(manifestSalt);
+
+                            // Deserialize and decrypt the VeraCrypt password
+                            var encryptedVcResult = PhantomVault.Core.Utils.HybridKeyDerivation.DeserializeEncryptionResult(
+                                testManifest.VeraCryptPasswordEncryptedBase64);
+                            byte[] vcAad = System.Text.Encoding.UTF8.GetBytes("VeraCrypt-AutoPassword");
+                            byte[] vcPasswordBytes = encryptionService.Decrypt(
+                                encryptedVcResult.Ciphertext,
+                                encryptedVcResult.Nonce,
+                                encryptedVcResult.Tag,
+                                kek,
+                                vcAad);
+                            veraCryptPasswordToUse = System.Text.Encoding.UTF8.GetString(vcPasswordBytes);
+                            
+                            // Clean up sensitive data
+                            CryptographicOperations.ZeroMemory(vcPasswordBytes);
+                            CryptographicOperations.ZeroMemory(kek);
+                            CryptographicOperations.ZeroMemory(vcAad);
+                        }
+                        catch (Exception vcDecryptEx)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Failed to decrypt auto VeraCrypt password: {vcDecryptEx.Message}");
+                            // If decryption fails, fall back to user password
+                            veraCryptPasswordToUse = password;
+                        }
+                    }
+                    else
+                    {
+                        // No auto password, use user password
+                        veraCryptPasswordToUse = password;
                     }
                     
                     // Check for additional auth requirements from manifest
@@ -232,10 +338,10 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Get VeraCrypt path from settings
+                // Get VeraCrypt path from settings (kept for backward compatibility, but not used with PhantomContainer)
                 var settings = SettingsService.Load();
                 var effectivePath = string.IsNullOrWhiteSpace(settings.VeraCryptPathOverride) 
-                    ? _veraCryptService.VeraCryptPath 
+                    ? "veracrypt" 
                     : settings.VeraCryptPathOverride!;
                 
                 // If effectivePath is null or empty, fall back to default "veracrypt"
@@ -244,7 +350,7 @@ namespace PhantomVault.UI.ViewModels
                     VeraCryptPath = string.IsNullOrWhiteSpace(effectivePath) ? "veracrypt" : effectivePath 
                 };
 
-                var vaultService = new VaultService(vaultOptions);
+                var vaultService = new VaultService(vaultOptions, _encryptionService);
                 var idleLockService = new IdleLockService(TimeSpan.FromMinutes(15));
                 var zkVaultService = new Core.Services.ZeroKnowledge.ZkVaultService();
 
@@ -263,8 +369,9 @@ namespace PhantomVault.UI.ViewModels
                 _secureTrashService,
                 _iconManager);
 
-            // Set the manifest context with the validated password
-            vaultViewModel.SetManifestContext(manifestPath, password, null);
+            // Set the manifest context with the VeraCrypt password (which may be auto-generated)
+            // and the user's password for manifest decryption
+            vaultViewModel.SetManifestContext(manifestPath, password, null, veraCryptPasswordToUse);
 
                 ProgressPercent = 95;
                 Status = "Preparing vault interface...";

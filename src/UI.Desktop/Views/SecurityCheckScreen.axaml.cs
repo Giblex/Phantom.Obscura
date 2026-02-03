@@ -52,7 +52,7 @@ namespace PhantomVault.UI.Views
         private void OnNavigateToVault(object? sender, string usbPath)
         {
             // Ensure we're on the UI thread
-            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
             {
                 try
                 {
@@ -86,24 +86,26 @@ namespace PhantomVault.UI.Views
                 var dialogService = services.GetRequiredService<DialogService>();
                 var vaultLockDurationService = services.GetRequiredService<VaultLockDurationService>();
                 var secureTrashService = services.GetRequiredService<SecureTrashService>();
-                var veraCryptService = services.GetService<IVeraCryptService>() ?? new VeraCryptService();
+                var encryptionService = services.GetRequiredService<EncryptionService>();
                 var iconManager = services.GetRequiredService<IconManager>();
                 var usbDetector = services.GetRequiredService<UsbDetector>();
 
-                // Create VaultUnlockViewModel and window
+                // Create VaultUnlockViewModel 
                 var unlockViewModel = new ViewModels.VaultUnlockViewModel(
                     usbPath,
                     dialogService,
                     vaultLockDurationService,
                     secureTrashService,
-                    veraCryptService,
+                    encryptionService,
                     iconManager,
                     usbDetector);
-                    var unlockWindow = new VaultUnlockWindow(unlockViewModel);
-                    unlockWindow.Show();
-
-                    // Close security check screen
-                    this.Close();
+                
+                // Show unlock window (it will auto-unlock if keyfile is present)
+                var unlockWindow = new VaultUnlockWindow(unlockViewModel);
+                unlockWindow.Show();
+                
+                // Close security check screen
+                this.Close();
                 }
                 catch (Exception ex)
                 {

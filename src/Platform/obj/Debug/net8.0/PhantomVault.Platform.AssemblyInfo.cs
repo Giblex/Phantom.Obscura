@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("PhantomVault Platform-specific Passkey Services for Android, iOS, and Windows")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a690552b5f14fd805b01fa74e56bc86f8b69a2d4")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9b0b0cf1016565a9f044a406b5f69c726eafd8fa")]
 [assembly: System.Reflection.AssemblyProductAttribute("PhantomVault.Platform")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PhantomVault.Platform")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

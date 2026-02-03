@@ -12,7 +12,7 @@
         MinWidth="700" MinHeight="500"
         WindowStartupLocation="CenterScreen"
         CanResize="True"
-        Background="{DynamicResource WindowBackgroundBrush}" Icon="avares://PhantomVault.UI/Assets/images/Parent Icon.ico" FontFamily="Segoe UI">
+        Background="{DynamicResource ContentBackgroundBrush}" Icon="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Parent Icon.ico" FontFamily="Segoe UI">
 
     <Design.DataContext>
         <vm:UsbSetupViewModel/>
@@ -21,7 +21,7 @@
     <Grid RowDefinitions="Auto,*,Auto" Margin="0">
         
         <!-- Header -->
-        <Border Grid.Row="0" Background="{DynamicResource HeaderBackgroundBrush}" Padding="15,8">
+        <Border Grid.Row="0" Background="{DynamicResource ContentBackgroundBrush}" Padding="15,8">
             <StackPanel Spacing="8">
                 <TextBlock Text="USB Drive Setup"
                            FontSize="22"
@@ -85,10 +85,15 @@
                               Height="36"
                               HorizontalAlignment="Stretch"
                               FontSize="13"
+                              Background="{DynamicResource ControlBackgroundBrush}"
+                              Foreground="{DynamicResource PrimaryTextBrush}"
+                              BorderBrush="{DynamicResource ControlBorderBrush}"
                               ToolTip.Tip="Select the USB drive where your vault will be stored. Ensure it has at least 100 MB free space.">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding}" Padding="5"/>
+                                <TextBlock Text="{Binding}" 
+                                           Padding="5"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>
@@ -124,7 +129,7 @@
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                     
-                            <Border Background="{DynamicResource FooterBackgroundBrush}"
+                            <Border Background="{DynamicResource ControlBackgroundBrush}"
                             Padding="15"
                             CornerRadius="{StaticResource Radius.Md}"
                             BorderBrush="{DynamicResource ControlBorderBrush}"
@@ -152,7 +157,7 @@
                 </StackPanel>
 
                 <!-- Status Message -->
-                <Border Background="{DynamicResource FooterBackgroundBrush}"
+                <Border Background="{DynamicResource ControlBackgroundBrush}"
                         Padding="15,12"
                         CornerRadius="{StaticResource Radius.Md}"
                         BorderBrush="{DynamicResource ControlBorderBrush}"
@@ -168,7 +173,7 @@
         </ScrollViewer>
 
         <!-- Action Buttons -->
-        <Border Grid.Row="2" Background="{DynamicResource FooterBackgroundBrush}" Padding="25,10">
+        <Border Grid.Row="2" Background="{DynamicResource ContentBackgroundBrush}" Padding="25,10">
             <StackPanel Orientation="Horizontal" 
                         HorizontalAlignment="Center"
                         Spacing="15">

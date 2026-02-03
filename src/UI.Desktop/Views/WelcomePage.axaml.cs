@@ -32,6 +32,7 @@ namespace PhantomVault.UI.Views
             {
                 _currentViewModel.NavigateToUsbSetup -= OnNavigateToUsbSetup;
                 _currentViewModel.NavigateToSecurityCheck -= OnNavigateToSecurityCheck;
+                _currentViewModel.NavigateToSetupWizard -= OnNavigateToSetupWizard;
                 _currentViewModel.DeveloperBypassRequested -= OnDeveloperBypass;
                 _currentViewModel.OpenInstallerRequested -= OnOpenInstaller;
             }
@@ -44,6 +45,7 @@ namespace PhantomVault.UI.Views
                 // Wire up navigation events
                 viewModel.NavigateToUsbSetup += OnNavigateToUsbSetup;
                 viewModel.NavigateToSecurityCheck += OnNavigateToSecurityCheck;
+                viewModel.NavigateToSetupWizard += OnNavigateToSetupWizard;
                 viewModel.DeveloperBypassRequested += OnDeveloperBypass;
                 viewModel.OpenInstallerRequested += OnOpenInstaller;
                 _currentViewModel = viewModel;
@@ -51,6 +53,42 @@ namespace PhantomVault.UI.Views
             else
             {
                 _currentViewModel = null;
+            }
+        }
+
+        private void OnNavigateToSetupWizard(object? sender, EventArgs e)
+        {
+            try
+            {
+                var setupWizard = new SetupWizardWindow();
+                
+                // When wizard closes, show welcome page again or proceed based on result
+                setupWizard.Closed += (s, args) =>
+                {
+                    // Check if vault was created successfully (via ViewModel state)
+                    if (setupWizard.DataContext is SetupWizardViewModel vm && vm.IsCompleting == false && vm.CurrentStep == vm.TotalSteps)
+                    {
+                        // Vault was created - close welcome page entirely
+                        this.Close();
+                    }
+                    else
+                    {
+                        // User cancelled - show welcome page again
+                        this.Show();
+                    }
+                };
+
+                setupWizard.Show();
+                this.Hide();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to open setup wizard");
+                var dialogService = new DialogService();
+                _ = dialogService.ShowErrorAsync(
+                    "Setup Wizard Error",
+                    $"Unable to open the setup wizard: {ex.Message}",
+                    this);
             }
         }
 
@@ -137,7 +175,7 @@ namespace PhantomVault.UI.Views
             usbSetupViewModel.SetOwnerWindow(usbSetupWindow);
 
             usbSetupWindow.Show();
-            this.Hide(); // Hide instead of close to keep WelcomePage alive
+            this.Close(); // Close WelcomePage so it doesn't linger
         }
 
         private void OnNavigateToSecurityCheck(object? sender, string usbPath)
@@ -149,7 +187,7 @@ namespace PhantomVault.UI.Views
 
             var securityCheckScreen = new SecurityCheckScreen(securityCheckService, usbPath);
             securityCheckScreen.Show();
-            this.Hide(); // Hide instead of close to keep WelcomePage alive
+            this.Close(); // Close WelcomePage so it doesn't linger
         }
 
         private void InitializeComponent()

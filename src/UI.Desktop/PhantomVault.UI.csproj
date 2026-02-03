@@ -11,7 +11,7 @@
     <!-- Use Avalonia for cross‑platform desktop UI. -->
 
     <!-- Application Icon (Desktop/Taskbar icon) -->
-    <ApplicationIcon>Assets\images\Parent Icon.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\Visuals\Giblex Icons\Parent Icon.ico</ApplicationIcon>
     <!-- CS1591: Missing XML comment for publicly visible type or member - Temporarily suppressed -->
     <!-- CS0618: Obsolete method usage - Some internal uses of deprecated methods are intentional -->
     <!-- CS1573, CS1574, CS1571: XML documentation parameter mismatches - Fix in future refactor -->
@@ -67,21 +67,20 @@
     <None Include="..\..\Policies\base_policy.json" Link="Policies\base_policy.json" CopyToOutputDirectory="PreserveNewest" />
     
     <!-- Include all icon and image files -->
-    <AvaloniaResource Include="Assets\images\*.ico" />
-    <AvaloniaResource Include="Assets\images\*.png" />
+    <!-- New organized Visuals folder structure -->
+    <AvaloniaResource Include="Assets\Visuals\Giblex Icons\**\*.*" />
+    <AvaloniaResource Include="Assets\Visuals\App Icons\**\*.png" />
+    <AvaloniaResource Include="Assets\Visuals\Cat Icons\**\*.png" />
+    <AvaloniaResource Include="Assets\Visuals\Entry Logos\**\*.png" />
+    
     <AvaloniaResource Include="Assets\noise_128.png" />
     <AvaloniaResource Include="Assets\palette-icon.png" />
-    <!-- Include SVG icons for UI elements (replacing emojis) -->
+    <!-- Include SVG icons for UI elements -->
     <AvaloniaResource Include="Assets\Icons\*.svg" />
     <AvaloniaResource Include="Assets\SVG\*.svg" />
     <AvaloniaResource Include="Assets\SVG\Current\*.svg" />
-    <!-- Include PO UI icons (currently stored under Logos) as AvaloniaResource for avares:// URI access -->
-    <!-- Map physical path Assets\Icons\Logos\PO UI\** to avares://PhantomVault.UI/Assets/Icons/PO UI/** -->
-    <AvaloniaResource Include="Assets\Icons\Logos\PO UI\**\*.png" Link="Assets\Icons\PO UI\%(RecursiveDir)%(Filename)%(Extension)" />
   <!-- Include OS Icons used in multiple UI controls, including filenames with spaces -->
   <AvaloniaResource Include="Assets\Icons\OS Icons\**\*.*" />
-    <!-- Include brand logos used for import tiles -->
-    <AvaloniaResource Include="Assets\Icons\Logos\import\**\*.png" />
     
     <!-- Include extracted XAML resources for modular UI architecture -->
     <AvaloniaResource Include="Resources\Tokens\SpacingTokens.axaml" />
