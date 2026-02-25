@@ -16,6 +16,7 @@ using Avalonia.Threading;
 using Avalonia.Controls.ApplicationLifetimes;
 using PhantomVault.UI.Services;
 using PhantomVault.UI.Views;
+using PhantomVault.UI.Helpers;
 
 
 namespace PhantomVault.UI.ViewModels
@@ -47,12 +48,13 @@ namespace PhantomVault.UI.ViewModels
 
             // Provide sensible defaults when no manifest is supplied so the
             // Category Manager isn't empty when opened standalone.
-            Categories.Add(new CategoryItem { Name = "General", Icon = "/Assets/Icons/Logos/Coloured Icons/Apps/Computer/3917414_semi_dark_pastel_blue.png", Order = 0 });
-            Categories.Add(new CategoryItem { Name = "Logins", Icon = "/Assets/Icons/Logos/Coloured Icons/Apps/Mail/Mail_semi_dark_pastel_blue.png", Order = 1 });
-            Categories.Add(new CategoryItem { Name = "Payment", Icon = "/Assets/Icons/Logos/Coloured Icons/Apps/Phone/Phone_semi_dark_pastel_blue.png", Order = 2 });
+            Categories.Add(new CategoryItem { Name = "General", Icon = "/Assets/Visuals/Cat Icons/Bookmark/3914133 (1)_semi_dark_pastel_blue.png", Order = 0, TileColor = "#BFDBFE" });
+            Categories.Add(new CategoryItem { Name = "Logins", Icon = "/Assets/Visuals/Cat Icons/Key/Key_golden_pastel_yellow.png", Order = 1, TileColor = "#FDE68A" });
+            Categories.Add(new CategoryItem { Name = "Payment", Icon = "/Assets/Visuals/Cat Icons/Credit cards/Credit cards_teal.png", Order = 2, TileColor = "#A7F3D0" });
 
             InitializeCommands();
             HookCollectionEvents();
+            AutoDetectTileColors();
         }
 
         /// <summary>
@@ -70,6 +72,7 @@ namespace PhantomVault.UI.ViewModels
                 SyncFromVaultCategories(vm);
             }
             HookCollectionEvents();
+            AutoDetectTileColors();
         }
 
         public CategoryManagerViewModel(ManifestService manifestService, VaultManifest manifest, string manifestPath, string? passphrase = null, string? keyfilePath = null)
@@ -85,23 +88,24 @@ namespace PhantomVault.UI.ViewModels
             {
                 foreach (var c in manifest.Categories.OrderBy(c => c.Order))
                 {
-                    Categories.Add(new CategoryItem { Name = c.Name, Icon = c.Icon, Order = c.Order, IsTrash = c.IsTrash, TileColor = c.TileColor });
+                    Categories.Add(new CategoryItem { Name = c.Name, Icon = IconPathMigrator.Migrate(c.Icon), Order = c.Order, IsTrash = c.IsTrash, TileColor = c.TileColor });
                 }
                 if (!Categories.Any(c => string.Equals(c.Name, "Deleted", System.StringComparison.OrdinalIgnoreCase)))
                 {
-                    Categories.Add(new CategoryItem { Name = "Deleted", Icon = "/Assets/Icons/Logos/Coloured Icons/Apps/Settings/3917035_pink_red_peach.png", Order = Categories.Count });
+                    Categories.Add(new CategoryItem { Name = "Deleted", Icon = "/Assets/Visuals/Cat Icons/rubbish/rubbish_charcoal.png", Order = Categories.Count, IsTrash = true, TileColor = "#6B7280" });
                 }
             }
             else
             {
-                Categories.Add(new CategoryItem { Name = "General", Icon = "/Assets/Icons/Logos/Coloured Icons/Apps/Computer/3917414_semi_dark_pastel_blue.png", Order = 0 });
-                Categories.Add(new CategoryItem { Name = "Logins", Icon = "/Assets/Icons/Logos/Coloured Icons/Apps/Mail/Mail_semi_dark_pastel_blue.png", Order = 1 });
-                Categories.Add(new CategoryItem { Name = "Payment", Icon = "/Assets/Icons/Logos/Coloured Icons/Apps/Phone/Phone_semi_dark_pastel_blue.png", Order = 2 });
-                Categories.Add(new CategoryItem { Name = "Secure rubbish bin", Icon = "/Assets/Icons/Logos/Coloured Icons/Apps/Settings/3917035_pink_red_peach.png", Order = 3, IsTrash = true });
+                Categories.Add(new CategoryItem { Name = "General", Icon = "/Assets/Visuals/Cat Icons/Bookmark/3914133 (1)_semi_dark_pastel_blue.png", Order = 0, TileColor = "#BFDBFE" });
+                Categories.Add(new CategoryItem { Name = "Logins", Icon = "/Assets/Visuals/Cat Icons/Key/Key_golden_pastel_yellow.png", Order = 1, TileColor = "#FDE68A" });
+                Categories.Add(new CategoryItem { Name = "Payment", Icon = "/Assets/Visuals/Cat Icons/Credit cards/Credit cards_teal.png", Order = 2, TileColor = "#A7F3D0" });
+                Categories.Add(new CategoryItem { Name = "Secure rubbish bin", Icon = "/Assets/Visuals/Cat Icons/rubbish/rubbish_charcoal.png", Order = 3, IsTrash = true, TileColor = "#6B7280" });
             }
 
             InitializeCommands();
             HookCollectionEvents();
+            AutoDetectTileColors();
         }
 
         /// <summary>
@@ -144,8 +148,8 @@ namespace PhantomVault.UI.ViewModels
         {
             if (_iconManager == null)
             {
-                // Point to the application's Assets/Icons folder
-                var iconsPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "Icons");
+                // Point to the application's Assets/Visuals folder
+                var iconsPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "Visuals");
                 _iconManager = new IconManager(iconsPath);
             }
             return _iconManager;
@@ -252,7 +256,7 @@ namespace PhantomVault.UI.ViewModels
                 Categories.Add(new CategoryItem
                 {
                     Name = c.Name,
-                    Icon = c.Icon,
+                    Icon = IconPathMigrator.Migrate(c.Icon),
                     Order = order++,
                     IsTrash = string.Equals(c.Name, "Secure rubbish bin", System.StringComparison.OrdinalIgnoreCase) ||
                               string.Equals(c.Name, "Deleted", System.StringComparison.OrdinalIgnoreCase) ||
@@ -264,7 +268,7 @@ namespace PhantomVault.UI.ViewModels
             // Ensure at least one trash category exists; if none in UI, append Secure rubbish bin at end for safety
             if (!Categories.Any(ci => ci.IsTrash || string.Equals(ci.Name, "Secure rubbish bin", System.StringComparison.OrdinalIgnoreCase)))
             {
-                Categories.Add(new CategoryItem { Name = "Secure rubbish bin", Icon = "/Assets/Icons/Logos/Coloured Icons/Apps/Settings/3917035_pink_red_peach.png", Order = Categories.Count, IsTrash = true, Count = 0 });
+                Categories.Add(new CategoryItem { Name = "Secure rubbish bin", Icon = "/Assets/Visuals/Cat Icons/rubbish/rubbish_charcoal.png", Order = Categories.Count, IsTrash = true, Count = 0, TileColor = "#6B7280" });
             }
             // Normalize order values
             for (int i = 0; i < Categories.Count; i++) Categories[i].Order = i;
@@ -340,9 +344,9 @@ namespace PhantomVault.UI.ViewModels
             var item = new CategoryItem 
             { 
                 Name = uniqueName, 
-                Icon = "/Assets/Icons/Logos/Coloured Icons/Apps/Computer/3917414_semi_dark_pastel_blue.png", 
+                Icon = "/Assets/Visuals/Cat Icons/Bookmark/3914133 (1)_purple.png", 
                 Order = nextOrder,
-                TileColor = defaultColor // Apply saved preference
+                TileColor = defaultColor ?? "#E9D5FF" // Apply saved preference or default purple
             };
             Categories.Add(item);
             
@@ -471,7 +475,7 @@ namespace PhantomVault.UI.ViewModels
                 var deletedCount = Categories.Count(c => string.Equals(c.Name, "Deleted", System.StringComparison.OrdinalIgnoreCase));
                 if (deletedCount == 0)
                 {
-                    Categories.Add(new CategoryItem { Name = "Deleted", Icon = "/Assets/Icons/Logos/Coloured Icons/Apps/Settings/3917035_pink_red_peach.png", Order = Categories.Count });
+                    Categories.Add(new CategoryItem { Name = "Deleted", Icon = "/Assets/Visuals/Cat Icons/rubbish/rubbish_charcoal.png", Order = Categories.Count, IsTrash = true, TileColor = "#6B7280" });
                 }
                 else if (deletedCount > 1)
                 {
@@ -722,11 +726,125 @@ namespace PhantomVault.UI.ViewModels
                     var baseDir = AppContext.BaseDirectory;
                     var relativePath = iconManagerVm.ConfirmedIconPath.Replace(baseDir, "").Replace("\\", "/").TrimStart('/');
                     item.Icon = $"/{relativePath}";
+
+                    // Auto-detect the dominant color from the icon and apply it
+                    var dominantColor = ExtractDominantColor(iconManagerVm.ConfirmedIconPath);
+                    if (dominantColor != null)
+                    {
+                        item.TileColor = dominantColor;
+                        Debug.WriteLine($"[CATEGORY-MGR] Auto-detected tile color '{dominantColor}' from icon");
+                    }
                 }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"[CATEGORY-MGR] Error picking icon: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Automatically detects and applies tile colors for categories that have an icon but no TileColor set.
+        /// </summary>
+        private void AutoDetectTileColors()
+        {
+            foreach (var item in Categories)
+            {
+                if (!string.IsNullOrEmpty(item.TileColor)) continue; // already has a color
+                if (string.IsNullOrEmpty(item.Icon)) continue; // no icon to sample
+
+                var resolved = ResolveIconPath(item.Icon);
+                if (resolved == null) continue;
+
+                var color = ExtractDominantColor(resolved);
+                if (color != null)
+                {
+                    item.TileColor = color;
+                    Debug.WriteLine($"[CATEGORY-MGR] AutoDetect: Set tile color '{color}' for '{item.Name}'");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Resolves a relative icon path (starting with /) to an absolute path
+        /// using AppContext.BaseDirectory. Returns the original path if already absolute and exists.
+        /// </summary>
+        private static string? ResolveIconPath(string path)
+        {
+            if (System.IO.File.Exists(path)) return path;
+            if (path.StartsWith("/") || path.StartsWith("\\"))
+            {
+                var resolved = System.IO.Path.Combine(AppContext.BaseDirectory, path.TrimStart('/', '\\'));
+                if (System.IO.File.Exists(resolved)) return resolved;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Extracts the dominant (most frequent non-transparent, non-near-black/white) colour
+        /// from an image file using SkiaSharp. Returns a hex string like "#AABBCC" or null.
+        /// </summary>
+        private static string? ExtractDominantColor(string imagePath)
+        {
+            try
+            {
+                if (!System.IO.File.Exists(imagePath)) return null;
+
+                using var stream = System.IO.File.OpenRead(imagePath);
+                using var skBitmap = SkiaSharp.SKBitmap.Decode(stream);
+                if (skBitmap == null) return null;
+
+                // Sample pixels and bucket them by hue to find the dominant chromatic colour
+                var colorCounts = new Dictionary<uint, int>();
+                int step = Math.Max(1, Math.Max(skBitmap.Width, skBitmap.Height) / 64); // sample ~64x64 grid
+
+                for (int y = 0; y < skBitmap.Height; y += step)
+                {
+                    for (int x = 0; x < skBitmap.Width; x += step)
+                    {
+                        var px = skBitmap.GetPixel(x, y);
+
+                        // Skip transparent or near-transparent pixels
+                        if (px.Alpha < 80) continue;
+
+                        // Skip very dark (near-black) and very light (near-white) pixels
+                        float brightness = (px.Red * 0.299f + px.Green * 0.587f + px.Blue * 0.114f) / 255f;
+                        if (brightness < 0.12f || brightness > 0.92f) continue;
+
+                        // Skip low-saturation (grey) pixels
+                        int max = Math.Max(px.Red, Math.Max(px.Green, px.Blue));
+                        int min = Math.Min(px.Red, Math.Min(px.Green, px.Blue));
+                        float saturation = max == 0 ? 0 : (max - min) / (float)max;
+                        if (saturation < 0.15f) continue;
+
+                        // Quantise to reduce colour space — shift right by 4 bits (16-colour buckets per channel)
+                        uint quantised = ((uint)(px.Red >> 4) << 8) | ((uint)(px.Green >> 4) << 4) | (uint)(px.Blue >> 4);
+                        colorCounts.TryGetValue(quantised, out int count);
+                        colorCounts[quantised] = count + 1;
+                    }
+                }
+
+                if (colorCounts.Count == 0) return null;
+
+                // Find the most frequent quantised colour
+                var best = colorCounts.OrderByDescending(kv => kv.Value).First().Key;
+
+                // Expand back to 8-bit per channel (shift left 4 + half-step for centering)
+                int r = (int)((best >> 8) & 0xF) * 17;
+                int g = (int)((best >> 4) & 0xF) * 17;
+                int b = (int)(best & 0xF) * 17;
+
+                // Make it a softer/lighter pastel tone suitable for a dark UI accent strip
+                // Blend towards a lighter version (60% original, 40% white)
+                r = Math.Min(255, (int)(r * 0.7 + 255 * 0.3));
+                g = Math.Min(255, (int)(g * 0.7 + 255 * 0.3));
+                b = Math.Min(255, (int)(b * 0.7 + 255 * 0.3));
+
+                return $"#{r:X2}{g:X2}{b:X2}";
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[CATEGORY-MGR] ExtractDominantColor failed: {ex.Message}");
+                return null;
             }
         }
 

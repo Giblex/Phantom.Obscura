@@ -1,10 +1,10 @@
 using System;
 using Avalonia;
-using Avalonia.Animation;
+using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
-using Avalonia.Styling;
+using Avalonia.Threading;
 using Avalonia.Xaml.Interactivity;
 
 namespace PhantomVault.UI.Behaviors
@@ -12,6 +12,8 @@ namespace PhantomVault.UI.Behaviors
     /// <summary>
     /// Behavior that lifts a control slightly upward on hover.
     /// Respects ReduceMotion accessibility settings.
+    /// Uses DispatcherTimer interpolation because Avalonia's
+    /// Animation.RunAsync() cannot target TranslateTransform (it is not a Visual).
     /// </summary>
     public class HoverLiftBehavior : Behavior<Control>
     {
@@ -23,6 +25,12 @@ namespace PhantomVault.UI.Behaviors
 
         private TranslateTransform? _transform;
         private bool _isHovering;
+        private DispatcherTimer? _animTimer;
+        private double _animFrom;
+        private double _animTo;
+        private DateTime _animStart;
+        private double _animDuration; // seconds
+        private readonly CubicEaseOut _easing = new();
 
         /// <summary>
         /// Distance to lift in pixels (negative = up, default: -2px)
@@ -60,6 +68,8 @@ namespace PhantomVault.UI.Behaviors
         {
             base.OnDetaching();
 
+            StopAnimation();
+
             if (AssociatedObject != null)
             {
                 AssociatedObject.PointerEntered -= OnPointerEntered;
@@ -72,7 +82,7 @@ namespace PhantomVault.UI.Behaviors
             if (_isHovering || _transform == null) return;
             _isHovering = true;
 
-            AnimateTransform(0, LiftDistance);
+            AnimateTransform(_transform.Y, LiftDistance);
         }
 
         private void OnPointerExited(object? sender, PointerEventArgs e)
@@ -80,45 +90,67 @@ namespace PhantomVault.UI.Behaviors
             if (!_isHovering || _transform == null) return;
             _isHovering = false;
 
-            AnimateTransform(LiftDistance, 0);
+            AnimateTransform(_transform.Y, 0);
         }
 
-        private async void AnimateTransform(double fromY, double toY)
+        private void AnimateTransform(double fromY, double toY)
         {
             if (_transform == null || AssociatedObject == null) return;
 
-            // Check ReduceMotion - if enabled, use instant transition
+            // Check ReduceMotion — if enabled, snap immediately
             var reduceMotion = Services.AccessibilityService.Instance.ReduceMotion;
             if (reduceMotion)
             {
+                StopAnimation();
                 _transform.Y = toY;
                 return;
             }
 
-            // Smooth animation
-            var duration = AnimationHelper.GetDuration(AnimationTiming.Fast);
-            var easing = AnimationHelper.GetEasing();
+            // Set up timer-driven interpolation (~60 fps)
+            _animFrom = fromY;
+            _animTo = toY;
+            _animDuration = AnimationHelper.GetDuration(AnimationTiming.Fast);
+            _animStart = DateTime.UtcNow;
 
-            var animation = new Avalonia.Animation.Animation
+            if (_animTimer == null)
             {
-                Duration = TimeSpan.FromSeconds(duration),
-                Easing = easing,
-                Children =
-                {
-                    new KeyFrame
-                    {
-                        Cue = new Cue(0.0),
-                        Setters = { new Setter(TranslateTransform.YProperty, fromY) }
-                    },
-                    new KeyFrame
-                    {
-                        Cue = new Cue(1.0),
-                        Setters = { new Setter(TranslateTransform.YProperty, toY) }
-                    }
-                }
-            };
+                _animTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
+                _animTimer.Tick += OnAnimTick;
+            }
 
-            await animation.RunAsync(_transform);
+            _animTimer.Start();
+        }
+
+        private void OnAnimTick(object? sender, EventArgs e)
+        {
+            if (_transform == null)
+            {
+                StopAnimation();
+                return;
+            }
+
+            var elapsed = (DateTime.UtcNow - _animStart).TotalSeconds;
+            var t = Math.Clamp(elapsed / _animDuration, 0.0, 1.0);
+
+            // Apply cubic-ease-out
+            var easedT = _easing.Ease(t);
+            _transform.Y = _animFrom + (_animTo - _animFrom) * easedT;
+
+            if (t >= 1.0)
+            {
+                _transform.Y = _animTo;
+                _animTimer?.Stop();
+            }
+        }
+
+        private void StopAnimation()
+        {
+            if (_animTimer != null)
+            {
+                _animTimer.Stop();
+                _animTimer.Tick -= OnAnimTick;
+                _animTimer = null;
+            }
         }
     }
 }

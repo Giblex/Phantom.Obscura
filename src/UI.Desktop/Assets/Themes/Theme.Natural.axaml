@@ -221,4 +221,7 @@
         <GradientStop Color="#00FFFFFF" Offset="1"/>
     </LinearGradientBrush>
 
+    <!-- Liquid glass button foreground (dark text on earthy glass) -->
+    <SolidColorBrush x:Key="LiquidGlassButtonForeground" Color="#2B2520"/>
+
 </ResourceDictionary>

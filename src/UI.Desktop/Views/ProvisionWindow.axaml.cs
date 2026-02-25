@@ -76,7 +76,8 @@ namespace PhantomVault.UI.Views
         {
             await HandleEventAsync(async () =>
             {
-                var viewModel = new TotpSettingsViewModel();
+                var totpService = new PhantomVault.Core.Services.TotpService();
+                var viewModel = new TotpSettingsViewModel(totpService);
                 var window = new TotpSettingsWindow
                 {
                     DataContext = viewModel

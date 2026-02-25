@@ -10,10 +10,11 @@
                    Foreground="{DynamicResource PrimaryTextBrush}"/>
         
         <!-- Runtime Theme Selection -->
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+        <Border Classes="fade-in stagger-1"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
-                CornerRadius="8" 
+                CornerRadius="{StaticResource Radius.Lg}" 
                 Padding="20">
             <StackPanel Spacing="15">
                 <TextBlock Text="App Theme" 
@@ -21,20 +22,112 @@
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
                 <TextBlock Text="Choose a color scheme for the main vault windows." 
-                           FontSize="12" 
+                           FontSize="{StaticResource Type.Small.Size}" 
                            Foreground="{DynamicResource MutedTextBrush}"/>
                 <ComboBox 
                     ItemsSource="{Binding RuntimeThemeNames}" 
                     SelectedIndex="{Binding SelectedRuntimeThemeIndex, Mode=TwoWay}"
                     Width="250"
                     HorizontalAlignment="Left"/>
+                
+                <!-- Custom Theme Controls -->
+                <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,5,0,0">
+                    <Button Content="Create Custom Theme" 
+                            Command="{Binding CreateCustomThemeCommand}"
+                            Classes="accent"
+                            Padding="12,6"/>
+                    <Button Content="Delete Custom Theme" 
+                            Command="{Binding DeleteCustomThemeCommand}"
+                            IsVisible="{Binding IsCustomThemeSelected}"
+                            Foreground="{DynamicResource ErrorBrush}"
+                            Padding="12,6"/>
+                </StackPanel>
+
+                <!-- Custom Theme Editor (visible when creating/editing) -->
+                <Border IsVisible="{Binding IsCustomEditorOpen}"
+                        Background="{DynamicResource ContentBackgroundBrush}"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{StaticResource Radius.Md}"
+                        Padding="16"
+                        Margin="0,8,0,0">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Custom Theme Editor" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <TextBlock Text="Pick your base colors. The full theme is generated automatically."
+                                   FontSize="{StaticResource Type.Small.Size}" Foreground="{DynamicResource MutedTextBrush}"/>
+                        
+                        <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="8">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Theme Name" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding CustomThemeName, Mode=TwoWay}" Width="200" HorizontalAlignment="Left"/>
+                            
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Primary BG" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                <Border Width="24" Height="24" CornerRadius="4" Background="{Binding CustomPrimaryBgPreview}"/>
+                                <TextBox Text="{Binding CustomPrimaryBg, Mode=TwoWay}" Width="100"/>
+                            </StackPanel>
+                            
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Secondary BG" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                <Border Width="24" Height="24" CornerRadius="4" Background="{Binding CustomSecondaryBgPreview}"/>
+                                <TextBox Text="{Binding CustomSecondaryBg, Mode=TwoWay}" Width="100"/>
+                            </StackPanel>
+                            
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Surface BG" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                <Border Width="24" Height="24" CornerRadius="4" Background="{Binding CustomSurfaceBgPreview}"/>
+                                <TextBox Text="{Binding CustomSurfaceBg, Mode=TwoWay}" Width="100"/>
+                            </StackPanel>
+                            
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Accent" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                <Border Width="24" Height="24" CornerRadius="4" Background="{Binding CustomAccentPreview}"/>
+                                <TextBox Text="{Binding CustomAccent, Mode=TwoWay}" Width="100"/>
+                            </StackPanel>
+                            
+                            <TextBlock Grid.Row="5" Grid.Column="0" Text="Accent Hover" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                <Border Width="24" Height="24" CornerRadius="4" Background="{Binding CustomAccentHoverPreview}"/>
+                                <TextBox Text="{Binding CustomAccentHover, Mode=TwoWay}" Width="100"/>
+                            </StackPanel>
+                            
+                            <TextBlock Grid.Row="6" Grid.Column="0" Text="Text Primary" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                <Border Width="24" Height="24" CornerRadius="4" Background="{Binding CustomTextPrimaryPreview}"/>
+                                <TextBox Text="{Binding CustomTextPrimary, Mode=TwoWay}" Width="100"/>
+                            </StackPanel>
+                            
+                            <TextBlock Grid.Row="7" Grid.Column="0" Text="Text Muted" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <StackPanel Grid.Row="7" Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                <Border Width="24" Height="24" CornerRadius="4" Background="{Binding CustomTextMutedPreview}"/>
+                                <TextBox Text="{Binding CustomTextMuted, Mode=TwoWay}" Width="100"/>
+                            </StackPanel>
+                            
+                            <TextBlock Grid.Row="8" Grid.Column="0" Text="Border" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <StackPanel Grid.Row="8" Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                <Border Width="24" Height="24" CornerRadius="4" Background="{Binding CustomBorderPreview}"/>
+                                <TextBox Text="{Binding CustomBorder, Mode=TwoWay}" Width="100"/>
+                            </StackPanel>
+                        </Grid>
+                        
+                        <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,8,0,0">
+                            <Button Content="Save &amp; Apply" 
+                                    Command="{Binding SaveCustomThemeCommand}"
+                                    Classes="accent" Padding="12,6"/>
+                            <Button Content="Cancel" 
+                                    Command="{Binding CancelCustomThemeCommand}"
+                                    Padding="12,6"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
             </StackPanel>
         </Border>
         
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+        <Border Classes="fade-in stagger-2"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
-                CornerRadius="8" 
+                CornerRadius="{StaticResource Radius.Lg}" 
                 Padding="20">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="20">
                 <StackPanel Grid.Column="0" Spacing="15">
@@ -73,15 +166,15 @@
                         Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                         BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                         BorderThickness="1" 
-                        CornerRadius="8" 
+                        CornerRadius="{StaticResource Radius.Lg}" 
                         Padding="20"
                         Width="200">
                     <StackPanel Spacing="12">
                         <TextBlock Text="Preview" 
-                                   FontSize="12" 
+                                   FontSize="{StaticResource Type.Small.Size}" 
                                    Foreground="{DynamicResource MutedTextBrush}"/>
                         <Border Background="{DynamicResource ContentBackgroundBrush}" 
-                                CornerRadius="6" 
+                                CornerRadius="{StaticResource Radius.Md}" 
                                 Padding="12">
                             <StackPanel Spacing="8">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
@@ -106,10 +199,11 @@
             </Grid>
         </Border>
 
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+        <Border Classes="fade-in stagger-3"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
-                CornerRadius="8" 
+                CornerRadius="{StaticResource Radius.Lg}" 
                 Padding="20">
             <StackPanel Spacing="15">
                 <TextBlock Text="Motion &amp; Effects" 

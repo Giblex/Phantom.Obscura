@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using GiblexVault.Security.ZK.Models;
 using GiblexVault.Security.ZK.Primitives;
+using GiblexVault.Security.ZK.Signing;
 using GiblexVault.Security.ZK.Wrapping;
 
 namespace GiblexVault.Security.ZK.Container
@@ -23,11 +24,16 @@ namespace GiblexVault.Security.ZK.Container
         private static readonly byte[] Magic = { 0x47, 0x56, 0x2D, 0x43, 0x5A, 0x4B, 0x01, 0x00 };
         private const int ChunkSize = 64 * 1024; // 64 KB streaming buffer
 
-        private sealed record CHeader(string Type, string Version, CipherSuite Suite, KdfParams Kdf, string? Label);
+        private sealed record CHeader(string Type, string Version, CipherSuite Suite, KdfParams Kdf, string? Label, string? PolicyHash = null);
         private sealed record Entry(string Name, long RealLength, long Offset, long BlobLength, byte[] WrappedDek);
         private sealed record Toc(List<Entry> Entries);
 
-        public static async Task CreateAsync(string path, byte[] masterKey, EngineOptions options, string? label = null)
+        /// <summary>
+        /// Creates a new encrypted container. If signingKey is provided, an Ed25519 signature
+        /// is written over the header. The corresponding public key must be supplied during Open
+        /// to verify the header has not been tampered with before any key derivation occurs.
+        /// </summary>
+        public static async Task CreateAsync(string path, byte[] masterKey, EngineOptions options, string? label = null, string? policyHash = null, byte[]? signingKey = null)
         {
             var suite = options.Suite;
             var kdf = new KdfParams
@@ -39,7 +45,7 @@ namespace GiblexVault.Security.ZK.Container
                 Salt = RandomNumberGenerator.GetBytes(32)
             };
 
-            var header = JsonSerializer.SerializeToUtf8Bytes(new CHeader("GV-CZK", "1", suite, kdf, label));
+            var header = JsonSerializer.SerializeToUtf8Bytes(new CHeader("GV-CZK", "2", suite, kdf, label, policyHash));
             await using var fs = File.Create(path);
             await fs.WriteAsync(Magic);
 
@@ -47,6 +53,23 @@ namespace GiblexVault.Security.ZK.Container
             BinaryPrimitives.WriteUInt32LittleEndian(l, (uint)header.Length);
             await fs.WriteAsync(l);
             await fs.WriteAsync(header);
+
+            // Write Ed25519 signature over the header (64 bytes, or 0 bytes if unsigned)
+            if (signingKey != null)
+            {
+                var headerStr = Encoding.UTF8.GetString(header);
+                var sig = Ed25519Signer.SignString(headerStr, signingKey);
+                byte[] sigLen = new byte[2];
+                BinaryPrimitives.WriteUInt16LittleEndian(sigLen, (ushort)sig.Length);
+                await fs.WriteAsync(sigLen);
+                await fs.WriteAsync(sig);
+            }
+            else
+            {
+                byte[] sigLen = new byte[2];
+                BinaryPrimitives.WriteUInt16LittleEndian(sigLen, 0);
+                await fs.WriteAsync(sigLen);
+            }
 
             var cek = Hkdf.Sha256(masterKey, kdf.Salt, Encoding.UTF8.GetBytes("container::cek"));
             await WriteTocAsync(fs, header, suite, cek, new Toc(new List<Entry>()));
@@ -68,7 +91,12 @@ namespace GiblexVault.Security.ZK.Container
             await fs.FlushAsync();
         }
 
-        private static (byte[] header, CipherSuite suite, byte[] cek, long tocStart, FileStream fs) Open(string path, byte[] masterKey)
+        /// <summary>
+        /// Opens an existing container. If verifyingKey is provided, the Ed25519 signature
+        /// over the header is verified BEFORE any key derivation occurs. If the signature
+        /// is invalid or missing when a verifying key is expected, the operation fails.
+        /// </summary>
+        private static (byte[] header, CipherSuite suite, byte[] cek, long tocStart, FileStream fs) Open(string path, byte[] masterKey, byte[]? verifyingKey = null)
         {
             var fs = File.Open(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
             Span<byte> magic = stackalloc byte[Magic.Length];
@@ -84,7 +112,37 @@ namespace GiblexVault.Security.ZK.Container
             if (fs.Read(header, 0, (int)hlen) != (int)hlen)
                 throw new InvalidOperationException("Bad header");
 
+            // Read signature length (2 bytes) - present in v2+ containers
             var hdoc = JsonSerializer.Deserialize<CHeader>(header)!;
+            if (hdoc.Version != "1") // v2+ includes signature block
+            {
+                byte[] sigLenBuf = new byte[2];
+                if (fs.Read(sigLenBuf) != 2)
+                    throw new InvalidOperationException("Bad signature length");
+                int sigLen = BinaryPrimitives.ReadUInt16LittleEndian(sigLenBuf);
+
+                if (sigLen > 0)
+                {
+                    byte[] sig = new byte[sigLen];
+                    if (fs.Read(sig, 0, sigLen) != sigLen)
+                        throw new InvalidOperationException("Bad signature");
+
+                    // Verify signature BEFORE key derivation
+                    if (verifyingKey != null)
+                    {
+                        var headerStr = Encoding.UTF8.GetString(header);
+                        if (!Ed25519Signer.VerifyString(headerStr, sig, verifyingKey))
+                            throw new CryptographicException("Container header signature verification failed. The header may have been tampered with.");
+                    }
+                }
+                else if (verifyingKey != null)
+                {
+                    // Signature expected but not present
+                    throw new CryptographicException("Container header signature required but not found.");
+                }
+            }
+
+            // Only derive key AFTER signature verification passes
             var cek = Hkdf.Sha256(masterKey, hdoc.Kdf.Salt, Encoding.UTF8.GetBytes("container::cek"));
             var tocStart = fs.Position;
 
@@ -139,9 +197,9 @@ namespace GiblexVault.Security.ZK.Container
         /// <summary>
         /// Adds a file to the container using streaming to avoid loading the entire file into memory.
         /// </summary>
-        public static void AddFile(string path, byte[] masterKey, EngineOptions options, string entryName, string filePath)
+        public static void AddFile(string path, byte[] masterKey, EngineOptions options, string entryName, string filePath, byte[]? verifyingKey = null)
         {
-            var (header, suite, cek, tocStart, fs) = Open(path, masterKey);
+            var (header, suite, cek, tocStart, fs) = Open(path, masterKey, verifyingKey);
             using (fs)
             {
                 var toc = ReadToc(fs, header, suite, cek);
@@ -210,9 +268,9 @@ namespace GiblexVault.Security.ZK.Container
             CryptographicOperations.ZeroMemory(cek);
         }
 
-        public static List<string> List(string path, byte[] masterKey, EngineOptions options)
+        public static List<string> List(string path, byte[] masterKey, EngineOptions options, byte[]? verifyingKey = null)
         {
-            var (header, suite, cek, tocStart, fs) = Open(path, masterKey);
+            var (header, suite, cek, tocStart, fs) = Open(path, masterKey, verifyingKey);
             using (fs)
             {
                 var toc = ReadToc(fs, header, suite, cek);
@@ -222,9 +280,9 @@ namespace GiblexVault.Security.ZK.Container
             }
         }
 
-        public static byte[] Extract(string path, byte[] masterKey, EngineOptions options, string entryName)
+        public static byte[] Extract(string path, byte[] masterKey, EngineOptions options, string entryName, byte[]? verifyingKey = null)
         {
-            var (header, suite, cek, tocStart, fs) = Open(path, masterKey);
+            var (header, suite, cek, tocStart, fs) = Open(path, masterKey, verifyingKey);
             using (fs)
             {
                 var toc = ReadToc(fs, header, suite, cek);

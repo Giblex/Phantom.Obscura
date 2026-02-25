@@ -13,7 +13,8 @@ namespace PhantomVault.UI.Converters
 
             if (value is string s && !string.IsNullOrWhiteSpace(s))
             {
-                exists = File.Exists(s);
+                var resolved = ResolveIconPath(s);
+                exists = resolved != null && File.Exists(resolved);
             }
 
             // Check if we should invert the result
@@ -28,6 +29,26 @@ namespace PhantomVault.UI.Converters
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Resolves a relative icon path (starting with /) to an absolute path
+        /// using AppContext.BaseDirectory. Returns the original path if already absolute.
+        /// </summary>
+        private static string? ResolveIconPath(string path)
+        {
+            if (File.Exists(path))
+                return path;
+
+            // Resolve paths like /Assets/Visuals/... relative to the app base directory
+            if (path.StartsWith("/") || path.StartsWith("\\"))
+            {
+                var resolved = Path.Combine(AppContext.BaseDirectory, path.TrimStart('/', '\\'));
+                if (File.Exists(resolved))
+                    return resolved;
+            }
+
+            return null;
         }
     }
 }

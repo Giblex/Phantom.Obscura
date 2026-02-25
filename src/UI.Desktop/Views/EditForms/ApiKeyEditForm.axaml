@@ -4,29 +4,29 @@
     
     <Border x:Name="ApiKeyPanelBorder" Background="Transparent" IsVisible="{Binding IsApiKeyEntry}">
         <StackPanel x:Name="ApiKeyPanel" Spacing="12">
-        <TextBlock Text="API Credential" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+        <TextBlock Text="API Credential" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
         <StackPanel Spacing="6">
-            <TextBlock Text="Key Type" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBlock Text="Key Type" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
             <ComboBox ItemsSource="{Binding ApiKeyTypeOptions}"
                       SelectedItem="{Binding ApiKeyType}"
                       Height="40"
-                      FontSize="14"/>
+                      FontSize="{StaticResource Type.Body.Size}"/>
         </StackPanel>
         <StackPanel Spacing="6">
-            <TextBlock Text="API Key" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding ApiKeyValue}" Height="40" FontSize="14" Watermark="sk_live_..."/>
+            <TextBlock Text="API Key" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding ApiKeyValue}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="sk_live_..."/>
         </StackPanel>
         <StackPanel Spacing="6">
-            <TextBlock Text="Endpoint" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding ApiEndpoint}" Height="40" FontSize="14" Watermark="https://api.example.com"/>
+            <TextBlock Text="Endpoint" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding ApiEndpoint}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="https://api.example.com"/>
         </StackPanel>
         <StackPanel Spacing="6">
-            <TextBlock Text="Environment" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding ApiEnvironment}" Height="40" FontSize="14" Watermark="Production"/>
+            <TextBlock Text="Environment" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding ApiEnvironment}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="Production"/>
         </StackPanel>
         <StackPanel Spacing="6">
-            <TextBlock Text="Documentation URL" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding ApiDocumentationUrl}" Height="40" FontSize="14" Watermark="https://docs.example.com"/>
+            <TextBlock Text="Documentation URL" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding ApiDocumentationUrl}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="https://docs.example.com"/>
         </StackPanel>
         </StackPanel>
     </Border>

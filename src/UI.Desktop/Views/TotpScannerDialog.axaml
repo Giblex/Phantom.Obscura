@@ -1,253 +1,454 @@
-<Window xmlns="https://github.com/avaloniaui"
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:PhantomVault.UI.ViewModels"
+        xmlns:views="clr-namespace:PhantomVault.UI.Views"
+        xmlns:controls="clr-namespace:PhantomVault.UI.Desktop.Controls"
         x:Class="PhantomVault.UI.Views.TotpScannerDialog"
-        Title="Add TOTP Authenticator"
-        Width="500"
-        Height="650"
+        x:DataType="vm:TotpScannerViewModel"
+        Title="TOTP Settings"
+        Width="480"
+        Height="620"
+        MinWidth="420" MinHeight="500"
         WindowStartupLocation="CenterOwner"
         CanResize="False"
         Background="{DynamicResource WindowBackgroundBrush}"
-        BorderBrush="{DynamicResource ControlBorderBrush}"
-        BorderThickness="1">
+        Classes="animated-window">
 
-    <Window.Styles>
-        <!-- FORCE blue dropdown background for ComboBox with HARDCODED values -->
+    <views:ThemeAwareWindow.Styles>
+        <!-- Liquid glass card style -->
+        <Style Selector="Border.totp-card">
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="16,14"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="ClipToBounds" Value="True"/>
+            <Setter Property="BorderBrush">
+                <Setter.Value>
+                    <SolidColorBrush Color="#FFFFFF" Opacity="0.08"/>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Color="#0CFFFFFF" Offset="0"/>
+                        <GradientStop Color="#06FFFFFF" Offset="0.5"/>
+                        <GradientStop Color="#03FFFFFF" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BoxShadow" Value="0 2 8 0 #14000000"/>
+        </Style>
+
+        <!-- Danger card -->
+        <Style Selector="Border.totp-card-danger">
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="16,14"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="ClipToBounds" Value="True"/>
+            <Setter Property="BoxShadow" Value="0 2 8 0 #14000000"/>
+            <Setter Property="BorderBrush">
+                <Setter.Value>
+                    <SolidColorBrush Color="#FFCC3333" Opacity="0.25"/>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Color="#08FF4444" Offset="0"/>
+                        <GradientStop Color="#04FF4444" Offset="0.5"/>
+                        <GradientStop Color="#02FF4444" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- FORCE themed dropdown background for ComboBox -->
         <Style Selector="ComboBox /template/ Popup Border">
-            <Setter Property="Background" Value="#35475B"/>
+            <Setter Property="Background" Value="{DynamicResource PopupBackgroundBrush}"/>
         </Style>
         <Style Selector="ComboBox /template/ Popup ListBox">
-            <Setter Property="Background" Value="#35475B"/>
+            <Setter Property="Background" Value="{DynamicResource PopupBackgroundBrush}"/>
         </Style>
         <Style Selector="ComboBox /template/ Popup ScrollViewer">
-            <Setter Property="Background" Value="#35475B"/>
+            <Setter Property="Background" Value="{DynamicResource PopupBackgroundBrush}"/>
         </Style>
-    </Window.Styles>
+    </views:ThemeAwareWindow.Styles>
 
-    <Grid RowDefinitions="Auto,*,Auto" Margin="20">
-        <!-- Header -->
-        <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,20">
-            <TextBlock Text="Add Two-Factor Authentication"
-                       FontSize="20"
-                       FontWeight="Bold"
-                       Foreground="{DynamicResource PrimaryTextBrush}"/>
-            <TextBlock Text="Scan a QR code or enter the secret manually"
-                       FontSize="13"
-                       Foreground="{DynamicResource MutedTextBrush}"/>
-        </StackPanel>
+    <Grid RowDefinitions="Auto,*,Auto">
 
-        <!-- Content -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="20">
-                <!-- QR Code Scanner Section -->
-                <Border Background="{DynamicResource CardBackgroundBrush}"
-                        BorderThickness="0"
-                        CornerRadius="8"
-                        Padding="16">
+        <!-- ═══ Header ═══ -->
+        <Border Grid.Row="0" Padding="24,20" ClipToBounds="True">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                    <GradientStop Color="#14FFFFFF" Offset="0"/>
+                    <GradientStop Color="#06FFFFFF" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+            <Grid ColumnDefinitions="Auto,14,*">
+                <Border Grid.Column="0"
+                        Width="44" Height="44"
+                        CornerRadius="22"
+                        VerticalAlignment="Center">
+                    <Border.Background>
+                        <SolidColorBrush Color="{DynamicResource AccentColor}" Opacity="0.15"/>
+                    </Border.Background>
+                    <controls:SvgIcon IconName="Assets/SVG/Current/Key.svg"
+                                      Width="20" Height="20"
+                                      IconColor="{DynamicResource AccentBrush}"
+                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Grid.Column="2" Spacing="3" VerticalAlignment="Center">
+                    <TextBlock Text="TOTP Authenticator"
+                               FontSize="{StaticResource Type.H3.Size}"
+                               FontWeight="Bold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <TextBlock Text="Configure two-factor authentication"
+                               FontSize="{StaticResource Type.Small.Size}"
+                               Foreground="{DynamicResource MutedTextBrush}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ═══ Content ═══ -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="24,16,24,24">
+            <StackPanel Spacing="0">
+
+                <!-- ── Secret Key Card ── -->
+                <Border Classes="totp-card">
                     <StackPanel Spacing="12">
-                        <TextBlock Text="Scan QR Code"
-                                   FontSize="15"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
-                        
-                        <!-- Camera Preview (Placeholder - will be implemented with ZXing.Net) -->
-                        <Border Height="250"
-                                Background="{DynamicResource ControlBackgroundBrush}"
-                                BorderThickness="0"
-                                CornerRadius="6"
-                                ClipToBounds="True">
-                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12">
-                                <TextBlock Text="📷"
-                                           FontSize="48"
-                                           HorizontalAlignment="Center"
+                        <Grid ColumnDefinitions="Auto,10,*">
+                            <Border Width="30" Height="30" CornerRadius="8" VerticalAlignment="Center">
+                                <Border.Background>
+                                    <SolidColorBrush Color="{DynamicResource AccentColor}" Opacity="0.12"/>
+                                </Border.Background>
+                                <controls:SvgIcon IconName="Assets/SVG/Current/Key.svg"
+                                                  Width="14" Height="14"
+                                                  IconColor="{DynamicResource AccentBrush}"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="2" Spacing="1" VerticalAlignment="Center">
+                                <TextBlock Text="Secret Key"
+                                           FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                <TextBlock Text="Base32 encoded secret from your provider"
+                                           FontSize="{StaticResource Type.Tiny.Size}"
                                            Foreground="{DynamicResource MutedTextBrush}"/>
-                                <TextBlock Text="Camera Preview"
-                                           FontSize="14"
-                                           HorizontalAlignment="Center"
-                                           Foreground="{DynamicResource MutedTextBrush}"/>
-                                <Button Content="Start Camera"
-                                        Command="{Binding StartCameraCommand}"
-                                        Classes="liquid-glass"
-                                        HorizontalAlignment="Center"
-                                        Padding="16,8"/>
                             </StackPanel>
-                        </Border>
-
-                        <TextBlock Text="{Binding QrScanStatus}"
-                                   FontSize="12"
-                                   Foreground="{DynamicResource MutedTextBrush}"
-                                   HorizontalAlignment="Center"
-                                   IsVisible="{Binding HasQrScanStatus}"/>
+                        </Grid>
+                        <TextBox Text="{Binding SecretKey}"
+                                 Watermark="e.g. JBSWY3DPEHPK3PXP"
+                                 Height="38"
+                                 FontFamily="Consolas,Courier New,monospace"
+                                 FontSize="{StaticResource Type.Label.Size}"
+                                 LetterSpacing="1"
+                                 CornerRadius="8"
+                                 Padding="10,8"
+                                 Background="{DynamicResource ControlBackgroundBrush}"/>
+                        <TextBlock Text="{Binding SecretValidationMessage}"
+                                   FontSize="{StaticResource Type.Tiny.Size}"
+                                   Foreground="{Binding SecretValidationColor}"
+                                   IsVisible="{Binding HasSecretValidationMessage}"/>
                     </StackPanel>
                 </Border>
 
-                <!-- Manual Entry Section -->
-                <Border Background="{DynamicResource CardBackgroundBrush}"
-                        BorderThickness="0"
-                        CornerRadius="8"
-                        Padding="16">
+                <!-- ── Account Details Card ── -->
+                <Border Classes="totp-card">
                     <StackPanel Spacing="12">
-                        <TextBlock Text="Manual Entry"
-                                   FontSize="15"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <Grid ColumnDefinitions="Auto,10,*">
+                            <Border Width="30" Height="30" CornerRadius="8" VerticalAlignment="Center">
+                                <Border.Background>
+                                    <SolidColorBrush Color="{DynamicResource AccentColor}" Opacity="0.12"/>
+                                </Border.Background>
+                                <controls:SvgIcon IconName="Assets/SVG/Current/user-check (1).svg"
+                                                  Width="14" Height="14"
+                                                  IconColor="{DynamicResource AccentBrush}"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="2" Spacing="1" VerticalAlignment="Center">
+                                <TextBlock Text="Account Details"
+                                           FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                <TextBlock Text="Service issuer and account name"
+                                           FontSize="{StaticResource Type.Tiny.Size}"
+                                           Foreground="{DynamicResource MutedTextBrush}"/>
+                            </StackPanel>
+                        </Grid>
 
-                        <!-- Issuer -->
-                        <StackPanel Spacing="6">
+                        <StackPanel Spacing="4">
                             <TextBlock Text="Issuer (e.g., Google, GitHub)"
-                                       FontSize="12"
+                                       FontSize="{StaticResource Type.Tiny.Size}" FontWeight="SemiBold"
                                        Foreground="{DynamicResource MutedTextBrush}"/>
                             <TextBox Text="{Binding Issuer}"
                                      Watermark="Enter service name"
                                      Height="36"
-                                     Padding="10"
+                                     Padding="10,8"
+                                     CornerRadius="8"
                                      Background="{DynamicResource ControlBackgroundBrush}"
                                      Foreground="{DynamicResource PrimaryTextBrush}"
                                      BorderThickness="0"/>
                         </StackPanel>
 
-                        <!-- Account Name -->
-                        <StackPanel Spacing="6">
+                        <StackPanel Spacing="4">
                             <TextBlock Text="Account Name (e.g., user@example.com)"
-                                       FontSize="12"
+                                       FontSize="{StaticResource Type.Tiny.Size}" FontWeight="SemiBold"
                                        Foreground="{DynamicResource MutedTextBrush}"/>
                             <TextBox Text="{Binding AccountName}"
                                      Watermark="Enter account identifier"
                                      Height="36"
-                                     Padding="10"
+                                     Padding="10,8"
+                                     CornerRadius="8"
                                      Background="{DynamicResource ControlBackgroundBrush}"
                                      Foreground="{DynamicResource PrimaryTextBrush}"
                                      BorderThickness="0"/>
                         </StackPanel>
+                    </StackPanel>
+                </Border>
 
-                        <!-- Secret Key -->
-                        <StackPanel Spacing="6">
-                            <TextBlock Text="Secret Key *"
-                                       FontSize="12"
-                                       Foreground="{DynamicResource MutedTextBrush}"/>
-                            <TextBox Text="{Binding SecretKey}"
-                                     Watermark="Enter Base32 secret (e.g., JBSWY3DPEHPK3PXP)"
-                                     Height="36"
-                                     Padding="10"
-                                     FontFamily="Consolas,Courier New,monospace"
-                                     Background="{DynamicResource ControlBackgroundBrush}"
-                                     Foreground="{DynamicResource PrimaryTextBrush}"
-                                     BorderThickness="0"/>
-                            <TextBlock Text="{Binding SecretValidationMessage}"
-                                       FontSize="11"
-                                       Foreground="{Binding SecretValidationColor}"
-                                       IsVisible="{Binding HasSecretValidationMessage}"/>
-                        </StackPanel>
-
-                        <!-- Advanced Settings (Collapsible) -->
-                        <Expander Header="Advanced Settings" 
-                                  IsExpanded="False"
-                                  Foreground="{DynamicResource PrimaryTextBrush}">
-                            <StackPanel Spacing="12" Margin="0,12,0,0" HorizontalAlignment="Center">
-                                <!-- Digits -->
-                                <StackPanel Spacing="6">
-                                    <TextBlock Text="Code Length"
-                                               FontSize="12"
-                                               Foreground="{DynamicResource MutedTextBrush}"/>
-                                    <ComboBox SelectedItem="{Binding Digits}"
-                                              Width="100"
-                                              HorizontalAlignment="Left"
-                                              Background="{DynamicResource ControlBackgroundBrush}"
-                                              Foreground="{DynamicResource PrimaryTextBrush}"
-                                              BorderThickness="0">
-                                        <ComboBoxItem Content="6" />
-                                        <ComboBoxItem Content="7" />
-                                        <ComboBoxItem Content="8" />
-                                    </ComboBox>
-                                </StackPanel>
-
-                                <!-- Period -->
-                                <StackPanel Spacing="6">
-                                    <TextBlock Text="Time Step (seconds)"
-                                               FontSize="12"
-                                               Foreground="{DynamicResource MutedTextBrush}"/>
-                                    <NumericUpDown Value="{Binding Period}"
-                                                   Minimum="15"
-                                                   Maximum="60"
-                                                   Increment="15"
-                                                   Width="100"
-                                                   HorizontalAlignment="Left"
-                                                   Background="{DynamicResource ControlBackgroundBrush}"
-                                                   Foreground="{DynamicResource PrimaryTextBrush}"
-                                                   BorderThickness="0"/>
-                                </StackPanel>
-
-                                <!-- Algorithm -->
-                                <StackPanel Spacing="6">
-                                    <TextBlock Text="Hash Algorithm"
-                                               FontSize="12"
-                                               Foreground="{DynamicResource MutedTextBrush}"/>
-                                    <ComboBox SelectedItem="{Binding Algorithm}"
-                                              Width="120"
-                                              HorizontalAlignment="Left"
-                                              Background="{DynamicResource ControlBackgroundBrush}"
-                                              Foreground="{DynamicResource PrimaryTextBrush}"
-                                              BorderThickness="0">
-                                        <ComboBoxItem Content="SHA1" />
-                                        <ComboBoxItem Content="SHA256" />
-                                        <ComboBoxItem Content="SHA512" />
-                                    </ComboBox>
-                                </StackPanel>
+                <!-- ── Advanced Settings Card ── -->
+                <Border Classes="totp-card">
+                    <StackPanel Spacing="12">
+                        <Grid ColumnDefinitions="Auto,10,*">
+                            <Border Width="30" Height="30" CornerRadius="8" VerticalAlignment="Center">
+                                <Border.Background>
+                                    <SolidColorBrush Color="{DynamicResource AccentColor}" Opacity="0.12"/>
+                                </Border.Background>
+                                <controls:SvgIcon IconName="Assets/SVG/Current/Settings.svg"
+                                                  Width="14" Height="14"
+                                                  IconColor="{DynamicResource AccentBrush}"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="2" Spacing="1" VerticalAlignment="Center">
+                                <TextBlock Text="Advanced Settings"
+                                           FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                <TextBlock Text="Code length, period, and algorithm"
+                                           FontSize="{StaticResource Type.Tiny.Size}"
+                                           Foreground="{DynamicResource MutedTextBrush}"/>
                             </StackPanel>
-                        </Expander>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*,12,*,12,*">
+                            <!-- Digits -->
+                            <StackPanel Grid.Column="0" Spacing="4">
+                                <TextBlock Text="Digits"
+                                           FontSize="{StaticResource Type.Tiny.Size}" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource MutedTextBrush}"/>
+                                <ComboBox SelectedItem="{Binding Digits}"
+                                          HorizontalAlignment="Stretch"
+                                          Background="{DynamicResource ControlBackgroundBrush}"
+                                          Foreground="{DynamicResource PrimaryTextBrush}"
+                                          BorderThickness="0"
+                                          CornerRadius="8">
+                                    <ComboBoxItem Content="6" />
+                                    <ComboBoxItem Content="7" />
+                                    <ComboBoxItem Content="8" />
+                                </ComboBox>
+                            </StackPanel>
+
+                            <!-- Period -->
+                            <StackPanel Grid.Column="2" Spacing="4">
+                                <TextBlock Text="Period (sec)"
+                                           FontSize="{StaticResource Type.Tiny.Size}" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource MutedTextBrush}"/>
+                                <NumericUpDown Value="{Binding Period}"
+                                               Minimum="15"
+                                               Maximum="60"
+                                               Increment="15"
+                                               HorizontalAlignment="Stretch"
+                                               Background="{DynamicResource ControlBackgroundBrush}"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"
+                                               BorderThickness="0"
+                                               CornerRadius="8"/>
+                            </StackPanel>
+
+                            <!-- Algorithm -->
+                            <StackPanel Grid.Column="4" Spacing="4">
+                                <TextBlock Text="Algorithm"
+                                           FontSize="{StaticResource Type.Tiny.Size}" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource MutedTextBrush}"/>
+                                <ComboBox SelectedItem="{Binding Algorithm}"
+                                          HorizontalAlignment="Stretch"
+                                          Background="{DynamicResource ControlBackgroundBrush}"
+                                          Foreground="{DynamicResource PrimaryTextBrush}"
+                                          BorderThickness="0"
+                                          CornerRadius="8">
+                                    <ComboBoxItem Content="SHA1" />
+                                    <ComboBoxItem Content="SHA256" />
+                                    <ComboBoxItem Content="SHA512" />
+                                </ComboBox>
+                            </StackPanel>
+                        </Grid>
                     </StackPanel>
                 </Border>
 
-                <!-- Preview Code -->
-                <Border Background="{DynamicResource CardBackgroundBrush}"
-                        BorderThickness="0"
-                        CornerRadius="8"
-                        Padding="16"
+                <!-- ── Preview Code Card ── -->
+                <Border Classes="totp-card"
                         IsVisible="{Binding HasValidSecret}">
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="Preview Code"
-                                   FontSize="13"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
-                        <TextBlock Text="{Binding PreviewCode}"
-                                   FontSize="28"
-                                   FontWeight="Bold"
-                                   FontFamily="Consolas,Courier New,monospace"
-                                   LetterSpacing="4"
-                                   HorizontalAlignment="Center"
-                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
-                        <TextBlock Text="{Binding PreviewTimeRemaining, StringFormat='Refreshes in {0} seconds'}"
-                                   FontSize="11"
-                                   HorizontalAlignment="Center"
-                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                    <StackPanel Spacing="10">
+                        <Grid ColumnDefinitions="Auto,10,*">
+                            <Border Width="30" Height="30" CornerRadius="8" VerticalAlignment="Center">
+                                <Border.Background>
+                                    <SolidColorBrush Color="{DynamicResource AccentColor}" Opacity="0.12"/>
+                                </Border.Background>
+                                <controls:SvgIcon IconName="Assets/SVG/Current/Security.svg"
+                                                  Width="14" Height="14"
+                                                  IconColor="{DynamicResource AccentBrush}"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="2" Spacing="1" VerticalAlignment="Center">
+                                <TextBlock Text="Live Preview"
+                                           FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                <TextBlock Text="Verify your setup with the live code below"
+                                           FontSize="{StaticResource Type.Tiny.Size}"
+                                           Foreground="{DynamicResource MutedTextBrush}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Border CornerRadius="8"
+                                Padding="14,10"
+                                BorderThickness="1"
+                                BorderBrush="#0EFFFFFF">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                                    <GradientStop Color="#08FFFFFF" Offset="0"/>
+                                    <GradientStop Color="#04FFFFFF" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                <TextBlock Text="{Binding PreviewCode}"
+                                           FontSize="{StaticResource Type.XL.Size}"
+                                           FontWeight="Bold"
+                                           FontFamily="Consolas,Courier New,monospace"
+                                           LetterSpacing="3"
+                                           HorizontalAlignment="Center"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                <TextBlock Text="{Binding PreviewTimeRemaining, StringFormat='Refreshes in {0}s'}"
+                                           FontSize="{StaticResource Type.Tiny.Size}"
+                                           HorizontalAlignment="Center"
+                                           Foreground="{DynamicResource MutedTextBrush}"/>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </Border>
+
+                <!-- ── QR Scanner Card ── -->
+                <Border Classes="totp-card">
+                    <StackPanel Spacing="10">
+                        <Grid ColumnDefinitions="Auto,10,*,Auto">
+                            <Border Width="30" Height="30" CornerRadius="8" VerticalAlignment="Center">
+                                <Border.Background>
+                                    <SolidColorBrush Color="{DynamicResource AccentColor}" Opacity="0.12"/>
+                                </Border.Background>
+                                <TextBlock Text="📷" FontSize="{StaticResource Type.Body.Size}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="2" Spacing="1" VerticalAlignment="Center">
+                                <TextBlock Text="QR Code Scanner"
+                                           FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                <TextBlock Text="Scan authenticator QR code from screen"
+                                           FontSize="{StaticResource Type.Tiny.Size}"
+                                           Foreground="{DynamicResource MutedTextBrush}"/>
+                            </StackPanel>
+                            <Button Grid.Column="3"
+                                    Content="Scan"
+                                    Command="{Binding StartCameraCommand}"
+                                    Classes="liquid-glass"
+                                    Height="32"
+                                    Padding="14,0"
+                                    CornerRadius="8"
+                                    VerticalAlignment="Center"/>
+                        </Grid>
+                        <TextBlock Text="{Binding QrScanStatus}"
+                                   FontSize="{StaticResource Type.Tiny.Size}"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   TextWrapping="Wrap"
+                                   IsVisible="{Binding HasQrScanStatus}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- ── Remove TOTP (danger zone) — only visible when editing ── -->
+                <Border Classes="totp-card-danger"
+                        IsVisible="{Binding IsEditing}">
+                    <StackPanel Spacing="12">
+                        <Grid ColumnDefinitions="Auto,10,*">
+                            <Border Width="30" Height="30" CornerRadius="8" VerticalAlignment="Center">
+                                <Border.Background>
+                                    <SolidColorBrush Color="#FFCC3333" Opacity="0.12"/>
+                                </Border.Background>
+                                <controls:SvgIcon IconName="Assets/SVG/Current/Warning.svg"
+                                                  Width="14" Height="14"
+                                                  IconColor="#FFCC3333"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="2" Spacing="1" VerticalAlignment="Center">
+                                <TextBlock Text="Danger Zone"
+                                           FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                <TextBlock Text="Permanently remove TOTP from this entry"
+                                           FontSize="{StaticResource Type.Tiny.Size}"
+                                           Foreground="{DynamicResource MutedTextBrush}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Button Command="{Binding DeleteTotpCommand}"
+                                Classes="liquid-glass"
+                                HorizontalAlignment="Stretch"
+                                Height="36"
+                                CornerRadius="8">
+                            <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                <controls:SvgIcon IconName="Assets/SVG/Current/Delete.svg"
+                                                  Width="13" Height="13"
+                                                  IconColor="#CCCC4444"/>
+                                <TextBlock Text="Remove TOTP" FontSize="{StaticResource Type.Small.Size}" FontWeight="SemiBold"
+                                           Foreground="#CCCC4444"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Border>
+
             </StackPanel>
         </ScrollViewer>
 
-        <!-- Action Buttons -->
-        <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto" Margin="0,20,0,0">
-            <CheckBox Grid.Column="0"
-                      IsChecked="{Binding LinkToCurrentEntry}"
-                      Content="Link to current password entry"
-                      VerticalAlignment="Center"
-                      FontSize="12"/>
-            
-            <Button Grid.Column="1"
-                    Content="Cancel"
-                    Command="{Binding CancelCommand}"
-                    Classes="liquid-glass"
-                    Width="100"
-                    Height="36"
-                    Margin="0,0,12,0"/>
-            
-            <Button Grid.Column="2"
-                    Content="Add TOTP"
-                    Command="{Binding SaveCommand}"
-                    Classes="liquid-glass"
-                    Width="120"
-                    Height="36"
-                    IsEnabled="{Binding CanSave}"/>
-        </Grid>
+        <!-- ═══ Footer ═══ -->
+        <Border Grid.Row="2"
+                Padding="24,14"
+                BorderThickness="0,1,0,0"
+                BorderBrush="#10FFFFFF">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                    <GradientStop Color="#08FFFFFF" Offset="0"/>
+                    <GradientStop Color="#03FFFFFF" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+            <Grid ColumnDefinitions="Auto,*,Auto,10,Auto">
+                <CheckBox Grid.Column="0"
+                          IsChecked="{Binding LinkToCurrentEntry}"
+                          Content="Link to entry"
+                          VerticalAlignment="Center"
+                          FontSize="{StaticResource Type.Small.Size}"
+                          Foreground="{DynamicResource SecondaryTextBrush}"/>
+
+                <Button Grid.Column="2"
+                        Content="Cancel"
+                        Command="{Binding CancelCommand}"
+                        Classes="liquid-glass"
+                        Width="90"
+                        Height="34"
+                        CornerRadius="8"/>
+
+                <Button Grid.Column="4"
+                        Content="Save"
+                        Command="{Binding SaveCommand}"
+                        Classes="liquid-glass"
+                        Width="100"
+                        Height="34"
+                        CornerRadius="8"
+                        IsEnabled="{Binding CanSave}"/>
+            </Grid>
+        </Border>
     </Grid>
-</Window>
+</views:ThemeAwareWindow>

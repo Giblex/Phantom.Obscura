@@ -3,15 +3,20 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using PhantomVault.Core.Models.AutoInject;
+using PhantomVault.Platform.Services;
 
 namespace PhantomVault.Core.Services.Platform.Windows
 {
     /// <summary>
-    /// Windows implementation for detecting active window context using Win32 APIs
+    /// Windows implementation for detecting active window context using Win32 APIs,
+    /// with UI Automation support for native login form detection via
+    /// <see cref="WindowsNativeLoginDetector"/>.
     /// </summary>
     public class WindowsActiveWindowDetector : IActiveWindowDetector
     {
+        private readonly WindowsNativeLoginDetector _nativeDetector = new();
         [DllImport("user32.dll")]
         private static extern IntPtr GetForegroundWindow();
 
@@ -155,5 +160,13 @@ namespace PhantomVault.Core.Services.Platform.Windows
                 return url;
             }
         }
+
+        /// <inheritdoc/>
+        public NativeLoginContext? DetectNativeLoginFields()
+            => _nativeDetector.DetectLoginFields();
+
+        /// <inheritdoc/>
+        public Task<bool> TryFillNativeLoginAsync(NativeLoginContext context, string username, string password)
+            => _nativeDetector.TryFillLoginAsync(context, username, password);
     }
 }

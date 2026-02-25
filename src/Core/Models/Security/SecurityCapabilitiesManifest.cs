@@ -192,10 +192,10 @@ namespace PhantomVault.Core.Models.Security
     public sealed class KeyDerivationParams
     {
         [JsonPropertyName("memoryCostKb")]
-        public int MemoryCostKb { get; set; } = 65536; // 64 MB
+        public int MemoryCostKb { get; set; } = 262144; // 256 MB
 
         [JsonPropertyName("timeCost")]
-        public int TimeCost { get; set; } = 3;
+        public int TimeCost { get; set; } = 6;
 
         [JsonPropertyName("parallelism")]
         public int Parallelism { get; set; } = 4;

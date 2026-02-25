@@ -13,7 +13,6 @@
         WindowStartupLocation="CenterScreen"
         CanResize="True"
         Icon="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Parent Icon.ico"
-        FontFamily="Segoe UI"
         Background="{DynamicResource WindowBackgroundBrush}"
         Classes="animated-window">
 
@@ -39,7 +38,7 @@
                                VerticalAlignment="Center"/>
                 </StackPanel>
 
-                <!-- Step Progress Bar -->
+                <!-- Step Progress Bar - Clickable for completed steps -->
                 <Grid Grid.Row="1" Margin="20,0,20,12">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -52,99 +51,141 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Step 1: Welcome -->
-                    <StackPanel Grid.Column="0" HorizontalAlignment="Center" Spacing="4">
-                        <Border Width="32" Height="32" CornerRadius="16"
-                                Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=1}"
-                                BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2">
-                            <TextBlock Text="1" FontSize="12" FontWeight="Bold"
-                                       Foreground="{DynamicResource PrimaryTextBrush}"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <TextBlock Text="Welcome" FontSize="9" 
-                                   Foreground="{DynamicResource SecondaryTextBrush}"
-                                   HorizontalAlignment="Center"/>
-                    </StackPanel>
+                    <Button Grid.Column="0" 
+                            Command="{Binding GoToStepCommand}" CommandParameter="1"
+                            IsEnabled="{Binding CurrentStep, Converter={x:Static views:StepClickableConverter.Instance}, ConverterParameter=1}"
+                            Background="Transparent" BorderThickness="0" Padding="0"
+                            HorizontalAlignment="Center" VerticalAlignment="Stretch"
+                            Cursor="{Binding CurrentStep, Converter={x:Static views:StepCursorConverter.Instance}, ConverterParameter=1}">
+                        <StackPanel HorizontalAlignment="Center" Spacing="4">
+                            <Border Width="32" Height="32" CornerRadius="16"
+                                    Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=1}"
+                                    BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2">
+                                <TextBlock Text="1" FontSize="{StaticResource Type.Small.Size}" FontWeight="Bold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="Welcome" FontSize="{StaticResource Type.Mini.Size}" 
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
 
                     <!-- Step 2: Security -->
-                    <StackPanel Grid.Column="1" HorizontalAlignment="Center" Spacing="4">
-                        <Border Width="32" Height="32" CornerRadius="16"
-                                Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=2}"
-                                BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2">
-                            <TextBlock Text="2" FontSize="12" FontWeight="Bold"
-                                       Foreground="{DynamicResource PrimaryTextBrush}"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <TextBlock Text="Security" FontSize="9"
-                                   Foreground="{DynamicResource SecondaryTextBrush}"
-                                   HorizontalAlignment="Center"/>
-                    </StackPanel>
+                    <Button Grid.Column="1"
+                            Command="{Binding GoToStepCommand}" CommandParameter="2"
+                            IsEnabled="{Binding CurrentStep, Converter={x:Static views:StepClickableConverter.Instance}, ConverterParameter=2}"
+                            Background="Transparent" BorderThickness="0" Padding="0"
+                            HorizontalAlignment="Center" VerticalAlignment="Stretch"
+                            Cursor="{Binding CurrentStep, Converter={x:Static views:StepCursorConverter.Instance}, ConverterParameter=2}">
+                        <StackPanel HorizontalAlignment="Center" Spacing="4">
+                            <Border Width="32" Height="32" CornerRadius="16"
+                                    Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=2}"
+                                    BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2">
+                                <TextBlock Text="2" FontSize="{StaticResource Type.Small.Size}" FontWeight="Bold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="Security" FontSize="{StaticResource Type.Mini.Size}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
 
                     <!-- Step 3: Storage -->
-                    <StackPanel Grid.Column="2" HorizontalAlignment="Center" Spacing="4">
-                        <Border Width="32" Height="32" CornerRadius="16"
-                                Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=3}"
-                                BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2">
-                            <TextBlock Text="3" FontSize="12" FontWeight="Bold"
-                                       Foreground="{DynamicResource PrimaryTextBrush}"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <TextBlock Text="Storage" FontSize="9"
-                                   Foreground="{DynamicResource SecondaryTextBrush}"
-                                   HorizontalAlignment="Center"/>
-                    </StackPanel>
+                    <Button Grid.Column="2"
+                            Command="{Binding GoToStepCommand}" CommandParameter="3"
+                            IsEnabled="{Binding CurrentStep, Converter={x:Static views:StepClickableConverter.Instance}, ConverterParameter=3}"
+                            Background="Transparent" BorderThickness="0" Padding="0"
+                            HorizontalAlignment="Center" VerticalAlignment="Stretch"
+                            Cursor="{Binding CurrentStep, Converter={x:Static views:StepCursorConverter.Instance}, ConverterParameter=3}">
+                        <StackPanel HorizontalAlignment="Center" Spacing="4">
+                            <Border Width="32" Height="32" CornerRadius="16"
+                                    Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=3}"
+                                    BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2">
+                                <TextBlock Text="3" FontSize="{StaticResource Type.Small.Size}" FontWeight="Bold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="Storage" FontSize="{StaticResource Type.Mini.Size}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
 
                     <!-- Step 4: Keyfile -->
-                    <StackPanel Grid.Column="3" HorizontalAlignment="Center" Spacing="4">
-                        <Border Width="32" Height="32" CornerRadius="16"
-                                Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=4}"
-                                BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2">
-                            <TextBlock Text="4" FontSize="12" FontWeight="Bold"
-                                       Foreground="{DynamicResource PrimaryTextBrush}"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <TextBlock Text="Keyfile" FontSize="9"
-                                   Foreground="{DynamicResource SecondaryTextBrush}"
-                                   HorizontalAlignment="Center"/>
-                    </StackPanel>
+                    <Button Grid.Column="3"
+                            Command="{Binding GoToStepCommand}" CommandParameter="4"
+                            IsEnabled="{Binding CurrentStep, Converter={x:Static views:StepClickableConverter.Instance}, ConverterParameter=4}"
+                            Background="Transparent" BorderThickness="0" Padding="0"
+                            HorizontalAlignment="Center" VerticalAlignment="Stretch"
+                            Cursor="{Binding CurrentStep, Converter={x:Static views:StepCursorConverter.Instance}, ConverterParameter=4}">
+                        <StackPanel HorizontalAlignment="Center" Spacing="4">
+                            <Border Width="32" Height="32" CornerRadius="16"
+                                    Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=4}"
+                                    BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2">
+                                <TextBlock Text="4" FontSize="{StaticResource Type.Small.Size}" FontWeight="Bold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="Keyfile" FontSize="{StaticResource Type.Mini.Size}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
 
                     <!-- Step 5: Hello -->
-                    <StackPanel Grid.Column="4" HorizontalAlignment="Center" Spacing="4">
-                        <Border Width="32" Height="32" CornerRadius="16"
-                                Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=5}"
-                                BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2">
-                            <TextBlock Text="5" FontSize="12" FontWeight="Bold"
-                                       Foreground="{DynamicResource PrimaryTextBrush}"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <TextBlock Text="Hello" FontSize="9"
-                                   Foreground="{DynamicResource SecondaryTextBrush}"
-                                   HorizontalAlignment="Center"/>
-                    </StackPanel>
+                    <Button Grid.Column="4"
+                            Command="{Binding GoToStepCommand}" CommandParameter="5"
+                            IsEnabled="{Binding CurrentStep, Converter={x:Static views:StepClickableConverter.Instance}, ConverterParameter=5}"
+                            Background="Transparent" BorderThickness="0" Padding="0"
+                            HorizontalAlignment="Center" VerticalAlignment="Stretch"
+                            Cursor="{Binding CurrentStep, Converter={x:Static views:StepCursorConverter.Instance}, ConverterParameter=5}">
+                        <StackPanel HorizontalAlignment="Center" Spacing="4">
+                            <Border Width="32" Height="32" CornerRadius="16"
+                                    Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=5}"
+                                    BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2">
+                                <TextBlock Text="5" FontSize="{StaticResource Type.Small.Size}" FontWeight="Bold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="Hello" FontSize="{StaticResource Type.Mini.Size}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
 
                     <!-- Step 6: Auth -->
-                    <StackPanel Grid.Column="5" HorizontalAlignment="Center" Spacing="4">
-                        <Border Width="32" Height="32" CornerRadius="16"
-                                Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=6}"
-                                BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2">
-                            <TextBlock Text="6" FontSize="12" FontWeight="Bold"
-                                       Foreground="{DynamicResource PrimaryTextBrush}"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <TextBlock Text="Auth" FontSize="9"
-                                   Foreground="{DynamicResource SecondaryTextBrush}"
-                                   HorizontalAlignment="Center"/>
-                    </StackPanel>
+                    <Button Grid.Column="5"
+                            Command="{Binding GoToStepCommand}" CommandParameter="6"
+                            IsEnabled="{Binding CurrentStep, Converter={x:Static views:StepClickableConverter.Instance}, ConverterParameter=6}"
+                            Background="Transparent" BorderThickness="0" Padding="0"
+                            HorizontalAlignment="Center" VerticalAlignment="Stretch"
+                            Cursor="{Binding CurrentStep, Converter={x:Static views:StepCursorConverter.Instance}, ConverterParameter=6}">
+                        <StackPanel HorizontalAlignment="Center" Spacing="4">
+                            <Border Width="32" Height="32" CornerRadius="16"
+                                    Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=6}"
+                                    BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2">
+                                <TextBlock Text="6" FontSize="{StaticResource Type.Small.Size}" FontWeight="Bold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="Auth" FontSize="{StaticResource Type.Mini.Size}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
 
-                    <!-- Step 7: Complete -->
+                    <!-- Step 7: Complete (not clickable - can only reach via completion) -->
                     <StackPanel Grid.Column="6" HorizontalAlignment="Center" Spacing="4">
                         <Border Width="32" Height="32" CornerRadius="16"
                                 Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=7}"
                                 BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2">
-                            <TextBlock Text="✓" FontSize="12" FontWeight="Bold"
+                            <TextBlock Text="✓" FontSize="{StaticResource Type.Small.Size}" FontWeight="Bold"
                                        Foreground="{DynamicResource PrimaryTextBrush}"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
-                        <TextBlock Text="Complete" FontSize="9"
+                        <TextBlock Text="Complete" FontSize="{StaticResource Type.Mini.Size}"
                                    Foreground="{DynamicResource SecondaryTextBrush}"
                                    HorizontalAlignment="Center"/>
                     </StackPanel>
@@ -326,7 +367,7 @@
                                                             Padding="8,2"
                                                             VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding RecommendedFor}"
-                                                                   FontSize="10"
+                                                                   FontSize="{StaticResource Type.Micro.Size}"
                                                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
                                                     </Border>
                                                 </StackPanel>
@@ -340,7 +381,7 @@
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate>
                                                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,2">
-                                                                <TextBlock Text="✓" FontSize="12" 
+                                                                <TextBlock Text="✓" FontSize="{StaticResource Type.Small.Size}" 
                                                                            Foreground="{DynamicResource SuccessBrush}"/>
                                                                 <TextBlock Text="{Binding}"
                                                                            FontSize="{StaticResource Type.Small.Size}"
@@ -476,6 +517,52 @@
                                 </StackPanel>
                             </Grid>
                         </Border>
+
+                        <!-- USB Device Binding Option (shown when USB is selected) -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                CornerRadius="{StaticResource Radius.Xl}"
+                                Padding="20,16"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1"
+                                IsVisible="{Binding SelectedStorageLocation, Converter={x:Static views:StorageLocationConverter.Instance}, ConverterParameter=USB}">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <Image Source="avares://PhantomVault.UI/Assets/Visuals/Cat Icons/Locked/Locked_teal.png" Width="24" Height="24" VerticalAlignment="Center"/>
+                                    <TextBlock Text="USB Device Binding"
+                                               FontSize="{StaticResource Type.H4.Size}"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                </StackPanel>
+                                
+                                <TextBlock TextWrapping="Wrap"
+                                           FontSize="{StaticResource Type.Small.Size}"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           LineHeight="20">
+                                    Device binding cryptographically ties your vault to this specific USB drive. 
+                                    The vault cannot be decrypted if copied to another device.
+                                </TextBlock>
+
+                                <CheckBox IsChecked="{Binding EnableUsbBinding}" Margin="0,4,0,0">
+                                    <TextBlock Text="Enable USB device binding (recommended)"
+                                               FontSize="{StaticResource Type.Body.Size}"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                </CheckBox>
+
+                                <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                        CornerRadius="{StaticResource Radius.Sm}"
+                                        Padding="12,8"
+                                        IsVisible="{Binding UsbDeviceId, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="✓" FontSize="{StaticResource Type.Body.Size}" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" VerticalAlignment="Center"/>
+                                        <TextBlock FontSize="{StaticResource Type.Small.Size}"
+                                                   Foreground="{DynamicResource SuccessBrush}">
+                                            <Run Text="Device ID: "/>
+                                            <Run Text="{Binding UsbDeviceId}" FontFamily="{StaticResource MonoFontFamily}"/>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </Border>
 
@@ -493,7 +580,7 @@
                                 <StackPanel Orientation="Horizontal" Spacing="12">
                                     <Image Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Key/Key_teal.png" Width="32" Height="32" VerticalAlignment="Center"/>
                                     <StackPanel>
-                                        <TextBlock Text="Generate Your Keyfile"
+                                        <TextBlock Text="Keyfile Configuration"
                                                    FontSize="{StaticResource Type.H3.Size}"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
@@ -514,11 +601,83 @@
                                     your vault cannot be accessed.
                                 </TextBlock>
 
-                                <!-- Keyfile Generation Status -->
+                                <!-- Keyfile Option Selection -->
                                 <Border Background="{DynamicResource ControlBackgroundBrush}"
                                         CornerRadius="{StaticResource Radius.Md}"
                                         Padding="16,12"
                                         Margin="0,8,0,0">
+                                    <StackPanel Spacing="12">
+                                        <!-- Generate New Keyfile Option -->
+                                        <RadioButton IsChecked="{Binding !UseExistingKeyfile}" GroupName="KeyfileOption">
+                                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                                <Image Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Add/Add_teal.png" Width="20" Height="20" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Generate a new keyfile"
+                                                           FontSize="{StaticResource Type.Body.Size}"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource PrimaryTextBrush}"
+                                                           VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </RadioButton>
+                                        
+                                        <!-- Use Existing Keyfile Option -->
+                                        <RadioButton IsChecked="{Binding UseExistingKeyfile}" GroupName="KeyfileOption">
+                                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                                <Image Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Folders/3917418_teal.png" Width="20" Height="20" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Use an existing keyfile"
+                                                           FontSize="{StaticResource Type.Body.Size}"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource PrimaryTextBrush}"
+                                                           VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </RadioButton>
+
+                                        <!-- Browse for Keyfile (shown when Use Existing is selected) -->
+                                        <Border IsVisible="{Binding UseExistingKeyfile}"
+                                                Background="{DynamicResource SurfaceBrush}"
+                                                CornerRadius="{StaticResource Radius.Sm}"
+                                                Padding="12"
+                                                Margin="28,4,0,0">
+                                            <StackPanel Spacing="10">
+                                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                                    <Button Command="{Binding BrowseKeyfileCommand}"
+                                                            Classes="primary"
+                                                            Padding="16,8"
+                                                            HorizontalAlignment="Left">
+                                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                                            <TextBlock Text="📂" FontSize="{StaticResource Type.Body.Size}" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="Browse..." VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                    <Button Command="{Binding ClearKeyfileCommand}"
+                                                            IsVisible="{Binding KeyfileSelected}"
+                                                            Classes="ghost"
+                                                            Padding="8"
+                                                            ToolTip.Tip="Clear selection">
+                                                        <TextBlock Text="✕" FontSize="{StaticResource Type.Body.Size}" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                                    </Button>
+                                                </StackPanel>
+                                                
+                                                <TextBlock Text="{Binding KeyfileStatus}"
+                                                           FontSize="{StaticResource Type.Small.Size}"
+                                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                                           TextWrapping="Wrap"/>
+                                                <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding KeyfileSelected}">
+                                                    <TextBlock Text="✓" FontSize="{StaticResource Type.Body.Size}" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="Keyfile validated"
+                                                               FontSize="{StaticResource Type.Small.Size}"
+                                                               Foreground="{DynamicResource SuccessBrush}"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Keyfile Generation Info (shown when Generate is selected) -->
+                                <Border IsVisible="{Binding !UseExistingKeyfile}"
+                                        Background="{DynamicResource ControlBackgroundBrush}"
+                                        CornerRadius="{StaticResource Radius.Md}"
+                                        Padding="16,12"
+                                        Margin="0,4,0,0">
                                     <StackPanel Spacing="8">
                                         <StackPanel Orientation="Horizontal" Spacing="8">
                                             <Image Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Information empty (2)/Information empty (2)_teal.png" Width="18" Height="18" VerticalAlignment="Center"/>
@@ -612,7 +771,7 @@
                                         <StackPanel Orientation="Horizontal" Spacing="8"
                                                     IsVisible="{Binding ConfirmPassword, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                                             <TextBlock Text="{Binding PasswordsMatch, Converter={x:Static views:PasswordMatchIconConverter.Instance}}"
-                                                       FontSize="14"/>
+                                                       FontSize="{StaticResource Type.Body.Size}"/>
                                             <TextBlock Text="{Binding PasswordsMatch, Converter={x:Static views:PasswordMatchTextConverter.Instance}}"
                                                        FontSize="{StaticResource Type.Small.Size}"
                                                        Foreground="{Binding PasswordsMatch, Converter={x:Static views:PasswordMatchColorConverter.Instance}}"/>
@@ -674,7 +833,7 @@
                                     <Border Width="48" Height="48" CornerRadius="24"
                                             Background="{Binding WindowsHelloAvailable, Converter={x:Static views:BoolToStatusBackgroundConverter.Instance}}">
                                         <TextBlock Text="{Binding WindowsHelloAvailable, Converter={x:Static views:BoolToCheckConverter.Instance}}"
-                                                   FontSize="20" FontWeight="Bold"
+                                                   FontSize="{StaticResource Type.Icon.Size}" FontWeight="Bold"
                                                    Foreground="{DynamicResource PrimaryTextBrush}"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>

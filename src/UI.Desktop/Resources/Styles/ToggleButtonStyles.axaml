@@ -11,7 +11,7 @@
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="Height" Value="44" />
         <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="CornerRadius" Value="16" />
+        <Setter Property="CornerRadius" Value="8" />
         <Setter Property="Margin" Value="0" />
         <Setter Property="Template">
             <Setter.Value>
@@ -96,24 +96,25 @@
 
     <Style Selector="ToggleButton.quick-filter:checked /template/ Border#BaseBorder">
         <Setter Property="CornerRadius" Value="8"/>
-        <Setter Property="BorderBrush" Value="#70FFFFFF"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+        <Setter Property="BorderThickness" Value="1.5"/>
         <Setter Property="Background">
             <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                <GradientStop Color="#50FFFFFF" Offset="0"/>
-                <GradientStop Color="#38FFFFFF" Offset="0.55"/>
-                <GradientStop Color="#30FFFFFF" Offset="1"/>
+                <GradientStop Color="#40004258" Offset="0"/>
+                <GradientStop Color="#30004258" Offset="0.55"/>
+                <GradientStop Color="#25004258" Offset="1"/>
             </LinearGradientBrush>
         </Setter>
     </Style>
 
     <Style Selector="ToggleButton.quick-filter:checked:pointerover /template/ Border#BaseBorder">
         <Setter Property="CornerRadius" Value="8"/>
-        <Setter Property="BorderBrush" Value="#80FFFFFF"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
         <Setter Property="Background">
             <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                <GradientStop Color="#60FFFFFF" Offset="0"/>
-                <GradientStop Color="#48FFFFFF" Offset="0.55"/>
-                <GradientStop Color="#40FFFFFF" Offset="1"/>
+                <GradientStop Color="#40004258" Offset="0"/>
+                <GradientStop Color="#2C004258" Offset="0.55"/>
+                <GradientStop Color="#24004258" Offset="1"/>
             </LinearGradientBrush>
         </Setter>
     </Style>
@@ -128,62 +129,19 @@
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="Height" Value="38" />
         <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="CornerRadius" Value="16" />
+        <Setter Property="CornerRadius" Value="8" />
         <Setter Property="Margin" Value="0" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
                     <Panel>
-                        <!-- Base body with glass gradient -->
+                        <!-- Base body -->
                         <Border Name="BaseBorder"
                                 CornerRadius="{TemplateBinding CornerRadius}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                BorderBrush="#40FFFFFF"
-                                ClipToBounds="True">
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                                    <GradientStop Color="#30FFFFFF" Offset="0"/>
-                                    <GradientStop Color="#18FFFFFF" Offset="0.55"/>
-                                    <GradientStop Color="#10FFFFFF" Offset="1"/>
-                                </LinearGradientBrush>
-                            </Border.Background>
-                        </Border>
-                        
-                        <!-- Inner rim highlight -->
-                        <Border Margin="1"
-                                CornerRadius="{TemplateBinding CornerRadius}"
-                                BorderThickness="1"
-                                BorderBrush="#10FFFFFF"
-                                Opacity="0.95"
-                                IsHitTestVisible="False"/>
-                        
-                        <!-- Liquid sheen effect -->
-                        <Border Name="Sheen"
-                                CornerRadius="{TemplateBinding CornerRadius}"
-                                Opacity="0.90"
-                                IsHitTestVisible="False">
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                    <GradientStop Color="#18FFFFFF" Offset="0"/>
-                                    <GradientStop Color="#08FFFFFF" Offset="0.38"/>
-                                    <GradientStop Color="#00FFFFFF" Offset="0.75"/>
-                                </LinearGradientBrush>
-                            </Border.Background>
-                        </Border>
-                        
-                        <!-- Specular top highlight -->
-                        <Border Height="14"
-                                VerticalAlignment="Top"
-                                CornerRadius="{TemplateBinding CornerRadius}"
-                                Opacity="0.80"
-                                IsHitTestVisible="False">
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                                    <GradientStop Color="#18FFFFFF" Offset="0"/>
-                                    <GradientStop Color="#00FFFFFF" Offset="1"/>
-                                </LinearGradientBrush>
-                            </Border.Background>
-                        </Border>
+                                BorderBrush="Transparent"
+                                Background="Transparent"
+                                ClipToBounds="True"/>
                         
                         <!-- Content -->
                         <ContentPresenter Name="PART_ContentPresenter"
@@ -201,36 +159,33 @@
 
     <Style Selector="ToggleButton.category-filter:pointerover /template/ Border#BaseBorder">
         <Setter Property="CornerRadius" Value="8"/>
-        <Setter Property="BorderBrush" Value="#60FFFFFF"/>
+        <Setter Property="BorderBrush" Value="#20000000"/>
         <Setter Property="Background">
             <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                <GradientStop Color="#40FFFFFF" Offset="0"/>
-                <GradientStop Color="#28FFFFFF" Offset="0.55"/>
-                <GradientStop Color="#20FFFFFF" Offset="1"/>
+                <GradientStop Color="#18000000" Offset="0"/>
+                <GradientStop Color="#10000000" Offset="1"/>
             </LinearGradientBrush>
         </Setter>
     </Style>
 
     <Style Selector="ToggleButton.category-filter:checked /template/ Border#BaseBorder">
         <Setter Property="CornerRadius" Value="8"/>
-        <Setter Property="BorderBrush" Value="#70FFFFFF"/>
+        <Setter Property="BorderBrush" Value="#25000000"/>
         <Setter Property="Background">
             <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                <GradientStop Color="#50FFFFFF" Offset="0"/>
-                <GradientStop Color="#38FFFFFF" Offset="0.55"/>
-                <GradientStop Color="#30FFFFFF" Offset="1"/>
+                <GradientStop Color="#20000000" Offset="0"/>
+                <GradientStop Color="#14000000" Offset="1"/>
             </LinearGradientBrush>
         </Setter>
     </Style>
 
     <Style Selector="ToggleButton.category-filter:checked:pointerover /template/ Border#BaseBorder">
         <Setter Property="CornerRadius" Value="8"/>
-        <Setter Property="BorderBrush" Value="#80FFFFFF"/>
+        <Setter Property="BorderBrush" Value="#30000000"/>
         <Setter Property="Background">
             <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                <GradientStop Color="#60FFFFFF" Offset="0"/>
-                <GradientStop Color="#48FFFFFF" Offset="0.55"/>
-                <GradientStop Color="#40FFFFFF" Offset="1"/>
+                <GradientStop Color="#28000000" Offset="0"/>
+                <GradientStop Color="#1C000000" Offset="1"/>
             </LinearGradientBrush>
         </Setter>
     </Style>

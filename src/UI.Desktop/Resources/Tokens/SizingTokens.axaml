@@ -4,8 +4,8 @@
     <!-- Tile sizing tokens - Adjust these to change all tiles uniformly -->
     <x:Double x:Key="TileWidth">420</x:Double>
     <x:Double x:Key="TileHeight">100</x:Double>
-    <x:Double x:Key="GridTileWidth">210</x:Double>
-    <x:Double x:Key="GridTileHeight">84</x:Double>
+    <x:Double x:Key="GridTileWidth">252</x:Double>
+    <x:Double x:Key="GridTileHeight">96</x:Double>
     
 </ResourceDictionary>
 

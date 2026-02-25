@@ -101,7 +101,7 @@
             <Setter Property="Opacity" Value="1"/>
         </Style>
         <Style Selector="ScrollViewer ScrollBar:pressed">
-            <Setter Property="Opacity" Value="0"/>
+            <Setter Property="Opacity" Value="1"/>
         </Style>
         <Style Selector="ScrollViewer ScrollBar:vertical">
             <Setter Property="Width" Value="4"/>
@@ -110,143 +110,9 @@
             <Setter Property="Height" Value="4"/>
         </Style>
         
-        <!-- Remove all shadows from copy buttons and other elements -->
-        <Style Selector="Button">
-            <Setter Property="Effect" Value="{x:Null}"/>
-        </Style>
-        <Style Selector="Button /template/ Border">
-            <Setter Property="Effect" Value="{x:Null}"/>
-            <Setter Property="BoxShadow" Value="0 0 0 0 #00000000"/>
-        </Style>
-        
-        <!-- Tile button styles with explicit ControlTemplate so DataTemplate content is always shown.
-             Split styles so list tiles can stretch while grid tiles keep fixed sizing. -->
-        <Style Selector="Button.tile-button">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="0"/>
-            <!-- List tiles: stretch to fill available width, fixed height via template or explicit Height -->
-            <Setter Property="HorizontalAlignment" Value="Stretch"/>
-            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-            <Setter Property="MinHeight" Value="{StaticResource TileHeight}" />
-            <Setter Property="MaxHeight" Value="{StaticResource TileHeight}" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}" ClipToBounds="True">
-                            <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
-                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+        <!-- ═══ Tile & header-action styles are in ButtonStyles.axaml (single source of truth) ═══ -->
 
-        <Style Selector="Button.tile-button-grid">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="CornerRadius" Value="8" />
-            <!-- Grid tiles: sizing handled inside the template (e.g., inner Border Width/Height) -->
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}" ClipToBounds="True">
-                            <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
-                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Ensure hovered/pressed states remain transparent -->
-        <Style Selector="Button.tile-button:pointerover, Button.tile-button:pressed, Button.tile-button-grid:pointerover, Button.tile-button-grid:pressed">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderBrush" Value="Transparent" />
-        </Style>
-
-        <!-- Defensive: remove any BoxShadow or Effect that could be applied by base themes
-             to tile buttons or their inner template borders. Keeps tiles visually flat. -->
-        <Style Selector="Button.tile-button /template/ Border">
-            <Setter Property="Effect" Value="{x:Null}" />
-            <Setter Property="BoxShadow" Value="0 0 0 0 #00000000" />
-        </Style>
-
-        <!-- Also ensure any Buttons inside tile-button (e.g., copy icon) do not receive shadows -->
-        <Style Selector="Button.tile-button Button">
-            <Setter Property="Effect" Value="{x:Null}" />
-        </Style>
-
-        <!-- Ensure TextBlocks inside tile buttons have no effect applied -->
-        <Style Selector="Button.tile-button TextBlock">
-            <Setter Property="Effect" Value="{x:Null}" />
-        </Style>
-
-        <!-- Additional defensive overrides scoped to list items (credential tiles)
-             These clear any BoxShadow or Effect that might come from global/base templates
-             while keeping the rest of the app shadows intact. -->
-        <Style Selector="ListBoxItem /template/ Border">
-            <Setter Property="BoxShadow" Value="0 0 0 0 #00000000" />
-            <Setter Property="Effect" Value="{x:Null}" />
-        </Style>
-
-        <Style Selector="ListBoxItem Border">
-            <Setter Property="BoxShadow" Value="0 0 0 0 #00000000" />
-            <Setter Property="Effect" Value="{x:Null}" />
-        </Style>
-
-        <!-- Note: BoxShadow is not a property on Button - template Border override below clears any shadow on button templates. -->
-
-        <Style Selector="ListBoxItem Button /template/ Border">
-            <Setter Property="BoxShadow" Value="0 0 0 0 #00000000" />
-            <Setter Property="Effect" Value="{x:Null}" />
-        </Style>
-
-        <Style Selector="ListBoxItem TextBlock">
-            <Setter Property="Effect" Value="{x:Null}" />
-        </Style>
-
-        <Style Selector="ListBoxItem Image">
-            <Setter Property="Effect" Value="{x:Null}" />
-        </Style>
-
-        <!-- Keyboard accessibility: show a subtle focus outline on tile buttons -->
-        <Style Selector="Button.tile-button:focus, Button.tile-button-grid:focus">
-            <!-- Keep a visual focus indicator but do not change BorderThickness so layout does not shift.
-                 Use BorderBrush only (thickness is controlled in the inner tile Border) -->
-            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
-        </Style>
-
-        <Style Selector="Button.header-action">
-            <Setter Property="Background" Value="{DynamicResource HeaderButtonBackgroundBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource HeaderButtonBorderBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="TextElement.Foreground" Value="{DynamicResource HeaderButtonForegroundBrush}" />
-            <Setter Property="Effect" Value="{x:Null}" />
-            <Setter Property="Padding" Value="12,6" />
-            <Setter Property="HorizontalContentAlignment" Value="Center" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="Cursor" Value="Hand" />
-        </Style>
-
-        <Style Selector="Button.header-action:pointerover">
-            <Setter Property="Background" Value="{DynamicResource HeaderButtonHoverBrush}" />
-        </Style>
-
-        <Style Selector="Button.header-action:pressed">
-            <Setter Property="Background" Value="{DynamicResource HeaderButtonPressedBrush}" />
-        </Style>
-
-        <Style Selector="Button.header-action:focus">
-            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
-        </Style>
-
-        <!-- Sidebar quick filter toggles return to their original look. -->
+        <!-- Sidebar quick filter toggles - left-aligned by default, centered override on Dashboard/Passwords -->
         <Style Selector="ToggleButton.quick-filter">
             <Setter Property="FontFamily" Value="{DynamicResource MainFontFamily}" />
             <Setter Property="Background" Value="Transparent" />
@@ -257,12 +123,15 @@
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="Height" Value="44" />
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Margin" Value="0" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ToggleButton">
-                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="{TemplateBinding CornerRadius}">
                             <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
                                               HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                               VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
@@ -273,20 +142,56 @@
         </Style>
 
         <Style Selector="ToggleButton.quick-filter:pointerover">
-            <Setter Property="Background" Value="{DynamicResource QuickFilterGlassHoverBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassBorderBrush}" />
+            <Setter Property="Background" Value="{DynamicResource FilterHoverGradient}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource FilterHoverBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
 
         <Style Selector="ToggleButton.quick-filter:checked">
-            <Setter Property="Background" Value="{DynamicResource QuickFilterGlassActiveBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassActiveBorderBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Color="#40004258" Offset="0"/>
+                        <GradientStop Color="#30004258" Offset="0.55"/>
+                        <GradientStop Color="#25004258" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="BorderThickness" Value="1.5" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
         </Style>
 
         <Style Selector="ToggleButton.quick-filter:checked:pointerover">
-            <Setter Property="Background" Value="{DynamicResource QuickFilterGlassActiveHoverBrush}" />
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Color="#40004258" Offset="0"/>
+                        <GradientStop Color="#2C004258" Offset="0.55"/>
+                        <GradientStop Color="#24004258" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
+        <Style Selector="ToggleButton.quick-filter:pressed">
+            <Setter Property="Background" Value="{DynamicResource FilterPressedGradient}" />
+        </Style>
+
+        <Style Selector="ToggleButton.quick-filter:checked:pressed">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Color="#40004258" Offset="0"/>
+                        <GradientStop Color="#2C004258" Offset="0.55"/>
+                        <GradientStop Color="#24004258" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
         </Style>
 
         <Style Selector="ToggleButton.category-filter">
@@ -299,36 +204,98 @@
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="Height" Value="38" />
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Margin" Value="0" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ToggleButton">
-                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                        <Panel>
+                            <Border x:Name="BackBorder"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="{TemplateBinding CornerRadius}"/>
+                            <!-- Per-category color highlight - always visible when color is set -->
+                            <Border x:Name="ColorHighlight"
+                                    CornerRadius="{TemplateBinding CornerRadius}"
+                                    Background="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource HexToBrushConverter}}"
+                                    Opacity="0.15"
+                                    IsHitTestVisible="False">
+                                <Border.Transitions>
+                                    <Transitions>
+                                        <DoubleTransition Property="Opacity" Duration="0:0:0.15" Easing="CubicEaseOut"/>
+                                    </Transitions>
+                                </Border.Transitions>
+                            </Border>
                             <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
                                               HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                               VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
-                        </Border>
+                        </Panel>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
 
-        <Style Selector="ToggleButton.category-filter:pointerover">
-            <Setter Property="Background" Value="{DynamicResource QuickFilterGlassHoverBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassBorderBrush}" />
+        <Style Selector="ToggleButton.category-filter:pointerover /template/ Border#ColorHighlight">
+            <Setter Property="Opacity" Value="0.25"/>
+        </Style>
+
+        <Style Selector="ToggleButton.category-filter:pointerover /template/ Border#BackBorder">
+            <Setter Property="Background">
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                    <GradientStop Color="#18000000" Offset="0"/>
+                    <GradientStop Color="#10000000" Offset="1"/>
+                </LinearGradientBrush>
+            </Setter>
+            <Setter Property="BorderBrush" Value="#20000000" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
 
-        <Style Selector="ToggleButton.category-filter:checked">
-            <Setter Property="Background" Value="{DynamicResource QuickFilterGlassActiveBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassActiveBorderBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+        <Style Selector="ToggleButton.category-filter:checked /template/ Border#ColorHighlight">
+            <Setter Property="Opacity" Value="0.35"/>
         </Style>
 
-        <Style Selector="ToggleButton.category-filter:checked:pointerover">
-            <Setter Property="Background" Value="{DynamicResource QuickFilterGlassActiveHoverBrush}" />
+        <Style Selector="ToggleButton.category-filter:checked /template/ Border#BackBorder">
+            <Setter Property="Background">
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                    <GradientStop Color="#20000000" Offset="0"/>
+                    <GradientStop Color="#14000000" Offset="1"/>
+                </LinearGradientBrush>
+            </Setter>
+            <Setter Property="BorderBrush" Value="#25000000" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
+        <Style Selector="ToggleButton.category-filter:checked:pointerover /template/ Border#ColorHighlight">
+            <Setter Property="Opacity" Value="0.45"/>
+        </Style>
+
+        <Style Selector="ToggleButton.category-filter:pressed /template/ Border#ColorHighlight">
+            <Setter Property="Opacity" Value="0.20"/>
+        </Style>
+
+        <Style Selector="ToggleButton.category-filter:pressed /template/ Border#BackBorder">
+            <Setter Property="Background">
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                    <GradientStop Color="#28000000" Offset="0"/>
+                    <GradientStop Color="#1C000000" Offset="1"/>
+                </LinearGradientBrush>
+            </Setter>
+        </Style>
+
+        <Style Selector="ToggleButton.category-filter:checked:pressed /template/ Border#ColorHighlight">
+            <Setter Property="Opacity" Value="0.35"/>
+        </Style>
+
+        <Style Selector="ToggleButton.category-filter:checked:pressed /template/ Border#BackBorder">
+            <Setter Property="Background">
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                    <GradientStop Color="#28000000" Offset="0"/>
+                    <GradientStop Color="#1C000000" Offset="1"/>
+                </LinearGradientBrush>
+            </Setter>
+            <Setter Property="BorderBrush" Value="#30000000" />
+            <Setter Property="BorderThickness" Value="1" />
         </Style>
     </Window.Styles>
     
@@ -360,8 +327,8 @@
                         Background="{DynamicResource WarningIcon}"
                         CornerRadius="{DynamicResource Radius.Xl}">
                     <TextBlock Text="⚠" 
-                               FontSize="16" 
-                               Foreground="White"
+                               FontSize="{StaticResource Type.H4.Size}" 
+                               Foreground="{DynamicResource PrimaryTextBrush}"
                                HorizontalAlignment="Center" 
                                VerticalAlignment="Center"/>
                 </Border>
@@ -370,11 +337,11 @@
                 <StackPanel Grid.Column="2" VerticalAlignment="Center">
                     <TextBlock FontWeight="SemiBold" 
                                Foreground="{DynamicResource WarningBrushDark}"
-                               FontSize="13">
+                               FontSize="{StaticResource Type.Label.Size}">
                         <Run Text="Key Rotation Recommended"/>
                     </TextBlock>
                     <TextBlock Foreground="{DynamicResource WarningBrushDarker}" 
-                               FontSize="12">
+                               FontSize="{StaticResource Type.Small.Size}">
                         <Run Text="It has been"/>
                         <Run Text="{Binding DaysSinceRotation}" FontWeight="Bold"/>
                         <Run Text="days since your last key rotation. Rotate now to maintain vault security."/>
@@ -386,9 +353,9 @@
                         Command="{Binding RotateNowCommand}"
                         Classes="liquid-glass"
                         Background="{DynamicResource WarningIcon}"
-                        Foreground="White"
+                        Foreground="{DynamicResource ButtonAccentForegroundBrush}"
                         FontWeight="SemiBold"
-                        FontSize="13"
+                        FontSize="{StaticResource Type.Label.Size}"
                         Padding="16,6"
                         CornerRadius="{DynamicResource Radius.Md}"
                         BorderThickness="0"
@@ -403,7 +370,7 @@
                         Classes="liquid-glass"
                         Background="Transparent"
                         Foreground="{DynamicResource WarningBrushDarker}"
-                        FontSize="18"
+                        FontSize="{StaticResource Type.H3.Size}"
                         Width="24" Height="24"
                         Padding="0"
                         CornerRadius="{DynamicResource Radius.Xl}"
@@ -436,10 +403,10 @@
                             </Binding>
                         </ColumnDefinition.Width>
                     </ColumnDefinition>
-                    <!-- Fixed width prevents resizing when filters change -->
-                    <ColumnDefinition Width="460"
-                                      MinWidth="340"
-                                      MaxWidth="640"/>
+                    <!-- Stable width tuned to match target screenshot proportions -->
+                    <ColumnDefinition Width="510"
+                                      MinWidth="420"
+                                      MaxWidth="720"/>
                     <ColumnDefinition Width="*"
                                       MinWidth="520"/>
                 </Grid.ColumnDefinitions>
@@ -507,7 +474,7 @@
                                     <Image Source="{Binding SelectedCredential.AutoDetectedIconBitmap}"
                                            Width="108" Height="108" Stretch="Uniform"
                                            IsVisible="{Binding SelectedCredential.HasAutoDetectedIcon}"/>
-                                    <TextBlock Text="{Binding SelectedCredential.IconText}" FontSize="48" FontWeight="Bold" Foreground="White"
+                                    <TextBlock Text="{Binding SelectedCredential.IconText}" FontSize="{StaticResource Type.IconLg.Size}" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"
                                                IsVisible="{Binding !SelectedCredential.HasAutoDetectedIcon}"/>
                                 </Grid>
@@ -515,7 +482,7 @@
                             
                             <!-- Text to the right of icon -->
                             <StackPanel Grid.Column="2" Spacing="8" VerticalAlignment="Center">
-                                <TextBlock FontSize="32" FontWeight="Bold"
+                                <TextBlock FontSize="{StaticResource Type.H1.Size}" FontWeight="Bold"
                                            Foreground="{DynamicResource PrimaryTextBrush}"
                                            TextWrapping="Wrap">
                                     <TextBlock.Effect>
@@ -528,7 +495,7 @@
                                         </MultiBinding>
                                     </TextBlock.Text>
                                 </TextBlock>
-                                <TextBlock FontSize="18" 
+                                <TextBlock FontSize="{StaticResource Type.H3.Size}" 
                                            Foreground="{DynamicResource SecondaryTextBrush}">
                                     <TextBlock.Effect>
                                         <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
@@ -549,40 +516,55 @@
                                         Classes="liquid-glass"
                                         Width="36" Height="36" MinWidth="0"
                                         ToolTip.Tip="Edit">
-                                    <TextBlock Text="✎" FontSize="16" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    <dcontrols:SvgIcon IconName="Assets/SVG/edit.svg" Width="16" Height="16"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                       IconColor="{DynamicResource PrimaryTextBrush}"/>
                                 </Button>
                                 <Button Command="{Binding ToggleFavoriteCommand}"
                                         CommandParameter="{Binding SelectedCredential}"
                                         Classes="liquid-glass"
                                         Width="36" Height="36" MinWidth="0"
                                         ToolTip.Tip="Toggle favorite">
-                                    <TextBlock Text="{Binding SelectedCredential.FavoriteIcon}" FontSize="16"/>
+                                    <dcontrols:SvgIcon IconName="Assets/SVG/Favourites.svg" Width="16" Height="16"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                       IconColor="{Binding SelectedCredential.FavoriteIconBrush}"
+                                                       Opacity="{Binding SelectedCredential.FavoriteIconOpacity}"/>
                                 </Button>
                             </StackPanel>
                         </Grid>
                         
                         <!-- Credential Details -->
-                        <StackPanel Spacing="24" Margin="0,16,0,0">
+                        <StackPanel Spacing="16" Margin="0,16,0,0">
                             <!-- Login Credentials -->
-                            <details:PasswordDetailView DataContext="{Binding}" />
+                            <details:PasswordDetailView DataContext="{Binding}"
+                                IsVisible="{Binding SelectedCredential.IsPasswordEntry}" />
 
-                            <details:WiFiDetailView DataContext="{Binding}" />
+                            <details:WiFiDetailView DataContext="{Binding}"
+                                IsVisible="{Binding SelectedCredential.IsWiFiEntry}" />
 
-                            <details:CreditCardDetailView DataContext="{Binding}" />
+                            <details:CreditCardDetailView DataContext="{Binding}"
+                                IsVisible="{Binding SelectedCredential.IsCreditCardEntry}" />
 
-                            <details:BankAccountDetailView DataContext="{Binding}" />
+                            <details:BankAccountDetailView DataContext="{Binding}"
+                                IsVisible="{Binding SelectedCredential.IsBankAccountEntry}" />
 
-                            <details:IdentityDetailView DataContext="{Binding}" />
+                            <details:IdentityDetailView DataContext="{Binding}"
+                                IsVisible="{Binding SelectedCredential.IsIdentityEntry}" />
 
-                            <details:ApiKeyDetailView DataContext="{Binding}" />
+                            <details:ApiKeyDetailView DataContext="{Binding}"
+                                IsVisible="{Binding SelectedCredential.IsApiKeyEntry}" />
 
-                            <details:ContactDetailView DataContext="{Binding}" />
+                            <details:ContactDetailView DataContext="{Binding}"
+                                IsVisible="{Binding SelectedCredential.IsContactEntry}" />
 
-                            <details:UrlDetailSection DataContext="{Binding}" />
+                            <details:UrlDetailSection DataContext="{Binding}"
+                                IsVisible="{Binding SelectedCredential.HasUrl}" />
 
-                            <details:CategoryDetailSection DataContext="{Binding}" />
+                            <details:CategoryDetailSection DataContext="{Binding}"
+                                IsVisible="{Binding SelectedCredential.HasGroup}" />
                             
-                            <details:NotesDetailSection DataContext="{Binding}" />
+                            <details:NotesDetailSection DataContext="{Binding}"
+                                IsVisible="{Binding SelectedCredential.HasNotes}" />
                             
                             <details:MetadataDetailSection DataContext="{Binding}" />
                             
@@ -601,16 +583,16 @@
                                 Margin="0,120,0,0"
                                 IsVisible="{Binding SelectedCredential, Converter={x:Static ObjectConverters.IsNull}}">
                         <TextBlock Text="🔍" 
-                                   FontSize="80" 
+                                   FontSize="{StaticResource Type.EmptyState.Size}" 
                                    HorizontalAlignment="Center" 
                                    Opacity="0.2"/>
                         <TextBlock Text="Select an item to view details" 
-                                   FontSize="16" 
+                                   FontSize="{StaticResource Type.H4.Size}" 
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource SecondaryTextBrush}"
                                    HorizontalAlignment="Center"/>
                         <TextBlock Text="Click on a credential from the list" 
-                                   FontSize="13" 
+                                   FontSize="{StaticResource Type.Label.Size}" 
                                    Foreground="{DynamicResource MutedTextBrush}"
                                    HorizontalAlignment="Center"/>
                     </StackPanel>
@@ -625,14 +607,14 @@
                                             <Image Source="{Binding SelectedTrashItem.Payload.AutoDetectedIconBitmap}"
                                                    Width="108" Height="108" Stretch="Uniform"
                                                    IsVisible="{Binding SelectedTrashItem.Payload.HasAutoDetectedIcon}"/>
-                                            <TextBlock Text="{Binding SelectedTrashItem.Payload.IconText}" FontSize="48" FontWeight="Bold" Foreground="White"
+                                            <TextBlock Text="{Binding SelectedTrashItem.Payload.IconText}" FontSize="{StaticResource Type.IconLg.Size}" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}"
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"
                                                        IsVisible="{Binding !SelectedTrashItem.Payload.HasAutoDetectedIcon}"/>
                                         </Grid>
                                     </Border>
 
                                     <StackPanel Grid.Column="2" Spacing="8" VerticalAlignment="Center">
-                                        <TextBlock FontSize="32" FontWeight="Bold"
+                                        <TextBlock FontSize="{StaticResource Type.H1.Size}" FontWeight="Bold"
                                                    Foreground="{DynamicResource PrimaryTextBrush}"
                                                    TextWrapping="Wrap">
                                             <TextBlock.Effect>
@@ -645,7 +627,7 @@
                                                 </MultiBinding>
                                             </TextBlock.Text>
                                         </TextBlock>
-                                        <TextBlock FontSize="18" Foreground="{DynamicResource SecondaryTextBrush}">
+                                        <TextBlock FontSize="{StaticResource Type.H3.Size}" Foreground="{DynamicResource SecondaryTextBrush}">
                                             <TextBlock.Effect>
                                                 <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
                                             </TextBlock.Effect>
@@ -667,17 +649,17 @@
                                                 Height="40"
                                                 FontWeight="SemiBold"
                                                 ToolTip.Tip="Restore this entry">
-                                            <TextBlock Text="Recover" FontSize="14" Foreground="White" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="Recover" FontSize="{StaticResource Type.Body.Size}" Foreground="{DynamicResource ButtonForegroundBrush}" HorizontalAlignment="Center"/>
                                         </Button>
                                         <Button Command="{Binding PurgeTrashItemCommand}"
                                                 CommandParameter="{Binding SelectedTrashItem}"
-                                                Classes="liquid-glass"
-                                                Background="{DynamicResource ErrorBrush}"
+                                                Classes="liquid-glass danger"
                                                 Width="170"
                                                 Height="40"
                                                 FontWeight="SemiBold"
+                                                CornerRadius="8"
                                                 ToolTip.Tip="Permanently delete this entry">
-                                            <TextBlock Text="Delete Permanently" FontSize="14" Foreground="White" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="Delete Permanently" FontSize="{StaticResource Type.Body.Size}" Foreground="{DynamicResource ButtonForegroundBrush}" HorizontalAlignment="Center"/>
                                         </Button>
                                     </StackPanel>
                                 </Grid>
@@ -685,7 +667,7 @@
                                 <StackPanel Spacing="20" Margin="0,16,0,0">
                                     <StackPanel Spacing="6">
                                         <TextBlock Text="Username"
-                                                   FontSize="13"
+                                                   FontSize="{StaticResource Type.Label.Size}"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource MutedTextBrush}"/>
                                         <Border Background="{DynamicResource ControlBackgroundBrush}"
@@ -710,7 +692,7 @@
 
                                     <StackPanel Spacing="6">
                                         <TextBlock Text="Password"
-                                                   FontSize="13"
+                                                   FontSize="{StaticResource Type.Label.Size}"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource MutedTextBrush}"/>
                                         <Border Background="{DynamicResource ControlBackgroundBrush}"
@@ -735,7 +717,7 @@
 
                                     <StackPanel Spacing="6" IsVisible="{Binding SelectedTrashItem.Payload.HasUrl}">
                                         <TextBlock Text="Website"
-                                                   FontSize="13"
+                                                   FontSize="{StaticResource Type.Label.Size}"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource MutedTextBrush}"/>
                                         <Border Background="{DynamicResource ControlBackgroundBrush}"
@@ -760,7 +742,7 @@
 
                                     <StackPanel Spacing="6">
                                         <TextBlock Text="Original group"
-                                                   FontSize="13"
+                                                   FontSize="{StaticResource Type.Label.Size}"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource MutedTextBrush}"/>
                                         <Border Background="{DynamicResource ControlBackgroundBrush}"
@@ -776,7 +758,7 @@
 
                                     <StackPanel Spacing="6">
                                         <TextBlock Text="Deleted on"
-                                                   FontSize="13"
+                                                   FontSize="{StaticResource Type.Label.Size}"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource MutedTextBrush}"/>
                                         <Border Background="{DynamicResource ControlBackgroundBrush}"
@@ -792,7 +774,7 @@
 
                                     <StackPanel Spacing="6">
                                         <TextBlock Text="Scheduled purge"
-                                                   FontSize="13"
+                                                   FontSize="{StaticResource Type.Label.Size}"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource MutedTextBrush}"/>
                                         <Border Background="{DynamicResource ControlBackgroundBrush}"
@@ -815,16 +797,16 @@
                                         Margin="0,120,0,0"
                                         IsVisible="{Binding SelectedTrashItem, Converter={x:Static ObjectConverters.IsNull}}">
                                 <TextBlock Text="🗑"
-                                           FontSize="80"
+                                           FontSize="{StaticResource Type.EmptyState.Size}"
                                            HorizontalAlignment="Center"
                                            Opacity="0.2"/>
                                 <TextBlock Text="Select a secure bin item"
-                                           FontSize="16"
+                                           FontSize="{StaticResource Type.H4.Size}"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource SecondaryTextBrush}"
                                            HorizontalAlignment="Center"/>
                                 <TextBlock Text="Choose an entry from the rubbish list to recover or delete"
-                                           FontSize="13"
+                                           FontSize="{StaticResource Type.Label.Size}"
                                            Foreground="{DynamicResource MutedTextBrush}"
                                            HorizontalAlignment="Center"/>
                             </StackPanel>
@@ -901,10 +883,10 @@
                                             Classes="liquid-glass"
                                             Width="36" Height="36"
                                             ToolTip.Tip="Back">
-                                        <TextBlock Text="←" FontSize="16"/>
+                                        <TextBlock Text="←" FontSize="{StaticResource Type.H4.Size}"/>
                                     </Button>
                                     <TextBlock Grid.Column="1"
-                                               FontSize="16"
+                                               FontSize="{StaticResource Type.H4.Size}"
                                                FontWeight="SemiBold"
                                                VerticalAlignment="Center"
                                                Margin="12,0,0,0">
@@ -928,13 +910,13 @@
                                                 <Image Source="{Binding SelectedCredential.AutoDetectedIconBitmap}"
                                                        Width="72" Height="72" Stretch="Uniform"
                                                        IsVisible="{Binding SelectedCredential.HasAutoDetectedIcon}"/>
-                                                <TextBlock Text="{Binding SelectedCredential.IconText}" FontSize="34" FontWeight="Bold" Foreground="White"
+                                                <TextBlock Text="{Binding SelectedCredential.IconText}" FontSize="{StaticResource Type.IconMd.Size}" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}"
                                                            HorizontalAlignment="Center" VerticalAlignment="Center"
                                                            IsVisible="{Binding !SelectedCredential.HasAutoDetectedIcon}"/>
                                             </Grid>
                                         </Border>
                                         <StackPanel Grid.Column="2" Spacing="{StaticResource Space6}" VerticalAlignment="Center">
-                                            <TextBlock FontSize="22" FontWeight="Bold">
+                                            <TextBlock FontSize="{StaticResource Type.SubHeading.Size}" FontWeight="Bold">
                                                 <TextBlock.Text>
                                                     <MultiBinding Converter="{StaticResource PrivacyMaskConverter}">
                                                         <Binding Path="SelectedCredential.Title"/>
@@ -942,7 +924,7 @@
                                                     </MultiBinding>
                                                 </TextBlock.Text>
                                             </TextBlock>
-                                            <TextBlock FontSize="14" Foreground="{DynamicResource SecondaryTextBrush}">
+                                            <TextBlock FontSize="{StaticResource Type.Body.Size}" Foreground="{DynamicResource SecondaryTextBrush}">
                                                 <TextBlock.Text>
                                                     <MultiBinding Converter="{StaticResource PrivacyMaskConverter}" ConverterParameter="Username">
                                                         <Binding Path="SelectedCredential.Username"/>
@@ -968,16 +950,16 @@
                                         IsPassword="True" 
                                         CopyCommand="{Binding CopyPasswordCommand}" 
                                         CopyCommandParameter="{Binding SelectedCredential}" 
-                                        ButtonBackground="#4A6B8A" 
+                                        ButtonBackground="#199c8e" 
                                         ButtonTooltip="Copy password" />
 
                                     <!-- URL -->
                                     <StackPanel Spacing="{StaticResource Space6}" IsVisible="{Binding SelectedCredential.HasUrl}">
-                                        <TextBlock Text="Website" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                                        <TextBlock Text="Website" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
                                         <Grid ColumnDefinitions="*,Auto">
                                             <TextBox Grid.Column="0" Text="{Binding SelectedCredential.Url}" IsReadOnly="True" Background="{DynamicResource ControlBackgroundBrush}" Foreground="{DynamicResource PrimaryTextBrush}" BorderThickness="1" BorderBrush="{DynamicResource ControlBorderBrush}" Height="36" Padding="10,8"/>
                                             <Button Grid.Column="1" Command="{Binding OpenUrlCommand}" CommandParameter="{Binding SelectedCredential}" Classes="liquid-glass" Width="36" Height="36" Margin="8,0,0,0" ToolTip.Tip="Open in browser">
-                                                <TextBlock Text="🌐" FontSize="16" VerticalAlignment="Center"/>
+                                                <TextBlock Text="🌐" FontSize="{StaticResource Type.H4.Size}" VerticalAlignment="Center"/>
                                             </Button>
                                         </Grid>
                                     </StackPanel>
@@ -1013,6 +995,7 @@
                 VerticalAlignment="Stretch"
                 Width="{Binding ElementName=DetailPanel, Path=Bounds.Width}"
                 ZIndex="1"
+                Background="Transparent"
                 Tag="{Binding IsEditPanelVisible}">
                         
                         <!-- Edit Panel Content -->
@@ -1075,18 +1058,18 @@
                             <!-- Header -->
                             <Border Grid.Row="0" 
                                     Background="{DynamicResource HeaderBackgroundBrush}" 
-                                    Padding="25,20,10,20"
+                                    Padding="25,30,10,20"
                                     BorderBrush="{DynamicResource ControlBorderBrush}"
                                     BorderThickness="0,0,0,1"
                                     CornerRadius="0,0,12,12">
                                 <Grid ColumnDefinitions="*,Auto">
                                     <StackPanel Grid.Column="0" Spacing="6" Margin="0,0,15,0">
                                         <TextBlock Text="Add/Edit Credentials" 
-                                                   FontSize="20" 
+                                                   FontSize="{StaticResource Type.Icon.Size}" 
                                                    FontWeight="Bold"
                                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
                                         <TextBlock Text="Enter credential details securely" 
-                                                   FontSize="13" 
+                                                   FontSize="{StaticResource Type.Label.Size}" 
                                                    Foreground="{DynamicResource MutedTextBrush}"/>
                                     </StackPanel>
                                     <Button Grid.Column="1"
@@ -1094,12 +1077,15 @@
                                             Classes="liquid-glass"
                                             Width="32"
                                             Height="32"
+                                            MinWidth="32"
+                                            MinHeight="32"
                                             CornerRadius="8"
                                             Padding="0"
                                             VerticalAlignment="Top"
                                             Margin="0,0,15,0"
                                             ToolTip.Tip="Close">
-                                        <dcontrols:SvgIcon IconName="Assets/SVG/x.svg" Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        <dcontrols:SvgIcon IconName="Assets/SVG/x.svg" Width="14" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                           IconColor="{DynamicResource PrimaryTextBrush}" />
                                     </Button>
                                 </Grid>
                             </Border>
@@ -1110,12 +1096,12 @@
                                           VerticalScrollBarVisibility="Auto"
                                           HorizontalScrollBarVisibility="Disabled"
                                           HorizontalContentAlignment="Stretch"
-                                          AllowAutoHide="False"
-                                          Padding="30,10,30,250">
+                                          AllowAutoHide="False">
                                 <StackPanel x:Name="EditFormStack"
                                             Spacing="10"
                                             HorizontalAlignment="Stretch"
-                                            MaxWidth="590">
+                                            MaxWidth="590"
+                                            Margin="30,25,30,30">
                                     
                                     <!-- Password Entry Fields -->
                                     <StackPanel Spacing="14" IsVisible="{Binding IsPasswordEntry}">
@@ -1123,13 +1109,13 @@
                                     <!-- Title Field -->
                                     <StackPanel Spacing="8">
                                         <TextBlock Text="Title *" 
-                                                   FontSize="13" 
+                                                   FontSize="{StaticResource Type.Label.Size}" 
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                                         <TextBox Text="{Binding Title}"
                                                  Watermark="e.g., GitHub, Gmail, Bank Account"
                                                  Height="40"
-                                                 FontSize="14"
+                                                 FontSize="{StaticResource Type.Body.Size}"
                                                  Background="{DynamicResource ControlBackgroundBrush}">
                                             <TextBox.Styles>
                                                 <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
@@ -1141,7 +1127,7 @@
                                             </TextBox.Styles>
                                         </TextBox>
                                         <TextBlock Text="{Binding TitleError}" 
-                                                   FontSize="11" 
+                                                   FontSize="{StaticResource Type.Tiny.Size}" 
                                                    Foreground="{DynamicResource ErrorBrush}"
                                                    IsVisible="{Binding HasTitleError}"/>
                                     </StackPanel>
@@ -1149,13 +1135,13 @@
                                     <!-- Username/Email Field -->
                                     <StackPanel Spacing="8" IsVisible="{Binding ShowPasswordFields}">
                                         <TextBlock Text="Username / Email *" 
-                                                   FontSize="13" 
+                                                   FontSize="{StaticResource Type.Label.Size}" 
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                                         <TextBox Text="{Binding Username}"
                                                  Watermark="username@example.com"
                                                  Height="40"
-                                                 FontSize="14"
+                                                 FontSize="{StaticResource Type.Body.Size}"
                                                  Background="{DynamicResource ControlBackgroundBrush}">
                                             <TextBox.Styles>
                                                 <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
@@ -1167,7 +1153,7 @@
                                             </TextBox.Styles>
                                         </TextBox>
                                         <TextBlock Text="{Binding UsernameError}" 
-                                                   FontSize="11" 
+                                                   FontSize="{StaticResource Type.Tiny.Size}" 
                                                    Foreground="{DynamicResource ErrorBrush}"
                                                    IsVisible="{Binding HasUsernameError}"/>
                                     </StackPanel>
@@ -1177,30 +1163,32 @@
                                         <Grid ColumnDefinitions="*,Auto,4,Auto">
                                             <TextBlock Grid.Column="0"
                                                        Text="Password *" 
-                                                       FontSize="13" 
+                                                       FontSize="{StaticResource Type.Label.Size}" 
                                                        FontWeight="SemiBold"
                                                        Foreground="{DynamicResource SecondaryTextBrush}"/>
                                             <Button Grid.Column="1"
                                                     Command="{Binding GeneratePasswordCommand}"
                                                     Classes="liquid-glass"
-                                                    Width="36"
-                                                    Height="36"
+                                                    Width="30"
+                                                    Height="30"
+                                                    MinWidth="30"
+                                                    MinHeight="30"
                                                     CornerRadius="6"
                                                     Padding="0"
-                                                    FontSize="11"
                                                     ToolTip.Tip="Generate strong password">
-                                                <dcontrols:SvgIcon IconName="Assets/SVG/Current/Generate dice.svg" Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                <dcontrols:SvgIcon IconName="Assets/SVG/Current/Generate dice.svg" Width="15" Height="15" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             </Button>
                                             <Button Grid.Column="3"
                                                     Command="{Binding OpenPasswordGeneratorCommand}"
                                                     Classes="liquid-glass"
-                                                    Height="36"
-                                                    Width="36"
+                                                    Width="30"
+                                                    Height="30"
+                                                    MinWidth="30"
+                                                    MinHeight="30"
                                                     CornerRadius="6"
                                                     Padding="0"
-                                                    FontSize="11"
                                                     ToolTip.Tip="Open password generator settings">
-                                                <dcontrols:SvgIcon IconName="Assets/SVG/Current/Settings gear.svg" Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                <dcontrols:SvgIcon IconName="Assets/SVG/Current/Settings gear.svg" Width="15" Height="15" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             </Button>
                                         </Grid>
 
@@ -1211,7 +1199,7 @@
                                                          PasswordChar="{Binding PasswordChar}"
                                                          Watermark="Enter secure password"
                                                          Height="40"
-                                                         FontSize="14"
+                                                         FontSize="{StaticResource Type.Body.Size}"
                                                          Padding="12,10"
                                                          Margin="0,0,8,0"
                                                          Foreground="{DynamicResource PrimaryTextBrush}"
@@ -1228,12 +1216,14 @@
                                                 <Button Grid.Column="1"
                                                         Command="{Binding TogglePasswordVisibilityCommand}"
                                                         Classes="liquid-glass"
-                                                        Width="36"
-                                                        Height="36"
+                                                        Width="30"
+                                                        Height="30"
+                                                        MinWidth="30"
+                                                        MinHeight="30"
                                                         CornerRadius="6"
                                                         Padding="0"
                                                         ToolTip.Tip="Show/Hide password">
-                                                    <dcontrols:SvgIcon IconName="{Binding PasswordVisibilitySvgIcon}" Width="18" Height="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                    <dcontrols:SvgIcon IconName="{Binding PasswordVisibilitySvgIcon}" Width="15" Height="15" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                                 </Button>
                                             </Grid>
 
@@ -1246,9 +1236,9 @@
                                                     IsVisible="{Binding ShowPasswordFlag}"
                                                     IsHitTestVisible="False">
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
-                                                    <TextBlock Text="⚑" FontSize="11"/>
+                                                    <TextBlock Text="⚑" FontSize="{StaticResource Type.Tiny.Size}"/>
                                                     <TextBlock Text="{Binding PasswordFlagText}"
-                                                               FontSize="11"
+                                                               FontSize="{StaticResource Type.Tiny.Size}"
                                                                FontWeight="SemiBold"
                                                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                                                 </StackPanel>
@@ -1256,14 +1246,14 @@
                                         </Grid>
 
                                         <!-- Password Strength Meter -->
-                                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                        <Border Background="Transparent"
                                                 CornerRadius="{DynamicResource Radius.Sm}"
                                                 Padding="10,8"
                                                 IsVisible="{Binding HasPassword}">
                                             <Grid ColumnDefinitions="Auto,*,Auto">
                                                 <TextBlock Grid.Column="0"
                                                            Text="Strength:" 
-                                                           FontSize="11" 
+                                                           FontSize="{StaticResource Type.Tiny.Size}" 
                                                            Foreground="{DynamicResource MutedTextBrush}"
                                                            VerticalAlignment="Center"
                                                            Margin="0,0,10,0"/>
@@ -1271,11 +1261,12 @@
                                                              Value="{Binding PasswordStrength}"
                                                              Maximum="100"
                                                              Height="8"
+                                                             CornerRadius="4"
                                                              VerticalAlignment="Center"
                                                              Foreground="{Binding PasswordStrengthColor}"/>
                                                 <TextBlock Grid.Column="2"
                                                            Text="{Binding PasswordStrengthText}" 
-                                                           FontSize="11" 
+                                                           FontSize="{StaticResource Type.Tiny.Size}" 
                                                            FontWeight="SemiBold"
                                                            Foreground="{Binding PasswordStrengthColor}"
                                                            VerticalAlignment="Center"
@@ -1284,7 +1275,7 @@
                                         </Border>
 
                                         <TextBlock Text="{Binding PasswordError}" 
-                                                   FontSize="11" 
+                                                   FontSize="{StaticResource Type.Tiny.Size}" 
                                                    Foreground="{DynamicResource ErrorBrush}"
                                                    IsVisible="{Binding HasPasswordError}"/>
                                     </StackPanel>
@@ -1292,13 +1283,13 @@
                                     <!-- URL Field -->
                                     <StackPanel Spacing="8" IsVisible="{Binding ShowPasswordFields}">
                                         <TextBlock Text="Website URL" 
-                                                   FontSize="13" 
+                                                   FontSize="{StaticResource Type.Label.Size}" 
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                                         <TextBox Text="{Binding Url}"
                                                  Watermark="https://example.com"
                                                  Height="40"
-                                                 FontSize="14"
+                                                 FontSize="{StaticResource Type.Body.Size}"
                                                  Background="{DynamicResource ControlBackgroundBrush}">
                                             <TextBox.Styles>
                                                 <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
@@ -1310,25 +1301,212 @@
                                             </TextBox.Styles>
                                         </TextBox>
                                         <TextBlock Text="Optional - Used for auto-fill and quick access" 
-                                                   FontSize="11" 
+                                                   FontSize="{StaticResource Type.Tiny.Size}" 
                                                    Foreground="{DynamicResource MutedTextBrush}"/>
                                     </StackPanel>
+
+                                    <!-- ═══ TOTP Authenticator Section ═══ -->
+
+                                    <!-- TOTP: Current secret display (when secret exists) -->
+                                    <Border IsVisible="{Binding HasTotpSecret}"
+                                            CornerRadius="12"
+                                            Padding="16,14"
+                                            BorderThickness="1">
+                                        <Border.BorderBrush>
+                                            <SolidColorBrush Color="#FFFFFF" Opacity="0.08"/>
+                                        </Border.BorderBrush>
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                                <GradientStop Color="#0CFFFFFF" Offset="0"/>
+                                                <GradientStop Color="#06FFFFFF" Offset="0.5"/>
+                                                <GradientStop Color="#03FFFFFF" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                        <StackPanel Spacing="12">
+                                            <Grid ColumnDefinitions="Auto,10,*,Auto,6,Auto">
+                                                <Border Width="30" Height="30" CornerRadius="8" VerticalAlignment="Center">
+                                                    <Border.Background>
+                                                        <SolidColorBrush Color="{DynamicResource AccentColor}" Opacity="0.12"/>
+                                                    </Border.Background>
+                                                    <dcontrols:SvgIcon IconName="Assets/SVG/Current/Key.svg"
+                                                                       Width="14" Height="14"
+                                                                       IconColor="{DynamicResource AccentBrush}"
+                                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <StackPanel Grid.Column="2" Spacing="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="TOTP Authenticator"
+                                                               FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                    <TextBlock Text="Two-factor authentication is configured"
+                                                               FontSize="{StaticResource Type.Tiny.Size}"
+                                                               Foreground="{DynamicResource MutedTextBrush}"/>
+                                                </StackPanel>
+                                                <!-- Settings button -->
+                                                <Button Grid.Column="3"
+                                                        Command="{Binding OpenTotpSettingsCommand}"
+                                                        Classes="liquid-glass"
+                                                        Width="30" Height="30"
+                                                        CornerRadius="8"
+                                                        Padding="0"
+                                                        ToolTip.Tip="TOTP Settings">
+                                                    <dcontrols:SvgIcon IconName="Assets/SVG/Current/Settings.svg"
+                                                                       Width="13" Height="13"
+                                                                       IconColor="{DynamicResource SecondaryTextBrush}"
+                                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Button>
+                                                <!-- Remove button -->
+                                                <Button Grid.Column="5"
+                                                        Command="{Binding RemoveTotpSecretCommand}"
+                                                        Classes="liquid-glass"
+                                                        Width="30" Height="30"
+                                                        CornerRadius="8"
+                                                        Padding="0"
+                                                        ToolTip.Tip="Remove TOTP">
+                                                    <dcontrols:SvgIcon IconName="Assets/SVG/Current/Delete.svg"
+                                                                       Width="13" Height="13"
+                                                                       IconColor="#CCCC4444"
+                                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Button>
+                                            </Grid>
+                                            <!-- Secret key (editable) -->
+                                            <StackPanel Spacing="4">
+                                                <TextBlock Text="Secret Key (Base32)"
+                                                           FontSize="{StaticResource Type.Tiny.Size}" FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource MutedTextBrush}"/>
+                                                <TextBox Text="{Binding TotpSecretInput, Mode=TwoWay}"
+                                                         Watermark="e.g. JBSWY3DPEHPK3PXP"
+                                                         Height="38"
+                                                         FontFamily="Consolas,Courier New,monospace"
+                                                         FontSize="{StaticResource Type.Label.Size}"
+                                                         LetterSpacing="1"
+                                                         CornerRadius="8"
+                                                         Padding="10,8"
+                                                         Background="{DynamicResource ControlBackgroundBrush}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- TOTP: Add setup (when no secret) -->
+                                    <Border IsVisible="{Binding !HasTotpSecret}"
+                                            CornerRadius="12"
+                                            Padding="16,14"
+                                            BorderThickness="1">
+                                        <Border.BorderBrush>
+                                            <SolidColorBrush Color="#FFFFFF" Opacity="0.08"/>
+                                        </Border.BorderBrush>
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                                <GradientStop Color="#0CFFFFFF" Offset="0"/>
+                                                <GradientStop Color="#06FFFFFF" Offset="0.5"/>
+                                                <GradientStop Color="#03FFFFFF" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                        <StackPanel Spacing="12">
+                                            <!-- Header -->
+                                            <Grid ColumnDefinitions="Auto,10,*">
+                                                <Border Width="30" Height="30" CornerRadius="8" VerticalAlignment="Center">
+                                                    <Border.Background>
+                                                        <SolidColorBrush Color="{DynamicResource AccentColor}" Opacity="0.12"/>
+                                                    </Border.Background>
+                                                    <dcontrols:SvgIcon IconName="Assets/SVG/Current/Key.svg"
+                                                                       Width="14" Height="14"
+                                                                       IconColor="{DynamicResource AccentBrush}"
+                                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <StackPanel Grid.Column="2" Spacing="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="Add TOTP Authenticator"
+                                                               FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                    <TextBlock Text="Enter the secret key from your service provider"
+                                                               FontSize="{StaticResource Type.Tiny.Size}"
+                                                               Foreground="{DynamicResource MutedTextBrush}"
+                                                               TextWrapping="Wrap"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- Secret key input -->
+                                            <StackPanel Spacing="4">
+                                                <TextBlock Text="Secret Key (Base32)"
+                                                           FontSize="{StaticResource Type.Tiny.Size}" FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource MutedTextBrush}"/>
+                                                <TextBox Text="{Binding TotpSecretInput, Mode=TwoWay}"
+                                                         Watermark="e.g. JBSWY3DPEHPK3PXP"
+                                                         Height="38"
+                                                         FontFamily="Consolas,Courier New,monospace"
+                                                         FontSize="{StaticResource Type.Label.Size}"
+                                                         LetterSpacing="1"
+                                                         CornerRadius="8"
+                                                         Padding="10,8"
+                                                         Background="{DynamicResource ControlBackgroundBrush}"/>
+                                            </StackPanel>
+
+                                            <!-- Supported apps chips -->
+                                            <WrapPanel Orientation="Horizontal">
+                                                <Border Background="#10FFFFFF" CornerRadius="8" Padding="8,3" Margin="0,0,5,0">
+                                                    <TextBlock Text="Google Authenticator" FontSize="{StaticResource Type.Micro.Size}"
+                                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                </Border>
+                                                <Border Background="#10FFFFFF" CornerRadius="8" Padding="8,3" Margin="0,0,5,0">
+                                                    <TextBlock Text="Authy" FontSize="{StaticResource Type.Micro.Size}"
+                                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                </Border>
+                                                <Border Background="#10FFFFFF" CornerRadius="8" Padding="8,3" Margin="0,0,5,0">
+                                                    <TextBlock Text="Microsoft Authenticator" FontSize="{StaticResource Type.Micro.Size}"
+                                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                </Border>
+                                            </WrapPanel>
+
+                                            <!-- Generate + Import buttons -->
+                                            <Grid ColumnDefinitions="*,8,*">
+                                                <Button Grid.Column="0"
+                                                        Command="{Binding GenerateTotpSecretCommand}"
+                                                        Classes="liquid-glass"
+                                                        HorizontalAlignment="Stretch"
+                                                        Height="36"
+                                                        CornerRadius="8"
+                                                        ToolTip.Tip="Generate a random TOTP secret">
+                                                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                                        <dcontrols:SvgIcon IconName="Assets/SVG/Current/Generate dice.svg"
+                                                                           Width="14" Height="14"
+                                                                           IconColor="{DynamicResource PrimaryTextBrush}"/>
+                                                        <TextBlock Text="Generate" FontSize="{StaticResource Type.Small.Size}" FontWeight="SemiBold"
+                                                                   VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Button>
+                                                <Button Grid.Column="2"
+                                                        Command="{Binding ImportFromOtpAuthCommand}"
+                                                        Classes="liquid-glass"
+                                                        HorizontalAlignment="Stretch"
+                                                        Height="36"
+                                                        CornerRadius="8"
+                                                        ToolTip.Tip="Import from clipboard (otpauth:// URL)">
+                                                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                                        <dcontrols:SvgIcon IconName="Assets/SVG/Current/Copy Hollow.svg"
+                                                                           Width="14" Height="14"
+                                                                           IconColor="{DynamicResource PrimaryTextBrush}"/>
+                                                        <TextBlock Text="Import URI" FontSize="{StaticResource Type.Small.Size}" FontWeight="SemiBold"
+                                                                   VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
                                     
                                     <!-- Category Selection -->
                                     <StackPanel Spacing="8" IsVisible="{Binding ShowCategorySelector}">
                                         <TextBlock Text="Category" 
-                                                   FontSize="13" 
+                                                   FontSize="{StaticResource Type.Label.Size}" 
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                                         <ComboBox SelectedItem="{Binding SelectedCategory}"
                                                   ItemsSource="{Binding Categories}"
                                                   Height="40"
-                                                  FontSize="14">
+                                                  FontSize="{StaticResource Type.Body.Size}">
                                             <ComboBox.ItemTemplate>
                                                 <DataTemplate>
                                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                                         <Image Source="{Binding Icon, Converter={StaticResource IconPathToBitmapConverter}}" Width="22" Height="22" Stretch="Uniform" IsVisible="{Binding Icon, Converter={StaticResource IconPathExistsConverter}}"/>
-                                                        <TextBlock Text="{Binding Icon}" FontSize="14" IsVisible="{Binding Icon, Converter={StaticResource IconPathExistsConverter}, ConverterParameter=invert}"/>
+                                                        <TextBlock Text="{Binding Icon}" FontSize="{StaticResource Type.Body.Size}" IsVisible="{Binding Icon, Converter={StaticResource IconPathExistsConverter}, ConverterParameter=invert}"/>
                                                         <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
                                                     </StackPanel>
                                                 </DataTemplate>
@@ -1339,7 +1517,7 @@
                                     <!-- Icon/Logo Selection -->
                                     <StackPanel Spacing="8" IsVisible="{Binding ShowIconSelector}">
                                         <TextBlock Text="Icon / Logo" 
-                                                   FontSize="13" 
+                                                   FontSize="{StaticResource Type.Label.Size}" 
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                                         <Border Background="{DynamicResource ControlBackgroundBrush}"
@@ -1347,7 +1525,9 @@
                                                 BorderThickness="1"
                                                 CornerRadius="{DynamicResource Radius.Md}"
                                                 Padding="15"
-                                                Height="100">
+                                                Height="100"
+                                                Cursor="Hand"
+                                                PointerReleased="IconSectionBorder_PointerReleased">
                                             <Border.Styles>
                                                 <Style Selector="Border:pointerover">
                                                     <Setter Property="Background" Value="#33FFFFFF"/>
@@ -1375,18 +1555,20 @@
                                                             VerticalAlignment="Center"
                                                             Spacing="4">
                                                     <TextBlock Text="Custom icon for this credential" 
-                                                               FontSize="13" 
+                                                               FontSize="{StaticResource Type.Label.Size}" 
                                                                FontWeight="SemiBold"
                                                                Foreground="{DynamicResource SecondaryTextBrush}"/>
                                           <TextBlock Text="Click 'Change Icon' to select from library or upload custom" 
-                                                               FontSize="11" 
+                                                               FontSize="{StaticResource Type.Tiny.Size}" 
                                                                Foreground="{DynamicResource MutedTextBrush}"
                                                                TextWrapping="Wrap"/>
                                                 </StackPanel>
                                                 
                                                 <!-- Change Icon Button -->
                                                 <Button Grid.Column="2"
-                                                        Command="{Binding PickIconCommand}"
+                                                        x:Name="IconPickerButton"
+                                                        Command="{Binding OpenIconPickerCommand}"
+                                                        Click="IconPickerButton_Click"
                                                         Classes="liquid-glass"
                                                         Width="32"
                                                         Height="32"
@@ -1403,7 +1585,7 @@
                                     <!-- Notes Field -->
                                     <StackPanel Spacing="8">
                                         <TextBlock Text="Notes" 
-                                                   FontSize="13" 
+                                                   FontSize="{StaticResource Type.Label.Size}" 
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                                         <TextBox Text="{Binding Notes}"
@@ -1411,7 +1593,7 @@
                                                  AcceptsReturn="True"
                                                  TextWrapping="Wrap"
                                                  Height="100"
-                                                 FontSize="13"
+                                                 FontSize="{StaticResource Type.Label.Size}"
                                                  Background="{DynamicResource ControlBackgroundBrush}">
                                             <TextBox.Styles>
                                                 <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
@@ -1423,7 +1605,7 @@
                                             </TextBox.Styles>
                                         </TextBox>
                                     </StackPanel>
-                                    
+
                                     </StackPanel>
                                     <!-- End Password Entry Fields -->
 
@@ -1443,17 +1625,17 @@
                                     <!-- Tags -->
                                     <StackPanel Spacing="8" Margin="0,0,0,0">
                                         <TextBlock Text="Tags" 
-                                                   FontSize="13" 
+                                                   FontSize="{StaticResource Type.Label.Size}" 
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                                         <TextBox Text="{Binding TagsText}"
                                                  Watermark="work, personal, important (comma-separated)"
                                                  Height="40"
-                                                 FontSize="14"
+                                                 FontSize="{StaticResource Type.Body.Size}"
                                                  Foreground="{DynamicResource PrimaryTextBrush}"
                                                  Background="{DynamicResource ControlBackgroundBrush}"/>
                                         <TextBlock Text="Add tags to organize and search credentials easily" 
-                                                   FontSize="11" 
+                                                   FontSize="{StaticResource Type.Tiny.Size}" 
                                                    Foreground="{DynamicResource MutedTextBrush}"/>
                                     </StackPanel>
 
@@ -1466,14 +1648,14 @@
                                                       Margin="0,0,10,0"/>
                                             <TextBlock Grid.Column="1"
                                                        Text="Set expiration date (e.g., for temporary passwords)" 
-                                                       FontSize="13" 
+                                                       FontSize="{StaticResource Type.Label.Size}" 
                                                        FontWeight="SemiBold"
                                                        Foreground="{DynamicResource SecondaryTextBrush}"
                                                        VerticalAlignment="Center"/>
                                         </Grid>
                                         <DatePicker SelectedDate="{Binding ExpiryDate}"
                                                     Height="40"
-                                                    FontSize="14"
+                                                    FontSize="{StaticResource Type.Body.Size}"
                                                     IsVisible="{Binding HasExpiryDate}"/>
                                     </StackPanel>
 
@@ -1488,11 +1670,11 @@
                                                       Margin="0,0,12,0"/>
                                             <StackPanel Grid.Column="1">
                                                 <TextBlock Text="⭐ Mark as Favorite" 
-                                                           FontSize="13" 
+                                                           FontSize="{StaticResource Type.Label.Size}" 
                                                            FontWeight="SemiBold"
                                                            Foreground="{DynamicResource SecondaryTextBrush}"/>
                                                 <TextBlock Text="Quick access from favorites list" 
-                                                           FontSize="11" 
+                                                           FontSize="{StaticResource Type.Tiny.Size}" 
                                                            Foreground="{DynamicResource MutedTextBrush}"
                                                            Margin="0,2,0,0"/>
                                             </StackPanel>
@@ -1511,7 +1693,7 @@
                                 <Grid ColumnDefinitions="*,Auto,Auto,Auto">
                                     <TextBlock Grid.Column="0"
                                                Text="* Required fields" 
-                                               FontSize="11" 
+                                               FontSize="{StaticResource Type.Tiny.Size}" 
                                                Foreground="{DynamicResource MutedTextBrush}"
                                                VerticalAlignment="Center"/>
 
@@ -1638,11 +1820,11 @@
                                 <Grid ColumnDefinitions="*,Auto">
                                     <StackPanel Grid.Column="0" Spacing="6">
                                         <TextBlock Text="Security Dashboard"
-                                                   FontSize="24"
+                                                   FontSize="{StaticResource Type.H2.Size}"
                                                    FontWeight="Bold"
                                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
                                         <TextBlock Text="Comprehensive security analysis and monitoring"
-                                                   FontSize="13"
+                                                   FontSize="{StaticResource Type.Label.Size}"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                                     </StackPanel>
                                     <Button Grid.Column="1"
@@ -1651,7 +1833,7 @@
                                             Width="36"
                                             Height="36"
                                             ToolTip.Tip="Close dashboard">
-                                        <TextBlock Text="✕" FontSize="16"/>
+                                        <TextBlock Text="✕" FontSize="{StaticResource Type.H4.Size}"/>
                                     </Button>
                                 </Grid>
                             </Border>
@@ -1690,13 +1872,13 @@
                                 MinWidth="420">
                         
                         <TextBlock Text="{Binding LockscreenTitle}"
-                                   FontSize="32"
+                                   FontSize="{StaticResource Type.H1.Size}"
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource PrimaryTextBrush}"
                                    HorizontalAlignment="Center"/>
 
                         <TextBlock Text="{Binding LockscreenMessage}"
-                                   FontSize="14"
+                                   FontSize="{StaticResource Type.Body.Size}"
                                    Foreground="{DynamicResource MutedTextBrush}"
                                    TextWrapping="Wrap"
                                    HorizontalAlignment="Center"
@@ -1704,7 +1886,7 @@
                                    MaxWidth="500"/>
 
                         <TextBlock Text="{Binding LockscreenError}"
-                                   FontSize="13"
+                                   FontSize="{StaticResource Type.Label.Size}"
                                    Foreground="{DynamicResource ErrorTextBrush}"
                                    TextWrapping="Wrap"
                                    HorizontalAlignment="Center"
@@ -1715,7 +1897,7 @@
                         <!-- PIN unlock (soft lock only) -->
                         <StackPanel Spacing="12" IsVisible="{Binding PinUnlockAvailable}" MinWidth="380">
                             <TextBlock Text="PIN" 
-                                       FontSize="13" 
+                                       FontSize="{StaticResource Type.Label.Size}" 
                                        Foreground="{DynamicResource SecondaryTextBrush}"
                                        HorizontalAlignment="Center"/>
                             <TextBox Text="{Binding LockscreenPin, Mode=TwoWay}"
@@ -1727,7 +1909,7 @@
                                      BorderThickness="1"
                                      Height="44"
                                      Padding="14,10"
-                                     FontSize="16"
+                                     FontSize="{StaticResource Type.H4.Size}"
                                      HorizontalAlignment="Stretch"/>
                             <Button Content="Unlock"
                                     Command="{Binding UnlockWithPinCommand}"
@@ -1735,7 +1917,7 @@
                                     HorizontalAlignment="Center"
                                     Width="200"
                                     Height="44"
-                                    FontSize="15"
+                                    FontSize="{StaticResource Type.H5.Size}"
                                     FontWeight="SemiBold"/>
                         </StackPanel>
 
@@ -1746,12 +1928,12 @@
                                 IsVisible="{Binding ShowPassphraseFallbackLink}"
                                 Height="38"
                                 Padding="20,0"
-                                FontSize="13"/>
+                                FontSize="{StaticResource Type.Label.Size}"/>
 
                         <!-- Password unlock (fallback or when PIN is unavailable) -->
                         <StackPanel Spacing="12" IsVisible="{Binding ShowPassphraseFallbackSection}" MinWidth="380">
                             <TextBlock Text="Passphrase" 
-                                       FontSize="13" 
+                                       FontSize="{StaticResource Type.Label.Size}" 
                                        Foreground="{DynamicResource SecondaryTextBrush}"
                                        HorizontalAlignment="Center"/>
                             <TextBox Text="{Binding LockscreenPassword, Mode=TwoWay}"
@@ -1763,7 +1945,7 @@
                                      BorderThickness="1"
                                      Height="44"
                                      Padding="14,10"
-                                     FontSize="16"
+                                     FontSize="{StaticResource Type.H4.Size}"
                                      HorizontalAlignment="Stretch"/>
                             <Button Content="Unlock"
                                     Command="{Binding UnlockWithPasswordCommand}"
@@ -1771,7 +1953,7 @@
                                     HorizontalAlignment="Center"
                                     Width="200"
                                     Height="44"
-                                    FontSize="15"
+                                    FontSize="{StaticResource Type.H5.Size}"
                                     FontWeight="SemiBold"/>
                         </StackPanel>
 
@@ -1782,7 +1964,7 @@
                                 HorizontalAlignment="Center"
                                 Width="200"
                                 Height="44"
-                                FontSize="15"
+                                FontSize="{StaticResource Type.H5.Size}"
                                 FontWeight="SemiBold"
                                 IsVisible="{Binding ShowLockscreenDismiss}"/>
                     </StackPanel>

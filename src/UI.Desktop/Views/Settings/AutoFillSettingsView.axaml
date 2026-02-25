@@ -7,10 +7,11 @@
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource PrimaryTextBrush}"/>
         
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+        <Border Classes="fade-in stagger-1"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
-                CornerRadius="8" 
+                CornerRadius="{StaticResource Radius.Lg}" 
                 Padding="20">
             <StackPanel Spacing="15">
                 <TextBlock Text="Browser Integration" 
@@ -31,10 +32,11 @@
             </StackPanel>
         </Border>
 
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+        <Border Classes="fade-in stagger-2"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
-                CornerRadius="8" 
+                CornerRadius="{StaticResource Radius.Lg}" 
                 Padding="20">
             <StackPanel Spacing="15">
                 <TextBlock Text="Mobile Integration" 
@@ -43,7 +45,7 @@
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
                 
                 <TextBlock Text="Configure auto-fill settings for Android and iOS devices" 
-                           FontSize="12"
+                           FontSize="{StaticResource Type.Small.Size}"
                            Foreground="{DynamicResource MutedTextBrush}"
                            TextWrapping="Wrap"/>
                 
@@ -55,25 +57,62 @@
             </StackPanel>
         </Border>
 
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
-                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
-                BorderThickness="1" 
-                CornerRadius="8" 
+        <Border Classes="fade-in stagger-3"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="{StaticResource Radius.Lg}"
                 Padding="20">
             <StackPanel Spacing="15">
-                <TextBlock Text="Desktop Applications" 
-                           FontSize="{StaticResource Type.Body.Size}" 
+                <TextBlock Text="Desktop Applications"
+                           FontSize="{StaticResource Type.Body.Size}"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
-                
-                <CheckBox Content="Enable auto-fill for desktop apps" 
+
+                <CheckBox Content="Enable auto-fill for desktop apps"
                           ToolTip.Tip="Allow PhantomVault to auto-fill credentials in desktop applications"/>
-                
-                <Button Content="Manage App Permissions" 
-                        Width="200" 
+
+                <Button Content="Manage App Permissions"
+                        Width="200"
                         HorizontalAlignment="Left"
                         Classes="liquid-glass"
                         ToolTip.Tip="Control which apps can use auto-fill"/>
+            </StackPanel>
+        </Border>
+
+        <!-- AutoFill Mode (USB-Triggered) -->
+        <Border Classes="fade-in stagger-4"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="{StaticResource Radius.Lg}"
+                Padding="20">
+            <StackPanel Spacing="15">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="AutoFill Mode  —  USB-Triggered"
+                               FontSize="{StaticResource Type.Body.Size}"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <TextBlock Text="Inserting your USB key automatically detects the active login portal and fills your credentials. Passkeys are used when available. Requires vault to be unlocked."
+                               FontSize="{StaticResource Type.Small.Size}"
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <ToggleSwitch IsChecked="{Binding AutoFillModeEnabled}"
+                              OnContent="Enabled — App runs in System Tray"
+                              OffContent="Disabled"
+                              ToolTip.Tip="When enabled, Phantom Obscura stays alive in the notification tray and auto-fills login portals on USB insertion"/>
+
+                <StackPanel Spacing="10"
+                            IsEnabled="{Binding AutoFillModeEnabled}">
+                    <CheckBox IsChecked="{Binding AutoFillAutoInputTotp}"
+                              Content="Auto-input TOTP code after fill"
+                              ToolTip.Tip="After filling username and password, wait for a 2FA code field to appear and fill it automatically"/>
+                    <CheckBox IsChecked="{Binding AutoFillShowNewEntryOnNoMatch}"
+                              Content="Show 'New Entry' dialog when no credential matches"
+                              ToolTip.Tip="When no stored credential matches the active login portal, offer to add a new entry or create a passkey"/>
+                </StackPanel>
             </StackPanel>
         </Border>
     </StackPanel>

@@ -12,7 +12,9 @@ namespace PhantomVault.UI.Converters
         {
             if (value is PhantomVault.UI.ViewModels.CategoryItem item)
             {
-                return string.Equals(item.Name, "Deleted", StringComparison.OrdinalIgnoreCase);
+                if (item.IsTrash) return true;
+                return string.Equals(item.Name, "Deleted", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(item.Name, "Secure rubbish bin", StringComparison.OrdinalIgnoreCase);
             }
             return false;
         }

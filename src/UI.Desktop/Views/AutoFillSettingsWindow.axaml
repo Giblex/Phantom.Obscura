@@ -3,8 +3,10 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:views="clr-namespace:PhantomVault.UI.Views"
     x:Class="PhantomVault.UI.Views.AutoFillSettingsWindow"
-        Title="Auto‑Fill Settings" Width="400" Height="300">
-    <Border Padding="15">
+        Title="Auto‑Fill Settings" Width="400" Height="300"
+        Classes="animated-window">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <Border Padding="15,15,15,40">
         <StackPanel Spacing="10">
             <CheckBox Content="Enable auto‑fill" IsChecked="{Binding EnableAutoFill, Mode=TwoWay}" />
             <StackPanel Orientation="Vertical" Margin="0,5,0,0">
@@ -16,5 +18,5 @@
             <Button Content="Save" Command="{Binding SaveCommand}" Width="80" HorizontalAlignment="Left" />
         </StackPanel>
     </Border>
+    </ScrollViewer>
 </views:ThemeAwareWindow>
-

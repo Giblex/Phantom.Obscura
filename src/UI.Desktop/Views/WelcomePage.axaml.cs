@@ -34,7 +34,6 @@ namespace PhantomVault.UI.Views
                 _currentViewModel.NavigateToSecurityCheck -= OnNavigateToSecurityCheck;
                 _currentViewModel.NavigateToSetupWizard -= OnNavigateToSetupWizard;
                 _currentViewModel.DeveloperBypassRequested -= OnDeveloperBypass;
-                _currentViewModel.OpenInstallerRequested -= OnOpenInstaller;
             }
 
             if (DataContext is WelcomePageViewModel viewModel)
@@ -47,7 +46,6 @@ namespace PhantomVault.UI.Views
                 viewModel.NavigateToSecurityCheck += OnNavigateToSecurityCheck;
                 viewModel.NavigateToSetupWizard += OnNavigateToSetupWizard;
                 viewModel.DeveloperBypassRequested += OnDeveloperBypass;
-                viewModel.OpenInstallerRequested += OnOpenInstaller;
                 _currentViewModel = viewModel;
             }
             else
@@ -118,7 +116,7 @@ namespace PhantomVault.UI.Views
 
             usbSetupViewModel.NavigateToContinue += (s, usbPath) =>
             {
-                // SKIP VeraCrypt - Go directly to ProvisionWindow with pre-selected USB
+                // SKIP old installer flow - Go directly to ProvisionWindow with pre-selected USB
 
                 var app = (App)Application.Current!;
                 var provisionViewModel = ActivatorUtilities.CreateInstance<ProvisionViewModel>(app.Services!, usbPath);
@@ -241,43 +239,6 @@ namespace PhantomVault.UI.Views
                 _ = dialogService.ShowErrorAsync(
                     "Developer Bypass Failed",
                     $"Unable to open the vault window for development testing:\n{ex}\n\nFull exception written to your Desktop as 'PhantomVault_DevException.txt' (if possible).",
-                    this);
-            }
-#endif
-        }
-
-        private void OnOpenInstaller(object? sender, EventArgs e)
-        {
-#if DEBUG
-            try
-            {
-                if (Application.Current is not App app || app.Services == null)
-                {
-                    return;
-                }
-
-                var services = app.Services;
-                var veraCryptService = services.GetRequiredService<IVeraCryptService>();
-
-                var installerViewModel = new InstallerViewModel(veraCryptService);
-                var installerWindow = new InstallerWindow
-                {
-                    DataContext = installerViewModel
-                };
-
-                installerViewModel.SetOwnerWindow(installerWindow);
-
-                installerWindow.Closed += (_, _) => this.Show();
-
-                installerWindow.Show();
-                this.Hide();
-            }
-            catch (Exception ex)
-            {
-                var dialogService = new DialogService();
-                _ = dialogService.ShowErrorAsync(
-                    "Open Installer Failed",
-                    $"Unable to open the installer window:\n{ex.Message}",
                     this);
             }
 #endif

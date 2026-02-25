@@ -13,8 +13,8 @@
         WindowStartupLocation="CenterScreen"
         CanResize="True"
         Icon="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Parent Icon.ico"
-        FontFamily="Segoe UI"
-        Background="{DynamicResource WindowBackgroundBrush}">
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Classes="animated-window">
 
     <Design.DataContext>
         <vm:WelcomePageViewModel/>
@@ -98,16 +98,6 @@
                             FontFamily="{DynamicResource MainFontFamily}"
                             ToolTip.Tip="Bypass normal unlock flow (debug only)">
                         <TextBlock Text="Dev Bypass" Foreground="{DynamicResource ButtonTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Button>
-                    <Button Command="{Binding OpenInstallerCommand}"
-                            Classes="liquid-glass"
-                            CornerRadius="10"
-                            Height="34"
-                            Width="140"
-                            FontSize="{StaticResource Type.Label.Size}"
-                            FontFamily="{DynamicResource MainFontFamily}"
-                            ToolTip.Tip="Open installer screen (debug only)">
-                        <TextBlock Text="Open Installer" Foreground="{DynamicResource ButtonTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Button>
                 </StackPanel>
             </StackPanel>

@@ -31,11 +31,14 @@ namespace PhantomVault.UI.ViewModels
 
         public event EventHandler<TotpScanResult?>? CloseRequested;
 
+        private bool _isEditing;
+
         public TotpScannerViewModel()
         {
             StartCameraCommand = ReactiveCommand.Create(StartCamera);
             SaveCommand = ReactiveCommand.Create(Save);
             CancelCommand = ReactiveCommand.Create(Cancel);
+            DeleteTotpCommand = ReactiveCommand.Create(DeleteTotp);
 
             // Watch for changes to secret key
             this.WhenAnyValue(x => x.SecretKey)
@@ -45,6 +48,16 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> StartCameraCommand { get; }
         public ReactiveCommand<Unit, Unit> SaveCommand { get; }
         public ReactiveCommand<Unit, Unit> CancelCommand { get; }
+        public ReactiveCommand<Unit, Unit> DeleteTotpCommand { get; }
+
+        /// <summary>
+        /// Whether this dialog is editing an existing TOTP entry (shows delete option).
+        /// </summary>
+        public bool IsEditing
+        {
+            get => _isEditing;
+            set => this.RaiseAndSetIfChanged(ref _isEditing, value);
+        }
 
         public string Issuer
         {
@@ -342,6 +355,19 @@ namespace PhantomVault.UI.ViewModels
             CloseRequested?.Invoke(this, null);
         }
 
+        private void DeleteTotp()
+        {
+            var result = new TotpScanResult
+            {
+                Success = true,
+                Deleted = true
+            };
+
+            _previewTimer?.Dispose();
+            _previewTimer = null;
+            CloseRequested?.Invoke(this, result);
+        }
+
         public void Dispose()
         {
             _previewTimer?.Dispose();
@@ -352,6 +378,7 @@ namespace PhantomVault.UI.ViewModels
     public class TotpScanResult
     {
         public bool Success { get; set; }
+        public bool Deleted { get; set; }
         public string Issuer { get; set; } = string.Empty;
         public string AccountName { get; set; } = string.Empty;
         public string Secret { get; set; } = string.Empty;

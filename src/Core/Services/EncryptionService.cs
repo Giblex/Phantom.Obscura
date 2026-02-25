@@ -22,19 +22,6 @@ namespace PhantomVault.Core.Services
         // Passed via constructor injection in test builds; null in production.
         private readonly IEncryptionObserver? _observer;
 
-        // Internal testing hook: when true, the Argon2 path will throw to
-        // force execution of the PBKDF2 fallback. This field is set via an
-        // internal constructor and is only intended for tests that verify
-        // fallback behavior.
-        private readonly bool _forceArgon2FailureForTests;
-
-        internal EncryptionService(bool forceArgon2FailureForTests, IEncryptionObserver? observer = null)
-        {
-            _forceArgon2FailureForTests = forceArgon2FailureForTests;
-            _observer = observer;
-        }
-
-        // Default public constructor
         public EncryptionService(IEncryptionObserver? observer = null)
         {
             _observer = observer;
@@ -67,7 +54,7 @@ namespace PhantomVault.Core.Services
         /// <param name="salt">The unique salt associated with this key.</param>
         /// <param name="keyLength">The desired key size in bytes.</param>
         /// <returns>A byte array containing the derived key.</returns>
-        public byte[] DeriveKey(ReadOnlySpan<char> password, byte[] salt, int keyLength = 32, int memoryCostKb = 64 * 1024, int iterations = 3, int parallelism = 0)
+        public byte[] DeriveKey(ReadOnlySpan<char> password, byte[] salt, int keyLength = 32, int memoryCostKb = 256 * 1024, int iterations = 6, int parallelism = 0)
         {
             if (password.IsEmpty)
             {
@@ -105,15 +92,8 @@ namespace PhantomVault.Core.Services
                 // Pin and lock the trimmed array while in native calls.
                 pinnedHandle = System.Runtime.InteropServices.GCHandle.Alloc(passTrim, System.Runtime.InteropServices.GCHandleType.Pinned);
                 locked = SecureMemory.Lock(passTrim);
-                // Primary implementation: Argon2id. We allocate a large chunk of
-                // memory to slow down brute‑force attempts and increase
-                // resistance against GPU/ASIC attacks. See the OWASP password
-                // storage cheat sheet for guidance on parameter selection.
-                if (_forceArgon2FailureForTests)
-                {
-                    // Force a deterministic failure so tests can exercise the fallback.
-                    throw new InvalidOperationException("Forced Argon2 failure for tests");
-                }
+                // Argon2id: memory-hard KDF mandatory for all key derivation.
+                // No fallback to weaker KDFs is permitted.
                 var config = new Argon2Config
                 {
                     Type = Isopoh.Cryptography.Argon2.Argon2Type.HybridAddressing, // Argon2id
@@ -138,22 +118,9 @@ namespace PhantomVault.Core.Services
                     throw new CryptographicException("Argon2 returned insufficient hash length");
                 return outKey;
             }
-            catch (Exception ex) when (ShouldFallbackToPbkdf2(ex))
-            {
-                // Fallback to PBKDF2 (HMAC‑SHA256) if Argon2 fails. We use a
-                // very high iteration count to compensate for the lack of
-                // memory hardness. The iteration count here (200k) can be
-                // increased depending on performance characteristics.
-                // Ensure PBKDF2 operates on the trimmed password bytes only.
-                using var pbkdf2 = new Rfc2898DeriveBytes(passTrim ?? Array.Empty<byte>(), salt, 200_000, HashAlgorithmName.SHA256);
-                byte[] key = pbkdf2.GetBytes(keyLength);
-                return key;
-            }
-            catch
-            {
-                // Non-recoverable Argon2 failure: rethrow to avoid silent downgrade.
-                throw;
-            }
+            // No PBKDF2 fallback: Argon2id is mandatory. Silent downgrade to a
+            // weaker KDF undermines the security guarantee. If Argon2 is unavailable,
+            // the vault must not open.
             finally
             {
                 // Always zero and unlock the passphrase bytes to reduce
@@ -293,17 +260,5 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        private bool ShouldFallbackToPbkdf2(Exception ex)
-        {
-            if (_forceArgon2FailureForTests)
-            {
-                return true;
-            }
-
-            return ex is DllNotFoundException
-                   || ex is PlatformNotSupportedException
-                   || ex is EntryPointNotFoundException
-                   || ex is NotSupportedException;
-        }
     }
 }

@@ -35,12 +35,12 @@
             </TextBlock>
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="15">
                 <TextBlock Text="{Binding LastSyncTime, StringFormat='Last sync: {0}'}" 
-                           FontSize="11" 
+                           FontSize="{StaticResource Type.Tiny.Size}" 
                            Classes="footer-muted"
                            VerticalAlignment="Center"/>
                 <Border Width="1" Height="16" Background="{DynamicResource ControlBorderBrush}"/>
                 <TextBlock Text="🔒 Encrypted" 
-                           FontSize="11" 
+                           FontSize="{StaticResource Type.Tiny.Size}" 
                            Foreground="{DynamicResource SuccessBrush}"
                            VerticalAlignment="Center"/>
             </StackPanel>

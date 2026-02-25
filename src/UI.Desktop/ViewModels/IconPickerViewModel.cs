@@ -34,8 +34,9 @@ namespace PhantomVault.UI.ViewModels
         private ObservableCollection<FlaticonResult> _flaticonResults = new();
         private FlaticonResult? _selectedFlaticonResult;
 
-        // Available icon files from Assets/Icons/Logos/Coloured Icons
+        // Available icon files from Assets/Visuals/Cat Icons and Entry Logos
         public ObservableCollection<string> AvailableIconPaths { get; } = new();
+        public ObservableCollection<string> EntryLogoPaths { get; } = new();
 
         // Pastel color options for icon backgrounds
         public Color[] AvailableColors { get; } = new[]
@@ -61,7 +62,7 @@ namespace PhantomVault.UI.ViewModels
             // Don't initialize icon downloader here - it will be created lazily when needed
             _iconDownloader = null;
 
-            // Load available icons from Coloured Icons folder
+            // Load available icons from Cat Icons folder
             LoadAvailableIcons();
 
             SelectIconCommand = ReactiveCommand.Create<string>(SelectIcon);
@@ -92,27 +93,53 @@ namespace PhantomVault.UI.ViewModels
             {
                 // Get the base directory for the application
                 var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-                var iconsPath = Path.Combine(baseDir, "Assets", "Icons", "Logos", "Coloured Icons");
+                var iconsPath = Path.Combine(baseDir, "Assets", "Visuals", "Cat Icons");
 
-                if (!Directory.Exists(iconsPath))
+                if (Directory.Exists(iconsPath))
                 {
-                    Debug.WriteLine($"[ICON-PICKER] Icons directory not found: {iconsPath}");
-                    return;
+                    // Recursively find all PNG files in Cat Icons folder
+                    var pngFiles = Directory.GetFiles(iconsPath, "*.png", SearchOption.AllDirectories);
+
+                    foreach (var file in pngFiles.OrderBy(f => Path.GetFileName(f)))
+                    {
+                        // Convert to relative path for Assets
+                        var relativePath = file.Replace(baseDir, "").Replace("\\", "/").TrimStart('/');
+                        AvailableIconPaths.Add($"/{relativePath}");
+
+                        if (AvailableIconPaths.Count >= 200) break; // Limit for performance
+                    }
+
+                    Debug.WriteLine($"[ICON-PICKER] Loaded {AvailableIconPaths.Count} icons from {iconsPath}");
+                }
+                else
+                {
+                    Debug.WriteLine($"[ICON-PICKER] Cat Icons directory not found: {iconsPath}");
                 }
 
-                // Recursively find all PNG files in Coloured Icons folder
-                var pngFiles = Directory.GetFiles(iconsPath, "*.png", SearchOption.AllDirectories);
-
-                foreach (var file in pngFiles.OrderBy(f => Path.GetFileName(f)))
+                // Also load entry logos from Entry Logos folder
+                var entryLogosPath = Path.Combine(baseDir, "Assets", "Visuals", "Entry Logos");
+                if (Directory.Exists(entryLogosPath))
                 {
-                    // Convert to relative path for Assets
-                    var relativePath = file.Replace(baseDir, "").Replace("\\", "/").TrimStart('/');
-                    AvailableIconPaths.Add($"/{relativePath}");
+                    var supportedExts = new[] { "*.png", "*.jpg", "*.jpeg", "*.ico" };
+                    var entryFiles = supportedExts
+                        .SelectMany(ext => Directory.GetFiles(entryLogosPath, ext, SearchOption.TopDirectoryOnly))
+                        .OrderBy(f => Path.GetFileName(f))
+                        .ToArray();
 
-                    if (AvailableIconPaths.Count >= 100) break; // Limit to first 100 icons for performance
+                    foreach (var file in entryFiles)
+                    {
+                        // Use absolute file path - avares:// URIs don't work for spaces in folder names
+                        EntryLogoPaths.Add(file);
+
+                        if (EntryLogoPaths.Count >= 500) break; // Higher limit for entry logos
+                    }
+
+                    Debug.WriteLine($"[ICON-PICKER] Loaded {EntryLogoPaths.Count} entry logos from {entryLogosPath}");
                 }
-
-                Debug.WriteLine($"[ICON-PICKER] Loaded {AvailableIconPaths.Count} icons from {iconsPath}");
+                else
+                {
+                    Debug.WriteLine($"[ICON-PICKER] Entry Logos directory not found: {entryLogosPath}");
+                }
             }
             catch (Exception ex)
             {

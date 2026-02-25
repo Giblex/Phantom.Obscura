@@ -15,15 +15,15 @@
     <StackPanel Spacing="12"
                 IsVisible="{Binding SelectedCredential.IsIdentityEntry}">
         <TextBlock Text="Identity Document"
-                   FontSize="14"
+                   FontSize="{StaticResource Type.Body.Size}"
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource SecondaryTextBrush}"/>
         <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasIdDocumentType}">
-            <TextBlock Text="Document Type" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBlock Text="Document Type" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
             <TextBox Text="{Binding SelectedCredential.IdDocumentType}" IsReadOnly="True" Height="36" Padding="10,8"/>
         </StackPanel>
         <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasIdNumber}">
-            <TextBlock Text="Document Number" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBlock Text="Document Number" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
             <TextBox Text="{Binding SelectedCredential.IdNumber}" IsReadOnly="True" Height="36" Padding="10,8">
                 <TextBox.Effect>
                     <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
@@ -31,19 +31,19 @@
             </TextBox>
         </StackPanel>
         <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasIdIssuingCountry}">
-            <TextBlock Text="Issuing Country" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBlock Text="Issuing Country" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
             <TextBox Text="{Binding SelectedCredential.IdIssuingCountry}" IsReadOnly="True" Height="36" Padding="10,8"/>
         </StackPanel>
         <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasIdIssuingState}">
-            <TextBlock Text="Issuing State / Region" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBlock Text="Issuing State / Region" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
             <TextBox Text="{Binding SelectedCredential.IdIssuingState}" IsReadOnly="True" Height="36" Padding="10,8"/>
         </StackPanel>
         <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasIdIssueDate}">
-            <TextBlock Text="Issue Date" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBlock Text="Issue Date" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
             <TextBox Text="{Binding SelectedCredential.IdIssueDateText}" IsReadOnly="True" Height="36" Padding="10,8"/>
         </StackPanel>
         <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasIdExpiryDate}">
-            <TextBlock Text="Expiration Date" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBlock Text="Expiration Date" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
             <TextBox Text="{Binding SelectedCredential.IdExpiryDateText}" IsReadOnly="True" Height="36" Padding="10,8"/>
         </StackPanel>
     </StackPanel>

@@ -3,20 +3,51 @@
     xmlns:views="clr-namespace:PhantomVault.UI.Views"
     x:Class="PhantomVault.UI.Views.AboutWindow"
         Title="About Phantom Vault"
-        Width="420" Height="300"
+        Width="420" Height="320"
         WindowStartupLocation="CenterOwner"
         CanResize="False"
-        Background="{DynamicResource WindowBackgroundBrush}">
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Classes="animated-window">
 
-    <StackPanel Margin="18" Spacing="12">
-        <TextBlock Text="Phantom Vault" FontSize="18" FontWeight="SemiBold"/>
-        <TextBlock Text="A secure vault application by Giblex." FontSize="12"/>
-        <TextBlock Text="Version: {Binding AppVersion}" FontSize="11" Foreground="{DynamicResource MutedTextBrush}"/>
+    <StackPanel Margin="24" Spacing="14">
+        <!-- App identity -->
+        <StackPanel Spacing="4">
+            <TextBlock Text="Phantom Vault"
+                       FontSize="{StaticResource Type.H2.Size}"
+                       FontWeight="Bold"
+                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+            <TextBlock Text="{Binding AppVersion, StringFormat='Version {0}'}"
+                       FontSize="{StaticResource Type.Small.Size}"
+                       Foreground="{DynamicResource MutedTextBrush}"/>
+        </StackPanel>
 
-        <TextBlock TextWrapping="Wrap" Margin="0,8,0,0">This is a placeholder About dialog. Replace with licensing and credits as needed.</TextBlock>
+        <Border Height="1" Background="{DynamicResource SeparatorBrush}" Margin="0,4"/>
 
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,12,0">
-            <Button Click="Close_Click" Width="80" Height="30">Close</Button>
+        <!-- Description -->
+        <TextBlock Text="A secure credential vault built with privacy-first principles.&#x0a;Designed and developed by Giblex."
+                   FontSize="{StaticResource Type.Body.Size}"
+                   Foreground="{DynamicResource SecondaryTextBrush}"
+                   TextWrapping="Wrap"
+                   LineHeight="22"/>
+
+        <TextBlock Text="© 2025 Giblex. All rights reserved."
+                   FontSize="{StaticResource Type.Tiny.Size}"
+                   Foreground="{DynamicResource MutedTextBrush}"
+                   Margin="0,4,0,0"/>
+
+        <!-- Close button -->
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+            <Button Click="Close_Click"
+                    Classes="primary"
+                    MinWidth="90"
+                    Height="34"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    CornerRadius="{StaticResource Radius.Md}">
+                <TextBlock Text="Close"
+                           FontSize="{StaticResource Type.Body.Size}"
+                           FontWeight="SemiBold"/>
+            </Button>
         </StackPanel>
     </StackPanel>
 </views:ThemeAwareWindow>

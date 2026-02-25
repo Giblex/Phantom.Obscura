@@ -217,6 +217,164 @@
         </Style.Animations>
     </Style>
 
+    <Style Selector="Control.stagger-4">
+        <Style.Animations>
+            <Animation Delay="0:0:0.2" Duration="0:0:0.4" FillMode="Forward" Easing="CubicEaseOut">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="0"/>
+                    <Setter Property="(TranslateTransform.Y)" Value="10"/>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="1"/>
+                    <Setter Property="(TranslateTransform.Y)" Value="0"/>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <Style Selector="Control.stagger-5">
+        <Style.Animations>
+            <Animation Delay="0:0:0.25" Duration="0:0:0.4" FillMode="Forward" Easing="CubicEaseOut">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="0"/>
+                    <Setter Property="(TranslateTransform.Y)" Value="10"/>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="1"/>
+                    <Setter Property="(TranslateTransform.Y)" Value="0"/>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <Style Selector="Control.stagger-6">
+        <Style.Animations>
+            <Animation Delay="0:0:0.3" Duration="0:0:0.4" FillMode="Forward" Easing="CubicEaseOut">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="0"/>
+                    <Setter Property="(TranslateTransform.Y)" Value="10"/>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="1"/>
+                    <Setter Property="(TranslateTransform.Y)" Value="0"/>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <Style Selector="Control.stagger-7">
+        <Style.Animations>
+            <Animation Delay="0:0:0.35" Duration="0:0:0.4" FillMode="Forward" Easing="CubicEaseOut">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="0"/>
+                    <Setter Property="(TranslateTransform.Y)" Value="10"/>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="1"/>
+                    <Setter Property="(TranslateTransform.Y)" Value="0"/>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <Style Selector="Control.stagger-8">
+        <Style.Animations>
+            <Animation Delay="0:0:0.4" Duration="0:0:0.4" FillMode="Forward" Easing="CubicEaseOut">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="0"/>
+                    <Setter Property="(TranslateTransform.Y)" Value="10"/>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="1"/>
+                    <Setter Property="(TranslateTransform.Y)" Value="0"/>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <!-- ══════════════════════ PAGE/VIEW TRANSITIONS ══════════════════════ -->
+
+    <!-- Cross-fade + slide-up for content area transitions (Dashboard ↔ Passwords ↔ etc.) -->
+    <Style Selector="Border.page-transition">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.2" Easing="CubicEaseOut"/>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.25" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Border.page-transition.entering">
+        <Setter Property="Opacity" Value="1"/>
+        <Setter Property="RenderTransform" Value="translateY(0)"/>
+    </Style>
+
+    <Style Selector="Border.page-transition.leaving">
+        <Setter Property="Opacity" Value="0"/>
+        <Setter Property="RenderTransform" Value="translateY(8px)"/>
+    </Style>
+
+    <!-- Panel content fade-in (for panels that load async content) -->
+    <Style Selector="Panel.content-fade">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.2" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <!-- ══════════════════════ EXIT / LEAVE ANIMATIONS ══════════════════════ -->
+
+    <!-- Slide Out Bottom (for dismissing views/dialogs downward) -->
+    <Style Selector="Control.slide-out-bottom">
+        <Style.Animations>
+            <Animation Duration="0:0:0.2" FillMode="Forward" Easing="CubicEaseIn">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="1"/>
+                    <Setter Property="(TranslateTransform.Y)" Value="0"/>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="0"/>
+                    <Setter Property="(TranslateTransform.Y)" Value="10"/>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <!-- Slide Out Right (for toast dismiss, sidebar collapse) -->
+    <Style Selector="Control.slide-out-right">
+        <Style.Animations>
+            <Animation Duration="0:0:0.25" FillMode="Forward" Easing="CubicEaseIn">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="1"/>
+                    <Setter Property="(TranslateTransform.X)" Value="0"/>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="0"/>
+                    <Setter Property="(TranslateTransform.X)" Value="20"/>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <!-- Scale Down (for closing panels/cards) -->
+    <Style Selector="Control.scale-down">
+        <Style.Animations>
+            <Animation Duration="0:0:0.2" FillMode="Forward" Easing="CubicEaseIn">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="1"/>
+                    <Setter Property="(ScaleTransform.ScaleX)" Value="1"/>
+                    <Setter Property="(ScaleTransform.ScaleY)" Value="1"/>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="0"/>
+                    <Setter Property="(ScaleTransform.ScaleX)" Value="0.95"/>
+                    <Setter Property="(ScaleTransform.ScaleY)" Value="0.95"/>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
     <!-- ══════════════════════ HOVER ANIMATIONS ══════════════════════ -->
 
     <!-- Smooth lift on hover -->
@@ -238,6 +396,225 @@
                 <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" Easing="CubicEaseOut"/>
             </Transitions>
         </Setter>
+    </Style>
+
+    <!-- ══════════════════════ CARD HOVER WITH ELEVATION (from Attestor) ══════════════════════ -->
+
+    <Style Selector="Border.card-hover">
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.2" Easing="CubicEaseOut"/>
+                <BrushTransition Property="BorderBrush" Duration="0:0:0.2" Easing="CubicEaseOut"/>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Border.card-hover:pointerover">
+        <Setter Property="RenderTransform" Value="translateY(-2px)"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.AccentHover}"/>
+    </Style>
+
+    <!-- ══════════════════════ TEXTBOX FOCUS GLOW (from Attestor) ══════════════════════ -->
+
+    <Style Selector="TextBox.glow-input">
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="BorderBrush" Duration="0:0:0.25" Easing="CubicEaseOut"/>
+                <BrushTransition Property="Background" Duration="0:0:0.2" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="TextBox.glow-input:focus">
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
+    </Style>
+
+    <Style Selector="TextBox.glow-input:pointerover /template/ Border#PART_BorderElement">
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.AccentHover}"/>
+    </Style>
+
+    <!-- ══════════════════════ DIALOG SLIDE-UP (from Attestor) ══════════════════════ -->
+
+    <Style Selector="Border.dialog-content">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.3" Easing="CubicEaseOut"/>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Border.dialog-content.enter">
+        <Setter Property="Opacity" Value="1"/>
+        <Setter Property="RenderTransform" Value="translateY(0)"/>
+    </Style>
+
+    <Style Selector="Border.dialog-content.exit">
+        <Setter Property="Opacity" Value="0"/>
+        <Setter Property="RenderTransform" Value="translateY(20px)"/>
+    </Style>
+
+    <!-- ══════════════════════ PROGRESSBAR ANIMATIONS (from Attestor) ══════════════════════ -->
+
+    <Style Selector="ProgressBar.animated">
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Foreground" Duration="0:0:0.3" Easing="CubicEaseOut"/>
+                <DoubleTransition Property="Value" Duration="0:0:0.4" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="ProgressBar.totp-timer">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Foreground" Duration="0:0:0.5" Easing="LinearEasing"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <!-- ══════════════════════ TOAST SLIDE-IN (from Attestor) ══════════════════════ -->
+
+    <Style Selector="Border.toast-animated">
+        <Setter Property="Opacity" Value="0"/>
+        <Setter Property="RenderTransform" Value="translateX(400px) scale(0.95)"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.3" Easing="CubicEaseOut"/>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.4" Easing="BackEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Border.toast-animated.visible">
+        <Setter Property="Opacity" Value="1"/>
+        <Setter Property="RenderTransform" Value="translateX(0) scale(1)"/>
+    </Style>
+
+    <!-- ══════════════════════ SIDEBAR SLIDE PANEL (from Attestor) ══════════════════════ -->
+
+    <Style Selector="Panel.slide-panel">
+        <Setter Property="Transitions">
+            <Transitions>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3" Easing="CubicEaseOut"/>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.25" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Panel.slide-panel.collapsed">
+        <Setter Property="RenderTransform" Value="translateX(-300px)"/>
+        <Setter Property="Opacity" Value="0"/>
+    </Style>
+
+    <Style Selector="Panel.slide-panel.expanded">
+        <Setter Property="RenderTransform" Value="translateX(0px)"/>
+        <Setter Property="Opacity" Value="1"/>
+    </Style>
+
+    <!-- ══════════════════════ LOADING SPINNER (from Attestor) ══════════════════════ -->
+
+    <Style Selector="Border.spinner">
+        <Style.Animations>
+            <Animation Duration="0:0:1.2" IterationCount="INFINITE" Easing="LinearEasing">
+                <KeyFrame Cue="0%">
+                    <Setter Property="RotateTransform.Angle" Value="0"/>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="RotateTransform.Angle" Value="360"/>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <Style Selector="Border.pulse-glow">
+        <Style.Animations>
+            <Animation Duration="0:0:1.5" IterationCount="INFINITE" Easing="SineEaseInOut">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="1"/>
+                </KeyFrame>
+                <KeyFrame Cue="50%">
+                    <Setter Property="Opacity" Value="0.5"/>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="1"/>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <!-- ══════════════════════ CHECKBOX ANIMATED (from Attestor) ══════════════════════ -->
+
+    <Style Selector="CheckBox.animated /template/ Border#NormalRectangle">
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.2" Easing="CubicEaseOut"/>
+                <BrushTransition Property="BorderBrush" Duration="0:0:0.2" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <!-- ══════════════════════ SEPARATOR EXPAND (from Attestor) ══════════════════════ -->
+
+    <Style Selector="Border.separator-animated">
+        <Setter Property="Width" Value="0"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Width" Duration="0:0:0.4" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Border.separator-animated.expanded">
+        <Setter Property="Width" Value="NaN"/>
+    </Style>
+
+    <!-- ══════════════════════ SEARCH RESULT FILTER (from Attestor) ══════════════════════ -->
+
+    <Style Selector="Panel.search-results">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.25" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Panel.search-results.filtering">
+        <Setter Property="Opacity" Value="0.4"/>
+    </Style>
+
+    <!-- ══════════════════════ COPY BUTTON SUCCESS (from Attestor) ══════════════════════ -->
+
+    <Style Selector="Button.copy-btn-animated">
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.2" Easing="CubicEaseOut"/>
+                <BrushTransition Property="Foreground" Duration="0:0:0.2" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Button.copy-btn-animated.copied">
+        <Setter Property="Background" Value="{DynamicResource Brush.Success}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Style.Animations>
+            <Animation Duration="0:0:0.35" FillMode="Forward" Easing="BackEaseOut">
+                <KeyFrame Cue="0%">
+                    <Setter Property="(ScaleTransform.ScaleX)" Value="1.0"/>
+                    <Setter Property="(ScaleTransform.ScaleY)" Value="1.0"/>
+                </KeyFrame>
+                <KeyFrame Cue="40%">
+                    <Setter Property="(ScaleTransform.ScaleX)" Value="1.15"/>
+                    <Setter Property="(ScaleTransform.ScaleY)" Value="1.15"/>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="(ScaleTransform.ScaleX)" Value="1.0"/>
+                    <Setter Property="(ScaleTransform.ScaleY)" Value="1.0"/>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
     </Style>
 
 </Styles>

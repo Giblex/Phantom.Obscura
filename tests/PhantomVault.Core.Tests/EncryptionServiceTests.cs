@@ -29,15 +29,16 @@ namespace PhantomVault.Core.Tests
         }
 
         [Fact]
-        public void FallbackToPbkdf2_WhenArgon2Fails()
+        public void Argon2id_IsRequired_NoFallback()
         {
-            // Use internal constructor to force Argon2 failure and exercise PBKDF2 fallback
-            var svc = new EncryptionService(true);
+            // Argon2id is mandatory. There is no PBKDF2 fallback.
+            // This test verifies that key derivation succeeds with Argon2id.
+            var svc = new EncryptionService();
             var salt = svc.GenerateSalt();
             var key = svc.DeriveKey("password".AsSpan(), salt, 32);
             Assert.Equal(32, key.Length);
 
-            var plaintext = System.Text.Encoding.UTF8.GetBytes("fallback test");
+            var plaintext = System.Text.Encoding.UTF8.GetBytes("argon2id mandatory test");
             var res = svc.Encrypt(plaintext, key);
             var decrypted = svc.Decrypt(res.Ciphertext, res.Nonce, res.Tag, key);
             Assert.Equal(plaintext, decrypted);

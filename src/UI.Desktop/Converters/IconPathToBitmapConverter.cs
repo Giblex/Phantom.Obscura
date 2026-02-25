@@ -20,25 +20,26 @@ namespace PhantomVault.UI.Converters
             {
                 try
                 {
-                    // If absolute path provided and file exists
-                    if (File.Exists(s))
+                    // Resolve relative paths (e.g. /Assets/Visuals/...) to absolute
+                    var resolved = ResolveIconPath(s);
+                    if (resolved != null && File.Exists(resolved))
                     {
                         // Check cache first
                         lock (_lock)
                         {
-                            if (_cache.TryGetValue(s, out var cachedBitmap))
+                            if (_cache.TryGetValue(resolved, out var cachedBitmap))
                             {
                                 return cachedBitmap;
                             }
                         }
 
                         // Load bitmap
-                        var bitmap = new Bitmap(s);
+                        var bitmap = new Bitmap(resolved);
 
                         // Cache it
                         lock (_lock)
                         {
-                            _cache[s] = bitmap;
+                            _cache[resolved] = bitmap;
 
                             // Limit cache size to prevent memory issues
                             if (_cache.Count > 500)
@@ -68,6 +69,26 @@ namespace PhantomVault.UI.Converters
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Resolves a relative icon path (starting with /) to an absolute path
+        /// using AppContext.BaseDirectory. Returns the original path if already absolute.
+        /// </summary>
+        private static string? ResolveIconPath(string path)
+        {
+            if (File.Exists(path))
+                return path;
+
+            // Resolve paths like /Assets/Visuals/... relative to the app base directory
+            if (path.StartsWith("/") || path.StartsWith("\\"))
+            {
+                var resolved = Path.Combine(AppContext.BaseDirectory, path.TrimStart('/', '\\'));
+                if (File.Exists(resolved))
+                    return resolved;
+            }
+
+            return null;
         }
     }
 }

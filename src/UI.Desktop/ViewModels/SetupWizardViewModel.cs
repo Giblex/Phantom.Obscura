@@ -1,9 +1,14 @@
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using PhantomVault.Core.Models;
+using PhantomVault.Core.Services;
 
 namespace PhantomVault.UI.ViewModels
 {
@@ -13,6 +18,10 @@ namespace PhantomVault.UI.ViewModels
     /// </summary>
     public partial class SetupWizardViewModel : ObservableObject
     {
+        private Window? _ownerWindow;
+        private readonly EncryptionService _encryptionService;
+        private readonly ManifestService _manifestService;
+        private readonly UsbBindingService _usbBindingService;
         [ObservableProperty]
         private int _currentStep = 1;
 
@@ -74,6 +83,25 @@ namespace PhantomVault.UI.ViewModels
         [ObservableProperty]
         private string? _keyfilePath;
 
+        [ObservableProperty]
+        private bool _useExistingKeyfile;
+
+        [ObservableProperty]
+        private bool _keyfileSelected;
+
+        [ObservableProperty]
+        private string _keyfileStatus = "A new keyfile will be generated";
+
+        // USB Binding
+        [ObservableProperty]
+        private string? _usbSerialNumber;
+
+        [ObservableProperty]
+        private string? _usbDeviceId;
+
+        [ObservableProperty]
+        private bool _enableUsbBinding = true;
+
         // Step 5: Windows Hello
         [ObservableProperty]
         private bool _enableWindowsHello;
@@ -126,21 +154,68 @@ namespace PhantomVault.UI.ViewModels
             {
                 Name = "Balanced",
                 Description = "Recommended for most users. Strong security with convenient features.",
-                Features = new[] { "Keyfile + optional password", "USB storage recommended", "Post-quantum encryption", "Auto-lock on idle" },
+                Features = new[] { "Keyfile + optional password", "USB storage recommended", "Post-quantum encryption", "Auto-lock on idle", "Security dashboard" },
                 RecommendedFor = "General users who want strong security"
             },
             new SecurityLevelOption
             {
                 Name = "Maximum",
                 Description = "Highest security. Required for sensitive data and compliance.",
-                Features = new[] { "Keyfile + password required", "USB binding enforced", "Encrypted container", "Post-quantum encryption", "Aggressive auto-locking" },
+                Features = new[] { "Keyfile + password required", "USB binding enforced", "Encrypted container", "Post-quantum encryption", "Aggressive auto-locking", "Security dashboard" },
                 RecommendedFor = "Enterprise users, high-value data"
             }
         };
 
         public SetupWizardViewModel()
         {
-            // Initialize default state
+            // Initialize services
+            _encryptionService = new EncryptionService();
+            _manifestService = new ManifestService(_encryptionService);
+            _usbBindingService = new UsbBindingService();
+        }
+
+        /// <summary>
+        /// Sets the owner window for file dialogs.
+        /// </summary>
+        public void SetOwnerWindow(Window owner)
+        {
+            _ownerWindow = owner;
+        }
+
+        [RelayCommand]
+        private async Task BrowseKeyfileAsync()
+        {
+            if (_ownerWindow == null) return;
+
+            var storageProvider = _ownerWindow.StorageProvider;
+            var result = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = "Select Existing Keyfile",
+                AllowMultiple = false,
+                FileTypeFilter = new[]
+                {
+                    new FilePickerFileType("Keyfiles") { Patterns = new[] { "*.key", "*.keyfile" } },
+                    new FilePickerFileType("All Files") { Patterns = new[] { "*" } }
+                }
+            });
+
+            if (result.Count > 0)
+            {
+                var file = result[0];
+                KeyfilePath = file.Path.LocalPath;
+                UseExistingKeyfile = true;
+                KeyfileSelected = true;
+                KeyfileStatus = $"Using existing keyfile: {Path.GetFileName(KeyfilePath)}";
+            }
+        }
+
+        [RelayCommand]
+        private void ClearKeyfile()
+        {
+            KeyfilePath = null;
+            UseExistingKeyfile = false;
+            KeyfileSelected = false;
+            KeyfileStatus = "A new keyfile will be generated";
         }
 
         [RelayCommand]
@@ -171,6 +246,38 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Navigates directly to a specific step (only allowed for completed steps).
+        /// </summary>
+        [RelayCommand]
+        private void GoToStep(object? stepParameter)
+        {
+            // Parse step from XAML CommandParameter (passed as string)
+            if (stepParameter is string stepStr && int.TryParse(stepStr, out int targetStep))
+            {
+                // Can only go back to completed steps (steps before current)
+                if (targetStep >= 1 && targetStep < CurrentStep)
+                {
+                    CurrentStep = targetStep;
+                    UpdateStepInfo();
+                }
+            }
+            else if (stepParameter is int targetStepInt)
+            {
+                // Also handle direct int parameter
+                if (targetStepInt >= 1 && targetStepInt < CurrentStep)
+                {
+                    CurrentStep = targetStepInt;
+                    UpdateStepInfo();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Checks if a specific step can be navigated to (only completed steps).
+        /// </summary>
+        public bool CanGoToStep(int targetStep) => targetStep >= 1 && targetStep < CurrentStep;
+
         [RelayCommand]
         private async Task LoadStepDataAsync()
         {
@@ -178,6 +285,8 @@ namespace PhantomVault.UI.ViewModels
             {
                 case 3: // Storage Location
                     await DetectUsbDrivesAsync();
+                    // Detect USB serial when USB is selected
+                    await DetectUsbSerialAsync();
                     break;
 
                 case 5: // Windows Hello
@@ -294,6 +403,47 @@ namespace PhantomVault.UI.ViewModels
                     StatusMessage = "No USB drives detected. You can use local storage instead.";
                 }
             });
+        }
+
+        private async Task DetectUsbSerialAsync()
+        {
+            await Task.Run(() =>
+            {
+                if (SelectedStorageLocation == "USB" && !string.IsNullOrEmpty(SelectedUsbPath))
+                {
+                    try
+                    {
+                        // Extract drive letter from the selected path (e.g., "E:\" from "E:\ - My USB (16 GB)")
+                        var driveLetter = SelectedUsbPath.Length >= 2 ? SelectedUsbPath.Substring(0, 3) : SelectedUsbPath;
+                        if (SelectedUsbPath.Contains(" - "))
+                        {
+                            driveLetter = SelectedUsbPath.Split(" - ")[0].Trim();
+                            if (!driveLetter.EndsWith("\\")) driveLetter += "\\";
+                        }
+
+                        UsbDeviceId = _usbBindingService.ComputeDeviceId(driveLetter);
+                        UsbSerialNumber = UsbDeviceId;
+                        StatusMessage = $"USB bound to device ID: {UsbDeviceId}";
+                    }
+                    catch (Exception ex)
+                    {
+                        UsbDeviceId = null;
+                        UsbSerialNumber = null;
+                        StatusMessage = $"Could not detect USB serial: {ex.Message}";
+                    }
+                }
+                else
+                {
+                    UsbDeviceId = null;
+                    UsbSerialNumber = null;
+                }
+            });
+        }
+
+        partial void OnSelectedUsbPathChanged(string? value)
+        {
+            // Re-detect USB serial when selection changes
+            _ = DetectUsbSerialAsync();
         }
 
         [RelayCommand]
@@ -458,11 +608,20 @@ namespace PhantomVault.UI.ViewModels
                 IsCompleting = true;
                 StatusMessage = "Creating your vault...";
 
-                // Determine vault path
+                // Determine vault path based on storage selection
                 string vaultPath;
+                string? driveRoot = null;
+                
                 if (SelectedStorageLocation == "USB" && !string.IsNullOrEmpty(SelectedUsbPath))
                 {
-                    vaultPath = Path.Combine(SelectedUsbPath, "PhantomVault");
+                    // Extract drive letter from the selected path
+                    driveRoot = SelectedUsbPath.Length >= 2 ? SelectedUsbPath.Substring(0, 3) : SelectedUsbPath;
+                    if (SelectedUsbPath.Contains(" - "))
+                    {
+                        driveRoot = SelectedUsbPath.Split(" - ")[0].Trim();
+                        if (!driveRoot.EndsWith("\\")) driveRoot += "\\";
+                    }
+                    vaultPath = Path.Combine(driveRoot, "PhantomVault");
                 }
                 else
                 {
@@ -473,28 +632,94 @@ namespace PhantomVault.UI.ViewModels
 
                 // Create vault directory if it doesn't exist
                 Directory.CreateDirectory(vaultPath);
+                StatusMessage = "Creating vault directory...";
 
-                // Generate keyfile (always required)
-                string keyfilePath = Path.Combine(vaultPath, "vault.key");
-                await GenerateKeyfileAsync(keyfilePath);
-                KeyfilePath = keyfilePath;
-
-                // Save configuration
-                var configPath = Path.Combine(vaultPath, "vault.config.json");
-                var config = new
+                // Handle keyfile: either use existing or generate new
+                string? keyfilePath = null;
+                if (UseExistingKeyfile && KeyfileSelected)
                 {
-                    SecurityLevel = SelectedSecurityLevel,
-                    StorageLocation = SelectedStorageLocation,
+                    // User selected an existing keyfile
+                    keyfilePath = KeyfilePath;
+                    StatusMessage = "Using existing keyfile...";
+                }
+                else
+                {
+                    // Generate new keyfile
+                    keyfilePath = Path.Combine(vaultPath, "vault.key");
+                    await GenerateKeyfileAsync(keyfilePath);
+                    KeyfilePath = keyfilePath;
+                    StatusMessage = "Generated new keyfile...";
+                }
+
+                // Compute USB device binding if storing on USB
+                string? usbSerial = null;
+                if (SelectedStorageLocation == "USB" && !string.IsNullOrEmpty(driveRoot) && EnableUsbBinding)
+                {
+                    try
+                    {
+                        usbSerial = _usbBindingService.ComputeDeviceId(driveRoot);
+                        UsbDeviceId = usbSerial;
+                        StatusMessage = "Bound to USB device...";
+                    }
+                    catch (Exception ex)
+                    {
+                        StatusMessage = $"Warning: Could not bind to USB device: {ex.Message}";
+                        // Continue without USB binding
+                    }
+                }
+
+                // Generate salt for key derivation
+                byte[] salt = _encryptionService.GenerateSalt();
+
+                // Create the encrypted manifest
+                var manifest = new VaultManifest
+                {
+                    Version = 3,
+                    VaultName = "PhantomVault",
+                    ContainerPath = Path.Combine(vaultPath, "vault.pvault"),
+                    CreatedUtc = DateTimeOffset.UtcNow,
+                    Description = $"Created with {SelectedSecurityLevel} security level",
+                    SaltBase64 = Convert.ToBase64String(salt),
+                    Algorithm = "AES-256-GCM",
                     KeyfilePath = keyfilePath,
-                    UsePassword = UsePassword,
-                    EnableWindowsHello = EnableWindowsHello,
-                    EnablePasskeys = EnablePasskeys,
-                    EnableTotp = EnableTotp,
-                    CreatedAt = DateTime.UtcNow
+                    DeviceId = usbSerial,
+                    RequiresHardwareToken = false,
+                    RequiresTotp = EnableTotp
                 };
+
+                // Generate TOTP secret if enabled
+                if (EnableTotp)
+                {
+                    manifest.TotpSecret = GenerateSecureTotpSecret();
+                    StatusMessage = "Generated TOTP secret...";
+                }
+
+                // Write encrypted manifest
+                StatusMessage = "Writing encrypted manifest...";
+                var manifestPath = Path.Combine(vaultPath, "vault.manifest.encrypted");
                 
-                var configJson = System.Text.Json.JsonSerializer.Serialize(config, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
-                await File.WriteAllTextAsync(configPath, configJson);
+                // Determine dual-factor requirement based on security level
+                bool requireDualFactor = SelectedSecurityLevel == "Maximum";
+                
+                // Use passphrase if password is enabled, otherwise rely on keyfile
+                string? passphrase = UsePassword ? MasterPassword : null;
+
+#pragma warning disable CS0618 // Using obsolete WriteManifest for now (SecurePassword requires different handling)
+                _manifestService.WriteManifest(
+                    manifest,
+                    manifestPath,
+                    passphrase,
+                    keyfilePath,
+                    usbSerial,
+                    requireDualFactor);
+#pragma warning restore CS0618
+
+                // Create empty container file (the actual vault database)
+                var containerPath = manifest.ContainerPath;
+                if (!File.Exists(containerPath))
+                {
+                    await File.WriteAllBytesAsync(containerPath, Array.Empty<byte>());
+                }
 
                 StatusMessage = "Vault created successfully!";
                 
@@ -511,6 +736,44 @@ namespace PhantomVault.UI.ViewModels
             {
                 IsCompleting = false;
             }
+        }
+
+        private string GenerateSecureTotpSecret()
+        {
+            // Generate 20 bytes of random data for TOTP (160 bits, RFC 6238 compliant)
+            var secretBytes = new byte[20];
+            using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(secretBytes);
+            }
+            // Convert to Base32 for TOTP compatibility
+            return ToBase32(secretBytes);
+        }
+
+        private static string ToBase32(byte[] data)
+        {
+            const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+            var result = new System.Text.StringBuilder();
+            int buffer = 0;
+            int bitsLeft = 0;
+
+            foreach (byte b in data)
+            {
+                buffer = (buffer << 8) | b;
+                bitsLeft += 8;
+                while (bitsLeft >= 5)
+                {
+                    result.Append(alphabet[(buffer >> (bitsLeft - 5)) & 0x1F]);
+                    bitsLeft -= 5;
+                }
+            }
+
+            if (bitsLeft > 0)
+            {
+                result.Append(alphabet[(buffer << (5 - bitsLeft)) & 0x1F]);
+            }
+
+            return result.ToString();
         }
 
         private async Task GenerateKeyfileAsync(string keyfilePath)

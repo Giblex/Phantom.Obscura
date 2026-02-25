@@ -326,39 +326,21 @@ namespace PhantomVault.Core.Tests.Specialized
 
         #endregion
 
-        #region PBKDF2 Fallback Properties
+        // PBKDF2 fallback tests removed: Argon2id is now mandatory with no fallback.
+
+        #region Argon2id Mandatory Properties
 
         [Property(MaxTest = 50)]
-        public Property Pbkdf2Fallback_IsDeterministic(string password, byte[] salt)
+        public Property Argon2id_Mandatory_ProducesValidKey(string password)
         {
-            // Arrange
-            if (string.IsNullOrEmpty(password) || salt == null || salt.Length < 8)
-                return true.ToProperty();
-
-            var service = new EncryptionService(forceArgon2FailureForTests: true);
-
-            // Act
-            var key1 = service.DeriveKey(password.AsSpan(), salt);
-            var key2 = service.DeriveKey(password.AsSpan(), salt);
-
-            // Assert
-            return key1.SequenceEqual(key2).ToProperty();
-        }
-
-        [Property(MaxTest = 50)]
-        public Property Pbkdf2Fallback_ProducesValidKey(string password)
-        {
-            // Arrange
             if (string.IsNullOrEmpty(password))
                 return true.ToProperty();
 
-            var service = new EncryptionService(forceArgon2FailureForTests: true);
+            var service = new EncryptionService();
             var salt = service.GenerateSalt();
 
-            // Act
             var key = service.DeriveKey(password.AsSpan(), salt);
 
-            // Assert
             return (key != null && key.Length == 32).ToProperty();
         }
 

@@ -63,7 +63,7 @@
                        Grid.Column="1"
                        Grid.Row="0"
                        FontWeight="SemiBold"
-                       FontSize="14"
+                       FontSize="{StaticResource Type.Body.Size}"
                        Foreground="{DynamicResource PrimaryTextBrush}"
                        TextWrapping="NoWrap"
                        TextTrimming="CharacterEllipsis"/>
@@ -72,7 +72,7 @@
             <TextBlock x:Name="MessageText"
                        Grid.Column="1"
                        Grid.Row="1"
-                       FontSize="13"
+                       FontSize="{StaticResource Type.Label.Size}"
                        Foreground="{DynamicResource SecondaryTextBrush}"
                        TextWrapping="Wrap"
                        MaxLines="2"

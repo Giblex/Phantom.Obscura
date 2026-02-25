@@ -80,10 +80,6 @@ namespace PhantomVault.UI.ViewModels
         private int _kdfAlgorithmIndex = 0; // Default to Argon2id
         private int _kdfIterations = 600000; // Default to 600k iterations
 
-        // VeraCrypt integration
-        private string _veraCryptPath = string.Empty;
-        private string _veraCryptInstallerUrl = string.Empty;
-
         // Browser extension and native host status
         private string _extensionStatusColor = "#DC3545"; // Red by default
         private string _extensionStatusText = "Not Installed";
@@ -132,6 +128,7 @@ namespace PhantomVault.UI.ViewModels
         // UI layout / theme toggles (bound from XAML)
         private bool _useDarkTheme = true;
         private bool _useGridLayout = true;
+        private bool _isDashboardEnabled = true;
 
         // Privacy & diagnostics
         private bool _privacyModeEnabled;
@@ -161,24 +158,6 @@ namespace PhantomVault.UI.ViewModels
             
             // Load persisted settings
             var settings = SettingsService.Load();
-            if (!string.IsNullOrWhiteSpace(settings.VeraCryptPathOverride))
-            {
-                _veraCryptPath = settings.VeraCryptPathOverride!;
-            }
-            else
-            {
-                try
-                {
-                    var vc = (Avalonia.Application.Current as App)?.Services?.GetService(typeof(IVeraCryptService)) as IVeraCryptService
-                        ?? new VeraCryptService();
-                    _veraCryptPath = vc.VeraCryptPath;
-                }
-                catch { _veraCryptPath = string.Empty; }
-            }
-            if (!string.IsNullOrWhiteSpace(settings.VeraCryptInstallerUrl))
-            {
-                _veraCryptInstallerUrl = settings.VeraCryptInstallerUrl!;
-            }
 
             // Initialize privacy and secure trash settings from persisted settings
             try
@@ -194,6 +173,8 @@ namespace PhantomVault.UI.ViewModels
                 _secureTrashWipePasses = settings.SecureTrashWipePasses;
 
                 _clipboardClearTime = settings.ClipboardClearTime;
+
+                _isDashboardEnabled = settings.DashboardEnabled;
             }
             catch (Exception ex)
             {
@@ -242,12 +223,6 @@ namespace PhantomVault.UI.ViewModels
             OpenFlatIconDownloaderCommand = ReactiveCommand.CreateFromTask(OpenFlatIconDownloaderAsync);
             OpenIconManagerCommand = ReactiveCommand.CreateFromTask(OpenIconManagerAsync);
             ApplyThemeCommand = ReactiveCommand.Create(ApplyTheme);
-
-            BrowseVeraCryptPathCommand = ReactiveCommand.CreateFromTask(BrowseVeraCryptPathAsync);
-            AutoDetectVeraCryptPathCommand = ReactiveCommand.Create(AutoDetectVeraCryptPath);
-            DownloadVeraCryptCommand = ReactiveCommand.Create(DownloadVeraCrypt);
-            SaveVeraCryptPathCommand = ReactiveCommand.Create(SaveVeraCryptPath);
-            DownloadAndInstallVeraCryptCommand = ReactiveCommand.CreateFromTask(DownloadAndInstallVeraCryptAsync);
 
             SetPasskeyStatus(
                 "Windows Hello not linked",
@@ -741,28 +716,11 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> ResetToDefaultsCommand { get; }
         public ReactiveCommand<Unit, Unit> CloseCommand { get; }
         public ReactiveCommand<Unit, Unit> OpenFlatIconDownloaderCommand { get; }
-        public ReactiveCommand<Unit, Unit> BrowseVeraCryptPathCommand { get; }
-        public ReactiveCommand<Unit, Unit> AutoDetectVeraCryptPathCommand { get; }
-        public ReactiveCommand<Unit, Unit> DownloadVeraCryptCommand { get; }
-        public ReactiveCommand<Unit, Unit> SaveVeraCryptPathCommand { get; }
-        public ReactiveCommand<Unit, Unit> DownloadAndInstallVeraCryptCommand { get; }
 
         // Quick action commands used by settings UI
         public ReactiveCommand<Unit, Unit> OpenAddEntryCommand { get; }
         public ReactiveCommand<Unit, Unit> OpenPasswordGeneratorCommand { get; }
         public ReactiveCommand<Unit, Unit> OpenCategoryManagerCommand { get; }
-
-        public string VeraCryptPath
-        {
-            get => _veraCryptPath;
-            set => this.RaiseAndSetIfChanged(ref _veraCryptPath, value);
-        }
-
-        public string VeraCryptInstallerUrl
-        {
-            get => _veraCryptInstallerUrl;
-            set => this.RaiseAndSetIfChanged(ref _veraCryptInstallerUrl, value);
-        }
 
         // Theme/layout toggles (bound from XAML)
         public bool UseDarkTheme
@@ -791,6 +749,37 @@ namespace PhantomVault.UI.ViewModels
         {
             get => _useGridLayout;
             set => this.RaiseAndSetIfChanged(ref _useGridLayout, value);
+        }
+
+        /// <summary>
+        /// When true the Dashboard view is available; when false the app skips
+        /// straight to the Passwords view and hides the sidebar Dashboard button.
+        /// </summary>
+        public bool IsDashboardEnabled
+        {
+            get => _isDashboardEnabled;
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _isDashboardEnabled, value))
+                {
+                    try
+                    {
+                        var s = SettingsService.Load();
+                        s.DashboardEnabled = value;
+                        SettingsService.Save(s);
+
+                        // Propagate to VaultViewModel so it takes effect immediately
+                        if (_vaultViewModel != null)
+                        {
+                            _vaultViewModel.IsDashboardEnabled = value;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "Failed to persist DashboardEnabled setting");
+                    }
+                }
+            }
         }
 
         // Privacy & diagnostics (persisted)
@@ -981,128 +970,6 @@ namespace PhantomVault.UI.ViewModels
             HideAllSections();
             IsShowingAbout = true;
             CurrentSectionTitle = "About PhantomVault";
-        }
-
-        private async System.Threading.Tasks.Task BrowseVeraCryptPathAsync()
-        {
-            if (_ownerWindow == null) return;
-            var storage = _ownerWindow.StorageProvider;
-            var result = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
-            {
-                Title = "Select VeraCrypt Executable",
-                AllowMultiple = false
-            });
-            var file = result?.FirstOrDefault();
-            if (file != null)
-            {
-                VeraCryptPath = file.Path.LocalPath;
-                StatusMessage = $"Selected VeraCrypt: {VeraCryptPath}";
-            }
-        }
-
-        private void AutoDetectVeraCryptPath()
-        {
-            try
-            {
-                var vc = (Avalonia.Application.Current as App)?.Services?.GetService(typeof(IVeraCryptService)) as IVeraCryptService
-                    ?? new VeraCryptService();
-                VeraCryptPath = vc.VeraCryptPath;
-                StatusMessage = string.IsNullOrEmpty(VeraCryptPath) ? "VeraCrypt not found" : $"Detected VeraCrypt at: {VeraCryptPath}";
-            }
-            catch
-            {
-                StatusMessage = "Failed to detect VeraCrypt.";
-            }
-        }
-
-        private void DownloadVeraCrypt()
-        {
-            try
-            {
-                // Open official downloads page in default browser
-                var url = OperatingSystem.IsWindows() ? "https://www.veracrypt.fr/en/Downloads.html" : "https://www.veracrypt.fr/en/Downloads.html";
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = url,
-                    UseShellExecute = true
-                });
-                StatusMessage = "Opened VeraCrypt downloads page.";
-            }
-            catch
-            {
-                StatusMessage = "Failed to open browser for VeraCrypt download.";
-            }
-        }
-
-        private void SaveVeraCryptPath()
-        {
-            var settings = SettingsService.Load();
-            settings.VeraCryptPathOverride = string.IsNullOrWhiteSpace(VeraCryptPath) ? null : VeraCryptPath;
-            settings.VeraCryptInstallerUrl = string.IsNullOrWhiteSpace(VeraCryptInstallerUrl) ? null : VeraCryptInstallerUrl;
-            SettingsService.Save(settings);
-            StatusMessage = "VeraCrypt path saved.";
-        }
-
-        private async System.Threading.Tasks.Task DownloadAndInstallVeraCryptAsync()
-        {
-            if (!OperatingSystem.IsWindows())
-            {
-                await _dialogService.ShowWarningAsync("Unsupported", "In-app installer is only supported on Windows.", _ownerWindow);
-                return;
-            }
-            if (string.IsNullOrWhiteSpace(VeraCryptInstallerUrl))
-            {
-                await _dialogService.ShowWarningAsync("Missing URL", "Please provide a trusted VeraCrypt installer URL first.", _ownerWindow);
-                return;
-            }
-            try
-            {
-                string? installerPath = null;
-
-                await RunBusyOperationAsync(
-                    "Downloading VeraCrypt…",
-                    async () =>
-                    {
-                        UpdateBusyStatus("Requesting installer…", "Contacting the VeraCrypt download server.", progress: 15, indeterminate: false);
-
-                        using var http = new HttpClient();
-                        http.Timeout = TimeSpan.FromMinutes(5);
-                        installerPath = Path.Combine(Path.GetTempPath(), "VeraCryptSetup.exe");
-
-                        using (var resp = await http.GetAsync(VeraCryptInstallerUrl).ConfigureAwait(false))
-                        {
-                            resp.EnsureSuccessStatusCode();
-                            UpdateBusyStatus("Downloading installer…", "Saving VeraCryptSetup.exe locally.", progress: 55, indeterminate: false);
-                            await using var fs = File.Create(installerPath);
-                            await resp.Content.CopyToAsync(fs).ConfigureAwait(false);
-                        }
-
-                        UpdateBusyStatus("Preparing installer launch…", "Requesting elevated permissions.", progress: 85, indeterminate: false);
-
-                        if (!string.IsNullOrWhiteSpace(installerPath))
-                        {
-                            var psi = new System.Diagnostics.ProcessStartInfo
-                            {
-                                FileName = installerPath,
-                                UseShellExecute = true,
-                                Verb = "runas" // UAC prompt
-                            };
-
-                            System.Diagnostics.Process.Start(psi);
-                        }
-
-                        UpdateBusyStatus("Waiting for Windows elevation prompt…", progress: 100, indeterminate: false);
-                    },
-                    indeterminate: false,
-                    detail: "Downloading and launching the VeraCrypt installer.");
-
-                StatusMessage = "VeraCrypt installer launched.";
-            }
-            catch (Exception ex)
-            {
-                await _dialogService.ShowErrorAsync("Install Failed", ex.Message, _ownerWindow);
-                StatusMessage = "Installer failed.";
-            }
         }
 
         private async System.Threading.Tasks.Task OpenAddEntryAsync()
@@ -3034,10 +2901,9 @@ namespace PhantomVault.UI.ViewModels
                             await reader.ReadLineAsync();
 
                             var newCredentials = new List<Credential>();
-
-                            while (!reader.EndOfStream)
+                            string? line;
+                            while ((line = await reader.ReadLineAsync()) != null)
                             {
-                                var line = await reader.ReadLineAsync();
                                 if (string.IsNullOrWhiteSpace(line))
                                 {
                                     continue;

@@ -14,7 +14,7 @@
     <!-- Notes -->
     <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasNotes}">
         <TextBlock Text="Notes" 
-                   FontSize="13" 
+                   FontSize="{StaticResource Type.Label.Size}" 
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource MutedTextBrush}"/>
         <TextBox Text="{Binding SelectedCredential.Notes}" 

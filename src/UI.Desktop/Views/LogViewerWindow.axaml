@@ -9,7 +9,8 @@
         MinWidth="800"
         MinHeight="500"
         CanResize="True"
-        Background="{DynamicResource ObscuraCanvasBrush}">
+        Background="{DynamicResource ObscuraCanvasBrush}"
+        Classes="animated-window">
   <Grid RowDefinitions="Auto,Auto,*,Auto">
     <!-- Header -->
     <Border Grid.Row="0"
@@ -20,10 +21,10 @@
       <Grid ColumnDefinitions="*,Auto,Auto">
         <StackPanel Spacing="8">
           <TextBlock Text="Application Logs"
-                     FontSize="20"
+                     FontSize="{StaticResource Type.Icon.Size}"
                      FontWeight="SemiBold"/>
           <TextBlock Text="View and filter application log entries"
-                     FontSize="12"
+                     FontSize="{StaticResource Type.Small.Size}"
                      Classes="subtle"/>
         </StackPanel>
         <Button Grid.Column="1"
@@ -48,7 +49,7 @@
             Padding="20,12">
       <Grid ColumnDefinitions="Auto,*,Auto,Auto">
         <StackPanel Orientation="Horizontal" Spacing="8">
-          <TextBlock Text="Filter:" FontSize="13" VerticalAlignment="Center"/>
+          <TextBlock Text="Filter:" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
           <ComboBox SelectedIndex="{Binding SelectedLogLevel}"
                     MinWidth="120">
             <ComboBoxItem>All Levels</ComboBoxItem>
@@ -93,7 +94,7 @@
                  AcceptsReturn="True"
                  TextWrapping="NoWrap"
                  FontFamily="Consolas"
-                 FontSize="11"
+                 FontSize="{StaticResource Type.Tiny.Size}"
                  Padding="16"
                  Background="Transparent"
                  BorderThickness="0"/>
@@ -108,7 +109,7 @@
             Padding="20,12">
       <Grid ColumnDefinitions="*,Auto,Auto">
         <TextBlock Text="{Binding StatusMessage}"
-                   FontSize="12"
+                   FontSize="{StaticResource Type.Small.Size}"
                    VerticalAlignment="Center"
                    Classes="subtle"/>
         <Button Grid.Column="1"

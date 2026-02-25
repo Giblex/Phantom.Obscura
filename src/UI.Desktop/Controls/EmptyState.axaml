@@ -50,7 +50,7 @@
                     <!-- Background circle -->
                     <Ellipse Width="180" Height="180"
                              Canvas.Left="10" Canvas.Top="10"
-                             Fill="#15FFFFFF"
+                             Fill="#10000000"
                              Opacity="0.4"/>
 
                     <!-- Vault icon - simplified representation -->

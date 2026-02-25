@@ -172,12 +172,15 @@ namespace PhantomVault.Core.Services
 
             // Bind the manifest ciphertext to the container path using AES-GCM AAD so that
             // a copied manifest cannot be replayed for a different container file.
-            // Also bind to USB serial number if provided for additional security.
+            // Also bind to USB serial, monotonic counter, and policy hash for additional security.
             long timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             string aadString = string.IsNullOrEmpty(usbSerial)
                 ? containerPath
                 : $"{containerPath}|USB:{usbSerial}";
             aadString = $"{aadString}|TS:{timestamp}";
+            aadString = $"{aadString}|SEQ:{manifest.ManifestSequence}";
+            if (!string.IsNullOrEmpty(manifest.PolicyHashBase64))
+                aadString = $"{aadString}|POL:{manifest.PolicyHashBase64}";
             byte[] aad = Encoding.UTF8.GetBytes(aadString);
             var encResult = _encryptionService.Encrypt(plainBytes, key, aad);
 
@@ -190,6 +193,7 @@ namespace PhantomVault.Core.Services
                 usbSerial = usbSerial ?? string.Empty,
                 aad = Convert.ToBase64String(aad),
                 timestamp,
+                manifestSequence = manifest.ManifestSequence,
                 salt = manifest.SaltBase64,
                 nonce = Convert.ToBase64String(encResult.Nonce),
                 tag = Convert.ToBase64String(encResult.Tag),
@@ -280,12 +284,15 @@ namespace PhantomVault.Core.Services
                     ValidateContainerPath(containerPath);
                     ValidateUsbSerial(usbSerial);
 
-                    // Bind manifest ciphertext to container path and USB serial using AAD
+                    // Bind manifest ciphertext to container path, USB serial, sequence, and policy hash using AAD
                     long timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                     string aadString = string.IsNullOrEmpty(usbSerial)
                         ? containerPath
                         : $"{containerPath}|USB:{usbSerial}";
                     aadString = $"{aadString}|TS:{timestamp}";
+                    aadString = $"{aadString}|SEQ:{manifest.ManifestSequence}";
+                    if (!string.IsNullOrEmpty(manifest.PolicyHashBase64))
+                        aadString = $"{aadString}|POL:{manifest.PolicyHashBase64}";
                     byte[] aad = Encoding.UTF8.GetBytes(aadString);
 
                     var encResult = _encryptionService.Encrypt(plainBytes, key, aad);
@@ -298,6 +305,7 @@ namespace PhantomVault.Core.Services
                         usbSerial = usbSerial ?? string.Empty,
                         aad = Convert.ToBase64String(aad),
                         timestamp,
+                        manifestSequence = manifest.ManifestSequence,
                         salt = manifest.SaltBase64,
                         nonce = Convert.ToBase64String(encResult.Nonce),
                         tag = Convert.ToBase64String(encResult.Tag),
@@ -589,7 +597,7 @@ namespace PhantomVault.Core.Services
             if (manifest == null) throw new ArgumentNullException(nameof(manifest));
             if (key == null || key.Length < 32) throw new ArgumentException("Signing key must be at least 32 bytes", nameof(key));
 
-            // Canonical representation of critical fields
+            // Canonical representation of critical fields including anti-rollback counter and policy hash
             var canonicalData = new StringBuilder();
             canonicalData.Append(manifest.ContainerPath ?? string.Empty);
             canonicalData.Append('|');
@@ -604,6 +612,10 @@ namespace PhantomVault.Core.Services
             canonicalData.Append(manifest.Algorithm ?? "AES-256-GCM");
             canonicalData.Append('|');
             canonicalData.Append(manifest.Version.ToString());
+            canonicalData.Append('|');
+            canonicalData.Append(manifest.ManifestSequence.ToString());
+            canonicalData.Append('|');
+            canonicalData.Append(manifest.PolicyHashBase64 ?? string.Empty);
 
             byte[] dataBytes = Encoding.UTF8.GetBytes(canonicalData.ToString());
             byte[] hmac = HMACSHA256.HashData(key, dataBytes);
@@ -655,8 +667,30 @@ namespace PhantomVault.Core.Services
             if (manifest == null) throw new ArgumentNullException(nameof(manifest));
             if (key == null || key.Length < 32) throw new ArgumentException("Signing key must be at least 32 bytes", nameof(key));
 
+            // Increment monotonic counter on every write to prevent rollback attacks
+            manifest.ManifestSequence++;
+
             manifest.IntegritySignatureBase64 = ComputeIntegritySignature(manifest, key);
             manifest.SignatureTimestamp = DateTimeOffset.UtcNow;
+        }
+
+        /// <summary>
+        /// Verifies that the manifest sequence counter has not been rolled back.
+        /// Call this after decrypting a manifest and before trusting its contents.
+        /// </summary>
+        /// <param name="manifest">The decrypted manifest.</param>
+        /// <param name="lastKnownSequence">The last known sequence number (from previous session or stored locally).</param>
+        /// <exception cref="SecurityException">Thrown when rollback is detected.</exception>
+        public static void VerifyAntiRollback(VaultManifest manifest, long lastKnownSequence)
+        {
+            if (manifest == null) throw new ArgumentNullException(nameof(manifest));
+
+            if (manifest.ManifestSequence < lastKnownSequence)
+            {
+                throw new SecurityException(
+                    $"Anti-rollback violation: manifest sequence {manifest.ManifestSequence} is below " +
+                    $"last known sequence {lastKnownSequence}. The manifest may have been replaced with an older version.");
+            }
         }
 
         /// <summary>

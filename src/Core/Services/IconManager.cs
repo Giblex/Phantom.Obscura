@@ -12,7 +12,7 @@ using Serilog;
 namespace PhantomVault.Core.Services
 {
     /// <summary>
-    /// Manages icon loading from the Assets/Icons folder and provides
+    /// Manages icon loading from the Assets/Visuals folder and provides
     /// automatic icon matching based on credential names and URLs.
     /// Optimized with caching and lazy directory indexing.
     /// </summary>
@@ -132,14 +132,13 @@ namespace PhantomVault.Core.Services
 
         private IEnumerable<string> EnumerateSearchPaths()
         {
+            // Search paths for the Assets/Visuals folder structure
             var candidates = new[]
             {
-                Path.Combine(_iconsDirectory, "Logos", "PNG"),
-                Path.Combine(_iconsDirectory, "Logos", "Ico"),
-                Path.Combine(_iconsDirectory, "Logos"),
-                Path.Combine(_iconsDirectory, "OS Icons"),
-                Path.Combine(_iconsDirectory, "OS Icons", "UI"),
-                Path.Combine(_iconsDirectory, "PO UI"),
+                Path.Combine(_iconsDirectory, "Entry Logos"),
+                Path.Combine(_iconsDirectory, "App Icons"),
+                Path.Combine(_iconsDirectory, "Cat Icons"),
+                Path.Combine(_iconsDirectory, "Giblex Icons"),
                 _iconsDirectory
             };
 
@@ -545,6 +544,202 @@ namespace PhantomVault.Core.Services
             }
         }
 
+        /// <summary>
+        /// Returns information about sub-folders that contain icon files.
+        /// Scans two levels deep (category → subfolder) for fast section discovery.
+        /// </summary>
+        public IconFolderInfo[] GetIconFolders()
+        {
+            try
+            {
+                if (!Directory.Exists(_iconsDirectory))
+                    return Array.Empty<IconFolderInfo>();
+
+                var result = new List<IconFolderInfo>();
+
+                foreach (var topDir in Directory.GetDirectories(_iconsDirectory))
+                {
+                    var topName = Path.GetFileName(topDir);
+                    var subDirs = Directory.GetDirectories(topDir);
+
+                    foreach (var subDir in subDirs)
+                    {
+                        var subName = Path.GetFileName(subDir);
+                        var relativePath = Path.GetRelativePath(_iconsDirectory, subDir);
+                        int count = 0;
+                        try
+                        {
+                            count = Directory.EnumerateFiles(subDir, "*.*", SearchOption.AllDirectories)
+                                             .Count(IsSupportedExtension);
+                        }
+                        catch { /* skip inaccessible folders */ }
+
+                        if (count > 0)
+                        {
+                            result.Add(new IconFolderInfo(
+                                $"{topName} / {subName}",
+                                relativePath,
+                                subDir,
+                                count));
+                        }
+                    }
+
+                    // Count files directly in the top-level category folder (not in subfolders)
+                    int directCount = 0;
+                    try
+                    {
+                        directCount = Directory.EnumerateFiles(topDir, "*.*", SearchOption.TopDirectoryOnly)
+                                               .Count(IsSupportedExtension);
+                    }
+                    catch { }
+
+                    if (directCount > 0)
+                    {
+                        result.Add(new IconFolderInfo(
+                            topName,
+                            Path.GetRelativePath(_iconsDirectory, topDir),
+                            topDir,
+                            directCount));
+                    }
+                }
+
+                return result.OrderBy(f => f.Name, StringComparer.OrdinalIgnoreCase).ToArray();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "GetIconFolders failed");
+                return Array.Empty<IconFolderInfo>();
+            }
+        }
+
+        /// <summary>
+        /// Returns icon file metadata for files within a specific folder (recursively).
+        /// Used for lazy-loading a single section of the icon library.
+        /// </summary>
+        public IconFileInfo[] GetIconFilesInFolder(string folderFullPath)
+        {
+            try
+            {
+                if (!Directory.Exists(folderFullPath))
+                    return Array.Empty<IconFileInfo>();
+
+                var icons = new List<IconFileInfo>();
+                foreach (var file in Directory.EnumerateFiles(folderFullPath, "*.*", SearchOption.AllDirectories))
+                {
+                    if (!IsSupportedExtension(file))
+                        continue;
+
+                    try
+                    {
+                        var info = new FileInfo(file);
+                        var relativePath = Path.GetRelativePath(_iconsDirectory, file);
+                        var name = Path.GetFileNameWithoutExtension(file) ?? string.Empty;
+                        icons.Add(new IconFileInfo(name, relativePath, file, info.Length, info.LastWriteTimeUtc));
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Warning(ex, "Failed to process icon file: {FilePath}", file);
+                    }
+                }
+
+                return icons
+                    .OrderBy(icon => icon.Name, StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "GetIconFilesInFolder failed for {FolderPath}", folderFullPath);
+                return Array.Empty<IconFileInfo>();
+            }
+        }
+
+        /// <summary>
+        /// Returns top-level icon categories (e.g. Cat Icons, Entry Logos).
+        /// Each category reports its total file count and whether it contains variant subfolders.
+        /// </summary>
+        public IconCategoryInfo[] GetIconCategories()
+        {
+            try
+            {
+                if (!Directory.Exists(_iconsDirectory))
+                    return Array.Empty<IconCategoryInfo>();
+
+                var result = new List<IconCategoryInfo>();
+
+                foreach (var topDir in Directory.GetDirectories(_iconsDirectory))
+                {
+                    var name = Path.GetFileName(topDir);
+                    var subDirs = Directory.GetDirectories(topDir);
+                    int fileCount = 0;
+                    try
+                    {
+                        fileCount = Directory.EnumerateFiles(topDir, "*.*", SearchOption.AllDirectories)
+                                             .Count(IsSupportedExtension);
+                    }
+                    catch { }
+
+                    if (fileCount == 0) continue;
+
+                    // Heuristic: variant category has many subfolders each with a small number of files
+                    bool isVariantCategory = false;
+                    if (subDirs.Length > 10)
+                    {
+                        var sampleCounts = subDirs.Take(10).Select(d =>
+                        {
+                            try { return Directory.EnumerateFiles(d, "*.*", SearchOption.TopDirectoryOnly).Count(IsSupportedExtension); }
+                            catch { return 0; }
+                        }).ToArray();
+                        isVariantCategory = sampleCounts.All(c => c > 0 && c <= 30);
+                    }
+
+                    result.Add(new IconCategoryInfo(
+                        name,
+                        Path.GetRelativePath(_iconsDirectory, topDir),
+                        topDir,
+                        fileCount,
+                        subDirs.Length,
+                        isVariantCategory));
+                }
+
+                return result.OrderBy(c => c.Name, StringComparer.OrdinalIgnoreCase).ToArray();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "GetIconCategories failed");
+                return Array.Empty<IconCategoryInfo>();
+            }
+        }
+
+        /// <summary>
+        /// Returns subfolders within a category path, with file counts.
+        /// Used for variant-mode categories to enumerate icon groups.
+        /// </summary>
+        public IconSubfolderInfo[] GetCategorySubfolders(string categoryPath)
+        {
+            try
+            {
+                if (!Directory.Exists(categoryPath))
+                    return Array.Empty<IconSubfolderInfo>();
+
+                var result = new List<IconSubfolderInfo>();
+                foreach (var subDir in Directory.GetDirectories(categoryPath))
+                {
+                    var name = Path.GetFileName(subDir);
+                    int count = 0;
+                    try { count = Directory.EnumerateFiles(subDir, "*.*", SearchOption.AllDirectories).Count(IsSupportedExtension); }
+                    catch { }
+                    if (count > 0)
+                        result.Add(new IconSubfolderInfo(name, subDir, count));
+                }
+                return result.OrderBy(s => s.Name, StringComparer.OrdinalIgnoreCase).ToArray();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "GetCategorySubfolders failed for {Path}", categoryPath);
+                return Array.Empty<IconSubfolderInfo>();
+            }
+        }
+
         private static bool IsSupportedExtension(string path)
         {
             var extension = Path.GetExtension(path);
@@ -558,4 +753,7 @@ namespace PhantomVault.Core.Services
     }
 
     public sealed record IconFileInfo(string Name, string RelativePath, string FullPath, long SizeBytes, DateTime LastModifiedUtc);
+    public sealed record IconFolderInfo(string Name, string RelativePath, string FullPath, int FileCount);
+    public sealed record IconCategoryInfo(string Name, string RelativePath, string FullPath, int FileCount, int SubfolderCount, bool IsVariantCategory);
+    public sealed record IconSubfolderInfo(string Name, string FullPath, int FileCount);
 }

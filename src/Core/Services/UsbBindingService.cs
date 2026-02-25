@@ -1,6 +1,8 @@
 using System;
 using System.IO;
+using System.Management;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -55,31 +57,97 @@ namespace PhantomVault.Core.Services
         }
 
         /// <summary>
-        /// Computes a unique identifier for the given drive root. On Windows
-        /// this uses the volume serial number returned by GetVolumeInformation.
-        /// On non‑Windows platforms the method combines the drive's total
-        /// capacity, file system format and volume label and hashes the
-        /// result with SHA‑256. The returned value is hex encoded.
+        /// Derives a 32-byte AES-256-GCM encryption key from the vault salt.
+        /// Uses a distinct domain separation string from <see cref="DeriveHmacKeyFromVaultSalt"/>
+        /// to ensure orthogonal cryptographic keys per HKDF best practices.
+        /// </summary>
+        private static byte[] DeriveEncryptionKeyFromVaultSalt(byte[] vaultSalt)
+        {
+            if (vaultSalt == null || vaultSalt.Length == 0)
+                throw new ArgumentException("Vault salt must not be null or empty", nameof(vaultSalt));
+
+            byte[] info = Encoding.UTF8.GetBytes("PhantomVault.USB.DeviceId.Encryption.v1");
+            using var hmac = new HMACSHA256(vaultSalt);
+
+            byte[] t1Input = new byte[info.Length + 1];
+            Array.Copy(info, 0, t1Input, 0, info.Length);
+            t1Input[info.Length] = 0x01;
+
+            return hmac.ComputeHash(t1Input);
+        }
+
+        /// <summary>
+        /// Computes a unique identifier for the given drive root. Prefers cryptographically
+        /// strong identifiers in this priority order:
+        /// 1. GPT Disk GUID + Partition GUID (128-bit random each, strongest binding)
+        /// 2. WMI Disk Serial Number (manufacturer serial, harder to spoof than volume serial)
+        /// 3. Volume serial number via native API (32-bit, weakest - legacy fallback only)
+        /// 4. Heuristic fallback: SHA-256 of drive properties (non-Windows or all else fails)
+        ///
+        /// The returned value is always a hex-encoded string. When GPT GUIDs are available,
+        /// the result is a SHA-256 hash of both the disk and partition GUIDs, providing
+        /// 256 bits derived from 256 bits of random input.
         /// </summary>
         /// <param name="driveRoot">The root path of the removable drive (e.g. "E:\\" or "/media/user/USB").</param>
         public string ComputeDeviceId(string driveRoot)
         {
             if (string.IsNullOrEmpty(driveRoot)) throw new ArgumentException("Drive root must not be null or empty", nameof(driveRoot));
+
             if (OperatingSystem.IsWindows())
             {
-                // Windows: use native API to get the volume serial number. If this
-                // fails, fall back to hashing drive info like on Linux.
+                // Priority 1: GPT Disk GUID + Partition GUID (strongest - 128-bit random each)
+                if (TryGetGptGuids(driveRoot, out string? diskGuid, out string? partitionGuid))
+                {
+                    // Combine both GUIDs via SHA-256 for a stable, high-entropy device ID
+                    string combined = $"GPT:{diskGuid}|{partitionGuid}";
+                    byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(combined));
+                    return Convert.ToHexString(hash);
+                }
+
+                // Priority 2: WMI physical disk serial (manufacturer-set, not trivially spoofable)
+                if (TryGetDiskSerialNumber(driveRoot, out string? diskSerial) && !string.IsNullOrEmpty(diskSerial))
+                {
+                    byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes($"DISK:{diskSerial}"));
+                    return Convert.ToHexString(hash);
+                }
+
+                // Priority 3: Volume serial number (32-bit, weak - legacy fallback)
                 if (TryGetVolumeSerialNumber(driveRoot, out uint serial))
                 {
                     return serial.ToString("X8");
                 }
             }
-            // Fallback for all platforms (including Windows if API call fails).
+
+            // Priority 4: Heuristic fallback for all platforms
             var drive = new DriveInfo(driveRoot);
             string composite = $"{drive.TotalSize}|{drive.DriveFormat}|{drive.VolumeLabel}";
             byte[] data = Encoding.UTF8.GetBytes(composite);
-            byte[] hash = SHA256.HashData(data);
-            return Convert.ToHexString(hash);
+            byte[] fallbackHash = SHA256.HashData(data);
+            return Convert.ToHexString(fallbackHash);
+        }
+
+        /// <summary>
+        /// Returns the binding strength of the device ID for the given drive.
+        /// Useful for UI warnings and policy enforcement.
+        /// </summary>
+        public DeviceBindingStrength GetBindingStrength(string driveRoot)
+        {
+            if (string.IsNullOrEmpty(driveRoot))
+                return DeviceBindingStrength.None;
+
+            if (OperatingSystem.IsWindows())
+            {
+                if (TryGetGptGuids(driveRoot, out _, out _))
+                    return DeviceBindingStrength.GptGuid;
+
+                if (TryGetDiskSerialNumber(driveRoot, out string? ds) && !string.IsNullOrEmpty(ds))
+                    return DeviceBindingStrength.DiskSerial;
+
+                if (TryGetVolumeSerialNumber(driveRoot, out _))
+                    return DeviceBindingStrength.VolumeSerial;
+            }
+
+            return DeviceBindingStrength.Heuristic;
         }
 
         /// <summary>
@@ -127,6 +195,123 @@ namespace PhantomVault.Core.Services
             }
             return false;
         }
+
+        /// <summary>
+        /// Attempts to retrieve GPT Disk GUID and Partition GUID for the given drive using WMI.
+        /// GPT GUIDs are 128-bit random values assigned at disk/partition creation time and are
+        /// cryptographically stronger than 32-bit volume serial numbers. They survive reformatting
+        /// of individual partitions and cannot be trivially changed without specialized tools.
+        /// </summary>
+        [SupportedOSPlatform("windows")]
+        private static bool TryGetGptGuids(string driveRoot, out string? diskGuid, out string? partitionGuid)
+        {
+            diskGuid = null;
+            partitionGuid = null;
+
+            if (!OperatingSystem.IsWindows())
+                return false;
+
+            try
+            {
+                var driveLetter = driveRoot.TrimEnd('\\').TrimEnd(':');
+
+                // Traverse: LogicalDisk → Partition → DiskDrive to get the physical disk
+                using var logicalDiskQuery = new ManagementObjectSearcher(
+                    $"ASSOCIATORS OF {{Win32_LogicalDisk.DeviceID='{driveLetter}:'}} WHERE AssocClass=Win32_LogicalDiskToPartition");
+
+                foreach (ManagementObject partition in logicalDiskQuery.Get())
+                {
+                    // Get the GPT partition type and GUID from MSFT_Partition (Storage WMI)
+                    var partDeviceId = partition["DeviceID"]?.ToString();
+                    if (string.IsNullOrEmpty(partDeviceId))
+                        continue;
+
+                    // Extract disk index and partition number from Win32_DiskPartition
+                    var diskIndex = partition["DiskIndex"];
+
+                    // Query MSFT_Partition via Storage namespace for GPT GUIDs
+                    using var storagePartitionQuery = new ManagementObjectSearcher(
+                        @"root\Microsoft\Windows\Storage",
+                        $"SELECT GptType, Guid, DiskNumber FROM MSFT_Partition WHERE DiskNumber = {diskIndex}");
+
+                    foreach (ManagementObject storagePart in storagePartitionQuery.Get())
+                    {
+                        var guid = storagePart["Guid"]?.ToString();
+                        if (!string.IsNullOrEmpty(guid))
+                        {
+                            partitionGuid = guid.Trim('{', '}');
+                            break;
+                        }
+                    }
+
+                    // Get the Disk GUID from MSFT_Disk
+                    using var diskQuery = new ManagementObjectSearcher(
+                        @"root\Microsoft\Windows\Storage",
+                        $"SELECT Guid FROM MSFT_Disk WHERE Number = {diskIndex}");
+
+                    foreach (ManagementObject disk in diskQuery.Get())
+                    {
+                        var guid = disk["Guid"]?.ToString();
+                        if (!string.IsNullOrEmpty(guid))
+                        {
+                            diskGuid = guid.Trim('{', '}');
+                            break;
+                        }
+                    }
+
+                    break; // Only process first partition association
+                }
+
+                return !string.IsNullOrEmpty(diskGuid) && !string.IsNullOrEmpty(partitionGuid);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"GPT GUID lookup failed: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Attempts to retrieve the physical disk serial number via WMI.
+        /// This is the manufacturer-assigned serial, which is harder to spoof than
+        /// a volume serial number but can still be faked with driver-level tools.
+        /// </summary>
+        [SupportedOSPlatform("windows")]
+        private static bool TryGetDiskSerialNumber(string driveRoot, out string? serialNumber)
+        {
+            serialNumber = null;
+
+            if (!OperatingSystem.IsWindows())
+                return false;
+
+            try
+            {
+                var driveLetter = driveRoot.TrimEnd('\\').TrimEnd(':');
+
+                using var logicalDiskQuery = new ManagementObjectSearcher(
+                    $"ASSOCIATORS OF {{Win32_LogicalDisk.DeviceID='{driveLetter}:'}} WHERE AssocClass=Win32_LogicalDiskToPartition");
+
+                foreach (ManagementObject partition in logicalDiskQuery.Get())
+                {
+                    using var diskQuery = new ManagementObjectSearcher(
+                        $"ASSOCIATORS OF {{Win32_DiskPartition.DeviceID='{partition["DeviceID"]}'}} WHERE AssocClass=Win32_DiskDriveToDiskPartition");
+
+                    foreach (ManagementObject disk in diskQuery.Get())
+                    {
+                        serialNumber = disk["SerialNumber"]?.ToString()?.Trim();
+                        if (!string.IsNullOrEmpty(serialNumber))
+                            return true;
+                    }
+                    break;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Disk serial number lookup failed: {ex.Message}");
+            }
+
+            return false;
+        }
         #endregion
 
         #region Hidden Device ID File (High Assurance Binding)
@@ -168,7 +353,7 @@ namespace PhantomVault.Core.Services
             // Wipe the derived key from memory
             CryptographicOperations.ZeroMemory(hmacKey);
 
-            // Write to hidden file
+            // Build inner payload (deviceId + timestamp + HMAC signature)
             var idData = new DeviceIdData
             {
                 DeviceId = deviceId,
@@ -176,8 +361,42 @@ namespace PhantomVault.Core.Services
                 Signature = Convert.ToHexString(signature)
             };
 
-            string json = JsonSerializer.Serialize(idData, JsonOptions);
-            File.WriteAllText(hiddenFilePath, json, Encoding.UTF8);
+            string innerJson = JsonSerializer.Serialize(idData, JsonOptions);
+
+            // Encrypt the payload with AES-256-GCM using a vault-salt-derived key
+            byte[] encKey = DeriveEncryptionKeyFromVaultSalt(vaultSalt);
+            try
+            {
+                byte[] plainBytes = Encoding.UTF8.GetBytes(innerJson);
+                byte[] nonce = new byte[12];
+                RandomNumberGenerator.Fill(nonce);
+                byte[] ciphertext = new byte[plainBytes.Length];
+                byte[] tag = new byte[16];
+
+                using (var aes = new AesGcm(encKey, 16))
+                {
+                    aes.Encrypt(nonce, plainBytes, ciphertext, tag);
+                }
+
+                // Write encrypted envelope (v2 format)
+                var envelope = new EncryptedDeviceIdEnvelope
+                {
+                    Version = 2,
+                    Nonce = Convert.ToBase64String(nonce),
+                    Tag = Convert.ToBase64String(tag),
+                    Ciphertext = Convert.ToBase64String(ciphertext)
+                };
+
+                string envelopeJson = JsonSerializer.Serialize(envelope, JsonOptions);
+                File.WriteAllText(hiddenFilePath, envelopeJson, Encoding.UTF8);
+
+                // Wipe plaintext from memory
+                CryptographicOperations.ZeroMemory(plainBytes);
+            }
+            finally
+            {
+                CryptographicOperations.ZeroMemory(encKey);
+            }
 
             // Set hidden attribute on Windows
             if (OperatingSystem.IsWindows())
@@ -207,8 +426,53 @@ namespace PhantomVault.Core.Services
                 throw new FileNotFoundException("Hidden device identifier file not found. The drive may not be bound or was cloned without the hidden file.");
             }
 
-            string json = File.ReadAllText(hiddenFilePath, Encoding.UTF8);
-            var idData = JsonSerializer.Deserialize<DeviceIdData>(json, JsonOptions);
+            string rawJson = File.ReadAllText(hiddenFilePath, Encoding.UTF8);
+
+            // Detect format: v2 encrypted envelope or legacy plaintext
+            DeviceIdData? idData;
+            using (var doc = JsonDocument.Parse(rawJson))
+            {
+                if (doc.RootElement.TryGetProperty("version", out var vProp) && vProp.GetInt32() >= 2)
+                {
+                    // v2 encrypted format — decrypt first
+                    var envelope = JsonSerializer.Deserialize<EncryptedDeviceIdEnvelope>(rawJson, JsonOptions);
+                    if (envelope == null
+                        || string.IsNullOrEmpty(envelope.Nonce)
+                        || string.IsNullOrEmpty(envelope.Tag)
+                        || string.IsNullOrEmpty(envelope.Ciphertext))
+                    {
+                        throw new InvalidOperationException("Encrypted device identifier envelope is corrupted.");
+                    }
+
+                    byte[] encKey = DeriveEncryptionKeyFromVaultSalt(vaultSalt);
+                    try
+                    {
+                        byte[] nonce = Convert.FromBase64String(envelope.Nonce);
+                        byte[] tag = Convert.FromBase64String(envelope.Tag);
+                        byte[] ciphertext = Convert.FromBase64String(envelope.Ciphertext);
+                        byte[] plainBytes = new byte[ciphertext.Length];
+
+                        using (var aes = new AesGcm(encKey, 16))
+                        {
+                            aes.Decrypt(nonce, ciphertext, tag, plainBytes);
+                        }
+
+                        string innerJson = Encoding.UTF8.GetString(plainBytes);
+                        CryptographicOperations.ZeroMemory(plainBytes);
+
+                        idData = JsonSerializer.Deserialize<DeviceIdData>(innerJson, JsonOptions);
+                    }
+                    finally
+                    {
+                        CryptographicOperations.ZeroMemory(encKey);
+                    }
+                }
+                else
+                {
+                    // Legacy plaintext format — read directly (backward compatibility)
+                    idData = JsonSerializer.Deserialize<DeviceIdData>(rawJson, JsonOptions);
+                }
+            }
 
             if (idData == null || string.IsNullOrEmpty(idData.DeviceId) || string.IsNullOrEmpty(idData.Signature))
             {
@@ -295,11 +559,45 @@ namespace PhantomVault.Core.Services
             public string Signature { get; set; } = string.Empty;
         }
 
+        /// <summary>
+        /// Encrypted envelope (v2+) for the hidden device identifier file.
+        /// The ciphertext contains the AES-256-GCM-encrypted DeviceIdData JSON.
+        /// </summary>
+        private sealed class EncryptedDeviceIdEnvelope
+        {
+            public int Version { get; set; }
+            public string Nonce { get; set; } = string.Empty;
+            public string Tag { get; set; } = string.Empty;
+            public string Ciphertext { get; set; } = string.Empty;
+        }
+
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
 
         #endregion
+    }
+
+    /// <summary>
+    /// Indicates the strength of the device binding mechanism used.
+    /// Stronger bindings are harder to spoof or clone.
+    /// </summary>
+    public enum DeviceBindingStrength
+    {
+        /// <summary>No binding could be established.</summary>
+        None = 0,
+
+        /// <summary>Heuristic binding based on drive properties (weakest).</summary>
+        Heuristic = 1,
+
+        /// <summary>Windows volume serial number (32-bit, easily spoofable).</summary>
+        VolumeSerial = 2,
+
+        /// <summary>Physical disk manufacturer serial number (harder to spoof).</summary>
+        DiskSerial = 3,
+
+        /// <summary>GPT Disk + Partition GUIDs (128-bit random each, strongest).</summary>
+        GptGuid = 4
     }
 }

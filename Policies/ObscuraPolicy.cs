@@ -108,6 +108,11 @@ public sealed class ObscuraPolicy
         public bool RequireDeviceBinding { get; init; } = false;  // Manifest must specify device IDs
         public bool RequireUsbBinding { get; init; } = false;  // Manifest must specify USB IDs
         public string[] RequiredFields { get; init; } = Array.Empty<string>();  // Custom required fields
+
+        // Authentication Factor Requirements
+        public bool RequireKeyfile { get; init; } = false;  // Vault must use a keyfile (second factor)
+        public bool RequireHardwareToken { get; init; } = false;  // Vault must use hardware token (YubiKey/FIDO2)
+        public bool RequireAntiRollback { get; init; } = true;  // Enforce monotonic sequence counter
     }
 
     public sealed class PolicySync
@@ -250,7 +255,10 @@ public sealed class ObscuraPolicy
                 RequireUsbBinding = root.GetProperty("manifest").TryGetProperty("requireUsbBinding", out var rub) && rub.GetBoolean(),
                 RequiredFields = root.GetProperty("manifest").TryGetProperty("requiredFields", out var rf)
                     ? rf.EnumerateArray().Select(x => x.GetString()!).ToArray()
-                    : Array.Empty<string>()
+                    : Array.Empty<string>(),
+                RequireKeyfile = root.GetProperty("manifest").TryGetProperty("requireKeyfile", out var rkf) && rkf.GetBoolean(),
+                RequireHardwareToken = root.GetProperty("manifest").TryGetProperty("requireHardwareToken", out var rht) && rht.GetBoolean(),
+                RequireAntiRollback = root.GetProperty("manifest").TryGetProperty("requireAntiRollback", out var rar) ? rar.GetBoolean() : true
             },
             Sync = root.TryGetProperty("sync", out var syncProp) ? new PolicySync
             {

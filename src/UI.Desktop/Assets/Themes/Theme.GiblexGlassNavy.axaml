@@ -17,9 +17,9 @@
     <Color x:Key="Color.TextOnLight">#1A2332</Color>
     
     <!-- Accent Colors -->
-    <Color x:Key="Color.Accent">#2DD4BF</Color>
-    <Color x:Key="Color.AccentHover">#3BE5D0</Color>
-    <Color x:Key="Color.AccentDim">#14B8A6</Color>
+    <Color x:Key="Color.Accent">#004258</Color>
+    <Color x:Key="Color.AccentHover">#005A78</Color>
+    <Color x:Key="Color.AccentDim">#003248</Color>
     
     <!-- Semantic Colors -->
     <Color x:Key="Color.Success">#22C55E</Color>
@@ -42,13 +42,13 @@
     <SolidColorBrush x:Key="TileGlassBrush">#AA0D1420</SolidColorBrush>
     <SolidColorBrush x:Key="TileGapBrush" Color="#1C2D42"/>
     
-    <SolidColorBrush x:Key="AccentBrush" Color="#2DD4BF"/>
-    <SolidColorBrush x:Key="AccentHoverBrush" Color="#3BE5D0"/>
-    <SolidColorBrush x:Key="SecondaryAccentBrush" Color="#14B8A6"/>
+    <SolidColorBrush x:Key="AccentBrush" Color="#004258"/>
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#005A78"/>
+    <SolidColorBrush x:Key="SecondaryAccentBrush" Color="#003248"/>
     
     <Color x:Key="PrimaryTextColor">#FFFFFF</Color>
     <SolidColorBrush x:Key="PrimaryTextBrush" Color="#F8FAFC"/>
-    <SolidColorBrush x:Key="ControlForegroundBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="ControlForegroundBrush" Color="#F8FAFC"/>
     <SolidColorBrush x:Key="HeaderTextBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="HeaderMutedTextBrush" Color="#8B9CB3"/>
     <SolidColorBrush x:Key="FooterTextBrush" Color="#FFFFFF"/>
@@ -66,13 +66,13 @@
     <!-- FIXED: Changed from white to dark navy for dark theme consistency -->
     <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#162235"/>
     <SolidColorBrush x:Key="ControlBorderBrush" Color="#2A3E54"/>
-    <SolidColorBrush x:Key="ControlFocusBorderBrush" Color="#2DD4BF"/>
+    <SolidColorBrush x:Key="ControlFocusBorderBrush" Color="#004258"/>
     <!-- SUBTLER: Barely noticeable hover (was #1C2D42) -->
     <SolidColorBrush x:Key="ControlHoverBrush" Color="#182638"/>
     <SolidColorBrush x:Key="InputBackgroundBrush" Color="#162235"/>
     <SolidColorBrush x:Key="InputForegroundBrush" Color="#F8FAFC"/>
-    <SolidColorBrush x:Key="TextSelectionBrush" Color="#602DD4BF"/>
-    <SolidColorBrush x:Key="TextCaretBrush" Color="#2DD4BF"/>
+    <SolidColorBrush x:Key="TextSelectionBrush" Color="#60004258"/>
+    <SolidColorBrush x:Key="TextCaretBrush" Color="#4FC8FF"/>
     <SolidColorBrush x:Key="OverlayBackgroundBrush">#800A0F18</SolidColorBrush>
     <SolidColorBrush x:Key="ReadOnlyFieldBackgroundBrush" Color="#111B2A"/>
     <SolidColorBrush x:Key="ReadOnlyFieldForegroundBrush" Color="#8B9CB3"/>
@@ -88,19 +88,19 @@
     <!-- SUBTLER: Subtle focus (was #1C2D42) -->
     <SolidColorBrush x:Key="TextBoxBackgroundFocusedBrush" Color="#19283C"/>
     <SolidColorBrush x:Key="TextBoxBackgroundDisabledBrush" Color="#111B2A"/>
-    <SolidColorBrush x:Key="TextBoxBorderBrush" Color="#2DD4BF40"/>
-    <SolidColorBrush x:Key="TextBoxBorderHoverBrush" Color="#2DD4BF"/>
-    <SolidColorBrush x:Key="TextBoxBorderFocusedBrush" Color="#2DD4BF"/>
+    <SolidColorBrush x:Key="TextBoxBorderBrush" Color="#00425840"/>
+    <SolidColorBrush x:Key="TextBoxBorderHoverBrush" Color="#005A78"/>
+    <SolidColorBrush x:Key="TextBoxBorderFocusedBrush" Color="#004258"/>
     <!-- FIXED: white text for dark theme -->
     <SolidColorBrush x:Key="TextBrush" Color="#F8FAFC"/>
     
     <!-- Dialog/Window Brushes -->
     <SolidColorBrush x:Key="DialogBackgroundBrush" Color="#111B2A"/>
-    <SolidColorBrush x:Key="DialogBorderBrush" Color="#2DD4BF40"/>
+    <SolidColorBrush x:Key="DialogBorderBrush" Color="#00425860"/>
     
-    <!-- Button Text Brushes (dark text on teal accent, white on dark buttons) -->
+    <!-- Button Text Brushes (white text on dark accent, white on dark buttons) -->
     <SolidColorBrush x:Key="ButtonForegroundBrush" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="ButtonAccentForegroundBrush" Color="#0A0F18"/>
+    <SolidColorBrush x:Key="ButtonAccentForegroundBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="ButtonSecondaryForegroundBrush" Color="#F8FAFC"/>
     <SolidColorBrush x:Key="ButtonDisabledForegroundBrush" Color="#5A6A7A"/>
     
@@ -156,6 +156,31 @@
     <SolidColorBrush x:Key="QuickFilterGlassBorderBrush">#30FFFFFF</SolidColorBrush>
     <SolidColorBrush x:Key="QuickFilterGlassActiveBorderBrush">#45FFFFFF</SolidColorBrush>
     
+    <!-- Filter hover/pressed gradient brushes (white-alpha for dark theme) -->
+    <LinearGradientBrush x:Key="FilterHoverGradient" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Color="#30FFFFFF" Offset="0"/>
+        <GradientStop Color="#18FFFFFF" Offset="0.55"/>
+        <GradientStop Color="#10FFFFFF" Offset="1"/>
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="FilterHoverBorderBrush">#50FFFFFF</SolidColorBrush>
+    <LinearGradientBrush x:Key="FilterPressedGradient" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Color="#20FFFFFF" Offset="0"/>
+        <GradientStop Color="#10FFFFFF" Offset="0.55"/>
+        <GradientStop Color="#08FFFFFF" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="CategoryFilterHoverGradient" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Color="#20FFFFFF" Offset="0"/>
+        <GradientStop Color="#10FFFFFF" Offset="0.55"/>
+        <GradientStop Color="#08FFFFFF" Offset="1"/>
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="CategoryFilterHoverBorderBrush">#40FFFFFF</SolidColorBrush>
+    <SolidColorBrush x:Key="CategoryFilterCheckedBorderBrush">#60FFFFFF</SolidColorBrush>
+    <LinearGradientBrush x:Key="CategoryFilterPressedGradient" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Color="#18FFFFFF" Offset="0"/>
+        <GradientStop Color="#08FFFFFF" Offset="0.55"/>
+        <GradientStop Color="#04FFFFFF" Offset="1"/>
+    </LinearGradientBrush>
+    
     <SolidColorBrush x:Key="SuccessBrush" Color="#22C55E"/>
     <SolidColorBrush x:Key="WarningBrush" Color="#EAB308"/>
     <SolidColorBrush x:Key="ErrorBrush" Color="#EF4444"/>
@@ -187,5 +212,10 @@
         <GradientStop Color="#20FFFFFF" Offset="0"/>
         <GradientStop Color="#00FFFFFF" Offset="1"/>
     </LinearGradientBrush>
+
+    <!-- Liquid glass button foreground (light text on dark glass) -->
+    <SolidColorBrush x:Key="LiquidGlassButtonForeground" Color="#F8FAFC"/>
+    <SolidColorBrush x:Key="ErrorTextBrush" Color="#FF6B6B"/>
+    <SolidColorBrush x:Key="SuccessTextBrush" Color="#6DD47E"/>
 
 </ResourceDictionary>

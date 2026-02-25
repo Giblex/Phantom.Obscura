@@ -127,7 +127,7 @@
     <!-- Button Text Brushes -->
     <SolidColorBrush x:Key="ButtonForegroundBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="ButtonAccentForegroundBrush" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="ButtonSecondaryForegroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ButtonSecondaryForegroundBrush" Color="#2B1A4A"/>
     <SolidColorBrush x:Key="ButtonDisabledForegroundBrush" Color="#6B6680"/>
     
     <!-- Content Area Text -->
@@ -218,5 +218,8 @@
         <GradientStop Color="#108B6EFF" Offset="0.5"/>
         <GradientStop Color="#00FFFFFF" Offset="1"/>
     </LinearGradientBrush>
+
+    <!-- Liquid glass button foreground (dark text on pastel glass) -->
+    <SolidColorBrush x:Key="LiquidGlassButtonForeground" Color="#2B1A4A"/>
 
 </ResourceDictionary>

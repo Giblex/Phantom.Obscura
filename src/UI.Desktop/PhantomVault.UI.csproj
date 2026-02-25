@@ -27,29 +27,28 @@
     <AvaloniaXaml Remove="Legacy\**\*.axaml" />
     <AvaloniaResource Remove="Legacy\**\*" />
     <None Remove="Legacy\**\*" />
-    <!-- Exclude PhantomRecovery integration files until project reference is fixed -->
-    <Compile Remove="Services\IntegratedRecoveryService.cs" />
-    <Compile Remove="Services\RecoveryDeveloperMode.cs" />
-    <Compile Remove="Views\RecoveryPanel.axaml.cs" />
-    <AvaloniaXaml Remove="Views\RecoveryPanel.axaml" />
+    <!-- Note: IntegratedRecoveryService.cs, RecoveryDeveloperMode.cs, and RecoveryPanel.axaml(.cs) 
+         have been moved to Legacy folder. Stub replacements are in use. -->
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.9" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.11" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.11" />
     <ProjectReference Include="..\Core\PhantomVault.Core.csproj" />
     <ProjectReference Include="..\Platform\PhantomVault.Platform.csproj" />
     <ProjectReference Include="..\Crypto\GiblexVault.Security.ZK.csproj" />
     <ProjectReference Include="..\Autofill\PhantomVault.Autofill.csproj" />
+    <ProjectReference Include="..\..\..\Phantom.Shared\Giblex.AssetShield\Giblex.AssetShield.csproj" />
     <!-- <ProjectReference Include="..\..\..\PhantomRecovery\PhantomRecovery.App\PhantomRecovery.App.csproj" /> -->
     <!-- <ProjectReference Include="..\..\..\PhantomRecovery\PhantomRecovery.Core\PhantomRecovery.Core.csproj" /> -->
-    <PackageReference Include="Avalonia" Version="11.3.9" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.3.9" />
+    <PackageReference Include="Avalonia" Version="11.3.11" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.11" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.9" />
-    <PackageReference Include="Avalonia.Skia" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Skia" Version="11.3.11" />
     <PackageReference Include="SkiaSharp" Version="3.119.1" />
   </ItemGroup>
   
   <ItemGroup>
+    <PackageReference Include="Avalonia.Markup.Xaml.Loader" Version="11.3.11" />
     <PackageReference Include="Avalonia.Svg.Skia" Version="11.0.0" />
     <PackageReference Include="Avalonia.Xaml.Interactivity" Version="11.3.0.6" />
     <PackageReference Include="Isopoh.Cryptography.Argon2" Version="2.0.0" />
@@ -70,6 +69,7 @@
     <!-- New organized Visuals folder structure -->
     <AvaloniaResource Include="Assets\Visuals\Giblex Icons\**\*.*" />
     <AvaloniaResource Include="Assets\Visuals\App Icons\**\*.png" />
+    <AvaloniaResource Include="Assets\Visuals\App Icons\**\*.svg" />
     <AvaloniaResource Include="Assets\Visuals\Cat Icons\**\*.png" />
     <AvaloniaResource Include="Assets\Visuals\Entry Logos\**\*.png" />
     
@@ -83,17 +83,8 @@
   <AvaloniaResource Include="Assets\Icons\OS Icons\**\*.*" />
     
     <!-- Include extracted XAML resources for modular UI architecture -->
-    <AvaloniaResource Include="Resources\Tokens\SpacingTokens.axaml" />
-    <AvaloniaResource Include="Resources\Tokens\SizingTokens.axaml" />
-    <AvaloniaResource Include="Resources\Tokens\ThicknessTokens.axaml" />
-    <AvaloniaResource Include="Resources\Converters\ConverterResources.axaml" />
-    <AvaloniaResource Include="Resources\Brushes\SidebarBrushes.axaml" />
-    <AvaloniaResource Include="Resources\Brushes\GlassEffects.axaml" />
-    <AvaloniaResource Include="Resources\Styles\ButtonStyles.axaml" />
-    <AvaloniaResource Include="Resources\Styles\ListBoxStyles.axaml" />
-    <AvaloniaResource Include="Resources\Styles\ToggleButtonStyles.axaml" />
-    <AvaloniaResource Include="Resources\Templates\DataTemplates\CredentialDataTemplates.axaml" />
-    <AvaloniaResource Include="Resources\Templates\DataTemplates\CategoryDataTemplates.axaml" />
+    <!-- Note: .axaml files are auto-included by the Avalonia SDK as AvaloniaResource.
+         Explicit includes would cause duplicate key errors at startup. -->
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
     <PackageReference Include="ZXing.Net" Version="0.16.9" />
     <PackageReference Include="ZXing.Net.Bindings.SkiaSharp" Version="0.16.14" />
@@ -111,6 +102,15 @@
   <None Include="Assets\Icons\Logos\PO UI\**\*.*" CopyToOutputDirectory="PreserveNewest" />
   <!-- Copy OS Icons to output as well for runtime enumeration -->
   <None Include="Assets\Icons\OS Icons\**\*.*" CopyToOutputDirectory="PreserveNewest" />
+  <!-- Copy only Entry Logos and Cat Icons to output for IconManager runtime access -->
+  <Content Include="Assets\Visuals\Entry Logos\**\*.png" CopyToOutputDirectory="PreserveNewest" />
+  <Content Include="Assets\Visuals\Entry Logos\**\*.jpg" CopyToOutputDirectory="PreserveNewest" />
+  <Content Include="Assets\Visuals\Entry Logos\**\*.svg" CopyToOutputDirectory="PreserveNewest" />
+  <Content Include="Assets\Visuals\Entry Logos\**\*.ico" CopyToOutputDirectory="PreserveNewest" />
+  <Content Include="Assets\Visuals\Cat Icons\**\*.png" CopyToOutputDirectory="PreserveNewest" />
+  <Content Include="Assets\Visuals\Cat Icons\**\*.jpg" CopyToOutputDirectory="PreserveNewest" />
+  <Content Include="Assets\Visuals\Cat Icons\**\*.svg" CopyToOutputDirectory="PreserveNewest" />
+  <Content Include="Assets\Visuals\Cat Icons\**\*.ico" CopyToOutputDirectory="PreserveNewest" />
   <!-- (removed) previously added copy rule for Assets\Icons\Icons\PNG - icons live under Assets\Icons\Logos\PNG -->
   </ItemGroup>
 
@@ -118,6 +118,14 @@
   <Target Name="DumpAvaloniaItems">
     <Message Text="AvaloniaXaml: @(AvaloniaXaml->'%(Identity)')" Importance="High" />
     <Message Text="AvaloniaResource: @(AvaloniaResource->'%(Identity)')" Importance="High" />
+  </Target>
+
+  <!-- AssetShield: Encrypt all published files except the main exe -->
+  <Target Name="EncryptPublishedAssets" AfterTargets="Publish">
+    <PropertyGroup>
+      <_AssetShieldToolProject>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '..', '..', '..', 'Phantom.Shared', 'Giblex.AssetShield', 'Tool', 'Giblex.AssetShield.Tool.csproj'))</_AssetShieldToolProject>
+    </PropertyGroup>
+    <Exec Command="dotnet run --project &quot;$(_AssetShieldToolProject)&quot; -c $(Configuration) -- &quot;$(PublishDir)&quot; &quot;$(AssemblyName).exe&quot;" />
   </Target>
 
 </Project>

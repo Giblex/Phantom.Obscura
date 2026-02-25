@@ -12,7 +12,8 @@
         Width="520" Height="600"
         MinWidth="480" MinHeight="520"
         WindowStartupLocation="CenterOwner"
-        Background="{DynamicResource WindowBackgroundBrush}">
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Classes="animated-window">
 
     <Design.DataContext>
         <vm:WindowsHelloSettingsViewModel/>
@@ -222,7 +223,7 @@ Your biometric data is stored securely in the TPM (Trusted Platform Module) and 
                         Background="{DynamicResource AccentBrush}"
                         Opacity="0.3"/>
                 <ProgressBar IsIndeterminate="True" Width="200" Classes="enhanced-spinner"/>
-                <TextBlock Text="Authenticating..." Foreground="White" HorizontalAlignment="Center"/>
+                <TextBlock Text="Authenticating..." Foreground="{DynamicResource PrimaryTextBrush}" HorizontalAlignment="Center"/>
             </StackPanel>
         </Border>
     </Grid>

@@ -21,7 +21,7 @@
                     </Grid>
                 </Border>
 
-                <TextBlock Text="Welcome to Phantom Vault" FontSize="26" FontWeight="Bold" HorizontalAlignment="Center" />
+                <TextBlock Text="Welcome to Phantom Vault" FontSize="{StaticResource Type.Hero.Size}" FontWeight="Bold" HorizontalAlignment="Center" />
                 <TextBlock Text="Your secure USB password manager" HorizontalAlignment="Center" />
             </StackPanel>
         </Border>

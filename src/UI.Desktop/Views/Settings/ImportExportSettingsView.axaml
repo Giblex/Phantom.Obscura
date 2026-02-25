@@ -8,10 +8,11 @@
                    Foreground="{DynamicResource PrimaryTextBrush}"/>
         
         <!-- Import Section -->
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}"
+        <Border Classes="fade-in stagger-1"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
                 BorderThickness="1"
-                CornerRadius="8"
+                CornerRadius="{StaticResource Radius.Lg}"
                 Padding="20">
             <StackPanel Spacing="15">
                 <TextBlock Text="Import Credentials" 
@@ -19,7 +20,7 @@
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
                 <TextBlock Text="Import credentials from other password managers (CSV, KeePass, Bitwarden, LastPass, 1Password, Chrome, Edge, Firefox)" 
-                           FontSize="12" 
+                           FontSize="{StaticResource Type.Small.Size}" 
                            Foreground="{DynamicResource MutedTextBrush}"
                            TextWrapping="Wrap"/>
                 <Button Command="{Binding $parent[Window].DataContext.OpenImportWindowCommand}"
@@ -34,10 +35,11 @@
         </Border>
         
         <!-- Export Section -->
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}"
+        <Border Classes="fade-in stagger-2"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
                 BorderThickness="1"
-                CornerRadius="8"
+                CornerRadius="{StaticResource Radius.Lg}"
                 Padding="20">
             <StackPanel Spacing="15">
                 <TextBlock Text="Export Credentials" 
@@ -45,7 +47,7 @@
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
                 <TextBlock Text="Export your vault data to portable formats for backup or migration" 
-                           FontSize="12" 
+                           FontSize="{StaticResource Type.Small.Size}" 
                            Foreground="{DynamicResource MutedTextBrush}"
                            TextWrapping="Wrap"/>
                 <Grid ColumnDefinitions="*,12,*,12,*" Margin="0,8,0,0">
@@ -72,7 +74,7 @@
                     </Button>
                 </Grid>
                 <TextBlock Text="⚠ Exported files contain unencrypted passwords. Store them securely!" 
-                           FontSize="11" 
+                           FontSize="{StaticResource Type.Tiny.Size}" 
                            Foreground="{DynamicResource WarningBrush}"
                            TextWrapping="Wrap"
                            Margin="0,8,0,0"/>

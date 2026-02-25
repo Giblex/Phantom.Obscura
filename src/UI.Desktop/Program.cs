@@ -4,6 +4,8 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using Giblex.AssetShield;
 using PhantomVault.Core;
 using PhantomVault.Core.Services;
 using PhantomVault.Core.Services.Security;
@@ -30,10 +32,27 @@ namespace PhantomVault.UI
         }
 
         /// <summary>
-        /// Main entry point. Configures and starts the Avalonia app.
+        /// Main entry point. Installs the AssetShield encrypted-assembly resolver,
+        /// then delegates to AppMain which references types from encrypted assemblies.
         /// </summary>
         [STAThread]
         public static void Main(string[] args)
+        {
+            // Install AssetShield encrypted assembly resolver BEFORE any
+            // encrypted assembly types are referenced. Giblex.AssetShield.dll
+            // itself is exempt from encryption and loads normally.
+            ShieldedAssemblyLoadContext.Install(Assembly.GetExecutingAssembly());
+
+            AppMain(args);
+        }
+
+        /// <summary>
+        /// Real application entry point. Separated from Main so the JIT does not
+        /// attempt to resolve encrypted assembly types before ShieldedAssemblyLoadContext
+        /// is installed as the fallback resolver.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void AppMain(string[] args)
         {
             // SECURITY PHASE 0: Suppress crash dumps before any sensitive data is loaded
             bool dumpSuppressionActive = CrashDumpSuppression.Initialize();
@@ -98,7 +117,13 @@ namespace PhantomVault.UI
                 InitializePolicyService();
                 Log.Information("Policy verification succeeded");
 
-                // PHASE 3: Enforce policy rules
+                // PHASE 3: Enforce startup policy rules
+                // NOTE: USB policy is NOT enforced here. The front page must always be
+                // reachable (first install, re-download, update, no USB bound).
+                // USB policy is enforced later when the user actually interacts with a
+                // vault (ProvisionViewModel for vault creation, SecurityCheckScreen for
+                // vault opening). This keeps the welcome page accessible while still
+                // gating all sensitive operations on the correct USB policy.
                 if (_policyService != null)
                 {
 #if DEBUG
@@ -107,7 +132,7 @@ namespace PhantomVault.UI
                     if (devBypass == "1")
                     {
                         Log.Warning("⚠️ DEVELOPMENT MODE: Policy bypass enabled!");
-                        Log.Warning("USB policy enforcement: BYPASSED");
+                        Log.Warning("Desktop policy enforcement: BYPASSED");
                         Log.Warning("Policy synchronization: BYPASSED");
                         // Skip all policy enforcement in dev mode
                     }
@@ -116,9 +141,8 @@ namespace PhantomVault.UI
                         _policyService.EnforceDebuggerPolicy();
                         _policyService.EnforceVirtualMachinePolicy();
 
-                        var usbResult = _policyService.EnforceUsbPolicy();
-                        Log.Information("USB policy enforced. Drive={DriveName} Serial={VolumeSerial}",
-                            usbResult.drive?.Name ?? "none", usbResult.volumeSerial ?? "n/a");
+                        // USB enforcement deferred — runs at vault-open / vault-create time
+                        Log.Information("USB policy enforcement deferred to vault access stage");
 
                         var syncResult = _policyService.SynchronizeAndValidate();
                         if (!syncResult.Success)
@@ -128,16 +152,15 @@ namespace PhantomVault.UI
                                 $"Policy sync failed: {string.Join("; ", syncResult.Errors)}");
                         }
 
-                        Log.Information("All startup policy checks passed");
+                        Log.Information("All startup policy checks passed (USB deferred)");
                     }
 #else
-                    // RELEASE builds ALWAYS enforce policies
+                    // RELEASE builds ALWAYS enforce desktop/VM policies at startup
                     _policyService.EnforceDebuggerPolicy();
                     _policyService.EnforceVirtualMachinePolicy();
 
-                    var usbResult = _policyService.EnforceUsbPolicy();
-                    Log.Information("USB policy enforced. Drive={DriveName} Serial={VolumeSerial}",
-                        usbResult.drive?.Name ?? "none", usbResult.volumeSerial ?? "n/a");
+                    // USB enforcement deferred — runs at vault-open / vault-create time
+                    Log.Information("USB policy enforcement deferred to vault access stage");
 
                     var syncResult = _policyService.SynchronizeAndValidate();
                     if (!syncResult.Success)
@@ -147,7 +170,7 @@ namespace PhantomVault.UI
                             $"Policy sync failed: {string.Join("; ", syncResult.Errors)}");
                     }
 
-                    Log.Information("All startup policy checks passed");
+                    Log.Information("All startup policy checks passed (USB deferred)");
 #endif
                 }
 

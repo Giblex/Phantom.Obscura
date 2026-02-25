@@ -1,0 +1,145 @@
+############################################
+# PHANTOM SECURITY WORKSPACE (.NET + AI)
+############################################
+
+########################
+# OS / System
+########################
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+########################
+# Logs / Dumps
+########################
+*.log
+logs/
+err.txt
+*.dmp
+*.stacktrace
+
+########################
+# Environment / Secrets (CRITICAL)
+########################
+.env
+.env.*
+*.pem
+*.key
+*.pfx
+*.p12
+*.crt
+*.cer
+*.der
+*.jks
+*.keystore
+*.kdbx
+
+# .NET local secrets
+secrets.json
+secrets/
+appsettings.Development.json
+appsettings.*.Development.json
+local.settings.json
+
+# Keys / Certificates folders (workspace-specific)
+**/Keys/
+**/certs/
+
+# Sample credentials (VERY IMPORTANT based on screenshot)
+**/SampleArtifacts/credentials.txt
+**/SampleArtifacts/recovery-codes.txt
+
+########################
+# IDE / Editors
+########################
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.rsuser
+*.userprefs
+*.cache
+TestResults/
+
+# VS Code
+.vscode/
+.history/
+*.code-workspace
+.vscode-test/
+
+# JetBrains
+.idea/
+*.sln.iml
+
+########################
+# .NET / Avalonia
+########################
+bin/
+obj/
+artifacts/
+publish/
+
+# Debug symbols
+*.pdb
+*.mdb
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+.nuget/
+
+########################
+# Testing / Coverage
+########################
+coverage/
+*.coverage
+*.coveragexml
+*.lcov
+BenchmarkDotNet.Artifacts/
+
+########################
+# Containers / Docker
+########################
+docker-data/
+docker-volumes/
+**/docker-data/
+**/docker-volumes/
+*.tar
+docker-compose.override.yml
+
+########################
+# AI / Model Artifacts
+########################
+.models/
+model-cache/
+ai-cache/
+ai-output/
+prompts/tmp/
+.embeddings/
+.vectorstore/
+.chroma/
+.qdrant/
+.weaviate/
+milvus/
+faiss/
+index/
+symbol-index/
+code-index/
+
+# Claude / Copilot local artifacts
+.claude/
+.anthropic/
+.copilot/
+.github/copilot/
+
+########################
+# Temporary / Swap
+########################
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+*.bak

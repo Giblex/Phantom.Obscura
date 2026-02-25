@@ -16,9 +16,9 @@ namespace PhantomVault.Core.Services.Security
         private readonly List<CopyEvent> _copyEvents = new();
         private readonly object _lock = new();
 
-        private const int MaxCopiesPerMinute = 10;
+        private const int MaxCopiesPerMinute = 25;
         private static readonly TimeSpan SlidingWindow = TimeSpan.FromMinutes(1);
-        private static readonly TimeSpan CooldownDuration = TimeSpan.FromMinutes(2);
+        private static readonly TimeSpan CooldownDuration = TimeSpan.FromSeconds(30);
 
         private DateTimeOffset? _cooldownUntil;
 

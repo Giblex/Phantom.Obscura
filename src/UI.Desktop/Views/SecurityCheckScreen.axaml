@@ -13,7 +13,8 @@
         CanResize="True"
         Background="{DynamicResource ContentBackgroundBrush}" Icon="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Parent Icon.ico"
         FontFamily="{DynamicResource DefaultFontFamily}"
-        FontSize="{DynamicResource DefaultFontSize}">
+        FontSize="{DynamicResource DefaultFontSize}"
+        Classes="animated-window">
 
     <Design.DataContext>
         <vm:SecurityCheckScreenViewModel/>
@@ -25,13 +26,13 @@
         <Border Grid.Row="0" Background="{DynamicResource ContentBackgroundBrush}" Padding="20,15">
             <StackPanel Spacing="8" MaxWidth="700">
                 <TextBlock Text="Welcome to Your Vault"
-                           FontSize="22"
+                           FontSize="{StaticResource Type.SubHeading.Size}"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"
                            HorizontalAlignment="Center"/>
                 
                 <TextBlock Text="Running security checks to ensure your vault is safe..."
-                           FontSize="14"
+                           FontSize="{StaticResource Type.Body.Size}"
                            Foreground="{DynamicResource SecondaryTextBrush}"
                            HorizontalAlignment="Center"
                            TextWrapping="Wrap"
@@ -57,7 +58,7 @@
                                  Foreground="{DynamicResource AccentBrush}"/>
                     
                     <TextBlock Text="{Binding PercentComplete, StringFormat='{}{0}% complete'}"
-                               FontSize="13"
+                               FontSize="{StaticResource Type.Label.Size}"
                                Foreground="{DynamicResource MutedTextBrush}"
                                HorizontalAlignment="Center"/>
                 </StackPanel>
@@ -72,7 +73,7 @@
                     <Grid>
                         <!-- Default/Running state -->
                         <TextBlock Text="{Binding CurrentCheckDisplay}"
-                                   FontSize="15"
+                                   FontSize="{StaticResource Type.H5.Size}"
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource PrimaryTextBrush}"
                                    TextWrapping="Wrap"
@@ -90,9 +91,9 @@
                         
                         <!-- Passed state - Green -->
                         <TextBlock Text="{Binding CurrentCheckDisplay}"
-                                   FontSize="15"
+                                   FontSize="{StaticResource Type.H5.Size}"
                                    FontWeight="SemiBold"
-                                   Foreground="#4CAF50"
+                                   Foreground="{DynamicResource SuccessTextBrush}"
                                    TextWrapping="Wrap"
                                    TextAlignment="Center"
                                    HorizontalAlignment="Center"
@@ -101,9 +102,9 @@
                         
                         <!-- Failed state - Red -->
                         <TextBlock Text="{Binding CurrentCheckDisplay}"
-                                   FontSize="15"
+                                   FontSize="{StaticResource Type.H5.Size}"
                                    FontWeight="SemiBold"
-                                   Foreground="#F44336"
+                                   Foreground="{DynamicResource ErrorBrush}"
                                    TextWrapping="Wrap"
                                    TextAlignment="Center"
                                    HorizontalAlignment="Center"
@@ -125,7 +126,7 @@
                 <Button Command="{Binding ContinueCommand}"
                         Width="140"
                         Height="40"
-                        FontSize="15"
+                        FontSize="{StaticResource Type.H5.Size}"
                         FontWeight="Bold"
                         Classes="liquid-glass primary"
                         IsVisible="{Binding ChecksSuccessful}"
@@ -138,7 +139,7 @@
                         Width="130"
                         Height="36"
                         Classes="liquid-glass"
-                        FontSize="14"
+                        FontSize="{StaticResource Type.Body.Size}"
                         IsVisible="{Binding !ChecksSuccessful}"
                         ToolTip.Tip="Some checks failed. Click to re-run the security checks.">
                     <TextBlock Text="Retry"/>
@@ -150,7 +151,7 @@
                         Height="36"
                         Classes="liquid-glass"
                         
-                        FontSize="14"
+                        FontSize="{StaticResource Type.Body.Size}"
                         IsVisible="{Binding !IsRunningChecks}"
                         ToolTip.Tip="Cancel and return to the previous screen.">
                     <TextBlock Text="Cancel"/>

@@ -8,7 +8,8 @@
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource PrimaryTextBrush}"/>
         
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+        <Border Classes="fade-in stagger-1"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
                 CornerRadius="{StaticResource Radius.Lg}" 
@@ -78,7 +79,8 @@
             </StackPanel>
         </Border>
 
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+        <Border Classes="fade-in stagger-2"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
                 CornerRadius="{DynamicResource Radius.Lg}" 
@@ -110,7 +112,8 @@
         </Border>
 
         <!-- Screenshot Protection -->
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+        <Border Classes="fade-in stagger-3"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
                 CornerRadius="{DynamicResource Radius.Lg}" 
@@ -135,7 +138,8 @@
         </Border>
 
         <!-- Decoy Vault Section -->
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}"
+        <Border Classes="fade-in stagger-4"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="{DynamicResource Radius.Lg}"
@@ -185,7 +189,7 @@
                 <Border Background="{DynamicResource WindowBackgroundBrush}"
                         BorderBrush="{DynamicResource Brush.Accent}"
                         BorderThickness="1"
-                        CornerRadius="6"
+                        CornerRadius="{StaticResource Radius.Md}"
                         Padding="12"
                         Margin="0,5,0,0">
                     <StackPanel Spacing="6">
@@ -204,7 +208,8 @@
             </StackPanel>
         </Border>
 
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}"
+        <Border Classes="fade-in stagger-5"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="{DynamicResource Radius.Lg}"
@@ -226,7 +231,8 @@
         </Border>
 
         <!-- Multi-Factor Authentication Section -->
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+        <Border Classes="fade-in stagger-6"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
                 CornerRadius="{DynamicResource Radius.Lg}" 
@@ -254,7 +260,7 @@
                             Height="50"
                             ToolTip.Tip="Set up time-based one-time password (Google Authenticator, Authy, etc.)">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="•" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Text="•" FontSize="{StaticResource Type.Icon.Size}" VerticalAlignment="Center"/>
                             <TextBlock Text="TOTP Setup" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
@@ -268,7 +274,7 @@
                             Height="50"
                             ToolTip.Tip="Configure passkey/FIDO2 authentication (hardware keys, password managers)">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="🔑" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Text="🔑" FontSize="{StaticResource Type.Icon.Size}" VerticalAlignment="Center"/>
                             <TextBlock Text="Passkey/FIDO2" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
@@ -282,7 +288,7 @@
                             Height="50"
                             ToolTip.Tip="Use Windows Hello biometrics (fingerprint, face, PIN)">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="👁️" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Text="👁️" FontSize="{StaticResource Type.Icon.Size}" VerticalAlignment="Center"/>
                             <TextBlock Text="Windows Hello" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
@@ -296,7 +302,7 @@
                             Height="50"
                             ToolTip.Tip="Generate emergency backup codes for account recovery">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="📋" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Text="📋" FontSize="{StaticResource Type.Icon.Size}" VerticalAlignment="Center"/>
                             <TextBlock Text="Backup Codes" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>

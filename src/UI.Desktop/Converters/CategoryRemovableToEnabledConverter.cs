@@ -10,11 +10,13 @@ namespace PhantomVault.UI.Converters
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            // Enable Remove when the category is NOT Trash (by flag or by name)
+            // Disable Remove for trash categories (not removable)
             if (value is PhantomVault.UI.ViewModels.CategoryItem item)
             {
+                if (item.IsTrash) return false;
                 var isDeleted = string.Equals(item.Name, "Deleted", StringComparison.OrdinalIgnoreCase);
-                return !isDeleted;
+                var isRubbish = string.Equals(item.Name, "Secure rubbish bin", StringComparison.OrdinalIgnoreCase);
+                return !isDeleted && !isRubbish;
             }
             return true;
         }

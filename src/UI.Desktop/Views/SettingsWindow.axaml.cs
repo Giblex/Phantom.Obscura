@@ -21,26 +21,6 @@ namespace PhantomVault.UI.Views
             AvaloniaXamlLoader.Load(this);
         }
 
-        private async void OpenVeraCryptSettings_Click(object? sender, RoutedEventArgs e)
-        {
-            await HandleEventAsync(async () =>
-            {
-                // Get VeraCrypt service from DI (we'll use a simple instance for now)
-                var veraCryptService = new VeraCryptService();
-
-                // Create ViewModel
-                var viewModel = new VeraCryptSetupWindowViewModel(veraCryptService, string.Empty);
-
-                // Create and show VeraCrypt setup window with settings tab
-                var veraCryptWindow = new VeraCryptSetupWindow
-                {
-                    DataContext = viewModel
-                };
-
-                await veraCryptWindow.ShowDialog(this);
-            });
-        }
-
         private async void OpenWindowsHelloSettings_Click(object? sender, RoutedEventArgs e)
         {
             await HandleEventAsync(async () =>
@@ -75,8 +55,9 @@ namespace PhantomVault.UI.Views
         {
             await HandleEventAsync(async () =>
             {
-                // Create TOTP settings window
-                var viewModel = new TotpSettingsViewModel();
+                // Create TOTP settings window with service for code verification
+                var totpService = new PhantomVault.Core.Services.TotpService();
+                var viewModel = new TotpSettingsViewModel(totpService);
                 var window = new TotpSettingsWindow
                 {
                     DataContext = viewModel

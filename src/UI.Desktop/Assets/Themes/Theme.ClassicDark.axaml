@@ -45,7 +45,7 @@
     
     <Color x:Key="PrimaryTextColor">#FFFFFF</Color>
     <SolidColorBrush x:Key="PrimaryTextBrush" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="ControlForegroundBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="ControlForegroundBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="HeaderTextBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="HeaderMutedTextBrush" Color="#B9C7D6"/>
     <SolidColorBrush x:Key="FooterTextBrush" Color="#FFFFFF"/>
@@ -83,7 +83,7 @@
     <SolidColorBrush x:Key="TextBoxBorderBrush" Color="#556C83"/>
     <SolidColorBrush x:Key="TextBoxBorderHoverBrush" Color="#647D94"/>
     <SolidColorBrush x:Key="TextBoxBorderFocusedBrush" Color="#647D94"/>
-    <SolidColorBrush x:Key="TextBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="TextBrush" Color="#FFFFFF"/>
     
     <!-- Dialog/Window Brushes -->
     <SolidColorBrush x:Key="DialogBackgroundBrush" Color="#2C3B4B"/>
@@ -103,7 +103,7 @@
     <SolidColorBrush x:Key="CardSecondaryTextBrush" Color="#E0E6ED"/>
     
     <!-- Input/Form Text -->
-    <SolidColorBrush x:Key="InputTextBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="InputTextBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="InputPlaceholderBrush" Color="#8A9AAA"/>
     <SolidColorBrush x:Key="LabelTextBrush" Color="#FFFFFF"/>
 
@@ -167,5 +167,10 @@
         <GradientStop Color="#33FFFFFF" Offset="0"/>
         <GradientStop Color="#00FFFFFF" Offset="1"/>
     </LinearGradientBrush>
+
+    <!-- Liquid glass button foreground (light text on dark glass) -->
+    <SolidColorBrush x:Key="LiquidGlassButtonForeground" Color="#F8FAFC"/>
+    <SolidColorBrush x:Key="ErrorTextBrush" Color="#FF6B6B"/>
+    <SolidColorBrush x:Key="SuccessTextBrush" Color="#6DD47E"/>
 
 </ResourceDictionary>

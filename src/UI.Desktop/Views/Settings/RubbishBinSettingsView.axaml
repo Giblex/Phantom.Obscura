@@ -9,7 +9,8 @@
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource PrimaryTextBrush}"/>
         
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+        <Border Classes="fade-in stagger-1"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
                 CornerRadius="{StaticResource Radius.Lg}" 
@@ -61,7 +62,8 @@
             </StackPanel>
         </Border>
 
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+        <Border Classes="fade-in stagger-2"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
                 CornerRadius="{StaticResource Radius.Lg}" 
@@ -103,7 +105,8 @@
             </StackPanel>
         </Border>
 
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+        <Border Classes="fade-in stagger-3"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
                 CornerRadius="{StaticResource Radius.Lg}" 
@@ -147,7 +150,8 @@
             </StackPanel>
         </Border>
 
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+        <Border Classes="fade-in stagger-4"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
                 CornerRadius="{StaticResource Radius.Lg}" 
@@ -201,7 +205,8 @@
             </StackPanel>
         </Border>
 
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+        <Border Classes="fade-in stagger-5"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
                 CornerRadius="{StaticResource Radius.Lg}" 

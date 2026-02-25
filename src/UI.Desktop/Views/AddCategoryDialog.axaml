@@ -9,7 +9,8 @@
         MinWidth="700"
         MinHeight="500"
         WindowStartupLocation="CenterOwner"
-        Background="{DynamicResource WindowBackgroundBrush}">
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Classes="animated-window">
     
     <Design.DataContext>
         <vm:AddCategoryDialogViewModel/>
@@ -18,21 +19,21 @@
     <Grid RowDefinitions="Auto,Auto,*,Auto">
         <!-- Header -->
         <Border Grid.Row="0"
-                Background="#FF2A4560"
+                Background="{DynamicResource HeaderBackgroundBrush}"
                 Padding="20,16"
                 BorderBrush="{DynamicResource ControlBorderBrush}"
                 BorderThickness="0,0,0,1">
             <TextBlock Text="Add New Category"
-                       FontSize="18"
+                       FontSize="{StaticResource Type.H3.Size}"
                        FontWeight="SemiBold"
-                       Foreground="White"/>
+                       Foreground="{DynamicResource HeaderTextBrush}"/>
         </Border>
 
         <!-- Source category selector -->
         <Border Grid.Row="1" Padding="20,16" Background="{DynamicResource ContentBackgroundBrush}">
             <StackPanel Spacing="8">
                 <TextBlock Text="Select source category to populate from:"
-                           FontSize="13"
+                           FontSize="{StaticResource Type.Label.Size}"
                            Foreground="{DynamicResource SecondaryTextBrush}"/>
                 <ComboBox ItemsSource="{Binding SourceCategories}"
                           SelectedItem="{Binding SelectedSourceCategory}"
@@ -76,7 +77,7 @@
                                         Padding="10,8"
                                         Margin="0,2">
                                     <TextBlock Text="{Binding Title}"
-                                               FontSize="13"
+                                               FontSize="{StaticResource Type.Label.Size}"
                                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                                 </Border>
                             </DataTemplate>
@@ -99,7 +100,7 @@
                             CornerRadius="6,6,0,0">
                         <TextBlock Text="New Category"
                                    FontWeight="SemiBold"
-                                   Foreground="White"/>
+                                   Foreground="{DynamicResource ButtonAccentForegroundBrush}"/>
                     </Border>
                     <ListBox Grid.Row="1"
                              x:Name="DestinationListBox"
@@ -118,7 +119,7 @@
                                         Padding="10,8"
                                         Margin="0,2">
                                     <TextBlock Text="{Binding Title}"
-                                               FontSize="13"
+                                               FontSize="{StaticResource Type.Label.Size}"
                                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                                 </Border>
                             </DataTemplate>
@@ -145,8 +146,8 @@
                                  Watermark="Enter category name"/>
                     </StackPanel>
                     <TextBlock Text="{Binding ValidationError}"
-                               Foreground="#FFE74C3C"
-                               FontSize="12"
+                               Foreground="{DynamicResource ErrorBrush}"
+                               FontSize="{StaticResource Type.Small.Size}"
                                Margin="150,0,0,0"
                                IsVisible="{Binding ValidationError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                 </StackPanel>

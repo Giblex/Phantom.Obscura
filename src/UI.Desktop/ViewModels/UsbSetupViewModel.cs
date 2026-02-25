@@ -232,7 +232,7 @@ namespace PhantomVault.UI.ViewModels
                     }
                 }
 
-                StatusMessage = "Drive validated. Proceeding to VeraCrypt setup...";
+                StatusMessage = "Drive validated. Proceeding to vault setup...";
                 await Task.Delay(1000);
 
                 NavigateToContinue?.Invoke(this, _selectedDrive);

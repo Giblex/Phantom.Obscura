@@ -26,21 +26,21 @@
         </Style>
 
         <Style Selector="TextBlock.step-title">
-            <Setter Property="FontSize" Value="24"/>
+            <Setter Property="FontSize" Value="{StaticResource Type.H2.Size}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Margin" Value="0,0,0,8"/>
         </Style>
 
         <Style Selector="TextBlock.step-description">
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="{StaticResource Type.Body.Size}"/>
             <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
             <Setter Property="Margin" Value="0,0,0,16"/>
         </Style>
 
         <Style Selector="Border.warning-banner">
-            <Setter Property="Background" Value="#3D2A1A"/>
-            <Setter Property="BorderBrush" Value="#FF9800"/>
+            <Setter Property="Background" Value="{DynamicResource WarningBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource WarningBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="Padding" Value="16,12"/>
@@ -48,8 +48,8 @@
         </Style>
 
         <Style Selector="Border.error-banner">
-            <Setter Property="Background" Value="#3D1A1A"/>
-            <Setter Property="BorderBrush" Value="#F44336"/>
+            <Setter Property="Background" Value="{DynamicResource ErrorBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ErrorBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="Padding" Value="16,12"/>
@@ -57,8 +57,8 @@
         </Style>
 
         <Style Selector="Border.success-banner">
-            <Setter Property="Background" Value="#1A3D1A"/>
-            <Setter Property="BorderBrush" Value="#4CAF50"/>
+            <Setter Property="Background" Value="{DynamicResource SuccessBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SuccessBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="Padding" Value="16,12"/>
@@ -111,7 +111,7 @@
                         CornerRadius="8"
                         Margin="0,0,16,0">
                     <TextBlock Text="R"
-                               FontSize="24"
+                               FontSize="{StaticResource Type.H2.Size}"
                                FontWeight="Bold"
                                Foreground="White"
                                HorizontalAlignment="Center"
@@ -121,10 +121,10 @@
                 <!-- Title -->
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                     <TextBlock Text="Phantom Recovery"
-                               FontSize="20"
+                               FontSize="{StaticResource Type.Icon.Size}"
                                FontWeight="SemiBold"/>
                     <TextBlock Text="Secure domain recovery wizard"
-                               FontSize="12"
+                               FontSize="{StaticResource Type.Small.Size}"
                                Foreground="{DynamicResource TextSecondaryBrush}"/>
                 </StackPanel>
 
@@ -158,8 +158,8 @@
                     <!-- Warning about recovery -->
                     <Border Classes="warning-banner">
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Important Security Information" FontWeight="SemiBold" Foreground="#FF9800"/>
-                            <TextBlock TextWrapping="Wrap" Foreground="#FFE0B2">
+                            <TextBlock Text="Important Security Information" FontWeight="SemiBold" Foreground="{DynamicResource WarningBrush}"/>
+                            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}">
                                 <Run Text="Recovery will restore access to ONE domain at a time. "/>
                                 <Run Text="You cannot recover all domains simultaneously. "/>
                                 <Run Text="After recovery, you will be required to change your password."/>
@@ -169,7 +169,7 @@
 
                     <!-- Device warning if present -->
                     <Border Classes="warning-banner" IsVisible="{Binding HasDeviceWarning}">
-                        <TextBlock Text="{Binding DeviceWarning}" TextWrapping="Wrap" Foreground="#FFE0B2"/>
+                        <TextBlock Text="{Binding DeviceWarning}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     </Border>
 
                     <!-- Remaining codes info -->
@@ -179,7 +179,7 @@
                             <TextBlock Grid.Column="0" Text="Recovery Codes Remaining:"
                                        VerticalAlignment="Center"/>
                             <TextBlock Grid.Column="1" Text="{Binding RemainingCodes}"
-                                       FontSize="24" FontWeight="Bold"
+                                       FontSize="{StaticResource Type.H2.Size}" FontWeight="Bold"
                                        Foreground="{DynamicResource Brush.Accent}"
                                        HorizontalAlignment="Right"/>
                         </Grid>
@@ -200,7 +200,7 @@
 
                     <!-- Error display -->
                     <Border Classes="error-banner" IsVisible="{Binding HasError}">
-                        <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" Foreground="#FFCDD2"/>
+                        <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" Foreground="{DynamicResource ErrorBrush}"/>
                     </Border>
 
                     <!-- Code input -->
@@ -209,7 +209,7 @@
                         <TextBox Text="{Binding RecoveryCode, Mode=TwoWay}"
                                  Watermark="XXXX-XXXX-XXXX-XXXX"
                                  FontFamily="Consolas, monospace"
-                                 FontSize="18"
+                                 FontSize="{StaticResource Type.H3.Size}"
                                  LetterSpacing="2"
                                  HorizontalContentAlignment="Center"
                                  MaxLength="24"
@@ -218,7 +218,7 @@
 
                     <!-- Failed attempts warning -->
                     <Border Classes="warning-banner" IsVisible="{Binding FailedAttempts}">
-                        <TextBlock Foreground="#FFE0B2">
+                        <TextBlock Foreground="{DynamicResource SecondaryTextBrush}">
                             <Run Text="Failed attempts: "/>
                             <Run Text="{Binding FailedAttempts}" FontWeight="Bold"/>
                         </TextBlock>
@@ -268,7 +268,7 @@
                     <TextBlock Text="Press Abort if you are being forced to recover"
                                HorizontalAlignment="Center"
                                Foreground="{DynamicResource TextSecondaryBrush}"
-                               FontSize="12"
+                               FontSize="{StaticResource Type.Small.Size}"
                                Margin="0,8,0,0"/>
                 </StackPanel>
 
@@ -291,20 +291,20 @@
                                     Padding="0">
                                 <StackPanel Spacing="8">
                                     <Border Width="48" Height="48"
-                                            Background="#2196F3" CornerRadius="8">
-                                        <TextBlock Text="O" FontSize="24" FontWeight="Bold"
-                                                   Foreground="White"
+                                            Background="{DynamicResource AccentBrush}" CornerRadius="8">
+                                        <TextBlock Text="O" FontSize="{StaticResource Type.H2.Size}" FontWeight="Bold"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"/>
                                     </Border>
                                     <TextBlock Text="Obscura" FontWeight="SemiBold"
                                                HorizontalAlignment="Center"/>
                                     <TextBlock Text="Credentials &amp; Passwords"
-                                               FontSize="12"
+                                               FontSize="{StaticResource Type.Small.Size}"
                                                Foreground="{DynamicResource TextSecondaryBrush}"
                                                HorizontalAlignment="Center"/>
                                     <TextBlock Text="{Binding ObscuraStatus}"
-                                               FontSize="11"
+                                               FontSize="{StaticResource Type.Tiny.Size}"
                                                Foreground="{DynamicResource Brush.Accent}"
                                                HorizontalAlignment="Center"/>
                                 </StackPanel>
@@ -322,20 +322,20 @@
                                     Padding="0">
                                 <StackPanel Spacing="8">
                                     <Border Width="48" Height="48"
-                                            Background="#9C27B0" CornerRadius="8">
-                                        <TextBlock Text="A" FontSize="24" FontWeight="Bold"
-                                                   Foreground="White"
+                                            Background="{DynamicResource SecondaryAccentBrush}" CornerRadius="8">
+                                        <TextBlock Text="A" FontSize="{StaticResource Type.H2.Size}" FontWeight="Bold"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"/>
                                     </Border>
                                     <TextBlock Text="Attestor" FontWeight="SemiBold"
                                                HorizontalAlignment="Center"/>
                                     <TextBlock Text="TOTP, Passkeys, Keys"
-                                               FontSize="12"
+                                               FontSize="{StaticResource Type.Small.Size}"
                                                Foreground="{DynamicResource TextSecondaryBrush}"
                                                HorizontalAlignment="Center"/>
                                     <TextBlock Text="{Binding AttestorStatus}"
-                                               FontSize="11"
+                                               FontSize="{StaticResource Type.Tiny.Size}"
                                                Foreground="{DynamicResource Brush.Accent}"
                                                HorizontalAlignment="Center"/>
                                 </StackPanel>
@@ -354,10 +354,10 @@
                 <StackPanel IsVisible="{Binding CurrentStep, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:RecoveryStep.Complete}}"
                             HorizontalAlignment="Center">
                     <Border Width="80" Height="80"
-                            Background="#4CAF50" CornerRadius="40"
+                            Background="{DynamicResource SuccessBorderBrush}" CornerRadius="40"
                             HorizontalAlignment="Center"
                             Margin="0,0,0,16">
-                        <TextBlock Text="✓" FontSize="48" Foreground="White"
+                        <TextBlock Text="✓" FontSize="{StaticResource Type.IconLg.Size}" Foreground="{DynamicResource PrimaryTextBrush}"
                                    HorizontalAlignment="Center"
                                    VerticalAlignment="Center"/>
                     </Border>
@@ -367,14 +367,14 @@
                     <Border Classes="success-banner">
                         <TextBlock Text="{Binding CompletionMessage}"
                                    TextWrapping="Wrap"
-                                   Foreground="#C8E6C9"/>
+                                   Foreground="{DynamicResource SuccessTextBrush}"/>
                     </Border>
 
                     <!-- Rekey warning -->
                     <Border Classes="warning-banner" IsVisible="{Binding RekeyRequired}">
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Password Change Required" FontWeight="SemiBold" Foreground="#FF9800"/>
-                            <TextBlock TextWrapping="Wrap" Foreground="#FFE0B2">
+                            <TextBlock Text="Password Change Required" FontWeight="SemiBold" Foreground="{DynamicResource WarningBrush}"/>
+                            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}">
                                 You must change your password immediately. This is mandatory after recovery to ensure security.
                             </TextBlock>
                         </StackPanel>
@@ -396,10 +396,10 @@
                 <StackPanel IsVisible="{Binding CurrentStep, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:RecoveryStep.Aborted}}"
                             HorizontalAlignment="Center">
                     <Border Width="80" Height="80"
-                            Background="#FF9800" CornerRadius="40"
+                            Background="{DynamicResource WarningBorderBrush}" CornerRadius="40"
                             HorizontalAlignment="Center"
                             Margin="0,0,0,16">
-                        <TextBlock Text="!" FontSize="48" Foreground="White"
+                        <TextBlock Text="!" FontSize="{StaticResource Type.IconLg.Size}" Foreground="{DynamicResource PrimaryTextBrush}"
                                    HorizontalAlignment="Center"
                                    VerticalAlignment="Center"/>
                     </Border>
@@ -421,10 +421,10 @@
                 <StackPanel IsVisible="{Binding CurrentStep, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:RecoveryStep.Error}}"
                             HorizontalAlignment="Center">
                     <Border Width="80" Height="80"
-                            Background="#F44336" CornerRadius="40"
+                            Background="{DynamicResource ErrorBorderBrush}" CornerRadius="40"
                             HorizontalAlignment="Center"
                             Margin="0,0,0,16">
-                        <TextBlock Text="✕" FontSize="48" Foreground="White"
+                        <TextBlock Text="✕" FontSize="{StaticResource Type.IconLg.Size}" Foreground="{DynamicResource PrimaryTextBrush}"
                                    HorizontalAlignment="Center"
                                    VerticalAlignment="Center"/>
                     </Border>
@@ -434,7 +434,7 @@
                     <Border Classes="error-banner">
                         <TextBlock Text="{Binding ErrorMessage}"
                                    TextWrapping="Wrap"
-                                   Foreground="#FFCDD2"/>
+                                   Foreground="{DynamicResource ErrorBrush}"/>
                     </Border>
 
                     <Button Content="Close"
@@ -460,18 +460,18 @@
                                     <Grid ColumnDefinitions="Auto,*,Auto">
                                         <TextBlock Grid.Column="0"
                                                    Text="{Binding StatusIcon}"
-                                                   FontSize="16"
+                                                   FontSize="{StaticResource Type.H4.Size}"
                                                    Margin="0,0,12,0"
                                                    VerticalAlignment="Center"/>
                                         <StackPanel Grid.Column="1">
                                             <TextBlock Text="{Binding DisplayText}" FontWeight="SemiBold"/>
                                             <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}"
-                                                       FontSize="11"
+                                                       FontSize="{StaticResource Type.Tiny.Size}"
                                                        Foreground="{DynamicResource TextSecondaryBrush}"/>
                                         </StackPanel>
                                         <TextBlock Grid.Column="2"
                                                    Text="{Binding Id}"
-                                                   FontSize="10"
+                                                   FontSize="{StaticResource Type.Micro.Size}"
                                                    FontFamily="Consolas"
                                                    Foreground="{DynamicResource TextSecondaryBrush}"
                                                    VerticalAlignment="Center"

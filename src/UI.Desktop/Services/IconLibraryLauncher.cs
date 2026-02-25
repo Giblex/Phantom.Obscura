@@ -34,8 +34,8 @@ namespace PhantomVault.UI.Services
                     iconManager = app.Services.GetService(typeof(IconManager)) as IconManager;
                 }
 
-                // Default to the root Assets/Icons so the manager can search subfolders (Logos/PNG, PO UI, etc.)
-                iconManager ??= new IconManager(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Icons"));
+                // Default to the root Assets/Visuals so the manager can search subfolders (App Icons, Entry Logos, etc.)
+                iconManager ??= new IconManager(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Visuals"));
 
                 Window? ownerToUse = owner;
                 if (ownerToUse == null && Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopLifetime)

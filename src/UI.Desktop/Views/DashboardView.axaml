@@ -2,226 +2,900 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:PhantomVault.UI.Desktop.Controls"
              xmlns:services="clr-namespace:PhantomVault.Core.Services;assembly=PhantomVault.Core"
+             xmlns:vm="clr-namespace:PhantomVault.UI.ViewModels"
              xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
              xmlns:behaviors="clr-namespace:PhantomVault.UI.Behaviors"
              x:Class="PhantomVault.UI.Views.DashboardView">
 
     <UserControl.Resources>
-        <SolidColorBrush x:Key="TileGlassBrush" Color="#1E2A3A" />
-        <SolidColorBrush x:Key="TileBorderBrush" Color="#2D3E55" />
-        <SolidColorBrush x:Key="CardBackgroundBrush" Color="#223044" />
-        <SolidColorBrush x:Key="SurfaceBrush" Color="#27384F" />
-        <SolidColorBrush x:Key="ControlBorderBrush" Color="#33475E" />
-        <SolidColorBrush x:Key="PrimaryTextBrush" Color="White" />
-        <SolidColorBrush x:Key="SecondaryTextBrush" Color="#C8FFFFFF" />
-        <SolidColorBrush x:Key="MutedTextBrush" Color="#88FFFFFF" />
-        <SolidColorBrush x:Key="AccentBrush" Color="#7FC8FF" />
-        <SolidColorBrush x:Key="SuccessBrush" Color="#6EE7A4" />
-        <SolidColorBrush x:Key="WarningBrush" Color="#FFD166" />
-        <SolidColorBrush x:Key="InfoBrush" Color="#88BFFF" />
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://PhantomVault.UI/Resources/Converters/ConverterResources.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </UserControl.Resources>
 
+    <UserControl.Styles>
+        <Style Selector="Border.dashboard-section">
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="{StaticResource Radius.Lg}"/>
+            <Setter Property="Padding" Value="20"/>
+        </Style>
+
+        <!-- Liquid Glass Quick Action Tiles -->
+        <Style Selector="Button.dashboard-card">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Color="#12FFFFFF" Offset="0"/>
+                        <GradientStop Color="#08FFFFFF" Offset="0.5"/>
+                        <GradientStop Color="#04FFFFFF" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+            <Setter Property="BorderBrush" Value="#25FFFFFF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="MinHeight" Value="52"/>
+            <Setter Property="MinWidth" Value="72"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="8" OffsetX="2" OffsetY="3" Color="#20000000"/>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15"/>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.12"/>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <Style Selector="Button.dashboard-card:pointerover">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Color="#22FFFFFF" Offset="0"/>
+                        <GradientStop Color="#18B8D4F0" Offset="0.3"/>
+                        <GradientStop Color="#14A0C4E8" Offset="0.7"/>
+                        <GradientStop Color="#10FFFFFF" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush" Value="#50A0D4FF"/>
+            <Setter Property="RenderTransform" Value="scale(1.03)"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="12" OffsetX="3" OffsetY="4" Color="#30000000"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style Selector="Button.dashboard-card:pressed">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Color="#28B0D0F0" Offset="0"/>
+                        <GradientStop Color="#2090B8E0" Offset="0.5"/>
+                        <GradientStop Color="#18FFFFFF" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="RenderTransform" Value="scale(0.97)"/>
+        </Style>
+
+        <!-- Liquid Glass Navigation Tiles -->
+        <Style Selector="Button.dashboard-nav">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Color="#10FFFFFF" Offset="0"/>
+                        <GradientStop Color="#08FFFFFF" Offset="0.5"/>
+                        <GradientStop Color="#04FFFFFF" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+            <Setter Property="BorderBrush" Value="#20FFFFFF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="14,10"/>
+            <Setter Property="MinHeight" Value="44"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="6" OffsetX="1" OffsetY="2" Color="#18000000"/>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15"/>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.12"/>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <Style Selector="Button.dashboard-nav:pointerover">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Color="#20FFFFFF" Offset="0"/>
+                        <GradientStop Color="#16B8D4F0" Offset="0.3"/>
+                        <GradientStop Color="#12A0C4E8" Offset="0.7"/>
+                        <GradientStop Color="#0EFFFFFF" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush" Value="#45A0D4FF"/>
+            <Setter Property="RenderTransform" Value="scale(1.02)"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="10" OffsetX="2" OffsetY="3" Color="#28000000"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style Selector="Button.dashboard-nav:pressed">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Color="#25B0D0F0" Offset="0"/>
+                        <GradientStop Color="#1E90B8E0" Offset="0.5"/>
+                        <GradientStop Color="#16FFFFFF" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="RenderTransform" Value="scale(0.98)"/>
+        </Style>
+
+        <Style Selector="Button.dashboard-nav.primary">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Color="#30508CF0" Offset="0"/>
+                        <GradientStop Color="#254070D0" Offset="0.5"/>
+                        <GradientStop Color="#203060B0" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush" Value="#40508CF0"/>
+            <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundBrush}"/>
+        </Style>
+    </UserControl.Styles>
+
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel Spacing="{StaticResource Space.Xl}" Margin="24">
+        <StackPanel Spacing="{StaticResource Space.Xl}" Margin="24,12,24,24">
 
             <TextBlock Text="Dashboard"
-                       FontSize="28"
+                       Classes="fade-in"
+                       FontSize="{StaticResource Type.H1.Size}"
                        FontWeight="Bold"
-                       Foreground="White" />
+                       Foreground="{DynamicResource PrimaryTextBrush}" />
 
-            <!-- Hero Header -->
-            <Border Background="{DynamicResource TileGlassBrush}"
-                    BorderBrush="{DynamicResource TileBorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="{StaticResource Radius.Lg}"
-                    Padding="32,24">
-                <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel Grid.Column="0" Spacing="8">
-                        <TextBlock Text="Welcome to PhantomVault"
-                                   FontSize="{StaticResource Type.H1.Size}"
-                                   FontWeight="Bold"
-                                   Foreground="White"/>
-                        <TextBlock Text="{Binding WelcomeMessage}"
-                                   FontSize="{StaticResource Type.H3.Size}"
-                                   Foreground="#C8FFFFFF"/>
-                    </StackPanel>
-                    <controls:SvgIcon Grid.Column="1"
-                                      Preset="{x:Static services:IconPreset.Shield}"
-                                      Width="64" Height="64"
-                                      IconColor="White"/>
-                </Grid>
+            <!-- Quick Access -->
+            <Border Classes="dashboard-section stagger-2"
+                    Padding="20"
+                    IsVisible="{Binding HasQuickAccessCredentials}">
+                <StackPanel Spacing="14">
+                    <!-- Header row: title + copied feedback + pin-options toggle -->
+                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+                        <TextBlock Grid.Column="0"
+                                   Text="Quick Access"
+                                   FontSize="{StaticResource Type.H2.Size}"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <!-- Copied feedback -->
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding CopiedFeedback}"
+                                   FontSize="{StaticResource Type.Small.Size}"
+                                   Foreground="{DynamicResource AccentBrush}"
+                                   VerticalAlignment="Center"
+                                   Opacity="0.9">
+                            <TextBlock.Transitions>
+                                <Transitions>
+                                    <DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+                                </Transitions>
+                            </TextBlock.Transitions>
+                        </TextBlock>
+                        <!-- Pin options toggle button -->
+                        <ToggleButton Grid.Column="2"
+                                      IsChecked="{Binding IsCategoryPinOptionsOpen, Mode=TwoWay}"
+                                      Classes="liquid-glass"
+                                      MinWidth="0"
+                                      Height="30"
+                                      Padding="10,4"
+                                      VerticalAlignment="Center"
+                                      HorizontalAlignment="Right"
+                                      Cursor="Hand"
+                                      ToolTip.Tip="Choose which categories to pin">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Path Data="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96a7.04 7.04 0 0 0-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87a.48.48 0 0 0 .12.61l2.03 1.58c-.04.31-.06.63-.06.94 0 .31.02.63.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.37 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"
+                                      Stroke="{DynamicResource MutedTextBrush}" StrokeThickness="1.2" Fill="Transparent"
+                                      Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text="Pin" FontSize="{StaticResource Type.Small.Size}" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </ToggleButton>
+                    </Grid>
+                    <TextBlock Text="Browse categories or click a tile to copy its password"
+                               FontSize="{StaticResource Type.Small.Size}"
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               Margin="0,-8,0,0"/>
+
+                    <!-- Collapsible pin-options panel -->
+                    <Border IsVisible="{Binding IsCategoryPinOptionsOpen}"
+                            CornerRadius="10"
+                            Padding="14,10"
+                            BorderThickness="1"
+                            BorderBrush="#20FFFFFF">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                <GradientStop Color="#0CFFFFFF" Offset="0"/>
+                                <GradientStop Color="#06FFFFFF" Offset="0.5"/>
+                                <GradientStop Color="#03FFFFFF" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Pin categories to Quick Access"
+                                       FontSize="{StaticResource Type.Small.Size}"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"
+                                       Margin="0,0,0,6"/>
+                            <ItemsControl ItemsSource="{Binding Categories}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal" HorizontalAlignment="Left"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:CategoryViewModel">
+                                        <CheckBox IsChecked="{Binding IsPinned, Mode=TwoWay}"
+                                                  Content="{Binding Name}"
+                                                  FontSize="{StaticResource Type.Small.Size}"
+                                                  Foreground="{DynamicResource PrimaryTextBrush}"
+                                                  Margin="0,0,16,4"
+                                                  Cursor="Hand"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Row 1: Category shortcut tiles (using real vault categories) -->
+                    <TextBlock Text="Categories"
+                               FontSize="{StaticResource Type.Label.Size}"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               Margin="0,4,0,0"/>
+                    <ItemsControl ItemsSource="{Binding Categories}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:CategoryViewModel">
+                                <Button IsVisible="{Binding IsPinned}"
+                                        Command="{Binding $parent[UserControl].DataContext.NavigateToCategoryCommand}"
+                                        CommandParameter="{Binding}"
+                                        ToolTip.Tip="{Binding Name, StringFormat='View all {0} entries'}"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Padding="0"
+                                        Margin="0,0,10,10"
+                                        Cursor="Hand">
+                                    <Button.Styles>
+                                        <Style Selector="Button:pointerover > Border#CatTileBorder">
+                                            <Setter Property="BorderBrush" Value="#508FB5DF"/>
+                                            <Setter Property="Background">
+                                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                                    <GradientStop Color="#18FFFFFF" Offset="0"/>
+                                                    <GradientStop Color="#12B8D4F0" Offset="0.5"/>
+                                                    <GradientStop Color="#0CFFFFFF" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Setter>
+                                        </Style>
+                                        <Style Selector="Button:pressed > Border#CatTileBorder">
+                                            <Setter Property="RenderTransform" Value="scale(0.96)"/>
+                                        </Style>
+                                    </Button.Styles>
+                                    <Border x:Name="CatTileBorder"
+                                            Width="110" Height="100"
+                                            CornerRadius="12"
+                                            Padding="10,10"
+                                            ClipToBounds="True"
+                                            BorderThickness="1"
+                                            BorderBrush="#25FFFFFF">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                                <GradientStop Color="#10FFFFFF" Offset="0"/>
+                                                <GradientStop Color="#06FFFFFF" Offset="0.5"/>
+                                                <GradientStop Color="#03FFFFFF" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                        <Border.Effect>
+                                            <DropShadowEffect BlurRadius="8" OffsetX="2" OffsetY="3" Color="#20000000"/>
+                                        </Border.Effect>
+                                        <Border.Transitions>
+                                            <Transitions>
+                                                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15"/>
+                                                <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                                                <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                                            </Transitions>
+                                        </Border.Transitions>
+                                        <Grid RowDefinitions="Auto,*">
+                                            <!-- Category colour bar at top (uses TileColor from category manager) -->
+                                            <Border Height="4"
+                                                    HorizontalAlignment="Stretch"
+                                                    VerticalAlignment="Top"
+                                                    CornerRadius="2"
+                                                    Margin="-10,-10,-10,6"
+                                                    IsHitTestVisible="False">
+                                                <Border.Background>
+                                                    <Binding Path="TileColor" Converter="{StaticResource HexToBrushConverter}"/>
+                                                </Border.Background>
+                                            </Border>
+
+                                            <!-- Icon + label + count -->
+                                            <StackPanel Grid.Row="1" Spacing="4" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                <!-- Category icon from category manager -->
+                                                <Border Width="36" Height="36"
+                                                        CornerRadius="18"
+                                                        HorizontalAlignment="Center"
+                                                        ClipToBounds="True">
+                                                    <Border.Background>
+                                                        <Binding Path="TileColor" Converter="{StaticResource HexToBrushConverter}"/>
+                                                    </Border.Background>
+                                                    <Grid>
+                                                        <Image Source="{Binding Icon, Converter={StaticResource IconPathToBitmapConverter}}"
+                                                               Width="28" Height="28"
+                                                               Stretch="Uniform"
+                                                               IsVisible="{Binding Icon, Converter={StaticResource IconPathExistsConverter}}"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center"/>
+                                                        <TextBlock Text="{Binding Name, Converter={x:Static StringConverters.IsNullOrEmpty}}"
+                                                                   FontSize="{StaticResource Type.Body.Size}"
+                                                                   FontWeight="Bold"
+                                                                   Foreground="White"
+                                                                   HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center"
+                                                                   IsVisible="{Binding Icon, Converter={StaticResource IconPathExistsConverter}, ConverterParameter=invert}"/>
+                                                    </Grid>
+                                                </Border>
+                                                <!-- Name + count -->
+                                                <TextBlock Text="{Binding Name}"
+                                                           FontSize="{StaticResource Type.Small.Size}"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource PrimaryTextBrush}"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           MaxLines="1"
+                                                           TextAlignment="Center"
+                                                           HorizontalAlignment="Center"
+                                                           MaxWidth="96"/>
+                                                <TextBlock Text="{Binding Count, StringFormat='{}{0} items'}"
+                                                           FontSize="{StaticResource Type.Tiny.Size}"
+                                                           Foreground="{DynamicResource MutedTextBrush}"
+                                                           TextAlignment="Center"
+                                                           HorizontalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Row 2: Most Used password tiles -->
+                    <TextBlock Text="Most Used"
+                               FontSize="{StaticResource Type.Label.Size}"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               Margin="0,4,0,0"/>
+                    <ItemsControl ItemsSource="{Binding QuickAccessCredentials}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:CredentialViewModel">
+                                <Button Command="{Binding $parent[UserControl].DataContext.CopyQuickAccessPasswordCommand}"
+                                        CommandParameter="{Binding}"
+                                        ToolTip.Tip="{Binding Title, StringFormat='Click to copy password for {0}'}"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Padding="0"
+                                        Margin="0,0,10,10"
+                                        Cursor="Hand">
+                                    <Button.Styles>
+                                        <Style Selector="Button:pointerover > Border#QuickTileBorder">
+                                            <Setter Property="BorderBrush" Value="#508FB5DF"/>
+                                            <Setter Property="Background">
+                                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                                    <GradientStop Color="#18FFFFFF" Offset="0"/>
+                                                    <GradientStop Color="#12B8D4F0" Offset="0.5"/>
+                                                    <GradientStop Color="#0CFFFFFF" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Setter>
+                                        </Style>
+                                        <Style Selector="Button:pressed > Border#QuickTileBorder">
+                                            <Setter Property="RenderTransform" Value="scale(0.96)"/>
+                                        </Style>
+                                    </Button.Styles>
+                                    <!-- Outer wrapper for liquid glass layers -->
+                                    <Grid Width="130" Height="100">
+                                        <!-- Base tile -->
+                                        <Border x:Name="QuickTileBorder"
+                                                CornerRadius="12"
+                                                Padding="12,10"
+                                                ClipToBounds="True"
+                                                BorderThickness="1"
+                                                BorderBrush="#25FFFFFF">
+                                            <Border.Background>
+                                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                                    <GradientStop Color="#10FFFFFF" Offset="0"/>
+                                                    <GradientStop Color="#06FFFFFF" Offset="0.5"/>
+                                                    <GradientStop Color="#03FFFFFF" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Border.Background>
+                                            <Border.Effect>
+                                                <DropShadowEffect BlurRadius="8" OffsetX="2" OffsetY="3" Color="#20000000"/>
+                                            </Border.Effect>
+                                            <Border.Transitions>
+                                                <Transitions>
+                                                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15"/>
+                                                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                                                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                                                </Transitions>
+                                            </Border.Transitions>
+                                            <Grid RowDefinitions="Auto,*">
+                                                <!-- Category colour bar at top -->
+                                                <Border Height="4"
+                                                        HorizontalAlignment="Stretch"
+                                                        VerticalAlignment="Top"
+                                                        CornerRadius="2"
+                                                        Margin="-12,-10,-12,8"
+                                                        IsHitTestVisible="False"
+                                                        Opacity="{Binding HasGroup, Converter={StaticResource BoolToOpacityConverter}}">
+                                                    <Border.Background>
+                                                        <MultiBinding Converter="{StaticResource CategoryNameToBrushConverter}">
+                                                            <Binding Path="Group"/>
+                                                            <Binding Path="$parent[UserControl].DataContext.Categories"/>
+                                                        </MultiBinding>
+                                                    </Border.Background>
+                                                </Border>
+
+                                                <!-- Icon + Title -->
+                                                <StackPanel Grid.Row="1" Spacing="8" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                    <!-- Icon -->
+                                                    <Border Width="36" Height="36"
+                                                            CornerRadius="18"
+                                                            Background="{Binding IconBackgroundBrush}"
+                                                            HorizontalAlignment="Center">
+                                                        <Grid>
+                                                            <Image Source="{Binding AutoDetectedIconBitmap}"
+                                                                   Width="30" Height="30"
+                                                                   Stretch="Uniform"
+                                                                   IsVisible="{Binding HasAutoDetectedIcon}"/>
+                                                            <TextBlock Text="{Binding IconText}"
+                                                                       FontSize="{StaticResource Type.Body.Size}"
+                                                                       FontWeight="Bold"
+                                                                       Foreground="White"
+                                                                       HorizontalAlignment="Center"
+                                                                       VerticalAlignment="Center"
+                                                                       IsVisible="{Binding !HasAutoDetectedIcon}"/>
+                                                        </Grid>
+                                                    </Border>
+
+                                                    <!-- Title only -->
+                                                    <TextBlock Text="{Binding Title}"
+                                                               FontSize="{StaticResource Type.Small.Size}"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource PrimaryTextBrush}"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               MaxLines="1"
+                                                               TextAlignment="Center"
+                                                               HorizontalAlignment="Center"
+                                                               MaxWidth="110"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+
+                                        <!-- Liquid glass: top-left highlight bevel -->
+                                        <Border CornerRadius="12"
+                                                IsHitTestVisible="False"
+                                                BorderThickness="1,0.8,0,0"
+                                                ClipToBounds="True">
+                                            <Border.BorderBrush>
+                                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                                    <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0"/>
+                                                    <GradientStop Color="{DynamicResource TileReflectMidColor}" Offset="0.45"/>
+                                                    <GradientStop Color="#00000000" Offset="0.55"/>
+                                                </LinearGradientBrush>
+                                            </Border.BorderBrush>
+                                        </Border>
+
+                                        <!-- Liquid glass: bottom-right shadow bevel -->
+                                        <Border CornerRadius="12"
+                                                IsHitTestVisible="False"
+                                                BorderThickness="0,0,1,0.8"
+                                                ClipToBounds="True">
+                                            <Border.BorderBrush>
+                                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                                    <GradientStop Color="#00000000" Offset="0.45"/>
+                                                    <GradientStop Color="{DynamicResource TileReflectShadowColor}" Offset="0.6"/>
+                                                    <GradientStop Color="{DynamicResource TileReflectShadowColor}" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Border.BorderBrush>
+                                        </Border>
+
+                                        <!-- Liquid glass: top-edge micro-specular line -->
+                                        <Border CornerRadius="12"
+                                                IsHitTestVisible="False"
+                                                BorderThickness="0,0.6,0,0"
+                                                Opacity="0.45"
+                                                ClipToBounds="True">
+                                            <Border.BorderBrush>
+                                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                                                    <GradientStop Color="#00000000" Offset="0"/>
+                                                    <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.15"/>
+                                                    <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.5"/>
+                                                    <GradientStop Color="{DynamicResource TileReflectMidColor}" Offset="0.85"/>
+                                                    <GradientStop Color="#00000000" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Border.BorderBrush>
+                                        </Border>
+                                    </Grid>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
             </Border>
 
             <!-- Quick Actions -->
-            <Border Background="{DynamicResource CardBackgroundBrush}"
-                    BorderBrush="{DynamicResource ControlBorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="{StaticResource Radius.Lg}"
+            <Border Classes="dashboard-section stagger-3"
                     Padding="20,12"
                     HorizontalAlignment="Stretch">
                 <StackPanel Spacing="16">
-                    <TextBlock Text="Quick Actions"
-                               FontSize="{StaticResource Type.H2.Size}"
-                               FontWeight="SemiBold"
-                               Foreground="White"/>
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <TextBlock Grid.Column="0"
+                                   Text="Quick Actions"
+                                   FontSize="{StaticResource Type.H2.Size}"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"
+                                   VerticalAlignment="Center"/>
+                        <ToggleButton Grid.Column="1"
+                                      IsChecked="{Binding IsQuickAccessOptionsOpen, Mode=TwoWay}"
+                                      Classes="liquid-glass"
+                                      MinWidth="0"
+                                      Height="30"
+                                      Padding="10,4"
+                                      VerticalAlignment="Center"
+                                      HorizontalAlignment="Right">
+                            <TextBlock Text="Options" FontSize="{StaticResource Type.Small.Size}" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        </ToggleButton>
+                    </Grid>
+
+                    <Border IsVisible="{Binding IsQuickAccessOptionsOpen}"
+                            Background="{DynamicResource SurfaceBrush}"
+                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource Radius.Md}"
+                            Padding="12,10">
+                        <WrapPanel ItemWidth="140" Orientation="Horizontal" HorizontalAlignment="Stretch">
+                            <CheckBox Content="Add" IsChecked="{Binding ShowQuickAddPassword, Mode=TwoWay}" Margin="0,0,8,6" FontSize="{StaticResource Type.Label.Size}"/>
+                            <CheckBox Content="Generate" IsChecked="{Binding ShowQuickGenerator, Mode=TwoWay}" Margin="0,0,8,6" FontSize="{StaticResource Type.Label.Size}"/>
+                            <CheckBox Content="Import" IsChecked="{Binding ShowQuickImport, Mode=TwoWay}" Margin="0,0,8,6" FontSize="{StaticResource Type.Label.Size}"/>
+                            <CheckBox Content="Export" IsChecked="{Binding ShowQuickExport, Mode=TwoWay}" Margin="0,0,8,6" FontSize="{StaticResource Type.Label.Size}"/>
+                            <CheckBox Content="Health" IsChecked="{Binding ShowQuickHealth, Mode=TwoWay}" Margin="0,0,8,6" FontSize="{StaticResource Type.Label.Size}"/>
+                            <CheckBox Content="Passwords" IsChecked="{Binding ShowQuickPasswords, Mode=TwoWay}" Margin="0,0,8,6" FontSize="{StaticResource Type.Label.Size}"/>
+                            <CheckBox Content="Favorites" IsChecked="{Binding ShowQuickFavorites, Mode=TwoWay}" Margin="0,0,8,6" FontSize="{StaticResource Type.Label.Size}"/>
+                            <CheckBox Content="Recovery" IsChecked="{Binding ShowQuickRecovery, Mode=TwoWay}" Margin="0,0,8,6" FontSize="{StaticResource Type.Label.Size}"/>
+                            <CheckBox Content="TOTP" IsChecked="{Binding ShowQuickTotp, Mode=TwoWay}" Margin="0,0,8,6" FontSize="{StaticResource Type.Label.Size}"/>
+                            <CheckBox Content="Security" IsChecked="{Binding ShowQuickSecurity, Mode=TwoWay}" Margin="0,0,8,6" FontSize="{StaticResource Type.Label.Size}"/>
+                            <CheckBox Content="Settings" IsChecked="{Binding ShowQuickSettings, Mode=TwoWay}" Margin="0,0,8,6" FontSize="{StaticResource Type.Label.Size}"/>
+                            <CheckBox Content="Backup" IsChecked="{Binding ShowQuickBackup, Mode=TwoWay}" Margin="0,0,8,6" FontSize="{StaticResource Type.Label.Size}"/>
+                        </WrapPanel>
+                    </Border>
                     
-                    <UniformGrid Columns="4" ColumnSpacing="12">
-                        <!-- Add Password -->
+                    <!-- Compact Liquid Glass Quick Action Grid -->
+                    <UniformGrid Columns="6" Rows="2" ColumnSpacing="8" RowSpacing="8">
+                        <!-- Row 1 -->
                         <Button Command="{Binding AddPasswordCommand}"
-                                Background="{DynamicResource SurfaceBrush}"
-                                BorderBrush="{DynamicResource ControlBorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="{StaticResource Radius.Md}"
-                            Padding="16,8"
-                                HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Center">
-                            <StackPanel Spacing="8" HorizontalAlignment="Center">
-                                <controls:SvgIcon Preset="{x:Static services:IconPreset.Plus}" Width="32" Height="32" IconColor="White"/>
-                                <TextBlock Text="Add Password" FontSize="{StaticResource Type.Label.Size}" TextAlignment="Center"/>
-                            </StackPanel>
+                                Classes="dashboard-card"
+                                IsVisible="{Binding ShowQuickAddPassword}"
+                                ToolTip.Tip="Add a new password entry">
+                            <Grid RowDefinitions="Auto,Auto">
+                                <!-- Highlight shimmer on top -->
+                                <Border Grid.RowSpan="2" CornerRadius="10" Opacity="0.15" IsHitTestVisible="False">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                                            <GradientStop Color="#40FFFFFF" Offset="0"/>
+                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <controls:SvgIcon Grid.Row="0" Preset="{x:Static services:IconPreset.Plus}" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Row="1" Text="Add" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" TextAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0"/>
+                            </Grid>
                         </Button>
 
-                        <!-- Password Generator -->
                         <Button Command="{Binding OpenGeneratorCommand}"
-                                Background="{DynamicResource SurfaceBrush}"
-                                BorderBrush="{DynamicResource ControlBorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="{StaticResource Radius.Md}"
-                            Padding="16,8"
-                                HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Center">
-                            <StackPanel Spacing="8" HorizontalAlignment="Center">
-                                <controls:SvgIcon Preset="{x:Static services:IconPreset.Key}" Width="32" Height="32" IconColor="White"/>
-                                <TextBlock Text="Generate" FontSize="{StaticResource Type.Label.Size}" TextAlignment="Center"/>
-                            </StackPanel>
+                                Classes="dashboard-card"
+                                IsVisible="{Binding ShowQuickGenerator}"
+                                ToolTip.Tip="Generate secure passwords">
+                            <Grid RowDefinitions="Auto,Auto">
+                                <Border Grid.RowSpan="2" CornerRadius="10" Opacity="0.15" IsHitTestVisible="False">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                                            <GradientStop Color="#40FFFFFF" Offset="0"/>
+                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <controls:SvgIcon Grid.Row="0" Preset="{x:Static services:IconPreset.Key}" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Row="1" Text="Generate" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" TextAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0"/>
+                            </Grid>
                         </Button>
 
-                        <!-- Import -->
                         <Button Command="{Binding OpenImportCommand}"
-                                Background="{DynamicResource SurfaceBrush}"
-                                BorderBrush="{DynamicResource ControlBorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="{StaticResource Radius.Md}"
-                            Padding="16,8"
-                                HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Center">
-                            <StackPanel Spacing="8" HorizontalAlignment="Center">
-                                <controls:SvgIcon Preset="{x:Static services:IconPreset.Upload}" Width="32" Height="32" IconColor="White"/>
-                                <TextBlock Text="Import" FontSize="{StaticResource Type.Label.Size}" TextAlignment="Center"/>
-                            </StackPanel>
+                                Classes="dashboard-card"
+                                IsVisible="{Binding ShowQuickImport}"
+                                ToolTip.Tip="Import passwords from file">
+                            <Grid RowDefinitions="Auto,Auto">
+                                <Border Grid.RowSpan="2" CornerRadius="10" Opacity="0.15" IsHitTestVisible="False">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                                            <GradientStop Color="#40FFFFFF" Offset="0"/>
+                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <controls:SvgIcon Grid.Row="0" Preset="{x:Static services:IconPreset.Upload}" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Row="1" Text="Import" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" TextAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0"/>
+                            </Grid>
                         </Button>
 
-                        <!-- Password Health -->
+                        <Button Command="{Binding OpenExportCommand}"
+                                Classes="dashboard-card"
+                                IsVisible="{Binding ShowQuickExport}"
+                                ToolTip.Tip="Export vault data">
+                            <Grid RowDefinitions="Auto,Auto">
+                                <Border Grid.RowSpan="2" CornerRadius="10" Opacity="0.15" IsHitTestVisible="False">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                                            <GradientStop Color="#40FFFFFF" Offset="0"/>
+                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <controls:SvgIcon Grid.Row="0" Preset="{x:Static services:IconPreset.Download}" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Row="1" Text="Export" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" TextAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0"/>
+                            </Grid>
+                        </Button>
+
                         <Button Command="{Binding OpenPasswordHealthCommand}"
-                                Background="{DynamicResource SurfaceBrush}"
-                                BorderBrush="{DynamicResource ControlBorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="{StaticResource Radius.Md}"
-                            Padding="16,8"
-                                HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Center">
-                            <StackPanel Spacing="8" HorizontalAlignment="Center">
-                                <controls:SvgIcon IconName="activity" Width="32" Height="32" IconColor="White"/>
-                                <TextBlock Text="Health Check" FontSize="{StaticResource Type.Label.Size}" TextAlignment="Center"/>
-                            </StackPanel>
+                                Classes="dashboard-card"
+                                IsVisible="{Binding ShowQuickHealth}"
+                                ToolTip.Tip="Check password health">
+                            <Grid RowDefinitions="Auto,Auto">
+                                <Border Grid.RowSpan="2" CornerRadius="10" Opacity="0.15" IsHitTestVisible="False">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                                            <GradientStop Color="#40FFFFFF" Offset="0"/>
+                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <controls:SvgIcon Grid.Row="0" IconName="activity" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Row="1" Text="Health" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" TextAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0"/>
+                            </Grid>
+                        </Button>
+
+                        <Button Command="{Binding OpenPasswordsCommand}"
+                                Classes="dashboard-card"
+                                IsVisible="{Binding ShowQuickPasswords}"
+                                ToolTip.Tip="View all passwords">
+                            <Grid RowDefinitions="Auto,Auto">
+                                <Border Grid.RowSpan="2" CornerRadius="10" Opacity="0.15" IsHitTestVisible="False">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                                            <GradientStop Color="#40FFFFFF" Offset="0"/>
+                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <controls:SvgIcon Grid.Row="0" Preset="{x:Static services:IconPreset.Key}" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Row="1" Text="Passwords" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" TextAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0"/>
+                            </Grid>
+                        </Button>
+
+                        <!-- Row 2 -->
+                        <Button Command="{Binding OpenFavoritesCommand}"
+                                Classes="dashboard-card"
+                                IsVisible="{Binding ShowQuickFavorites}"
+                                ToolTip.Tip="View favorite items">
+                            <Grid RowDefinitions="Auto,Auto">
+                                <Border Grid.RowSpan="2" CornerRadius="10" Opacity="0.15" IsHitTestVisible="False">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                                            <GradientStop Color="#40FFFFFF" Offset="0"/>
+                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <controls:SvgIcon Grid.Row="0" Preset="{x:Static services:IconPreset.Star}" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Row="1" Text="Favorites" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" TextAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0"/>
+                            </Grid>
+                        </Button>
+
+                        <Button Command="{Binding OpenRecoveryCommand}"
+                                Classes="dashboard-card"
+                                IsVisible="{Binding ShowQuickRecovery}"
+                                ToolTip.Tip="Recovery options">
+                            <Grid RowDefinitions="Auto,Auto">
+                                <Border Grid.RowSpan="2" CornerRadius="10" Opacity="0.15" IsHitTestVisible="False">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                                            <GradientStop Color="#40FFFFFF" Offset="0"/>
+                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <controls:SvgIcon Grid.Row="0" Preset="{x:Static services:IconPreset.Shield}" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Row="1" Text="Recovery" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" TextAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0"/>
+                            </Grid>
+                        </Button>
+
+                        <Button Command="{Binding OpenTotpVaultCommand}"
+                                Classes="dashboard-card"
+                                IsVisible="{Binding ShowQuickTotp}"
+                                ToolTip.Tip="TOTP authenticator vault">
+                            <Grid RowDefinitions="Auto,Auto">
+                                <Border Grid.RowSpan="2" CornerRadius="10" Opacity="0.15" IsHitTestVisible="False">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                                            <GradientStop Color="#40FFFFFF" Offset="0"/>
+                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <controls:SvgIcon Grid.Row="0" Preset="{x:Static services:IconPreset.Clock}" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Row="1" Text="TOTP" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" TextAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0"/>
+                            </Grid>
+                        </Button>
+
+                        <Button Command="{Binding OpenSecurityOptionsCommand}"
+                                Classes="dashboard-card"
+                                IsVisible="{Binding ShowQuickSecurity}"
+                                ToolTip.Tip="Security settings">
+                            <Grid RowDefinitions="Auto,Auto">
+                                <Border Grid.RowSpan="2" CornerRadius="10" Opacity="0.15" IsHitTestVisible="False">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                                            <GradientStop Color="#40FFFFFF" Offset="0"/>
+                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <controls:SvgIcon Grid.Row="0" Preset="{x:Static services:IconPreset.Shield}" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Row="1" Text="Security" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" TextAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0"/>
+                            </Grid>
+                        </Button>
+
+                        <Button Command="{Binding OpenSettingsCommand}"
+                                Classes="dashboard-card"
+                                IsVisible="{Binding ShowQuickSettings}"
+                                ToolTip.Tip="Application settings">
+                            <Grid RowDefinitions="Auto,Auto">
+                                <Border Grid.RowSpan="2" CornerRadius="10" Opacity="0.15" IsHitTestVisible="False">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                                            <GradientStop Color="#40FFFFFF" Offset="0"/>
+                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <controls:SvgIcon Grid.Row="0" Preset="{x:Static services:IconPreset.Settings}" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Row="1" Text="Settings" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" TextAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0"/>
+                            </Grid>
+                        </Button>
+
+                        <Button Command="{Binding OpenBackupCommand}"
+                                Classes="dashboard-card"
+                                IsVisible="{Binding ShowQuickBackup}"
+                                ToolTip.Tip="Backup vault data">
+                            <Grid RowDefinitions="Auto,Auto">
+                                <Border Grid.RowSpan="2" CornerRadius="10" Opacity="0.15" IsHitTestVisible="False">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                                            <GradientStop Color="#40FFFFFF" Offset="0"/>
+                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <controls:SvgIcon Grid.Row="0" IconName="database" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Row="1" Text="Backup" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" TextAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0"/>
+                            </Grid>
                         </Button>
                     </UniformGrid>
                 </StackPanel>
             </Border>
 
             <!-- Navigation Panel -->
-            <Border Background="{DynamicResource CardBackgroundBrush}"
-                    BorderBrush="{DynamicResource ControlBorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="{StaticResource Radius.Lg}"
+                <Border Classes="dashboard-section stagger-4"
                     Padding="20">
                 <StackPanel Spacing="12">
                     <TextBlock Text="Navigation"
                                FontSize="{StaticResource Type.H2.Size}"
                                FontWeight="SemiBold"
-                               Foreground="White"/>
-                    <StackPanel Spacing="16">
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <UniformGrid Columns="3" ColumnSpacing="10" RowSpacing="10">
                         <Button Command="{Binding OpenPasswordsCommand}"
-                                Background="{DynamicResource SurfaceBrush}"
-                                BorderBrush="{DynamicResource ControlBorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="{StaticResource Radius.Md}"
-                                Padding="24"
-                                MinHeight="80"
-                                HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Left">
-                            <TextBlock Text="Passwords" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                                Classes="dashboard-nav">
+                            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+                                <controls:SvgIcon IconName="Assets/SVG/Current/Key.svg" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}"/>
+                                <TextBlock Text="Passwords" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="{StaticResource Type.H5.Size}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
                         </Button>
                         <Button Command="{Binding OpenRecoveryCommand}"
-                                Background="{DynamicResource SurfaceBrush}"
-                                BorderBrush="{DynamicResource ControlBorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="{StaticResource Radius.Md}"
-                                Padding="24"
-                                MinHeight="80"
-                                HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Left">
-                            <TextBlock Text="Phantom Recovery" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                                Classes="dashboard-nav">
+                            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+                                <controls:SvgIcon IconName="Assets/SVG/Current/Recovery.svg" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}"/>
+                                <TextBlock Text="Recovery" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="{StaticResource Type.H5.Size}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
                         </Button>
                         <Button Command="{Binding OpenPasswordHealthDashboardCommand}"
-                                Background="{DynamicResource SurfaceBrush}"
-                                BorderBrush="{DynamicResource ControlBorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="{StaticResource Radius.Md}"
-                                Padding="24"
-                                MinHeight="80"
-                                HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Left">
-                            <TextBlock Text="Password health" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                                Classes="dashboard-nav">
+                            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+                                <controls:SvgIcon IconName="Assets/SVG/Current/Security.svg" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}"/>
+                                <TextBlock Text="Password Health" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="{StaticResource Type.H5.Size}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
                         </Button>
                         <Button Command="{Binding OpenTotpVaultCommand}"
-                                Background="{DynamicResource SurfaceBrush}"
-                                BorderBrush="{DynamicResource ControlBorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="{StaticResource Radius.Md}"
-                                Padding="24"
-                                MinHeight="80"
-                                HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Left">
-                            <TextBlock Text="TOTP vault" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                                Classes="dashboard-nav">
+                            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+                                <controls:SvgIcon Preset="{x:Static services:IconPreset.Clock}" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}"/>
+                                <TextBlock Text="TOTP Vault" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="{StaticResource Type.H5.Size}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
                         </Button>
                         <Button Command="{Binding LaunchPhantomAttestorCommand}"
-                                Background="{DynamicResource AccentBrush}"
-                                BorderBrush="{DynamicResource AccentBrush}"
-                                BorderThickness="1"
-                                CornerRadius="{StaticResource Radius.Md}"
-                                Padding="24"
-                                MinHeight="80"
-                                HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Left">
-                            <StackPanel Orientation="Horizontal" Spacing="12">
-                                <TextBlock Text="🔐" FontSize="24" VerticalAlignment="Center"/>
-                                <StackPanel Spacing="4">
-                                    <TextBlock Text="Launch PhantomAttestor" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Standalone TOTP app with live sync" Foreground="White" FontSize="12" Opacity="0.8"/>
-                                </StackPanel>
+                                Classes="dashboard-nav primary">
+                            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+                                <controls:SvgIcon Preset="{x:Static services:IconPreset.Shield}" Width="20" Height="20" IconColor="{DynamicResource ButtonForegroundBrush}"/>
+                                <TextBlock Text="PhantomAttestor" Foreground="{DynamicResource ButtonForegroundBrush}" FontSize="{StaticResource Type.H5.Size}" FontWeight="SemiBold" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                         <Button Command="{Binding OpenSecurityOptionsCommand}"
-                                Background="{DynamicResource SurfaceBrush}"
-                                BorderBrush="{DynamicResource ControlBorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="{StaticResource Radius.Md}"
-                                Padding="24"
-                                MinHeight="80"
-                                HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Left">
-                            <TextBlock Text="Security options" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                                Classes="dashboard-nav">
+                            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+                                <controls:SvgIcon IconName="Assets/SVG/Current/Security.svg" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}"/>
+                                <TextBlock Text="Security" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="{StaticResource Type.H5.Size}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
                         </Button>
-                    </StackPanel>
+                    </UniformGrid>
                 </StackPanel>
             </Border>
 
             <!-- Security Dashboard -->
-            <Border Background="{DynamicResource CardBackgroundBrush}"
-                    BorderBrush="{DynamicResource ControlBorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="{StaticResource Radius.Lg}"
+                <Border Classes="dashboard-section"
                     Padding="20">
                 <controls:SecurityDashboard DataContext="{Binding SecurityDashboardViewModel}"/>
             </Border>
@@ -231,10 +905,7 @@
                 
                 <!-- Recent Activity -->
                 <Border Grid.Column="0"
-                        Background="{DynamicResource CardBackgroundBrush}"
-                        BorderBrush="{DynamicResource ControlBorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="{StaticResource Radius.Lg}"
+                    Classes="dashboard-section"
                         Padding="20">
                     <StackPanel Spacing="12">
                         <Grid ColumnDefinitions="*,Auto">
@@ -297,7 +968,7 @@
                                 CornerRadius="{StaticResource Radius.Sm}"
                                 Padding="32,24">
                             <StackPanel Spacing="8" HorizontalAlignment="Center">
-                                <controls:SvgIcon Preset="{x:Static services:IconPreset.Clock}" Width="48" Height="48" IconColor="White"/>
+                                <controls:SvgIcon Preset="{x:Static services:IconPreset.Clock}" Width="48" Height="48" IconColor="{DynamicResource MutedTextBrush}"/>
                                 <TextBlock Text="No recent activity"
                                            FontSize="{StaticResource Type.Body.Size}"
                                            Foreground="{DynamicResource SecondaryTextBrush}"
@@ -311,10 +982,7 @@
                 <StackPanel Grid.Column="1" Spacing="12">
                     
                     <!-- Vault Statistics -->
-                    <Border Background="{DynamicResource CardBackgroundBrush}"
-                            BorderBrush="{DynamicResource ControlBorderBrush}"
-                            BorderThickness="1"
-                            CornerRadius="{StaticResource Radius.Lg}"
+                        <Border Classes="dashboard-section"
                             Padding="16">
                         <StackPanel Spacing="12">
                             <TextBlock Text="Statistics"
@@ -366,10 +1034,7 @@
                     </Border>
 
                     <!-- Favorites -->
-                    <Border Background="{DynamicResource CardBackgroundBrush}"
-                            BorderBrush="{DynamicResource ControlBorderBrush}"
-                            BorderThickness="1"
-                            CornerRadius="{StaticResource Radius.Lg}"
+                        <Border Classes="dashboard-section"
                             Padding="16">
                         <StackPanel Spacing="12">
                             <TextBlock Text="Favorites"
@@ -394,7 +1059,7 @@
                                                 <controls:SvgIcon Grid.Column="0"
                                                                   Preset="{x:Static services:IconPreset.Star}"
                                                                   Width="16" Height="16"
-                                                                  IconColor="White"
+                                                                  IconColor="{DynamicResource AccentBrush}"
                                                                   Margin="0,0,8,0"/>
                                                 <TextBlock Grid.Column="1"
                                                            Text="{Binding Title}"
@@ -415,7 +1080,7 @@
                                     CornerRadius="{StaticResource Radius.Sm}"
                                     Padding="16">
                                 <StackPanel Spacing="4" HorizontalAlignment="Center">
-                                    <controls:SvgIcon Preset="{x:Static services:IconPreset.Star}" Width="32" Height="32" IconColor="White"/>
+                                    <controls:SvgIcon Preset="{x:Static services:IconPreset.Star}" Width="32" Height="32" IconColor="{DynamicResource AccentBrush}"/>
                                     <TextBlock Text="No favorites yet"
                                                FontSize="{StaticResource Type.Small.Size}"
                                                Foreground="{DynamicResource SecondaryTextBrush}"

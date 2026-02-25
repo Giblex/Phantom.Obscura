@@ -15,31 +15,31 @@
     <StackPanel Spacing="12"
                 IsVisible="{Binding SelectedCredential.IsWiFiEntry}">
         <TextBlock Text="Wi-Fi Network"
-                   FontSize="14"
+                   FontSize="{StaticResource Type.Body.Size}"
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource SecondaryTextBrush}"/>
         <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasWiFiSSID}">
-            <TextBlock Text="SSID" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
-            <TextBox Text="{Binding SelectedCredential.WiFiSSID}" IsReadOnly="True" Height="36" Padding="8,16">
+            <TextBlock Text="SSID" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBox Text="{Binding SelectedCredential.WiFiSSID}" IsReadOnly="True" Height="36" Padding="10,8">
                 <TextBox.Effect>
                     <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
                 </TextBox.Effect>
             </TextBox>
         </StackPanel>
         <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasWiFiSecurity}">
-            <TextBlock Text="Security" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
-            <TextBox Text="{Binding SelectedCredential.WiFiSecurityType}" IsReadOnly="True" Height="36" Padding="8,16"/>
+            <TextBlock Text="Security" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBox Text="{Binding SelectedCredential.WiFiSecurityType}" IsReadOnly="True" Height="36" Padding="10,8"/>
         </StackPanel>
         <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasWiFiBssid}">
-            <TextBlock Text="BSSID" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
-            <TextBox Text="{Binding SelectedCredential.WiFiBSSID}" IsReadOnly="True" Height="36" Padding="8,16">
+            <TextBlock Text="BSSID" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBox Text="{Binding SelectedCredential.WiFiBSSID}" IsReadOnly="True" Height="36" Padding="10,8">
                 <TextBox.Effect>
                     <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
                 </TextBox.Effect>
             </TextBox>
         </StackPanel>
         <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasWiFiPassword}">
-            <TextBlock Text="Network Password" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBlock Text="Network Password" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
             <Grid ColumnDefinitions="*,Auto">
                 <TextBox Grid.Column="0"
                          Text="{Binding SelectedCredential.MaskedWiFiPassword}"
@@ -48,7 +48,7 @@
                          BorderThickness="1"
                          BorderBrush="{DynamicResource ControlBorderBrush}"
                          Height="36"
-                         Padding="8,16">
+                         Padding="10,8">
                     <TextBox.Effect>
                         <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
                     </TextBox.Effect>

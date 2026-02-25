@@ -4,22 +4,22 @@
     
     <Border x:Name="WiFiPanelBorder" Background="Transparent" IsVisible="{Binding IsWiFiEntry}">
         <StackPanel x:Name="WiFiPanel" Spacing="12">
-        <TextBlock Text="Wi-Fi Network" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+        <TextBlock Text="Wi-Fi Network" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
         <StackPanel Spacing="6">
-            <TextBlock Text="Network Name (SSID) *" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding WiFiSSID}" Height="40" FontSize="14" Watermark="MyHomeWifi"/>
+            <TextBlock Text="Network Name (SSID) *" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding WiFiSSID}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="MyHomeWifi"/>
         </StackPanel>
         <StackPanel Spacing="6">
-            <TextBlock Text="Security Type" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding WiFiSecurityType}" Height="40" FontSize="14" Watermark="WPA2"/>
+            <TextBlock Text="Security Type" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding WiFiSecurityType}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="WPA2"/>
         </StackPanel>
         <StackPanel Spacing="6">
-            <TextBlock Text="BSSID / MAC" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding WiFiBSSID}" Height="40" FontSize="14" Watermark="AA:BB:CC:DD:EE:FF"/>
+            <TextBlock Text="BSSID / MAC" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding WiFiBSSID}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="AA:BB:CC:DD:EE:FF"/>
         </StackPanel>
         <StackPanel Spacing="6">
-            <TextBlock Text="Network Password" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding WiFiPassword}" PasswordChar="•" Height="40" FontSize="14" Watermark="••••••••"/>
+            <TextBlock Text="Network Password" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding WiFiPassword}" PasswordChar="•" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="••••••••"/>
         </StackPanel>
         </StackPanel>
     </Border>

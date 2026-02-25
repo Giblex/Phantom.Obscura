@@ -1,0 +1,110 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PhantomVault.UI.ViewModels.Settings"
+             x:Class="PhantomVault.UI.Views.Settings.SyncSettingsView"
+             x:DataType="vm:SyncSettingsViewModel">
+    <StackPanel Spacing="20" Margin="0,0,30,60">
+        <TextBlock Text="Sync &amp; Integration" 
+                   FontSize="{StaticResource Type.H3.Size}" 
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+        <!-- Connected Apps Section -->
+        <Border Classes="fade-in stagger-1"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Lg}" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Connected Phantom Apps" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+                <!-- PhantomAttestor card -->
+                <Border Background="{DynamicResource CardBackgroundBrush}"
+                        CornerRadius="8" Padding="16,12">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Border Width="40" Height="40" CornerRadius="8"
+                                Background="{DynamicResource ControlBackgroundBrush}"
+                                Padding="6" Margin="0,0,14,0">
+                            <TextBlock Text="🔐" FontSize="{StaticResource Type.Icon.Size}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                            <TextBlock Text="Phantom Attestor (TOTP Authenticator)"
+                                       FontWeight="SemiBold" FontSize="{StaticResource Type.Label.Size}"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <TextBlock Text="Syncs theme, display preferences, and security policies"
+                                       FontSize="{StaticResource Type.Tiny.Size}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        </StackPanel>
+                        <Border Grid.Column="2" CornerRadius="12"
+                                Background="{DynamicResource SuccessBackgroundBrush}"
+                                Padding="10,4" VerticalAlignment="Center">
+                            <TextBlock Text="Connected" FontSize="{StaticResource Type.Tiny.Size}"
+                                       Foreground="{DynamicResource SuccessTextBrush}"/>
+                        </Border>
+                    </Grid>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <!-- Sync Settings -->
+        <Border Classes="fade-in stagger-2"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Lg}" 
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Sync Preferences" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+                <CheckBox Content="Enable cross-app sync" 
+                          IsChecked="{Binding SyncEnabled}"
+                          ToolTip.Tip="Automatically sync settings between Phantom apps"/>
+
+                <CheckBox Content="Sync theme selection" 
+                          IsChecked="{Binding SyncTheme}"
+                          IsEnabled="{Binding SyncEnabled}"
+                          ToolTip.Tip="Share the selected color theme across all Phantom apps"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Sync Details -->
+        <Border Classes="fade-in stagger-3"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
+                BorderThickness="1" 
+                CornerRadius="{StaticResource Radius.Lg}" 
+                Padding="20">
+            <StackPanel Spacing="10">
+                <TextBlock Text="Sync Details" 
+                           FontSize="{StaticResource Type.Body.Size}" 
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Sync file" FontSize="{StaticResource Type.Small.Size}"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text="%AppData%/PhantomVault/phantom-sync.json" FontSize="{StaticResource Type.Small.Size}"
+                               Foreground="{DynamicResource PrimaryTextBrush}" HorizontalAlignment="Right"
+                               TextTrimming="CharacterEllipsis"/>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Synced items" FontSize="{StaticResource Type.Small.Size}" Margin="0,6,0,0"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="Theme" FontSize="{StaticResource Type.Small.Size}" Margin="0,6,0,0"
+                               Foreground="{DynamicResource PrimaryTextBrush}" HorizontalAlignment="Right"/>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Sync direction" FontSize="{StaticResource Type.Small.Size}" Margin="0,6,0,0"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Grid.Row="2" Grid.Column="1" Text="Bidirectional" FontSize="{StaticResource Type.Small.Size}" Margin="0,6,0,0"
+                               Foreground="{DynamicResource PrimaryTextBrush}" HorizontalAlignment="Right"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

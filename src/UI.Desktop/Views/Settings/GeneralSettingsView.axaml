@@ -7,10 +7,11 @@
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource PrimaryTextBrush}"/>
         
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}"
+        <Border Classes="fade-in stagger-1"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
-                CornerRadius="8" 
+                CornerRadius="{StaticResource Radius.Lg}" 
                 Padding="20">
             <StackPanel Spacing="15">
                 <TextBlock Text="Vault Preferences" 
@@ -35,37 +36,19 @@
                         <ComboBoxItem Content="Grid View"/>
                     </ComboBox>
                 </StackPanel>
+                
+                <ToggleSwitch Content="Show Dashboard on startup"
+                              IsChecked="{Binding IsDashboardEnabled}"
+                              HorizontalAlignment="Left"
+                              ToolTip.Tip="When disabled, the app starts directly on the Passwords view and hides the Dashboard button"/>
             </StackPanel>
         </Border>
 
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}"
+        <Border Classes="fade-in stagger-2"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
-                CornerRadius="8" 
-                Padding="20">
-            <StackPanel Spacing="15">
-                <TextBlock Text="VeraCrypt Integration" 
-                           FontSize="{StaticResource Type.Body.Size}" 
-                           FontWeight="SemiBold"
-                           Foreground="{DynamicResource PrimaryTextBrush}"/>
-                
-                <TextBlock Text="Configure VeraCrypt encryption settings and integration options" 
-                           FontSize="12"
-                           Foreground="{DynamicResource MutedTextBrush}"
-                           TextWrapping="Wrap"/>
-                
-                <Button Content="Configure VeraCrypt Settings" 
-                        Width="240" 
-                        HorizontalAlignment="Left"
-                        Classes="liquid-glass"
-                        ToolTip.Tip="Open detailed VeraCrypt configuration"/>
-            </StackPanel>
-        </Border>
-
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}"
-                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
-                BorderThickness="1" 
-                CornerRadius="8" 
+                CornerRadius="{StaticResource Radius.Lg}" 
                 Padding="20">
             <StackPanel Spacing="15">
                 <TextBlock Text="Icon Management" 
@@ -74,7 +57,7 @@
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
                 
                 <TextBlock Text="Manage custom icons, import new icons, and organize your icon library" 
-                           FontSize="12"
+                           FontSize="{StaticResource Type.Small.Size}"
                            Foreground="{DynamicResource MutedTextBrush}"
                            TextWrapping="Wrap"/>
                 

@@ -62,7 +62,6 @@ namespace PhantomVault.Core.Tests
                 {
                     VaultName = "TestVault",
                     ContainerPath = "vaults/primary.pvault",
-                    UseVeraCrypt = false,
                     ContainerSizeBytes = 1024
                 };
 
@@ -102,8 +101,7 @@ namespace PhantomVault.Core.Tests
                 var manifest = new VaultManifest
                 {
                     VaultName = "UsbBoundVault",
-                    ContainerPath = "vaults/usb.pvault",
-                    UseVeraCrypt = false
+                    ContainerPath = "vaults/usb.pvault"
                 };
 
                 // Write manifest bound to USB

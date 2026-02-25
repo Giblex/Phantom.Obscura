@@ -9,7 +9,8 @@
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource PrimaryTextBrush}"/>
         
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+        <Border Classes="fade-in stagger-1"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
                 CornerRadius="{StaticResource Radius.Lg}" 
@@ -72,7 +73,8 @@
             </StackPanel>
         </Border>
 
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+        <Border Classes="fade-in stagger-2"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
                 CornerRadius="{StaticResource Radius.Lg}" 
@@ -102,7 +104,8 @@
             </StackPanel>
         </Border>
 
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+        <Border Classes="fade-in stagger-3"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
                 CornerRadius="{StaticResource Radius.Lg}" 
@@ -136,7 +139,8 @@
             </StackPanel>
         </Border>
 
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+        <Border Classes="fade-in stagger-4"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
                 CornerRadius="{StaticResource Radius.Lg}" 
@@ -163,7 +167,8 @@
         </Border>
 
         <!-- Recovery Vault Backup -->
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+        <Border Classes="fade-in stagger-5"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
                 CornerRadius="{StaticResource Radius.Lg}" 
@@ -180,7 +185,7 @@
                 
                 <TextBlock Text="Recovery vault contains critical recovery keys and methods. Backing it up ensures you can restore vault access if the USB drive is lost or damaged." 
                            TextWrapping="Wrap"
-                           FontSize="12"
+                           FontSize="{StaticResource Type.Small.Size}"
                            Foreground="{DynamicResource SecondaryTextBrush}"/>
                 
                 <StackPanel Orientation="Horizontal" Spacing="10">

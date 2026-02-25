@@ -9,54 +9,8 @@
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource PrimaryTextBrush}"/>
         
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
-                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
-                BorderThickness="1" 
-                CornerRadius="{StaticResource Radius.Lg}" 
-                Padding="20">
-            <StackPanel Spacing="15">
-                <TextBlock Text="VeraCrypt Integration" 
-                           FontSize="{StaticResource Type.Body.Size}" 
-                           FontWeight="SemiBold"
-                           Foreground="{DynamicResource PrimaryTextBrush}"/>
-                
-                <TextBlock Text="Enable VeraCrypt container mounting for additional security" 
-                           TextWrapping="Wrap"
-                           Foreground="{DynamicResource SecondaryTextBrush}"/>
-
-                <CheckBox Content="Enable VeraCrypt integration" 
-                          ToolTip.Tip="Mount vault files from VeraCrypt containers"/>
-
-                <StackPanel Spacing="8">
-                    <TextBlock Text="VeraCrypt executable path:" 
-                               Foreground="{DynamicResource PrimaryTextBrush}"/>
-                    <Grid ColumnDefinitions="*,Auto,Auto">
-                        <TextBox Grid.Column="0" 
-                                 Margin="0,0,10,0"
-                                 Text="{Binding VeraCryptPath}"
-                                 Watermark="C:\Program Files\VeraCrypt\VeraCrypt.exe"/>
-                        <Button Grid.Column="1" 
-                                Content="Browse..." 
-                                Command="{Binding BrowseVeraCryptCommand}"
-                                Width="100"
-                                Margin="0,0,10,0"/>
-                        <Button Grid.Column="2" 
-                                Content="Auto-Detect" 
-                                Command="{Binding AutoDetectVeraCryptCommand}"
-                                Width="100"/>
-                    </Grid>
-                </StackPanel>
-
-                <Button Content="Download VeraCrypt" 
-                        Width="180" 
-                        HorizontalAlignment="Left"
-                        Command="{Binding DownloadVeraCryptCommand}"
-                        Classes="liquid-glass"
-                        ToolTip.Tip="Open VeraCrypt website"/>
-            </StackPanel>
-        </Border>
-
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+        <Border Classes="fade-in stagger-1"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
                 CornerRadius="{StaticResource Radius.Lg}" 
@@ -95,7 +49,8 @@
         </Border>
 
         <!-- PhantomRecovery Developer Mode -->
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+        <Border Classes="fade-in stagger-3"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource Brush.Accent}"
                 BorderThickness="2" 
                 CornerRadius="{StaticResource Radius.Lg}" 
@@ -109,7 +64,7 @@
                     <TextBlock Text="Enable testing features for PhantomRecovery integration" 
                                TextWrapping="Wrap"
                                Foreground="{DynamicResource SecondaryTextBrush}"
-                               FontSize="12"/>
+                               FontSize="{StaticResource Type.Small.Size}"/>
                 </StackPanel>
                 
                 <CheckBox Content="Enable Developer Mode" 
@@ -122,7 +77,7 @@
                         Background="{DynamicResource ContentBackgroundBrush}"
                         BorderBrush="{DynamicResource ControlBorderBrush}"
                         BorderThickness="1"
-                        CornerRadius="6"
+                        CornerRadius="{StaticResource Radius.Md}"
                         Padding="15"
                         Margin="0,5,0,0">
                     <StackPanel Spacing="12">
@@ -142,29 +97,29 @@
 
                         <StackPanel Spacing="6">
                             <TextBlock Text="Developer Paths" 
-                                       FontSize="12"
+                                       FontSize="{StaticResource Type.Small.Size}"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource SecondaryTextBrush}"/>
                             
                             <StackPanel Spacing="4">
                                 <TextBlock Text="Vault Path:" 
-                                           FontSize="11"
+                                           FontSize="{StaticResource Type.Tiny.Size}"
                                            Foreground="{DynamicResource SecondaryTextBrush}"/>
                                 <TextBox Text="{Binding RecoveryDeveloperVaultPath}" 
                                          IsReadOnly="True"
-                                         FontSize="10"
-                                         FontFamily="Consolas"
+                                         FontSize="{StaticResource Type.Micro.Size}"
+                                         FontFamily="{StaticResource MonoFontFamily}"
                                          Background="{DynamicResource InputBackgroundBrush}"/>
                             </StackPanel>
 
                             <StackPanel Spacing="4">
                                 <TextBlock Text="Simulated USB Path:" 
-                                           FontSize="11"
+                                           FontSize="{StaticResource Type.Tiny.Size}"
                                            Foreground="{DynamicResource SecondaryTextBrush}"/>
                                 <TextBox Text="{Binding RecoveryDeveloperUsbPath}" 
                                          IsReadOnly="True"
-                                         FontSize="10"
-                                         FontFamily="Consolas"
+                                         FontSize="{StaticResource Type.Micro.Size}"
+                                         FontFamily="{StaticResource MonoFontFamily}"
                                          Background="{DynamicResource InputBackgroundBrush}"/>
                             </StackPanel>
                         </StackPanel>
@@ -178,15 +133,15 @@
                             <StackPanel Spacing="4">
                                 <TextBlock Text="ℹ️ Developer Credentials" 
                                            FontWeight="SemiBold"
-                                           FontSize="11"
+                                           FontSize="{StaticResource Type.Tiny.Size}"
                                            Foreground="{DynamicResource WarningBrush}"/>
                                 <TextBlock Text="Master Secret: dev-phantom-recovery-master-2025" 
-                                           FontSize="10"
-                                           FontFamily="Consolas"
+                                           FontSize="{StaticResource Type.Micro.Size}"
+                                           FontFamily="{StaticResource MonoFontFamily}"
                                            Foreground="{DynamicResource SecondaryTextBrush}"/>
                                 <TextBlock Text="Recovery PIN: 1234" 
-                                           FontSize="10"
-                                           FontFamily="Consolas"
+                                           FontSize="{StaticResource Type.Micro.Size}"
+                                           FontFamily="{StaticResource MonoFontFamily}"
                                            Foreground="{DynamicResource SecondaryTextBrush}"/>
                             </StackPanel>
                         </Border>
@@ -195,7 +150,8 @@
             </StackPanel>
         </Border>
 
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+        <Border Classes="fade-in stagger-4"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
                 CornerRadius="{StaticResource Radius.Lg}" 
@@ -228,7 +184,8 @@
             </StackPanel>
         </Border>
 
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+        <Border Classes="fade-in stagger-5"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
                 CornerRadius="{StaticResource Radius.Lg}" 
@@ -268,7 +225,8 @@
             </StackPanel>
         </Border>
 
-        <Border Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+        <Border Classes="fade-in stagger-6"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
                 CornerRadius="{StaticResource Radius.Lg}" 
@@ -297,7 +255,8 @@
             </StackPanel>
         </Border>
 
-        <Border BorderBrush="{DynamicResource DangerBrush}" 
+        <Border Classes="fade-in stagger-7"
+                BorderBrush="{DynamicResource DangerBrush}" 
                 BorderThickness="2" 
                 CornerRadius="{StaticResource Radius.Lg}" 
                 Padding="20"

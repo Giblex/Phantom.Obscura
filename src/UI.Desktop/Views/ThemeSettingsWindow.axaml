@@ -7,13 +7,14 @@
         Width="480" Height="340"
         MinWidth="420" MinHeight="300"
         WindowStartupLocation="CenterOwner"
-    Background="{DynamicResource WindowBackgroundBrush}">
+    Background="{DynamicResource WindowBackgroundBrush}"
+    Classes="animated-window">
     <Grid Margin="16" RowDefinitions="Auto,*,Auto">
         <!-- Header -->
         <Border Grid.Row="0" Background="{DynamicResource HeaderBackgroundBrush}" Padding="12,10" CornerRadius="6" Margin="0,0,0,12">
             <StackPanel Spacing="4">
-                <TextBlock Text="Theme Settings" FontSize="16" FontWeight="SemiBold"/>
-                <TextBlock Text="Customize the look and feel of your vault." FontSize="12" Foreground="{DynamicResource MutedTextBrush}"/>
+                <TextBlock Text="Theme Settings" FontSize="{StaticResource Type.H4.Size}" FontWeight="SemiBold"/>
+                <TextBlock Text="Customize the look and feel of your vault." FontSize="{StaticResource Type.Small.Size}" Foreground="{DynamicResource MutedTextBrush}"/>
             </StackPanel>
         </Border>
 
@@ -23,7 +24,7 @@
                 <!-- Runtime Theme Selection -->
                 <StackPanel Spacing="6">
                     <TextBlock Text="App Theme" FontWeight="SemiBold"/>
-                    <TextBlock Text="Choose a color scheme for the main vault windows." FontSize="12" Foreground="{DynamicResource MutedTextBrush}"/>
+                    <TextBlock Text="Choose a color scheme for the main vault windows." FontSize="{StaticResource Type.Small.Size}" Foreground="{DynamicResource MutedTextBrush}"/>
                     <ComboBox 
                         ItemsSource="{Binding RuntimeThemeNames}" 
                         SelectedIndex="{Binding SelectedRuntimeThemeIndex, Mode=TwoWay}"
@@ -41,20 +42,20 @@
             <!-- Simple preview swatches reflecting current theme brushes -->
             <Border Grid.Column="1" Background="{DynamicResource ControlBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10" VerticalAlignment="Top">
                 <StackPanel Spacing="6">
-                    <TextBlock Text="Preview" FontSize="12" Foreground="{DynamicResource MutedTextBrush}"/>
+                    <TextBlock Text="Preview" FontSize="{StaticResource Type.Small.Size}" Foreground="{DynamicResource MutedTextBrush}"/>
                     <Border Background="{DynamicResource ContentBackgroundBrush}" CornerRadius="4" Padding="8">
                         <StackPanel Spacing="6">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <Border Background="{DynamicResource AccentBrush}" Width="16" Height="16" CornerRadius="3"/>
-                                <TextBlock Text="Accent" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12"/>
+                                <TextBlock Text="Accent" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="{StaticResource Type.Small.Size}"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <Border Background="{DynamicResource Brush.Card}" Width="16" Height="16" CornerRadius="3" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1"/>
-                                <TextBlock Text="Card" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12"/>
+                                <TextBlock Text="Card" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="{StaticResource Type.Small.Size}"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <Border Background="{DynamicResource WindowBackgroundBrush}" Width="16" Height="16" CornerRadius="3" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1"/>
-                                <TextBlock Text="Background" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="12"/>
+                                <TextBlock Text="Background" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="{StaticResource Type.Small.Size}"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>

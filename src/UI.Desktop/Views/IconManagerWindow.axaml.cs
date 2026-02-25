@@ -4,20 +4,25 @@ using Avalonia.Markup.Xaml;
 using PhantomVault.UI.ViewModels;
 using System.ComponentModel;
 using Avalonia;
+using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using Avalonia.LogicalTree;
-using Avalonia.Controls.Shapes;
-using System.Threading.Tasks;
-using Avalonia.Threading;
 using System.Linq;
 
 namespace PhantomVault.UI.Views
 {
     public partial class IconManagerWindow : ThemeAwareWindow
     {
+        /// <summary>Tracks the last Button clicked whose DataContext is an IconFileEntryViewModel.</summary>
+        private Button? _lastClickedIconButton;
+
         public IconManagerWindow()
         {
             InitializeComponent();
+
+            // Capture every Button.Click that bubbles through the window so we know
+            // exactly which button was pressed (for popup anchoring).
+            AddHandler(Button.ClickEvent, OnAnyButtonClick, RoutingStrategies.Bubble, handledEventsToo: true);
 
             DataContextChanged += (_, _) =>
             {
@@ -26,22 +31,18 @@ namespace PhantomVault.UI.Views
 #endif
                 if (DataContext is IconManagerViewModel vm)
                 {
-                    // Only set the owner here if the view model hasn't been initialized with an owner yet.
                     if (!vm.HasOwnerWindow)
                     {
                         vm.SetOwnerWindow(this);
                     }
 
-                    // Subscribe to IsVariantPopupOpen changes so we can open the popup anchored to the clicked item
-                    vm.PropertyChanged -= Vm_PropertyChanged; // ensure not double-subscribed
+                    vm.PropertyChanged -= Vm_PropertyChanged;
                     vm.PropertyChanged += Vm_PropertyChanged;
                 }
             };
 
             // Close variant popup on Escape
             this.KeyDown += IconManagerWindow_KeyDown;
-            // Close variant popup when clicking outside
-            this.PointerPressed += IconManagerWindow_PointerPressed;
 
             Opened += (_, _) =>
             {
@@ -67,6 +68,15 @@ namespace PhantomVault.UI.Views
             AvaloniaXamlLoader.Load(this);
         }
 
+        /// <summary>Captures every button click so we can reliably anchor the popup.</summary>
+        private void OnAnyButtonClick(object? sender, RoutedEventArgs e)
+        {
+            if (e.Source is Button btn && btn.DataContext is IconFileEntryViewModel)
+            {
+                _lastClickedIconButton = btn;
+            }
+        }
+
         private void Vm_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (sender is not IconManagerViewModel vm) return;
@@ -80,127 +90,20 @@ namespace PhantomVault.UI.Views
 
                     if (vm.IsVariantPopupOpen)
                     {
-                        // Find the item container corresponding to the VariantOwnerIcon
-                        var topList = this.FindControl<ItemsControl>("TopIconsList");
-                        if (topList != null && vm.VariantOwnerIcon != null)
+                        // Find the item container for the clicked icon across all ItemsControls
+                        Control? container = null;
+                        if (vm.VariantOwnerIcon != null)
                         {
-                            // Try to get the container directly from the generator
-                            var container = null as Control;
-                            var items = topList.Items?.Cast<object>().ToList() ?? new System.Collections.Generic.List<object>();
-                            var idx = items.IndexOf(vm.VariantOwnerIcon);
-                            if (idx >= 0)
-                            {
-                                try
-                                {
-                                    // Use ItemsControl.ContainerFromIndex to avoid obsolete API
-                                    container = topList.ContainerFromIndex(idx) as Control;
-                                }
-                                catch { container = null; }
-                            }
+                            container = FindOwnerContainer(vm.VariantOwnerIcon);
+                        }
 
-                            if (container == null)
-                            {
-                                // As a fallback, search the logical tree for a control whose DataContext matches
-                                container = FindContainerByDataContext(topList, vm.VariantOwnerIcon);
-                            }
-
-                            if (container != null)
-                            {
-                                popup.PlacementTarget = container;
-                                // Default placement below the anchor; we'll open and then measure to decide whether to flip
-                                popup.Placement = PlacementMode.Bottom;
-
-                                // Show caret initially as pointing up (popup below anchor)
-                                var caretTop = this.FindControl<Polygon>("CaretTop");
-                                var caretBottom = this.FindControl<Polygon>("CaretBottom");
-                                if (caretTop != null && caretBottom != null)
-                                {
-                                    caretTop.IsVisible = true;
-                                    caretBottom.IsVisible = false;
-                                }
+                        if (container != null)
+                        {
+                            popup.PlacementTarget = container;
+                            popup.Placement = PlacementMode.Bottom;
 #if DEBUG
-                                System.Diagnostics.Debug.WriteLine($"[ICON-MGR] VariantPopup opening for: {vm.VariantOwnerIcon?.Name ?? "(unknown)"} tentativePlacement=Bottom");
+                            System.Diagnostics.Debug.WriteLine($"[ICON-MGR] VariantPopup anchored to: {vm.VariantOwnerIcon?.Name ?? "(unknown)"}");
 #endif
-
-                                // Open popup then measure/adjust placement and caret horizontally to center over anchor.
-                                // Schedule measurement after layout has a chance to run.
-                                _ = Dispatcher.UIThread.InvokeAsync(async () =>
-                                {
-                                    try
-                                    {
-                                        // Small delay to allow popup content to measure
-                                        await Task.Delay(40).ConfigureAwait(false);
-                                        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
-
-                                        var popupChild = popup.Child as Control;
-                                        if (popupChild != null && container != null)
-                                        {
-                                            var popupTopLeft = popupChild.TranslatePoint(new Avalonia.Point(0, 0), this);
-                                            var anchorCenter = container.TranslatePoint(new Avalonia.Point(container.Bounds.Width / 2.0, container.Bounds.Height / 2.0), this);
-                                            if (popupTopLeft != null && anchorCenter != null)
-                                            {
-                                                // If popup extends below window when placed bottom, flip to top
-                                                var popupBottom = popupTopLeft.Value.Y + popupChild.Bounds.Height;
-                                                var windowBottom = this.Bounds.Height - 24; // keep some padding
-                                                if (popupBottom > windowBottom)
-                                                {
-                                                    // Flip to top
-                                                    popup.IsOpen = false;
-                                                    popup.Placement = PlacementMode.Top;
-                                                    // reopen to reflow
-                                                    popup.IsOpen = true;
-                                                    // allow measure again
-                                                    await Task.Delay(20).ConfigureAwait(false);
-                                                }
-
-                                                // Recompute measurements after potential flip
-                                                popupTopLeft = (popup.Child as Control)?.TranslatePoint(new Avalonia.Point(0, 0), this);
-                                                popupChild = popup.Child as Control;
-                                                if (popupTopLeft != null && popupChild != null)
-                                                {
-                                                    var anchorCx = anchorCenter.Value.X;
-                                                    var popupLeft = popupTopLeft.Value.X;
-                                                    var offset = anchorCx - popupLeft - 8.0; // half caret width (approx 16/2)
-                                                    // Bound offset within popup content area
-                                                    if (offset < 8) offset = 8;
-                                                    if (offset > popupChild.Bounds.Width - 24) offset = Math.Max(8, popupChild.Bounds.Width - 24);
-
-                                                    if (caretTop != null)
-                                                    {
-                                                        caretTop.Margin = new Avalonia.Thickness(offset, 0, 0, 0);
-                                                    }
-                                                    if (caretBottom != null)
-                                                    {
-                                                        caretBottom.Margin = new Avalonia.Thickness(offset, 0, 0, 0);
-                                                    }
-
-                                                    // Toggle caret visibility based on final placement
-                                                    if (popup.Placement == PlacementMode.Bottom)
-                                                    {
-                                                        if (caretTop != null) caretTop.IsVisible = true;
-                                                        if (caretBottom != null) caretBottom.IsVisible = false;
-                                                    }
-                                                    else
-                                                    {
-                                                        if (caretTop != null) caretTop.IsVisible = false;
-                                                        if (caretBottom != null) caretBottom.IsVisible = true;
-                                                    }
-
-#if DEBUG
-                                                    System.Diagnostics.Debug.WriteLine($"[ICON-MGR] VariantPopup measured placement={(popup.Placement)} caretOffset={offset:F1}");
-#endif
-                                                }
-                                            }
-                                        }
-                                    }
-#pragma warning disable CA1031
-                                    catch (Exception ex)
-                                    {
-                                        System.Diagnostics.Debug.WriteLine($"[ICON-MGR] Popup measurement error: {ex.Message}");
-                                    }
-#pragma warning restore CA1031
-                                });
-                            }
                         }
 
                         popup.IsOpen = true;
@@ -225,6 +128,36 @@ namespace PhantomVault.UI.Views
                 }
 #pragma warning restore CA1031
             }
+        }
+
+        /// <summary>
+        /// Returns the Button that was just clicked for the target icon.
+        /// Uses the tracked _lastClickedIconButton for reliable anchoring,
+        /// regardless of whether the click came from TopIconsList or the grid.
+        /// </summary>
+        private Control? FindOwnerContainer(IconFileEntryViewModel target)
+        {
+            // Best: use the button we captured from the Click event
+            if (_lastClickedIconButton != null && _lastClickedIconButton.DataContext == target)
+                return _lastClickedIconButton;
+
+            // Fallback: search the visual tree
+            return FindButtonByDataContextInTree(this, target);
+        }
+
+        private static Control? FindButtonByDataContextInTree(Visual root, object target)
+        {
+            foreach (var child in root.GetVisualChildren())
+            {
+                if (child is Button btn && btn.DataContext == target)
+                    return btn;
+                if (child is Visual v)
+                {
+                    var found = FindButtonByDataContextInTree(v, target);
+                    if (found != null) return found;
+                }
+            }
+            return null;
         }
 
         private void Popup_Closed(object? sender, EventArgs e)
@@ -354,42 +287,6 @@ namespace PhantomVault.UI.Views
                 }
             }
             return null;
-        }
-
-        private void IconManagerWindow_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
-        {
-            try
-            {
-                if (!(DataContext is IconManagerViewModel vm)) return;
-
-                var popup = this.FindControl<Popup>("VariantPopup");
-                if (popup == null || !vm.IsVariantPopupOpen) return;
-
-                // If the pointer event's source is associated with an IconFileEntryViewModel
-                // that exists inside the TopIcons or VariantIcons collections, treat it as
-                // an interaction inside the popup/top list and don't close the popup.
-                var srcControl = e.Source as Control;
-                if (srcControl != null)
-                {
-                    var dc = srcControl.DataContext;
-                    if (dc is ViewModels.IconFileEntryViewModel iconVm)
-                    {
-                        // Avoid closing when clicking a top-icon (to re-open or change selection)
-                        if (vm.TopIcons.Contains(iconVm)) return;
-                        // Avoid closing when clicking inside the variant popup items
-                        if (vm.VariantIcons.Contains(iconVm)) return;
-                    }
-                }
-
-                // Otherwise close the popup
-                vm.IsVariantPopupOpen = false;
-            }
-#pragma warning disable CA1031
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[IconManager] PointerPressed handler error: {ex.Message}");
-            }
-#pragma warning restore CA1031
         }
     }
 }

@@ -8,9 +8,13 @@ using Avalonia.Styling;
 using Microsoft.Extensions.DependencyInjection;
 using PhantomVault.Core.Options;
 using PhantomVault.Core.Services;
+using PhantomVault.Core.Services.Autofill;
 using PhantomVault.Core.Services.Security;
 using PhantomVault.Core.Services.ZeroKnowledge;
+using PhantomVault.Core.Services.Platform.Windows;
 using PhantomVault.UI.Services;
+using PhantomVault.UI.Services.AutoFill;
+using PhantomVault.UI.Services.TrayBackground;
 using PhantomVault.UI.ViewModels;
 using PhantomVault.UI.Views;
 using System;
@@ -62,8 +66,6 @@ namespace PhantomVault.UI
             services.AddSingleton<IZkVaultService, ZkVaultService>();
 
             services.AddSingleton<EncryptionService>();
-            // Register VeraCrypt service for encrypted container management
-            services.AddSingleton<IVeraCryptService, VeraCryptService>();
             // Additional services for hybrid encryption and audit logging
             // Use the production implementation with ML-KEM-768 (CRYSTALS-Kyber) for post-quantum security
             services.AddSingleton<IHybridEncryptionService, HybridEncryptionService>();
@@ -97,6 +99,8 @@ namespace PhantomVault.UI
             services.AddSingleton<IntrusionService>();
             // Register Runtime Theme Service for scoped theme switching
             services.AddSingleton<IRuntimeThemeService, RuntimeThemeService>();
+            // Register Cross-App Sync Service for theme sync with PhantomAttestor
+            services.AddSingleton<CrossAppSyncService>();
 
             // NEW: UI Polish Services
             services.AddSingleton<SvgIconService>(sp => new SvgIconService("ZluQ8qGZzB"));
@@ -117,8 +121,8 @@ namespace PhantomVault.UI
 
             services.AddSingleton<IconManager>(provider =>
             {
-                // Use the Assets\Icons root as the canonical icons source (IconManager enumerates subfolders)
-                var iconsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Icons");
+                // Use the Assets\Visuals root as the canonical icons source (IconManager enumerates subfolders)
+                var iconsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Visuals");
                 return new IconManager(iconsDir);
             });
 
@@ -137,7 +141,7 @@ namespace PhantomVault.UI
             // USB Auto-Inject Services
             // Note: VaultViewModel is registered as Transient, so we'll need to get it dynamically
             // Platform-specific services (Windows)
-            services.AddSingleton<PhantomVault.Core.Services.Platform.IActiveWindowDetector, PhantomVault.Core.Services.Platform.Windows.WindowsActiveWindowDetector>();
+            services.AddSingleton<PhantomVault.Platform.Services.IActiveWindowDetector, PhantomVault.Core.Services.Platform.Windows.WindowsActiveWindowDetector>();
             services.AddSingleton<PhantomVault.Core.Services.Platform.IAutoTypeService, PhantomVault.Core.Services.Platform.Windows.WindowsAutoTypeService>();
 
             // Auto-inject core services
@@ -152,19 +156,39 @@ namespace PhantomVault.UI
             // Main orchestrator - will be initialized with VaultViewModel after it's created
             services.AddSingleton<PhantomVault.Core.Services.AutoInject.IUsbAutoInjectService, PhantomVault.Core.Services.AutoInject.UsbAutoInjectService>();
 
+            // ── AutoFill Mode (USB-triggered) ───────────────────────────────────────
+            // Vault context bridge for native messaging host
+            services.AddSingleton<VaultAutofillContext>();
+            services.AddSingleton<IAutofillVaultContext>(sp => sp.GetRequiredService<VaultAutofillContext>());
+
+            // Windows UI Automation login detector
+            services.AddSingleton<WindowsNativeLoginDetector>();
+
+            // TOTP field poller (subscribes to NativeMessagingHostService.FormDetected events)
+            services.AddSingleton<ITotpFieldPoller>(sp => new TotpFieldPoller(
+                sp.GetRequiredService<WindowsNativeLoginDetector>(),
+                new PhantomVault.Core.Services.Autofill.FormFieldDetector()));
+
+            // AutoFill orchestrator state machine
+            services.AddSingleton<IAutoFillOrchestrator, AutoFillOrchestrator>();
+
+            // System tray background service — owns TrayIcon and wires USB events
+            services.AddSingleton<ITrayBackgroundService, TrayBackgroundService>();
+            // ───────────────────────────────────────────────────────────────────────
+
             services.AddTransient<MainViewModel>();
             services.AddTransient<ProvisionViewModel>();
             services.AddTransient<VaultViewModel>();
             services.AddTransient<SettingsViewModel>();
             services.AddTransient<SecuritySettingsViewModel>();
-            services.AddTransient<AutoFillSettingsViewModel>();
+            services.AddTransient<AutoFillSettingsViewModel>(sp =>
+                new AutoFillSettingsViewModel(sp.GetService<ITrayBackgroundService>()));
             services.AddTransient<AddPasswordViewModel>();
             services.AddTransient<UsbSetupViewModel>();
             services.AddTransient<FrontPageViewModel>();
             services.AddTransient<PasswordHealthViewModel>();
             services.AddTransient<ShareViewModel>();
             services.AddTransient<WelcomePageViewModel>();
-            services.AddTransient<VeraCryptSetupWindowViewModel>();
             services.AddTransient<TotpSettingsViewModel>();
             services.AddTransient<WindowsHelloSettingsViewModel>();
             services.AddTransient<PasskeySettingsViewModel>();
@@ -195,7 +219,7 @@ namespace PhantomVault.UI
                     runtimeThemeService.Apply(persistedSettings.SelectedThemeId);
                 }
                 
-                // Initialize theme from persisted settings (will skip PhantomTheme if runtime theme is active)
+                // Initialize theme from persisted settings (coordinates with RuntimeThemeService for Light mode)
                 var theme = persistedSettings.EnableHighContrast ? AppTheme.HighContrast : 
                            (persistedSettings.IsDarkTheme ? AppTheme.Dark : AppTheme.Light);
                 themeManager.SetTheme(theme);
@@ -207,6 +231,17 @@ namespace PhantomVault.UI
             catch
             {
                 // best effort; ignore if theme service unavailable during init
+            }
+
+            // Start cross-app sync (theme sync with PhantomAttestor)
+            try
+            {
+                var syncService = _serviceProvider.GetRequiredService<CrossAppSyncService>();
+                syncService.Start();
+            }
+            catch
+            {
+                // best effort
             }
             var secureTrash = _serviceProvider.GetRequiredService<SecureTrashService>();
             secureTrash.ApplyConfiguration(
@@ -232,6 +267,33 @@ namespace PhantomVault.UI
                     DataContext = _serviceProvider.GetRequiredService<WelcomePageViewModel>()
                 };
                 desktop.MainWindow = welcomePage;
+
+                // ── AutoFill Mode: tray startup & close-to-tray ────────────────────
+                if (persistedSettings.AutoFillModeEnabled)
+                {
+                    try
+                    {
+                        var trayService = _serviceProvider.GetRequiredService<ITrayBackgroundService>();
+                        _ = trayService.StartAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"[App] Failed to start AutoFill tray service: {ex.Message}");
+                    }
+                }
+
+                // When AutoFill Mode is enabled, closing the main window hides it to tray
+                // rather than exiting the process so the USB listener stays alive.
+                desktop.MainWindow.Closing += (sender, e) =>
+                {
+                    var settings = SettingsService.Load();
+                    if (settings.AutoFillModeEnabled)
+                    {
+                        e.Cancel = true;
+                        ((Window)sender!).Hide();
+                    }
+                };
+                // ───────────────────────────────────────────────────────────────────
             }
 
             base.OnFrameworkInitializationCompleted();
@@ -260,7 +322,7 @@ namespace PhantomVault.UI
 
         /// <summary>
         /// Handles application exit to terminate only processes spawned by this application.
-        /// Uses SpawnedProcessTracker to avoid killing unrelated VeraCrypt instances.
+        /// Uses SpawnedProcessTracker to avoid killing unrelated spawned instances.
         /// </summary>
         private void OnApplicationExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
         {
@@ -272,7 +334,7 @@ namespace PhantomVault.UI
 #endif
 
                 // Only terminate processes that were spawned by this application
-                // This prevents killing VeraCrypt volumes mounted by other apps or the user
+                // This prevents killing processes used by other apps or the user
                 try
                 {
                     SpawnedProcessTracker.Instance.TerminateAllTrackedProcesses();

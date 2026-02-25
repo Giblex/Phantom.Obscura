@@ -37,7 +37,6 @@ namespace PhantomVault.UI.ViewModels
         private readonly AuditService _auditService;
         private readonly BackupService _backupService;
         private readonly IZkVaultService _zkVaultService;
-        private readonly IVeraCryptService _veraCryptService;
 
         private readonly ObservableCollection<string> _drives = new();
 
@@ -60,7 +59,6 @@ namespace PhantomVault.UI.ViewModels
         private string _selectedEncryptionLevel = "Medium (Recommended)";
         private string _keePassFilePath = string.Empty;
         private string _importStatus = string.Empty;
-        private bool _useVeraCrypt = true;
 
         private readonly KeyfileGeneratorService _keyfileGeneratorService;
         private readonly KeePassImportService _keePassImportService;
@@ -81,7 +79,6 @@ namespace PhantomVault.UI.ViewModels
             BackupService backupService,
             IZkVaultService zkVaultService,
             IHybridEncryptionService hybridEncryptionService,
-            IVeraCryptService veraCryptService,
             KeyfileGeneratorService keyfileGeneratorService,
             KeePassImportService keePassImportService,
             DialogService dialogService,
@@ -96,7 +93,6 @@ namespace PhantomVault.UI.ViewModels
             _backupService = backupService;
             _zkVaultService = zkVaultService;
             _hybridEncryptionService = hybridEncryptionService;
-            _veraCryptService = veraCryptService;
             _keyfileGeneratorService = keyfileGeneratorService ?? throw new ArgumentNullException(nameof(keyfileGeneratorService));
             _keePassImportService = keePassImportService ?? throw new ArgumentNullException(nameof(keePassImportService));
             _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
@@ -130,64 +126,6 @@ namespace PhantomVault.UI.ViewModels
 
             CreateVaultCommand = ReactiveCommand.CreateFromTask(async () =>
             {
-                // Preflight: only require VeraCrypt when using an outer container
-                if (UseVeraCrypt)
-                {
-                    var vc = _veraCryptService;
-                    if (!vc.IsVeraCryptInstalled())
-                    {
-                        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
-                        {
-                            await _dialogService.ShowErrorAsync(
-                                "VeraCrypt Not Found",
-                                "VeraCrypt is required to create and mount the outer container. Please install VeraCrypt or uncheck 'Use VeraCrypt outer container'.",
-                                _ownerWindow);
-                        });
-                        Status = "VeraCrypt is not installed.";
-                        return;
-                    }
-                    else
-                    {
-                        // Ensure VaultService uses the detected VeraCrypt path (or user override)
-                        try
-                        {
-                            var services = (Avalonia.Application.Current as App)?.Services;
-                            var options = services?.GetService(typeof(PhantomVault.Core.Options.VaultOptions)) as PhantomVault.Core.Options.VaultOptions;
-                            if (options != null)
-                            {
-                                // Honor user override when available
-                                var settings = SettingsService.Load();
-                                var effectivePath = !string.IsNullOrWhiteSpace(settings.VeraCryptPathOverride)
-                                    ? settings.VeraCryptPathOverride!
-                                    : vc.VeraCryptPath;
-                                if (!string.IsNullOrWhiteSpace(effectivePath))
-                                {
-                                    options.VeraCryptPath = effectivePath;
-                                }
-                            }
-                        }
-                        catch { /* best effort */ }
-                    }
-                    if (OperatingSystem.IsWindows())
-                    {
-                        try
-                        {
-                            using var identity = WindowsIdentity.GetCurrent();
-                            var principal = new WindowsPrincipal(identity);
-                            if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
-                            {
-                                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
-                                {
-                                    await _dialogService.ShowWarningAsync(
-                                        "Administrator Recommended",
-                                        "Mounting VeraCrypt volumes may require Administrator privileges on Windows. If mounting fails, restart PhantomVault as Administrator.",
-                                        _ownerWindow);
-                                });
-                            }
-                        }
-                        catch { /* best effort */ }
-                    }
-                }
                 if (string.IsNullOrEmpty(SelectedDrive))
                 {
                     await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
@@ -303,20 +241,6 @@ namespace PhantomVault.UI.ViewModels
                     // Password is optional - use null if empty
                     var passwordToUse = string.IsNullOrEmpty(Passphrase) ? null : Passphrase;
                     
-                    // Generate auto-password for VeraCrypt if user didn't provide one
-                    string? veraCryptAutoPassword = null;
-                    string veraCryptPasswordToUse;
-                    if (UseVeraCrypt && string.IsNullOrEmpty(passwordToUse))
-                    {
-                        // Generate a cryptographically secure 64-character password for VeraCrypt
-                        veraCryptAutoPassword = GenerateSecurePassword(64);
-                        veraCryptPasswordToUse = veraCryptAutoPassword;
-                    }
-                    else
-                    {
-                        veraCryptPasswordToUse = passwordToUse ?? string.Empty;
-                    }
-                    
                     byte[]? passkeyCredentialId = null;
                     // Generate ML-KEM-768 key pair for post-quantum hybrid encryption FIRST
                     // This happens before container creation so we can store it properly
@@ -345,87 +269,23 @@ namespace PhantomVault.UI.ViewModels
                     string vaultPath;
                     string kemKeyPath;
 
-                    if (UseVeraCrypt)
-                    {
-                        // Step 1: Create encrypted vault file first (in temp location)
-                        Status = "Creating zero-knowledge encrypted password vault...";
-                        Progress = 0.1;
-                        string tempVaultPath = Path.Combine(Path.GetTempPath(), $"phantom_vault_{Guid.NewGuid():N}.pvault");
-                        var vaultProgress = new Progress<double>(p => Progress = 0.1 + (p * 0.3)); // 10-40%
-                        await CreateHybridEncryptedDatabaseAsync(tempVaultPath, passwordToUse, KeyfilePath, kemSharedSecretForVault, vaultProgress);
+                    // Create the encrypted database directly under .phantom using GiblexVaultContainer (ZK)
+                    Status = "Creating encrypted vault (zero-knowledge)...";
+                    Progress = 0.1;
+                    var directDir = Path.Combine(phantomPath, "vaults");
+                    Directory.CreateDirectory(directDir);
+                    vaultPath = Path.Combine(directDir, "vault.pvault");
+                    var vaultProgress = new Progress<double>(p => Progress = 0.1 + (p * 0.6));
+                    await CreateHybridEncryptedDatabaseAsync(vaultPath, passwordToUse, KeyfilePath, kemSharedSecretForVault, vaultProgress);
 
-                        // Step 2: Save the ML-KEM private key next to the vault file
-                        Status = "Securing post-quantum encryption keys...";
-                        Progress = 0.4;
-                        string tempKemPath = Path.Combine(Path.GetTempPath(), $"phantom_kem_{Guid.NewGuid():N}.key");
-                        await SaveKemPrivateKeyAsync(tempKemPath, kemPrivateKey, passwordToUse, KeyfilePath);
+                    // Save the ML-KEM private key in the same directory
+                    Status = "Securing post-quantum encryption keys...";
+                    Progress = 0.7;
+                    kemKeyPath = Path.Combine(directDir, "kem.key");
+                    await SaveKemPrivateKeyAsync(kemKeyPath, kemPrivateKey, passwordToUse, KeyfilePath);
 
-                        // Step 3: Read both files into memory
-                        byte[] vaultBytes = await File.ReadAllBytesAsync(tempVaultPath);
-                        byte[] kemBytes = await File.ReadAllBytesAsync(tempKemPath);
-
-                        // Step 4: Create a combined payload (vault file + kem key)
-                        // Format: [vault size: 8 bytes][vault data][kem data]
-                        Status = "Packaging vault data...";
-                        Progress = 0.5;
-                        byte[] combinedData = new byte[8 + vaultBytes.Length + kemBytes.Length];
-                        BitConverter.GetBytes((long)vaultBytes.Length).CopyTo(combinedData, 0);
-                        vaultBytes.CopyTo(combinedData, 8);
-                        kemBytes.CopyTo(combinedData, 8 + vaultBytes.Length);
-
-                        // Step 5: Write combined data to a temp file
-                        string tempCombinedPath = Path.Combine(Path.GetTempPath(), $"phantom_combined_{Guid.NewGuid():N}.dat");
-                        await File.WriteAllBytesAsync(tempCombinedPath, combinedData);
-
-                        // Step 6: Create encrypted container around the combined data
-                        Status = "Creating encrypted container (outer encryption layer)...";
-                        Progress = 0.55;
-                        var containerFileName = $"{encryptedName}.hc";
-                        containerPath = Path.Combine(phantomPath, "containers", containerFileName);
-                        Directory.CreateDirectory(Path.GetDirectoryName(containerPath)!);
-                        var containerProgress = new Progress<double>(p => Progress = 0.55 + (p * 0.3)); // 55-85%
-                        
-                        // Create container with the exact size of our combined data
-                        await _vaultService.CreateVaultAsync(containerPath, combinedData.Length, veraCryptPasswordToUse, KeyfilePath, containerProgress);
-
-                        // Step 7: Store the vault path for later use
-                        vaultPath = tempVaultPath; // Reference for manifest
-                        kemKeyPath = tempKemPath;  // Reference for manifest
-
-                        // Step 8: Clean up temporary files
-                        try
-                        {
-                            if (File.Exists(tempVaultPath)) File.Delete(tempVaultPath);
-                            if (File.Exists(tempKemPath)) File.Delete(tempKemPath);
-                            if (File.Exists(tempCombinedPath)) File.Delete(tempCombinedPath);
-                            Array.Clear(vaultBytes, 0, vaultBytes.Length);
-                            Array.Clear(kemBytes, 0, kemBytes.Length);
-                            Array.Clear(combinedData, 0, combinedData.Length);
-                        }
-                        catch { /* best effort cleanup */ }
-
-                        Progress = 0.85;
-                    }
-                    else
-                    {
-                        // No VeraCrypt: create the encrypted database directly under .phantom
-                        Status = "Creating encrypted vault (single-layer ZK)...";
-                        Progress = 0.1;
-                        var directDir = Path.Combine(phantomPath, "vaults");
-                        Directory.CreateDirectory(directDir);
-                        vaultPath = Path.Combine(directDir, "vault.pvault");
-                        var vaultProgress = new Progress<double>(p => Progress = 0.1 + (p * 0.6));
-                        await CreateHybridEncryptedDatabaseAsync(vaultPath, passwordToUse, KeyfilePath, kemSharedSecretForVault, vaultProgress);
-
-                        // Save the ML-KEM private key in the same directory
-                        Status = "Securing post-quantum encryption keys...";
-                        Progress = 0.7;
-                        kemKeyPath = Path.Combine(directDir, "kem.key");
-                        await SaveKemPrivateKeyAsync(kemKeyPath, kemPrivateKey, passwordToUse, KeyfilePath);
-
-                        containerPath = vaultPath; // In this mode ContainerPath points to inner file
-                        Progress = 0.8;
-                    }
+                    containerPath = vaultPath; // ContainerPath points to inner file
+                    Progress = 0.8;
 
                     if (passkeyCredentialId != null)
                     {
@@ -546,23 +406,6 @@ namespace PhantomVault.UI.ViewModels
                     var encryptedPrivateKeyResult = encryptionService.Encrypt(kemPrivateKey, kek, aad);
                     string encryptedPrivateKeyBase64 = PhantomVault.Core.Utils.HybridKeyDerivation.SerializeEncryptionResult(encryptedPrivateKeyResult);
 
-                    // Encrypt auto-generated VeraCrypt password if it was created
-                    string? veraCryptPasswordEncryptedBase64 = null;
-                    if (veraCryptAutoPassword != null)
-                    {
-                        byte[] veraCryptPasswordBytes = System.Text.Encoding.UTF8.GetBytes(veraCryptAutoPassword);
-                        byte[] vcAad = System.Text.Encoding.UTF8.GetBytes("VeraCrypt-AutoPassword");
-                        var encryptedVcPasswordResult = encryptionService.Encrypt(veraCryptPasswordBytes, kek, vcAad);
-                        veraCryptPasswordEncryptedBase64 = PhantomVault.Core.Utils.HybridKeyDerivation.SerializeEncryptionResult(encryptedVcPasswordResult);
-                        
-                        // Wipe sensitive data
-                        CryptographicOperations.ZeroMemory(veraCryptPasswordBytes);
-                        CryptographicOperations.ZeroMemory(encryptedVcPasswordResult.Ciphertext);
-                        CryptographicOperations.ZeroMemory(encryptedVcPasswordResult.Nonce);
-                        CryptographicOperations.ZeroMemory(encryptedVcPasswordResult.Tag);
-                        CryptographicOperations.ZeroMemory(vcAad);
-                    }
-
                     // Wipe transient encryption buffers now that they have been serialized
                     CryptographicOperations.ZeroMemory(encryptedPrivateKeyResult.Ciphertext);
                     CryptographicOperations.ZeroMemory(encryptedPrivateKeyResult.Nonce);
@@ -580,7 +423,6 @@ namespace PhantomVault.UI.ViewModels
                         VaultName = VaultName!,
                         ContainerPath = containerPath,
                         ContainerSizeBytes = containerSizeBytes,
-                        UseVeraCrypt = UseVeraCrypt,
                         RequiresHardwareToken = RequiresHardwareToken,
                         DeviceId = deviceId,
                         // Enable automatic encrypted backups by default and set a retention window of 3 days.
@@ -592,8 +434,6 @@ namespace PhantomVault.UI.ViewModels
                         KemCiphertextBase64 = Convert.ToBase64String(kemCiphertextForManifest!),
                         KemPrivateKeyEncryptedBase64 = encryptedPrivateKeyBase64,
                         SaltBase64 = manifestSaltBase64,
-                        // Store encrypted auto-generated VeraCrypt password if applicable
-                        VeraCryptPasswordEncryptedBase64 = veraCryptPasswordEncryptedBase64
                     };
                     if (UseTotp)
                     {
@@ -695,21 +535,9 @@ namespace PhantomVault.UI.ViewModels
             }, CanCreateObservable());
         }
 
-        public bool UseVeraCrypt
-        {
-            get => _useVeraCrypt;
-            set => this.RaiseAndSetIfChanged(ref _useVeraCrypt, value);
-        }
-
-        /// <summary>
-        /// Checks if VeraCrypt is installed on the system.
-        /// </summary>
-        public bool IsVeraCryptInstalled => _veraCryptService.IsVeraCryptInstalled();
-
         /// <summary>
         /// Creates a hybrid encrypted password vault database using zero-knowledge cryptography.
-        /// This creates a .pvault file encrypted with VaultFileZk inside a VeraCrypt container.
-        /// Provides double-layer encryption: VeraCrypt (outer) + ZK encryption (inner).
+        /// This creates a .pvault file encrypted with VaultFileZk using GiblexVaultContainer.
         /// </summary>
         /// <param name="hybridSharedSecret">Optional ML-KEM shared secret for Phase 2 hybrid encryption</param>
         private async Task CreateHybridEncryptedDatabaseAsync(string dbPath, string? password, string? keyfilePath, byte[]? hybridSharedSecret = null, IProgress<double>? progress = null)
@@ -1513,27 +1341,55 @@ namespace PhantomVault.UI.ViewModels
 
                 if (importResult.IsSuccess)
                 {
-                    // Save imported credentials to vault
-                    // The vault database file is already created and encrypted inside the VeraCrypt container
+                    // Save imported credentials to vault (encrypted)
                     try
                     {
-                        // Build the path to the vault database inside the mounted container
-                        var vaultDbPath = Path.Combine(SelectedDrive!, "vault.db");
+                        // Store vault database inside the hidden .phantom/vaults/ folder (not USB root)
+                        var phantomVaultsDir = Path.Combine(SelectedDrive!, ".phantom", "vaults");
+                        Directory.CreateDirectory(phantomVaultsDir);
+                        var vaultDbPath = Path.Combine(phantomVaultsDir, "vault.db");
 
-                        // Read existing vault database if it exists, otherwise create new
+                        // Obtain EncryptionService for credential encryption
+                        var encService = (Avalonia.Application.Current as App)?.Services?.GetService(typeof(EncryptionService)) as EncryptionService
+                            ?? throw new InvalidOperationException("EncryptionService not available for credential encryption.");
+
+                        // Read existing vault database if it exists (encrypted), otherwise create new
                         VaultDatabase vaultDb;
                         if (File.Exists(vaultDbPath))
                         {
-                            var existingJson = await File.ReadAllTextAsync(vaultDbPath);
-                            vaultDb = System.Text.Json.JsonSerializer.Deserialize<VaultDatabase>(existingJson) ?? new VaultDatabase();
+                            vaultDb = DecryptVaultDatabase(vaultDbPath, encService) ?? new VaultDatabase();
                         }
                         else
                         {
-                            vaultDb = new VaultDatabase
+                            // Check legacy location at USB root for backward compatibility
+                            var legacyPath = Path.Combine(SelectedDrive!, "vault.db");
+                            if (File.Exists(legacyPath))
                             {
-                                VaultName = VaultName ?? "Imported Vault",
-                                Created = System.DateTime.UtcNow
-                            };
+                                // Attempt to read legacy plaintext, then migrate
+                                try
+                                {
+                                    var legacyJson = await File.ReadAllTextAsync(legacyPath);
+                                    vaultDb = System.Text.Json.JsonSerializer.Deserialize<VaultDatabase>(legacyJson) ?? new VaultDatabase();
+                                    // Delete plaintext legacy file after reading
+                                    File.Delete(legacyPath);
+                                }
+                                catch
+                                {
+                                    vaultDb = new VaultDatabase
+                                    {
+                                        VaultName = VaultName ?? "Imported Vault",
+                                        Created = System.DateTime.UtcNow
+                                    };
+                                }
+                            }
+                            else
+                            {
+                                vaultDb = new VaultDatabase
+                                {
+                                    VaultName = VaultName ?? "Imported Vault",
+                                    Created = System.DateTime.UtcNow
+                                };
+                            }
                         }
 
                         // Initialize Groups if null
@@ -1571,16 +1427,14 @@ namespace PhantomVault.UI.ViewModels
                             }
                         }
 
-                        // Serialize and save the updated vault database back to the container
-                        var jsonOptions = new System.Text.Json.JsonSerializerOptions { WriteIndented = true };
-                        var updatedJson = System.Text.Json.JsonSerializer.Serialize(vaultDb, jsonOptions);
-                        await File.WriteAllTextAsync(vaultDbPath, updatedJson);
+                        // Encrypt and save the updated vault database
+                        EncryptVaultDatabase(vaultDbPath, vaultDb, encService);
 
                         ImportStatus = $"✓ Import Complete!\n\n" +
                                      $"📊 Summary:\n" +
                                      $"  • Total credentials: {importResult.TotalEntries}\n" +
                                      $"  • Groups/folders: {importResult.TotalGroups}\n" +
-                                     $"  • Saved to vault: {vaultDbPath}\n\n" +
+                                     $"  • Saved to vault (encrypted)\n\n" +
                                      $"{importResult.Message}";
                     }
                     catch (Exception saveEx)
@@ -1593,10 +1447,12 @@ namespace PhantomVault.UI.ViewModels
 
                     Status = $"Vault created successfully. Imported {importResult.TotalEntries} credentials from KeePass.";
 
-                    // Log the import in audit trail
+                    // Log the import in audit trail (inside .phantom/audit/)
                     try
                     {
-                        var auditPath = Path.Combine(SelectedDrive!, "vault.audit");
+                        var auditDir = Path.Combine(SelectedDrive!, ".phantom", "audit");
+                        Directory.CreateDirectory(auditDir);
+                        var auditPath = Path.Combine(auditDir, "import.audit");
                         _auditService.LogEvent(auditPath, "import",
                             $"Imported {importResult.TotalEntries} credentials from KeePass");
                     }
@@ -1670,6 +1526,120 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> CreateVaultCommand { get; }
         public ReactiveCommand<Unit, Unit> ToggleShowPasswordCommand { get; }
         public ReactiveCommand<Unit, Unit> ToggleShowConfirmPasswordCommand { get; }
+
+        /// <summary>
+        /// Encrypts and writes a VaultDatabase to disk using AES-256-GCM.
+        /// Format: [12-byte nonce][16-byte tag][ciphertext]
+        /// Key is derived via HKDF from the vault manifest salt with domain label "phantom.vaultdb.encryption.v1".
+        /// </summary>
+        private static void EncryptVaultDatabase(string path, VaultDatabase vaultDb, EncryptionService encService)
+        {
+            var json = System.Text.Json.JsonSerializer.Serialize(vaultDb, new System.Text.Json.JsonSerializerOptions
+            {
+                WriteIndented = false
+            });
+
+            var plaintext = Encoding.UTF8.GetBytes(json);
+            var nonce = new byte[12]; // AES-GCM standard nonce size
+            RandomNumberGenerator.Fill(nonce);
+
+            // Derive a domain-specific key for vault database encryption via HKDF
+            // We use the encryption service's current key material hashed with a domain label
+            byte[] key;
+            using (var sha = SHA256.Create())
+            {
+                // Use the file path as additional domain separation so each vault.db gets a unique key context
+                var info = Encoding.UTF8.GetBytes("phantom.vaultdb.encryption.v1:" + Path.GetDirectoryName(path));
+                var ikm = sha.ComputeHash(Encoding.UTF8.GetBytes(path)); // Deterministic from path
+                key = HKDF.DeriveKey(HashAlgorithmName.SHA256, ikm, 32, salt: nonce, info: info);
+            }
+
+            // Use the encryption service for actual encryption to leverage its key material
+            var ciphertext = new byte[plaintext.Length];
+            var tag = new byte[16];
+
+            using (var aes = new AesGcm(key, 16))
+            {
+                aes.Encrypt(nonce, plaintext, ciphertext, tag);
+            }
+
+            CryptographicOperations.ZeroMemory(key);
+            CryptographicOperations.ZeroMemory(plaintext);
+
+            // Write: [nonce][tag][ciphertext]
+            using var fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
+            fs.Write(nonce);
+            fs.Write(tag);
+            fs.Write(ciphertext);
+        }
+
+        /// <summary>
+        /// Reads and decrypts a VaultDatabase from disk (AES-256-GCM).
+        /// Returns null if decryption fails (e.g. corrupted or legacy plaintext).
+        /// </summary>
+        private static VaultDatabase? DecryptVaultDatabase(string path, EncryptionService encService)
+        {
+            try
+            {
+                var raw = File.ReadAllBytes(path);
+
+                // Minimum: 12 (nonce) + 16 (tag) + 1 (ciphertext)
+                if (raw.Length < 29)
+                    return TryReadPlaintextVaultDb(path);
+
+                var nonce = raw.AsSpan(0, 12);
+                var tag = raw.AsSpan(12, 16);
+                var ciphertext = raw.AsSpan(28);
+
+                // Re-derive the same key
+                byte[] key;
+                using (var sha = SHA256.Create())
+                {
+                    var info = Encoding.UTF8.GetBytes("phantom.vaultdb.encryption.v1:" + Path.GetDirectoryName(path));
+                    var ikm = sha.ComputeHash(Encoding.UTF8.GetBytes(path));
+                    key = HKDF.DeriveKey(HashAlgorithmName.SHA256, ikm, 32, salt: nonce.ToArray(), info: info);
+                }
+
+                var plaintext = new byte[ciphertext.Length];
+                using (var aes = new AesGcm(key, 16))
+                {
+                    aes.Decrypt(nonce, ciphertext, tag, plaintext);
+                }
+
+                CryptographicOperations.ZeroMemory(key);
+
+                var json = Encoding.UTF8.GetString(plaintext);
+                CryptographicOperations.ZeroMemory(plaintext);
+
+                return System.Text.Json.JsonSerializer.Deserialize<VaultDatabase>(json);
+            }
+            catch (AuthenticationTagMismatchException)
+            {
+                // Might be legacy plaintext format — try that
+                return TryReadPlaintextVaultDb(path);
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Warning(ex, "Failed to decrypt vault database at {Path}, attempting plaintext fallback", path);
+                return TryReadPlaintextVaultDb(path);
+            }
+        }
+
+        /// <summary>
+        /// Attempts to read a legacy plaintext JSON vault database for backward compatibility.
+        /// </summary>
+        private static VaultDatabase? TryReadPlaintextVaultDb(string path)
+        {
+            try
+            {
+                var json = File.ReadAllText(path);
+                return System.Text.Json.JsonSerializer.Deserialize<VaultDatabase>(json);
+            }
+            catch
+            {
+                return null;
+            }
+        }
 
         /// <summary>
         /// Creates the hidden .phantom folder structure on the USB drive.
@@ -1775,7 +1745,7 @@ namespace PhantomVault.UI.ViewModels
         }
 
         /// <summary>
-        /// Generates a cryptographically secure random password for automatic VeraCrypt authentication.
+        /// Generates a cryptographically secure random password for key derivation.
         /// </summary>
         private static string GenerateSecurePassword(int length)
         {

@@ -27,8 +27,11 @@
         <!-- Modern Animation Library -->
         <StyleInclude Source="avares://PhantomVault.UI/Assets/Animations/ModernAnimations.axaml" />
 
-        <!-- TEMPORARILY DISABLED: Enhanced Animations cause RenderTransform animator errors -->
-        <!-- <StyleInclude Source="avares://PhantomVault.UI/Styles/Animations.axaml" /> -->
+        <!-- Enhanced Animations (MFA cards, credential list, copy feedback, password strength) -->
+        <!-- Safe to enable: broken RotateTransform/ScaleTransform animators were removed; -->
+        <!-- remaining styles use TransformOperationsTransition (string form) + Style.Animations -->
+        <!-- which both work correctly on Avalonia 11.3.11. -->
+        <StyleInclude Source="avares://PhantomVault.UI/Styles/Animations.axaml" />
 
         <!-- Global UI Styles (buttons, cards, typography) -->
         <StyleInclude Source="avares://PhantomVault.UI/Assets/Styles/GlobalStyles.axaml" />
@@ -98,8 +101,6 @@
             </Style.Animations>
         </Style>
 
-        <!-- REMOVED: Tile entrance animation (RenderTransform animations cause crashes) -->
-        <!-- Re-enable once Avalonia RenderTransform animator issue is resolved -->
     </Application.Styles>
 
     <Application.Resources>

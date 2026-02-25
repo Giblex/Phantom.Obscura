@@ -111,6 +111,7 @@ namespace PhantomVault.UI.ViewModels
                 QrCodeData = $"otpauth://totp/PhantomVault:{VaultName}?secret={TotpSecret}&issuer=PhantomVault";
 
                 HasTotpSecret = true;
+                IsTotpEnabled = true;
                 StatusMessage = "TOTP secret generated successfully! Scan the QR code with your authenticator app.";
             }
             catch (Exception ex)
@@ -150,6 +151,7 @@ namespace PhantomVault.UI.ViewModels
 
         private async Task VerifyTotpCode()
         {
+            System.Diagnostics.Debug.WriteLine($"[TOTP-VERIFY] VerifyTotpCode called. TotpSecret='{TotpSecret?.Length}chars', TestCode='{TestCode}', _totpService={(_totpService != null ? "OK" : "NULL")}");
             try
             {
                 IsBusy = true;
@@ -157,25 +159,31 @@ namespace PhantomVault.UI.ViewModels
 
                 await Task.Delay(500);
 
-                // Verify TOTP code using the service
-                if (_totpService != null && !string.IsNullOrEmpty(TotpSecret) && !string.IsNullOrEmpty(TestCode))
+                if (string.IsNullOrEmpty(TotpSecret))
                 {
-                    string expectedCode = _totpService.GenerateCode(TotpSecret);
-                    bool isValid = expectedCode == TestCode;
+                    StatusMessage = "✗ No TOTP secret configured. Generate a secret first.";
+                    return;
+                }
 
-                    if (isValid)
-                    {
-                        StatusMessage = "TOTP code verified successfully!";
-                        IsTotpEnabled = true;
-                    }
-                    else
-                    {
-                        StatusMessage = "✗ Invalid TOTP code. Please try again.";
-                    }
+                if (string.IsNullOrEmpty(TestCode))
+                {
+                    StatusMessage = "✗ Please enter a valid 6-digit code.";
+                    return;
+                }
+
+                // Use injected service or create one as fallback
+                var service = _totpService ?? new PhantomVault.Core.Services.TotpService();
+                string expectedCode = service.GenerateCode(TotpSecret);
+                bool isValid = expectedCode == TestCode.Trim();
+
+                if (isValid)
+                {
+                    StatusMessage = "✓ TOTP code verified successfully!";
+                    IsTotpEnabled = true;
                 }
                 else
                 {
-                    StatusMessage = "✗ Please enter a valid 6-digit code.";
+                    StatusMessage = "✗ Invalid TOTP code. Please try again.";
                 }
             }
             catch (Exception ex)

@@ -2,6 +2,7 @@ using System;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using PhantomVault.Core;
 using PhantomVault.Core.Services;
 using PhantomVault.UI.Services;
 using PhantomVault.UI.ViewModels;
@@ -84,6 +85,35 @@ namespace PhantomVault.UI.Views
                 var app = (App)Application.Current!;
                 var services = app.Services ?? throw new InvalidOperationException("Service provider not initialized.");
                 var dialogService = services.GetRequiredService<DialogService>();
+
+                // SECURITY: Enforce USB policy at vault-access boundary
+                // This was deferred from startup so the front page is always reachable.
+                try
+                {
+                    if (Program.PolicyService.IsUsbRequired())
+                    {
+                        var usbResult = Program.PolicyService.EnforceUsbPolicy();
+                        System.Diagnostics.Debug.WriteLine(
+                            $"[SecurityCheck] USB policy enforced. Drive={usbResult.drive?.Name ?? "none"} Serial={usbResult.volumeSerial ?? "n/a"}");
+                    }
+                }
+                catch (PolicyViolationException pvEx)
+                {
+                    await dialogService.ShowErrorAsync(
+                        "Policy Violation",
+                        $"USB policy enforcement failed: {pvEx.Message}",
+                        this);
+                    return;
+                }
+                catch (System.Security.SecurityException secEx)
+                {
+                    await dialogService.ShowErrorAsync(
+                        "Security Policy Error",
+                        $"Security policy check failed: {secEx.Message}",
+                        this);
+                    return;
+                }
+
                 var vaultLockDurationService = services.GetRequiredService<VaultLockDurationService>();
                 var secureTrashService = services.GetRequiredService<SecureTrashService>();
                 var encryptionService = services.GetRequiredService<EncryptionService>();

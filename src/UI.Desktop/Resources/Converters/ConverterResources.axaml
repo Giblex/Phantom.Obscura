@@ -20,6 +20,7 @@
     <converters:CategoryNameToBrushConverter x:Key="CategoryNameToBrushConverter"/>
     <converters:CategoryNameToForegroundBrushConverter x:Key="CategoryNameToForegroundBrushConverter"/>
     <converters:BooleanAndConverter x:Key="BooleanAndConverter"/>
+    <converters:ObjectReferenceEqualsConverter x:Key="ObjectReferenceEqualsConverter"/>
 
     <!-- NEW: Security score and utility converters -->
     <converters:SecurityScoreToBrushConverter x:Key="SecurityScoreToBrushConverter"/>

@@ -12,7 +12,8 @@
         Width="520" Height="600"
         MinWidth="480" MinHeight="500"
         WindowStartupLocation="CenterOwner"
-        Background="{DynamicResource WindowBackgroundBrush}">
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Classes="animated-window">
 
     <Design.DataContext>
         <vm:PasskeySettingsViewModel/>
@@ -25,11 +26,11 @@
                 Padding="24,20">
             <StackPanel Spacing="{StaticResource Space.Xs}">
                 <TextBlock Text="Passkey / FIDO2 Authentication"
-                           FontSize="20"
+                           FontSize="{StaticResource Type.Icon.Size}"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource HeaderTextBrush}"/>
                 <TextBlock Text="Use hardware keys, password managers, or platform authenticators"
-                           FontSize="13"
+                           FontSize="{StaticResource Type.Label.Size}"
                            Foreground="{DynamicResource HeaderMutedTextBrush}"/>
             </StackPanel>
         </Border>

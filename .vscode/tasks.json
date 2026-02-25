@@ -6,6 +6,18 @@
 			"type": "shell",
 			"command": "dotnet run --project \"src\\UI.Desktop\\PhantomVault.UI.csproj\" -c Debug",
 			"isBackground": true
+		},
+		{
+			"label": "Run PhantomVault UI (Debug)",
+			"type": "shell",
+			"command": "dotnet run --project \"src\\UI.Desktop\\PhantomVault.UI.csproj\" -c Debug",
+			"isBackground": true
+		},
+		{
+			"label": "Run PhantomVault UI (Debug)",
+			"type": "shell",
+			"command": "dotnet run --project \"src\\UI.Desktop\\PhantomVault.UI.csproj\" -c Debug",
+			"isBackground": true
 		}
 	]
 }

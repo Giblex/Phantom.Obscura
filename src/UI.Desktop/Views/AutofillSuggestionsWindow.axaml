@@ -10,7 +10,8 @@
         WindowStartupLocation="Manual"
         Topmost="True"
         ShowInTaskbar="False"
-        CanResize="True">
+        CanResize="True"
+        Classes="animated-window">
     
     <Window.Styles>
         <Style Selector="TabItem">
@@ -32,11 +33,11 @@
                 BorderThickness="0,0,0,1">
             <StackPanel Spacing="4">
                 <TextBlock Text="Auto-Fill Suggestions" 
-                           FontSize="15" 
+                           FontSize="{StaticResource Type.H5.Size}" 
                            FontWeight="Bold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
                 <TextBlock Text="Select credentials or detect new passwords" 
-                           FontSize="11" 
+                           FontSize="{StaticResource Type.Tiny.Size}" 
                            Foreground="{DynamicResource MutedTextBrush}"/>
             </StackPanel>
         </Border>
@@ -57,10 +58,10 @@
                             Margin="0,0,0,8">
                         <StackPanel Spacing="4">
                             <TextBlock Text="Current site:" 
-                                       FontSize="10"
+                                       FontSize="{StaticResource Type.Micro.Size}"
                                        Foreground="{DynamicResource MutedTextBrush}"/>
                             <TextBlock Text="github.com" 
-                                       FontSize="12"
+                                       FontSize="{StaticResource Type.Small.Size}"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource PrimaryTextBrush}"/>
                         </StackPanel>
@@ -92,9 +93,9 @@
                                                 Background="{DynamicResource AccentBrush}"
                                                 Margin="0,0,10,0">
                                             <TextBlock Text="GH" 
-                                                       FontSize="12"
+                                                       FontSize="{StaticResource Type.Small.Size}"
                                                        FontWeight="Bold"
-                                                       Foreground="White"
+                                                       Foreground="{DynamicResource ButtonAccentForegroundBrush}"
                                                        HorizontalAlignment="Center"
                                                        VerticalAlignment="Center"/>
                                         </Border>
@@ -102,16 +103,16 @@
                                                     VerticalAlignment="Center"
                                                     Spacing="2">
                                             <TextBlock Text="user@example.com" 
-                                                       FontSize="12"
+                                                       FontSize="{StaticResource Type.Small.Size}"
                                                        FontWeight="SemiBold"
                                                        Foreground="{DynamicResource PrimaryTextBrush}"/>
                                             <TextBlock Text="GitHub Account" 
-                                                       FontSize="10"
+                                                       FontSize="{StaticResource Type.Micro.Size}"
                                                        Foreground="{DynamicResource MutedTextBrush}"/>
                                         </StackPanel>
                                         <TextBlock Grid.Column="2"
                                                    Text="⭐"
-                                                   FontSize="14"
+                                                   FontSize="{StaticResource Type.Body.Size}"
                                                    VerticalAlignment="Center"
                                                    Margin="8,0,0,0"/>
                                     </Grid>
@@ -135,7 +136,7 @@
                                                 Background="#4078C0"
                                                 Margin="0,0,10,0">
                                             <TextBlock Text="GH" 
-                                                       FontSize="12"
+                                                       FontSize="{StaticResource Type.Small.Size}"
                                                        FontWeight="Bold"
                                                        Foreground="White"
                                                        HorizontalAlignment="Center"
@@ -145,11 +146,11 @@
                                                     VerticalAlignment="Center"
                                                     Spacing="2">
                                             <TextBlock Text="work@company.com" 
-                                                       FontSize="12"
+                                                       FontSize="{StaticResource Type.Small.Size}"
                                                        FontWeight="SemiBold"
                                                        Foreground="{DynamicResource PrimaryTextBrush}"/>
                                             <TextBlock Text="Work GitHub" 
-                                                       FontSize="10"
+                                                       FontSize="{StaticResource Type.Micro.Size}"
                                                        Foreground="{DynamicResource MutedTextBrush}"/>
                                         </StackPanel>
                                     </Grid>
@@ -163,15 +164,15 @@
                                         IsVisible="False">
                                     <StackPanel Spacing="8" HorizontalAlignment="Center">
                                         <TextBlock Text="🔍" 
-                                                   FontSize="32"
+                                                   FontSize="{StaticResource Type.H1.Size}"
                                                    HorizontalAlignment="Center"/>
                                         <TextBlock Text="No saved credentials for this site" 
-                                                   FontSize="12"
+                                                   FontSize="{StaticResource Type.Small.Size}"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"
                                                    HorizontalAlignment="Center"/>
                                         <TextBlock Text="Enter credentials to save them" 
-                                                   FontSize="10"
+                                                   FontSize="{StaticResource Type.Micro.Size}"
                                                    Foreground="{DynamicResource MutedTextBrush}"
                                                    HorizontalAlignment="Center"/>
                                     </StackPanel>
@@ -192,12 +193,12 @@
                                     Classes="liquid-glass"
                                     HorizontalAlignment="Stretch"
                                     Height="36"
-                                    FontSize="12"/>
+                                    FontSize="{StaticResource Type.Small.Size}"/>
                             <Button Content="⚙️ Manage All Credentials"
                                     Classes="liquid-glass"
                                     HorizontalAlignment="Stretch"
                                     Height="32"
-                                    FontSize="11"/>
+                                    FontSize="{StaticResource Type.Tiny.Size}"/>
                         </StackPanel>
                     </Border>
                     
@@ -215,11 +216,11 @@
                             Margin="0,0,0,12">
                         <StackPanel Spacing="6">
                             <TextBlock Text="Automatic Password Change Detection" 
-                                       FontSize="12"
+                                       FontSize="{StaticResource Type.Small.Size}"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource PrimaryTextBrush}"/>
                             <TextBlock Text="PhantomVault will automatically detect when you create or change passwords and offer to update your vault." 
-                                       FontSize="10"
+                                       FontSize="{StaticResource Type.Micro.Size}"
                                        Foreground="{DynamicResource SecondaryTextBrush}"
                                        TextWrapping="Wrap"/>
                         </StackPanel>
@@ -237,18 +238,18 @@
                                     Padding="15">
                                 <StackPanel Spacing="10">
                                     <TextBlock Text="Detection Settings" 
-                                               FontSize="11"
+                                               FontSize="{StaticResource Type.Tiny.Size}"
                                                FontWeight="SemiBold"
                                                Foreground="{DynamicResource SecondaryTextBrush}"/>
                                     <ToggleSwitch Content="Auto-detect new passwords"
                                                   IsChecked="True"
-                                                  FontSize="11"/>
+                                                  FontSize="{StaticResource Type.Tiny.Size}"/>
                                     <ToggleSwitch Content="Auto-detect password changes"
                                                   IsChecked="True"
-                                                  FontSize="11"/>
+                                                  FontSize="{StaticResource Type.Tiny.Size}"/>
                                     <ToggleSwitch Content="Prompt before saving"
                                                   IsChecked="True"
-                                                  FontSize="11"/>
+                                                  FontSize="{StaticResource Type.Tiny.Size}"/>
                                 </StackPanel>
                             </Border>
                             
@@ -258,7 +259,7 @@
                                     Padding="15">
                                 <StackPanel Spacing="10">
                                     <TextBlock Text="Recent Detections" 
-                                               FontSize="11"
+                                               FontSize="{StaticResource Type.Tiny.Size}"
                                                FontWeight="SemiBold"
                                                Foreground="{DynamicResource SecondaryTextBrush}"/>
                                     
@@ -273,21 +274,21 @@
                                                         Orientation="Horizontal" 
                                                         Spacing="6">
                                                 <TextBlock Text="✓" 
-                                                           FontSize="12"
+                                                           FontSize="{StaticResource Type.Small.Size}"
                                                            Foreground="{DynamicResource SuccessBrush}"/>
                                                 <TextBlock Text="Password Changed" 
-                                                           FontSize="11"
+                                                           FontSize="{StaticResource Type.Tiny.Size}"
                                                            FontWeight="SemiBold"
                                                            Foreground="{DynamicResource PrimaryTextBrush}"/>
                                             </StackPanel>
                                             <TextBlock Grid.Row="1" 
                                                        Text="github.com • user@example.com" 
-                                                       FontSize="10"
+                                                       FontSize="{StaticResource Type.Micro.Size}"
                                                        Foreground="{DynamicResource MutedTextBrush}"
                                                        Margin="0,4,0,0"/>
                                             <TextBlock Grid.Row="2" 
                                                        Text="Updated 2 minutes ago" 
-                                                       FontSize="9"
+                                                       FontSize="{StaticResource Type.Mini.Size}"
                                                        Foreground="{DynamicResource MutedTextBrush}"
                                                        Margin="0,2,0,0"/>
                                         </Grid>
@@ -300,10 +301,10 @@
                                             IsVisible="False">
                                         <StackPanel Spacing="4" HorizontalAlignment="Center">
                                             <TextBlock Text="👁️" 
-                                                       FontSize="24"
+                                                       FontSize="{StaticResource Type.H2.Size}"
                                                        HorizontalAlignment="Center"/>
                                             <TextBlock Text="No recent detections" 
-                                                       FontSize="10"
+                                                       FontSize="{StaticResource Type.Micro.Size}"
                                                        Foreground="{DynamicResource MutedTextBrush}"
                                                        HorizontalAlignment="Center"/>
                                         </StackPanel>
@@ -319,26 +320,26 @@
                                     BorderThickness="1">
                                 <StackPanel Spacing="10">
                                     <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <TextBlock Text="🔄" FontSize="14"/>
+                                        <TextBlock Text="🔄" FontSize="{StaticResource Type.Body.Size}"/>
                                         <TextBlock Text="Quick Update Credential" 
-                                                   FontSize="11"
+                                                   FontSize="{StaticResource Type.Tiny.Size}"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
                                     </StackPanel>
                                     <TextBlock Text="Detected a password change on this page" 
-                                               FontSize="10"
+                                               FontSize="{StaticResource Type.Micro.Size}"
                                                Foreground="{DynamicResource SecondaryTextBrush}"
                                                TextWrapping="Wrap"/>
                                     <ComboBox PlaceholderText="Select credential to update"
                                               Height="32"
-                                              FontSize="11">
+                                              FontSize="{StaticResource Type.Tiny.Size}">
                                         <ComboBoxItem Content="user@example.com - GitHub Account"/>
                                         <ComboBoxItem Content="work@company.com - Work GitHub"/>
                                     </ComboBox>
                                     <Button Content="Update Selected Credential"
                                             Classes="accent"
                                             Height="32"
-                                            FontSize="11"
+                                            FontSize="{StaticResource Type.Tiny.Size}"
                                             HorizontalAlignment="Stretch"/>
                                 </StackPanel>
                             </Border>
@@ -356,7 +357,7 @@
                                 Classes="liquid-glass"
                                 HorizontalAlignment="Stretch"
                                 Height="32"
-                                FontSize="11"/>
+                                FontSize="{StaticResource Type.Tiny.Size}"/>
                     </Border>
                     
                 </Grid>

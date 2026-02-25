@@ -1,10 +1,10 @@
 using System;
 using Avalonia;
-using Avalonia.Animation;
+using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
-using Avalonia.Styling;
+using Avalonia.Threading;
 using Avalonia.Xaml.Interactivity;
 
 namespace PhantomVault.UI.Behaviors
@@ -12,6 +12,8 @@ namespace PhantomVault.UI.Behaviors
     /// <summary>
     /// Behavior that scales up a control slightly on hover.
     /// Respects ReduceMotion accessibility settings.
+    /// Uses DispatcherTimer interpolation because Avalonia's
+    /// Animation.RunAsync() cannot target ScaleTransform (it is not a Visual).
     /// </summary>
     public class HoverScaleBehavior : Behavior<Control>
     {
@@ -23,6 +25,12 @@ namespace PhantomVault.UI.Behaviors
 
         private ScaleTransform? _transform;
         private bool _isHovering;
+        private DispatcherTimer? _animTimer;
+        private double _animFromScale;
+        private double _animToScale;
+        private DateTime _animStart;
+        private double _animDuration; // seconds
+        private readonly CubicEaseOut _easing = new();
 
         /// <summary>
         /// Scale factor on hover (default: 1.02 = 102%)
@@ -61,6 +69,8 @@ namespace PhantomVault.UI.Behaviors
         {
             base.OnDetaching();
 
+            StopAnimation();
+
             if (AssociatedObject != null)
             {
                 AssociatedObject.PointerEntered -= OnPointerEntered;
@@ -73,7 +83,7 @@ namespace PhantomVault.UI.Behaviors
             if (_isHovering || _transform == null) return;
             _isHovering = true;
 
-            AnimateScale(1.0, HoverScale);
+            AnimateScale(_transform.ScaleX, HoverScale);
         }
 
         private void OnPointerExited(object? sender, PointerEventArgs e)
@@ -81,54 +91,71 @@ namespace PhantomVault.UI.Behaviors
             if (!_isHovering || _transform == null) return;
             _isHovering = false;
 
-            AnimateScale(HoverScale, 1.0);
+            AnimateScale(_transform.ScaleX, 1.0);
         }
 
-        private async void AnimateScale(double fromScale, double toScale)
+        private void AnimateScale(double fromScale, double toScale)
         {
             if (_transform == null || AssociatedObject == null) return;
 
-            // Check ReduceMotion - if enabled, use instant transition
+            // Check ReduceMotion — if enabled, snap immediately
             var reduceMotion = Services.AccessibilityService.Instance.ReduceMotion;
             if (reduceMotion)
             {
+                StopAnimation();
                 _transform.ScaleX = toScale;
                 _transform.ScaleY = toScale;
                 return;
             }
 
-            // Smooth animation
-            var duration = AnimationHelper.GetDuration(AnimationTiming.Fast);
-            var easing = AnimationHelper.GetEasing();
+            // Set up timer-driven interpolation (~60 fps)
+            _animFromScale = fromScale;
+            _animToScale = toScale;
+            _animDuration = AnimationHelper.GetDuration(AnimationTiming.Fast);
+            _animStart = DateTime.UtcNow;
 
-            var animation = new Avalonia.Animation.Animation
+            if (_animTimer == null)
             {
-                Duration = TimeSpan.FromSeconds(duration),
-                Easing = easing,
-                Children =
-                {
-                    new KeyFrame
-                    {
-                        Cue = new Cue(0.0),
-                        Setters =
-                        {
-                            new Setter(ScaleTransform.ScaleXProperty, fromScale),
-                            new Setter(ScaleTransform.ScaleYProperty, fromScale)
-                        }
-                    },
-                    new KeyFrame
-                    {
-                        Cue = new Cue(1.0),
-                        Setters =
-                        {
-                            new Setter(ScaleTransform.ScaleXProperty, toScale),
-                            new Setter(ScaleTransform.ScaleYProperty, toScale)
-                        }
-                    }
-                }
-            };
+                _animTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
+                _animTimer.Tick += OnAnimTick;
+            }
 
-            await animation.RunAsync(_transform);
+            _animTimer.Start();
+        }
+
+        private void OnAnimTick(object? sender, EventArgs e)
+        {
+            if (_transform == null)
+            {
+                StopAnimation();
+                return;
+            }
+
+            var elapsed = (DateTime.UtcNow - _animStart).TotalSeconds;
+            var t = Math.Clamp(elapsed / _animDuration, 0.0, 1.0);
+
+            // Apply cubic-ease-out
+            var easedT = _easing.Ease(t);
+            var val = _animFromScale + (_animToScale - _animFromScale) * easedT;
+            _transform.ScaleX = val;
+            _transform.ScaleY = val;
+
+            if (t >= 1.0)
+            {
+                _transform.ScaleX = _animToScale;
+                _transform.ScaleY = _animToScale;
+                _animTimer?.Stop();
+            }
+        }
+
+        private void StopAnimation()
+        {
+            if (_animTimer != null)
+            {
+                _animTimer.Stop();
+                _animTimer.Tick -= OnAnimTick;
+                _animTimer = null;
+            }
         }
     }
 }

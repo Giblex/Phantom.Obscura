@@ -10,8 +10,6 @@ namespace PhantomVault.UI.ViewModels.Settings
 {
     public class AdvancedSettingsViewModel : ReactiveObject
     {
-        private bool _enableVeraCrypt = false;
-        private string _veraCryptPath = string.Empty;
         private bool _enableDebugLogging = false;
         private bool _showDiagnosticInfo = false;
         private bool _enablePrivacyMode = false;
@@ -23,18 +21,6 @@ namespace PhantomVault.UI.ViewModels.Settings
         private bool _clearClipboardOnLock = true;
         private bool _requireUnlockToShow = false;
         private int _selectedFailedAttempts = 2; // 10 attempts
-
-        public bool EnableVeraCrypt
-        {
-            get => _enableVeraCrypt;
-            set => this.RaiseAndSetIfChanged(ref _enableVeraCrypt, value);
-        }
-
-        public string VeraCryptPath
-        {
-            get => _veraCryptPath;
-            set => this.RaiseAndSetIfChanged(ref _veraCryptPath, value);
-        }
 
         public bool EnableDebugLogging
         {
@@ -102,9 +88,6 @@ namespace PhantomVault.UI.ViewModels.Settings
             set => this.RaiseAndSetIfChanged(ref _selectedFailedAttempts, value);
         }
 
-        public ICommand BrowseVeraCryptCommand { get; }
-        public ICommand AutoDetectVeraCryptCommand { get; }
-        public ICommand DownloadVeraCryptCommand { get; }
         public ICommand ViewLogsCommand { get; }
         public ICommand ExportDiagnosticReportCommand { get; }
         public ICommand OpenLogFolderCommand { get; }
@@ -151,9 +134,6 @@ namespace PhantomVault.UI.ViewModels.Settings
 
         public AdvancedSettingsViewModel()
         {
-            BrowseVeraCryptCommand = ReactiveCommand.CreateFromTask(BrowseVeraCrypt);
-            AutoDetectVeraCryptCommand = ReactiveCommand.Create(AutoDetectVeraCrypt);
-            DownloadVeraCryptCommand = ReactiveCommand.Create(DownloadVeraCrypt);
             ViewLogsCommand = ReactiveCommand.Create(ViewLogs);
             ExportDiagnosticReportCommand = ReactiveCommand.CreateFromTask(ExportDiagnosticReport);
             OpenLogFolderCommand = ReactiveCommand.Create(OpenLogFolder);
@@ -161,82 +141,6 @@ namespace PhantomVault.UI.ViewModels.Settings
             RebuildSearchIndexCommand = ReactiveCommand.CreateFromTask(RebuildSearchIndex);
             ClearAllVaultDataCommand = ReactiveCommand.CreateFromTask(ClearAllVaultData);
             ResetToDefaultsCommand = ReactiveCommand.CreateFromTask(ResetToDefaults);
-        }
-
-        private async Task BrowseVeraCrypt()
-        {
-            try
-            {
-                var topLevel = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
-                    ? desktop.MainWindow
-                    : null;
-
-                if (topLevel == null) return;
-
-                var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-                {
-                    Title = "Select VeraCrypt Executable",
-                    AllowMultiple = false,
-                    FileTypeFilter = new[]
-                    {
-                        new FilePickerFileType("Executable") { Patterns = new[] { "*.exe" } },
-                        new FilePickerFileType("All Files") { Patterns = new[] { "*" } }
-                    }
-                });
-
-                if (files.Count > 0)
-                {
-                    VeraCryptPath = files[0].Path.LocalPath;
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error selecting VeraCrypt path: {ex.Message}");
-            }
-        }
-
-        private void AutoDetectVeraCrypt()
-        {
-            try
-            {
-                var commonPaths = new[]
-                {
-                    @"C:\Program Files\VeraCrypt\VeraCrypt.exe",
-                    @"C:\Program Files (x86)\VeraCrypt\VeraCrypt.exe"
-                };
-
-                foreach (var path in commonPaths)
-                {
-                    if (System.IO.File.Exists(path))
-                    {
-                        VeraCryptPath = path;
-                        System.Diagnostics.Debug.WriteLine($"VeraCrypt auto-detected: {path}");
-                        return;
-                    }
-                }
-
-                System.Diagnostics.Debug.WriteLine("VeraCrypt not found in common locations");
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Auto-detect failed: {ex.Message}");
-            }
-        }
-
-        private void DownloadVeraCrypt()
-        {
-            try
-            {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = "https://www.veracrypt.fr/en/Downloads.html",
-                    UseShellExecute = true
-                });
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error opening VeraCrypt website: {ex.Message}");
-            }
         }
 
         private void ViewLogs()
@@ -414,13 +318,6 @@ namespace PhantomVault.UI.ViewModels.Settings
             sb.AppendLine($"Clear Clipboard on Lock: {ClearClipboardOnLock}");
             sb.AppendLine($"Require Unlock to Show: {RequireUnlockToShow}");
             sb.AppendLine($"Failed Attempts Threshold: {GetFailedAttemptsValue()}");
-            sb.AppendLine();
-
-            // VeraCrypt Integration
-            sb.AppendLine("VERACRYPT INTEGRATION");
-            sb.AppendLine("---------------------");
-            sb.AppendLine($"Enabled: {EnableVeraCrypt}");
-            sb.AppendLine($"Path: {(string.IsNullOrEmpty(VeraCryptPath) ? "Not configured" : VeraCryptPath)}");
             sb.AppendLine();
 
             // Paths

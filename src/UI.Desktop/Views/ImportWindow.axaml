@@ -9,7 +9,8 @@
         MinWidth="700" MinHeight="600"
         WindowStartupLocation="CenterOwner"
         CanResize="True"
-        Background="{DynamicResource WindowBackgroundBrush}">
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Classes="animated-window">
     <InputElement.KeyBindings>
     <KeyBinding Gesture="Escape" Command="{Binding CloseCommand}"/>
     </InputElement.KeyBindings>
@@ -77,7 +78,7 @@
             <Border Padding="30,25" ClipToBounds="True">
                 <StackPanel Spacing="16">
             <!-- Header -->
-            <TextBlock Text="Import Credentials" FontSize="20" FontWeight="SemiBold"/>
+            <TextBlock Text="Import Credentials" FontSize="{StaticResource Type.Icon.Size}" FontWeight="SemiBold"/>
             
             <TextBlock Text="Import credentials from external password managers or export files." 
                        TextWrapping="Wrap" 
@@ -101,7 +102,7 @@
                                 <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
                                         <Image Source="{Binding IconSource}" Width="56" Height="56" Stretch="Uniform" HorizontalAlignment="Center" />
-                                        <TextBlock Text="{Binding Name}" FontSize="12" TextAlignment="Center" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}" MaxWidth="140" />
+                                        <TextBlock Text="{Binding Name}" FontSize="{StaticResource Type.Small.Size}" TextAlignment="Center" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}" MaxWidth="140" />
                                     </StackPanel>
                                 </Grid>
                                 <ToolTip.Tip>
@@ -136,7 +137,7 @@
                     BorderBrush="{DynamicResource ControlBorderBrush}"
                     BorderThickness="1">
                 <StackPanel Spacing="4">
-                    <TextBlock Text="Status:" FontWeight="SemiBold" FontSize="12"/>
+                    <TextBlock Text="Status:" FontWeight="SemiBold" FontSize="{StaticResource Type.Small.Size}"/>
                     <TextBlock Text="{Binding StatusMessage}" 
                                TextWrapping="Wrap" 
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -169,12 +170,12 @@
                                             <TextBlock Foreground="{DynamicResource SecondaryTextBrush}">
                                                 <Run Text="Username: "/><Run Text="{Binding Username}"/>
                                             </TextBlock>
-                                            <TextBlock Foreground="{DynamicResource SecondaryTextBrush}" FontSize="11">
+                                            <TextBlock Foreground="{DynamicResource SecondaryTextBrush}" FontSize="{StaticResource Type.Tiny.Size}">
                                                 <Run Text="Password: ●●●●●●●●"/>
                                             </TextBlock>
                                             <TextBlock Text="{Binding Url}" 
                                                        Foreground="{DynamicResource MutedTextBrush}" 
-                                                       FontSize="11"/>
+                                                       FontSize="{StaticResource Type.Tiny.Size}"/>
                                         </StackPanel>
                                     </Border>
                                 </DataTemplate>

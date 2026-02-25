@@ -1,7 +1,9 @@
 using System;
+using System.Globalization;
 using System.Threading;
 using ReactiveUI;
 using PhantomVault.Core.Models;
+using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using PhantomVault.UI.Services;
@@ -24,9 +26,22 @@ namespace PhantomVault.UI.ViewModels
         private IBrush _passwordFlagBackground = Brushes.Transparent;
         private bool _showPasswordFlag;
         private string _passwordFlagValue = string.Empty;
+        private int _passwordStrength;
+        private string _passwordStrengthText = string.Empty;
+        private IBrush _passwordStrengthColor = Brushes.Gray;
         private string _currentTotpCode = string.Empty;
         private int _totpSecondsRemaining;
         private Timer? _totpTimer;
+        private double _totpCodeOpacity = 1.0;
+        private double _totpCodeScale = 1.0;
+
+        // Shared IconManager for all credential VMs – avoids rebuilding the
+        // 8 000-file directory index on every credential construction.
+        private static readonly Lazy<IconManager> _sharedIconManager = new(() =>
+        {
+            var visualsDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Visuals");
+            return new IconManager(visualsDir);
+        }, System.Threading.LazyThreadSafetyMode.ExecutionAndPublication);
 
         public CredentialViewModel(Credential credential)
         {
@@ -51,11 +66,10 @@ namespace PhantomVault.UI.ViewModels
                 _iconBackgroundBrush = new SolidColorBrush(Colors.Transparent);
             }
 
-            // Attempt to load an image icon from the Assets/Icons folder
+            // Attempt to auto-detect an icon from Assets/Visuals/Entry Logos
             try
             {
-                var iconsDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Icons");
-                var iconManager = new PhantomVault.Core.Services.IconManager(iconsDir);
+                var iconManager = _sharedIconManager.Value;
                 var path = iconManager.FindIconPathForCredential(_credential);
                 if (!string.IsNullOrEmpty(path) && System.IO.File.Exists(path))
                 {
@@ -75,9 +89,10 @@ namespace PhantomVault.UI.ViewModels
             }
 
             UpdatePasswordFlagState();
+            UpdatePasswordStrengthState();
 
-            // Initialize TOTP timer if this is a TOTP entry
-            if (_credential.EntryType == EntryType.TotpGenerator && !string.IsNullOrWhiteSpace(_credential.TotpSecret))
+            // Initialize TOTP timer if this entry has a TOTP secret (any entry type)
+            if (!string.IsNullOrWhiteSpace(_credential.TotpSecret))
             {
                 UpdateTotpCode();
                 _totpTimer = new Timer(_ => UpdateTotpCode(), null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
@@ -133,6 +148,8 @@ namespace PhantomVault.UI.ViewModels
                 this.RaiseAndSetIfChanged(ref _isFavorite, value);
                 // Notify the FavoriteIcon text and any other dependent UI
                 this.RaisePropertyChanged(nameof(FavoriteIcon));
+                this.RaisePropertyChanged(nameof(FavoriteIconBrush));
+                this.RaisePropertyChanged(nameof(FavoriteIconOpacity));
             }
         }
 
@@ -193,6 +210,14 @@ namespace PhantomVault.UI.ViewModels
         }
 
         public string FavoriteIcon => IsFavorite ? "⭐" : "☆";
+
+        /// <summary>Brush for the favourite SVG icon: gold when favourite, dim white when not.</summary>
+        public IBrush FavoriteIconBrush => IsFavorite
+            ? new SolidColorBrush(Color.Parse("#FFD700"))
+            : new SolidColorBrush(Color.Parse("#AAAAAA"));
+
+        /// <summary>Opacity for the favourite SVG icon: full when favourite, dimmed when not.</summary>
+        public double FavoriteIconOpacity => IsFavorite ? 1.0 : 0.45;
 
         public bool HasGroup => !string.IsNullOrEmpty(Group);
         public bool HasUrl => !string.IsNullOrEmpty(Url);
@@ -317,55 +342,107 @@ namespace PhantomVault.UI.ViewModels
                     this.RaisePropertyChanged();
                     this.RaisePropertyChanged(nameof(TotpProgressPercent));
                     this.RaisePropertyChanged(nameof(TotpTimerArcPath));
+                    this.RaisePropertyChanged(nameof(TotpIsExpiring));
+                    this.RaisePropertyChanged(nameof(TotpTimerArcPathCompact));
                 }
             }
         }
 
         public double TotpProgressPercent => TotpTimeStep > 0 ? (double)TotpSecondsRemaining / TotpTimeStep * 100 : 0;
         
+        /// <summary>True when fewer than 6 seconds remain — used to trigger urgency color.</summary>
+        public bool TotpIsExpiring => TotpSecondsRemaining > 0 && TotpSecondsRemaining <= 5;
+
         /// <summary>
-        /// Gets the SVG path data for the circular timer arc that decreases clockwise as time runs out.
+        /// Opacity for the TOTP code text; pulses from 0 → 1 when code changes.
+        /// Bind a DoubleTransition on Opacity to animate the fade-in.
         /// </summary>
-        public string TotpTimerArcPath
+        public double TotpCodeOpacity
         {
-            get
+            get => _totpCodeOpacity;
+            private set
             {
-                if (TotpSecondsRemaining <= 0 || TotpTimeStep <= 0)
-                    return "";
-
-                const double centerX = 20;
-                const double centerY = 20;
-                const double radius = 16;
-
-                // Calculate progress (0.0 to 1.0)
-                double progress = (double)TotpSecondsRemaining / TotpTimeStep;
-                double angleDegrees = progress * 360.0;
-
-                if (angleDegrees >= 360)
+                if (Math.Abs(_totpCodeOpacity - value) > 0.001)
                 {
-                    // Full circle
-                    return $"M {centerX},{centerY - radius} A {radius},{radius} 0 1,1 {centerX - 0.01},{centerY - radius}";
+                    _totpCodeOpacity = value;
+                    this.RaisePropertyChanged();
                 }
-
-                // Convert to radians (start at top, 12 o'clock)
-                double angleRadians = (angleDegrees - 90) * Math.PI / 180.0;
-                
-                // Calculate end point
-                double endX = centerX + radius * Math.Cos(angleRadians);
-                double endY = centerY + radius * Math.Sin(angleRadians);
-
-                // Start point at top
-                double startX = centerX;
-                double startY = centerY - radius;
-
-                // Large arc flag
-                int largeArcFlag = angleDegrees > 180 ? 1 : 0;
-
-                // Create arc path (sweep clockwise)
-                return $"M {startX},{startY} A {radius},{radius} 0 {largeArcFlag},1 {endX},{endY}";
             }
         }
-        
+
+        /// <summary>
+        /// Scale multiplier for TOTP code; pulses from 0.85 → 1.0 on code change.
+        /// </summary>
+        public double TotpCodeScale
+        {
+            get => _totpCodeScale;
+            private set
+            {
+                if (Math.Abs(_totpCodeScale - value) > 0.001)
+                {
+                    _totpCodeScale = value;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the Geometry for the circular timer arc that decreases clockwise as time runs out.
+        /// Builds geometry programmatically for reliable dynamic updates.
+        /// </summary>
+        public Geometry? TotpTimerArcPath
+        {
+            get => BuildArcGeometry(20, 16, TotpSecondsRemaining, TotpTimeStep);
+        }
+
+        /// <summary>
+        /// Compact Geometry for the smaller 32x32 timer ring (center=16, radius=12).
+        /// </summary>
+        public Geometry? TotpTimerArcPathCompact
+        {
+            get => BuildArcGeometry(16, 12, TotpSecondsRemaining, TotpTimeStep);
+        }
+
+        /// <summary>
+        /// Builds an arc geometry for the TOTP countdown ring.
+        /// Uses StreamGeometry with invariant culture to avoid locale issues.
+        /// </summary>
+        private static Geometry? BuildArcGeometry(double center, double radius, int secondsRemaining, int timeStep)
+        {
+            if (secondsRemaining <= 0 || timeStep <= 0)
+                return null;
+
+            double progress = (double)secondsRemaining / timeStep;
+            double angleDegrees = progress * 360.0;
+
+            var startX = center;
+            var startY = center - radius;
+
+            string pathData;
+            if (angleDegrees >= 359.99)
+            {
+                // Near-full circle (two semicircular arcs to avoid SVG zero-length arc issue)
+                pathData = string.Format(
+                    CultureInfo.InvariantCulture,
+                    "M {0},{1} A {2},{2} 0 1,1 {3},{1}",
+                    startX, startY, radius, center - 0.01);
+            }
+            else
+            {
+                double angleRadians = (angleDegrees - 90) * Math.PI / 180.0;
+                double endX = center + radius * Math.Cos(angleRadians);
+                double endY = center + radius * Math.Sin(angleRadians);
+                int largeArcFlag = angleDegrees > 180 ? 1 : 0;
+
+                pathData = string.Format(
+                    CultureInfo.InvariantCulture,
+                    "M {0},{1} A {2},{2} 0 {3},1 {4},{5}",
+                    startX, startY, radius, largeArcFlag, endX, endY);
+            }
+
+            return StreamGeometry.Parse(pathData);
+        }
+
         public bool HasApiEnvironment => !string.IsNullOrWhiteSpace(ApiEnvironment);
         public bool HasApiDocumentation => !string.IsNullOrWhiteSpace(ApiDocumentationUrl);
 
@@ -402,6 +479,12 @@ namespace PhantomVault.UI.ViewModels
 
         public string PasswordFlagValue => _passwordFlagValue;
 
+        public int PasswordStrength => _passwordStrength;
+
+        public string PasswordStrengthText => _passwordStrengthText;
+
+        public IBrush PasswordStrengthColor => _passwordStrengthColor;
+
         public Credential GetCredential() => _credential;
 
         /// <summary>
@@ -413,6 +496,7 @@ namespace PhantomVault.UI.ViewModels
         public void Refresh()
         {
             UpdatePasswordFlagState();
+            UpdatePasswordStrengthState();
             this.RaisePropertyChanged(nameof(Title));
             this.RaisePropertyChanged(nameof(Username));
             this.RaisePropertyChanged(nameof(Password));
@@ -434,6 +518,9 @@ namespace PhantomVault.UI.ViewModels
             this.RaisePropertyChanged(nameof(PasswordFlagBackground));
             this.RaisePropertyChanged(nameof(ShowPasswordFlag));
             this.RaisePropertyChanged(nameof(PasswordFlagValue));
+            this.RaisePropertyChanged(nameof(PasswordStrength));
+            this.RaisePropertyChanged(nameof(PasswordStrengthText));
+            this.RaisePropertyChanged(nameof(PasswordStrengthColor));
             this.RaisePropertyChanged(nameof(DetailLine1));
             this.RaisePropertyChanged(nameof(DetailLine2));
             this.RaisePropertyChanged(nameof(HasDetailLine2));
@@ -552,6 +639,22 @@ namespace PhantomVault.UI.ViewModels
                 _passwordFlagBackground = info.CreateBadgeBrush();
                 _showPasswordFlag = true;
                 _passwordFlagValue = storedValue ?? string.Empty;
+            }
+        }
+
+        private void UpdatePasswordStrengthState()
+        {
+            var info = PasswordStrengthHelper.Evaluate(_credential.Password);
+            _passwordStrength = info.Progress;
+            if (info.HasValue)
+            {
+                _passwordStrengthText = info.Label;
+                _passwordStrengthColor = info.CreateBrush();
+            }
+            else
+            {
+                _passwordStrengthText = string.Empty;
+                _passwordStrengthColor = Brushes.Gray;
             }
         }
 
@@ -699,8 +802,11 @@ namespace PhantomVault.UI.ViewModels
             {
                 if (string.IsNullOrWhiteSpace(_credential.TotpSecret))
                 {
-                    CurrentTotpCode = string.Empty;
-                    TotpSecondsRemaining = 0;
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        CurrentTotpCode = string.Empty;
+                        TotpSecondsRemaining = 0;
+                    });
                     return;
                 }
 
@@ -712,19 +818,48 @@ namespace PhantomVault.UI.ViewModels
                     _credential.TotpTimeStep
                 );
 
-                CurrentTotpCode = code;
-
                 // Calculate seconds remaining
                 var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                 var timeStep = _credential.TotpTimeStep;
                 var secondsElapsed = (int)(now % timeStep);
-                TotpSecondsRemaining = timeStep - secondsElapsed;
+                var remaining = timeStep - secondsElapsed;
+
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    var codeChanged = _currentTotpCode != code;
+                    CurrentTotpCode = code;
+                    TotpSecondsRemaining = remaining;
+
+                    if (codeChanged && !string.IsNullOrEmpty(code))
+                    {
+                        // Kick off fade-in + scale-up animation
+                        TotpCodeOpacity = 0.0;
+                        TotpCodeScale = 0.85;
+                        // After a tiny delay let transitions animate to final values
+                        _ = AnimateTotpCodeInAsync();
+                    }
+                });
             }
             catch
             {
-                CurrentTotpCode = "------";
-                TotpSecondsRemaining = 0;
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    CurrentTotpCode = "------";
+                    TotpSecondsRemaining = 0;
+                });
             }
+        }
+
+        /// <summary>
+        /// Briefly yields to let the UI apply opacity=0 / scale=0.85, then sets
+        /// them back to 1.0 so the bound Transitions animate smoothly.
+        /// </summary>
+        private async System.Threading.Tasks.Task AnimateTotpCodeInAsync()
+        {
+            // One frame delay so the transition sees the "from" values
+            await System.Threading.Tasks.Task.Delay(30);
+            TotpCodeOpacity = 1.0;
+            TotpCodeScale = 1.0;
         }
 
         public void Dispose()

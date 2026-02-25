@@ -5,6 +5,7 @@ using System.Management;
 using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using PhantomVault.Core;
+using PhantomVault.Core.Models;
 
 /// <summary>
 /// Enforces USB, manifest, and desktop sync policies for PhantomVault.
@@ -59,13 +60,13 @@ public sealed class PolicyEngine
             if (_policy.Usb.RequireRemovable && drive.DriveType != DriveType.Removable)
                 continue;
 
-            // USB standard check (v1: honest version - not enforced yet, just logged)
+            // USB standard check - enforced: devices that fail are rejected
             // Only check on Windows where WMI is available
             if (OperatingSystem.IsWindows() && !string.IsNullOrWhiteSpace(_policy.Usb.MinStandard) &&
                 !IsUsbStandardSatisfied(drive, _policy.Usb.MinStandard!))
             {
-                System.Diagnostics.Debug.WriteLine($"Drive {drive.Name} does not meet minimum USB standard '{_policy.Usb.MinStandard}' (v1: not enforced)");
-                // v1: We continue anyway - this is logged for future enforcement
+                System.Diagnostics.Debug.WriteLine($"Drive {drive.Name} does not meet minimum USB standard '{_policy.Usb.MinStandard}' - skipping device");
+                continue; // Fail-closed: device does not meet USB standard, skip it
             }
 
             // Branch by identity mode
@@ -173,7 +174,7 @@ public sealed class PolicyEngine
             if (string.IsNullOrEmpty(deviceId))
             {
                 System.Diagnostics.Debug.WriteLine($"USB standard check: Could not find PNPDeviceID for drive {driveLetter}");
-                return true; // Can't determine, allow it
+                return false; // Fail-closed: cannot verify USB standard, reject device
             }
 
             // Query USB controller for this device to determine USB version
@@ -203,14 +204,14 @@ public sealed class PolicyEngine
                     return false;
 
                 default:
-                    System.Diagnostics.Debug.WriteLine($"USB standard check: Unknown standard '{minStandard}', allowing device");
-                    return true;
+                    System.Diagnostics.Debug.WriteLine($"USB standard check: Unknown standard '{minStandard}', rejecting device");
+                    return false; // Fail-closed: unknown standard requirement, reject
             }
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"USB standard check failed with exception: {ex.Message}");
-            return true; // On error, allow the device (fail-open for usability)
+            return false; // Fail-closed: cannot verify USB standard on error, reject device
         }
     }
 
@@ -515,6 +516,74 @@ public sealed class PolicyEngine
             throw new PolicyViolationException(
                 PolicyViolationCode.ManifestVersionMismatch,
                 $"Manifest version {manifestVersion} is above maximum allowed ({_policy.Manifest.MaxVersion}).");
+        }
+    }
+
+    /// <summary>
+    /// Enforces authentication factor requirements from the manifest policy.
+    /// Must be called before granting access to vault contents.
+    /// </summary>
+    /// <param name="manifest">The vault manifest to validate.</param>
+    /// <param name="lastKnownSequence">The last known monotonic sequence value for anti-rollback.</param>
+    public void EnforceAuthenticationFactors(VaultManifest manifest, long lastKnownSequence = 0)
+    {
+        if (manifest == null)
+            throw new ArgumentNullException(nameof(manifest));
+
+        // SECURITY: Keyfile is mandatory when policy requires it.
+        // A vault without a keyfile relies solely on password + Argon2id,
+        // making it vulnerable if the USB is cloned and the password is weak.
+        if (_policy.Manifest.RequireKeyfile)
+        {
+            if (string.IsNullOrWhiteSpace(manifest.KeyfilePath))
+            {
+                throw new PolicyViolationException(
+                    PolicyViolationCode.KeyfileRequired,
+                    "Policy requires a keyfile but the vault has no keyfile configured. " +
+                    "A keyfile provides a mandatory second factor that prevents password-only access.");
+            }
+        }
+
+        // SECURITY: Hardware token (YubiKey/FIDO2) is mandatory when policy requires it.
+        // This is the strongest anti-clone control: even with the USB and password,
+        // an attacker cannot unlock without the physical hardware token.
+        if (_policy.Manifest.RequireHardwareToken)
+        {
+            if (!manifest.RequiresHardwareToken)
+            {
+                throw new PolicyViolationException(
+                    PolicyViolationCode.HardwareTokenRequired,
+                    "Policy requires a hardware token (YubiKey/FIDO2) but the vault does not have " +
+                    "hardware token authentication enabled.");
+            }
+
+            // Also verify that credential material exists (not just the flag)
+            bool hasYubiKey = !string.IsNullOrWhiteSpace(manifest.YubiKeyCredentialIdBase64) &&
+                              manifest.YubiKeySerial.HasValue;
+            bool hasPasskey = !string.IsNullOrWhiteSpace(manifest.PasskeyId);
+
+            if (!hasYubiKey && !hasPasskey)
+            {
+                throw new PolicyViolationException(
+                    PolicyViolationCode.HardwareTokenRequired,
+                    "Policy requires a hardware token but no credential material (YubiKey credential ID " +
+                    "or passkey ID) is present in the manifest. Register a hardware token before use.");
+            }
+        }
+
+        // SECURITY: Anti-rollback enforcement via monotonic sequence counter.
+        // Prevents an attacker from replacing the manifest with an older version
+        // that had weaker settings or fewer authentication requirements.
+        if (_policy.Manifest.RequireAntiRollback)
+        {
+            if (manifest.ManifestSequence < lastKnownSequence)
+            {
+                throw new PolicyViolationException(
+                    PolicyViolationCode.AntiRollbackViolation,
+                    $"Anti-rollback violation: manifest sequence {manifest.ManifestSequence} is below " +
+                    $"last known sequence {lastKnownSequence}. The manifest may have been replaced " +
+                    "with an older version.");
+            }
         }
     }
 

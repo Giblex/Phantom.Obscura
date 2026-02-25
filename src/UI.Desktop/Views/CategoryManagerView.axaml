@@ -19,6 +19,7 @@
     <converters:IconPathToBitmapConverter x:Key="IconPathToBitmapConverter"/>
     <converters:IconPathExistsConverter x:Key="IconPathExistsConverter"/>
     <converters:InvertBoolConverter x:Key="InvertBoolConverter"/>
+    <converters:IsTrashToBrushConverter x:Key="IsTrashToBrushConverter"/>
     </UserControl.Resources>
 
     <UserControl.Styles>
@@ -74,9 +75,9 @@
             <Grid ColumnDefinitions="*,Auto">
                 <TextBlock Grid.Column="0"
                            Text="Manage Categories"
-                           FontSize="18"
+                           FontSize="{StaticResource Type.H3.Size}"
                            FontWeight="SemiBold"
-                           Foreground="White"
+                           Foreground="{DynamicResource PrimaryTextBrush}"
                            VerticalAlignment="Center"/>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
                     <Button Content="Select all"
@@ -94,16 +95,24 @@
                     <Button Content="Add Category"
                             Width="130"
                             Command="{Binding AddCategoryCommand}"
+                            Classes="liquid-glass"
                             Background="{DynamicResource AccentBrush}"
-                            Foreground="White"/>
+                            Foreground="{DynamicResource ButtonForegroundBrush}"
+                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                            BorderThickness="1"/>
                 </StackPanel>
             </Grid>
         </Border>
 
         <Border Grid.Row="1" Padding="16" ClipToBounds="False">
             <Grid RowDefinitions="*,Auto">
-                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" ClipToBounds="False">
                 <ItemsControl x:Name="CategoryItems" ItemsSource="{Binding Categories}" ClipToBounds="False">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel ClipToBounds="False"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Border x:Name="TileContainer"
@@ -136,9 +145,9 @@
                                         Background="{DynamicResource ControlBackgroundBrush}"
                                         BorderBrush="{DynamicResource ControlBorderBrush}"
                                         BorderThickness="1"
-                                        CornerRadius="6"
-                                        Padding="6"
-                                        MaxWidth="650"
+                                        CornerRadius="12"
+                                        Padding="8,6"
+                                        MaxWidth="700"
                                         HorizontalAlignment="Stretch"
                                         ClipToBounds="False">
 
@@ -146,33 +155,37 @@
                                         <Border Grid.Column="0" Width="6" CornerRadius="3" Background="{Binding TileColor, Converter={StaticResource HexToBrushConverter}}" Margin="6,0,8,0"/>
                                         <CheckBox Grid.Column="1" IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="8,0,8,0"/>
 
-                                        <Button Grid.Column="2" Width="38" Height="38"
+                                        <Button Grid.Column="2" Width="56" Height="56"
                                                 Command="{Binding #CategoryWindow.DataContext.PickIconCommand}"
                                                 CommandParameter="{Binding .}"
                                                 Background="Transparent"
-                                                BorderBrush="{DynamicResource ControlBorderBrush}"
-                                                Margin="0,0,6,0"
+                                                BorderBrush="Transparent"
+                                                BorderThickness="0"
+                                                Margin="0,0,8,0"
+                                                Padding="0"
                                                 ToolTip.Tip="Choose icon"
                                                 VerticalAlignment="Center">
-                                            <Border Width="64" Height="64" CornerRadius="32"
+                                            <Border Width="50" Height="50" CornerRadius="25"
                                                     Background="{DynamicResource HeaderBackgroundBrush}"
                                                     BorderBrush="{DynamicResource ControlBorderBrush}"
                                                     BorderThickness="1"
+                                                    ClipToBounds="True"
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center">
                                                 <Grid>
-                                                    <Image Source="{Binding Icon, Converter={StaticResource IconPathToBitmapConverter}}" Width="48" Height="48" Stretch="Uniform" IsVisible="{Binding Icon, Converter={StaticResource IconPathExistsConverter}}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    <Image Source="{Binding Icon, Converter={StaticResource IconPathToBitmapConverter}}" Width="38" Height="38" Stretch="Uniform" IsVisible="{Binding Icon, Converter={StaticResource IconPathExistsConverter}}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                     <TextBlock Text="?"
                                                                HorizontalAlignment="Center"
                                                                VerticalAlignment="Center"
                                                                Opacity="0.35"
                                                                FontWeight="Bold"
-                                                               FontSize="16"
-                                                               Foreground="{DynamicResource MutedTextBrush}"/>
+                                                               FontSize="{StaticResource Type.H4.Size}"
+                                                               Foreground="{DynamicResource MutedTextBrush}"
+                                                               IsVisible="{Binding Icon, Converter={x:Static StringConverters.IsNullOrEmpty}}"/>
                                                     <TextBlock Text="{Binding Icon}"
                                                                HorizontalAlignment="Center"
                                                                VerticalAlignment="Center"
-                                                               FontSize="14"
+                                                               FontSize="{StaticResource Type.Body.Size}"
                                                                Foreground="{Binding TileColor, Converter={StaticResource HexToForegroundBrushConverter}, TargetNullValue={StaticResource ControlForegroundBrush}}"
                                                                IsVisible="{Binding Icon, Converter={StaticResource IconPathExistsConverter}, ConverterParameter=invert}"/>
                                                 </Grid>
@@ -180,18 +193,20 @@
                                         </Button>
 
                                         <Button Grid.Column="3"
-                                                Width="18" Height="18"
+                                                Width="36" Height="36"
                                                 Background="Transparent"
-                                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                                BorderBrush="Transparent"
                                                 BorderThickness="0"
                                                 Padding="0"
                                                 ToolTip.Tip="Choose color"
-                                            VerticalAlignment="Center" Margin="0,0,6,0">
-                                            <Image Source="/Assets/palette-icon.png" 
-                                                   Width="16" Height="16" 
-                                                   Stretch="Uniform" 
-                                                   HorizontalAlignment="Center" 
-                                                   VerticalAlignment="Center"/>
+                                                VerticalAlignment="Center" Margin="0,0,8,0"
+                                                IsVisible="{Binding IsTrash, Converter={StaticResource InvertBoolConverter}}">
+                                            <Grid Width="28" Height="28" ColumnDefinitions="13,2,13" RowDefinitions="13,2,13">
+                                                <Border Grid.Row="0" Grid.Column="0" Background="#FF6B6B" CornerRadius="3"/>
+                                                <Border Grid.Row="0" Grid.Column="2" Background="#4ECDC4" CornerRadius="3"/>
+                                                <Border Grid.Row="2" Grid.Column="0" Background="#FFE66D" CornerRadius="3"/>
+                                                <Border Grid.Row="2" Grid.Column="2" Background="#A78BFA" CornerRadius="3"/>
+                                            </Grid>
                                             <Button.Flyout>
                                             <Flyout Placement="Bottom" Opened="OnColorFlyoutOpened">
                                                     <Border x:Name="ColorFlyoutRoot"
@@ -222,7 +237,7 @@
                                                                     Tag="#E9D5FF" Click="OnPaletteColorClick"/>
                                                                 <Button Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="{DynamicResource ControlBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
                                                                         Tag="{x:Null}" Click="OnPaletteColorClick">
-                                                                    <TextBlock Text="✕" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="11"/>
+                                                                    <TextBlock Text="✕" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{StaticResource Type.Tiny.Size}"/>
                                                                 </Button>
                                                             </WrapPanel>
                                                             <StackPanel Orientation="Horizontal" Spacing="6">
@@ -237,10 +252,15 @@
 
                                         <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                             <TextBox Text="{Binding Name}"
-                                                     MaxWidth="200"
+                                                     Width="180"
+                                                     MinWidth="180"
+                                                     Height="34"
                                                      VerticalAlignment="Center"
+                                                     VerticalContentAlignment="Center"
                                                      Background="{DynamicResource ControlBackgroundBrush}"
-                                                     Foreground="{DynamicResource ControlForegroundBrush}"
+                                                     Foreground="{DynamicResource PrimaryTextBrush}"
+                                                     FontSize="{StaticResource Type.Label.Size}"
+                                                     Padding="8,4"
                                                      IsReadOnly="{Binding ., Converter={StaticResource CategoryDeletedNameToReadOnlyConverter}}"/>
                                             <!-- Entry count badge -->
                                             <Border Background="{DynamicResource HeaderBackgroundBrush}"
@@ -250,7 +270,7 @@
                                                     Padding="8,4"
                                                     VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Count}"
-                                                           FontSize="11"
+                                                           FontSize="{StaticResource Type.Tiny.Size}"
                                                            FontWeight="SemiBold"
                                                            Foreground="{DynamicResource SecondaryTextBrush}"/>
                                             </Border>
@@ -262,7 +282,7 @@
                                                 Margin="8,0,0,0"
                                                 VerticalAlignment="Center"
                                                 FontWeight="Bold"
-                                                FontSize="12"
+                                                FontSize="{StaticResource Type.Small.Size}"
                                                 Background="{DynamicResource ControlBackgroundBrush}"
                                                 BorderThickness="0"
                                                 CornerRadius="4"
@@ -282,14 +302,15 @@
                                                 VerticalAlignment="Center"
                                                 Margin="8,0,0,0"
                                                 Tag="{Binding .}"
+                                                IsVisible="{Binding IsTrash, Converter={StaticResource InvertBoolConverter}}"
                                                 PointerPressed="OnCategoryPointerPressed"
                                                 PointerMoved="OnCategoryPointerMoved"
                                                 PointerReleased="OnCategoryPointerReleased"
                                                 PointerCaptureLost="OnCategoryPointerCaptureLost">
                                             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="3">
-                                                <Ellipse Width="4" Height="4" Fill="White"/>
-                                                <Ellipse Width="4" Height="4" Fill="White"/>
-                                                <Ellipse Width="4" Height="4" Fill="White"/>
+                                                <Ellipse Width="4" Height="4" Fill="{DynamicResource MutedTextBrush}"/>
+                                                <Ellipse Width="4" Height="4" Fill="{DynamicResource MutedTextBrush}"/>
+                                                <Ellipse Width="4" Height="4" Fill="{DynamicResource MutedTextBrush}"/>
                                             </StackPanel>
                                         </Border>
                                     </Grid>
@@ -319,8 +340,11 @@
                 <Button Content="Apply Changes"
                         Width="140"
                         Command="{Binding SaveAllCommand}"
+                        Classes="liquid-glass"
                         Background="{DynamicResource AccentBrush}"
-                        Foreground="White"/>
+                        Foreground="{DynamicResource ButtonForegroundBrush}"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"/>
                 <Button Content="Close"
                         Width="100"
                         Command="{Binding CloseCommand}"

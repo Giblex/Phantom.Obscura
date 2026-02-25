@@ -90,31 +90,6 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Preflight: ensure VeraCrypt is installed and warn about admin on Windows
-                var vc = (Avalonia.Application.Current as App)?.Services?.GetService(typeof(IVeraCryptService)) as IVeraCryptService
-                    ?? new VeraCryptService();
-                if (!vc.IsVeraCryptInstalled())
-                {
-                    await ShowDialogMessage(
-                        "VeraCrypt Not Found",
-                        "VeraCrypt is required to mount the container. Please install VeraCrypt and try again.");
-                    return;
-                }
-                if (OperatingSystem.IsWindows())
-                {
-                    try
-                    {
-                        using var identity = WindowsIdentity.GetCurrent();
-                        var principal = new WindowsPrincipal(identity);
-                        if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
-                        {
-                            await ShowDialogMessage(
-                                "Administrator Recommended",
-                                "Mounting VeraCrypt volumes may require Administrator privileges on Windows. If mounting fails, restart PhantomVault as Administrator.");
-                        }
-                    }
-                    catch { /* best effort */ }
-                }
                 // Attempt to read the manifest using provided credentials (non-throwing)
                 if (!_manifestService.TryReadManifest(ManifestPath, string.IsNullOrEmpty(Passphrase) ? null : Passphrase, KeyfilePath, out var manifest, out var manifestError))
                 {
@@ -154,7 +129,7 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Step 1: Mount the VeraCrypt container (outer encryption layer)
+                // Step 1: Mount the vault container
                 string mountName = manifest.VaultName ?? Path.GetFileNameWithoutExtension(containerPath);
                 string mountPath = await _vaultService.MountVaultAsync(containerPath, mountName, Passphrase ?? string.Empty, KeyfilePath);
 

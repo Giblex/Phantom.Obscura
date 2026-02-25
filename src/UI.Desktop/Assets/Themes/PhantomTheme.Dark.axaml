@@ -12,12 +12,18 @@
             <!-- Dark acrylic-style tile base and overlay used by list/grid entries -->
             <SolidColorBrush x:Key="TileGlassBrush">#AA1F2937</SolidColorBrush>
             <SolidColorBrush x:Key="TileGapBrush">#3F4E64</SolidColorBrush>
+            <!-- Micro-highlight reflection edges: slightly offset shades of the window background -->
+            <Color x:Key="TileReflectHighlightColor">#4A6278</Color>
+            <Color x:Key="TileReflectMidColor">#3D5267</Color>
+            <Color x:Key="TileReflectShadowColor">#232F3E</Color>
             <LinearGradientBrush x:Key="TileOverlayBrush" StartPoint="0,0" EndPoint="1,1">
                 <GradientStop Color="#33FFFFFF" Offset="0" />
                 <GradientStop Color="#00FFFFFF" Offset="1" />
             </LinearGradientBrush>
             <!-- Card background - lighter for better content visibility -->
             <SolidColorBrush x:Key="CardBackgroundBrush">#3F526B</SolidColorBrush>
+            <!-- Surface brush for dashboard/card buttons -->
+            <SolidColorBrush x:Key="SurfaceBrush">#2A3544</SolidColorBrush>
             <!-- Slightly duller blues for buttons (subtler, less saturated) -->
             <!-- FIXED: Enhanced accent color hierarchy with 25% brightness increase on hover -->
             <SolidColorBrush x:Key="AccentBrush">#6B8CAE</SolidColorBrush>
@@ -52,6 +58,24 @@
             
             <!-- Liquid glass button foreground for dark theme (light text) -->
             <SolidColorBrush x:Key="LiquidGlassButtonForeground">#EAF1FA</SolidColorBrush>
+
+            <!-- ═══ Liquid Glass Token Colors ═══
+                 Theme-aware tint colors used by LiquidGlass.axaml gradient brushes.
+                 Override these in other themes for different glass tints. -->
+            <Color x:Key="Glass.Tint.Light">#D8E8F8</Color>
+            <Color x:Key="Glass.Tint.Mid">#8FB5DF</Color>
+            <Color x:Key="Glass.Tint.Dark">#6B8CAE</Color>
+            <Color x:Key="Glass.Tint.Deepest">#272F43</Color>
+            <Color x:Key="Glass.Sheen.Bright">#E8F4FF</Color>
+            <Color x:Key="Glass.Sheen.Mid">#C8E0F5</Color>
+            <Color x:Key="Glass.Sheen.Soft">#A0C8E8</Color>
+            <SolidColorBrush x:Key="Brush.Glass.Border">#306B8CAE</SolidColorBrush>
+            <SolidColorBrush x:Key="Brush.Glass.BorderHover">#508FB5DF</SolidColorBrush>
+            <SolidColorBrush x:Key="Brush.Glass.BorderPressed">#406B8CAE</SolidColorBrush>
+            <SolidColorBrush x:Key="Brush.Glass.BorderFocus">#A8C5E8</SolidColorBrush>
+            <SolidColorBrush x:Key="Brush.Glass.EdgeHighlight.Start">#50D8E8F8</SolidColorBrush>
+            <SolidColorBrush x:Key="Brush.Glass.EdgeHighlight.Mid">#30B8D5EF</SolidColorBrush>
+            <SolidColorBrush x:Key="Brush.Glass.EdgeHighlight.End">#008FB5DF</SolidColorBrush>
             
             <SolidColorBrush x:Key="OverlayBackgroundBrush">#80000000</SolidColorBrush>
             <SolidColorBrush x:Key="ReadOnlyFieldBackgroundBrush">#3D4F61</SolidColorBrush>
@@ -74,11 +98,15 @@
             <SolidColorBrush x:Key="WarningBrushDarker">#BF360C</SolidColorBrush>
             <SolidColorBrush x:Key="WarningIcon">#FF9800</SolidColorBrush>
             <SolidColorBrush x:Key="ErrorBrush">#F48771</SolidColorBrush>
-            <SolidColorBrush x:Key="SuccessBackgroundBrush">#3D4F61</SolidColorBrush>
-            <SolidColorBrush x:Key="WarningBackgroundBrush">#3A2E1A</SolidColorBrush>
-            <SolidColorBrush x:Key="ErrorBackgroundBrush">#3D4F61</SolidColorBrush>
+            <SolidColorBrush x:Key="SuccessBackgroundBrush">#1A3D1A</SolidColorBrush>
+            <SolidColorBrush x:Key="SuccessBorderBrush">#4CAF50</SolidColorBrush>
+            <SolidColorBrush x:Key="WarningBackgroundBrush">#3D2A1A</SolidColorBrush>
+            <SolidColorBrush x:Key="WarningBorderBrush">#FF9800</SolidColorBrush>
+            <SolidColorBrush x:Key="ErrorBackgroundBrush">#3D1A1A</SolidColorBrush>
+            <SolidColorBrush x:Key="ErrorBorderBrush">#F44336</SolidColorBrush>
             <SolidColorBrush x:Key="InfoBackgroundBrush">#3D4F61</SolidColorBrush>
             <FontFamily x:Key="MainFontFamily">Segoe UI</FontFamily>
+            <FontFamily x:Key="MonoFontFamily">Consolas</FontFamily>
             
             <!-- Overlay & Utility Tokens (P9: Overlays) -->
             <SolidColorBrush x:Key="OverlayBackgroundLightBrush">#40000000</SolidColorBrush>
@@ -141,13 +169,28 @@
             <x:Double x:Key="Type.H2.Size">24</x:Double>
             <x:Double x:Key="Type.H3.Size">18</x:Double>
             <x:Double x:Key="Type.H4.Size">16</x:Double>
+            <x:Double x:Key="Type.H5.Size">15</x:Double>
             <x:Double x:Key="Type.Body.Size">14</x:Double>
             <x:Double x:Key="Type.Label.Size">13</x:Double>
             <x:Double x:Key="Type.Small.Size">12</x:Double>
             <x:Double x:Key="Type.Tiny.Size">11</x:Double>
+            <x:Double x:Key="Type.Micro.Size">10</x:Double>
+            <x:Double x:Key="Type.Mini.Size">9</x:Double>
+            <!-- Specialty sizes for icons, headings, and empty-state decorations -->
+            <x:Double x:Key="Type.EmptyState.Size">80</x:Double>
+            <x:Double x:Key="Type.EmptyState.Lg.Size">64</x:Double>
+            <x:Double x:Key="Type.IconLg.Size">48</x:Double>
+            <x:Double x:Key="Type.Score.Size">42</x:Double>
+            <x:Double x:Key="Type.Banner.Size">36</x:Double>
+            <x:Double x:Key="Type.IconMd.Size">34</x:Double>
+            <x:Double x:Key="Type.XL.Size">28</x:Double>
+            <x:Double x:Key="Type.Hero.Size">26</x:Double>
+            <x:Double x:Key="Type.SubHeading.Size">22</x:Double>
+            <x:Double x:Key="Type.Icon.Size">20</x:Double>
             <FontWeight x:Key="Type.Weight.Light">Light</FontWeight>
             <FontWeight x:Key="Type.Weight.Medium">Medium</FontWeight>
             <FontWeight x:Key="Type.Weight.SemiBold">SemiBold</FontWeight>
+            <FontWeight x:Key="Type.Weight.Bold">Bold</FontWeight>
             
             <!-- Text Selection Colors -->
             <!-- Light grey selection for dark mode -->
@@ -159,6 +202,10 @@
             <SolidColorBrush x:Key="InputForegroundBrush">#1F2937</SolidColorBrush>
             <!-- Lighter placeholder for better hierarchy (PRIORITY 13) -->
             <SolidColorBrush x:Key="InputPlaceholderBrush">#8A9AAA</SolidColorBrush>
+            <!-- Subtle highlight for TextBox/Border hover & focus states (theme-adaptive) -->
+            <SolidColorBrush x:Key="InputHighlightBrush">#33FFFFFF</SolidColorBrush>
+            <!-- Icon tile background for IconManager (theme-adaptive) -->
+            <SolidColorBrush x:Key="IconTileBackgroundBrush">#3D4F61</SolidColorBrush>
 
             <!-- Popup/Flyout/Dropdown Brushes (force off-white dropdowns + dark text) -->
             <SolidColorBrush x:Key="FlyoutPresenterBackground">#F5F7FA</SolidColorBrush>

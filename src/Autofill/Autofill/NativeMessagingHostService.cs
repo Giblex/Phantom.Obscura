@@ -43,6 +43,29 @@ namespace PhantomVault.Core.Services.Autofill
         /// </summary>
         public event EventHandler<FormSubmittedEventArgs>? FormSubmitted;
 
+        /// <summary>
+        /// Pending fill request set by the AutoFill orchestrator so the extension
+        /// can pick it up on its next <c>fill</c> or <c>detectForm</c> poll.
+        /// </summary>
+        private PendingFillRequest? _pendingFill;
+
+        /// <summary>
+        /// Registers a credential fill that the browser extension should apply to
+        /// the active login form. Called by the AutoFill orchestrator after matching.
+        /// </summary>
+        public void SetPendingFill(string username, string password, string? totpCode = null)
+        {
+            _pendingFill = new PendingFillRequest
+            {
+                Username = username,
+                Password = password,
+                TotpCode = totpCode
+            };
+        }
+
+        /// <summary>Clears any pending fill (e.g. after the extension confirms fill).</summary>
+        public void ClearPendingFill() => _pendingFill = null;
+
         public NativeMessagingHostService(
             ICredentialRepository credentialRepository,
             IAutofillVaultContext vaultContext,
@@ -188,6 +211,10 @@ namespace PhantomVault.Core.Services.Autofill
                     "saveCredential" => await HandleSaveCredentialAsync(message, cancellationToken),
                     "detectForm" => HandleDetectForm(message),
                     "submitForm" => HandleSubmitForm(message),
+                    // AutoFill Mode: extension polls for pending fill after USB insertion
+                    "fill" => HandleFill(message),
+                    // AutoFill Mode: extension signals that a TOTP field has appeared
+                    "detectTotp" => HandleDetectTotp(message),
                     "ping" => CreateSuccessResponse(new { status = "ok" }),
                     _ => CreateErrorResponse($"Unknown message type: {message.Type}")
                 };
@@ -387,6 +414,70 @@ namespace PhantomVault.Core.Services.Autofill
             }
         }
 
+        /// <summary>
+        /// Handles a <c>fill</c> message from the browser extension.
+        /// If a pending fill request exists (set by the AutoFill orchestrator after USB
+        /// insertion), it is returned and cleared. Otherwise responds with no-op.
+        /// </summary>
+        private string HandleFill(NativeMessage message)
+        {
+            if (_pendingFill is null)
+                return CreateSuccessResponse(new { hasFill = false });
+
+            var fill = _pendingFill;
+            _pendingFill = null; // consume once
+
+            return CreateSuccessResponse(new
+            {
+                hasFill = true,
+                username = fill.Username,
+                password = fill.Password,
+                totpCode = fill.TotpCode
+            });
+        }
+
+        /// <summary>
+        /// Handles a <c>detectTotp</c> message: the browser extension reports that
+        /// a 2FA code field has appeared after password fill. Raises <see cref="FormDetected"/>
+        /// with the TOTP field so <c>TotpFieldPoller</c> can resolve its wait.
+        /// </summary>
+        private string HandleDetectTotp(NativeMessage message)
+        {
+            try
+            {
+                var data = message.Data;
+                if (!data.HasValue)
+                    return CreateErrorResponse("No data provided");
+
+                var url = data.Value.TryGetProperty("url", out var urlProp) ? urlProp.GetString() ?? "" : "";
+                var fieldId = data.Value.TryGetProperty("fieldId", out var idProp) ? idProp.GetString() ?? "" : "";
+                var fieldName = data.Value.TryGetProperty("fieldName", out var nameProp) ? nameProp.GetString() ?? "" : "";
+
+                // Synthesise a FormDetected event with a TwoFactor field so that
+                // TotpFieldPoller's subscription resolves.
+                FormDetected?.Invoke(this, new FormDetectedEventArgs
+                {
+                    Url = url,
+                    Fields = new List<FormFieldInfo>
+                    {
+                        new FormFieldInfo
+                        {
+                            Id = fieldId,
+                            Name = fieldName,
+                            Type = "text",
+                            AutoComplete = "one-time-code"
+                        }
+                    }
+                });
+
+                return CreateSuccessResponse(new { received = true });
+            }
+            catch (Exception ex)
+            {
+                return CreateErrorResponse($"detectTotp error: {ex.Message}");
+            }
+        }
+
         private string ExtractDomain(string url)
         {
             if (string.IsNullOrWhiteSpace(url))
@@ -462,6 +553,13 @@ namespace PhantomVault.Core.Services.Autofill
         {
             public bool IsUnlocked => false;
             public VaultManifest? CurrentManifest => null;
+        }
+
+        private sealed class PendingFillRequest
+        {
+            public string Username { get; init; } = string.Empty;
+            public string Password { get; init; } = string.Empty;
+            public string? TotpCode { get; init; }
         }
 
         private static HashSet<string> BuildAllowlist(IEnumerable<string>? allowedOrigins)

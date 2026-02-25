@@ -43,12 +43,21 @@
                 </Border.RenderTransform>
                 <Border.Styles>
                     <Style Selector="Border#IconManagerSlideHost[Tag=True]">
-                        <Setter Property="Opacity" Value="1"/>
+                        <Setter Property="RenderTransform">
+                            <TranslateTransform X="0"/>
+                        </Setter>
                     </Style>
-                    <Style Selector="Border[Tag=False]">
-                        <Setter Property="Opacity" Value="0"/>
+                    <Style Selector="Border#IconManagerSlideHost[Tag=False]">
+                        <Setter Property="RenderTransform">
+                            <TranslateTransform X="1280"/>
+                        </Setter>
                     </Style>
                 </Border.Styles>
+                <Border.Transitions>
+                    <Transitions>
+                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.35" Easing="CubicEaseOut"/>
+                    </Transitions>
+                </Border.Transitions>
 
                 <Grid>
                     <Grid.RowDefinitions>
@@ -65,11 +74,11 @@
                         <Grid ColumnDefinitions="*,Auto">
                             <StackPanel Grid.Column="0" Spacing="4">
                                 <TextBlock Text="Icon Manager" 
-                                           FontSize="18" 
+                                           FontSize="{StaticResource Type.H3.Size}" 
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource PrimaryTextBrush}"/>
                                 <TextBlock Text="Manage custom icons and download icon packs" 
-                                           FontSize="12"
+                                           FontSize="{StaticResource Type.Small.Size}"
                                            Foreground="{DynamicResource MutedTextBrush}"/>
                             </StackPanel>
                             <Button Grid.Column="1"
@@ -86,7 +95,7 @@
                                  VerticalScrollBarVisibility="Auto"
                                  Padding="20">
                         <TextBlock Text="Icon Manager is available as a separate window"
-                                   FontSize="16"
+                                   FontSize="{StaticResource Type.H4.Size}"
                                    Foreground="{DynamicResource PrimaryTextBrush}"
                                    HorizontalAlignment="Center"
                                    VerticalAlignment="Center"/>

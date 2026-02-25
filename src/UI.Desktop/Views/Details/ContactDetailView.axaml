@@ -7,31 +7,31 @@
     <StackPanel Spacing="12"
                 IsVisible="{Binding SelectedCredential.IsContactEntry}">
         <TextBlock Text="Contact Details"
-                   FontSize="14"
+                   FontSize="{StaticResource Type.Body.Size}"
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource SecondaryTextBrush}"/>
         <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasContactName}">
-            <TextBlock Text="Full Name" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBlock Text="Full Name" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
               <TextBox Text="{Binding SelectedCredential.ContactFullName}" IsReadOnly="True" Height="36" Padding="10,8"/>
         </StackPanel>
         <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasContactEmail}">
-            <TextBlock Text="Email" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBlock Text="Email" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
               <TextBox Text="{Binding SelectedCredential.ContactEmail}" IsReadOnly="True" Height="36" Padding="10,8"/>
         </StackPanel>
         <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasContactPhone}">
-            <TextBlock Text="Phone" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBlock Text="Phone" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
               <TextBox Text="{Binding SelectedCredential.ContactPhone}" IsReadOnly="True" Height="36" Padding="10,8"/>
         </StackPanel>
         <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasContactCompany}">
-            <TextBlock Text="Company" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBlock Text="Company" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
               <TextBox Text="{Binding SelectedCredential.ContactCompany}" IsReadOnly="True" Height="36" Padding="10,8"/>
         </StackPanel>
         <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasContactJobTitle}">
-            <TextBlock Text="Job Title" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBlock Text="Job Title" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
               <TextBox Text="{Binding SelectedCredential.ContactJobTitle}" IsReadOnly="True" Height="36" Padding="10,8"/>
         </StackPanel>
         <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasContactAddress}">
-            <TextBlock Text="Address" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <TextBlock Text="Address" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
             <TextBox Text="{Binding SelectedCredential.ContactAddress}"
                      IsReadOnly="True"
                      Background="{DynamicResource ControlBackgroundBrush}"

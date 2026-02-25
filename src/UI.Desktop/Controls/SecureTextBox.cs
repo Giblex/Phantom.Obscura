@@ -307,5 +307,36 @@ namespace PhantomVault.UI.Controls
                 ToolTip.SetTip(this, "🔒 Secure input - Protected against keylogging");
             }
         }
+
+        /// <summary>
+        /// Cleans up event handlers and timers when the control is removed from the visual tree
+        /// to prevent memory leaks (DispatcherTimer is rooted by the Dispatcher).
+        /// </summary>
+        protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+        {
+            // Stop obfuscation timer first — it holds a closure over this instance
+            StopObfuscation();
+
+            // Unsubscribe tunnelled event handlers
+            this.RemoveHandler(KeyDownEvent, OnSecureKeyDown);
+            this.RemoveHandler(TextInputEvent, OnSecureTextInput);
+
+            // Unsubscribe routed event handlers
+            this.GotFocus -= OnSecureGotFocus;
+            this.LostFocus -= OnSecureLostFocus;
+
+            // Securely clear any residual text in memory
+            if (_memoryProtection != null && !string.IsNullOrEmpty(Text))
+            {
+                _memoryProtection.ClearString(Text);
+            }
+            if (_memoryProtection != null && !string.IsNullOrEmpty(_realText))
+            {
+                _memoryProtection.ClearString(_realText);
+            }
+            _realText = null;
+
+            base.OnDetachedFromVisualTree(e);
+        }
     }
 }

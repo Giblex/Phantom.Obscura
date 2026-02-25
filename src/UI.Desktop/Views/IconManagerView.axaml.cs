@@ -1,8 +1,9 @@
 using System;
+using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
-using Avalonia.Controls.Shapes;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.VisualTree;
 using PhantomVault.UI.ViewModels;
@@ -12,8 +13,8 @@ namespace PhantomVault.UI.Views
     public partial class IconManagerView : UserControl
     {
         private Popup? _variantPopup;
-        private Polygon? _caretTop;
-        private Polygon? _caretBottom;
+        /// <summary>Tracks the last Button clicked whose DataContext is an IconFileEntryViewModel.</summary>
+        private Button? _lastClickedIconButton;
 
         public IconManagerView()
         {
@@ -24,47 +25,95 @@ namespace PhantomVault.UI.Views
         {
             AvaloniaXamlLoader.Load(this);
 
-            // Get references to popup and carets
             _variantPopup = this.FindControl<Popup>("VariantPopup");
-            _caretTop = this.FindControl<Polygon>("CaretTop");
-            _caretBottom = this.FindControl<Polygon>("CaretBottom");
 
-            // Hook up popup placement logic
-            if (_variantPopup != null)
-            {
-                _variantPopup.Opened += OnVariantPopupOpened;
-            }
+            // Capture every Button.Click that bubbles through the control
+            AddHandler(Button.ClickEvent, OnAnyButtonClick, RoutingStrategies.Bubble, handledEventsToo: true);
 
             // Hook up DataContext changes
             this.DataContextChanged += OnDataContextChanged;
         }
 
-        private void OnDataContextChanged(object? sender, EventArgs e)
+        /// <summary>Captures every button click so we can reliably anchor the popup.</summary>
+        private void OnAnyButtonClick(object? sender, RoutedEventArgs e)
         {
-            // If the ViewModel doesn't have an owner window set, try to get one from the visual tree
-            if (DataContext is IconManagerViewModel vm && !vm.HasOwnerWindow)
+            if (e.Source is Button btn && btn.DataContext is IconFileEntryViewModel)
             {
-                var window = this.FindAncestorOfType<Window>();
-                if (window != null)
-                {
-                    vm.SetOwnerWindow(window);
-                }
+                _lastClickedIconButton = btn;
             }
         }
 
-        private void OnVariantPopupOpened(object? sender, EventArgs e)
+        private void OnDataContextChanged(object? sender, EventArgs e)
         {
-            // Adjust caret visibility based on placement
-            if (_variantPopup?.Placement == PlacementMode.Bottom)
+            if (DataContext is IconManagerViewModel vm)
             {
-                if (_caretTop != null) _caretTop.IsVisible = true;
-                if (_caretBottom != null) _caretBottom.IsVisible = false;
+                if (!vm.HasOwnerWindow)
+                {
+                    var window = this.FindAncestorOfType<Window>();
+                    if (window != null)
+                    {
+                        vm.SetOwnerWindow(window);
+                    }
+                }
+
+                vm.PropertyChanged -= Vm_PropertyChanged;
+                vm.PropertyChanged += Vm_PropertyChanged;
             }
-            else if (_variantPopup?.Placement == PlacementMode.Top)
+        }
+
+        private void Vm_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (sender is not IconManagerViewModel vm) return;
+            if (e.PropertyName != nameof(IconManagerViewModel.IsVariantPopupOpen)) return;
+            if (_variantPopup == null) return;
+
+            try
             {
-                if (_caretTop != null) _caretTop.IsVisible = false;
-                if (_caretBottom != null) _caretBottom.IsVisible = true;
+                if (vm.IsVariantPopupOpen && vm.VariantOwnerIcon != null)
+                {
+                    // Use the button we captured from the Click event
+                    if (_lastClickedIconButton != null && _lastClickedIconButton.DataContext == vm.VariantOwnerIcon)
+                    {
+                        _variantPopup.PlacementTarget = _lastClickedIconButton;
+                        _variantPopup.Placement = PlacementMode.Bottom;
+                    }
+                    else
+                    {
+                        // Fallback: search visual tree
+                        var found = FindButtonByDataContext(this, vm.VariantOwnerIcon);
+                        if (found != null)
+                        {
+                            _variantPopup.PlacementTarget = found;
+                            _variantPopup.Placement = PlacementMode.Bottom;
+                        }
+                    }
+
+                    _variantPopup.IsOpen = true;
+                }
+                else
+                {
+                    _variantPopup.IsOpen = false;
+                }
             }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[IconManagerView] Popup error: {ex.Message}");
+            }
+        }
+
+        private static Control? FindButtonByDataContext(Visual root, object target)
+        {
+            foreach (var child in root.GetVisualChildren())
+            {
+                if (child is Button btn && btn.DataContext == target)
+                    return btn;
+                if (child is Visual v)
+                {
+                    var found = FindButtonByDataContext(v, target);
+                    if (found != null) return found;
+                }
+            }
+            return null;
         }
     }
 }

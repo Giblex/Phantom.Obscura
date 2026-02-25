@@ -284,6 +284,7 @@ namespace PhantomVault.UI.Views
             if (_currentEditViewModel != null)
             {
                 _currentEditViewModel.PropertyChanged += EditViewModel_PropertyChanged;
+                _currentEditViewModel.SetOwnerWindow(this);
             }
 
             if (_editFormStack != null)
@@ -625,6 +626,96 @@ namespace PhantomVault.UI.Views
             if (DataContext is VaultViewModel vm)
             {
                 vm.CloseEditPanel();
+            }
+        }
+
+        private static void LogIconPicker(string msg)
+        {
+            try
+            {
+                var logPath = System.IO.Path.Combine(
+                    AppDomain.CurrentDomain.BaseDirectory ?? ".", "logs", "icon_picker_debug.log");
+                var dir = System.IO.Path.GetDirectoryName(logPath);
+                if (dir != null && !System.IO.Directory.Exists(dir))
+                    System.IO.Directory.CreateDirectory(dir);
+                System.IO.File.AppendAllText(logPath, $"[{DateTime.Now:O}] {msg}\n");
+            }
+            catch { /* logging must never crash UI */ }
+        }
+
+        private async void IconPickerButton_Click(object? sender, RoutedEventArgs e)
+        {
+            // This fires as backup if the Command binding doesn't work
+            LogIconPicker("IconPickerButton_Click FIRED (Click handler)");
+            await OpenIconPickerFromCodeBehind("Click");
+        }
+
+        private async void IconSectionBorder_PointerReleased(object? sender, Avalonia.Input.PointerReleasedEventArgs e)
+        {
+            // Backup: entire icon section border is clickable
+            LogIconPicker("IconSectionBorder_PointerReleased FIRED");
+            // Only trigger if it was a left click
+            if (e.InitialPressMouseButton == Avalonia.Input.MouseButton.Left)
+            {
+                e.Handled = true;
+                await OpenIconPickerFromCodeBehind("PointerReleased");
+            }
+        }
+
+        private async System.Threading.Tasks.Task OpenIconPickerFromCodeBehind(string source)
+        {
+            try
+            {
+                LogIconPicker($"OpenIconPickerFromCodeBehind called from: {source}");
+
+                var editVm = _currentEditViewModel;
+                if (editVm == null)
+                {
+                    LogIconPicker("ERROR: _currentEditViewModel is null!");
+                    return;
+                }
+
+                LogIconPicker($"Creating IconPickerViewModel with Icon='{editVm.Icon}', Color='{editVm.SelectedIconColor}'");
+                var viewModel = new ViewModels.IconPickerViewModel(
+                    editVm.Icon, editVm.SelectedIconColor);
+
+                LogIconPicker("Creating IconPickerWindow...");
+                var window = new IconPickerWindow
+                {
+                    DataContext = viewModel,
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen
+                };
+                viewModel.SetOwnerWindow(window);
+
+                LogIconPicker("Calling ShowDialog...");
+                string? result = null;
+                try
+                {
+                    result = await window.ShowDialog<string?>(this);
+                }
+                catch (Exception showEx)
+                {
+                    LogIconPicker($"ShowDialog THREW: {showEx.GetType().Name}: {showEx.Message}\n{showEx.StackTrace}");
+                    // Fallback: try Show() non-modal
+                    LogIconPicker("Trying Show() as non-modal fallback...");
+                    var tcs = new System.Threading.Tasks.TaskCompletionSource<string?>();
+                    window.Closed += (_, _) => tcs.TrySetResult(viewModel.SelectedIcon);
+                    window.Show();
+                    result = await tcs.Task;
+                }
+
+                LogIconPicker($"Dialog result: '{result ?? "null"}'");
+
+                if (!string.IsNullOrEmpty(result))
+                {
+                    editVm.Icon = result;
+                    editVm.SelectedIconColor = viewModel.SelectedIconColor;
+                    LogIconPicker($"Icon set to: '{result}'");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogIconPicker($"EXCEPTION: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
             }
         }
 

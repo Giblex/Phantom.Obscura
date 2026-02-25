@@ -14,7 +14,8 @@
         WindowStartupLocation="CenterScreen"
         CanResize="True"
         Background="{DynamicResource ContentBackgroundBrush}"
-        Icon="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Parent Icon.ico" FontFamily="Segoe UI">
+        Icon="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Parent Icon.ico"
+        Classes="animated-window">
 
     <Design.DataContext>
         <vm:ProvisionViewModel/>
@@ -35,11 +36,11 @@
         <Border Grid.Row="0" Background="{DynamicResource ContentBackgroundBrush}" Padding="15,8">
             <StackPanel Spacing="{StaticResource Space.Sm}">
             <TextBlock Text="Create Your Vault"
-                           FontSize="22"
+                           FontSize="{StaticResource Type.SubHeading.Size}"
                            FontWeight="Bold"
                            HorizontalAlignment="Center"/>
             <TextBlock Text="Configure your secure password vault"
-                           FontSize="13"
+                           FontSize="{StaticResource Type.Label.Size}"
                            Foreground="{DynamicResource SecondaryTextBrush}"
                            HorizontalAlignment="Center"/>
             </StackPanel>
@@ -56,7 +57,7 @@
                         <!-- Vault Name -->
                         <StackPanel Spacing="10">
             <TextBlock Text="Vault Name"
-                                       FontSize="15"
+                                       FontSize="{StaticResource Type.H5.Size}"
                                        FontWeight="SemiBold"
                                        />
             <TextBlock Text="Choose a name for your vault"
@@ -68,7 +69,7 @@
                                      MaxWidth="920"
                                      Height="36"
                                      HorizontalAlignment="Stretch"
-                                     FontSize="13"
+                                     FontSize="{StaticResource Type.Label.Size}"
                                      Watermark="My Secure Vault"
                                      ToolTip.Tip="Enter a descriptive name for your vault (e.g., 'Personal Passwords', 'Work Accounts')"
                                      AutomationProperties.Name="Vault name"
@@ -78,7 +79,7 @@
                         <!-- Volume Size -->
                         <StackPanel Spacing="10">
             <TextBlock Text="Volume Size (MB)"
-                                       FontSize="15"
+                                       FontSize="{StaticResource Type.H5.Size}"
                                        FontWeight="SemiBold"
                                        />
             <TextBlock Text="Size of the encrypted container"
@@ -102,7 +103,7 @@
                                            Foreground="{DynamicResource SecondaryTextBrush}"/>
             <TextBlock Text="{Binding VolumeSizeGB, StringFormat='({0} GB)'}"
                                            VerticalAlignment="Center"
-                                           FontSize="13"
+                                           FontSize="{StaticResource Type.Label.Size}"
                                            Foreground="{DynamicResource MutedTextBrush}"/>
                             </StackPanel>
                         </StackPanel>
@@ -110,11 +111,11 @@
                         <!-- Master Password -->
                         <StackPanel Spacing="10">
             <TextBlock Text="Master Password (Optional)"
-                                       FontSize="15"
+                                       FontSize="{StaticResource Type.H5.Size}"
                                        FontWeight="SemiBold"
                                        />
             <TextBlock Text="Must have 1 uppercase, 1 lowercase, 1 number, 1 special character, 8-64 characters"
-                                       FontSize="11"
+                                       FontSize="{StaticResource Type.Tiny.Size}"
                                        Foreground="{DynamicResource MutedTextBrush}"
                                        Margin="0,0,0,8"/>
                             
@@ -122,7 +123,7 @@
             <TextBox Name="PasswordTextBox"
                                          Text="{Binding Passphrase, Mode=TwoWay}"
                                          Height="36"
-                                         FontSize="13"
+                                         FontSize="{StaticResource Type.Label.Size}"
                                          Watermark="Enter master password (optional)"
                                          IsVisible="{Binding !ShowPassword}"
                                          HorizontalAlignment="Stretch"
@@ -137,7 +138,7 @@
             <TextBox Name="PasswordTextBoxVisible"
                      Text="{Binding Passphrase, Mode=TwoWay}"
                      Height="36"
-                     FontSize="13"
+                     FontSize="{StaticResource Type.Label.Size}"
                      Watermark="Enter master password (optional)"
                      IsVisible="{Binding ShowPassword}"
                      HorizontalAlignment="Stretch"
@@ -147,7 +148,7 @@
                     Classes="liquid-glass"
                     Width="36"
                     Height="36"
-                    FontSize="16"
+                    FontSize="{StaticResource Type.H4.Size}"
                     HorizontalAlignment="Right"
                     Command="{Binding ToggleShowPasswordCommand}"
                     ToolTip.Tip="Toggle password visibility"
@@ -170,7 +171,7 @@
                         <!-- Confirm Password -->
                         <StackPanel Spacing="10">
             <TextBlock Text="Confirm Password"
-                                       FontSize="15"
+                                       FontSize="{StaticResource Type.H5.Size}"
                                        FontWeight="SemiBold"
                                        />
                             
@@ -178,7 +179,7 @@
             <TextBox Name="ConfirmPasswordTextBox"
                                          Text="{Binding ConfirmPassphrase, Mode=TwoWay}"
                                          Height="36"
-                                         FontSize="13"
+                                         FontSize="{StaticResource Type.Label.Size}"
                                          Watermark="Re-enter password"
                                          IsVisible="{Binding !ShowConfirmPassword}">
             <TextBox.Styles>
@@ -190,7 +191,7 @@
             <TextBox Name="ConfirmPasswordTextBoxVisible"
                                          Text="{Binding ConfirmPassphrase, Mode=TwoWay}"
                                          Height="36"
-                                         FontSize="13"
+                                         FontSize="{StaticResource Type.Label.Size}"
                                          Watermark="Re-enter password"
                                          IsVisible="{Binding ShowConfirmPassword}"
                                          HorizontalAlignment="Stretch"/>
@@ -198,7 +199,7 @@
                                         Classes="liquid-glass"
                                         Width="36"
                                         Height="36"
-                                        FontSize="16"
+                                        FontSize="{StaticResource Type.H4.Size}"
                                         HorizontalAlignment="Right"
                                         Command="{Binding ToggleShowConfirmPasswordCommand}"
                                         ToolTip.Tip="Toggle password visibility"
@@ -219,7 +220,7 @@
                         <!-- USB Drive (Auto-configured) -->
                         <StackPanel Spacing="10">
             <TextBlock Text="USB Drive (Configured)"
-                                       FontSize="15"
+                                       FontSize="{StaticResource Type.H5.Size}"
                                        FontWeight="SemiBold"
                                        />
             <TextBlock Text="Your vault will be stored on the USB drive you selected"
@@ -233,65 +234,11 @@
                                        Margin="0,0,0,0" HorizontalAlignment="Center"/>
                         </StackPanel>
 
-                        <!-- VeraCrypt Outer Container Option -->
-                        <Border Background="{DynamicResource ControlBackgroundBrush}"
-                                Padding="20"
-                                CornerRadius="{DynamicResource Radius.Md}"
-                                BorderBrush="{DynamicResource AccentBrush}"
-                                BorderThickness="1">
-                            <StackPanel Spacing="12">
-                                <StackPanel Orientation="Horizontal" Spacing="10">
-                                    <TextBlock Text="🔐" FontSize="20" VerticalAlignment="Center"/>
-                                    <TextBlock Text="VeraCrypt Outer Container"
-                                               FontSize="16"
-                                               FontWeight="SemiBold"
-                                               Foreground="{DynamicResource PrimaryTextBrush}"
-                                               VerticalAlignment="Center"/>
-                                </StackPanel>
-                                
-                                <TextBlock FontSize="{StaticResource Type.Small.Size}"
-                                           Foreground="{DynamicResource SecondaryTextBrush}"
-                                           TextWrapping="Wrap"
-                                           LineHeight="18">
-                                    VeraCrypt adds an additional encrypted container layer around your vault for maximum security.<LineBreak/>
-                                    <LineBreak/>
-                                    <Bold>Enabled (Recommended):</Bold> Two layers - VeraCrypt outer container + zero-knowledge inner vault<LineBreak/>
-                                    <Bold>Disabled:</Bold> Single layer - zero-knowledge encryption only<LineBreak/>
-                                    <LineBreak/>
-                                    <Run Foreground="{DynamicResource MutedTextBrush}" FontSize="11">Note: VeraCrypt must be installed on your system. Download from https://www.veracrypt.fr</Run>
-                                </TextBlock>
-                                
-                                <!-- VeraCrypt Not Installed Warning -->
-                                <Border Background="{DynamicResource ErrorBackgroundBrush}"
-                                        BorderBrush="{DynamicResource ErrorBrush}"
-                                        BorderThickness="1"
-                                        CornerRadius="6"
-                                        Padding="12,10"
-                                        IsVisible="{Binding !IsVeraCryptInstalled}">
-                                    <StackPanel Orientation="Horizontal" Spacing="10">
-                                        <TextBlock Text="⚠️" FontSize="16" VerticalAlignment="Center"/>
-                                        <TextBlock FontSize="{StaticResource Type.Small.Size}"
-                                                   Foreground="{DynamicResource ErrorBrush}"
-                                                   TextWrapping="Wrap"
-                                                   VerticalAlignment="Center">
-                                            <Bold>VeraCrypt Not Detected</Bold><LineBreak/>
-                                            VeraCrypt is not installed. You can continue with single-layer encryption or install VeraCrypt first.
-                                        </TextBlock>
-                                    </StackPanel>
-                                </Border>
-                                
-                                <CheckBox Content="Use VeraCrypt outer container (Recommended)"
-                                          IsChecked="{Binding UseVeraCrypt, Mode=TwoWay}"
-                                          FontSize="{StaticResource Type.Body.Size}"
-                                          FontWeight="SemiBold"
-                                          Margin="0,5,0,0"/>
-                            </StackPanel>
-                        </Border>
 
     <!-- Keyfile Section (REQUIRED) -->
                         <StackPanel Spacing="10">
             <TextBlock Text="Keyfile (Required)"
-                                       FontSize="15"
+                                       FontSize="{StaticResource Type.H5.Size}"
                                        FontWeight="SemiBold"
                                        />
             <TextBlock FontSize="{StaticResource Type.Small.Size}"
@@ -316,10 +263,10 @@
                                 <Button Command="{Binding GenerateKeyfileCommand}"
                                         Width="150"
                                         Height="36"
-                                        FontSize="13"
+                                        FontSize="{StaticResource Type.Label.Size}"
                                         ToolTip.Tip="Generate a cryptographically secure random keyfile">
                                     <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-            <TextBlock Text="⌘" FontSize="16" VerticalAlignment="Center"/>
+            <TextBlock Text="⌘" FontSize="{StaticResource Type.H4.Size}" VerticalAlignment="Center"/>
             <TextBlock Text="Generate Keyfile" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
@@ -328,7 +275,7 @@
                                         Width="130"
                                         Height="36"
                                         Classes="liquid-glass"
-                                        FontSize="13"
+                                        FontSize="{StaticResource Type.Label.Size}"
                                         ToolTip.Tip="Select an existing file to use as a keyfile">
                                     <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
             <TextBlock Text="📁" FontSize="{StaticResource Type.Body.Size}" VerticalAlignment="Center"/>
@@ -340,7 +287,7 @@
                                         Width="100"
                                         Height="36"
                                         Classes="liquid-glass"
-                                        FontSize="13"
+                                        FontSize="{StaticResource Type.Label.Size}"
                                         IsVisible="{Binding KeyfilePath, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                         ToolTip.Tip="Remove the selected keyfile">
             <TextBlock Text="Clear"/>
@@ -358,7 +305,7 @@
                         <!-- Encryption Level -->
                         <StackPanel Spacing="10">
             <TextBlock Text="Encryption Level"
-                                       FontSize="15"
+                                       FontSize="{StaticResource Type.H5.Size}"
                                        FontWeight="SemiBold"
                                        />
             <TextBlock Text="Higher levels use more secure algorithms but may be slower"
@@ -371,7 +318,7 @@
                                       Width="300"
                                       Height="36"
                                       HorizontalAlignment="Center"
-                                      FontSize="13"
+                                      FontSize="{StaticResource Type.Label.Size}"
                                       ToolTip.Tip="Choose encryption strength: Higher levels provide better security but may be slower">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate>
@@ -380,7 +327,7 @@
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
                             <TextBlock Text="{Binding EncryptionLevelDescription}"
-                                       FontSize="11"
+                                       FontSize="{StaticResource Type.Tiny.Size}"
                                        Foreground="{DynamicResource SuccessBrush}"
                                        TextWrapping="Wrap"
                                        Margin="0,5,0,0" TextAlignment="Center"/>
@@ -394,7 +341,7 @@
                                       HorizontalAlignment="Center"
                                       ToolTip.Tip="Require a physical YubiKey device to unlock your vault (most secure option)"/>
             <TextBlock Text="Adds an extra security layer requiring a physical device"
-                                       FontSize="11"
+                                       FontSize="{StaticResource Type.Tiny.Size}"
                                        Foreground="{DynamicResource MutedTextBrush}"
                                        Margin="0,0,0,0"
                                        TextWrapping="Wrap" TextAlignment="Center"/>
@@ -408,7 +355,7 @@
                                       HorizontalAlignment="Center"
                                       ToolTip.Tip="Enable 2FA code generation (like Google Authenticator) for your stored accounts"/>
             <TextBlock Text="Generate 2FA codes for your accounts"
-                                       FontSize="11"
+                                       FontSize="{StaticResource Type.Tiny.Size}"
                                        Foreground="{DynamicResource MutedTextBrush}"
                                        Margin="0,0,0,0"
                                        TextWrapping="Wrap" TextAlignment="Center"/>
@@ -422,7 +369,7 @@
                                       HorizontalAlignment="Center"
                                       ToolTip.Tip="Enable passwordless authentication using FIDO2/WebAuthn (biometrics, security keys)"/>
             <TextBlock Text="Use FIDO2/WebAuthn for passwordless authentication"
-                                       FontSize="11"
+                                       FontSize="{StaticResource Type.Tiny.Size}"
                                        Foreground="{DynamicResource MutedTextBrush}"
                                        Margin="0,0,0,0"
                                        TextWrapping="Wrap" TextAlignment="Center"/>
@@ -449,7 +396,7 @@
                                                Foreground="{DynamicResource PrimaryTextBrush}"
                                                VerticalAlignment="Center"/>
                                 </StackPanel>
-            <TextBlock FontSize="13"
+            <TextBlock FontSize="{StaticResource Type.Label.Size}"
                                            Foreground="{DynamicResource SecondaryTextBrush}"
                                            TextWrapping="Wrap"
                                            LineHeight="20">
@@ -510,12 +457,12 @@
                             <StackPanel Spacing="10">
                                 <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
             <TextBlock Text="Import from CSV"
-                                               FontSize="16"
+                                               FontSize="{StaticResource Type.H4.Size}"
                                                FontWeight="SemiBold"
                                                Foreground="{DynamicResource PrimaryTextBrush}"
                                                VerticalAlignment="Center"/>
             <TextBlock Text="(Coming Soon)"
-                                               FontSize="11"
+                                               FontSize="{StaticResource Type.Tiny.Size}"
                                                Foreground="{DynamicResource MutedTextBrush}"
                                                VerticalAlignment="Center"
                                                Margin="5,0,0,0"/>
@@ -557,9 +504,9 @@
                             Background="{DynamicResource CardBackgroundBrush}">
                         <StackPanel Spacing="{StaticResource Space.Md}">
                             <StackPanel Orientation="Horizontal" Spacing="10">
-                                <TextBlock Text="🔐" FontSize="20" VerticalAlignment="Center"/>
+                                <TextBlock Text="🔐" FontSize="{StaticResource Type.Icon.Size}" VerticalAlignment="Center"/>
                                 <TextBlock Text="Windows Hello"
-                                           FontSize="16"
+                                           FontSize="{StaticResource Type.H4.Size}"
                                            FontWeight="SemiBold"
                                            VerticalAlignment="Center"/>
                             </StackPanel>
@@ -583,9 +530,9 @@
                             Background="{DynamicResource CardBackgroundBrush}">
                         <StackPanel Spacing="{StaticResource Space.Md}">
                             <StackPanel Orientation="Horizontal" Spacing="10">
-                                <TextBlock Text="🔑" FontSize="20" VerticalAlignment="Center"/>
+                                <TextBlock Text="🔑" FontSize="{StaticResource Type.Icon.Size}" VerticalAlignment="Center"/>
                                 <TextBlock Text="Passkey Authentication"
-                                           FontSize="16"
+                                           FontSize="{StaticResource Type.H4.Size}"
                                            FontWeight="SemiBold"
                                            VerticalAlignment="Center"/>
                             </StackPanel>
@@ -609,9 +556,9 @@
                             Background="{DynamicResource CardBackgroundBrush}">
                         <StackPanel Spacing="{StaticResource Space.Md}">
                             <StackPanel Orientation="Horizontal" Spacing="10">
-                                <TextBlock Text="⏱️" FontSize="20" VerticalAlignment="Center"/>
+                                <TextBlock Text="⏱️" FontSize="{StaticResource Type.Icon.Size}" VerticalAlignment="Center"/>
                                 <TextBlock Text="TOTP Authenticator"
-                                           FontSize="16"
+                                           FontSize="{StaticResource Type.H4.Size}"
                                            FontWeight="SemiBold"
                                            VerticalAlignment="Center"/>
                             </StackPanel>
@@ -635,7 +582,7 @@
                             Background="{DynamicResource CardBackgroundBrush}">
                         <StackPanel Spacing="{StaticResource Space.Sm}">
                             <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space.Sm}">
-                                <TextBlock Text="ℹ️" FontSize="16" VerticalAlignment="Top"/>
+                                <TextBlock Text="ℹ️" FontSize="{StaticResource Type.H4.Size}" VerticalAlignment="Top"/>
                                 <TextBlock Text="Setup Timing"
                                            FontSize="{StaticResource Type.Body.Size}"
                                            FontWeight="SemiBold"
@@ -708,7 +655,7 @@
                     <Button Command="{Binding CreateVaultCommand}"
                             Width="160"
                             Height="42"
-                            FontSize="15"
+                            FontSize="{StaticResource Type.H5.Size}"
                             FontWeight="SemiBold"
                             Classes="liquid-glass"
                             ToolTip.Tip="Create your encrypted vault with the configured settings"

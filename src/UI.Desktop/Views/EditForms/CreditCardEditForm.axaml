@@ -4,46 +4,46 @@
     
     <Border x:Name="CreditCardPanelBorder" Background="Transparent" IsVisible="{Binding IsCreditCardEntry, FallbackValue=False}">
         <StackPanel x:Name="CreditCardPanel" Spacing="12">
-        <TextBlock Text="Card Details" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+        <TextBlock Text="Card Details" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
         <StackPanel Spacing="6">
-            <TextBlock Text="Cardholder Name" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding CardholderName}" Height="40" FontSize="14" Watermark="Name on card"/>
+            <TextBlock Text="Cardholder Name" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding CardholderName}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="Name on card"/>
         </StackPanel>
         <StackPanel Spacing="6">
-            <TextBlock Text="Card Number" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding CardNumber}" Height="40" FontSize="14" Watermark="1234 5678 9012 3456"/>
+            <TextBlock Text="Card Number" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding CardNumber}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="1234 5678 9012 3456"/>
         </StackPanel>
         <StackPanel Spacing="6">
-            <TextBlock Text="Card Type" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding CardType}" Height="40" FontSize="14" Watermark="Visa"/>
+            <TextBlock Text="Card Type" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding CardType}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="Visa"/>
         </StackPanel>
         <Grid ColumnDefinitions="*,16,*">
             <StackPanel Grid.Column="0" Spacing="6">
-                <TextBlock Text="Expiry Month" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                <TextBox Text="{Binding CardExpiryMonth}" Height="40" FontSize="14" Watermark="MM"/>
+                <TextBlock Text="Expiry Month" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                <TextBox Text="{Binding CardExpiryMonth}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="MM"/>
             </StackPanel>
             <StackPanel Grid.Column="2" Spacing="6">
-                <TextBlock Text="Expiry Year" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                <TextBox Text="{Binding CardExpiryYear}" Height="40" FontSize="14" Watermark="YYYY"/>
+                <TextBlock Text="Expiry Year" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                <TextBox Text="{Binding CardExpiryYear}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="YYYY"/>
             </StackPanel>
         </Grid>
         <Grid ColumnDefinitions="*,16,*">
             <StackPanel Grid.Column="0" Spacing="6">
-                <TextBlock Text="CVV" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding CardCVVSecure}" Height="40" FontSize="14" Watermark="123" PasswordChar="•"/>
+                <TextBlock Text="CVV" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding CardCVVSecure}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="123" PasswordChar="•"/>
         </StackPanel>
         <StackPanel Grid.Column="2" Spacing="6">
-            <TextBlock Text="PIN" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding CardPINSecure}" Height="40" FontSize="14" Watermark="0000" PasswordChar="•"/>
+            <TextBlock Text="PIN" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding CardPINSecure}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="0000" PasswordChar="•"/>
         </StackPanel>
         </Grid>
         <StackPanel Spacing="6">
-            <TextBlock Text="Billing Address" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBlock Text="Billing Address" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
             <TextBox Text="{Binding CardBillingAddress}"
                      AcceptsReturn="True"
                      TextWrapping="Wrap"
                      Height="80"
-                     FontSize="13"
+                     FontSize="{StaticResource Type.Label.Size}"
                      />
         </StackPanel>
         </StackPanel>

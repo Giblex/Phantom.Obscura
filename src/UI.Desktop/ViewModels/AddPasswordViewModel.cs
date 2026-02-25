@@ -53,7 +53,7 @@ namespace PhantomVault.UI.ViewModels
             // Initialize IconManager
             try
             {
-                var iconsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Icons");
+                var iconsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Visuals");
                 _iconManager = new IconManager(iconsDir);
             }
             catch

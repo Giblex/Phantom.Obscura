@@ -3,36 +3,36 @@
              x:Class="PhantomVault.UI.Views.EditForms.ContactEditForm">
     
     <StackPanel Spacing="12" IsVisible="{Binding IsContactEntry}">
-        <TextBlock Text="Contact" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+        <TextBlock Text="Contact" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
         <StackPanel Spacing="6">
-            <TextBlock Text="Full Name" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding ContactFullName}" Height="40" FontSize="14" Watermark="Jane Doe"/>
+            <TextBlock Text="Full Name" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding ContactFullName}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="Jane Doe"/>
         </StackPanel>
         <StackPanel Spacing="6">
-            <TextBlock Text="Email" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding ContactEmail}" Height="40" FontSize="14" Watermark="user@example.com"/>
+            <TextBlock Text="Email" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding ContactEmail}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="user@example.com"/>
         </StackPanel>
         <StackPanel Spacing="6">
-            <TextBlock Text="Phone" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding ContactPhone}" Height="40" FontSize="14" Watermark="+1 555 123 4567"/>
+            <TextBlock Text="Phone" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding ContactPhone}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="+1 555 123 4567"/>
         </StackPanel>
         <Grid ColumnDefinitions="*,16,*">
             <StackPanel Grid.Column="0" Spacing="6">
-                <TextBlock Text="Company" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                <TextBox Text="{Binding ContactCompany}" Height="40" FontSize="14" Watermark="Contoso"/>
+                <TextBlock Text="Company" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                <TextBox Text="{Binding ContactCompany}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="Contoso"/>
             </StackPanel>
             <StackPanel Grid.Column="2" Spacing="6">
-                <TextBlock Text="Job Title" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                <TextBox Text="{Binding ContactJobTitle}" Height="40" FontSize="14" Watermark="CTO"/>
+                <TextBlock Text="Job Title" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                <TextBox Text="{Binding ContactJobTitle}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="CTO"/>
             </StackPanel>
         </Grid>
         <StackPanel Spacing="6">
-            <TextBlock Text="Address" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBlock Text="Address" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
             <TextBox Text="{Binding ContactAddress}"
                      AcceptsReturn="True"
                      TextWrapping="Wrap"
                      Height="80"
-                     FontSize="13"
+                     FontSize="{StaticResource Type.Label.Size}"
                      />
         </StackPanel>
     </StackPanel>

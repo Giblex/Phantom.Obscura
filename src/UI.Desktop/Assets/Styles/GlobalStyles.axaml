@@ -287,17 +287,17 @@
 
     <!-- ComboBox Popup/Dropdown styling - FORCE OVERRIDE -->
     <Style Selector="ComboBox /template/ Popup Border">
-        <Setter Property="Background" Value="#35475B"/>
+        <Setter Property="Background" Value="{DynamicResource PopupBackgroundBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.BorderSoft}"/>
         <Setter Property="CornerRadius" Value="{DynamicResource Radius.Sm}"/>
     </Style>
 
     <Style Selector="ComboBox /template/ Popup ListBox">
-        <Setter Property="Background" Value="#35475B"/>
+        <Setter Property="Background" Value="{DynamicResource PopupBackgroundBrush}"/>
     </Style>
     
     <Style Selector="ComboBox /template/ Popup ScrollViewer">
-        <Setter Property="Background" Value="#35475B"/>
+        <Setter Property="Background" Value="{DynamicResource PopupBackgroundBrush}"/>
     </Style>
     
     <Style Selector="ComboBoxItem">
@@ -565,6 +565,193 @@
     
     <Style Selector="Ellipse.status-dot.danger">
         <Setter Property="Fill" Value="{DynamicResource Brush.Danger}"/>
+    </Style>
+
+    <!-- ═══════════════════════ TOAST / NOTIFICATION (from Attestor) ═══════════════════════ -->
+
+    <Style Selector="Border.toast">
+        <Setter Property="Background" Value="{DynamicResource Brush.Card}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Lg}"/>
+        <Setter Property="Padding" Value="16,12"/>
+        <Setter Property="BoxShadow" Value="0 8 24 0 #50000000"/>
+        <Setter Property="Opacity" Value="0"/>
+    </Style>
+
+    <Style Selector="Border.toast.visible">
+        <Setter Property="Opacity" Value="1"/>
+    </Style>
+
+    <Style Selector="Border.toast-success">
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Success}"/>
+    </Style>
+
+    <!-- ═══════════════════════ EXPANDER (from Attestor) ═══════════════════════ -->
+
+    <Style Selector="Expander">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+    </Style>
+
+    <Style Selector="Expander /template/ ToggleButton">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+        <Setter Property="Padding" Value="0,8"/>
+    </Style>
+
+    <!-- ═══════════════════════ LISTBOX (from Attestor) ═══════════════════════ -->
+
+    <Style Selector="ListBox">
+        <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.BorderSoft}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Sm}"/>
+    </Style>
+
+    <Style Selector="ListBoxItem">
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="Background" Value="Transparent"/>
+    </Style>
+
+    <Style Selector="ListBoxItem:pointerover">
+        <Setter Property="Background" Value="{DynamicResource ControlHoverBrush}"/>
+    </Style>
+
+    <Style Selector="ListBoxItem:selected">
+        <Setter Property="Background" Value="{DynamicResource Brush.Accent}"/>
+    </Style>
+
+    <!-- ═══════════════════════ MENUITEM (from Attestor) ═══════════════════════ -->
+
+    <Style Selector="MenuItem">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+        <Setter Property="Padding" Value="12,8"/>
+    </Style>
+
+    <Style Selector="MenuItem:pointerover">
+        <Setter Property="Background" Value="{DynamicResource ControlHoverBrush}"/>
+    </Style>
+
+    <!-- ═══════════════════════ PROGRESSBAR (from Attestor) ═══════════════════════ -->
+
+    <Style Selector="ProgressBar">
+        <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="MinHeight" Value="6"/>
+    </Style>
+
+    <Style Selector="ProgressBar.urgent">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Danger}"/>
+    </Style>
+
+    <!-- Password Strength Meter -->
+    <Style Selector="ProgressBar.strength-meter">
+        <Setter Property="MinHeight" Value="4"/>
+        <Setter Property="CornerRadius" Value="2"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Value" Duration="0:0:0.3"/>
+                <BrushTransition Property="Foreground" Duration="0:0:0.4" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="ProgressBar.strength-meter.weak">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Danger}"/>
+    </Style>
+
+    <Style Selector="ProgressBar.strength-meter.medium">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Warning}"/>
+    </Style>
+
+    <Style Selector="ProgressBar.strength-meter.strong">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Success}"/>
+    </Style>
+
+    <!-- ═══════════════════════ TEXTBOX.SEARCH (from Attestor) ═══════════════════════ -->
+
+    <Style Selector="TextBox.search">
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Pill}"/>
+        <Setter Property="Padding" Value="16,10"/>
+    </Style>
+
+    <!-- ═══════════════════════ AUTO-HIDING NARROW SCROLLBARS (from Attestor) ═══════════════════════ -->
+
+    <Style Selector="ScrollViewer /template/ ScrollBar">
+        <Setter Property="Opacity" Value="0"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.3"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="ScrollViewer:pointerover /template/ ScrollBar">
+        <Setter Property="Opacity" Value="0.6"/>
+    </Style>
+
+    <Style Selector="ScrollViewer /template/ ScrollBar /template/ Thumb">
+        <Setter Property="MinWidth" Value="4"/>
+        <Setter Property="Background" Value="{DynamicResource Brush.TextMuted}"/>
+        <Setter Property="CornerRadius" Value="2"/>
+    </Style>
+
+    <!-- ═══════════════════════ SKELETON LOADING (from Attestor) ═══════════════════════ -->
+
+    <Style Selector="Border.skeleton.pulse">
+        <Style.Animations>
+            <Animation Duration="0:0:1.5" IterationCount="Infinite">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="0.3"/>
+                </KeyFrame>
+                <KeyFrame Cue="50%">
+                    <Setter Property="Opacity" Value="0.7"/>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="0.3"/>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <Style Selector="Border.skeleton-text.pulse">
+        <Setter Property="Height" Value="14"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
+        <Style.Animations>
+            <Animation Duration="0:0:1.5" IterationCount="Infinite">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="0.3"/>
+                </KeyFrame>
+                <KeyFrame Cue="50%">
+                    <Setter Property="Opacity" Value="0.7"/>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="0.3"/>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <!-- ═══════════════════════ PULSE ANIMATION (from Attestor) ═══════════════════════ -->
+
+    <Style Selector="Border.pulse">
+        <Style.Animations>
+            <Animation Duration="0:0:1" IterationCount="Infinite">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="1"/>
+                </KeyFrame>
+                <KeyFrame Cue="50%">
+                    <Setter Property="Opacity" Value="0.6"/>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="1"/>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
     </Style>
 
 </Styles>

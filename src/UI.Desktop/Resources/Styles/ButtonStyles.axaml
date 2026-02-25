@@ -1,15 +1,17 @@
 <Styles xmlns="https://github.com/avaloniaui"
          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- Shadow handling moved to theme files (Dark.axaml, Light.axaml, HighContrast.axaml) -->
-    <!-- This allows themes to control shadow presence/intensity without defensive overrides -->
+    <!-- ═══════════════════════════════════════════════════════════════════
+         Tile Button Styles — Single source of truth for credential tiles
+         Shadow handling moved to theme files (Dark/Light/HighContrast.axaml)
+         ═══════════════════════════════════════════════════════════════════ -->
 
-    <!-- Tile button styles - Transparent wrappers for credential tiles -->
-    <!-- List tile variant - stretches to fill available width -->
+    <!-- List tile variant — stretches to fill available width -->
     <Style Selector="Button.tile-button">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Padding" Value="0"/>
+        <Setter Property="Effect" Value="{x:Null}"/>
         <Setter Property="HorizontalAlignment" Value="Stretch"/>
         <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
         <Setter Property="MinHeight" Value="{StaticResource TileHeight}" />
@@ -33,11 +35,12 @@
         </Setter>
     </Style>
 
-    <!-- Grid tile variant - fixed sizing -->
+    <!-- Grid tile variant — fixed sizing -->
     <Style Selector="Button.tile-button-grid">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Padding" Value="0"/>
+        <Setter Property="Effect" Value="{x:Null}"/>
         <Setter Property="CornerRadius" Value="8" />
         <Setter Property="Template">
             <Setter.Value>
@@ -57,24 +60,27 @@
         </Setter>
     </Style>
 
-    <!-- Ensure hovered/pressed states remain transparent -->
-    <Style Selector="Button.tile-button:pointerover, Button.tile-button:pressed">
-        <Setter Property="Background" Value="Transparent" />
-        <Setter Property="BorderBrush" Value="Transparent" />
+    <!-- Tile hover: subtle highlight for interaction feedback -->
+    <Style Selector="Button.tile-button:pointerover, Button.tile-button-grid:pointerover">
+        <Setter Property="Background" Value="#08FFFFFF" />
     </Style>
-    
-    <Style Selector="Button.tile-button-grid:pointerover, Button.tile-button-grid:pressed">
-        <Setter Property="Background" Value="Transparent" />
-        <Setter Property="BorderBrush" Value="Transparent" />
+    <Style Selector="Button.tile-button:pressed, Button.tile-button-grid:pressed">
+        <Setter Property="Background" Value="#04FFFFFF" />
     </Style>
 
-    <!-- Defensive: remove any BoxShadow or Effect that could be applied by base themes -->
+    <!-- Keyboard accessibility: subtle focus outline on tile buttons -->
+    <Style Selector="Button.tile-button:focus, Button.tile-button-grid:focus">
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+    </Style>
+
+    <!-- Defensive: remove any BoxShadow or Effect applied by base themes -->
     <Style Selector="Button.tile-button /template/ Border">
         <Setter Property="Effect" Value="{x:Null}" />
         <Setter Property="BoxShadow" Value="0 0 0 0 #00000000" />
     </Style>
 
-    <Style Selector="Button.tile-button Button">
+    <!-- Copy and nested buttons inside tiles: keep flat -->
+    <Style Selector="Button.tile-button Button, Button.tile-button-grid Button">
         <Setter Property="Effect" Value="{x:Null}" />
     </Style>
 
@@ -82,7 +88,15 @@
         <Setter Property="Effect" Value="{x:Null}" />
     </Style>
 
-    <!-- Header action buttons - used in toolbar -->
+    <!-- ListBox items: keep flat (no shadow/effects from base themes) -->
+    <Style Selector="ListBoxItem /template/ Border">
+        <Setter Property="BoxShadow" Value="0 0 0 0 #00000000" />
+        <Setter Property="Effect" Value="{x:Null}" />
+    </Style>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         Header Action Buttons — toolbar buttons with hover/press/focus
+         ═══════════════════════════════════════════════════════════════════ -->
     <Style Selector="Button.header-action">
         <Setter Property="Background" Value="{DynamicResource HeaderButtonBackgroundBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource HeaderButtonBorderBrush}" />
@@ -94,6 +108,18 @@
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Cursor" Value="Hand" />
+    </Style>
+
+    <Style Selector="Button.header-action:pointerover">
+        <Setter Property="Background" Value="{DynamicResource HeaderButtonHoverBrush}" />
+    </Style>
+
+    <Style Selector="Button.header-action:pressed">
+        <Setter Property="Background" Value="{DynamicResource HeaderButtonPressedBrush}" />
+    </Style>
+
+    <Style Selector="Button.header-action:focus">
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
     </Style>
     
 </Styles>

@@ -4,30 +4,31 @@
              xmlns:editforms="clr-namespace:PhantomVault.UI.Views.EditForms"
              x:Class="PhantomVault.UI.Views.EditForms.EditFormContentPanel">
     
+    <UserControl.Styles>
+        <!-- Shared TextBox hover/focus highlight — theme-adaptive via token -->
+        <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="{DynamicResource InputHighlightBrush}"/>
+        </Style>
+        <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="{DynamicResource InputHighlightBrush}"/>
+        </Style>
+    </UserControl.Styles>
+    
     <StackPanel x:Name="EditFormStack" Spacing="20">
         
         <!-- Title Field -->
         <StackPanel Spacing="8">
             <TextBlock Text="Title *" 
-                       FontSize="13" 
+                       FontSize="{StaticResource Type.Label.Size}" 
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource SecondaryTextBrush}"/>
             <TextBox Text="{Binding Title}"
                      Watermark="e.g., GitHub, Gmail, Bank Account"
                      Height="40"
-                     FontSize="14"
-                     Background="{DynamicResource ReadOnlyFieldBackgroundBrush}">
-                <TextBox.Styles>
-                    <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
-                        <Setter Property="Background" Value="#33FFFFFF"/>
-                    </Style>
-                    <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
-                        <Setter Property="Background" Value="#33FFFFFF"/>
-                    </Style>
-                </TextBox.Styles>
-            </TextBox>
+                     FontSize="{StaticResource Type.Body.Size}"
+                     Background="{DynamicResource ReadOnlyFieldBackgroundBrush}"/>
             <TextBlock Text="{Binding TitleError}" 
-                       FontSize="11" 
+                       FontSize="{StaticResource Type.Tiny.Size}" 
                        Foreground="{DynamicResource ErrorBrush}"
                        IsVisible="{Binding HasTitleError}"/>
         </StackPanel>
@@ -35,25 +36,16 @@
         <!-- Username/Email Field -->
         <StackPanel Spacing="8">
             <TextBlock Text="Username / Email *" 
-                       FontSize="13" 
+                       FontSize="{StaticResource Type.Label.Size}" 
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource SecondaryTextBrush}"/>
             <TextBox Text="{Binding Username}"
                      Watermark="username@example.com"
                      Height="40"
-                     FontSize="14"
-                     Background="{DynamicResource ReadOnlyFieldBackgroundBrush}">
-                <TextBox.Styles>
-                    <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
-                        <Setter Property="Background" Value="#33FFFFFF"/>
-                    </Style>
-                    <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
-                        <Setter Property="Background" Value="#33FFFFFF"/>
-                    </Style>
-                </TextBox.Styles>
-            </TextBox>
+                     FontSize="{StaticResource Type.Body.Size}"
+                     Background="{DynamicResource ReadOnlyFieldBackgroundBrush}"/>
             <TextBlock Text="{Binding UsernameError}" 
-                       FontSize="11" 
+                       FontSize="{StaticResource Type.Tiny.Size}" 
                        Foreground="{DynamicResource ErrorBrush}"
                        IsVisible="{Binding HasUsernameError}"/>
         </StackPanel>
@@ -63,7 +55,7 @@
             <Grid ColumnDefinitions="*,Auto,4,Auto">
                 <TextBlock Grid.Column="0"
                            Text="Password *" 
-                           FontSize="13" 
+                           FontSize="{StaticResource Type.Label.Size}" 
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource SecondaryTextBrush}"/>
                 <Button Grid.Column="1"
@@ -72,7 +64,7 @@
                         Width="90"
                         Height="26"
                         Padding="10,4"
-                        FontSize="11"
+                        FontSize="{StaticResource Type.Tiny.Size}"
                         ToolTip.Tip="Generate strong password">
                     <TextBlock Text="Generate" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Button>
@@ -82,9 +74,9 @@
                         Height="26"
                         Width="26"
                         Padding="4"
-                        FontSize="11"
+                        FontSize="{StaticResource Type.Tiny.Size}"
                         ToolTip.Tip="Open password generator settings">
-                    <TextBlock Text="..." FontSize="13"/>
+                    <TextBlock Text="..." FontSize="{StaticResource Type.Label.Size}"/>
                 </Button>
             </Grid>
 
@@ -94,18 +86,9 @@
                          PasswordChar="{Binding PasswordChar}"
                          Watermark="Enter secure password"
                          Height="40"
-                         FontSize="14"
+                         FontSize="{StaticResource Type.Body.Size}"
                          Padding="12,10,45,10"
-                         Background="{DynamicResource ReadOnlyFieldBackgroundBrush}">
-                    <TextBox.Styles>
-                        <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
-                            <Setter Property="Background" Value="#33FFFFFF"/>
-                        </Style>
-                        <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
-                            <Setter Property="Background" Value="#33FFFFFF"/>
-                        </Style>
-                    </TextBox.Styles>
-                </TextBox>
+                         Background="{DynamicResource ReadOnlyFieldBackgroundBrush}"/>
                 <Button Grid.Column="1"
                         Command="{Binding TogglePasswordVisibilityCommand}"
                         Classes="secondary"
@@ -113,7 +96,7 @@
                         Height="36"
                         Margin="-40,2,4,2"
                         ToolTip.Tip="Show/Hide password">
-                    <TextBlock Text="{Binding PasswordVisibilityIcon}" FontSize="16"/>
+                    <TextBlock Text="{Binding PasswordVisibilityIcon}" FontSize="{StaticResource Type.H4.Size}"/>
                 </Button>
             </Grid>
 
@@ -125,7 +108,7 @@
                 <Grid ColumnDefinitions="Auto,*,Auto">
                     <TextBlock Grid.Column="0"
                                Text="Strength:" 
-                               FontSize="11" 
+                               FontSize="{StaticResource Type.Tiny.Size}" 
                                Foreground="{DynamicResource MutedTextBrush}"
                                VerticalAlignment="Center"
                                Margin="0,0,10,0"/>
@@ -137,7 +120,7 @@
                                  Foreground="{Binding PasswordStrengthColor}"/>
                     <TextBlock Grid.Column="2"
                                Text="{Binding PasswordStrengthText}" 
-                               FontSize="11" 
+                               FontSize="{StaticResource Type.Tiny.Size}" 
                                FontWeight="SemiBold"
                                Foreground="{Binding PasswordStrengthColor}"
                                VerticalAlignment="Center"
@@ -146,7 +129,7 @@
             </Border>
 
             <TextBlock Text="{Binding PasswordError}" 
-                       FontSize="11" 
+                       FontSize="{StaticResource Type.Tiny.Size}" 
                        Foreground="{DynamicResource ErrorBrush}"
                        IsVisible="{Binding HasPasswordError}"/>
         </StackPanel>
@@ -154,38 +137,29 @@
         <!-- URL Field -->
         <StackPanel Spacing="8">
             <TextBlock Text="Website URL" 
-                       FontSize="13" 
+                       FontSize="{StaticResource Type.Label.Size}" 
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource SecondaryTextBrush}"/>
             <TextBox Text="{Binding Url}"
                      Watermark="https://example.com"
                      Height="40"
-                     FontSize="14"
-                     Background="{DynamicResource ReadOnlyFieldBackgroundBrush}">
-                <TextBox.Styles>
-                    <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
-                        <Setter Property="Background" Value="#33FFFFFF"/>
-                    </Style>
-                    <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
-                        <Setter Property="Background" Value="#33FFFFFF"/>
-                    </Style>
-                </TextBox.Styles>
-            </TextBox>
+                     FontSize="{StaticResource Type.Body.Size}"
+                     Background="{DynamicResource ReadOnlyFieldBackgroundBrush}"/>
             <TextBlock Text="Optional - Used for auto-fill and quick access" 
-                       FontSize="11" 
+                       FontSize="{StaticResource Type.Tiny.Size}" 
                        Foreground="{DynamicResource MutedTextBrush}"/>
         </StackPanel>
         
         <!-- Category Selection -->
         <StackPanel Spacing="8">
             <TextBlock Text="Category" 
-                       FontSize="13" 
+                       FontSize="{StaticResource Type.Label.Size}" 
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource SecondaryTextBrush}"/>
             <ComboBox SelectedItem="{Binding SelectedCategory}"
                       ItemsSource="{Binding Categories}"
                       Height="40"
-                      FontSize="14">
+                      FontSize="{StaticResource Type.Body.Size}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal" Spacing="8">
@@ -199,7 +173,7 @@
         <!-- Icon/Logo Selection -->
         <StackPanel Spacing="8">
             <TextBlock Text="Icon / Logo" 
-                       FontSize="13" 
+                       FontSize="{StaticResource Type.Label.Size}" 
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource SecondaryTextBrush}"/>
             <Border Background="{DynamicResource ReadOnlyFieldBackgroundBrush}"
@@ -210,7 +184,7 @@
                     Height="100">
                 <Border.Styles>
                     <Style Selector="Border:pointerover">
-                        <Setter Property="Background" Value="#33FFFFFF"/>
+                        <Setter Property="Background" Value="{DynamicResource InputHighlightBrush}"/>
                     </Style>
                 </Border.Styles>
                 <Grid ColumnDefinitions="Auto,*,Auto">
@@ -235,11 +209,11 @@
                                 VerticalAlignment="Center"
                                 Spacing="4">
                         <TextBlock Text="Custom icon for this credential" 
-                                   FontSize="13" 
+                                   FontSize="{StaticResource Type.Label.Size}" 
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                         <TextBlock Text="Click 'Change Icon' to select from library or upload custom" 
-                                   FontSize="11" 
+                                   FontSize="{StaticResource Type.Tiny.Size}" 
                                    Foreground="{DynamicResource MutedTextBrush}"
                                    TextWrapping="Wrap"/>
                     </StackPanel>
@@ -269,7 +243,7 @@
         <!-- Notes Field -->
         <StackPanel Spacing="8">
             <TextBlock Text="Notes" 
-                       FontSize="13" 
+                       FontSize="{StaticResource Type.Label.Size}" 
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource SecondaryTextBrush}"/>
             <TextBox Text="{Binding Notes}"
@@ -277,17 +251,8 @@
                      AcceptsReturn="True"
                      TextWrapping="Wrap"
                      Height="100"
-                     FontSize="13"
-                     Background="{DynamicResource ReadOnlyFieldBackgroundBrush}">
-                <TextBox.Styles>
-                    <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
-                        <Setter Property="Background" Value="#33FFFFFF"/>
-                    </Style>
-                    <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
-                        <Setter Property="Background" Value="#33FFFFFF"/>
-                    </Style>
-                </TextBox.Styles>
-            </TextBox>
+                     FontSize="{StaticResource Type.Label.Size}"
+                     Background="{DynamicResource ReadOnlyFieldBackgroundBrush}"/>
         </StackPanel>
         
     </StackPanel>

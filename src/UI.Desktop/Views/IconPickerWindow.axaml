@@ -13,7 +13,8 @@
         MinWidth="500" MinHeight="600"
         WindowStartupLocation="CenterOwner"
         CanResize="True"
-        Background="{DynamicResource WindowBackgroundBrush}">
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Classes="animated-window">
     <InputElement.KeyBindings>
     <KeyBinding Gesture="Escape" Command="{Binding CloseCommand}"/>
     </InputElement.KeyBindings>
@@ -65,11 +66,11 @@
                 Padding="20,15">
             <StackPanel Spacing="5">
                 <TextBlock Text="Icon Picker"
-                           FontSize="20"
+                           FontSize="{StaticResource Type.Icon.Size}"
                            FontWeight="Bold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
                 <TextBlock Text="Choose or search for an icon"
-                           FontSize="13"
+                           FontSize="{StaticResource Type.Label.Size}"
                            Foreground="{DynamicResource MutedTextBrush}"/>
             </StackPanel>
         </Border>
@@ -85,7 +86,7 @@
                          Text="{Binding SearchText}"
                          Watermark="Search icons... (e.g., 'social', 'finance', 'security')"
                          Height="40"
-                         FontSize="14"/>
+                         FontSize="{StaticResource Type.Body.Size}"/>
                 <Button Grid.Column="1"
                         Content="✕"
                         Command="{Binding ClearSearchCommand}"
@@ -110,7 +111,7 @@
                         IsVisible="{Binding SelectedIcon, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                     <StackPanel Spacing="15">
                         <TextBlock Text="Current Selection"
-                                   FontSize="13"
+                                   FontSize="{StaticResource Type.Label.Size}"
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
                         
@@ -134,8 +135,8 @@
 
                 <!-- Available Icons Grid -->
                 <StackPanel Spacing="10">
-                    <TextBlock Text="Available Icons"
-                               FontSize="14"
+                    <TextBlock Text="Category Icons"
+                               FontSize="{StaticResource Type.Body.Size}"
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
                     
@@ -155,9 +156,45 @@
                                         Margin="4" 
                                         Padding="4"
                                         ToolTip.Tip="{Binding}">
-                                    <Image Source="{Binding}" 
+                                    <Image Source="{Binding Converter={StaticResource IconPathToBitmapConverter}}" 
                                            Width="40" 
                                            Height="40" 
+                                           Stretch="Uniform"/>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <!-- Entry Logos Grid -->
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Entry Logos"
+                               FontSize="{StaticResource Type.Body.Size}"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="Service and application logos for credential entries"
+                               FontSize="{StaticResource Type.Tiny.Size}"
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               Margin="0,0,0,4"/>
+                    
+                    <ItemsControl ItemsSource="{Binding EntryLogoPaths}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Command="{Binding Path=DataContext.SelectIconCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                        CommandParameter="{Binding}"
+                                        Classes="liquid-glass" 
+                                        Width="48" 
+                                        Height="48" 
+                                        Margin="3" 
+                                        Padding="3">
+                                    <Image Source="{Binding Converter={StaticResource IconPathToBitmapConverter}}" 
+                                           Width="36" 
+                                           Height="36" 
                                            Stretch="Uniform"/>
                                 </Button>
                             </DataTemplate>
@@ -177,7 +214,7 @@
             <Grid ColumnDefinitions="*,Auto,Auto">
                 <TextBlock Grid.Column="0"
                            Text="{Binding StatusMessage}"
-                           FontSize="12"
+                           FontSize="{StaticResource Type.Small.Size}"
                            Foreground="{DynamicResource MutedTextBrush}"
                            VerticalAlignment="Center"/>
                 

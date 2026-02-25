@@ -60,26 +60,6 @@ namespace PhantomVault.UI.Services
         }
 
         /// <summary>
-        /// Navigate to VeraCrypt setup window.
-        /// </summary>
-        /// <param name="usbPath">Path to USB drive for container creation</param>
-        public void ShowVeraCryptSetup(string usbPath)
-        {
-            var viewModel = new VeraCryptSetupWindowViewModel();
-
-            // Wire up navigation commands
-            viewModel.SkipCommand.Subscribe(_ => ShowProvision(usbPath));
-            // CreateContainerCommand will navigate to provision after success
-
-            var window = new VeraCryptSetupWindow
-            {
-                DataContext = viewModel
-            };
-
-            ShowWindow(window);
-        }
-
-        /// <summary>
         /// Navigate to security check screen.
         /// </summary>
         /// <param name="usbPath">Path to USB drive to validate</param>

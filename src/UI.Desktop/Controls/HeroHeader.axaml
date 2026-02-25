@@ -41,7 +41,7 @@
                                  Fill="{DynamicResource Brush.Accent}"
                                  VerticalAlignment="Center"/>
                         <TextBlock Text="{Binding BadgeText, ElementName=HeroRoot}"
-                                   FontSize="12"
+                                   FontSize="{StaticResource Type.Small.Size}"
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource Brush.TextOnDark}"
                                    VerticalAlignment="Center"/>
@@ -83,7 +83,7 @@
                 <StackPanel Spacing="12">
                     <!-- Glass panel header -->
                     <TextBlock Text="{Binding GlassPanelTitle, ElementName=HeroRoot}"
-                               FontSize="14"
+                               FontSize="{StaticResource Type.Body.Size}"
                                FontWeight="Medium"
                                Foreground="{DynamicResource Brush.TextMuted}"
                                IsVisible="{Binding GlassPanelTitle, ElementName=HeroRoot, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>

@@ -26,6 +26,47 @@ namespace PhantomVault.UI.Views
         private CategoryItem? _currentFlyoutCategory; // Store category when flyout opens
         private Flyout? _currentFlyout; // Store the flyout reference
 
+        /// <summary>
+        /// Set the dragged tile container to a high ZIndex so it renders on top of siblings.
+        /// </summary>
+        private void ElevateDraggedTile()
+        {
+            if (_tileContainer == null) return;
+            _tileContainer.ZIndex = 9999;
+            // The actual child of the StackPanel is the ContentPresenter wrapping TileContainer.
+            // We must also elevate it so the Panel respects the ZIndex for rendering order.
+            if (_tileContainer.Parent is Avalonia.Controls.Presenters.ContentPresenter cp)
+            {
+                cp.ZIndex = 9999;
+            }
+        }
+
+        /// <summary>
+        /// Reset all tile container ZIndex values back to 0.
+        /// </summary>
+        private void ResetAllTileZIndex()
+        {
+            try
+            {
+                var ic = this.FindControl<ItemsControl>("CategoryItems");
+                if (ic == null) return;
+
+                // Walk the visual tree to find all TileContainer borders
+                foreach (var child in ic.GetVisualDescendants())
+                {
+                    if (child is Border b && b.Name == "TileContainer")
+                    {
+                        b.ZIndex = 0;
+                        if (b.Parent is Avalonia.Controls.Presenters.ContentPresenter cp)
+                        {
+                            cp.ZIndex = 0;
+                        }
+                    }
+                }
+            }
+            catch { }
+        }
+
         public CategoryManagerView()
         {
             InitializeComponent();
@@ -269,21 +310,35 @@ namespace PhantomVault.UI.Views
                     {
                         _savedTransitions = _tileContainer.Transitions;
                         _tileContainer.Transitions = null;
-                        _tileContainer.ZIndex = 9999;
-                        _tileContainer.Opacity = 0.95;
+                        ElevateDraggedTile();
+                        _tileContainer.Opacity = 0.92;
 
                         if (_tileContainer.RenderTransform is TransformGroup transformGroup && transformGroup.Children.Count >= 3)
                         {
                             if (transformGroup.Children[0] is ScaleTransform scale)
                             {
-                                scale.ScaleX = 1.02;
-                                scale.ScaleY = 1.02;
+                                scale.ScaleX = 1.04;
+                                scale.ScaleY = 1.04;
                             }
 
                             if (transformGroup.Children[1] is RotateTransform rotate)
                             {
-                                rotate.Angle = 0;
+                                rotate.Angle = 1.0; // slight tilt for "lifted" feel
                             }
+                        }
+
+                        // Add a drop shadow to the dragged tile
+                        if (_draggedTile != null)
+                        {
+                            _draggedTile.BoxShadow = new Avalonia.Media.BoxShadows(
+                                new Avalonia.Media.BoxShadow
+                                {
+                                    OffsetX = 0,
+                                    OffsetY = 4,
+                                    Blur = 16,
+                                    Spread = 2,
+                                    Color = Avalonia.Media.Color.FromArgb(120, 0, 0, 0)
+                                });
                         }
                     }
                 }
@@ -297,6 +352,7 @@ namespace PhantomVault.UI.Views
                 {
                     if (transformGroup.Children[2] is TranslateTransform translate)
                     {
+                        translate.X += delta.X;
                         translate.Y += delta.Y;
                     }
                 }
@@ -347,8 +403,14 @@ namespace PhantomVault.UI.Views
                 {
                     _tileContainer.Transitions = _savedTransitions;
                     _savedTransitions = null;
-                    _tileContainer.ZIndex = 0;
+                    ResetAllTileZIndex();
                     _tileContainer.Opacity = 1.0;
+
+                    // Clear drop shadow
+                    if (_draggedTile != null)
+                    {
+                        _draggedTile.BoxShadow = default;
+                    }
 
                     if (_tileContainer.RenderTransform is TransformGroup transformGroup)
                     {
@@ -363,6 +425,7 @@ namespace PhantomVault.UI.Views
                         }
                         if (transformGroup.Children.Count >= 3 && transformGroup.Children[2] is TranslateTransform translate)
                         {
+                            translate.X = 0;
                             translate.Y = 0;
                         }
                     }
@@ -391,8 +454,14 @@ namespace PhantomVault.UI.Views
             {
                 _tileContainer.Transitions = _savedTransitions;
                 _savedTransitions = null;
-                _tileContainer.ZIndex = 0;
+                ResetAllTileZIndex();
                 _tileContainer.Opacity = 1.0;
+
+                // Clear drop shadow
+                if (_draggedTile != null)
+                {
+                    _draggedTile.BoxShadow = default;
+                }
 
                 if (_tileContainer.RenderTransform is TransformGroup transformGroup)
                 {
@@ -407,6 +476,7 @@ namespace PhantomVault.UI.Views
                     }
                     if (transformGroup.Children.Count >= 3 && transformGroup.Children[2] is TranslateTransform translate)
                     {
+                        translate.X = 0;
                         translate.Y = 0;
                     }
                 }

@@ -21,38 +21,38 @@
     
     <Border x:Name="IdentityPanelBorder" Background="Transparent" IsVisible="{Binding IsIdentityEntry}">
         <StackPanel x:Name="IdentityPanel" Spacing="12">
-        <TextBlock Text="Identity Document" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+        <TextBlock Text="Identity Document" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
         <StackPanel Spacing="6">
-            <TextBlock Text="ID Type" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBlock Text="ID Type" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
             <ComboBox ItemsSource="{Binding IdentityTypeOptions}"
                       SelectedItem="{Binding IdDocumentType}"
                       Height="40"
-                      FontSize="14"/>
+                      FontSize="{StaticResource Type.Body.Size}"/>
         </StackPanel>
         <StackPanel Spacing="6">
-            <TextBlock Text="{Binding IdNumberLabel}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding IdNumber}" Height="40" FontSize="14" Watermark="{Binding IdNumberWatermark}"/>
+            <TextBlock Text="{Binding IdNumberLabel}" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding IdNumber}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="{Binding IdNumberWatermark}"/>
         </StackPanel>
         <StackPanel Spacing="6">
-            <TextBlock Text="Card Number" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding IdCardNumber}" Height="40" FontSize="14" Watermark="Enter card or document number"/>
+            <TextBlock Text="Card Number" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding IdCardNumber}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="Enter card or document number"/>
         </StackPanel>
         <StackPanel Spacing="6" IsVisible="{Binding ShowIdIssuingCountry}">
-            <TextBlock Text="{Binding IdIssuingCountryLabel}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding IdIssuingCountry}" Height="40" FontSize="14" Watermark="{Binding IdIssuingCountryWatermark}"/>
+            <TextBlock Text="{Binding IdIssuingCountryLabel}" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding IdIssuingCountry}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="{Binding IdIssuingCountryWatermark}"/>
         </StackPanel>
         <StackPanel Spacing="6" IsVisible="{Binding ShowIdIssuingState}">
-            <TextBlock Text="{Binding IdIssuingStateLabel}" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding IdIssuingState}" Height="40" FontSize="14" Watermark="{Binding IdIssuingStateWatermark}"/>
+            <TextBlock Text="{Binding IdIssuingStateLabel}" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding IdIssuingState}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="{Binding IdIssuingStateWatermark}"/>
         </StackPanel>
         <Grid ColumnDefinitions="*,16,*">
             <StackPanel Grid.Column="0" Spacing="6" IsVisible="{Binding ShowIdIssueDate}">
-                <TextBlock Text="Issue Date" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                <DatePicker SelectedDate="{Binding IdIssueDate}" Height="40" FontSize="14"/>
+                <TextBlock Text="Issue Date" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                <DatePicker SelectedDate="{Binding IdIssueDate}" Height="40" FontSize="{StaticResource Type.Body.Size}"/>
             </StackPanel>
             <StackPanel Grid.Column="2" Spacing="6" IsVisible="{Binding ShowIdExpiryDate}">
-                <TextBlock Text="Expiration Date" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                <DatePicker SelectedDate="{Binding IdExpiryDate}" Height="40" FontSize="14"/>
+                <TextBlock Text="Expiration Date" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                <DatePicker SelectedDate="{Binding IdExpiryDate}" Height="40" FontSize="{StaticResource Type.Body.Size}"/>
             </StackPanel>
         </Grid>
         </StackPanel>

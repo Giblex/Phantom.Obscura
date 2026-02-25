@@ -26,7 +26,11 @@ namespace PhantomVault.Core
         SessionExpired,
         SessionIdleTimeout,
         PolicySyncFailed,
-        PolicyConflictDetected
+        PolicyConflictDetected,
+        KeyfileRequired,
+        HardwareTokenRequired,
+        AntiRollbackViolation,
+        ManifestPolicyInvalid
     }
 
     public class PolicyViolationException : Exception

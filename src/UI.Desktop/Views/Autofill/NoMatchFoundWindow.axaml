@@ -1,0 +1,45 @@
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:views="clr-namespace:PhantomVault.UI.Views"
+    x:Class="PhantomVault.UI.Views.AutoFill.NoMatchFoundWindow"
+    Title="Phantom Obscura — No Credential Found"
+    Width="420" Height="230"
+    CanResize="False"
+    Topmost="True"
+    ShowInTaskbar="False"
+    WindowStartupLocation="CenterScreen">
+    <Border Padding="24">
+        <StackPanel Spacing="16">
+            <StackPanel Spacing="6">
+                <TextBlock Text="No Credential Found"
+                           FontSize="{StaticResource Type.H4.Size}"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <TextBlock Text="{Binding Message}"
+                           FontSize="{StaticResource Type.Body.Size}"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <Button Command="{Binding AddNewEntryCommand}"
+                    Content="Add New Entry"
+                    Classes="liquid-glass"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    ToolTip.Tip="Open the credential editor to save a new login for this portal"/>
+
+            <Button Command="{Binding CreatePasskeyCommand}"
+                    IsVisible="{Binding CanCreatePasskey}"
+                    Content="Create Passkey  (via Attestor)"
+                    Classes="liquid-glass"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    ToolTip.Tip="Register a passkey for this portal using Phantom Attestor"/>
+
+            <Button Command="{Binding CancelCommand}"
+                    Content="Cancel"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"/>
+        </StackPanel>
+    </Border>
+</views:ThemeAwareWindow>

@@ -19,17 +19,17 @@
     </Design.DataContext>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <Border Padding="30,20">
+        <Border Padding="30,20,30,60">
             <StackPanel Spacing="25">
                 
                 <!-- Header -->
                 <StackPanel Spacing="8">
                     <TextBlock Text="♿ Accessibility Settings"
-                               FontSize="24"
+                               FontSize="{StaticResource Type.H2.Size}"
                                FontWeight="Bold"
                                HorizontalAlignment="Center"/>
                     <TextBlock Text="Customize the interface to match your preferences and needs"
-                               FontSize="13"
+                               FontSize="{StaticResource Type.Label.Size}"
                                Foreground="{DynamicResource SecondaryTextBrush}"
                                HorizontalAlignment="Center"
                                TextWrapping="Wrap"
@@ -44,24 +44,24 @@
                         Background="{DynamicResource CardBackgroundBrush}">
                     <StackPanel Spacing="15">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="🌍" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Text="🌍" FontSize="{StaticResource Type.Icon.Size}" VerticalAlignment="Center"/>
                             <TextBlock Text="Language"
-                                       FontSize="16"
+                                       FontSize="{StaticResource Type.H4.Size}"
                                        FontWeight="SemiBold"
                                        VerticalAlignment="Center"/>
                         </StackPanel>
                         <TextBlock Text="Choose your preferred language for the interface"
-                                   FontSize="12"
+                                   FontSize="{StaticResource Type.Small.Size}"
                                    Foreground="{DynamicResource MutedTextBrush}"
                                    TextWrapping="Wrap"/>
                         <ComboBox ItemsSource="{Binding AvailableLanguages}"
                                   SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"
                                   Width="300"
                                   Height="36"
-                                  FontSize="13"
+                                  FontSize="{StaticResource Type.Label.Size}"
                                   HorizontalAlignment="Left"/>
                         <TextBlock Text="Note: Language changes will take effect after restarting the application"
-                                   FontSize="11"
+                                   FontSize="{StaticResource Type.Tiny.Size}"
                                    Foreground="{DynamicResource MutedTextBrush}"
                                    FontStyle="Italic"
                                    TextWrapping="Wrap"/>
@@ -76,9 +76,9 @@
                         Background="{DynamicResource CardBackgroundBrush}">
                     <StackPanel Spacing="15">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="🎨" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Text="🎨" FontSize="{StaticResource Type.Icon.Size}" VerticalAlignment="Center"/>
                             <TextBlock Text="Theme Appearance"
-                                       FontSize="16"
+                                       FontSize="{StaticResource Type.H4.Size}"
                                        FontWeight="SemiBold"
                                        VerticalAlignment="Center"/>
                         </StackPanel>
@@ -86,11 +86,11 @@
                         <!-- Dark/Light Theme Toggle -->
                         <StackPanel Spacing="12">
                             <TextBlock Text="Color Mode"
-                                       FontSize="14"
+                                       FontSize="{StaticResource Type.Body.Size}"
                                        FontWeight="SemiBold"/>
                             <CheckBox Content="Use dark theme"
                                       IsChecked="{Binding IsDarkTheme, Mode=TwoWay}"
-                                      FontSize="13"/>
+                                      FontSize="{StaticResource Type.Label.Size}"/>
                             <Button Content="Toggle Theme"
                                     Command="{Binding ToggleThemeCommand}"
                                     Width="150"
@@ -101,23 +101,23 @@
                         <!-- Theme Skin Selection -->
                         <StackPanel Spacing="12" Margin="0,10,0,0">
                             <TextBlock Text="Theme Skin"
-                                       FontSize="14"
+                                       FontSize="{StaticResource Type.Body.Size}"
                                        FontWeight="SemiBold"/>
                             <TextBlock Text="Choose a color theme variant"
-                                       FontSize="12"
+                                       FontSize="{StaticResource Type.Small.Size}"
                                        Foreground="{DynamicResource MutedTextBrush}"/>
                             <ComboBox ItemsSource="{Binding AvailableThemeSkins}"
                                       SelectedItem="{Binding SelectedThemeSkin, Mode=TwoWay}"
                                       Width="300"
                                       Height="36"
-                                      FontSize="13"
+                                      FontSize="{StaticResource Type.Label.Size}"
                                       HorizontalAlignment="Left"/>
                         </StackPanel>
 
                         <!-- High Contrast -->
                         <CheckBox Content="Use high contrast mode"
                                   IsChecked="{Binding UseHighContrast, Mode=TwoWay}"
-                                  FontSize="13"
+                                  FontSize="{StaticResource Type.Label.Size}"
                                   Margin="0,10,0,0"
                                   ToolTip.Tip="Increases contrast for better visibility"/>
                     </StackPanel>
@@ -131,14 +131,14 @@
                         Background="{DynamicResource CardBackgroundBrush}">
                     <StackPanel Spacing="15">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="🔍" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Text="🔍" FontSize="{StaticResource Type.Icon.Size}" VerticalAlignment="Center"/>
                             <TextBlock Text="Display Scale"
-                                       FontSize="16"
+                                       FontSize="{StaticResource Type.H4.Size}"
                                        FontWeight="SemiBold"
                                        VerticalAlignment="Center"/>
                         </StackPanel>
                         <TextBlock Text="Adjust the size of text and interface elements"
-                                   FontSize="12"
+                                   FontSize="{StaticResource Type.Small.Size}"
                                    Foreground="{DynamicResource MutedTextBrush}"
                                    TextWrapping="Wrap"/>
                         
@@ -146,7 +146,7 @@
                                   SelectedItem="{Binding SelectedScaleOption, Mode=TwoWay}"
                                   Width="300"
                                   Height="36"
-                                  FontSize="13"
+                                  FontSize="{StaticResource Type.Label.Size}"
                                   HorizontalAlignment="Left">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
@@ -156,7 +156,7 @@
                         </ComboBox>
                         
                         <TextBlock Text="Changes take effect immediately"
-                                   FontSize="11"
+                                   FontSize="{StaticResource Type.Tiny.Size}"
                                    Foreground="{DynamicResource SuccessBrush}"
                                    FontStyle="Italic"/>
                     </StackPanel>
@@ -170,25 +170,25 @@
                         Background="{DynamicResource CardBackgroundBrush}">
                     <StackPanel Spacing="15">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="☷" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Text="☷" FontSize="{StaticResource Type.Icon.Size}" VerticalAlignment="Center"/>
                             <TextBlock Text="Default View Preference"
-                                       FontSize="16"
+                                       FontSize="{StaticResource Type.H4.Size}"
                                        FontWeight="SemiBold"
                                        VerticalAlignment="Center"/>
                         </StackPanel>
                         <TextBlock Text="Choose how credentials are displayed by default"
-                                   FontSize="12"
+                                   FontSize="{StaticResource Type.Small.Size}"
                                    Foreground="{DynamicResource MutedTextBrush}"
                                    TextWrapping="Wrap"/>
                         
                         <StackPanel Spacing="10">
                             <RadioButton Content="List View (Default)"
                                          IsChecked="{Binding IsListViewDefault, Mode=TwoWay}"
-                                         FontSize="13"
+                                         FontSize="{StaticResource Type.Label.Size}"
                                          ToolTip.Tip="Show credentials in a detailed list format"/>
                             <RadioButton Content="Grid View"
                                          IsChecked="{Binding IsGridViewDefault, Mode=TwoWay}"
-                                         FontSize="13"
+                                         FontSize="{StaticResource Type.Label.Size}"
                                          ToolTip.Tip="Show credentials as cards in a grid layout"/>
                         </StackPanel>
                     </StackPanel>
@@ -202,26 +202,26 @@
                         Background="{DynamicResource CardBackgroundBrush}">
                     <StackPanel Spacing="15">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="📧" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Text="📧" FontSize="{StaticResource Type.Icon.Size}" VerticalAlignment="Center"/>
                             <TextBlock Text="Autofill Preferences"
-                                       FontSize="16"
+                                       FontSize="{StaticResource Type.H4.Size}"
                                        FontWeight="SemiBold"
                                        VerticalAlignment="Center"/>
                         </StackPanel>
                         <TextBlock Text="Set default values for new credential entries"
-                                   FontSize="12"
+                                   FontSize="{StaticResource Type.Small.Size}"
                                    Foreground="{DynamicResource MutedTextBrush}"
                                    TextWrapping="Wrap"/>
                         
                         <StackPanel Spacing="10">
                             <TextBlock Text="Default Email/Username"
-                                       FontSize="13"
+                                       FontSize="{StaticResource Type.Label.Size}"
                                        FontWeight="SemiBold"/>
                             <TextBox Text="{Binding DefaultEmailUsername, Mode=TwoWay}"
                                      Watermark="user@example.com"
                                      Width="350"
                                      Height="36"
-                                     FontSize="13"
+                                     FontSize="{StaticResource Type.Label.Size}"
                                      HorizontalAlignment="Left"
                                      ToolTip.Tip="This will be pre-filled when creating new login entries"/>
                         </StackPanel>
@@ -236,29 +236,29 @@
                         Background="{DynamicResource CardBackgroundBrush}">
                     <StackPanel Spacing="15">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="⌨️" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Text="⌨️" FontSize="{StaticResource Type.Icon.Size}" VerticalAlignment="Center"/>
                             <TextBlock Text="Keyboard Shortcuts"
-                                       FontSize="16"
+                                       FontSize="{StaticResource Type.H4.Size}"
                                        FontWeight="SemiBold"
                                        VerticalAlignment="Center"/>
                         </StackPanel>
                         
                         <CheckBox Content="Show keyboard shortcut hints"
                                   IsChecked="{Binding ShowShortcutHints, Mode=TwoWay}"
-                                  FontSize="13"
+                                  FontSize="{StaticResource Type.Label.Size}"
                                   ToolTip.Tip="Display keyboard shortcuts in tooltips and menus"/>
                         
                         <Button Command="{Binding ViewShortcutsCommand}"
                                 Height="36"
                                 HorizontalAlignment="Stretch">
                             <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
-                                <TextBlock Text="⚙️" FontSize="16" VerticalAlignment="Center"/>
-                                <TextBlock Text="View &amp; Customize Shortcuts" FontSize="13" VerticalAlignment="Center"/>
+                                <TextBlock Text="⚙️" FontSize="{StaticResource Type.H4.Size}" VerticalAlignment="Center"/>
+                                <TextBlock Text="View &amp; Customize Shortcuts" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                         
                         <TextBlock Text="Common shortcuts: Ctrl+N (New), Ctrl+F (Search), Ctrl+C (Copy), Ctrl+L (Lock)"
-                                   FontSize="11"
+                                   FontSize="{StaticResource Type.Tiny.Size}"
                                    Foreground="{DynamicResource MutedTextBrush}"
                                    TextWrapping="Wrap"
                                    Margin="0,5,0,0"/>
@@ -273,25 +273,25 @@
                         Background="{DynamicResource CardBackgroundBrush}">
                     <StackPanel Spacing="15">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="♿" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Text="♿" FontSize="{StaticResource Type.Icon.Size}" VerticalAlignment="Center"/>
                             <TextBlock Text="Additional Features"
-                                       FontSize="16"
+                                       FontSize="{StaticResource Type.H4.Size}"
                                        FontWeight="SemiBold"
                                        VerticalAlignment="Center"/>
                         </StackPanel>
                         
                         <CheckBox Content="Reduce motion and animations"
                                   IsChecked="{Binding ReduceMotion, Mode=TwoWay}"
-                                  FontSize="13"
+                                  FontSize="{StaticResource Type.Label.Size}"
                                   ToolTip.Tip="Minimize animations for users sensitive to motion"/>
                         
                         <CheckBox Content="Use larger tooltips"
                                   IsChecked="{Binding LargeTooltips, Mode=TwoWay}"
-                                  FontSize="13"
+                                  FontSize="{StaticResource Type.Label.Size}"
                                   ToolTip.Tip="Display tooltips with larger text for better readability"/>
                         
                         <TextBlock Text="Screen reader support: Enabled"
-                                   FontSize="12"
+                                   FontSize="{StaticResource Type.Small.Size}"
                                    Foreground="{DynamicResource SuccessBrush}"
                                    Margin="0,10,0,0"/>
                     </StackPanel>
@@ -309,13 +309,13 @@
                                 HorizontalAlignment="Stretch"
                                 Classes="liquid-glass">
                             <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
-                                <TextBlock Text="🔄" FontSize="16" VerticalAlignment="Center"/>
-                                <TextBlock Text="Reset All to Defaults" FontSize="14" VerticalAlignment="Center"/>
+                                <TextBlock Text="🔄" FontSize="{StaticResource Type.H4.Size}" VerticalAlignment="Center"/>
+                                <TextBlock Text="Reset All to Defaults" FontSize="{StaticResource Type.Body.Size}" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                         
                         <TextBlock Text="This will restore all accessibility settings to their default values"
-                                   FontSize="11"
+                                   FontSize="{StaticResource Type.Tiny.Size}"
                                    Foreground="{DynamicResource MutedTextBrush}"
                                    TextAlignment="Center"
                                    TextWrapping="Wrap"/>

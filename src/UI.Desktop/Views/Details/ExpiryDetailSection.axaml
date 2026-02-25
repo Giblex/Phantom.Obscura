@@ -14,7 +14,7 @@
     <!-- Expiry Date -->
     <StackPanel Spacing="6">
         <TextBlock Text="Expiration" 
-                   FontSize="13" 
+                   FontSize="{StaticResource Type.Label.Size}" 
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource MutedTextBrush}"/>
         <Border Background="{DynamicResource InputBackgroundBrush}"

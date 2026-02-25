@@ -10,17 +10,13 @@
     Width="1280" Height="800"
     MinWidth="900" MinHeight="700"
         WindowStartupLocation="CenterOwner"
-        Background="{DynamicResource WindowBackgroundBrush}">
-    <views:ThemeAwareWindow.Styles>
-        <StyleInclude Source="avares://PhantomVault.UI/Assets/Themes/PhantomTheme.Dark.axaml"/>
-    </views:ThemeAwareWindow.Styles>
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Classes="animated-window">
 
     <Window.Resources>
         <converters:NullToBoolConverter x:Key="NullToBoolConverter"/>
         <converters:InvertBoolConverter x:Key="InvertBoolConverter"/>
-    <!-- PathToBitmapConverter left available for other UIs if needed. -->
-        <!-- Local tile background to make icon tiles slightly lighter than the control background -->
-        <SolidColorBrush x:Key="IconTileBackgroundBrush">#5E7584</SolidColorBrush>
+        <SolidColorBrush x:Key="IconTileCellBrush">Transparent</SolidColorBrush>
     </Window.Resources>
 
     <DockPanel Margin="20" LastChildFill="True">
@@ -59,7 +55,7 @@
                         </Button>
                         <!-- Options dropdown placed as vertical three-dashes: ⋮ -->
                         <Button Name="OptionsButton" Classes="liquid-glass" Width="40" Height="34" ToolTip.Tip="Options">
-                            <TextBlock Text="⋮" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="⋮" FontSize="{StaticResource Type.Icon.Size}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             <Button.ContextMenu>
                                 <ContextMenu>
                                     <MenuItem Header="Download Icons" Command="{Binding DownloadFlatIconsCommand}"/>
@@ -84,12 +80,12 @@
             <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space.Sm}" VerticalAlignment="Center" Grid.Column="0">
                     <TextBlock Text="{Binding StatusMessage}"
-                               FontSize="11"
+                               FontSize="{StaticResource Type.Tiny.Size}"
                                Foreground="{DynamicResource MutedTextBrush}"
                                TextWrapping="Wrap"/>
                     <Border Width="1" Height="14" Background="{DynamicResource ControlBorderBrush}"/>
                     <TextBlock Text="{Binding FilteredIconCount, StringFormat='Visible icons: {0}'}"
-                               FontSize="11"
+                               FontSize="{StaticResource Type.Tiny.Size}"
                                Foreground="{DynamicResource MutedTextBrush}"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Grid.Column="1" HorizontalAlignment="Center" Spacing="{StaticResource Space.Sm}" VerticalAlignment="Center">
@@ -110,22 +106,20 @@
         </Border>
 
         <!-- Thumbnail preview (top icons) -->
-    <Border Margin="0,0,0,8" CornerRadius="6" Background="{DynamicResource IconTileBackgroundBrush}" Padding="8" DockPanel.Dock="Top">
-            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Height="110">
+    <Border Margin="0,0,0,8" CornerRadius="6" Background="{DynamicResource HeaderBackgroundBrush}" Padding="8" DockPanel.Dock="Top">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Height="100" Padding="0,0,0,8">
                 <ItemsControl Name="TopIconsList" ItemsSource="{Binding TopIcons}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <WrapPanel Orientation="Horizontal" />
+                            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center"/>
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Button Command="{Binding DataContext.ShowVariantsCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" MinWidth="80" Height="96" Classes="liquid-glass">
-                                <StackPanel Width="80" Height="96" VerticalAlignment="Top" HorizontalAlignment="Left">
-                                    <Border Width="64" Height="64" CornerRadius="8" Background="{DynamicResource IconTileBackgroundBrush}" HorizontalAlignment="Center">
-                                        <Image Source="{Binding IconBitmap}" Stretch="Uniform" Width="56" Height="56"/>
-                                    </Border>
-                                </StackPanel>
+                            <Button Command="{Binding DataContext.ShowVariantsCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" MinWidth="72" Height="82" Classes="liquid-glass" Margin="2">
+                                <Border Width="56" Height="56" CornerRadius="8" Background="Transparent" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Image Source="{Binding IconBitmap}" Stretch="Uniform" Width="48" Height="48"/>
+                                </Border>
                             </Button>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
@@ -133,41 +127,37 @@
             </ScrollViewer>
         </Border>
 
-        <!-- Variant popup shown as a Popup anchored to the clicked TopIcon -->
-        <Popup Name="VariantPopup" IsOpen="{Binding IsVariantPopupOpen, Mode=TwoWay}" Placement="Bottom">
-            <!-- Popup content with caret/arrow. Two caret shapes are present; code-behind will toggle visibility
-                 to show the caret pointing to the anchor depending on placement (top/bottom). -->
-            <StackPanel>
-                <!-- Caret pointing up (shown when popup is below anchor) -->
-                <Polygon Name="CaretTop" Points="0,8 8,0 16,8" Fill="{DynamicResource ControlForegroundBrush}" HorizontalAlignment="Left" Margin="24,0,0,0" IsVisible="False" />
-                <Border Name="VariantBorder" Margin="0,4,0,8" Background="{DynamicResource IconTileBackgroundBrush}" CornerRadius="6" Padding="12" MaxWidth="740" MinWidth="220" Effect="{DynamicResource SubtleDropShadow}">
-                    <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space.Sm}">
-                        <TextBlock Text="Variants:" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{DynamicResource MutedTextBrush}"/>
-                        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                            <ItemsControl Name="VariantItemsControl" ItemsSource="{Binding VariantIcons}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <WrapPanel Orientation="Horizontal"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Button Command="{Binding DataContext.ApplyVariantToCategoryCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" Margin="4" Classes="liquid-glass" Focusable="True">
-                                            <StackPanel>
-                                                <Border Width="48" Height="48" CornerRadius="6" Background="{DynamicResource IconTileBackgroundBrush}">
-                                                    <Image Source="{Binding IconBitmap}" Width="40" Height="40" Stretch="Uniform"/>
-                                                </Border>
-                                            </StackPanel>
-                                        </Button>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
-                    </StackPanel>
+        <!-- Variant popup anchored below the clicked icon -->
+        <Popup Name="VariantPopup" IsOpen="{Binding IsVariantPopupOpen, Mode=TwoWay}" Placement="Bottom"
+               IsLightDismissEnabled="True">
+            <Border Margin="0,4,0,0" Background="Transparent" Padding="0" MaxWidth="350">
+                <Border Background="{DynamicResource WindowBackgroundBrush}" CornerRadius="6" Padding="6" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1" Effect="{DynamicResource SubtleDropShadow}">
+                    <ItemsControl Name="VariantItemsControl" ItemsSource="{Binding VariantIcons}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Command="{Binding #VariantItemsControl.DataContext.ApplyVariantToCategoryCommand}"
+                                        CommandParameter="{Binding}" Margin="2" Padding="0"
+                                        Width="36" Height="36" MinWidth="0" MinHeight="0"
+                                        Cursor="Hand" Focusable="True">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Width="36" Height="36" CornerRadius="2" Background="Transparent">
+                                                <ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                    <Image Source="{Binding IconBitmap}" Width="36" Height="36" Stretch="Uniform"/>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </Border>
-                <!-- Caret pointing down (shown when popup is above anchor) -->
-                <Polygon Name="CaretBottom" Points="0,0 8,8 16,0" Fill="{DynamicResource ControlForegroundBrush}" HorizontalAlignment="Left" Margin="24,0,0,0" IsVisible="False" />
-            </StackPanel>
+            </Border>
         </Popup>
 
         <!-- Icon grid -->
@@ -193,7 +183,7 @@
                     <DataGridTemplateColumn Header="" Width="48">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <Border Width="40" Height="40" CornerRadius="6" HorizontalAlignment="Center" VerticalAlignment="Center" Background="{DynamicResource IconTileBackgroundBrush}">
+                                <Border Width="40" Height="40" CornerRadius="6" HorizontalAlignment="Center" VerticalAlignment="Center" Background="{StaticResource IconTileCellBrush}">
                                     <Image Source="{Binding IconBitmap}" Stretch="Uniform" Width="28" Height="28"/>
                                 </Border>
                             </DataTemplate>
@@ -238,9 +228,9 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                                <Button Command="{Binding DataContext.SelectIconCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" MinWidth="72" Height="96" Classes="liquid-glass" Margin="6">
+                                <Button Command="{Binding DataContext.ShowVariantsCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" MinWidth="72" Height="96" Classes="liquid-glass" Margin="6">
                                 <StackPanel>
-                                    <Border Width="68" Height="68" CornerRadius="8" Background="{DynamicResource IconTileBackgroundBrush}" HorizontalAlignment="Center">
+                                    <Border Width="68" Height="68" CornerRadius="8" Background="{StaticResource IconTileCellBrush}" HorizontalAlignment="Center">
                                         <Image Source="{Binding IconBitmap}" Width="60" Height="60" Stretch="Uniform"/>
                                     </Border>
                                 </StackPanel>
@@ -259,11 +249,15 @@
                     CornerRadius="6"
                     IsVisible="{Binding IsBusy}"
                     HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch"
-                    Classes="overlay-fade">
+                    VerticalAlignment="Stretch">
+                <Border.Transitions>
+                    <Transitions>
+                        <DoubleTransition Property="Opacity" Duration="0:0:0.3"/>
+                    </Transitions>
+                </Border.Transitions>
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="{StaticResource Space.Md}">
-                    <ProgressBar IsIndeterminate="True" Width="220" Height="8"/>
-                    <TextBlock Text="Working..." FontSize="{StaticResource Type.Small.Size}" Foreground="{DynamicResource PrimaryTextBrush}" HorizontalAlignment="Center"/>
+                    <ProgressBar IsIndeterminate="True" Width="260" Height="4" Foreground="{DynamicResource AccentBrush}"/>
+                    <TextBlock Text="Loading icons..." FontSize="{StaticResource Type.Small.Size}" Foreground="{DynamicResource MutedTextBrush}" HorizontalAlignment="Center" Opacity="0.7"/>
                 </StackPanel>
             </Border>
         </Grid>

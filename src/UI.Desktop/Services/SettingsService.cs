@@ -7,8 +7,6 @@ namespace PhantomVault.UI.Services
 {
     public sealed class UserSettings
     {
-        public string? VeraCryptPathOverride { get; set; }
-        public string? VeraCryptInstallerUrl { get; set; }
         public bool PrivacyModeEnabled { get; set; }
         public bool RedactDiagnosticLogs { get; set; } = true;
         public bool SecureTrashEnabled { get; set; } = true;
@@ -139,6 +137,12 @@ namespace PhantomVault.UI.Services
         /// </summary>
         public bool PreferGridView { get; set; } = false;
 
+        /// <summary>
+        /// When false, the Dashboard view is disabled and the app starts on the Passwords view.
+        /// The sidebar Dashboard button is hidden.
+        /// </summary>
+        public bool DashboardEnabled { get; set; } = true;
+
         // ===== Category Manager Preferences =====
 
         /// <summary>
@@ -218,6 +222,54 @@ namespace PhantomVault.UI.Services
         /// Comma-separated whitelist of domains for autofill (empty = all domains).
         /// </summary>
         public string AutoFillDomainWhitelist { get; set; } = string.Empty;
+
+        // ===== AutoFill Mode (USB-Triggered) =====
+
+        /// <summary>
+        /// When true, the app runs in system tray and auto-fills credentials on USB insertion
+        /// for both browser and native Windows login portals. Passkeys are prioritised
+        /// when Attestor is linked.
+        /// </summary>
+        public bool AutoFillModeEnabled { get; set; } = false;
+
+        /// <summary>
+        /// When true, TOTP codes are automatically detected and input after the password
+        /// fill step completes.
+        /// </summary>
+        public bool AutoFillAutoInputTotp { get; set; } = true;
+
+        /// <summary>
+        /// When true, a "New Entry" or "Create Passkey" dialog is shown if no stored
+        /// credential matches the active login portal.
+        /// </summary>
+        public bool AutoFillShowNewEntryOnNoMatch { get; set; } = true;
+
+        /// <summary>
+        /// Milliseconds to wait after password fill before starting to poll for a TOTP field.
+        /// </summary>
+        public int AutoFillTotpPollDelayMs { get; set; } = 1500;
+
+        /// <summary>
+        /// Maximum milliseconds to spend polling for a TOTP field before giving up.
+        /// </summary>
+        public int AutoFillTotpPollTimeoutMs { get; set; } = 8000;
+
+        // ===== Cross-App Sync Settings =====
+
+        /// <summary>
+        /// Enable cross-app sync with other Phantom apps.
+        /// </summary>
+        public bool SyncEnabled { get; set; } = true;
+
+        /// <summary>
+        /// Sync theme selection across Phantom apps.
+        /// </summary>
+        public bool SyncTheme { get; set; } = true;
+
+        /// <summary>
+        /// Last time settings were synced from another app.
+        /// </summary>
+        public DateTimeOffset? LastSyncTime { get; set; }
 
         /// <summary>
         /// Gets the clipboard clear delay as a TimeSpan based on ClipboardClearTime index.

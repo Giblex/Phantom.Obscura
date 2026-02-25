@@ -10,6 +10,7 @@
                       HorizontalContentAlignment="Left"
                       Height="38"
                       IsChecked="{Binding IsActive, Mode=TwoWay}"
+                      Tag="{Binding TileColor}"
                       AutomationProperties.Name="{Binding Name, StringFormat='Category: {0} ({1} items)'}"
                       Margin="0,2">
             <StackPanel Orientation="Horizontal" Spacing="8" Margin="16,0,0,0">
@@ -21,9 +22,9 @@
                 </Border>
                 <TextBlock Text="{Binding Name}"
                            VerticalAlignment="Center"
-                           Foreground="White"/>
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
                 <TextBlock Text="{Binding Count}"
-                           Foreground="White"
+                           Foreground="{DynamicResource MutedTextBrush}"
                            VerticalAlignment="Center"
                            Margin="4,0,0,0"/>
             </StackPanel>

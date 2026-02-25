@@ -5,7 +5,7 @@ using PhantomVault.UI.Services;
 
 namespace PhantomVault.UI.Views
 {
-    public partial class TotpScannerDialog : Window
+    public partial class TotpScannerDialog : ThemeAwareWindow
     {
         public TotpScannerDialog()
         {

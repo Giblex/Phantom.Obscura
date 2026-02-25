@@ -1,0 +1,124 @@
+giblex/
+├─ README.md
+├─ LICENSE
+├─ .gitignore
+├─ .editorconfig
+├─ global.json
+├─ Directory.Packages.props
+├─ CHANGELOG.md
+├─ docs/
+│  ├─ architecture.md
+│  ├─ threat-model.md
+│  └─ ui-flows.md
+├─ build/
+│  ├─ scripts/
+│  │  ├─ pack-win.ps1
+│  │  ├─ pack-mac.sh
+│  │  └─ pack-linux.sh
+│  └─ pipelines/
+│     └─ ci.yml
+├─ tools/
+│  ├─ verify_unlock/
+│  ├─ data_migration/
+│  └─ profiling/
+├─ artifacts/                  # build outputs (kept out of git)
+├─ src/
+│  ├─ PhantomObscura.Avalonia/
+│  │  ├─ PhantomObscura.Avalonia.csproj
+│  │  ├─ app.manifest
+│  │  ├─ Program.cs
+│  │  ├─ App.axaml
+│  │  ├─ App.axaml.cs
+│  │  ├─ ViewLocator.cs
+│  │  ├─ ProgrammaticDialogs.cs
+│  │  ├─ Assets/
+│  │  │  ├─ Fonts/
+│  │  │  ├─ Icons/
+│  │  │  └─ Images/
+│  │  ├─ Resources/
+│  │  │  └─ Locales/           # .resx/.po for i18n if/when needed
+│  │  ├─ Styles/
+│  │  │  ├─ Colors.axaml
+│  │  │  ├─ Controls.axaml
+│  │  │  └─ Theme.axaml        # optional: app-wide tweaks
+│  │  ├─ Converters/
+│  │  │  └─ BoolInvertConverter.cs
+│  │  ├─ Behaviors/            # optional: Attached behaviors for UX
+│  │  ├─ Controls/             # reusable custom controls
+│  │  ├─ Components/           # shared UI fragments (cards, banners)
+│  │  ├─ Windows/
+│  │  │  ├─ UsbSetupWindow.axaml
+│  │  │  ├─ UsbSetupWindow.axaml.cs
+│  │  │  ├─ ProgressWindow.axaml
+│  │  │  ├─ ProgressWindow.axaml.cs
+│  │  │  ├─ UnlockVaultWindow.axaml
+│  │  │  └─ UnlockVaultWindow.axaml.cs
+│  │  ├─ Dialogs/
+│  │  │  ├─ ConfirmationDialog.axaml
+│  │  │  └─ ConfirmationDialog.axaml.cs
+│  │  ├─ ViewModels/
+│  │  │  ├─ ViewModelBase.cs
+│  │  │  ├─ UsbSetupViewModel.cs        # optional (if/when you MVVM-ify)
+│  │  │  ├─ ProgressViewModel.cs        # optional
+│  │  │  └─ UnlockVaultViewModel.cs     # optional
+│  │  ├─ Services/                       # UI-facing adapters only
+│  │  │  ├─ IVaultService.cs
+│  │  │  ├─ IPasswordGenerator.cs
+│  │  │  ├─ StrongPasswordGenerator.cs
+│  │  │  └─ TotpVerifier.cs
+│  │  ├─ Interop/                        # platform P/Invoke if needed
+│  │  └─ Platform/                       # platform-specific helpers
+│  │     ├─ Windows/
+│  │     ├─ macOS/
+│  │     └─ Linux/
+│  │
+│  ├─ PhantomObscura.Core/               # your real core library (separate proj)
+│  │  ├─ PhantomObscura.Core.csproj
+│  │  ├─ Abstractions/
+│  │  │  ├─ IUsbDetector.cs
+│  │  │  ├─ IUsbProvisioner.cs
+│  │  │  ├─ IManifestService.cs
+│  │  │  ├─ IVaultBackend.cs
+│  │  │  └─ IKeyMaterialStore.cs
+│  │  ├─ Models/
+│  │  │  ├─ UsbContext.cs
+│  │  │  ├─ ProvisionOptions.cs
+│  │  │  └─ VaultInfo.cs
+│  │  ├─ Services/
+│  │  │  ├─ UsbDetector.cs
+│  │  │  ├─ UsbProvisioner.cs
+│  │  │  ├─ ManifestService.cs
+│  │  │  ├─ VaultService.cs             # KeePass/DB ops
+│  │  │  └─ PasswordPolicy.cs
+│  │  ├─ Crypto/
+│  │  │  ├─ Kdf/
+│  │  │  │  ├─ Argon2Params.cs
+│  │  │  │  └─ PasswordKdf.cs
+│  │  │  ├─ Hashing/
+│  │  │  └─ Keyfiles/
+│  │  ├─ Totp/
+│  │  │  ├─ TotpSecretStore.cs
+│  │  │  └─ TotpVerifier.cs
+│  │  ├─ Yubi/
+│  │  │  └─ YubiPimProvider.cs
+│  │  ├─ Passkeys/
+│  │  │  └─ WebAuthnClient.cs
+│  │  ├─ Storage/
+│  │  │  ├─ LocalAppDataStore.cs
+│  │  │  └─ UsbFileStore.cs
+│  │  └─ Extensions/
+│  │     └─ Result.cs
+│  │
+│  └─ PhantomObscura.Installer/          # optional packaging project(s)
+│     ├─ Windows.WiX/
+│     ├─ Mac.Notarized/
+│     └─ Linux.AppImage/
+│
+└─ tests/
+   ├─ PhantomObscura.Core.Tests/
+   │  ├─ Unit/
+   │  └─ Integration/
+   ├─ PhantomObscura.Avalonia.Tests/
+   │  ├─ AvaloniaHeadless/               # view logic & bindings
+   │  └─ Snapshots/                      # golden UI tests (optional)
+   └─ TestAssets/

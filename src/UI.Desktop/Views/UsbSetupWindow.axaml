@@ -12,7 +12,8 @@
         MinWidth="700" MinHeight="500"
         WindowStartupLocation="CenterScreen"
         CanResize="True"
-        Background="{DynamicResource ContentBackgroundBrush}" Icon="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Parent Icon.ico" FontFamily="Segoe UI">
+        Background="{DynamicResource ContentBackgroundBrush}" Icon="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Parent Icon.ico"
+        Classes="animated-window">
 
     <Design.DataContext>
         <vm:UsbSetupViewModel/>
@@ -24,13 +25,13 @@
         <Border Grid.Row="0" Background="{DynamicResource ContentBackgroundBrush}" Padding="15,8">
             <StackPanel Spacing="8">
                 <TextBlock Text="USB Drive Setup"
-                           FontSize="22"
+                           FontSize="{StaticResource Type.SubHeading.Size}"
                            FontWeight="Bold"
                            Foreground="{DynamicResource PrimaryTextBrush}"
                            HorizontalAlignment="Center"/>
                 
                 <TextBlock Text="Select a USB drive for your vault"
-                           FontSize="13"
+                           FontSize="{StaticResource Type.Label.Size}"
                            Foreground="{DynamicResource SecondaryTextBrush}"
                            HorizontalAlignment="Center"/>
             </StackPanel>
@@ -48,11 +49,11 @@
                         BorderThickness="1">
                     <StackPanel Spacing="8">
                         <TextBlock Text="Important"
-                                   FontSize="13"
+                                   FontSize="{StaticResource Type.Label.Size}"
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
                         
-                        <TextBlock FontSize="11"
+                        <TextBlock FontSize="{StaticResource Type.Tiny.Size}"
                                    Foreground="{DynamicResource SecondaryTextBrush}"
                                    TextWrapping="Wrap"
                                    LineHeight="16">
@@ -69,7 +70,7 @@
                 <!-- Drive Selection -->
                 <StackPanel Spacing="12">
                     <TextBlock Text="Available USB Drives"
-                               FontSize="15"
+                               FontSize="{StaticResource Type.H5.Size}"
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                     
@@ -84,7 +85,7 @@
                               MaxWidth="840"
                               Height="36"
                               HorizontalAlignment="Stretch"
-                              FontSize="13"
+                              FontSize="{StaticResource Type.Label.Size}"
                               Background="{DynamicResource ControlBackgroundBrush}"
                               Foreground="{DynamicResource PrimaryTextBrush}"
                               BorderBrush="{DynamicResource ControlBorderBrush}"
@@ -104,7 +105,7 @@
                                 Classes="liquid-glass"
                                 Width="120"
                                 Height="36"
-                                FontSize="13"
+                                FontSize="{StaticResource Type.Label.Size}"
                                 ToolTip.Tip="Refresh the list of available USB drives. Use this if you just plugged in a drive.">
                             <TextBlock Text="Refresh" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Button>
@@ -113,7 +114,7 @@
                                 Classes="liquid-glass"
                                 Width="100"
                                 Height="32"
-                                FontSize="13"
+                                FontSize="{StaticResource Type.Label.Size}"
                                 ToolTip.Tip="Browse for a custom folder location instead of using a USB drive.">
                             <TextBlock Text="Browse..." HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Button>
@@ -192,7 +193,7 @@
                 <Button Command="{Binding ContinueCommand}"
                         Width="130"
                         Height="38"
-                        FontSize="15"
+                        FontSize="{StaticResource Type.H5.Size}"
                         FontWeight="SemiBold"
                         Classes="liquid-glass primary"
                         ToolTip.Tip="Continue to vault configuration with the selected USB drive.">

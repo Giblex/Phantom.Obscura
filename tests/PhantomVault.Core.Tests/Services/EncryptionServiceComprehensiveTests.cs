@@ -12,7 +12,7 @@ namespace PhantomVault.Core.Tests.Services
     /// <summary>
     /// Comprehensive test suite for EncryptionService covering:
     /// - All encryption/decryption scenarios
-    /// - Key derivation with Argon2id and PBKDF2 fallback
+    /// - Key derivation with Argon2id (mandatory, no fallback)
     /// - Memory zeroization verification
     /// - Associated authenticated data (AAD)
     /// - Edge cases and error handling
@@ -238,57 +238,20 @@ namespace PhantomVault.Core.Tests.Services
 
         #endregion
 
-        #region DeriveKey - PBKDF2 Fallback Tests
+        #region DeriveKey - Argon2id Mandatory Tests
 
         [Fact]
-        public void DeriveKey_Pbkdf2Fallback_ProducesValidKey()
+        public void DeriveKey_Argon2id_IsMandatory_NoFallback()
         {
-            // Arrange - Force Argon2 failure to test PBKDF2 fallback
-            var service = new EncryptionService(forceArgon2FailureForTests: true);
+            // Argon2id is the only permitted KDF. No PBKDF2 fallback exists.
+            var service = new EncryptionService();
             var password = "TestPassword".AsSpan();
             var salt = service.GenerateSalt();
 
-            // Act
             var key = service.DeriveKey(password, salt);
 
-            // Assert
             Assert.NotNull(key);
             Assert.Equal(32, key.Length);
-        }
-
-        [Fact]
-        public void DeriveKey_Pbkdf2Fallback_IsDeterministic()
-        {
-            // Arrange
-            var service = new EncryptionService(forceArgon2FailureForTests: true);
-            var password = "DeterministicPBKDF2".AsSpan();
-            var salt = new byte[16];
-            RandomNumberGenerator.Fill(salt);
-
-            // Act
-            var key1 = service.DeriveKey(password, salt);
-            var key2 = service.DeriveKey(password, salt);
-
-            // Assert
-            Assert.Equal(key1, key2);
-        }
-
-        [Fact]
-        public void DeriveKey_Pbkdf2Fallback_SupportsEncryptionWorkflow()
-        {
-            // Arrange
-            var service = new EncryptionService(forceArgon2FailureForTests: true);
-            var password = "FallbackWorkflow".AsSpan();
-            var salt = service.GenerateSalt();
-            var key = service.DeriveKey(password, salt);
-            var plaintext = Encoding.UTF8.GetBytes("Fallback encryption test");
-
-            // Act
-            var encrypted = service.Encrypt(plaintext, key);
-            var decrypted = service.Decrypt(encrypted.Ciphertext, encrypted.Nonce, encrypted.Tag, key);
-
-            // Assert
-            Assert.Equal(plaintext, decrypted);
         }
 
         #endregion

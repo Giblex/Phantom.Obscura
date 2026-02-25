@@ -231,7 +231,6 @@ namespace PhantomVault.UI.ViewModels
 
                 // CRITICAL: Validate passphrase by attempting to decrypt the manifest
                 VaultManifest? testManifest = null;
-                string? veraCryptPasswordToUse = null;
                 
                 try
                 {
@@ -251,54 +250,7 @@ namespace PhantomVault.UI.ViewModels
                         return;
                     }
                     
-                    // Check if there's an auto-generated VeraCrypt password stored in manifest
-                    if (testManifest.UseVeraCrypt && !string.IsNullOrEmpty(testManifest.VeraCryptPasswordEncryptedBase64))
-                    {
-                        // Decrypt the auto-generated VeraCrypt password
-                        try
-                        {
-                            // Derive KEK using same method as provisioning
-                            string combinedSecret = password ?? string.Empty;
-                            if (!string.IsNullOrEmpty(testManifest.KeyfilePath) && File.Exists(testManifest.KeyfilePath))
-                            {
-                                byte[] keyfileBytes = File.ReadAllBytes(testManifest.KeyfilePath);
-                                combinedSecret = combinedSecret + Convert.ToBase64String(keyfileBytes);
-                                PhantomVault.Core.Utils.HybridKeyDerivation.ZeroMemory(keyfileBytes);
-                            }
-
-                            byte[] manifestSalt = Convert.FromBase64String(testManifest.SaltBase64);
-                            byte[] kek = encryptionService.DeriveKey(combinedSecret.AsSpan(), manifestSalt);
-                            PhantomVault.Core.Utils.HybridKeyDerivation.ZeroMemory(manifestSalt);
-
-                            // Deserialize and decrypt the VeraCrypt password
-                            var encryptedVcResult = PhantomVault.Core.Utils.HybridKeyDerivation.DeserializeEncryptionResult(
-                                testManifest.VeraCryptPasswordEncryptedBase64);
-                            byte[] vcAad = System.Text.Encoding.UTF8.GetBytes("VeraCrypt-AutoPassword");
-                            byte[] vcPasswordBytes = encryptionService.Decrypt(
-                                encryptedVcResult.Ciphertext,
-                                encryptedVcResult.Nonce,
-                                encryptedVcResult.Tag,
-                                kek,
-                                vcAad);
-                            veraCryptPasswordToUse = System.Text.Encoding.UTF8.GetString(vcPasswordBytes);
-                            
-                            // Clean up sensitive data
-                            CryptographicOperations.ZeroMemory(vcPasswordBytes);
-                            CryptographicOperations.ZeroMemory(kek);
-                            CryptographicOperations.ZeroMemory(vcAad);
-                        }
-                        catch (Exception vcDecryptEx)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"Failed to decrypt auto VeraCrypt password: {vcDecryptEx.Message}");
-                            // If decryption fails, fall back to user password
-                            veraCryptPasswordToUse = password;
-                        }
-                    }
-                    else
-                    {
-                        // No auto password, use user password
-                        veraCryptPasswordToUse = password;
-                    }
+                    // Successful passphrase - continue to TOTP check
                     
                     // Check for additional auth requirements from manifest
                     if (testManifest.RequiresTotp && !string.IsNullOrEmpty(testManifest.TotpSecret))
@@ -338,17 +290,7 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Get VeraCrypt path from settings (kept for backward compatibility, but not used with PhantomContainer)
-                var settings = SettingsService.Load();
-                var effectivePath = string.IsNullOrWhiteSpace(settings.VeraCryptPathOverride) 
-                    ? "veracrypt" 
-                    : settings.VeraCryptPathOverride!;
-                
-                // If effectivePath is null or empty, fall back to default "veracrypt"
-                var vaultOptions = new Core.Options.VaultOptions 
-                { 
-                    VeraCryptPath = string.IsNullOrWhiteSpace(effectivePath) ? "veracrypt" : effectivePath 
-                };
+                var vaultOptions = new Core.Options.VaultOptions();
 
                 var vaultService = new VaultService(vaultOptions, _encryptionService);
                 var idleLockService = new IdleLockService(TimeSpan.FromMinutes(15));
@@ -369,9 +311,8 @@ namespace PhantomVault.UI.ViewModels
                 _secureTrashService,
                 _iconManager);
 
-            // Set the manifest context with the VeraCrypt password (which may be auto-generated)
-            // and the user's password for manifest decryption
-            vaultViewModel.SetManifestContext(manifestPath, password, null, veraCryptPasswordToUse);
+            // Set the manifest context with the user's password for manifest decryption
+            vaultViewModel.SetManifestContext(manifestPath, password, null);
 
                 ProgressPercent = 95;
                 Status = "Preparing vault interface...";
@@ -386,6 +327,39 @@ namespace PhantomVault.UI.ViewModels
                 ProgressPercent = 100;
                 Status = "Vault unlocked!";
                 vaultWindow.Show();
+
+                // ── Wire AutoFill orchestrator with the unlocked vault ────────────
+                try
+                {
+                    if (Avalonia.Application.Current is PhantomVault.UI.App app && app.Services is { } svc)
+                    {
+                        var credProvider = new PhantomVault.UI.Desktop.Services.VaultViewModelCredentialProvider(vaultViewModel);
+                        svc.GetService<PhantomVault.UI.Services.AutoFill.IAutoFillOrchestrator>()
+                           ?.SetVaultContext(credProvider, testManifest!);
+                        var vaultCtx = svc.GetService<PhantomVault.UI.Services.AutoFill.VaultAutofillContext>();
+                        vaultCtx?.SetUnlocked(testManifest!);
+                    }
+                }
+                catch (Exception wireEx)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[VaultUnlock] AutoFill wire failed: {wireEx.Message}");
+                }
+
+                // When the vault window closes (logout / auto-lock) clear the AutoFill context
+                vaultWindow.Closed += (_, _) =>
+                {
+                    try
+                    {
+                        if (Avalonia.Application.Current is PhantomVault.UI.App appOnClose
+                            && appOnClose.Services is { } svcOnClose)
+                        {
+                            svcOnClose.GetService<PhantomVault.UI.Services.AutoFill.VaultAutofillContext>()
+                                      ?.SetLocked();
+                        }
+                    }
+                    catch { /* best effort */ }
+                };
+                // ─────────────────────────────────────────────────────────────────
 
                 // Zero out the password after use
                 password = null;

@@ -8,7 +8,8 @@
     MinWidth="700" MinHeight="600"
     WindowStartupLocation="CenterOwner"
     CanResize="True"
-    Background="{DynamicResource WindowBackgroundBrush}">
+    Background="{DynamicResource WindowBackgroundBrush}"
+    Classes="animated-window">
 
     <views:ThemeAwareWindow.Styles>
         <!-- Import tile styles -->
@@ -70,7 +71,7 @@
                     <StackPanel Spacing="16">
                         <!-- Import Header -->
                         <TextBlock Text="Import Credentials" 
-                                  FontSize="20" 
+                                  FontSize="{StaticResource Type.Icon.Size}" 
                                   FontWeight="SemiBold"
                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
                         
@@ -88,7 +89,7 @@
                                    Classes="import-tile"
                                    Height="100">
                                 <StackPanel Spacing="8" HorizontalAlignment="Center">
-                                    <TextBlock Text="•" FontSize="32"/>
+                                    <TextBlock Text="•" FontSize="{StaticResource Type.H1.Size}"/>
                                     <TextBlock Text="KeePass" FontWeight="SemiBold"/>
                                 </StackPanel>
                             </Button>
@@ -97,7 +98,7 @@
                                    Classes="import-tile"
                                    Height="100">
                                 <StackPanel Spacing="8" HorizontalAlignment="Center">
-                                    <TextBlock Text="🔴" FontSize="32"/>
+                                    <TextBlock Text="🔴" FontSize="{StaticResource Type.H1.Size}"/>
                                     <TextBlock Text="LastPass" FontWeight="SemiBold"/>
                                 </StackPanel>
                             </Button>
@@ -106,7 +107,7 @@
                                    Classes="import-tile"
                                    Height="100">
                                 <StackPanel Spacing="8" HorizontalAlignment="Center">
-                                    <TextBlock Text="🔵" FontSize="32"/>
+                                    <TextBlock Text="🔵" FontSize="{StaticResource Type.H1.Size}"/>
                                     <TextBlock Text="1Password" FontWeight="SemiBold"/>
                                 </StackPanel>
                             </Button>
@@ -115,7 +116,7 @@
                                    Classes="import-tile"
                                    Height="100">
                                 <StackPanel Spacing="8" HorizontalAlignment="Center">
-                                    <TextBlock Text="🛡️" FontSize="32"/>
+                                    <TextBlock Text="🛡️" FontSize="{StaticResource Type.H1.Size}"/>
                                     <TextBlock Text="Bitwarden" FontWeight="SemiBold"/>
                                 </StackPanel>
                             </Button>
@@ -124,7 +125,7 @@
                                    Classes="import-tile"
                                    Height="100">
                                 <StackPanel Spacing="8" HorizontalAlignment="Center">
-                                    <TextBlock Text="🟢" FontSize="32"/>
+                                    <TextBlock Text="🟢" FontSize="{StaticResource Type.H1.Size}"/>
                                     <TextBlock Text="Dashlane" FontWeight="SemiBold"/>
                                 </StackPanel>
                             </Button>
@@ -133,7 +134,7 @@
                                    Classes="import-tile"
                                    Height="100">
                                 <StackPanel Spacing="8" HorizontalAlignment="Center">
-                                    <TextBlock Text="📄" FontSize="32"/>
+                                    <TextBlock Text="📄" FontSize="{StaticResource Type.H1.Size}"/>
                                     <TextBlock Text="CSV" FontWeight="SemiBold"/>
                                 </StackPanel>
                             </Button>
@@ -163,7 +164,7 @@
                     <StackPanel Spacing="16">
                         <!-- Export Header -->
                         <TextBlock Text="Export Credentials" 
-                                  FontSize="20" 
+                                  FontSize="{StaticResource Type.Icon.Size}" 
                                   FontWeight="SemiBold"
                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
                         
@@ -199,7 +200,7 @@
                                      ToolTip.Tip="Uncheck to export without passwords"/>
                             <TextBlock Text="⚠️ Warning: Exported files are NOT encrypted. Handle with care!" 
                                       Foreground="{DynamicResource ErrorBrush}"
-                                      FontSize="12"
+                                      FontSize="{StaticResource Type.Small.Size}"
                                       TextWrapping="Wrap"
                                       Margin="24,4,0,0"
                                       IsVisible="{Binding IncludePasswords}"/>
@@ -234,7 +235,7 @@
                                           TextWrapping="Wrap"
                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
                                 <TextBlock Text="{Binding ExportCredentialCount, StringFormat='Ready to export {0} credentials'}"
-                                          FontSize="12"
+                                          FontSize="{StaticResource Type.Small.Size}"
                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
                             </StackPanel>
                         </Border>

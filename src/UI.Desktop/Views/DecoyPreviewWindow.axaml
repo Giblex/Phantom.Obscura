@@ -16,11 +16,11 @@
                 Background="{DynamicResource ContentBackgroundBrush}">
             <StackPanel Spacing="8">
                 <TextBlock Text="🎭 Decoy Vault Preview"
-                           FontSize="20"
+                           FontSize="{StaticResource Type.Icon.Size}"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
                 <TextBlock TextWrapping="Wrap"
-                           FontSize="13"
+                           FontSize="{StaticResource Type.Label.Size}"
                            Foreground="{DynamicResource MutedTextBrush}">
                     <Run Text="This is what an attacker would see if tamper detection is triggered."/>
                     <LineBreak/>
@@ -45,7 +45,7 @@
                                 <Grid ColumnDefinitions="*,Auto">
                                     <TextBlock Grid.Column="0"
                                                Text="{Binding Title}"
-                                               FontSize="15"
+                                               FontSize="{StaticResource Type.H5.Size}"
                                                FontWeight="SemiBold"
                                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                                     <Border Grid.Column="1"
@@ -53,54 +53,54 @@
                                             CornerRadius="4"
                                             Padding="8,4">
                                         <TextBlock Text="{Binding EntryType}"
-                                                   FontSize="11"
+                                                   FontSize="{StaticResource Type.Tiny.Size}"
                                                    FontWeight="SemiBold"
-                                                   Foreground="White"/>
+                                                   Foreground="{DynamicResource ButtonAccentForegroundBrush}"/>
                                     </Border>
                                 </Grid>
 
                                 <!-- Username (if exists) -->
                                 <StackPanel Spacing="4" IsVisible="{Binding Username, Converter={StaticResource NullToBoolConverter}}">
                                     <TextBlock Text="Username:"
-                                               FontSize="11"
+                                               FontSize="{StaticResource Type.Tiny.Size}"
                                                FontWeight="SemiBold"
                                                Foreground="{DynamicResource MutedTextBrush}"/>
                                     <TextBlock Text="{Binding Username}"
-                                               FontSize="13"
+                                               FontSize="{StaticResource Type.Label.Size}"
                                                Foreground="{DynamicResource SecondaryTextBrush}"/>
                                 </StackPanel>
 
                                 <!-- Password (if exists) -->
                                 <StackPanel Spacing="4" IsVisible="{Binding Password, Converter={StaticResource NullToBoolConverter}}">
                                     <TextBlock Text="Password:"
-                                               FontSize="11"
+                                               FontSize="{StaticResource Type.Tiny.Size}"
                                                FontWeight="SemiBold"
                                                Foreground="{DynamicResource MutedTextBrush}"/>
                                     <TextBlock Text="{Binding Password}"
                                                FontFamily="Consolas,Courier New,monospace"
-                                               FontSize="13"
+                                               FontSize="{StaticResource Type.Label.Size}"
                                                Foreground="{DynamicResource AccentBrush}"/>
                                 </StackPanel>
 
                                 <!-- URL (if exists) -->
                                 <StackPanel Spacing="4" IsVisible="{Binding Url, Converter={StaticResource NullToBoolConverter}}">
                                     <TextBlock Text="URL:"
-                                               FontSize="11"
+                                               FontSize="{StaticResource Type.Tiny.Size}"
                                                FontWeight="SemiBold"
                                                Foreground="{DynamicResource MutedTextBrush}"/>
                                     <TextBlock Text="{Binding Url}"
-                                               FontSize="12"
+                                               FontSize="{StaticResource Type.Small.Size}"
                                                Foreground="{DynamicResource AccentBrush}"/>
                                 </StackPanel>
 
                                 <!-- Notes (if exists) -->
                                 <StackPanel Spacing="4" IsVisible="{Binding Notes, Converter={StaticResource NullToBoolConverter}}">
                                     <TextBlock Text="Notes:"
-                                               FontSize="11"
+                                               FontSize="{StaticResource Type.Tiny.Size}"
                                                FontWeight="SemiBold"
                                                Foreground="{DynamicResource MutedTextBrush}"/>
                                     <TextBlock Text="{Binding Notes}"
-                                               FontSize="12"
+                                               FontSize="{StaticResource Type.Small.Size}"
                                                TextWrapping="Wrap"
                                                Foreground="{DynamicResource SecondaryTextBrush}"/>
                                 </StackPanel>
@@ -108,11 +108,11 @@
                                 <!-- Category -->
                                 <StackPanel Spacing="4">
                                     <TextBlock Text="Category:"
-                                               FontSize="11"
+                                               FontSize="{StaticResource Type.Tiny.Size}"
                                                FontWeight="SemiBold"
                                                Foreground="{DynamicResource MutedTextBrush}"/>
                                     <TextBlock Text="{Binding Group}"
-                                               FontSize="12"
+                                               FontSize="{StaticResource Type.Small.Size}"
                                                Foreground="{DynamicResource SecondaryTextBrush}"/>
                                 </StackPanel>
                             </StackPanel>
@@ -128,7 +128,7 @@
                 Background="{DynamicResource ContentBackgroundBrush}">
             <StackPanel Orientation="Horizontal" Spacing="15" HorizontalAlignment="Right">
                 <TextBlock Text="{Binding TotalCredentialsText}"
-                           FontSize="13"
+                           FontSize="{StaticResource Type.Label.Size}"
                            FontWeight="SemiBold"
                            VerticalAlignment="Center"
                            Foreground="{DynamicResource MutedTextBrush}"/>
@@ -136,9 +136,9 @@
                         Command="{Binding CloseCommand}"
                         Width="140"
                         Height="36"
-                        FontSize="13"
+                        FontSize="{StaticResource Type.Label.Size}"
                         Background="{DynamicResource AccentBrush}"
-                        Foreground="White"/>
+                        Foreground="{DynamicResource ButtonAccentForegroundBrush}"/>
             </StackPanel>
         </Border>
     </Grid>

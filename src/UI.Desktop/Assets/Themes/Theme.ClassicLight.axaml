@@ -198,4 +198,7 @@
         <GradientStop Color="#12FFFFFF" Offset="1"/>
     </LinearGradientBrush>
 
+    <!-- Liquid glass button foreground (dark text on light glass) -->
+    <SolidColorBrush x:Key="LiquidGlassButtonForeground" Color="#1A2332"/>
+
 </ResourceDictionary>

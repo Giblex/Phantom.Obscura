@@ -14,7 +14,7 @@
     <!-- URL -->
     <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasUrl}">
         <TextBlock Text="Website" 
-                   FontSize="13" 
+                   FontSize="{StaticResource Type.Label.Size}" 
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource MutedTextBrush}"/>
         <Grid ColumnDefinitions="*,Auto">
@@ -24,7 +24,7 @@
                      BorderThickness="1"
                      BorderBrush="{DynamicResource ControlBorderBrush}"
                      Height="36"
-                     Padding="8,16">
+                     Padding="10,8">
                 <TextBox.Effect>
                     <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
                 </TextBox.Effect>
@@ -38,7 +38,7 @@
                     Padding="6"
                     Margin="8,0,0,0"
                     ToolTip.Tip="Open in browser">
-                <TextBlock Text="🌐" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                <TextBlock Text="🌐" FontSize="{StaticResource Type.H4.Size}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
             </Button>
         </Grid>
     </StackPanel>

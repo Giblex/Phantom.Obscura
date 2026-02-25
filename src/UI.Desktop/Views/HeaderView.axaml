@@ -22,11 +22,11 @@
                 <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png" Width="48" Height="48" VerticalAlignment="Center"/>
                 <StackPanel Spacing="2">
                     <TextBlock Text="PhantomObscura" 
-                               FontSize="16" 
+                               FontSize="{StaticResource Type.H4.Size}" 
                                FontWeight="Bold"
                                Foreground="{DynamicResource HeaderTextBrush}"/>
                     <TextBlock Text="{Binding VaultName}" 
-                               FontSize="11" 
+                               FontSize="{StaticResource Type.Tiny.Size}" 
                                Classes="header-muted"/>
                 </StackPanel>
             </StackPanel>
@@ -35,7 +35,7 @@
             <Grid Grid.Column="1" ColumnDefinitions="*,Auto" Margin="30,0" VerticalAlignment="Center">
                 <Border Grid.Column="0"
                         Background="{DynamicResource ControlBackgroundBrush}"
-                        BorderBrush="#33000000"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="20"
                         MinWidth="320"
@@ -44,8 +44,8 @@
                     <Grid ColumnDefinitions="Auto,*,Auto">
                         <dcontrols:SvgIcon Grid.Column="0"
                                IconName="Assets/SVG/Current/Search.svg"
-                               Width="16"
-                               Height="16"
+                               Width="20"
+                               Height="20"
                                Margin="12,0,0,0"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"/>
@@ -56,7 +56,7 @@
                                  Background="Transparent"
                                  Foreground="{DynamicResource PrimaryTextBrush}"
                                  Padding="8,8"
-                                 FontSize="13">
+                                 FontSize="{StaticResource Type.Label.Size}">
                             <InputElement.KeyBindings>
                                 <KeyBinding Gesture="Escape" Command="{Binding ClearSearchCommand}"/>
                             </InputElement.KeyBindings>
@@ -116,7 +116,7 @@
                                 <StackPanel Spacing="4">
                                     <!-- Add Credential Section -->
                                     <TextBlock Text="Add Credential" 
-                                               FontSize="14" 
+                                               FontSize="{StaticResource Type.Body.Size}" 
                                                FontWeight="SemiBold"
                                                Foreground="{DynamicResource PrimaryTextBrush}"
                                                Margin="12,8,12,12"/>
@@ -125,63 +125,63 @@
                                             HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Left"
                                             Padding="12,8">
-                                        <TextBlock Text="→ Login / Password" FontSize="12"/>
+                                        <TextBlock Text="→ Login / Password" FontSize="{StaticResource Type.Small.Size}"/>
                                     </Button>
                                     <Button Command="{Binding AddCreditCardCommand}"
                                             Classes="liquid-glass"
                                             HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Left"
                                             Padding="12,8">
-                                        <TextBlock Text="→ Credit Card" FontSize="12"/>
+                                        <TextBlock Text="→ Credit Card" FontSize="{StaticResource Type.Small.Size}"/>
                                     </Button>
                                     <Button Command="{Binding AddBankAccountCommand}"
                                             Classes="liquid-glass"
                                             HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Left"
                                             Padding="12,8">
-                                        <TextBlock Text="→ Bank Account" FontSize="12"/>
+                                        <TextBlock Text="→ Bank Account" FontSize="{StaticResource Type.Small.Size}"/>
                                     </Button>
                                     <Button Command="{Binding AddIdentityCommand}"
                                             Classes="liquid-glass"
                                             HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Left"
                                             Padding="12,8">
-                                        <TextBlock Text="→ Identity / Document" FontSize="12"/>
+                                        <TextBlock Text="→ Identity / Document" FontSize="{StaticResource Type.Small.Size}"/>
                                     </Button>
                                     <Button Command="{Binding AddSecureNoteCommand}"
                                             Classes="liquid-glass"
                                             HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Left"
                                             Padding="12,8">
-                                        <TextBlock Text="→ Secure Note" FontSize="12"/>
+                                        <TextBlock Text="→ Secure Note" FontSize="{StaticResource Type.Small.Size}"/>
                                     </Button>
                                     <Button Command="{Binding AddWiFiPasswordCommand}"
                                             Classes="liquid-glass"
                                             HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Left"
                                             Padding="12,8">
-                                        <TextBlock Text="→ WiFi Network" FontSize="12"/>
+                                        <TextBlock Text="→ WiFi Network" FontSize="{StaticResource Type.Small.Size}"/>
                                     </Button>
                                     <Button Command="{Binding AddApiKeyCommand}"
                                             Classes="liquid-glass"
                                             HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Left"
                                             Padding="12,8">
-                                        <TextBlock Text="→ API Key" FontSize="12"/>
+                                        <TextBlock Text="→ API Key" FontSize="{StaticResource Type.Small.Size}"/>
                                     </Button>
                                     <Button Command="{Binding AddContactCommand}"
                                             Classes="liquid-glass"
                                             HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Left"
                                             Padding="12,8">
-                                        <TextBlock Text="→ Contact / Personal Info" FontSize="12"/>
+                                        <TextBlock Text="→ Contact / Personal Info" FontSize="{StaticResource Type.Small.Size}"/>
                                     </Button>
                                     
                                     <Separator Margin="0,8" Background="{DynamicResource ControlBorderBrush}"/>
                                     
                                     <!-- Actions Section -->
                                     <TextBlock Text="ACTIONS" 
-                                               FontSize="11" 
+                                               FontSize="{StaticResource Type.Tiny.Size}" 
                                                FontWeight="SemiBold"
                                                Foreground="{DynamicResource MutedTextBrush}"
                                                Margin="8,4,8,4"/>
@@ -191,7 +191,7 @@
                                             HorizontalContentAlignment="Left"
                                             Padding="12,10">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
-                                            <dcontrols:SvgIcon IconName="Assets/SVG/Current/Key.svg" Width="18" Height="18"/>
+                                            <dcontrols:SvgIcon IconName="Assets/SVG/Current/Key.svg" Width="22" Height="22"/>
                                             <TextBlock Text="Password Generator" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>
@@ -201,7 +201,7 @@
                                             HorizontalContentAlignment="Left"
                                             Padding="12,10">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
-                                            <dcontrols:SvgIcon IconName="Assets/SVG/Current/Security.svg" Width="18" Height="18"/>
+                                            <dcontrols:SvgIcon IconName="Assets/SVG/Current/Security.svg" Width="22" Height="22"/>
                                             <TextBlock Text="Security Dashboard" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>
@@ -211,7 +211,7 @@
                                             HorizontalContentAlignment="Left"
                                             Padding="12,10">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
-                                            <dcontrols:SvgIcon IconName="Assets/SVG/Current/lock.svg" Width="18" Height="18"/>
+                                            <dcontrols:SvgIcon IconName="Assets/SVG/Current/lock.svg" Width="22" Height="22"/>
                                             <TextBlock Text="Lock Vault" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>
@@ -219,7 +219,7 @@
                             </Border>
                         </Flyout>
                     </Button.Flyout>
-                    <dcontrols:SvgIcon IconName="Assets/SVG/Current/Drop menu.svg" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <dcontrols:SvgIcon IconName="Assets/SVG/Current/Drop menu.svg" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Button>
 
                 <!-- Settings Button (Separate) -->
@@ -234,7 +234,7 @@
                         HorizontalContentAlignment="Center"
                         VerticalContentAlignment="Center"
                         ToolTip.Tip="Vault settings">
-                    <dcontrols:SvgIcon IconName="Assets/SVG/Current/Settings.svg" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <dcontrols:SvgIcon IconName="Assets/SVG/Current/Settings.svg" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Button>
             </StackPanel>
         </Grid>

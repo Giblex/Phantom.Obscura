@@ -16,11 +16,11 @@
         <TabItem Header="Theme">
             <ScrollViewer VerticalScrollBarVisibility="Auto" 
                           HorizontalScrollBarVisibility="Disabled">
-                <Border Padding="20">
+                <Border Padding="20,20,20,40">
                     <StackPanel Spacing="15">
         <!-- Theme Settings Content -->
         <TextBlock Text="Theme Settings" 
-                   FontSize="20" 
+                   FontSize="{StaticResource Type.Icon.Size}" 
                    FontWeight="Bold"
                    Foreground="{DynamicResource PrimaryTextBrush}"
                    Margin="0,0,0,10"/>
@@ -45,48 +45,16 @@
             </ScrollViewer>
         </TabItem>
 
-        <!-- VeraCrypt Tab -->
-        <TabItem Header="VeraCrypt">
-            <ScrollViewer VerticalScrollBarVisibility="Auto" 
-                          HorizontalScrollBarVisibility="Disabled">
-                <Border Padding="20">
-                    <StackPanel Spacing="15">
-        <TextBlock Text="VeraCrypt Integration" 
-                   FontSize="20" 
-                   FontWeight="Bold"
-                   Foreground="{DynamicResource PrimaryTextBrush}"
-                   Margin="0,0,0,10"/>
-        <Border BorderBrush="{DynamicResource ControlBorderBrush}" 
-                BorderThickness="1" 
-                CornerRadius="{StaticResource Radius.Md}" 
-                Padding="15">
-            <StackPanel Spacing="10">
-                <TextBlock Text="Configure VeraCrypt encryption settings and integration options" 
-                           FontSize="12"
-                           Foreground="{DynamicResource MutedTextBrush}"
-                           TextWrapping="Wrap"/>
-                <Button Content="Configure VeraCrypt Settings" 
-                        Click="OpenVeraCryptSettings_Click"
-                        Width="220" 
-                        Height="36"
-                        Classes="liquid-glass"
-                        HorizontalAlignment="Left"
-                        ToolTip.Tip="Open detailed VeraCrypt configuration and integration settings"/>
-            </StackPanel>
-        </Border>
-                    </StackPanel>
-                </Border>
-            </ScrollViewer>
-        </TabItem>
+
 
         <!-- Defence Tab -->
         <TabItem Header="Defence">
             <ScrollViewer VerticalScrollBarVisibility="Auto" 
                           HorizontalScrollBarVisibility="Disabled">
-                <Border Padding="20">
+                <Border Padding="20,20,20,40">
                     <StackPanel Spacing="15">
         <TextBlock Text="Defence Automations" 
-                   FontSize="20" 
+                   FontSize="{StaticResource Type.Icon.Size}" 
                    FontWeight="Bold"
                    Foreground="{DynamicResource PrimaryTextBrush}"
                    Margin="0,0,0,10"/>
@@ -96,7 +64,7 @@
                 Padding="15">
             <StackPanel Spacing="10">
                 <TextBlock Text="Configure automated defence responses to detected threats" 
-                           FontSize="12"
+                           FontSize="{StaticResource Type.Small.Size}"
                            Foreground="{DynamicResource MutedTextBrush}"
                            TextWrapping="Wrap"
                            Margin="0,0,0,6"/>
@@ -136,10 +104,10 @@
         <TabItem Header="Authentication">
             <ScrollViewer VerticalScrollBarVisibility="Auto" 
                           HorizontalScrollBarVisibility="Disabled">
-                <Border Padding="20">
+                <Border Padding="20,20,20,40">
                     <StackPanel Spacing="15">
         <TextBlock Text="Authentication Methods" 
-                   FontSize="20" 
+                   FontSize="{StaticResource Type.Icon.Size}" 
                    FontWeight="Bold"
                    Foreground="{DynamicResource PrimaryTextBrush}"
                    Margin="0,0,0,10"/>
@@ -151,11 +119,11 @@
                 Padding="15">
             <StackPanel Spacing="10">
                 <TextBlock Text="Windows Hello" 
-                           FontSize="16" 
+                           FontSize="{StaticResource Type.H4.Size}" 
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
                 <TextBlock Text="Use biometric authentication (fingerprint, face recognition) to unlock your vault" 
-                           FontSize="12"
+                           FontSize="{StaticResource Type.Small.Size}"
                            Foreground="{DynamicResource MutedTextBrush}"
                            TextWrapping="Wrap"/>
                 <Button Content="Configure Windows Hello" 
@@ -175,11 +143,11 @@
                 Padding="15">
             <StackPanel Spacing="10">
                 <TextBlock Text="Passkey Authentication" 
-                           FontSize="16" 
+                           FontSize="{StaticResource Type.H4.Size}" 
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
                 <TextBlock Text="Use hardware security keys (YubiKey, Titan Key) for passwordless vault access" 
-                           FontSize="12"
+                           FontSize="{StaticResource Type.Small.Size}"
                            Foreground="{DynamicResource MutedTextBrush}"
                            TextWrapping="Wrap"/>
                 <Button Content="Configure Passkeys" 
@@ -199,11 +167,11 @@
                 Padding="15">
             <StackPanel Spacing="10">
                 <TextBlock Text="TOTP Authenticator" 
-                           FontSize="16" 
+                           FontSize="{StaticResource Type.H4.Size}" 
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
                 <TextBlock Text="Add two-factor authentication using time-based one-time passwords" 
-                           FontSize="12"
+                           FontSize="{StaticResource Type.Small.Size}"
                            Foreground="{DynamicResource MutedTextBrush}"
                            TextWrapping="Wrap"/>
                 <Button Content="Configure TOTP" 
@@ -224,10 +192,10 @@
         <TabItem Header="Accessibility">
             <ScrollViewer VerticalScrollBarVisibility="Auto" 
                           HorizontalScrollBarVisibility="Disabled">
-                <Border Padding="20">
+                <Border Padding="20,20,20,40">
                     <StackPanel Spacing="15">
         <TextBlock Text="Accessibility Settings" 
-                   FontSize="20" 
+                   FontSize="{StaticResource Type.Icon.Size}" 
                    FontWeight="Bold"
                    Foreground="{DynamicResource PrimaryTextBrush}"
                    Margin="0,0,0,10"/>
@@ -238,14 +206,14 @@
                 Background="{DynamicResource CardBackgroundBrush}">
             <StackPanel Spacing="15">
                 <StackPanel Orientation="Horizontal" Spacing="12">
-                    <TextBlock Text="♿" FontSize="24" VerticalAlignment="Center"/>
+                    <TextBlock Text="♿" FontSize="{StaticResource Type.H2.Size}" VerticalAlignment="Center"/>
                     <TextBlock Text="Customize Your Experience" 
-                               FontSize="16" 
+                               FontSize="{StaticResource Type.H4.Size}" 
                                FontWeight="SemiBold" 
                                VerticalAlignment="Center"/>
                 </StackPanel>
                 <TextBlock Text="Customize language, themes, UI scaling, view preferences, keyboard shortcuts, and accessibility features" 
-                           FontSize="12"
+                           FontSize="{StaticResource Type.Small.Size}"
                            Foreground="{DynamicResource MutedTextBrush}"
                            TextWrapping="Wrap"/>
                 <Button Content="Open Accessibility Settings" 

@@ -5,7 +5,8 @@
         Title="Phantom Vault"
         Width="600" Height="200"
         MinWidth="400" MinHeight="300"
-        Background="{DynamicResource WindowBackgroundBrush}">
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Classes="animated-window">
 
     <Window.KeyBindings>
         <KeyBinding Gesture="Ctrl+U" Command="{Binding UnlockCommand}" />
@@ -104,7 +105,7 @@
         
         <TextBlock Text="{Binding Status}"
                    Margin="0,20,0,0"
-                   Foreground="Gray" />
+                   Foreground="{DynamicResource MutedTextBrush}" />
     </DockPanel>
 
         <!-- Toast notification container (top layer) -->

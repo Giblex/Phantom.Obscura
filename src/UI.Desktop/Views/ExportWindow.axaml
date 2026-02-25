@@ -8,7 +8,8 @@
         Width="650" Height="550"
         WindowStartupLocation="CenterOwner"
         CanResize="False"
-        Background="{DynamicResource WindowBackgroundBrush}">
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Classes="animated-window">
 
     <Design.DataContext>
         <vm:ExportViewModel/>
@@ -17,7 +18,7 @@
     <Border Padding="20" ClipToBounds="True">
         <StackPanel Spacing="16">
             <!-- Header -->
-            <TextBlock Text="Export Credentials" FontSize="20" FontWeight="SemiBold"/>
+            <TextBlock Text="Export Credentials" FontSize="{StaticResource Type.Icon.Size}" FontWeight="SemiBold"/>
             
             <TextBlock Text="Export your credentials to external formats for backup or migration to other password managers." 
                        TextWrapping="Wrap" 
@@ -51,7 +52,7 @@
                           ToolTip.Tip="Uncheck to export without passwords (for sharing templates or auditing)"/>
                 <TextBlock Text="⚠️ Warning: Exported files are NOT encrypted. Handle with care!" 
                            Foreground="{DynamicResource WarningBrush}"
-                           FontSize="12"
+                           FontSize="{StaticResource Type.Small.Size}"
                            TextWrapping="Wrap"
                            Margin="24,4,0,0"
                            IsVisible="{Binding IncludePasswords}"/>
@@ -80,7 +81,7 @@
                     BorderBrush="{DynamicResource ControlBorderBrush}"
                     BorderThickness="1">
                 <StackPanel Spacing="4">
-                    <TextBlock FontWeight="SemiBold" FontSize="12">
+                    <TextBlock FontWeight="SemiBold" FontSize="{StaticResource Type.Small.Size}">
                         <Run Text="Ready to export "/><Run Text="{Binding CredentialCount}"/><Run Text=" credential(s)"/>
                     </TextBlock>
                     <TextBlock Text="{Binding StatusMessage}" 

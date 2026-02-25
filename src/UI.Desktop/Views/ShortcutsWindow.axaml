@@ -3,9 +3,11 @@
         x:Class="PhantomVault.UI.Views.ShortcutsWindow"
         Width="480" Height="360"
         WindowStartupLocation="CenterOwner"
-        Title="Keyboard Shortcuts">
+        Title="Keyboard Shortcuts"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Classes="animated-window">
   <Grid RowDefinitions="Auto,*" Margin="16">
-    <TextBlock Text="Keyboard Shortcuts" FontSize="18" FontWeight="Bold" />
+    <TextBlock Text="Keyboard Shortcuts" FontSize="{StaticResource Type.H3.Size}" FontWeight="Bold" />
     <DataGrid Grid.Row="1"
               ItemsSource="{Binding Shortcuts}"
               HeadersVisibility="Column"

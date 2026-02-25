@@ -6,6 +6,7 @@ using Avalonia.Threading;
 using Avalonia.Platform;
 using PhantomVault.Core.Services;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Avalonia.Svg.Skia;
@@ -20,6 +21,7 @@ public partial class SvgIcon : UserControl
 {
     private static SvgIconService? _iconService;
     private Avalonia.Controls.Shapes.Path? _iconPath;
+    private Canvas? _iconCanvas;
 
     public static readonly StyledProperty<IconPreset?> PresetProperty =
         AvaloniaProperty.Register<SvgIcon, IconPreset?>(nameof(Preset));
@@ -61,6 +63,7 @@ public partial class SvgIcon : UserControl
     {
         InitializeComponent();
         _iconPath = this.FindControl<Avalonia.Controls.Shapes.Path>("IconPath");
+        _iconCanvas = this.FindControl<Canvas>("IconCanvas");
 
         // Initialize service (singleton)
         _iconService ??= new SvgIconService("ZluQ8qGZzB");
@@ -101,10 +104,38 @@ public partial class SvgIcon : UserControl
                 if (IconName.EndsWith(".svg", StringComparison.OrdinalIgnoreCase))
                 {
                     var path = IconName.TrimStart('/');
+                    // Remap legacy SVG paths to actual location under Assets/Visuals/App Icons/SVG/
+                    if (path.StartsWith("Assets/SVG/Current/", StringComparison.OrdinalIgnoreCase))
+                        path = "Assets/Visuals/App Icons/SVG/" + path.Substring("Assets/SVG/Current/".Length);
+                    else if (path.StartsWith("Assets/SVG/", StringComparison.OrdinalIgnoreCase))
+                        path = "Assets/Visuals/App Icons/SVG/" + path.Substring("Assets/SVG/".Length);
                     var uri = new Uri($"avares://PhantomVault.UI/{path}");
                     using var stream = AssetLoader.Open(uri);
                     using var reader = new StreamReader(stream);
                     svgContent = await reader.ReadToEndAsync();
+
+                    // Parse viewBox to set Canvas size correctly
+                    var vbMatch = System.Text.RegularExpressions.Regex.Match(
+                        svgContent, @"viewBox\s*=\s*""([^""]+)""");
+                    if (vbMatch.Success && _iconCanvas != null)
+                    {
+                        var parts = vbMatch.Groups[1].Value.Split(new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
+                        if (parts.Length == 4 &&
+                            double.TryParse(parts[2], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double vbW) &&
+                            double.TryParse(parts[3], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double vbH))
+                        {
+                            await Dispatcher.UIThread.InvokeAsync(() =>
+                            {
+                                _iconCanvas.Width = vbW;
+                                _iconCanvas.Height = vbH;
+                                // Scale stroke proportionally to viewBox (base: 2.5 at 24x24)
+                                if (_iconPath != null)
+                                {
+                                    _iconPath.StrokeThickness = 2.5 * (vbW / 24.0);
+                                }
+                            });
+                        }
+                    }
                 }
                 else
                 {
@@ -141,6 +172,20 @@ public partial class SvgIcon : UserControl
                                 catch { /* Skip invalid path data */ }
                             }
                             searchIndex = pathDataEnd + 1;
+                        }
+
+                        // Also extract <line> elements and convert to path data
+                        var lineRegex = new System.Text.RegularExpressions.Regex(
+                            @"<line\s[^>]*?x1\s*=\s*""([^""]+)""\s[^>]*?y1\s*=\s*""([^""]+)""\s[^>]*?x2\s*=\s*""([^""]+)""\s[^>]*?y2\s*=\s*""([^""]+)""",
+                            System.Text.RegularExpressions.RegexOptions.Singleline);
+                        foreach (System.Text.RegularExpressions.Match lineMatch in lineRegex.Matches(svgContent))
+                        {
+                            try
+                            {
+                                var lineData = $"M{lineMatch.Groups[1].Value} {lineMatch.Groups[2].Value}L{lineMatch.Groups[3].Value} {lineMatch.Groups[4].Value}";
+                                geometries.Add(Geometry.Parse(lineData));
+                            }
+                            catch { /* Skip invalid line data */ }
                         }
                         
                         // Combine all geometries

@@ -15,6 +15,7 @@ using ReactiveUI;
 using PhantomVault.Core.Models;
 using PhantomVault.UI.Services;
 using PhantomVault.UI.Views;
+using PhantomVault.UI.Helpers;
 
 namespace PhantomVault.UI.ViewModels
 {
@@ -35,6 +36,7 @@ namespace PhantomVault.UI.ViewModels
         private string _notes = string.Empty;
         private string _icon = string.Empty;
         private string _tagsText = string.Empty;
+        private string _totpSecretInput = string.Empty;
         private bool _isFavorite;
         private bool _hasExpiryDate;
         private DateTimeOffset? _expiryDate;
@@ -189,6 +191,9 @@ namespace PhantomVault.UI.ViewModels
             _isContactEntry = entryType == EntryType.Contact;
             _isTotpEntry = entryType == EntryType.TotpGenerator;
 
+            // Initialize TOTP secret input from existing credential
+            _totpSecretInput = _existingCredential?.TotpSecret ?? string.Empty;
+
             if (_isIdentityEntry && string.IsNullOrWhiteSpace(IdDocumentType))
             {
                 IdDocumentType = _identityTypeOptions.FirstOrDefault() ?? string.Empty;
@@ -250,7 +255,9 @@ namespace PhantomVault.UI.ViewModels
             SetIconCommand = ReactiveCommand.Create<string>(SetIcon);
             SelectColorCommand = ReactiveCommand.Create<Color>(SelectColor);
             GenerateTotpSecretCommand = ReactiveCommand.Create(GenerateTotpSecret);
+            RemoveTotpSecretCommand = ReactiveCommand.Create(RemoveTotpSecretInput);
             ImportFromOtpAuthCommand = ReactiveCommand.CreateFromTask(ImportFromOtpAuthAsync);
+            OpenTotpSettingsCommand = ReactiveCommand.CreateFromTask(OpenTotpSettingsAsync);
 
             // Subscribe to password changes for strength calculation
             this.WhenAnyValue(x => x.Password)
@@ -891,6 +898,18 @@ namespace PhantomVault.UI.ViewModels
         }
 
         // TOTP authenticator fields
+        public string TotpSecretInput
+        {
+            get => _totpSecretInput;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _totpSecretInput, value);
+                this.RaisePropertyChanged(nameof(HasTotpSecret));
+            }
+        }
+
+        public bool HasTotpSecret => !string.IsNullOrWhiteSpace(TotpSecretInput);
+
         public string TotpSecret
         {
             get => _existingCredential?.TotpSecret ?? string.Empty;
@@ -933,16 +952,22 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<string, Unit> SetIconCommand { get; }
         public ReactiveCommand<Color, Unit> SelectColorCommand { get; }
         public ReactiveCommand<Unit, Unit> GenerateTotpSecretCommand { get; }
+        public ReactiveCommand<Unit, Unit> RemoveTotpSecretCommand { get; }
         public ReactiveCommand<Unit, Unit> ImportFromOtpAuthCommand { get; }
+        public ReactiveCommand<Unit, Unit> OpenTotpSettingsCommand { get; }
 
         // Methods
         private void InitializeCategories()
         {
-            _categories.Add(new CategoryViewModel { Name = "Logins", Icon = "🔑" });
-            _categories.Add(new CategoryViewModel { Name = "Credit Cards", Icon = "💳" });
-            _categories.Add(new CategoryViewModel { Name = "Secure Notes", Icon = "📝" });
-            _categories.Add(new CategoryViewModel { Name = "Banking", Icon = "🏦" });
-            _categories.Add(new CategoryViewModel { Name = "Personal", Icon = "👤" });
+            _categories.Add(new CategoryViewModel { Name = "Logins", Icon = IconPathMigrator.LoginsIcon });
+            _categories.Add(new CategoryViewModel { Name = "Credit Cards", Icon = IconPathMigrator.PaymentIcon });
+            _categories.Add(new CategoryViewModel { Name = "Secure Notes", Icon = IconPathMigrator.NotesIcon });
+            _categories.Add(new CategoryViewModel { Name = "Banking", Icon = IconPathMigrator.BankingIcon });
+            _categories.Add(new CategoryViewModel { Name = "Personal", Icon = IconPathMigrator.PersonalIcon });
+            _categories.Add(new CategoryViewModel { Name = "WiFi", Icon = IconPathMigrator.WiFiIcon });
+            _categories.Add(new CategoryViewModel { Name = "ID", Icon = IconPathMigrator.IdIcon });
+            _categories.Add(new CategoryViewModel { Name = "Notes", Icon = IconPathMigrator.NotesIcon });
+            _categories.Add(new CategoryViewModel { Name = "Custom", Icon = IconPathMigrator.CustomIcon });
         }
 
         private string GetIdentityTypeKey()
@@ -1123,6 +1148,25 @@ namespace PhantomVault.UI.ViewModels
 
                 // Passkey flag
                 credential.IsPasskey = _existingCredential.IsPasskey;
+
+                // TOTP fields
+                credential.TotpSecret = _existingCredential.TotpSecret;
+                credential.TotpDigits = _existingCredential.TotpDigits;
+                credential.TotpTimeStep = _existingCredential.TotpTimeStep;
+                credential.TotpAlgorithm = _existingCredential.TotpAlgorithm;
+                credential.TotpIssuer = _existingCredential.TotpIssuer;
+                credential.TotpAccountName = _existingCredential.TotpAccountName;
+            }
+
+            // Apply TOTP secret from input field
+            if (!string.IsNullOrWhiteSpace(TotpSecretInput))
+            {
+                credential.TotpSecret = TotpSecretInput.Trim().ToUpperInvariant();
+            }
+            else
+            {
+                // Clear TOTP if secret was removed
+                credential.TotpSecret = string.Empty;
             }
 
             // Update timestamps
@@ -1237,116 +1281,73 @@ namespace PhantomVault.UI.ViewModels
             ShowQuickPicks = false; // Hide quick picks once an icon is selected
         }
 
+        private static void LogIconPicker(string msg)
+        {
+            try
+            {
+                var logPath = System.IO.Path.Combine(
+                    AppDomain.CurrentDomain.BaseDirectory ?? ".", "logs", "icon_picker_debug.log");
+                var dir = System.IO.Path.GetDirectoryName(logPath);
+                if (dir != null && !System.IO.Directory.Exists(dir))
+                    System.IO.Directory.CreateDirectory(dir);
+                System.IO.File.AppendAllText(logPath, $"[{DateTime.Now:O}] [VM] {msg}\n");
+            }
+            catch { /* logging must never crash UI */ }
+        }
+
         private async System.Threading.Tasks.Task OpenIconPickerAsync()
         {
             try
             {
-                Debug.WriteLine("[ICON-PICKER] OpenIconPickerAsync called");
+                LogIconPicker("OpenIconPickerAsync CALLED (from Command)");
+                LogIconPicker($"_ownerWindow type: {_ownerWindow?.GetType().Name ?? "NULL"}");
 
-                if (_ownerWindow == null)
-                {
-                    Debug.WriteLine("[ICON-PICKER] Owner window is null - will attempt fallback to main window");
-                    // continue - we'll try to find a fallback owner below
-                }
-
-                Debug.WriteLine($"[ICON-PICKER] Creating IconPickerViewModel with icon: '{Icon}', color: '{SelectedIconColor}'");
                 var viewModel = new IconPickerViewModel(Icon, SelectedIconColor);
                 var window = new IconPickerWindow
                 {
-                    DataContext = viewModel
+                    DataContext = viewModel,
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen
                 };
                 viewModel.SetOwnerWindow(window);
 
-                Debug.WriteLine("[ICON-PICKER] Showing dialog...");
-
-                // If owner is null, attempt to fallback to the application's main window
+                // Find the best owner window
                 Window? ownerToUse = _ownerWindow;
                 if (ownerToUse == null)
                 {
-                    try
-                    {
-                        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-                        {
-                            ownerToUse = desktop.MainWindow;
-                            Debug.WriteLine($"[ICON-PICKER] Fallback owner window is: {ownerToUse?.GetType().Name ?? "null"}");
-                        }
-                    }
-                    catch (Exception lfEx)
-                    {
-                        Debug.WriteLine($"[ICON-PICKER] Failed to get fallback main window: {lfEx.Message}");
-                    }
+                    if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                        ownerToUse = desktop.MainWindow;
                 }
+
+                LogIconPicker($"ownerToUse: {ownerToUse?.GetType().Name ?? "NULL"}");
 
                 string? result = null;
-                try
+                if (ownerToUse != null)
                 {
-                    // Ensure ShowDialog is invoked on the UI thread
-                    var showTask = ownerToUse != null
-                        ? Dispatcher.UIThread.InvokeAsync(async () =>
-                        {
-                            return await window.ShowDialog<string?>(ownerToUse);
-                        })
-                        : Dispatcher.UIThread.InvokeAsync(async () =>
-                        {
-#pragma warning disable CS8625 // Allow passing null for owner as last-resort
-                            var r = await window.ShowDialog<string?>((Window?)null);
-#pragma warning restore CS8625
-                            return r;
-                        });
-
-                    result = await showTask.ConfigureAwait(false);
-                    Debug.WriteLine($"[ICON-PICKER] Dialog closed with result: '{result ?? "null"}'");
+                    LogIconPicker("Calling ShowDialog...");
+                    result = await window.ShowDialog<string?>(ownerToUse);
                 }
-                catch (Exception showEx)
+                else
                 {
-                    Debug.WriteLine($"[ICON-PICKER] ShowDialog failed: {showEx.Message}");
-                    Debug.WriteLine("[ICON-PICKER] Attempting non-modal fallback (window.Show())...");
-
-                    try
-                    {
-                        // Non-modal fallback on UI thread (post doesn't return a Task)
-                        Dispatcher.UIThread.Post(() =>
-                        {
-                            try
-                            {
-                                // Make window briefly topmost to ensure visibility
-                                window.Topmost = true;
-                                window.Show();
-                                Debug.WriteLine("[ICON-PICKER] Non-modal fallback: window.Show() invoked");
-
-                                // Reset Topmost after short delay so it doesn't stay above all windows
-                                _ = System.Threading.Tasks.Task.Run(async () =>
-                                {
-                                    await System.Threading.Tasks.Task.Delay(250);
-                                    Dispatcher.UIThread.Post(() => { window.Topmost = false; });
-                                });
-                            }
-                            catch (Exception nmEx)
-                            {
-                                Debug.WriteLine($"[ICON-PICKER] Non-modal fallback failed: {nmEx.Message}");
-                            }
-                        });
-                    }
-                    catch (Exception nmOuter)
-                    {
-                        Debug.WriteLine($"[ICON-PICKER] Non-modal fallback dispatcher failed: {nmOuter.Message}");
-                    }
+                    LogIconPicker("No owner, calling Show() non-modal...");
+                    var tcs = new System.Threading.Tasks.TaskCompletionSource<string?>();
+                    window.Closed += (_, _) => tcs.TrySetResult(viewModel.SelectedIcon);
+                    window.Show();
+                    result = await tcs.Task;
                 }
 
-                // If an icon was selected, use it
+                LogIconPicker($"Dialog closed with result: '{result ?? "null"}'");
+
                 if (!string.IsNullOrEmpty(result))
                 {
                     Icon = result;
-                    // Also get the selected color from the view model
                     SelectedIconColor = viewModel.SelectedIconColor;
-                    ShowQuickPicks = false; // Hide quick picks once an icon is selected
-                    Debug.WriteLine($"[ICON-PICKER] Icon updated to: '{Icon}', color: '{SelectedIconColor}'");
+                    ShowQuickPicks = false;
+                    LogIconPicker($"Icon updated to: '{Icon}', color: '{SelectedIconColor}'");
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[ICON-PICKER] ERROR: {ex.Message}");
-                Debug.WriteLine($"[ICON-PICKER] Stack trace: {ex.StackTrace}");
+                LogIconPicker($"EXCEPTION: {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
             }
         }
 
@@ -1515,8 +1516,88 @@ namespace PhantomVault.UI.ViewModels
 
         private void GenerateTotpSecret()
         {
-            TotpSecret = PhantomVault.Core.Services.TotpService.GenerateSecret();
+            TotpSecretInput = PhantomVault.Core.Services.TotpService.GenerateSecret();
+            if (_existingCredential != null)
+            {
+                _existingCredential.TotpSecret = TotpSecretInput;
+            }
             this.RaisePropertyChanged(nameof(TotpSecret));
+            this.RaisePropertyChanged(nameof(HasTotpSecret));
+        }
+
+        private void RemoveTotpSecretInput()
+        {
+            TotpSecretInput = string.Empty;
+            if (_existingCredential != null)
+            {
+                _existingCredential.TotpSecret = string.Empty;
+            }
+            this.RaisePropertyChanged(nameof(TotpSecret));
+            this.RaisePropertyChanged(nameof(HasTotpSecret));
+        }
+
+        /// <summary>
+        /// Opens the TOTP Scanner Dialog to configure advanced TOTP settings
+        /// (issuer, algorithm, digits, period) for this credential.
+        /// </summary>
+        private async Task OpenTotpSettingsAsync()
+        {
+            try
+            {
+                if (_ownerWindow == null) return;
+
+                var viewModel = new TotpScannerViewModel
+                {
+                    Issuer = _existingCredential?.TotpIssuer ?? string.Empty,
+                    AccountName = _existingCredential?.TotpAccountName ?? string.Empty,
+                    SecretKey = TotpSecretInput,
+                    Digits = _existingCredential?.TotpDigits ?? 6,
+                    Period = _existingCredential?.TotpTimeStep ?? 30,
+                    Algorithm = _existingCredential?.TotpAlgorithm ?? "SHA1",
+                    IsEditing = HasTotpSecret
+                };
+
+                var dialog = new PhantomVault.UI.Views.TotpScannerDialog(viewModel)
+                {
+                    Title = HasTotpSecret
+                        ? "TOTP Settings – " + (Title ?? "Entry")
+                        : "Add TOTP – " + (Title ?? "Entry")
+                };
+
+                var result = await dialog.ShowDialog<TotpScanResult?>(_ownerWindow);
+
+                if (result != null && result.Success)
+                {
+                    if (result.Deleted)
+                    {
+                        RemoveTotpSecretInput();
+                        return;
+                    }
+
+                    TotpSecretInput = result.Secret;
+                    if (_existingCredential != null)
+                    {
+                        _existingCredential.TotpSecret = result.Secret;
+                        _existingCredential.TotpIssuer = result.Issuer;
+                        _existingCredential.TotpAccountName = result.AccountName;
+                        _existingCredential.TotpDigits = result.Digits;
+                        _existingCredential.TotpTimeStep = result.Period;
+                        _existingCredential.TotpAlgorithm = result.Algorithm;
+                    }
+
+                    this.RaisePropertyChanged(nameof(TotpSecret));
+                    this.RaisePropertyChanged(nameof(HasTotpSecret));
+                    this.RaisePropertyChanged(nameof(TotpIssuer));
+                    this.RaisePropertyChanged(nameof(TotpAccountName));
+                    this.RaisePropertyChanged(nameof(TotpDigits));
+                    this.RaisePropertyChanged(nameof(TotpTimeStep));
+                    this.RaisePropertyChanged(nameof(TotpAlgorithm));
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[ERROR] OpenTotpSettingsAsync: {ex.Message}");
+            }
         }
 
         private async Task ImportFromOtpAuthAsync()

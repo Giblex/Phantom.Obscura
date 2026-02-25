@@ -28,7 +28,6 @@ namespace PhantomVault.UI.ViewModels
 #pragma warning disable CS0067 // events may only be raised in debug or legacy flows; suppress unused-event warning
         public event EventHandler? NavigateToUsbSetup;
         public event EventHandler? DeveloperBypassRequested;
-        public event EventHandler? OpenInstallerRequested;
 #pragma warning restore CS0067
 
         public WelcomePageViewModel()
@@ -38,11 +37,9 @@ namespace PhantomVault.UI.ViewModels
 #if DEBUG
             IsDeveloperBypassVisible = true;
             DeveloperBypassCommand = ReactiveCommand.Create(ExecuteDeveloperBypass);
-            OpenInstallerCommand = ReactiveCommand.Create(ExecuteOpenInstaller);
 #else
             IsDeveloperBypassVisible = false;
             DeveloperBypassCommand = ReactiveCommand.Create(() => { });
-            OpenInstallerCommand = ReactiveCommand.Create(() => { });
 #endif
 
             GetStartedCommand = ReactiveCommand.CreateFromTask(GetStartedAsync);
@@ -68,7 +65,7 @@ namespace PhantomVault.UI.ViewModels
             "• Post-quantum cryptography (ML-KEM-768)\n" +
             "• USB-bound vault storage\n" +
             "• Hardware token support (YubiKey)\n" +
-            "• VeraCrypt container integration\n" +
+            "• GiblexVaultContainer encryption\n" +
             "• KeePass import capability\n" +
             "• TOTP 2FA generator\n" +
             "• Password health monitoring\n" +
@@ -95,7 +92,6 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> GetStartedCommand { get; }
         public ReactiveCommand<Unit, Unit> OpenExistingVaultCommand { get; }
         public ReactiveCommand<Unit, Unit> DeveloperBypassCommand { get; }
-        public ReactiveCommand<Unit, Unit> OpenInstallerCommand { get; }
         public bool IsDeveloperBypassVisible { get; }
 
 #if DEBUG
@@ -105,11 +101,6 @@ namespace PhantomVault.UI.ViewModels
             DeveloperBypassRequested?.Invoke(this, EventArgs.Empty);
         }
 
-        private void ExecuteOpenInstaller()
-        {
-            StatusMessage = "Opening installer (debug build).";
-            OpenInstallerRequested?.Invoke(this, EventArgs.Empty);
-        }
 #endif
 
         private async Task CheckForExistingVaultAsync()

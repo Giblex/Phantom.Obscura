@@ -85,7 +85,7 @@
     <!-- ALL TEXT COLORS WHITE - everything is on dark backgrounds now -->
     <Color x:Key="PrimaryTextColor">#FFFFFF</Color>
     <SolidColorBrush x:Key="PrimaryTextBrush" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="ControlForegroundBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="ControlForegroundBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="HeaderTextBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="HeaderMutedTextBrush" Color="#8BA8C8"/>
     <SolidColorBrush x:Key="FooterTextBrush" Color="#FFFFFF"/>
@@ -263,5 +263,10 @@
         <GradientStop Color="#10B5D4F0" Offset="0.5"/>
         <GradientStop Color="#00FFFFFF" Offset="1"/>
     </LinearGradientBrush>
+
+    <!-- Liquid glass button foreground -->
+    <SolidColorBrush x:Key="LiquidGlassButtonForeground" Color="#F8FAFC"/>
+    <SolidColorBrush x:Key="ErrorTextBrush" Color="#FF6B6B"/>
+    <SolidColorBrush x:Key="SuccessTextBrush" Color="#6DD47E"/>
 
 </ResourceDictionary>

@@ -25,6 +25,7 @@
 
   <!-- Windows-specific dependencies -->
   <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <PackageReference Include="Avalonia" Version="11.3.11" />
     <PackageReference Include="System.Runtime.WindowsRuntime" Version="4.7.0" />
   </ItemGroup>
 

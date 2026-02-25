@@ -32,12 +32,38 @@
             <!-- Category Manager Container - Slides in from right -->
             <Border x:Name="CategoryManagerSlideHost" 
                     HorizontalAlignment="Right"
+                    VerticalAlignment="Stretch"
                     Width="820"
                     Background="{DynamicResource WindowBackgroundBrush}"
                     BorderBrush="{DynamicResource ControlBorderBrush}"
                     BorderThickness="1,0,0,0"
                     BoxShadow="{DynamicResource SlideOutPanelShadow}"
-                    IsVisible="{Binding IsCategoryManagerPanelVisible}">
+                    RenderTransformOrigin="1,0.5">
+                <Border.IsVisible>
+                    <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                        <Binding Path="IsCategoryManagerPanelVisible"/>
+                    </MultiBinding>
+                </Border.IsVisible>
+                <Border.RenderTransform>
+                    <TranslateTransform X="0" />
+                </Border.RenderTransform>
+                <Border.Styles>
+                    <Style Selector="Border">
+                        <Setter Property="RenderTransform">
+                            <TranslateTransform X="820" />
+                        </Setter>
+                    </Style>
+                    <Style Selector="Border[IsVisible=true]">
+                        <Setter Property="RenderTransform">
+                            <TranslateTransform X="0" />
+                        </Setter>
+                    </Style>
+                </Border.Styles>
+                <Border.Transitions>
+                    <Transitions>
+                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.35" Easing="CubicEaseOut"/>
+                    </Transitions>
+                </Border.Transitions>
 
                 <!-- Embed the CategoryManagerView and bind to the ViewModel provided by VaultViewModel -->
                 <views:CategoryManagerView DataContext="{Binding CategoryManagerViewModel}"/>

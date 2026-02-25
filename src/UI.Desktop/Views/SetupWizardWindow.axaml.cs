@@ -15,12 +15,15 @@ namespace PhantomVault.UI.Views
         public SetupWizardWindow()
         {
             InitializeComponent();
-            DataContext = new SetupWizardViewModel();
+            var viewModel = new SetupWizardViewModel();
+            viewModel.SetOwnerWindow(this);
+            DataContext = viewModel;
         }
 
         public SetupWizardWindow(SetupWizardViewModel viewModel)
         {
             InitializeComponent();
+            viewModel.SetOwnerWindow(this);
             DataContext = viewModel;
         }
     }
@@ -296,6 +299,48 @@ namespace PhantomVault.UI.Views
         public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             return value is true ? "✓" : "✗";
+        }
+
+        public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+            => throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// Converts current step and target step to determine if step is clickable (completed steps only).
+    /// </summary>
+    public class StepClickableConverter : IValueConverter
+    {
+        public static readonly StepClickableConverter Instance = new();
+
+        public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            if (value is int currentStep && parameter is string stepParam && int.TryParse(stepParam, out int targetStep))
+            {
+                // Can click completed steps (before current step)
+                return currentStep > targetStep;
+            }
+            return false;
+        }
+
+        public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+            => throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// Converts current step to cursor for clickable steps.
+    /// </summary>
+    public class StepCursorConverter : IValueConverter
+    {
+        public static readonly StepCursorConverter Instance = new();
+
+        public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            if (value is int currentStep && parameter is string stepParam && int.TryParse(stepParam, out int targetStep))
+            {
+                // Completed steps get Hand cursor
+                return currentStep > targetStep ? Avalonia.Input.StandardCursorType.Hand : Avalonia.Input.StandardCursorType.Arrow;
+            }
+            return Avalonia.Input.StandardCursorType.Arrow;
         }
 
         public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

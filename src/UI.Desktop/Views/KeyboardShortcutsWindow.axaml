@@ -22,7 +22,7 @@
                 Padding="30,20">
             <StackPanel Spacing="8">
                 <TextBlock Text="⌨️ Keyboard Shortcuts"
-                           FontSize="24"
+                           FontSize="{StaticResource Type.H2.Size}"
                            FontWeight="Bold"
                            HorizontalAlignment="Center"/>
                 <TextBlock Text="View and customize keyboard shortcuts for quick access"
@@ -45,7 +45,7 @@
                             Background="{DynamicResource CardBackgroundBrush}">
                         <StackPanel Spacing="12">
                             <TextBlock Text="General Actions"
-                                       FontSize="16"
+                                       FontSize="{StaticResource Type.H4.Size}"
                                        FontWeight="SemiBold"/>
                             
                             <Grid ColumnDefinitions="*,Auto,120" RowDefinitions="Auto,Auto,Auto,Auto,Auto" Margin="0,10,0,0">
@@ -58,7 +58,7 @@
                                         CornerRadius="{DynamicResource Radius.Sm}"
                                         Padding="8,4"
                                         Background="{DynamicResource ButtonBackgroundBrush}">
-                                    <TextBlock Text="Ctrl+L" FontSize="12" FontFamily="Consolas" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Ctrl+L" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
 
                                 <!-- Row 1: Search -->
@@ -71,7 +71,7 @@
                                         Padding="8,4"
                                         Background="{DynamicResource ButtonBackgroundBrush}"
                                         Margin="0,8,0,0">
-                                    <TextBlock Text="Ctrl+F" FontSize="12" FontFamily="Consolas" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Ctrl+F" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
 
                                 <!-- Row 2: New Entry -->
@@ -84,7 +84,7 @@
                                         Padding="8,4"
                                         Background="{DynamicResource ButtonBackgroundBrush}"
                                         Margin="0,8,0,0">
-                                    <TextBlock Text="Ctrl+N" FontSize="12" FontFamily="Consolas" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Ctrl+N" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
 
                                 <!-- Row 3: Settings -->
@@ -97,7 +97,7 @@
                                         Padding="8,4"
                                         Background="{DynamicResource ButtonBackgroundBrush}"
                                         Margin="0,8,0,0">
-                                    <TextBlock Text="Ctrl+," FontSize="12" FontFamily="Consolas" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Ctrl+," FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
 
                                 <!-- Row 4: Refresh -->
@@ -110,7 +110,7 @@
                                         Padding="8,4"
                                         Background="{DynamicResource ButtonBackgroundBrush}"
                                         Margin="0,8,0,0">
-                                    <TextBlock Text="F5" FontSize="12" FontFamily="Consolas" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="F5" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
                             </Grid>
                         </StackPanel>
@@ -124,7 +124,7 @@
                             Background="{DynamicResource CardBackgroundBrush}">
                         <StackPanel Spacing="12">
                             <TextBlock Text="Credential Actions"
-                                       FontSize="16"
+                                       FontSize="{StaticResource Type.H4.Size}"
                                        FontWeight="SemiBold"/>
                             
                             <Grid ColumnDefinitions="*,Auto,120" RowDefinitions="Auto,Auto,Auto,Auto,Auto" Margin="0,10,0,0">
@@ -137,7 +137,7 @@
                                         CornerRadius="{DynamicResource Radius.Sm}"
                                         Padding="8,4"
                                         Background="{DynamicResource ButtonBackgroundBrush}">
-                                    <TextBlock Text="Ctrl+C" FontSize="12" FontFamily="Consolas" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Ctrl+C" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
 
                                 <!-- Copy Password -->
@@ -150,7 +150,7 @@
                                         Padding="8,4"
                                         Background="{DynamicResource ButtonBackgroundBrush}"
                                         Margin="0,8,0,0">
-                                    <TextBlock Text="Ctrl+Shift+C" FontSize="12" FontFamily="Consolas" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Ctrl+Shift+C" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
 
                                 <!-- Edit Entry -->
@@ -163,7 +163,7 @@
                                         Padding="8,4"
                                         Background="{DynamicResource ButtonBackgroundBrush}"
                                         Margin="0,8,0,0">
-                                    <TextBlock Text="Ctrl+E" FontSize="12" FontFamily="Consolas" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Ctrl+E" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
 
                                 <!-- Delete Entry -->
@@ -176,7 +176,7 @@
                                         Padding="8,4"
                                         Background="{DynamicResource ButtonBackgroundBrush}"
                                         Margin="0,8,0,0">
-                                    <TextBlock Text="Delete" FontSize="12" FontFamily="Consolas" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Delete" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
 
                                 <!-- Toggle Favorite -->
@@ -189,7 +189,7 @@
                                         Padding="8,4"
                                         Background="{DynamicResource ButtonBackgroundBrush}"
                                         Margin="0,8,0,0">
-                                    <TextBlock Text="Ctrl+D" FontSize="12" FontFamily="Consolas" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Ctrl+D" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
                             </Grid>
                         </StackPanel>
@@ -203,7 +203,7 @@
                             Background="{DynamicResource CardBackgroundBrush}">
                         <StackPanel Spacing="12">
                             <TextBlock Text="Navigation"
-                                       FontSize="16"
+                                       FontSize="{StaticResource Type.H4.Size}"
                                        FontWeight="SemiBold"/>
                             
                             <Grid ColumnDefinitions="*,Auto,120" RowDefinitions="Auto,Auto,Auto,Auto" Margin="0,10,0,0">
@@ -216,7 +216,7 @@
                                         CornerRadius="{DynamicResource Radius.Sm}"
                                         Padding="8,4"
                                         Background="{DynamicResource ButtonBackgroundBrush}">
-                                    <TextBlock Text="↓ / Tab" FontSize="12" FontFamily="Consolas" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="↓ / Tab" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
 
                                 <!-- Previous Entry -->
@@ -229,7 +229,7 @@
                                         Padding="8,4"
                                         Background="{DynamicResource ButtonBackgroundBrush}"
                                         Margin="0,8,0,0">
-                                    <TextBlock Text="↑ / Shift+Tab" FontSize="12" FontFamily="Consolas" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="↑ / Shift+Tab" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
 
                                 <!-- Jump to Search -->
@@ -242,7 +242,7 @@
                                         Padding="8,4"
                                         Background="{DynamicResource ButtonBackgroundBrush}"
                                         Margin="0,8,0,0">
-                                    <TextBlock Text="/" FontSize="12" FontFamily="Consolas" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="/" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
 
                                 <!-- Close Dialog -->
@@ -255,7 +255,7 @@
                                         Padding="8,4"
                                         Background="{DynamicResource ButtonBackgroundBrush}"
                                         Margin="0,8,0,0">
-                                    <TextBlock Text="Esc" FontSize="12" FontFamily="Consolas" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Esc" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
                             </Grid>
                         </StackPanel>
@@ -269,7 +269,7 @@
                             Background="{DynamicResource CardBackgroundBrush}">
                         <StackPanel Spacing="12">
                             <TextBlock Text="View Options"
-                                       FontSize="16"
+                                       FontSize="{StaticResource Type.H4.Size}"
                                        FontWeight="SemiBold"/>
                             
                             <Grid ColumnDefinitions="*,Auto,120" RowDefinitions="Auto,Auto,Auto" Margin="0,10,0,0">
@@ -282,7 +282,7 @@
                                         CornerRadius="{DynamicResource Radius.Sm}"
                                         Padding="8,4"
                                         Background="{DynamicResource ButtonBackgroundBrush}">
-                                    <TextBlock Text="Ctrl+G" FontSize="12" FontFamily="Consolas" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Ctrl+G" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
 
                                 <!-- Show Favorites -->
@@ -295,7 +295,7 @@
                                         Padding="8,4"
                                         Background="{DynamicResource ButtonBackgroundBrush}"
                                         Margin="0,8,0,0">
-                                    <TextBlock Text="Ctrl+Shift+F" FontSize="12" FontFamily="Consolas" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Ctrl+Shift+F" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
 
                                 <!-- Toggle Theme -->
@@ -308,7 +308,7 @@
                                         Padding="8,4"
                                         Background="{DynamicResource ButtonBackgroundBrush}"
                                         Margin="0,8,0,0">
-                                    <TextBlock Text="Ctrl+T" FontSize="12" FontFamily="Consolas" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Ctrl+T" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
                             </Grid>
                         </StackPanel>
@@ -321,9 +321,9 @@
                             Padding="15"
                             Background="{DynamicResource InfoBackgroundBrush}">
                         <StackPanel Spacing="8">
-                            <TextBlock Text="💡 Tip" FontSize="14" FontWeight="SemiBold"/>
+                            <TextBlock Text="💡 Tip" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold"/>
                             <TextBlock Text="Keyboard shortcuts can be customized in a future update. These are the default shortcuts for quick access to common features."
-                                       FontSize="12"
+                                       FontSize="{StaticResource Type.Small.Size}"
                                        TextWrapping="Wrap"
                                        Foreground="{DynamicResource SecondaryTextBrush}"/>
                         </StackPanel>

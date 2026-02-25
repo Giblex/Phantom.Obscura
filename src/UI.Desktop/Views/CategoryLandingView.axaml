@@ -8,8 +8,8 @@
              x:DataType="vm:CategoryLandingViewModel">
     
     <UserControl.Resources>
-        <SolidColorBrush x:Key="TileBackgroundBrush" Color="#2A2A3E" Opacity="0.6"/>
-        <SolidColorBrush x:Key="TileHoverBrush" Color="#2A2A3E" Opacity="0.8"/>
+        <SolidColorBrush x:Key="TileBackgroundBrush" Color="{DynamicResource ControlBackgroundColor}" Opacity="0.6"/>
+        <SolidColorBrush x:Key="TileHoverBrush" Color="{DynamicResource ControlBackgroundColor}" Opacity="0.8"/>
     </UserControl.Resources>
     
     <Grid>
@@ -20,9 +20,9 @@
                 
                 <!-- Page Title -->
                 <TextBlock Text="Passwords"
-                           FontSize="36"
+                           FontSize="{StaticResource Type.Banner.Size}"
                            FontWeight="Bold"
-                           Foreground="White"
+                           Foreground="{DynamicResource PrimaryTextBrush}"
                            HorizontalAlignment="Center"
                            Margin="0,0,0,30"/>
                 
@@ -40,7 +40,7 @@
                     <DataTemplate x:DataType="vm:CategoryTileViewModel">
                         <Button Command="{Binding $parent[UserControl].DataContext.NavigateToCategoryCommand}"
                                 CommandParameter="{Binding FilterType}"
-                                Background="{StaticResource TileBackgroundBrush}"
+                                Background="{DynamicResource CardBackgroundBrush}"
                                 BorderThickness="0"
                                 CornerRadius="12"
                                 Padding="0"
@@ -67,7 +67,7 @@
                                             Background="{Binding Color}">
                                         
                                         <TextBlock Text="{Binding Icon}"
-                                                   FontSize="24"
+                                                   FontSize="{StaticResource Type.H2.Size}"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"/>
                                     </Border>
@@ -75,18 +75,18 @@
                                     <!-- Category Name -->
                                     <TextBlock Grid.Column="1"
                                                Text="{Binding Name}"
-                                               FontSize="18"
+                                               FontSize="{StaticResource Type.H3.Size}"
                                                FontWeight="SemiBold"
-                                               Foreground="White"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"
                                                VerticalAlignment="Center"
                                                Margin="16,0,0,0"/>
                                     
                                     <!-- Count -->
                                     <TextBlock Grid.Column="2"
                                                Text="{Binding Count}"
-                                               FontSize="28"
+                                               FontSize="{StaticResource Type.XL.Size}"
                                                FontWeight="Light"
-                                               Foreground="White"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"
                                                Opacity="0.6"
                                                VerticalAlignment="Center"/>
                                 </Grid>

@@ -26,6 +26,8 @@ namespace PhantomVault.UI.ViewModels
         private static readonly LinkedList<string> _lru = new();
         private static int _capacity = 200; // tuneable; limits number of in-memory bitmaps
 
+        private static readonly HashSet<string> _svgExtensions = new(StringComparer.OrdinalIgnoreCase) { ".svg" };
+
         public static int Capacity
         {
             get => _capacity;
@@ -54,23 +56,82 @@ namespace PhantomVault.UI.ViewModels
                 }
             }
 
-            // We intentionally construct the bitmap on the calling thread (usually the UI thread).
             try
             {
-                Debug.WriteLine($"[ICON-BITMAP-CACHE] Loading bitmap: {path}");
-                var newBmp = new Avalonia.Media.Imaging.Bitmap(path);
-                lock (_sync)
+                Avalonia.Media.Imaging.Bitmap? newBmp = null;
+                var ext = Path.GetExtension(path);
+
+                if (_svgExtensions.Contains(ext))
                 {
-                    _cache[path] = newBmp;
-                    _lru.AddFirst(path);
-                    EvictAsNecessary();
+                    newBmp = LoadSvgAsBitmap(path);
                 }
-                Debug.WriteLine($"[ICON-BITMAP-CACHE] Successfully loaded: {path}");
+                else
+                {
+                    newBmp = new Avalonia.Media.Imaging.Bitmap(path);
+                }
+
+                if (newBmp != null)
+                {
+                    lock (_sync)
+                    {
+                        _cache[path] = newBmp;
+                        _lru.AddFirst(path);
+                        EvictAsNecessary();
+                    }
+                }
                 return newBmp;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"[ICON-BITMAP-CACHE] ERROR loading {path}: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Loads an SVG file and rasterizes it to an Avalonia Bitmap using SkiaSharp.
+        /// </summary>
+        private static Avalonia.Media.Imaging.Bitmap? LoadSvgAsBitmap(string path)
+        {
+            try
+            {
+                using var svg = new Svg.Skia.SKSvg();
+                var picture = svg.Load(path);
+                if (picture == null) return null;
+
+                var bounds = picture.CullRect;
+                int width = Math.Max(1, (int)bounds.Width);
+                int height = Math.Max(1, (int)bounds.Height);
+
+                // Clamp to a reasonable size for thumbnails
+                if (width > 256 || height > 256)
+                {
+                    float scale = 256f / Math.Max(width, height);
+                    width = Math.Max(1, (int)(width * scale));
+                    height = Math.Max(1, (int)(height * scale));
+                }
+
+                using var skBitmap = new SkiaSharp.SKBitmap(width, height);
+                using var canvas = new SkiaSharp.SKCanvas(skBitmap);
+                canvas.Clear(SkiaSharp.SKColors.Transparent);
+                // Scale to fit
+                float scaleX = width / bounds.Width;
+                float scaleY = height / bounds.Height;
+                float s = Math.Min(scaleX, scaleY);
+                canvas.Translate((width - bounds.Width * s) / 2f, (height - bounds.Height * s) / 2f);
+                canvas.Scale(s, s);
+                canvas.Translate(-bounds.Left, -bounds.Top);
+                canvas.DrawPicture(picture);
+                canvas.Flush();
+
+                using var image = SkiaSharp.SKImage.FromBitmap(skBitmap);
+                using var data = image.Encode(SkiaSharp.SKEncodedImageFormat.Png, 100);
+                using var stream = data.AsStream();
+                return new Avalonia.Media.Imaging.Bitmap(stream);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[ICON-BITMAP-CACHE] SVG render failed for {path}: {ex.Message}");
                 return null;
             }
         }
@@ -140,6 +201,7 @@ namespace PhantomVault.UI.ViewModels
             DownloadFlatIconsCommand = ReactiveCommand.CreateFromTask(DownloadFlatIconsAsync);
             CloseCommand = ReactiveCommand.Create(Close);
             SelectIconCommand = ReactiveCommand.Create<IconFileEntryViewModel?>(SelectIcon);
+            HandleIconClickCommand = ReactiveCommand.Create<IconFileEntryViewModel?>(HandleIconClick);
             ToggleGridViewCommand = ReactiveCommand.Create(() => { IsGridView = !IsGridView; });
             PrevPageCommand = ReactiveCommand.Create(() => MovePage(-1), this.WhenAnyValue(vm => vm.PageIndex, idx => idx > 0));
             NextPageCommand = ReactiveCommand.Create(() => MovePage(1), this.WhenAnyValue(vm => vm.PageIndex, idx => idx < TotalPages - 1));
@@ -165,6 +227,8 @@ namespace PhantomVault.UI.ViewModels
 
         public ObservableCollection<IconFileEntryViewModel> Icons { get; }
         public ObservableCollection<IconFileEntryViewModel> TopIcons { get; } = new ObservableCollection<IconFileEntryViewModel>();
+        public ObservableCollection<IconSectionViewModel> Sections { get; } = new();
+        public ObservableCollection<IconSectionViewModel> FilteredSections { get; } = new();
         public ObservableCollection<IconFileEntryViewModel> VariantIcons { get; } = new ObservableCollection<IconFileEntryViewModel>();
         private IconFileEntryViewModel? _variantOwnerIcon;
         public IconFileEntryViewModel? VariantOwnerIcon { get => _variantOwnerIcon; set => this.RaiseAndSetIfChanged(ref _variantOwnerIcon, value); }
@@ -212,6 +276,7 @@ namespace PhantomVault.UI.ViewModels
         }
 
         public int FilteredIconCount => Icons.Count;
+        public int TotalIconCount => Sections.Sum(s => s.TotalCount);
 
         public ReactiveCommand<Unit, Unit> RefreshCommand { get; }
         public ReactiveCommand<Unit, Unit> ImportIconCommand { get; }
@@ -227,6 +292,7 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<int, Unit> SetPageSizeCommand { get; }
         public ReactiveCommand<IconFileEntryViewModel, Unit> ShowVariantsCommand { get; }
         public ReactiveCommand<IconFileEntryViewModel, Unit> ApplyVariantToCategoryCommand { get; }
+        public ReactiveCommand<IconFileEntryViewModel?, Unit> HandleIconClickCommand { get; }
 
         public void SetOwnerWindow(Window window, Window? callingOwner = null)
         {
@@ -320,104 +386,62 @@ namespace PhantomVault.UI.ViewModels
                     }
                 }
 
-                Debug.WriteLine($"[ICON-MANAGER] Directory exists: {Directory.Exists(_iconManager.IconsDirectory)}");
-
-                IconFileInfo[] icons;
+                // Fast scan: enumerate top-level categories (not individual subfolders)
+                IconCategoryInfo[] categories;
                 try
                 {
-                    icons = await Task.Run(() => _iconManager.GetIconFiles());
+                    categories = await Task.Run(() => _iconManager.GetIconCategories());
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"[ICON-MANAGER] Error scanning icons: {ex.Message}");
+                    Debug.WriteLine($"[ICON-MANAGER] Error scanning categories: {ex.Message}");
                     StatusMessage = $"Error scanning icons: {ex.Message}";
                     IsBusy = false;
                     return;
                 }
 
-                Debug.WriteLine($"[ICON-MANAGER] Found {icons.Length} icon files");
-
-                // Pre-compute hashes off the UI thread to avoid blocking
-                var iconViewModels = new List<IconFileEntryViewModel>();
-                var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-                await Task.Run(() =>
-                {
-                    foreach (var icon in icons)
-                    {
-                        // Compute content hash for durable deduplication
-                        string hash;
-                        try
-                        {
-                            hash = ComputeFileHash(icon.FullPath);
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.WriteLine($"[ICON-MANAGER] Hash computation failed for {icon.FullPath}: {ex.Message}");
-                            // If hash fails, fallback to defensive dedupe key from name+size
-                            hash = $"{icon.Name.ToLowerInvariant()}|{icon.SizeBytes}";
-                        }
-
-                        if (seen.Contains(hash)) continue;
-                        var vm = new IconFileEntryViewModel(icon) { Hash = hash };
-                        // skip excluded keywords (bank/payment/logo)
-                        if (IsExcluded(vm)) continue;
-                        seen.Add(hash);
-                        iconViewModels.Add(vm);
-                    }
-                });
+                Debug.WriteLine($"[ICON-MANAGER] Found {categories.Length} icon categories");
 
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
+                    Sections.Clear();
+                    FilteredSections.Clear();
                     _allIcons.Clear();
-                    foreach (var vm in iconViewModels)
-                    {
-                        _allIcons.Add(vm);
-                    }
-
-                    ApplyFilter();
-                    PageIndex = 0; // reset to the first page on refresh
-                    // populate a small set of top icons for the thumbnail preview to avoid creating thousands of controls
+                    Icons.Clear();
                     TopIcons.Clear();
-                });
+                    PagedIcons.Clear();
 
-                // Build folder-based TopIcons set off the UI thread
-                var topIconsList = new List<IconFileEntryViewModel>();
-                await Task.Run(() =>
-                {
-                    // Group icons by their immediate parent folder so TopIcons shows one representative per folder
-                    var groups = iconViewModels.GroupBy(a => GetFolderKey(a), StringComparer.OrdinalIgnoreCase);
-                    // If there are PO UI icons, prefer PO UI groups first
-                    var orderedGroups = groups.OrderByDescending(g => string.Equals(g.Key, "PO UI", StringComparison.OrdinalIgnoreCase))
-                                              .ThenBy(g => g.Key, StringComparer.OrdinalIgnoreCase);
-                    // Build TopIcons but avoid showing duplicate visual content.
-                    var seenHashes = new HashSet<string>(StringComparer.Ordinal);
-                    foreach (var g in orderedGroups)
+                    int totalFiles = 0;
+                    foreach (var cat in categories)
                     {
-                        if (topIconsList.Count >= 100) break;
-                        var rep = g.FirstOrDefault();
-                        if (rep == null) continue;
-                        var key = rep.Hash;
-                        if (string.IsNullOrEmpty(key)) key = rep.FullPath?.ToLowerInvariant() ?? Guid.NewGuid().ToString();
-                        if (seenHashes.Contains(key)) continue;
-                        seenHashes.Add(key);
-                        topIconsList.Add(rep);
+                        var section = new IconSectionViewModel(
+                            cat.Name,
+                            cat.FullPath,
+                            cat.RelativePath,
+                            cat.FileCount,
+                            cat.SubfolderCount,
+                            cat.IsVariantCategory,
+                            _iconManager,
+                            IsExcluded);
+                        section.OnLoaded = OnSectionLoaded;
+                        section.OnVariantClicked = HandleVariantClicked;
+                        section.OnIconSelected = HandleIconSelected;
+                        Sections.Add(section);
+                        FilteredSections.Add(section);
+                        totalFiles += cat.FileCount;
                     }
-                });
 
-                await Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    foreach (var icon in topIconsList)
-                    {
-                        TopIcons.Add(icon);
-                    }
-                    Debug.WriteLine($"[ICON-MANAGER] TopIcons: {TopIcons.Count} items");
-                    StatusMessage = _allIcons.Count == 0
+                    this.RaisePropertyChanged(nameof(TotalIconCount));
+                    StatusMessage = totalFiles == 0
                         ? "No icons found. Import or download icons to get started."
-                        : $"Loaded {_allIcons.Count} icon(s).";
+                        : $"Found {totalFiles:N0} icon(s) in {Sections.Count} categories. Loading...";
                 });
-                this.RaisePropertyChanged(nameof(GridIcons));
-                Debug.WriteLine($"[ICON-MANAGER] After dedup: {_allIcons.Count} unique icon(s) (from {icons.Length} scanned)");
+
+                // Auto-expand all sections so icons are visible immediately
+                foreach (var section in Sections)
+                {
+                    await section.ExpandAsync();
+                }
             }
             catch (Exception ex)
             {
@@ -430,6 +454,85 @@ namespace PhantomVault.UI.ViewModels
             {
                 IsBusy = false;
             }
+        }
+
+        /// <summary>
+        /// Called when a section finishes loading its icons.
+        /// Rebuilds the flat _allIcons list from all loaded sections and re-applies the filter.
+        /// </summary>
+        private void OnSectionLoaded(IconSectionViewModel section)
+        {
+            Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                _allIcons.Clear();
+                foreach (var s in Sections.Where(s => s.IsLoaded))
+                {
+                    _allIcons.AddRange(s.AllIcons);
+                }
+
+                ApplyFilter();
+                StatusMessage = $"Loaded {_allIcons.Count} icon(s) from {Sections.Count(s => s.IsLoaded)}/{Sections.Count} categories.";
+                this.RaisePropertyChanged(nameof(TotalIconCount));
+            });
+        }
+
+        /// <summary>
+        /// Called when user clicks a variant-mode icon (Cat Icons).
+        /// Shows the variant popup with all color variants.
+        /// </summary>
+        private void HandleVariantClicked(IconFileEntryViewModel representative, IReadOnlyList<IconFileEntryViewModel> variants)
+        {
+            VariantIcons.Clear();
+            VariantOwnerIcon = representative;
+            foreach (var v in variants)
+                VariantIcons.Add(v);
+            SelectedVariantIndex = 0;
+            IsVariantPopupOpen = true;
+        }
+
+        /// <summary>
+        /// Called when user clicks an icon in normal mode (Entry Logos).
+        /// Selects the icon (and in dialog mode, confirms and closes).
+        /// </summary>
+        private void HandleIconSelected(IconFileEntryViewModel icon)
+        {
+            SelectIcon(icon);
+        }
+
+        /// <summary>
+        /// Unified icon click handler used by the grid view.
+        /// Finds which section owns the icon and shows variants or selects it.
+        /// </summary>
+        private void HandleIconClick(IconFileEntryViewModel? icon)
+        {
+            if (icon == null) return;
+
+            Debug.WriteLine($"[IconManager] HandleIconClick: '{icon.Name}' path='{icon.FullPath}'");
+
+            // Find which section owns this icon
+            foreach (var section in Sections)
+            {
+                if (!section.IsLoaded) continue;
+                if (!section.DisplayIcons.Contains(icon)) continue;
+
+                Debug.WriteLine($"[IconManager] Found in section '{section.Name}', IsVariantMode={section.IsVariantMode}");
+
+                if (section.IsVariantMode)
+                {
+                    var variants = section.GetVariantsFor(icon);
+                    Debug.WriteLine($"[IconManager] Got {variants.Count} variant(s) for '{icon.Name}'");
+                    HandleVariantClicked(icon, variants);
+                }
+                else
+                {
+                    SelectIcon(icon);
+                }
+                return;
+            }
+
+            // Fallback: just select it
+            Debug.WriteLine($"[IconManager] HandleIconClick: no owning section found, selecting directly");
+            SelectIcon(icon);
         }
 
         private async Task ImportIconsAsync()
@@ -659,6 +762,26 @@ namespace PhantomVault.UI.ViewModels
         private void ApplyFilter()
         {
             var search = SearchText?.Trim();
+
+            // Update FilteredSections for the section-based grid view
+            FilteredSections.Clear();
+            foreach (var section in Sections)
+            {
+                if (string.IsNullOrEmpty(search) ||
+                    section.Name.Contains(search, StringComparison.OrdinalIgnoreCase))
+                {
+                    FilteredSections.Add(section);
+                }
+                else if (section.IsLoaded &&
+                         section.AllIcons.Any(i =>
+                             i.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                             i.RelativePath.Contains(search, StringComparison.OrdinalIgnoreCase)))
+                {
+                    FilteredSections.Add(section);
+                }
+            }
+
+            // Update flat Icons list (used by DataGrid / list view)
             IEnumerable<IconFileEntryViewModel> filtered = _allIcons;
 
             if (!string.IsNullOrEmpty(search))
@@ -812,16 +935,29 @@ namespace PhantomVault.UI.ViewModels
             if (icon == null) return;
             VariantIcons.Clear();
             VariantOwnerIcon = icon;
-            // Show variants by folder: all icons that share the same parent folder as the clicked representative
+
+            // First, try to find variants from the section's variant groups (most reliable)
+            foreach (var section in Sections.Where(s => s.IsLoaded && s.IsVariantMode))
+            {
+                var sectionVariants = section.GetVariantsFor(icon);
+                if (sectionVariants.Count > 1)
+                {
+                    Debug.WriteLine($"[ICON-MANAGER] ShowVariantsForIcon: found {sectionVariants.Count} variants from section '{section.Name}'");
+                    foreach (var v in sectionVariants)
+                        VariantIcons.Add(v);
+                    SelectedVariantIndex = 0;
+                    IsVariantPopupOpen = true;
+                    return;
+                }
+            }
+
+            // Fallback: search _allIcons by folder key (for non-variant sections or unmatched icons)
             var folderKey = GetFolderKey(icon);
             var variants = _allIcons.Where(a => string.Equals(GetFolderKey(a), folderKey, StringComparison.OrdinalIgnoreCase)).ToList();
-            // If no variants found (rare), fall back to exact match only
             if (!variants.Any()) variants.Add(icon);
+            Debug.WriteLine($"[ICON-MANAGER] ShowVariantsForIcon: fallback found {variants.Count} variants by folder key '{folderKey}'");
             foreach (var v in variants)
-            {
                 VariantIcons.Add(v);
-            }
-            // Default selection on first variant
             SelectedVariantIndex = 0;
             IsVariantPopupOpen = true;
         }
@@ -867,68 +1003,22 @@ namespace PhantomVault.UI.ViewModels
             if (variant == null) return;
             try
             {
-                // Ask for confirmation. Prefer the window that launched the icon manager (callingOwner),
-                // otherwise fall back to the icon manager window itself.
-                var dialogOwner = _callingOwnerWindow ?? _ownerWindow;
 #if DEBUG
-                System.Diagnostics.Debug.WriteLine($"[ICON-MGR] ApplyVariant: dialogOwner={dialogOwner?.GetType().Name ?? "null"}, variant={variant.Name}");
+                System.Diagnostics.Debug.WriteLine($"[ICON-MGR] ApplyVariant: variant={variant.Name}, path={variant.FullPath}");
 #endif
-                var confirm = await _dialogService.ShowConfirmationAsync("Apply Icon to Category", $"Apply '{variant.Name}' as category icon?", dialogOwner);
-                if (!confirm) return;
+                // Close the variant popup
+                IsVariantPopupOpen = false;
 
-                // If the launcher (calling owner) is a CategoryManagerWindow, prefer its selected category
-                var cm = _callingOwnerWindow?.DataContext as CategoryManagerViewModel ?? _ownerWindow?.Owner?.DataContext as CategoryManagerViewModel;
-                if (cm != null)
-                {
-                    var selected = cm.Categories.FirstOrDefault(c => c.IsSelected);
-                    if (selected == null)
-                    {
-                        // Ask user to choose a category
-                        var names = cm.Categories.Select(c => c.Name).ToList();
-                        var chosen = await _dialogService.ShowSelectCategoryAsync(names, "Choose category to apply icon:", dialogOwner);
-                        if (!string.IsNullOrEmpty(chosen)) selected = cm.Categories.FirstOrDefault(c => string.Equals(c.Name, chosen, StringComparison.OrdinalIgnoreCase));
-                    }
+                // Set the confirmed icon path so the caller receives the selection
+                SelectedIcon = variant;
+                ConfirmedIconPath = variant.FullPath;
 
-                    if (selected != null)
-                    {
-#if DEBUG
-                        System.Diagnostics.Debug.WriteLine($"[ICON-MGR] ApplyVariant: applying to category '{selected.Name}' -> {variant.FullPath}");
-#endif
-                        // Apply the absolute path to the category icon property
-                        selected.Icon = variant.FullPath;
-                        // Persist for this category
-                        cm.SaveCategoryCommand.Execute(selected).Subscribe();
-                        // Close popup
-                        IsVariantPopupOpen = false;
-                        return;
-                    }
-                }
-
-                // If not in category manager, fall back to vault view
-                if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null && desktop.MainWindow.DataContext is VaultViewModel vm)
-                {
-                    var names = vm.Categories.Select(c => c.Name).ToList();
-                    var chosen = await _dialogService.ShowSelectCategoryAsync(names, "Choose category to apply icon:", dialogOwner);
-                    if (!string.IsNullOrEmpty(chosen))
-                    {
-                        var cat = vm.Categories.FirstOrDefault(c => string.Equals(c.Name, chosen, StringComparison.OrdinalIgnoreCase));
-                        if (cat != null)
-                        {
-#if DEBUG
-                            System.Diagnostics.Debug.WriteLine($"[ICON-MGR] ApplyVariant: applying to category '{cat.Name}' -> {variant.FullPath}");
-#endif
-                            cat.Icon = variant.FullPath;
-                        }
-                    }
-                }
+                // Close the icon manager window
+                _ownerWindow?.Close();
             }
             catch (Exception ex)
             {
                 await _dialogService.ShowErrorAsync("Apply Icon", ex.Message, _ownerWindow);
-            }
-            finally
-            {
-                IsVariantPopupOpen = false;
             }
         }
 

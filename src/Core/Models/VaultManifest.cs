@@ -32,27 +32,7 @@ namespace PhantomVault.Core.Models
         [JsonPropertyName("containerPath")]
         public string ContainerPath { get; set; } = string.Empty;
 
-        /// <summary>
-        /// When true, the vault uses a VeraCrypt outer container and
-        /// <see cref="ContainerPath"/> points to that container file. When
-        /// false, the vault stores the encrypted database directly on disk
-        /// and <see cref="ContainerPath"/> points to the inner
-        /// zero-knowledge encrypted file (e.g., vault.pvault).
-        /// </summary>
-        [JsonPropertyName("useVeraCrypt")]
-        public bool UseVeraCrypt { get; set; } = true;
 
-        /// <summary>
-        /// Auto-generated VeraCrypt password stored encrypted in the manifest.
-        /// When the user doesn't provide a password during provisioning, the app
-        /// generates a cryptographically secure random password for the VeraCrypt
-        /// container, encrypts it with the manifest encryption key, and stores it here.
-        /// This allows transparent VeraCrypt usage without requiring user password entry.
-        /// The value is Base64-encoded encrypted data containing nonce, tag, and ciphertext.
-        /// </summary>
-        [JsonPropertyName("veraCryptPasswordEncrypted")]
-        public string? VeraCryptPasswordEncryptedBase64 { get; set; }
-            = null;
 
         /// <summary>
         /// Size of the container in bytes. This field is recorded only to
@@ -388,6 +368,25 @@ namespace PhantomVault.Core.Models
 
         [JsonPropertyName("keyRotationPending")]
         public bool KeyRotationPending { get; set; } = false;
+
+        /// <summary>
+        /// Monotonic counter incremented on every manifest write. This value is included
+        /// in the AEAD authenticated data and integrity signature to prevent rollback
+        /// attacks. Before accepting a decrypted manifest, the application must verify
+        /// that this counter is strictly greater than or equal to the last known value.
+        /// Replaying an older manifest with a lower counter value must be rejected.
+        /// </summary>
+        [JsonPropertyName("manifestSequence")]
+        public long ManifestSequence { get; set; } = 0;
+
+        /// <summary>
+        /// SHA-256 hash of the active security policy at the time this manifest was
+        /// last written. Included in authenticated data to cryptographically bind the
+        /// manifest to its policy. If the policy hash does not match the current policy,
+        /// the manifest must be rejected to prevent policy downgrade attacks.
+        /// </summary>
+        [JsonPropertyName("policyHash")]
+        public string? PolicyHashBase64 { get; set; } = null;
 
         /// <summary>
         /// Optional HMAC-SHA256 signature of critical manifest fields for additional integrity

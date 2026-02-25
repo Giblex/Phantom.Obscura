@@ -1,4 +1,5 @@
 using System;
+using System.Reactive.Disposables;
 using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
@@ -161,6 +162,7 @@ public partial class LiquidGlassButton : UserControl
     private Button? _btn;
     private ScaleTransform? _scaleTransform;
     private DispatcherTimer? _physicsTimer;
+    private readonly CompositeDisposable _subscriptions = new();
 
     // Sheen inertia (velocity-based smoothing)
     private double _sheenVx, _sheenVy;
@@ -181,18 +183,26 @@ public partial class LiquidGlassButton : UserControl
     private double _currentBorderOpacity = 0.5;
     private double _targetBorderOpacity = 0.5;
 
-    // Timing constants (in seconds, converted to frames at 60fps)
-    private const double HoverInDuration = 0.14;   // 140ms
-    private const double PressDuration = 0.07;      // 70ms
-    private const double ReleaseDuration = 0.20;    // 200ms
+    // Physics profiles: Default for full motion, Reduced for accessibility
+    private record PhysicsProfile(
+        double SheenStiffness, double SheenDamping,
+        double ScaleStiffness, double ScaleDamping,
+        double WobbleAmplitude, double WobbleFrequency);
 
-    // Physics constants
-    private const double SheenStiffness = 0.12;
-    private const double SheenDamping = 0.78;
-    private const double ScaleStiffness = 0.18;
-    private const double ScaleDamping = 0.65;
-    private const double WobbleAmplitude = 0.008;
-    private const double WobbleFrequency = 3.5;
+    private static readonly PhysicsProfile DefaultPhysics = new(
+        SheenStiffness: 0.12, SheenDamping: 0.78,
+        ScaleStiffness: 0.18, ScaleDamping: 0.65,
+        WobbleAmplitude: 0.008, WobbleFrequency: 3.5);
+
+    private static readonly PhysicsProfile ReducedPhysics = new(
+        SheenStiffness: 0.25, SheenDamping: 0.90,
+        ScaleStiffness: 0.30, ScaleDamping: 0.85,
+        WobbleAmplitude: 0.0, WobbleFrequency: 0.0);
+
+    private PhysicsProfile _physics = DefaultPhysics;
+
+    // Settling threshold — when all velocities/deltas are below this, stop the timer
+    private const double SettleEpsilon = 0.001;
 
     public LiquidGlassButton()
     {
@@ -226,31 +236,58 @@ public partial class LiquidGlassButton : UserControl
         _btn.PointerPressed += OnPointerPressed;
         _btn.PointerReleased += OnPointerReleased;
 
-        // Start physics simulation timer (~60fps)
+        // Create physics simulation timer (~60fps) but don't start until needed.
+        // When ReduceMotion is preferred, skip the physics timer entirely.
         _physicsTimer = new DispatcherTimer
         {
             Interval = TimeSpan.FromMilliseconds(16)
         };
         _physicsTimer.Tick += OnPhysicsTick;
-        _physicsTimer.Start();
+        // Timer starts on-demand via EnsurePhysicsRunning() when pointer enters
+    }
+
+    /// <summary>
+    /// Starts the physics timer if it's not already running (and ReduceMotion is off).
+    /// </summary>
+    private void EnsurePhysicsRunning()
+    {
+        if (ShouldReduceMotion()) return;
+        if (_physicsTimer is { IsEnabled: false })
+            _physicsTimer.Start();
     }
 
     private void SetupPropertyBindings()
     {
         if (_btn == null) return;
 
-        this.GetObservable(ButtonContentProperty).Subscribe(content => _btn.Content = content);
-        this.GetObservable(ButtonContentTemplateProperty).Subscribe(template => _btn.ContentTemplate = template);
-        this.GetObservable(IsPrimaryProperty).Subscribe(isPrimary =>
-        {
-            if (isPrimary) _btn.Classes.Add("primary");
-            else _btn.Classes.Remove("primary");
-        });
-        this.GetObservable(WidthOverrideProperty).Subscribe(w => _btn.Width = double.IsNaN(w) ? double.NaN : w);
-        this.GetObservable(HeightOverrideProperty).Subscribe(h => _btn.Height = double.IsNaN(h) ? double.NaN : h);
-        this.GetObservable(CornerRadiusValueProperty).Subscribe(cr => _btn.CornerRadius = new CornerRadius(cr));
-        this.GetObservable(PaddingOverrideProperty).Subscribe(p => _btn.Padding = p);
-        this.GetObservable(ToolTipTextProperty).Subscribe(tip => ToolTip.SetTip(_btn, tip));
+        this.GetObservable(ButtonContentProperty)
+            .Subscribe(content => _btn!.Content = content)
+            .DisposeWith(_subscriptions);
+        this.GetObservable(ButtonContentTemplateProperty)
+            .Subscribe(template => _btn!.ContentTemplate = template)
+            .DisposeWith(_subscriptions);
+        this.GetObservable(IsPrimaryProperty)
+            .Subscribe(isPrimary =>
+            {
+                if (isPrimary) _btn!.Classes.Add("primary");
+                else _btn!.Classes.Remove("primary");
+            })
+            .DisposeWith(_subscriptions);
+        this.GetObservable(WidthOverrideProperty)
+            .Subscribe(w => _btn!.Width = double.IsNaN(w) ? double.NaN : w)
+            .DisposeWith(_subscriptions);
+        this.GetObservable(HeightOverrideProperty)
+            .Subscribe(h => _btn!.Height = double.IsNaN(h) ? double.NaN : h)
+            .DisposeWith(_subscriptions);
+        this.GetObservable(CornerRadiusValueProperty)
+            .Subscribe(cr => _btn!.CornerRadius = new CornerRadius(cr))
+            .DisposeWith(_subscriptions);
+        this.GetObservable(PaddingOverrideProperty)
+            .Subscribe(p => _btn!.Padding = p)
+            .DisposeWith(_subscriptions);
+        this.GetObservable(ToolTipTextProperty)
+            .Subscribe(tip => ToolTip.SetTip(_btn!, tip))
+            .DisposeWith(_subscriptions);
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -265,6 +302,13 @@ public partial class LiquidGlassButton : UserControl
         // Micro-inflate on hover (1.0 → 1.03)
         _targetScale = 1.03;
         _targetBorderOpacity = 0.65;
+
+        if (ShouldReduceMotion())
+        {
+            ApplyScaleImmediate(_targetScale);
+            return;
+        }
+        EnsurePhysicsRunning();
     }
 
     private void OnPointerExited(object? sender, PointerEventArgs e)
@@ -277,10 +321,18 @@ public partial class LiquidGlassButton : UserControl
         _targetSheenX = 0;
         _targetSheenY = 0;
         _targetBorderOpacity = 0.5;
+
+        if (ShouldReduceMotion())
+        {
+            ApplyScaleImmediate(_targetScale);
+            return;
+        }
+        EnsurePhysicsRunning();
     }
 
     private void OnPointerMoved(object? sender, PointerEventArgs e)
     {
+        if (ShouldReduceMotion()) return;
         if (_btn == null || _btn.Bounds.Width <= 1 || _btn.Bounds.Height <= 1) return;
 
         var p = e.GetPosition(_btn);
@@ -298,8 +350,15 @@ public partial class LiquidGlassButton : UserControl
         _targetScale = 0.97;
         _targetBorderOpacity = 0.4;
 
+        if (ShouldReduceMotion())
+        {
+            ApplyScaleImmediate(_targetScale);
+            return;
+        }
+
         // Add velocity impulse for snappy response
         _scaleVelocity = -0.08;
+        EnsurePhysicsRunning();
     }
 
     private void OnPointerReleased(object? sender, PointerReleasedEventArgs e)
@@ -317,6 +376,25 @@ public partial class LiquidGlassButton : UserControl
             _targetScale = 1.0;
         }
         _targetBorderOpacity = _isHovered ? 0.65 : 0.5;
+
+        if (ShouldReduceMotion())
+        {
+            ApplyScaleImmediate(_targetScale);
+            return;
+        }
+        EnsurePhysicsRunning();
+    }
+
+    /// <summary>
+    /// Instantly set scale without physics — used when ReduceMotion is preferred.
+    /// </summary>
+    private void ApplyScaleImmediate(double scale)
+    {
+        if (_scaleTransform == null) return;
+        _currentScale = scale;
+        _scaleVelocity = 0;
+        _scaleTransform.ScaleX = scale;
+        _scaleTransform.ScaleY = scale;
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -332,8 +410,8 @@ public partial class LiquidGlassButton : UserControl
         double sheenDx = _targetSheenX - _sheenX;
         double sheenDy = _targetSheenY - _sheenY;
 
-        _sheenVx = (_sheenVx + sheenDx * SheenStiffness) * SheenDamping;
-        _sheenVy = (_sheenVy + sheenDy * SheenStiffness) * SheenDamping;
+        _sheenVx = (_sheenVx + sheenDx * _physics.SheenStiffness) * _physics.SheenDamping;
+        _sheenVy = (_sheenVy + sheenDy * _physics.SheenStiffness) * _physics.SheenDamping;
 
         _sheenX += _sheenVx;
         _sheenY += _sheenVy;
@@ -343,7 +421,7 @@ public partial class LiquidGlassButton : UserControl
 
         // ─── Scale spring animation ───
         double scaleDelta = _targetScale - _currentScale;
-        _scaleVelocity = (_scaleVelocity + scaleDelta * ScaleStiffness) * ScaleDamping;
+        _scaleVelocity = (_scaleVelocity + scaleDelta * _physics.ScaleStiffness) * _physics.ScaleDamping;
         _currentScale += _scaleVelocity;
 
         // Clamp to ±3% as per guidelines
@@ -356,7 +434,7 @@ public partial class LiquidGlassButton : UserControl
         if (_isHovered && !_isPressed)
         {
             _wobbleTime += 0.016; // ~16ms per frame
-            double wobble = Math.Sin(_wobbleTime * WobbleFrequency * 2 * Math.PI) * WobbleAmplitude;
+            double wobble = Math.Sin(_wobbleTime * _physics.WobbleFrequency * 2 * Math.PI) * _physics.WobbleAmplitude;
 
             // Apply wobble as tiny scale variation
             _scaleTransform.ScaleX = _currentScale + wobble;
@@ -368,6 +446,33 @@ public partial class LiquidGlassButton : UserControl
 
         // Note: Border opacity would be applied via attached property if needed
         // For now the XAML handles this via :pointerover states
+
+        // ─── Idle settling: stop timer when physics are at rest ───
+        if (!_isHovered && !_isPressed)
+        {
+            bool settled = Math.Abs(_sheenVx) < SettleEpsilon
+                        && Math.Abs(_sheenVy) < SettleEpsilon
+                        && Math.Abs(_scaleVelocity) < SettleEpsilon
+                        && Math.Abs(_targetScale - _currentScale) < SettleEpsilon
+                        && Math.Abs(_targetSheenX - _sheenX) < SettleEpsilon
+                        && Math.Abs(_targetSheenY - _sheenY) < SettleEpsilon;
+            if (settled)
+            {
+                // Snap to exact rest values and stop ticking
+                _currentScale = _targetScale;
+                _sheenX = _targetSheenX;
+                _sheenY = _targetSheenY;
+                _scaleVelocity = 0;
+                _sheenVx = 0;
+                _sheenVy = 0;
+                if (_scaleTransform != null)
+                {
+                    _scaleTransform.ScaleX = _currentScale;
+                    _scaleTransform.ScaleY = _currentScale;
+                }
+                _physicsTimer?.Stop();
+            }
+        }
     }
 
     /// <summary>
@@ -382,6 +487,26 @@ public partial class LiquidGlassButton : UserControl
     protected override void OnUnloaded(RoutedEventArgs e)
     {
         base.OnUnloaded(e);
-        _physicsTimer?.Stop();
+
+        // Dispose observable subscriptions
+        _subscriptions.Dispose();
+
+        // Stop and detach physics timer
+        if (_physicsTimer != null)
+        {
+            _physicsTimer.Tick -= OnPhysicsTick;
+            _physicsTimer.Stop();
+            _physicsTimer = null;
+        }
+
+        // Unsubscribe pointer events
+        if (_btn != null)
+        {
+            _btn.PointerEntered -= OnPointerEntered;
+            _btn.PointerExited -= OnPointerExited;
+            _btn.PointerMoved -= OnPointerMoved;
+            _btn.PointerPressed -= OnPointerPressed;
+            _btn.PointerReleased -= OnPointerReleased;
+        }
     }
 }

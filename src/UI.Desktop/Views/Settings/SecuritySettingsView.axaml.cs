@@ -22,8 +22,9 @@ namespace PhantomVault.UI.Views.Settings
                 var parentWindow = this.FindAncestorOfType<Window>();
                 if (parentWindow != null)
                 {
-                    var app = (App)Avalonia.Application.Current!;
-                    var viewModel = app.Services?.GetService(typeof(TotpSettingsViewModel)) as TotpSettingsViewModel;
+                    // Explicitly create with TotpService so verification works
+                    var totpService = new PhantomVault.Core.Services.TotpService();
+                    var viewModel = new TotpSettingsViewModel(totpService);
 
                     var totpWindow = new TotpSettingsWindow
                     {

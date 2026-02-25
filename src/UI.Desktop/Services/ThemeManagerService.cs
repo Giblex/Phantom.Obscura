@@ -10,6 +10,7 @@ using Avalonia.Styling;
 using Avalonia.Themes.Fluent;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace PhantomVault.UI.Services
 {
@@ -168,11 +169,12 @@ namespace PhantomVault.UI.Services
                 
                 Log($"Removed {toRemove.Count} theme overlay(s)");
 
-                // Check if a runtime theme is active (Theme.ClassicDark, Theme.GiblexGlassNavy, etc.)
-                // If so, skip loading PhantomTheme as the runtime theme takes precedence
-                bool hasRuntimeTheme = app.Styles
-                    .OfType<StyleInclude>()
-                    .Any(s => s.Source?.OriginalString?.Contains("/Themes/Theme.") == true);
+                // Get the RuntimeThemeService to coordinate window-level theme dictionaries
+                IRuntimeThemeService? runtimeThemeService = null;
+                if (app is App phantomApp && phantomApp.Services != null)
+                {
+                    runtimeThemeService = phantomApp.Services.GetService(typeof(IRuntimeThemeService)) as IRuntimeThemeService;
+                }
 
                 // Avalonia 11.0+ uses RequestedThemeVariant property
                 string? phantomThemeUri = null;
@@ -181,27 +183,34 @@ namespace PhantomVault.UI.Services
                 {
                     case AppTheme.Light:
                         app.RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Light;
-                        phantomThemeUri = hasRuntimeTheme ? null : PHANTOM_THEME_LIGHT;
-                        Log($"Set RequestedThemeVariant to Light (RuntimeTheme active: {hasRuntimeTheme})");
+                        // ALWAYS load the light theme — it provides both Style selectors and token overrides.
+                        // Suspend the dark runtime theme from windows so our light tokens win.
+                        phantomThemeUri = PHANTOM_THEME_LIGHT;
+                        runtimeThemeService?.SuspendForLightMode();
+                        Log($"Set RequestedThemeVariant to Light — suspended runtime theme");
                         break;
                     
                     case AppTheme.Dark:
                         app.RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Dark;
-                        phantomThemeUri = hasRuntimeTheme ? null : PHANTOM_THEME_DARK;
-                        Log($"Set RequestedThemeVariant to Dark (RuntimeTheme active: {hasRuntimeTheme})");
+                        phantomThemeUri = PHANTOM_THEME_DARK;
+                        // Resume the dark runtime theme on windows so it provides dark tokens.
+                        runtimeThemeService?.ResumeForDarkMode();
+                        Log($"Set RequestedThemeVariant to Dark — resumed runtime theme");
                         break;
                     
                     case AppTheme.HighContrast:
                         // Use Dark as base with both dark PhantomTheme and high contrast overlay
                         app.RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Dark;
-                        phantomThemeUri = hasRuntimeTheme ? null : PHANTOM_THEME_DARK;
-                        Log($"Set RequestedThemeVariant to Dark/HighContrast (RuntimeTheme active: {hasRuntimeTheme})");
+                        phantomThemeUri = PHANTOM_THEME_DARK;
+                        runtimeThemeService?.ResumeForDarkMode();
+                        Log($"Set RequestedThemeVariant to Dark/HighContrast — resumed runtime theme");
                         break;
                     
                     default:
                         Log($"Unsupported theme: {theme}, defaulting to Dark");
                         app.RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Dark;
-                        phantomThemeUri = hasRuntimeTheme ? null : PHANTOM_THEME_DARK;
+                        phantomThemeUri = PHANTOM_THEME_DARK;
+                        runtimeThemeService?.ResumeForDarkMode();
                         break;
                 }
 
