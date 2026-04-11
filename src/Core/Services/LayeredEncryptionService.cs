@@ -112,7 +112,7 @@ namespace PhantomVault.Core.Services
 
                 if (level == SecurityLevel.Sensitive)
                 {
-                    var layer3Key = DeriveLayerKey(masterKey, salt, "Layer3");
+                    var layer3Key = DeriveLayerKey(masterKey, salt, "Layer3-AES-CBC");
                     var layer3Result = EncryptAesCbc(currentData, layer3Key, out byte[] iv3);
                     result.IV3 = iv3;
                     result.Ciphertext = layer3Result;

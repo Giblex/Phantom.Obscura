@@ -19,8 +19,12 @@
                            FontSize="{StaticResource Type.Body.Size}" 
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
-                <TextBlock Text="Import credentials from other password managers (CSV, KeePass, Bitwarden, LastPass, 1Password, Chrome, Edge, Firefox)" 
+                <TextBlock Text="Import from Obscura JSON, generic CSV, KeePass XML, KeePass KDBX, Bitwarden, 1Password CSV, Proton Pass JSON, LastPass CSV, and browser CSV exports." 
                            FontSize="{StaticResource Type.Small.Size}" 
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
+                <TextBlock Text="KDBX import prompts for the database password or keyfile in the import flow. Duplicate review happens before new credentials are added."
+                           FontSize="{StaticResource Type.Tiny.Size}"
                            Foreground="{DynamicResource MutedTextBrush}"
                            TextWrapping="Wrap"/>
                 <Button Command="{Binding $parent[Window].DataContext.OpenImportWindowCommand}"
@@ -46,7 +50,7 @@
                            FontSize="{StaticResource Type.Body.Size}" 
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
-                <TextBlock Text="Export your vault data to portable formats for backup or migration" 
+                <TextBlock Text="Export your vault data to portable JSON, CSV, or KeePass XML files for backup or migration." 
                            FontSize="{StaticResource Type.Small.Size}" 
                            Foreground="{DynamicResource MutedTextBrush}"
                            TextWrapping="Wrap"/>
@@ -70,7 +74,7 @@
                             Classes="liquid-glass"
                             HorizontalAlignment="Stretch"
                             Height="40">
-                        <TextBlock Text="Export KeePass" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Text="Export KeePass XML" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Button>
                 </Grid>
                 <TextBlock Text="⚠ Exported files contain unencrypted passwords. Store them securely!" 
@@ -82,5 +86,4 @@
         </Border>
     </StackPanel>
 </UserControl>
-
 

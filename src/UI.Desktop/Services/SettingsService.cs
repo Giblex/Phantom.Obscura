@@ -9,10 +9,24 @@ namespace PhantomVault.UI.Services
     {
         public bool PrivacyModeEnabled { get; set; }
         public bool RedactDiagnosticLogs { get; set; } = true;
+        public bool EnableDebugLogging { get; set; } = false;
         public bool SecureTrashEnabled { get; set; } = true;
         public bool SecureTrashAutoPurge { get; set; } = true;
         public int SecureTrashRetentionDays { get; set; } = 30;
         public int SecureTrashWipePasses { get; set; } = 3;
+        public bool SecureTrashCreateSnapshotBeforePurge { get; set; } = true;
+        public bool SecureTrashPromptBeforeDeletion { get; set; } = true;
+        public bool SecureTrashAutoEmptyOnClose { get; set; } = false;
+        public int SecureTrashErasureMethod { get; set; } = 2;
+        public bool SecureTrashDuplicateDetectionEnabled { get; set; } = false;
+        public bool SecureTrashAutoDeleteDuplicates { get; set; } = false;
+        public int SecureTrashDuplicateScanFrequency { get; set; } = 3;
+        public bool BackupAutomationEnabled { get; set; } = false;
+        public int BackupFrequencyMode { get; set; } = 0;
+        public string BackupLocation { get; set; } = string.Empty;
+        public bool BackupUseEncryption { get; set; } = true;
+        public int BackupRetentionCount { get; set; } = 2;
+        public DateTimeOffset? LastAutomatedBackupUtc { get; set; }
         public double RenderScale { get; set; } = 1.0;
         public bool IsDarkTheme { get; set; } = true;
         public int ThemeSkin { get; set; } = 0;
@@ -84,6 +98,41 @@ namespace PhantomVault.UI.Services
         public int IdleTimeoutMinutes { get; set; } = 15;
 
         /// <summary>
+        /// When true, lock the vault when the window is minimized.
+        /// </summary>
+        public bool AutoLockOnMinimize { get; set; } = false;
+
+        /// <summary>
+        /// When true, lock the vault when the Windows session is locked.
+        /// </summary>
+        public bool AutoLockOnScreenLock { get; set; } = true;
+
+        /// <summary>
+        /// When true, clear the clipboard when the vault enters its lockscreen state.
+        /// </summary>
+        public bool ClearClipboardOnLock { get; set; } = true;
+
+        /// <summary>
+        /// When true, show the vault window in a locked state until the user re-authenticates.
+        /// </summary>
+        public bool RequireUnlockToShow { get; set; } = false;
+
+        /// <summary>
+        /// Maximum failed unlock attempts before lockout. Null means unlimited.
+        /// </summary>
+        public int? MaxFailedUnlockAttempts { get; set; } = 10;
+
+        /// <summary>
+        /// Session timeout in minutes used by advanced policy preferences.
+        /// </summary>
+        public int SessionTimeoutMinutes { get; set; } = 30;
+
+        /// <summary>
+        /// Saved preference for startup hardening against remote debugging.
+        /// </summary>
+        public bool BlockRemoteDebugging { get; set; } = true;
+
+        /// <summary>
         /// Enable decoy vault protection.
         /// </summary>
         public bool EnableDecoyVault { get; set; } = false;
@@ -138,6 +187,19 @@ namespace PhantomVault.UI.Services
         public bool PreferGridView { get; set; } = false;
 
         /// <summary>
+        /// Preferred default password generator length.
+        /// </summary>
+        public int DefaultPasswordLength { get; set; } = 16;
+
+        /// <summary>
+        /// Preferred password generator character set toggles.
+        /// </summary>
+        public bool PasswordGeneratorIncludeUppercase { get; set; } = true;
+        public bool PasswordGeneratorIncludeLowercase { get; set; } = true;
+        public bool PasswordGeneratorIncludeNumbers { get; set; } = true;
+        public bool PasswordGeneratorIncludeSymbols { get; set; } = true;
+
+        /// <summary>
         /// When false, the Dashboard view is disabled and the app starts on the Passwords view.
         /// The sidebar Dashboard button is hidden.
         /// </summary>
@@ -179,6 +241,11 @@ namespace PhantomVault.UI.Services
         /// </summary>
         public string PreferredEncryptionProfile { get; set; } = "Advanced";
 
+        /// <summary>
+        /// Default storage/privacy tier to preselect during new-vault setup.
+        /// </summary>
+        public string DefaultVaultProtectionTier { get; set; } = "StealthSecure";
+
         // ===== Authentication Preferences =====
 
         /// <summary>
@@ -195,6 +262,12 @@ namespace PhantomVault.UI.Services
         /// Default setting for enabling Windows Hello/Passkey on new vaults.
         /// </summary>
         public bool DefaultUsePasskey { get; set; } = false;
+
+        /// <summary>
+        /// Vault unlock preference chosen during first-time setup.
+        /// Values: "Pin", "WindowsHello", "Automatic", or null if not yet configured.
+        /// </summary>
+        public string? VaultUnlockPreference { get; set; }
 
         /// <summary>
         /// Remember last authentication method used (YubiKey, Passkey, TOTP, etc.).
@@ -239,8 +312,9 @@ namespace PhantomVault.UI.Services
         public bool AutoFillAutoInputTotp { get; set; } = true;
 
         /// <summary>
-        /// When true, a "New Entry" or "Create Passkey" dialog is shown if no stored
-        /// credential matches the active login portal.
+        /// When true, the no-match dialog is shown if no stored credential matches
+        /// the active login portal. Passkey handoff is only exposed when Attestor
+        /// integration is linked.
         /// </summary>
         public bool AutoFillShowNewEntryOnNoMatch { get; set; } = true;
 
@@ -289,10 +363,99 @@ namespace PhantomVault.UI.Services
         }
     }
 
+    public sealed record SecuritySettingsSnapshot(
+        bool EnablePinLock,
+        bool UsePinLockForAutoLock,
+        bool AutoCopyTotpWithPassword,
+        bool RequireHardwareToken,
+        bool RequireKeyfile,
+        int IdleTimeoutMinutes,
+        int ClipboardClearTime,
+        bool EnableScreenshotProtection,
+        bool EnableDecoyVault,
+        int DecoyCredentialCount,
+        bool DecoyReadOnlyMode,
+        bool DecoyLogActivations);
+
+    public sealed record AdvancedSettingsSnapshot(
+        bool EnableDebugLogging,
+        bool PrivacyModeEnabled,
+        bool RedactDiagnosticLogs,
+        bool BlockRemoteDebugging,
+        int SessionTimeoutMinutes,
+        bool AutoLockOnMinimize,
+        bool AutoLockOnScreenLock,
+        bool ClearClipboardOnLock,
+        bool RequireUnlockToShow,
+        int? MaxFailedUnlockAttempts);
+
+    public sealed record VaultSettingsSnapshot(
+        bool PrivacyModeEnabled,
+        bool RedactDiagnosticLogs,
+        bool SecureTrashEnabled,
+        bool SecureTrashAutoPurge,
+        int SecureTrashRetentionDays,
+        int SecureTrashWipePasses,
+        int ClipboardClearTime,
+        bool IsDarkTheme,
+        bool PreferGridView,
+        bool DashboardEnabled,
+        bool EnableAutoFill,
+        int DefaultPasswordLength,
+        bool PasswordGeneratorIncludeUppercase,
+        bool PasswordGeneratorIncludeLowercase,
+        bool PasswordGeneratorIncludeNumbers,
+        bool PasswordGeneratorIncludeSymbols,
+        bool EnableDebugLogging);
+
+    public sealed record UserSettingsChangedEventArgs(UserSettings Settings);
+
     public static class SettingsService
     {
         private static string SettingsDir => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "PhantomVault");
         private static string SettingsPath => Path.Combine(SettingsDir, "settings.json");
+
+        public static event EventHandler<UserSettingsChangedEventArgs>? SettingsChanged;
+
+        public static int NormalizeClipboardClearTimeIndex(int index) => Math.Clamp(index, 0, 4);
+
+        public static bool IsClipboardAutoClearEnabled(int index) => NormalizeClipboardClearTimeIndex(index) < 4;
+
+        public static int GetAutoLockMinutesFromSelection(int index) => index switch
+        {
+            <= 0 => 1,
+            1 => 5,
+            2 => 15,
+            3 => 30,
+            _ => 60
+        };
+
+        public static int GetAutoLockSelectionFromMinutes(int minutes) => minutes switch
+        {
+            <= 1 => 0,
+            <= 5 => 1,
+            <= 15 => 2,
+            <= 30 => 3,
+            _ => 4
+        };
+
+        public static int? GetMaxFailedUnlockAttemptsFromSelection(int selection) => selection switch
+        {
+            0 => 3,
+            1 => 5,
+            2 => 10,
+            3 => null,
+            _ => 10
+        };
+
+        public static int GetFailedUnlockSelectionFromMaxAttempts(int? maxFailedAttempts) => maxFailedAttempts switch
+        {
+            3 => 0,
+            5 => 1,
+            10 => 2,
+            null => 3,
+            _ => 2
+        };
 
         public static UserSettings Load()
         {
@@ -318,6 +481,7 @@ namespace PhantomVault.UI.Services
                 Directory.CreateDirectory(SettingsDir);
                 var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(SettingsPath, json);
+                RaiseSettingsChanged(settings);
 #if DEBUG
                 System.Diagnostics.Debug.WriteLine($"[SettingsService] Settings saved to {SettingsPath}");
                 System.Diagnostics.Debug.WriteLine($"[SettingsService] EnableScreenshotProtection in file: {settings.EnableScreenshotProtection}");
@@ -327,6 +491,101 @@ namespace PhantomVault.UI.Services
             {
                 Log.Error(ex, "Failed to save user settings to {SettingsPath}", SettingsPath);
             }
+        }
+
+        public static UserSettings Update(Action<UserSettings> update)
+        {
+            ArgumentNullException.ThrowIfNull(update);
+
+            var settings = Load();
+            update(settings);
+            Save(settings);
+            return settings;
+        }
+
+        public static T Update<T>(Func<UserSettings, T> update)
+        {
+            ArgumentNullException.ThrowIfNull(update);
+
+            var settings = Load();
+            var result = update(settings);
+            Save(settings);
+            return result;
+        }
+
+        public static SecuritySettingsSnapshot LoadSecuritySnapshot()
+        {
+            var settings = Load();
+            return new SecuritySettingsSnapshot(
+                settings.EnablePinLock,
+                settings.UsePinLockForAutoLock,
+                settings.AutoCopyTotpWithPassword,
+                settings.RequireHardwareToken,
+                settings.RequireKeyfile,
+                settings.IdleTimeoutMinutes,
+                settings.ClipboardClearTime,
+                settings.EnableScreenshotProtection,
+                settings.EnableDecoyVault,
+                settings.DecoyCredentialCount,
+                settings.DecoyReadOnlyMode,
+                settings.DecoyLogActivations);
+        }
+
+        public static AdvancedSettingsSnapshot LoadAdvancedSnapshot()
+        {
+            var settings = Load();
+            return new AdvancedSettingsSnapshot(
+                settings.EnableDebugLogging,
+                settings.PrivacyModeEnabled,
+                settings.RedactDiagnosticLogs,
+                settings.BlockRemoteDebugging,
+                settings.SessionTimeoutMinutes,
+                settings.AutoLockOnMinimize,
+                settings.AutoLockOnScreenLock,
+                settings.ClearClipboardOnLock,
+                settings.RequireUnlockToShow,
+                settings.MaxFailedUnlockAttempts);
+        }
+
+        public static VaultSettingsSnapshot LoadVaultSnapshot()
+        {
+            var settings = Load();
+            return new VaultSettingsSnapshot(
+                settings.PrivacyModeEnabled,
+                settings.RedactDiagnosticLogs,
+                settings.SecureTrashEnabled,
+                settings.SecureTrashAutoPurge,
+                settings.SecureTrashRetentionDays,
+                settings.SecureTrashWipePasses,
+                settings.ClipboardClearTime,
+                settings.IsDarkTheme,
+                settings.PreferGridView,
+                settings.DashboardEnabled,
+                settings.EnableAutoFill,
+                settings.DefaultPasswordLength,
+                settings.PasswordGeneratorIncludeUppercase,
+                settings.PasswordGeneratorIncludeLowercase,
+                settings.PasswordGeneratorIncludeNumbers,
+                settings.PasswordGeneratorIncludeSymbols,
+                settings.EnableDebugLogging);
+        }
+
+        private static void RaiseSettingsChanged(UserSettings settings)
+        {
+            try
+            {
+                SettingsChanged?.Invoke(null, new UserSettingsChangedEventArgs(Clone(settings)));
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Failed to raise settings changed event");
+            }
+        }
+
+        private static UserSettings Clone(UserSettings settings)
+        {
+            var json = JsonSerializer.Serialize(settings);
+            return JsonSerializer.Deserialize<UserSettings>(json) ?? new UserSettings();
         }
     }
 }

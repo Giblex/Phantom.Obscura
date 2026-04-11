@@ -1,7 +1,0 @@
-<Project>
-	<Import Project="src/PhantomVault.UI/PhantomVault.UI.csproj" />
-	<Target Name="ShowResources">
-		<Message Text="AvaloniaResource: @(AvaloniaResource->'%(Identity)')" Importance="High" />
-		<Message Text="AvaloniaXaml: @(AvaloniaXaml->'%(Identity)')" Importance="High" />
-	</Target>
-</Project>

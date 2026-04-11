@@ -30,7 +30,7 @@ public static class RootTrust
         byte[] certBytes = File.ReadAllBytes(certPath);
 
         // SECURITY FIX: Dispose certificate after extracting the public key
-        using var cert = new X509Certificate2(certBytes);
+        using var cert = X509CertificateLoader.LoadCertificate(certBytes);
 
         var ecdsa = cert.GetECDsaPublicKey();
         if (ecdsa == null)
@@ -61,7 +61,7 @@ public static class RootTrust
         byte[] certBytes = memoryStream.ToArray();
 
         // SECURITY FIX: Dispose certificate after extracting the public key
-        using var cert = new X509Certificate2(certBytes);
+        using var cert = X509CertificateLoader.LoadCertificate(certBytes);
 
         var ecdsa = cert.GetECDsaPublicKey();
         if (ecdsa == null)

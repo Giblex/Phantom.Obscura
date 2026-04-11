@@ -16,6 +16,14 @@
         AutomationProperties.HelpText="This window shows the progress of unlocking your secure vault"
         Classes="animated-window">
 
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://PhantomVault.UI/Assets/Themes/PreVaultTheme.axaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
     <Window.Styles>
         <Style Selector="TextBlock">
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>

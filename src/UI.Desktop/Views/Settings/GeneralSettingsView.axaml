@@ -20,19 +20,29 @@
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
                 
                 <CheckBox Content="Start with Windows" 
+                          IsEnabled="False"
                           ToolTip.Tip="Launch PhantomVault automatically when Windows starts"/>
                 
                 <CheckBox Content="Minimize to system tray" 
+                          IsEnabled="False"
                           ToolTip.Tip="Keep PhantomVault running in background when minimized"/>
                 
                 <CheckBox Content="Check for updates automatically" 
+                          IsEnabled="False"
                           ToolTip.Tip="Automatically check for new versions on startup"/>
+
+                <TextBlock Text="Startup automation and in-app update controls are not wired in this build yet, so they are shown as unavailable instead of acting like live switches."
+                           FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
                 
                 <StackPanel Spacing="8">
                     <TextBlock Text="Default view mode:" 
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
-                    <ComboBox Width="200" HorizontalAlignment="Left">
-                        <ComboBoxItem Content="List View" IsSelected="True"/>
+                    <ComboBox Width="200"
+                              HorizontalAlignment="Left"
+                              SelectedIndex="{Binding SelectedDefaultView, Mode=TwoWay}">
+                        <ComboBoxItem Content="List View"/>
                         <ComboBoxItem Content="Grid View"/>
                     </ComboBox>
                 </StackPanel>

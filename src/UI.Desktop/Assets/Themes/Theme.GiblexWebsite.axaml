@@ -1,0 +1,424 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Giblex Light Theme — Exact match of giblex.com.au light mode -->
+    <!-- Source: style.css html.light variables -->
+
+    <!-- Light Scale (website light mode surface hierarchy) -->
+    <Color x:Key="Color.Navy900">#E5EFF2</Color>
+    <Color x:Key="Color.Navy800">#EAF3F6</Color>
+    <Color x:Key="Color.Navy700">#EEF6F8</Color>
+    <Color x:Key="Color.Navy600">#F4FAFC</Color>
+    <Color x:Key="Color.Navy500">#C8D7DE</Color>
+    <Color x:Key="Color.Navy400">#C2D1D8</Color>
+
+    <!-- Text Colors -->
+    <Color x:Key="Color.TextPrimary">#10202A</Color>
+    <Color x:Key="Color.TextMuted">#5A7280</Color>
+    <Color x:Key="Color.TextOnDark">#FFFFFF</Color>
+    <Color x:Key="Color.TextOnLight">#10202A</Color>
+
+    <!-- Accent Colors — Website teal (#138A9C / #0A7183) -->
+    <Color x:Key="Color.Accent">#138A9C</Color>
+    <Color x:Key="Color.AccentHover">#0A7183</Color>
+    <Color x:Key="Color.AccentDim">#55C3CF</Color>
+
+    <!-- Semantic Colors -->
+    <Color x:Key="Color.Success">#16A34A</Color>
+    <Color x:Key="Color.Warning">#D97706</Color>
+    <Color x:Key="Color.Danger">#DC2626</Color>
+    <Color x:Key="Color.Info">#138A9C</Color>
+
+    <!-- ═══════════════════════ LEGACY BRUSHES ═══════════════════════ -->
+
+    <!-- Surface hierarchy -->
+    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#DEF2F6"/>
+    <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#E5EFF2"/>
+    <SolidColorBrush x:Key="HeaderBorderBrush" Color="#138A9C"/>
+    <SolidColorBrush x:Key="FooterBackgroundBrush" Color="#E9F3F5"/>
+    <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#E5EFF2"/>
+    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#EFF5F7"/>
+    <SolidColorBrush x:Key="SettingsPanelBackgroundBrush" Color="#F8FBFC"/>
+    <SolidColorBrush x:Key="SettingsPanelBorderBrush" Color="#C8D7DE"/>
+    <SolidColorBrush x:Key="TileGlassBrush" Color="#F8FBFC"/>
+    <SolidColorBrush x:Key="TileGapBrush" Color="#DAE7EC"/>
+    <SolidColorBrush x:Key="TileOverlayBrush" Color="#00FFFFFF"/>
+
+    <!-- Accent ramp: website teal -->
+    <SolidColorBrush x:Key="AccentBrush" Color="#138A9C"/>
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#0A7183"/>
+    <SolidColorBrush x:Key="AccentPressedBrush" Color="#085A69"/>
+    <SolidColorBrush x:Key="AccentDimBrush" Color="#55C3CF"/>
+    <SolidColorBrush x:Key="SecondaryAccentBrush" Color="#55C3CF"/>
+    <SolidColorBrush x:Key="ButtonAccentForegroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="AccentButtonForeground" Color="#FFFFFF"/>
+
+    <!-- Logo / Branding -->
+    <SolidColorBrush x:Key="LogoTitleBrush" Color="#10202A"/>
+
+    <!-- Text hierarchy -->
+    <Color x:Key="PrimaryTextColor">#10202A</Color>
+    <SolidColorBrush x:Key="PrimaryTextBrush" Color="#10202A"/>
+    <SolidColorBrush x:Key="ControlForegroundBrush" Color="#10202A"/>
+    <SolidColorBrush x:Key="HeaderTextBrush" Color="#10202A"/>
+    <SolidColorBrush x:Key="HeaderMutedTextBrush" Color="#5A7280"/>
+    <SolidColorBrush x:Key="FooterTextBrush" Color="#10202A"/>
+    <SolidColorBrush x:Key="FooterMutedTextBrush" Color="#5A7280"/>
+    <SolidColorBrush x:Key="SecondaryTextBrush" Color="#3A5060"/>
+    <SolidColorBrush x:Key="MutedTextBrush" Color="#5A7280"/>
+    <SolidColorBrush x:Key="DisabledTextBrush" Color="#8FA0AB"/>
+
+    <!-- Header buttons -->
+    <SolidColorBrush x:Key="HeaderButtonBackgroundBrush" Color="#138A9C"/>
+    <SolidColorBrush x:Key="HeaderButtonHoverBrush" Color="#0A7183"/>
+    <SolidColorBrush x:Key="HeaderButtonPressedBrush" Color="#085A69"/>
+    <SolidColorBrush x:Key="HeaderButtonForegroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="HeaderButtonBorderBrush" Color="#138A9C"/>
+
+    <!-- Controls -->
+    <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#DAE7EC"/>
+    <SolidColorBrush x:Key="ControlHoverBrush" Color="#D2DFE4"/>
+    <SolidColorBrush x:Key="ControlBorderBrush" Color="#C8D7DE"/>
+    <SolidColorBrush x:Key="ControlFocusBorderBrush" Color="#55C3CF"/>
+    <SolidColorBrush x:Key="InputBackgroundBrush" Color="#EFF5F7"/>
+    <SolidColorBrush x:Key="InputForegroundBrush" Color="#10202A"/>
+    <SolidColorBrush x:Key="TextSelectionBrush" Color="#40138A9C"/>
+    <SolidColorBrush x:Key="TextCaretBrush" Color="#10202A"/>
+    <SolidColorBrush x:Key="OverlayBackgroundBrush" Color="#80000000"/>
+    <SolidColorBrush x:Key="ReadOnlyFieldBackgroundBrush" Color="#DAE7EC"/>
+    <SolidColorBrush x:Key="ReadOnlyFieldForegroundBrush" Color="#10202A"/>
+    <SolidColorBrush x:Key="CategoryPanelBackgroundBrush" Color="#E5EFF2"/>
+
+    <!-- High contrast border -->
+    <SolidColorBrush x:Key="HighContrastBorderBrush" Color="#00000000"/>
+
+    <!-- TextBox -->
+    <SolidColorBrush x:Key="TextBoxBackgroundBrush" Color="#EFF5F7"/>
+    <SolidColorBrush x:Key="TextBoxBackgroundHoverBrush" Color="#F4FAFC"/>
+    <SolidColorBrush x:Key="TextBoxBackgroundFocusedBrush" Color="#EFF5F7"/>
+    <SolidColorBrush x:Key="TextBoxBackgroundDisabledBrush" Color="#DAE7EC"/>
+    <SolidColorBrush x:Key="TextBoxBorderBrush" Color="#C8D7DE"/>
+    <SolidColorBrush x:Key="TextBoxBorderHoverBrush" Color="#94B0BB"/>
+    <SolidColorBrush x:Key="TextBoxBorderFocusedBrush" Color="#138A9C"/>
+    <SolidColorBrush x:Key="TextBrush" Color="#10202A"/>
+
+    <!-- Dialog -->
+    <SolidColorBrush x:Key="DialogBackgroundBrush" Color="#F8FBFC"/>
+    <SolidColorBrush x:Key="DialogBorderBrush" Color="#C8D7DE"/>
+
+    <!-- Button text -->
+    <SolidColorBrush x:Key="ButtonForegroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ButtonSecondaryForegroundBrush" Color="#10202A"/>
+    <SolidColorBrush x:Key="ButtonDisabledForegroundBrush" Color="#A8B8C2"/>
+    <SolidColorBrush x:Key="ButtonBackgroundBrush" Color="#138A9C"/>
+    <SolidColorBrush x:Key="ButtonBackgroundHoverBrush" Color="#0A7183"/>
+    <SolidColorBrush x:Key="ButtonBackgroundPressedBrush" Color="#085A69"/>
+
+    <!-- Content/card area text -->
+    <SolidColorBrush x:Key="ContentTextBrush" Color="#10202A"/>
+    <SolidColorBrush x:Key="ContentSecondaryTextBrush" Color="#3A5060"/>
+    <SolidColorBrush x:Key="ContentMutedTextBrush" Color="#8FA0AB"/>
+    <SolidColorBrush x:Key="CardTextBrush" Color="#10202A"/>
+    <SolidColorBrush x:Key="CardSecondaryTextBrush" Color="#0A7183"/>
+
+    <!-- Input text -->
+    <SolidColorBrush x:Key="InputTextBrush" Color="#10202A"/>
+    <SolidColorBrush x:Key="InputPlaceholderBrush" Color="#A8B8C2"/>
+    <SolidColorBrush x:Key="LabelTextBrush" Color="#0A7183"/>
+
+    <!-- List item text -->
+    <SolidColorBrush x:Key="ListItemTextBrush" Color="#10202A"/>
+    <SolidColorBrush x:Key="ListItemSecondaryTextBrush" Color="#8FA0AB"/>
+    <SolidColorBrush x:Key="ListItemSelectedTextBrush" Color="#10202A"/>
+
+    <SolidColorBrush x:Key="ButtonWhiteBackgroundBrush" Color="#F8FBFC"/>
+    <SolidColorBrush x:Key="SeparatorBrush" Color="#C8D7DE"/>
+    <SolidColorBrush x:Key="CardSeparatorBrush" Color="#C8D7DE"/>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#DAE7EC"/>
+
+    <!-- Sidebar filter glass -->
+    <SolidColorBrush x:Key="QuickFilterGlassBrush" Color="#00000000"/>
+    <SolidColorBrush x:Key="QuickFilterGlassHoverBrush" Color="#0C10202A"/>
+    <SolidColorBrush x:Key="QuickFilterGlassActiveBrush" Color="#14138A9C"/>
+    <SolidColorBrush x:Key="QuickFilterGlassActiveHoverBrush" Color="#1C138A9C"/>
+    <SolidColorBrush x:Key="QuickFilterGlassBorderBrush" Color="#1810202A"/>
+    <SolidColorBrush x:Key="QuickFilterGlassActiveBorderBrush" Color="#30138A9C"/>
+
+    <!-- Sidebar hover -->
+    <SolidColorBrush x:Key="SidebarItemHoverBrush" Color="#D2DFE4"/>
+    <SolidColorBrush x:Key="SidebarItemSelectedBrush" Color="#BDD0D8"/>
+
+    <!-- Status -->
+    <SolidColorBrush x:Key="SuccessBrush" Color="#16A34A"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="#D97706"/>
+    <SolidColorBrush x:Key="WarningBrushDark" Color="#E65100"/>
+    <SolidColorBrush x:Key="WarningBrushDarker" Color="#BF360C"/>
+    <SolidColorBrush x:Key="WarningIcon" Color="#FF9800"/>
+    <SolidColorBrush x:Key="ErrorBrush" Color="#DC2626"/>
+    <SolidColorBrush x:Key="SuccessBackgroundBrush" Color="#ECFDF5"/>
+    <SolidColorBrush x:Key="WarningBackgroundBrush" Color="#FFF4E5"/>
+    <SolidColorBrush x:Key="ErrorBackgroundBrush" Color="#FEF2F2"/>
+    <SolidColorBrush x:Key="InfoBackgroundBrush" Color="#EFF6FF"/>
+
+    <!-- Popup/Flyout/Dropdown -->
+    <SolidColorBrush x:Key="FlyoutPresenterBackground" Color="#F8FBFC"/>
+    <SolidColorBrush x:Key="FlyoutBorderThemeBrush" Color="#C8D7DE"/>
+    <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#F8FBFC"/>
+    <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#C8D7DE"/>
+    <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#F8FBFC"/>
+    <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="#C8D7DE"/>
+    <SolidColorBrush x:Key="SystemControlBackgroundChromeMediumLowBrush" Color="#F8FBFC"/>
+    <SolidColorBrush x:Key="SystemControlForegroundBaseHighBrush" Color="#10202A"/>
+    <SolidColorBrush x:Key="PopupBackgroundBrush" Color="#F8FBFC"/>
+    <SolidColorBrush x:Key="PopupBorderBrush" Color="#C8D7DE"/>
+
+    <!-- ComboBox items -->
+    <SolidColorBrush x:Key="ComboBoxItemBackground" Color="#F8FBFC"/>
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver" Color="#DAE7EC"/>
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundPressed" Color="#E5EFF2"/>
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected" Color="#DAE7EC"/>
+    <SolidColorBrush x:Key="ComboBoxItemForeground" Color="#10202A"/>
+    <SolidColorBrush x:Key="ComboBoxItemForegroundPointerOver" Color="#10202A"/>
+    <SolidColorBrush x:Key="ComboBoxItemForegroundPressed" Color="#10202A"/>
+    <SolidColorBrush x:Key="ComboBoxItemForegroundSelected" Color="#10202A"/>
+    <SolidColorBrush x:Key="ComboBoxItemForegroundDisabled" Color="#A8B8C2"/>
+
+    <FontFamily x:Key="MainFontFamily">Segoe UI Variable, Segoe UI</FontFamily>
+    <FontFamily x:Key="MonoFontFamily">Consolas</FontFamily>
+
+    <Color x:Key="GlobalShadowColor">#273B49</Color>
+    <Color x:Key="HeaderAccentColor">#0A7183</Color>
+
+    <!-- Shadows: cool teal-gray, light -->
+    <DropShadowEffect x:Key="DarkSubtleDropShadow" Color="#273B49" Opacity="0.06" BlurRadius="12" OffsetX="0" OffsetY="4"/>
+    <DropShadowEffect x:Key="SubtleDropShadow" Color="#10202A" Opacity="0.08" BlurRadius="18" OffsetX="0" OffsetY="6"/>
+    <DropShadowEffect x:Key="DarkButtonShadow" Color="#10202A" Opacity="0.06" BlurRadius="10" OffsetX="0" OffsetY="3"/>
+    <DropShadowEffect x:Key="DarkButtonShadowHover" Color="#10202A" Opacity="0.10" BlurRadius="16" OffsetX="0" OffsetY="5"/>
+    <DropShadowEffect x:Key="DarkButtonShadowPressed" Color="#10202A" Opacity="0.04" BlurRadius="6" OffsetX="0" OffsetY="2"/>
+    <DropShadowEffect x:Key="HoverMenuDropShadow" Color="#10202A" Opacity="0.12" BlurRadius="20" OffsetX="0" OffsetY="6"/>
+    <DropShadowEffect x:Key="TileActiveShadow" Color="#10202A" Opacity="0.12" BlurRadius="24" OffsetX="0" OffsetY="8"/>
+    <DropShadowEffect x:Key="TileActiveShadowPressed" Color="#10202A" Opacity="0.06" BlurRadius="12" OffsetX="0" OffsetY="4"/>
+    <DropShadowEffect x:Key="FrontPageTileBaseShadow" Color="#10202A" Opacity="0.08" BlurRadius="24" OffsetX="0" OffsetY="6"/>
+    <DropShadowEffect x:Key="FooterGroundedShadow" Color="#273B49" Opacity="0.08" BlurRadius="10" OffsetX="0" OffsetY="-3"/>
+
+    <BoxShadows x:Key="SlideOutPanelShadow">-12 0 24 -4 #2010202A</BoxShadows>
+    <BoxShadows x:Key="FlaggedPanelShadow">-10 0 20 -3 #1810202A</BoxShadows>
+    <BoxShadows x:Key="DetailCardShadow">0 8 30 -2 #1410202A</BoxShadows>
+    <BoxShadows x:Key="TileRestingShadow">0 2 10 0 #1010202A</BoxShadows>
+    <BoxShadows x:Key="TileHoverShadow">0 8 24 -2 #1810202A</BoxShadows>
+    <BoxShadows x:Key="TilePressedShadow">0 4 12 0 #1010202A</BoxShadows>
+
+    <!-- Liquid glass tokens (cool teal) -->
+    <Color x:Key="Glass.Tint.Light">#E5EFF2</Color>
+    <Color x:Key="Glass.Tint.Mid">#138A9C</Color>
+    <Color x:Key="Glass.Tint.Dark">#10202A</Color>
+    <Color x:Key="Glass.Tint.Deepest">#10202A</Color>
+    <Color x:Key="Glass.Sheen.Bright">#FFFFFF</Color>
+    <Color x:Key="Glass.Sheen.Mid">#E5EFF2</Color>
+    <Color x:Key="Glass.Sheen.Soft">#C8D7DE</Color>
+    <SolidColorBrush x:Key="Brush.Glass.Border" Color="#48FFFFFF"/>
+    <SolidColorBrush x:Key="Brush.Glass.BorderHover" Color="#6AFFFFFF"/>
+    <SolidColorBrush x:Key="Brush.Glass.BorderPressed" Color="#30E8F2F5"/>
+    <SolidColorBrush x:Key="Brush.Glass.BorderFocus" Color="#138A9C"/>
+    <SolidColorBrush x:Key="Brush.Glass.EdgeHighlight.Start" Color="#50EEF3F5"/>
+    <SolidColorBrush x:Key="Brush.Glass.EdgeHighlight.Mid" Color="#30D4DDE3"/>
+    <SolidColorBrush x:Key="Brush.Glass.EdgeHighlight.End" Color="#00138A9C"/>
+
+    <!-- Light-mode glass layer fills — frosted glass tinted to background (#E5EFF2) -->
+    <RadialGradientBrush x:Key="Brush.Glass.BaseFill" Center="35%,40%" RadiusX="80%" RadiusY="80%">
+        <GradientStop Color="#18FFFFFF" Offset="0"/>
+        <GradientStop Color="#14D8E8ED" Offset="0.5"/>
+        <GradientStop Color="#0EC8D7DE" Offset="0.8"/>
+        <GradientStop Color="#08B8CCD5" Offset="1"/>
+    </RadialGradientBrush>
+    <RadialGradientBrush x:Key="Brush.Glass.BaseFillHover" Center="35%,40%" RadiusX="80%" RadiusY="80%">
+        <GradientStop Color="#28FFFFFF" Offset="0"/>
+        <GradientStop Color="#1ED8E8ED" Offset="0.5"/>
+        <GradientStop Color="#16C8D7DE" Offset="0.8"/>
+        <GradientStop Color="#0EB8CCD5" Offset="1"/>
+    </RadialGradientBrush>
+    <RadialGradientBrush x:Key="Brush.Glass.BaseFillPressed" Center="35%,40%" RadiusX="80%" RadiusY="80%">
+        <GradientStop Color="#10FFFFFF" Offset="0"/>
+        <GradientStop Color="#0CD0E0E5" Offset="0.5"/>
+        <GradientStop Color="#0AC2D1D8" Offset="0.8"/>
+        <GradientStop Color="#06B0C4CD" Offset="1"/>
+    </RadialGradientBrush>
+    <RadialGradientBrush x:Key="Brush.Glass.BaseFillChecked" Center="35%,40%" RadiusX="80%" RadiusY="80%">
+        <GradientStop Color="#38FFFFFF" Offset="0"/>
+        <GradientStop Color="#2CD8E8ED" Offset="0.5"/>
+        <GradientStop Color="#22C8D7DE" Offset="0.8"/>
+        <GradientStop Color="#18B8CCD5" Offset="1"/>
+    </RadialGradientBrush>
+    <!-- Inner shadow — faint depth from bottom-right -->
+    <LinearGradientBrush x:Key="Brush.Glass.InnerShadow" StartPoint="100%,100%" EndPoint="0%,0%">
+        <GradientStop Color="#24A0B5C0" Offset="0"/>
+        <GradientStop Color="#00A0B5C0" Offset="0.4"/>
+    </LinearGradientBrush>
+    <!-- Sheen — white gloss from upper-left -->
+    <RadialGradientBrush x:Key="Brush.Glass.Sheen" Center="30%,25%" RadiusX="60%" RadiusY="50%">
+        <GradientStop Color="#30FFFFFF" Offset="0"/>
+        <GradientStop Color="#1CF4FAFB" Offset="0.2"/>
+        <GradientStop Color="#10E5EFF2" Offset="0.5"/>
+        <GradientStop Color="#00000000" Offset="1"/>
+    </RadialGradientBrush>
+    <!-- Edge highlight — directional light from top-left (white → transparent) -->
+    <LinearGradientBrush x:Key="Brush.Glass.EdgeHighlightBorder" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#5CFFFFFF" Offset="0"/>
+        <GradientStop Color="#35E8F2F5" Offset="0.3"/>
+        <GradientStop Color="#00C8D7DE" Offset="0.7"/>
+    </LinearGradientBrush>
+    <!-- Bottom shadow — subtle depth at lower-right -->
+    <LinearGradientBrush x:Key="Brush.Glass.BottomShadow" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#00000000" Offset="0"/>
+        <GradientStop Color="#00000000" Offset="0.5"/>
+        <GradientStop Color="#24A0B5C0" Offset="1"/>
+    </LinearGradientBrush>
+
+    <Color x:Key="LiquidGlassDropShadow">#223A5060</Color>
+    <Color x:Key="LiquidGlassDropShadowHover">#2C3A5060</Color>
+    <Color x:Key="LiquidGlassDropShadowPressed">#163A5060</Color>
+    <DropShadowEffect x:Key="LiquidGlassButtonEffect" BlurRadius="10" OffsetX="0" OffsetY="3" Color="#3A5060" Opacity="0.14"/>
+    <DropShadowEffect x:Key="LiquidGlassButtonEffectHover" BlurRadius="16" OffsetX="0" OffsetY="4" Color="#3A5060" Opacity="0.20"/>
+    <DropShadowEffect x:Key="LiquidGlassButtonEffectPressed" BlurRadius="5" OffsetX="0" OffsetY="1" Color="#3A5060" Opacity="0.08"/>
+
+    <!-- Liquid glass button foreground -->
+    <SolidColorBrush x:Key="LiquidGlassButtonForeground" Color="#10202A"/>
+    <SolidColorBrush x:Key="HeaderSvgIconColor" Color="#3B5260"/>
+
+    <!-- Tile hover/pressed -->
+    <SolidColorBrush x:Key="TileHoverBrush" Color="#0A10202A"/>
+    <SolidColorBrush x:Key="TilePressedBrush" Color="#1210202A"/>
+
+    <!-- Autofill/keyboard tokens -->
+    <SolidColorBrush x:Key="AutofillBackgroundBrush" Color="#F8FBFC"/>
+    <SolidColorBrush x:Key="AutofillHeaderBackgroundBrush" Color="#DAE7EC"/>
+    <SolidColorBrush x:Key="AutofillBorderBrush" Color="#C8D7DE"/>
+    <SolidColorBrush x:Key="AutofillTextBrush" Color="#10202A"/>
+    <SolidColorBrush x:Key="AutofillTextSecondaryBrush" Color="#0A7183"/>
+    <SolidColorBrush x:Key="AutofillTextTertiaryBrush" Color="#8FA0AB"/>
+    <SolidColorBrush x:Key="AutofillTextQuaternaryBrush" Color="#A8B8C2"/>
+    <SolidColorBrush x:Key="AutofillSuccessBackgroundBrush" Color="#ECFDF5"/>
+    <SolidColorBrush x:Key="KeyboardBackgroundBrush" Color="#F8FBFC"/>
+    <SolidColorBrush x:Key="KeyboardKeyBackgroundBrush" Color="#F8FBFC"/>
+
+    <!-- Obscura surface -->
+    <SolidColorBrush x:Key="ObscuraSurfaceBrush" Color="#DAE7EC"/>
+
+    <!-- Border/accent design tokens -->
+    <SolidColorBrush x:Key="Brush.BorderSoft" Color="#D2DFE4"/>
+    <SolidColorBrush x:Key="Brush.BorderMedium" Color="#BDD0D8"/>
+    <SolidColorBrush x:Key="Brush.BorderStrong" Color="#94B0BB"/>
+    <SolidColorBrush x:Key="Brush.Accent" Color="#138A9C"/>
+    <SolidColorBrush x:Key="Brush.AccentHover" Color="#0A7183"/>
+    <SolidColorBrush x:Key="Brush.AccentPressed" Color="#085A69"/>
+    <SolidColorBrush x:Key="Brush.SurfaceAlt" Color="#DAE7EC"/>
+    <SolidColorBrush x:Key="Brush.Danger" Color="#DC2626"/>
+    <SolidColorBrush x:Key="Brush.Card" Color="#F8FBFC"/>
+    <SolidColorBrush x:Key="Brush.CardHover" Color="#DAE7EC"/>
+    <SolidColorBrush x:Key="Brush.TextPrimary" Color="#10202A"/>
+    <SolidColorBrush x:Key="Brush.TextMuted" Color="#8FA0AB"/>
+    <SolidColorBrush x:Key="Brush.TextOnDark" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="Brush.Navy900" Color="#10202A"/>
+    <SolidColorBrush x:Key="Brush.FocusRing" Color="#55C3CF"/>
+    <SolidColorBrush x:Key="Brush.DangerHover" Color="#DC2626"/>
+
+    <!-- Secondary button -->
+    <SolidColorBrush x:Key="SecondaryButtonBackgroundBrush" Color="#F8FBFC"/>
+
+    <!-- Error/Success text -->
+    <SolidColorBrush x:Key="ErrorTextBrush" Color="#CC5555"/>
+    <SolidColorBrush x:Key="SuccessTextBrush" Color="#4CAF50"/>
+    <SolidColorBrush x:Key="OverlayBackgroundLightBrush" Color="#40000000"/>
+
+    <!-- ═══ Dashboard sheet overlay ═══ -->
+    <LinearGradientBrush x:Key="DashboardSheetOverlayBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Color="#55C5D8E8" Offset="0"/>
+        <GradientStop Color="#50BDD0E0" Offset="0.5"/>
+        <GradientStop Color="#48C5D8E8" Offset="1"/>
+    </LinearGradientBrush>
+    <Color x:Key="DashboardSheetAcrylicTint">#D0E0E8</Color>
+    <Color x:Key="DashboardSheetAcrylicFallback">#18BDD0E0</Color>
+
+    <!-- ═══ Dashboard glass panel resources ═══ -->
+    <LinearGradientBrush x:Key="DashboardSectionBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#50FFFFFF" Offset="0"/>
+        <GradientStop Color="#40E8F2F5" Offset="0.5"/>
+        <GradientStop Color="#30E0EAF0" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardSectionHoverBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#60FFFFFF" Offset="0"/>
+        <GradientStop Color="#50E8F2F5" Offset="0.5"/>
+        <GradientStop Color="#40E0EAF0" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardSectionBorderBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#20B0D0D8" Offset="0"/>
+        <GradientStop Color="#18138A9C" Offset="0.35"/>
+        <GradientStop Color="#10B0D0D8" Offset="0.7"/>
+        <GradientStop Color="#08B0D0D8" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardSectionHoverBorderBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#30B0D0D8" Offset="0"/>
+        <GradientStop Color="#24138A9C" Offset="0.35"/>
+        <GradientStop Color="#18B0D0D8" Offset="0.7"/>
+        <GradientStop Color="#0CB0D0D8" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardCardBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#48FFFFFF" Offset="0"/>
+        <GradientStop Color="#3CF0F6F8" Offset="0.5"/>
+        <GradientStop Color="#30E6EEF2" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardCardHoverBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#58FFFFFF" Offset="0"/>
+        <GradientStop Color="#4CF0F6F8" Offset="0.5"/>
+        <GradientStop Color="#40E6EEF2" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardCardPressedBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#38EAF2F4" Offset="0"/>
+        <GradientStop Color="#30E2ECF0" Offset="0.5"/>
+        <GradientStop Color="#28DCE6EA" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardNavBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#44FFFFFF" Offset="0"/>
+        <GradientStop Color="#38EEF4F6" Offset="0.5"/>
+        <GradientStop Color="#2CE6EEF2" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardNavHoverBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#54FFFFFF" Offset="0"/>
+        <GradientStop Color="#48EEF4F6" Offset="0.5"/>
+        <GradientStop Color="#3CE6EEF2" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardNavPressedBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#34E6EEF2" Offset="0"/>
+        <GradientStop Color="#2CE0EAEE" Offset="0.5"/>
+        <GradientStop Color="#24DAE4E8" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardNavPrimaryBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#50138A9C" Offset="0"/>
+        <GradientStop Color="#4410808E" Offset="0.5"/>
+        <GradientStop Color="#38107080" Offset="1"/>
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="DashboardNavPrimaryBorderBrush" Color="#60138A9C"/>
+    <LinearGradientBrush x:Key="DashboardPanelBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#18EAF2F6" Offset="0"/>
+        <GradientStop Color="#10E4EEF2" Offset="0.5"/>
+        <GradientStop Color="#08DEE8EC" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardPanelBorderBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#18A8D0D8" Offset="0"/>
+        <GradientStop Color="#0CA8D0D8" Offset="0.5"/>
+        <GradientStop Color="#06A8D0D8" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardTileBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#30FFFFFF" Offset="0"/>
+        <GradientStop Color="#24EEF4F8" Offset="0.5"/>
+        <GradientStop Color="#1CE6F0F4" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardTileHoverBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#40FFFFFF" Offset="0"/>
+        <GradientStop Color="#34EEF4F8" Offset="0.5"/>
+        <GradientStop Color="#28E6F0F4" Offset="1"/>
+    </LinearGradientBrush>
+    <Color x:Key="DashboardTileBorderColor">#30708888</Color>
+    <Color x:Key="DashboardTileHoverBorderColor">#48138A9C</Color>
+    <Color x:Key="DashboardAcrylicTint">#E0ECF0</Color>
+    <Color x:Key="DashboardAcrylicFallback">#10E5EFF2</Color>
+</ResourceDictionary>

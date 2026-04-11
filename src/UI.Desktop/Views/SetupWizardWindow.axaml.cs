@@ -1,8 +1,12 @@
 using System;
 using System.Globalization;
 using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Data;
 using Avalonia.Data.Converters;
+using Avalonia.Input;
 using Avalonia.Media;
+using PhantomVault.UI.Services;
 using PhantomVault.UI.ViewModels;
 
 namespace PhantomVault.UI.Views
@@ -14,6 +18,8 @@ namespace PhantomVault.UI.Views
     {
         public SetupWizardWindow()
         {
+            // Fixed dark navy — pre-vault screens never follow user theme
+            ThemeScope.SetIsThemed(this, false);
             InitializeComponent();
             var viewModel = new SetupWizardViewModel();
             viewModel.SetOwnerWindow(this);
@@ -22,9 +28,21 @@ namespace PhantomVault.UI.Views
 
         public SetupWizardWindow(SetupWizardViewModel viewModel)
         {
+            // Fixed dark navy — pre-vault screens never follow user theme
+            ThemeScope.SetIsThemed(this, false);
             InitializeComponent();
             viewModel.SetOwnerWindow(this);
             DataContext = viewModel;
+        }
+
+        private void SecurityLevelCard_Tapped(object? sender, TappedEventArgs e)
+        {
+            if (sender is Control control
+                && control.DataContext is SecurityLevelOption option
+                && DataContext is SetupWizardViewModel vm)
+            {
+                vm.SelectedSecurityLevel = option.Name;
+            }
         }
     }
 
@@ -45,7 +63,7 @@ namespace PhantomVault.UI.Views
         }
 
         public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-            => throw new NotImplementedException();
+            => BindingOperations.DoNothing;
     }
 
     /// <summary>
@@ -62,12 +80,12 @@ namespace PhantomVault.UI.Views
                 if (currentStep > targetStep)
                 {
                     // Completed step - solid accent
-                    return new SolidColorBrush(Color.Parse("#6B8CAE"));
+                    return new SolidColorBrush(Color.Parse("#111B2A"));
                 }
                 else if (currentStep == targetStep)
                 {
                     // Current step - highlighted
-                    return new SolidColorBrush(Color.Parse("#8FB5DF"));
+                    return new SolidColorBrush(Color.Parse("#1C2D42"));
                 }
                 else
                 {
@@ -79,24 +97,7 @@ namespace PhantomVault.UI.Views
         }
 
         public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-            => throw new NotImplementedException();
-    }
-
-    /// <summary>
-    /// Converts security level name to selected state.
-    /// </summary>
-    public class SecurityLevelSelectedConverter : IValueConverter
-    {
-        public static readonly SecurityLevelSelectedConverter Instance = new();
-
-        public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-        {
-            // This would need to be bound to the ViewModel's selected level
-            return value?.ToString() == "Balanced"; // Default selection
-        }
-
-        public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-            => throw new NotImplementedException();
+            => BindingOperations.DoNothing;
     }
 
     /// <summary>
@@ -131,13 +132,13 @@ namespace PhantomVault.UI.Views
         public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             bool isSelected = value?.ToString() == parameter?.ToString();
-            return isSelected 
-                ? new SolidColorBrush(Color.Parse("#6B8CAE"))
+            return isSelected
+                ? new SolidColorBrush(Color.Parse("#111B2A"))
                 : new SolidColorBrush(Color.Parse("#20FFFFFF"));
         }
 
         public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-            => throw new NotImplementedException();
+            => BindingOperations.DoNothing;
     }
 
     /// <summary>
@@ -161,7 +162,7 @@ namespace PhantomVault.UI.Views
         }
 
         public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-            => throw new NotImplementedException();
+            => BindingOperations.DoNothing;
     }
 
     /// <summary>
@@ -185,7 +186,7 @@ namespace PhantomVault.UI.Views
         }
 
         public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-            => throw new NotImplementedException();
+            => BindingOperations.DoNothing;
     }
 
     /// <summary>
@@ -201,7 +202,7 @@ namespace PhantomVault.UI.Views
         }
 
         public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-            => throw new NotImplementedException();
+            => BindingOperations.DoNothing;
     }
 
     /// <summary>
@@ -217,7 +218,7 @@ namespace PhantomVault.UI.Views
         }
 
         public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-            => throw new NotImplementedException();
+            => BindingOperations.DoNothing;
     }
 
     /// <summary>
@@ -235,7 +236,7 @@ namespace PhantomVault.UI.Views
         }
 
         public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-            => throw new NotImplementedException();
+            => BindingOperations.DoNothing;
     }
 
     /// <summary>
@@ -251,7 +252,7 @@ namespace PhantomVault.UI.Views
         }
 
         public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-            => throw new NotImplementedException();
+            => BindingOperations.DoNothing;
     }
 
     /// <summary>
@@ -267,7 +268,7 @@ namespace PhantomVault.UI.Views
         }
 
         public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-            => throw new NotImplementedException();
+            => BindingOperations.DoNothing;
     }
 
     /// <summary>
@@ -286,7 +287,7 @@ namespace PhantomVault.UI.Views
         }
 
         public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-            => throw new NotImplementedException();
+            => BindingOperations.DoNothing;
     }
 
     /// <summary>
@@ -302,7 +303,7 @@ namespace PhantomVault.UI.Views
         }
 
         public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-            => throw new NotImplementedException();
+            => BindingOperations.DoNothing;
     }
 
     /// <summary>
@@ -323,7 +324,7 @@ namespace PhantomVault.UI.Views
         }
 
         public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-            => throw new NotImplementedException();
+            => BindingOperations.DoNothing;
     }
 
     /// <summary>
@@ -344,6 +345,6 @@ namespace PhantomVault.UI.Views
         }
 
         public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-            => throw new NotImplementedException();
+            => BindingOperations.DoNothing;
     }
 }

@@ -2,6 +2,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:Giblex.Controls">
 
+<!-- Glass layer resources now live in PhantomTheme.Dark / .Light so DynamicResource resolves from the active theme. -->
+
 <!-- ═══════════════════════════════════════════════════════════════════════════════
      LIQUID GLASS BUTTON STYLES - OPTIMIZED WITH PHYSICS INTEGRATION
      
@@ -24,7 +26,7 @@
   <Setter Property="CornerRadius" Value="10"/>
   <Setter Property="BorderThickness" Value="1"/>
   <Setter Property="FontWeight" Value="SemiBold"/>
-  <Setter Property="Foreground" Value="#FFFFFF"/>
+  <Setter Property="Foreground" Value="{DynamicResource LiquidGlassButtonForeground}"/>
   <Setter Property="Cursor" Value="Hand"/>
   <Setter Property="Background" Value="#04FFFFFF"/>
   <Setter Property="MinWidth" Value="0"/>
@@ -36,19 +38,7 @@
       <DoubleTransition Property="Opacity" Duration="0:0:0.15"/>
     </Transitions>
   </Setter>
-  <Setter Property="Effect">
-    <Setter.Value>
-      <DropShadowEffect BlurRadius="20" OffsetX="8" OffsetY="6" Color="#45000000">
-        <DropShadowEffect.Transitions>
-          <Transitions>
-            <DoubleTransition Property="BlurRadius" Duration="0:0:0.18"/>
-            <DoubleTransition Property="OffsetX" Duration="0:0:0.18"/>
-            <DoubleTransition Property="OffsetY" Duration="0:0:0.18"/>
-          </Transitions>
-        </DropShadowEffect.Transitions>
-      </DropShadowEffect>
-    </Setter.Value>
-  </Setter>
+  <Setter Property="Effect" Value="{DynamicResource LiquidGlassButtonEffect}"/>
   
   <Setter Property="Template">
     <ControlTemplate>
@@ -58,6 +48,7 @@
                 CornerRadius="{TemplateBinding CornerRadius}"
                 BorderThickness="{TemplateBinding BorderThickness}"
                 BorderBrush="{DynamicResource Brush.Glass.Border}"
+                Background="{DynamicResource Brush.Glass.BaseFill}"
                 ClipToBounds="True">
           <Border.Transitions>
             <Transitions>
@@ -66,14 +57,6 @@
               <CornerRadiusTransition Property="CornerRadius" Duration="0:0:0.18"/>
             </Transitions>
           </Border.Transitions>
-          <Border.Background>
-            <RadialGradientBrush Center="35%,40%" RadiusX="80%" RadiusY="80%">
-              <GradientStop Color="#0ED8E8F8" Offset="0"/>
-              <GradientStop Color="#0C8FB5DF" Offset="0.5"/>
-              <GradientStop Color="#0A6B8CAE" Offset="0.8"/>
-              <GradientStop Color="#05272F43" Offset="1"/>
-            </RadialGradientBrush>
-          </Border.Background>
         </Border>
         
         <!-- LAYER 1.5: Inner shadow for depth -->
@@ -81,14 +64,8 @@
                 Opacity="0.3"
                 Margin="0"
                 IsHitTestVisible="False"
-                ClipToBounds="True">
-          <Border.Background>
-            <LinearGradientBrush StartPoint="100%,100%" EndPoint="0%,0%">
-              <GradientStop Color="#30272F43" Offset="0"/>
-              <GradientStop Color="#00272F43" Offset="0.3"/>
-            </LinearGradientBrush>
-          </Border.Background>
-        </Border>
+                ClipToBounds="True"
+                Background="{DynamicResource Brush.Glass.InnerShadow}"/>
 
         <!-- LAYER 2: Spherical highlight for curved glass reflection -->
         <Border Name="Sheen"
@@ -96,52 +73,54 @@
                 Opacity="0.35"
                 Margin="0"
                 IsHitTestVisible="False"
-                ClipToBounds="True">
+                ClipToBounds="True"
+                Background="{DynamicResource Brush.Glass.Sheen}">
+          <Border.RenderTransform>
+            <TransformGroup>
+              <RotateTransform Angle="{Binding $parent[Button].(local:LiquidGlassScrollChrome.ScrollSheenAngle)}">
+                <RotateTransform.Transitions>
+                  <Transitions>
+                    <DoubleTransition Property="Angle" Duration="0:0:0.28" Easing="CubicEaseOut"/>
+                  </Transitions>
+                </RotateTransform.Transitions>
+              </RotateTransform>
+              <TranslateTransform X="{Binding $parent[Button].(local:LiquidGlassScrollChrome.ScrollSheenX)}"
+                                  Y="{Binding $parent[Button].(local:LiquidGlassScrollChrome.ScrollSheenY)}">
+                <TranslateTransform.Transitions>
+                  <Transitions>
+                    <DoubleTransition Property="X" Duration="0:0:0.28" Easing="CubicEaseOut"/>
+                    <DoubleTransition Property="Y" Duration="0:0:0.28" Easing="CubicEaseOut"/>
+                  </Transitions>
+                </TranslateTransform.Transitions>
+              </TranslateTransform>
+            </TransformGroup>
+          </Border.RenderTransform>
           <Border.Transitions>
             <Transitions>
               <DoubleTransition Property="Opacity" Duration="0:0:0.18"/>
               <ThicknessTransition Property="Margin" Duration="0:0:0.25" Easing="SineEaseInOut"/>
             </Transitions>
           </Border.Transitions>
-          <Border.Background>
-            <RadialGradientBrush Center="30%,25%" RadiusX="60%" RadiusY="50%">
-              <GradientStop Color="#38E8F4FF" Offset="0"/>
-              <GradientStop Color="#20C8E0F5" Offset="0.2"/>
-              <GradientStop Color="#10A0C8E8" Offset="0.5"/>
-              <GradientStop Color="#00000000" Offset="1"/>
-            </RadialGradientBrush>
-          </Border.Background>
         </Border>
 
-        <!-- LAYER 2.75: Top/left edge highlight for glass curve -->
-        <Border CornerRadius="{TemplateBinding CornerRadius}"
-                BorderThickness="1.5"
-                Margin="0"
-                IsHitTestVisible="False"
-                ClipToBounds="False">
-          <Border.BorderBrush>
-            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-              <GradientStop Color="#50D8E8F8" Offset="0"/>
-              <GradientStop Color="#30B8D5EF" Offset="0.3"/>
-              <GradientStop Color="#008FB5DF" Offset="0.7"/>
-            </LinearGradientBrush>
-          </Border.BorderBrush>
-        </Border>
+        <local:BorderEnergyTrace IsHitTestVisible="False"
+                                 Progress="{Binding $parent[Button].(local:LiquidGlassScrollChrome.BorderTraceProgress)}"
+                                 SecondaryProgress="{Binding $parent[Button].(local:LiquidGlassScrollChrome.SecondaryBorderTraceProgress)}"
+                                 Direction="{Binding $parent[Button].(local:LiquidGlassScrollChrome.BorderTraceDirection)}"
+                                 TraceOpacity="{Binding $parent[Button].(local:LiquidGlassScrollChrome.BorderRunnerOpacity)}"
+                                 CornerRadius="{TemplateBinding CornerRadius}"
+                                 TraceThickness="0.78"
+                                 TraceColor="#B7CCD5DC"
+                                 CounterTraceColor="#182434"
+                                 CounterTraceOpacity="0.62"/>
         
         <!-- LAYER 2.8: Bottom/right shadow for 3D depth -->
         <Border CornerRadius="{TemplateBinding CornerRadius}"
                 Opacity="0.65"
                 Margin="0"
                 IsHitTestVisible="False"
-                ClipToBounds="True">
-          <Border.Background>
-            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-              <GradientStop Color="#00000000" Offset="0"/>
-              <GradientStop Color="#00000000" Offset="0.5"/>
-              <GradientStop Color="#40272F43" Offset="1"/>
-            </LinearGradientBrush>
-          </Border.Background>
-        </Border>
+                ClipToBounds="True"
+                Background="{DynamicResource Brush.Glass.BottomShadow}"/>
 
         <!-- LAYER 3: Content -->
         <ContentPresenter Name="PART_ContentPresenter"
@@ -174,32 +153,13 @@
      ═══════════════════════════════════════════════════════════════════════════════ -->
 <Style Selector="Button.liquid-glass:pointerover">
   <Setter Property="CornerRadius" Value="10"/>
-  <Setter Property="Effect">
-    <Setter.Value>
-      <DropShadowEffect BlurRadius="18" OffsetX="5" OffsetY="6" Color="#38000000">
-        <DropShadowEffect.Transitions>
-          <Transitions>
-            <DoubleTransition Property="BlurRadius" Duration="0:0:0.18"/>
-            <DoubleTransition Property="OffsetX" Duration="0:0:0.18"/>
-            <DoubleTransition Property="OffsetY" Duration="0:0:0.18"/>
-          </Transitions>
-        </DropShadowEffect.Transitions>
-      </DropShadowEffect>
-    </Setter.Value>
-  </Setter>
+  <Setter Property="Effect" Value="{DynamicResource LiquidGlassButtonEffectHover}"/>
 </Style>
 
 <Style Selector="Button.liquid-glass:pointerover /template/ Border#BaseBorder">
   <Setter Property="CornerRadius" Value="10"/>
   <Setter Property="BorderBrush" Value="{DynamicResource Brush.Glass.BorderHover}"/>
-  <Setter Property="Background">
-    <RadialGradientBrush Center="35%,40%" RadiusX="80%" RadiusY="80%">
-      <GradientStop Color="#20D8E8F8" Offset="0"/>
-      <GradientStop Color="#18A8C5E8" Offset="0.5"/>
-      <GradientStop Color="#108FB5DF" Offset="0.8"/>
-      <GradientStop Color="#08394D68" Offset="1"/>
-    </RadialGradientBrush>
-  </Setter>
+  <Setter Property="Background" Value="{DynamicResource Brush.Glass.BaseFillHover}"/>
 </Style>
 
 <Style Selector="Button.liquid-glass:pointerover /template/ Border#Sheen">
@@ -209,14 +169,7 @@
 <Style Selector="Button.liquid-glass:pressed /template/ Border#BaseBorder">
   <Setter Property="CornerRadius" Value="10"/>
   <Setter Property="BorderBrush" Value="{DynamicResource Brush.Glass.BorderPressed}"/>
-  <Setter Property="Background">
-    <RadialGradientBrush Center="35%,40%" RadiusX="80%" RadiusY="80%">
-      <GradientStop Color="#10B8D5EF" Offset="0"/>
-      <GradientStop Color="#0C879BBE" Offset="0.5"/>
-      <GradientStop Color="#086B8CAE" Offset="0.8"/>
-      <GradientStop Color="#04272F43" Offset="1"/>
-    </RadialGradientBrush>
-  </Setter>
+  <Setter Property="Background" Value="{DynamicResource Brush.Glass.BaseFillPressed}"/>
 </Style>
 
 <Style Selector="Button.liquid-glass:pressed /template/ Border#Sheen">
@@ -227,19 +180,7 @@
   <Setter Property="RenderTransform">
     <TranslateTransform Y="1"/>
   </Setter>
-  <Setter Property="Effect">
-    <Setter.Value>
-      <DropShadowEffect BlurRadius="8" OffsetX="1" OffsetY="2" Color="#25000000">
-        <DropShadowEffect.Transitions>
-          <Transitions>
-            <DoubleTransition Property="BlurRadius" Duration="0:0:0.18"/>
-            <DoubleTransition Property="OffsetX" Duration="0:0:0.18"/>
-            <DoubleTransition Property="OffsetY" Duration="0:0:0.18"/>
-          </Transitions>
-        </DropShadowEffect.Transitions>
-      </DropShadowEffect>
-    </Setter.Value>
-  </Setter>
+  <Setter Property="Effect" Value="{DynamicResource LiquidGlassButtonEffectPressed}"/>
 </Style>
 
 <!-- Disabled State -->
@@ -247,47 +188,6 @@
   <Setter Property="Opacity" Value="0.5"/>
   <Setter Property="Cursor" Value="Arrow"/>
 </Style>
-
-<!-- ═══════════════════════════════════════════════════════════════════════════════
-     LIGHT THEME OVERRIDES - Transparent with subtle white hue
-     Theme-aware selectors use ActualThemeVariant
-     ═══════════════════════════════════════════════════════════════════════════════ -->
-<Style Selector="Button.liquid-glass.light-theme">
-  <Setter Property="Background" Value="#15FFFFFF"/>
-  <Setter Property="Foreground" Value="#1F2933"/>
-</Style>
-
-<Style Selector="Button.liquid-glass.light-theme /template/ Border#BaseBorder">
-  <Setter Property="BorderBrush" Value="#40FFFFFF"/>
-  <Setter Property="Background">
-    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-      <GradientStop Color="#20FFFFFF" Offset="0"/>
-      <GradientStop Color="#10FFFFFF" Offset="1"/>
-    </LinearGradientBrush>
-  </Setter>
-</Style>
-
-<Style Selector="Button.liquid-glass.light-theme:pointerover /template/ Border#BaseBorder">
-  <Setter Property="BorderBrush" Value="#60FFFFFF"/>
-  <Setter Property="Background">
-    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-      <GradientStop Color="#35FFFFFF" Offset="0"/>
-      <GradientStop Color="#25FFFFFF" Offset="1"/>
-    </LinearGradientBrush>
-  </Setter>
-</Style>
-
-<Style Selector="Button.liquid-glass.light-theme:pressed /template/ Border#BaseBorder">
-  <Setter Property="BorderBrush" Value="#50FFFFFF"/>
-  <Setter Property="Background">
-    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-      <GradientStop Color="#28FFFFFF" Offset="0"/>
-      <GradientStop Color="#18FFFFFF" Offset="1"/>
-    </LinearGradientBrush>
-  </Setter>
-</Style>
-
-
 
 <Style Selector="Button.liquid-glass:disabled /template/ Border#DisabledMask">
   <Setter Property="IsVisible" Value="True"/>
@@ -311,21 +211,21 @@
      PRIMARY VARIANT - Colored accent buttons
      ═══════════════════════════════════════════════════════════════════════════════ -->
 <Style Selector="Button.liquid-glass.primary /template/ Border#BaseBorder">
-  <Setter Property="BorderBrush" Value="#60A855F7"/>
+  <Setter Property="BorderBrush" Value="#60C8D5E0"/>
   <Setter Property="Background">
     <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-      <GradientStop Color="#50A855F7" Offset="0"/>
-      <GradientStop Color="#30A855F7" Offset="1"/>
+      <GradientStop Color="#50C8D5E0" Offset="0"/>
+      <GradientStop Color="#30C8D5E0" Offset="1"/>
     </LinearGradientBrush>
   </Setter>
 </Style>
 
 <Style Selector="Button.liquid-glass.primary:pointerover /template/ Border#BaseBorder">
-  <Setter Property="BorderBrush" Value="#70A855F7"/>
+  <Setter Property="BorderBrush" Value="#70C8D5E0"/>
   <Setter Property="Background">
     <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-      <GradientStop Color="#60A855F7" Offset="0"/>
-      <GradientStop Color="#40A855F7" Offset="1"/>
+      <GradientStop Color="#60C8D5E0" Offset="0"/>
+      <GradientStop Color="#40C8D5E0" Offset="1"/>
     </LinearGradientBrush>
   </Setter>
 </Style>
@@ -451,11 +351,11 @@
 </Style>
 
 <Style Selector="Button.tile-button:pointerover">
-  <Setter Property="Background" Value="#101F2D"/>
+  <Setter Property="Background" Value="{DynamicResource TileHoverBrush}"/>
 </Style>
 
 <Style Selector="Button.tile-button:pressed">
-  <Setter Property="Background" Value="#1A2A38"/>
+  <Setter Property="Background" Value="{DynamicResource TilePressedBrush}"/>
 </Style>
 
 <!-- Grid tile button variant -->
@@ -487,11 +387,11 @@
 </Style>
 
 <Style Selector="Button.tile-button-grid:pointerover">
-  <Setter Property="Background" Value="#101F2D"/>
+  <Setter Property="Background" Value="{DynamicResource TileHoverBrush}"/>
 </Style>
 
 <Style Selector="Button.tile-button-grid:pressed">
-  <Setter Property="Background" Value="#1A2A38"/>
+  <Setter Property="Background" Value="{DynamicResource TilePressedBrush}"/>
 </Style>
 
 <!-- Tile focus state -->
@@ -507,7 +407,7 @@
   <Setter Property="CornerRadius" Value="10"/>
   <Setter Property="BorderThickness" Value="1"/>
   <Setter Property="FontWeight" Value="SemiBold"/>
-  <Setter Property="Foreground" Value="#FFFFFF"/>
+  <Setter Property="Foreground" Value="{DynamicResource LiquidGlassButtonForeground}"/>
   <Setter Property="Cursor" Value="Hand"/>
   <Setter Property="MinHeight" Value="40"/>
   <Setter Property="Padding" Value="16,8"/>
@@ -522,6 +422,7 @@
                 CornerRadius="{TemplateBinding CornerRadius}"
                 BorderThickness="{TemplateBinding BorderThickness}"
                 BorderBrush="{DynamicResource Brush.Glass.Border}"
+                Background="{DynamicResource Brush.Glass.BaseFill}"
                 ClipToBounds="True">
           <Border.Transitions>
             <Transitions>
@@ -529,14 +430,6 @@
               <BrushTransition Property="Background" Duration="0:0:0.18"/>
             </Transitions>
           </Border.Transitions>
-          <Border.Background>
-            <RadialGradientBrush Center="35%,40%" RadiusX="80%" RadiusY="80%">
-              <GradientStop Color="#0ED8E8F8" Offset="0"/>
-              <GradientStop Color="#0C8FB5DF" Offset="0.5"/>
-              <GradientStop Color="#0A6B8CAE" Offset="0.8"/>
-              <GradientStop Color="#05272F43" Offset="1"/>
-            </RadialGradientBrush>
-          </Border.Background>
         </Border>
 
         <Border Name="Sheen"
@@ -544,16 +437,8 @@
                 Opacity="0.45"
                 Margin="0"
                 IsHitTestVisible="False"
-                ClipToBounds="True">
-          <Border.Background>
-            <RadialGradientBrush Center="30%,25%" RadiusX="60%" RadiusY="50%">
-              <GradientStop Color="#48E8F4FF" Offset="0"/>
-              <GradientStop Color="#30C8E0F5" Offset="0.2"/>
-              <GradientStop Color="#18A0C8E8" Offset="0.5"/>
-              <GradientStop Color="#00000000" Offset="1"/>
-            </RadialGradientBrush>
-          </Border.Background>
-        </Border>
+                ClipToBounds="True"
+                Background="{DynamicResource Brush.Glass.Sheen}"/>
 
         <ContentPresenter Name="PART_ContentPresenter"
                           Background="{x:Null}"
@@ -571,14 +456,7 @@
 
 <Style Selector="ToggleButton.liquid-glass:pointerover /template/ Border#BaseBorder">
   <Setter Property="BorderBrush" Value="{DynamicResource Brush.Glass.BorderHover}"/>
-  <Setter Property="Background">
-    <RadialGradientBrush Center="35%,40%" RadiusX="80%" RadiusY="80%">
-      <GradientStop Color="#20D8E8F8" Offset="0"/>
-      <GradientStop Color="#18A8C5E8" Offset="0.5"/>
-      <GradientStop Color="#108FB5DF" Offset="0.8"/>
-      <GradientStop Color="#08394D68" Offset="1"/>
-    </RadialGradientBrush>
-  </Setter>
+  <Setter Property="Background" Value="{DynamicResource Brush.Glass.BaseFillHover}"/>
 </Style>
 
 <Style Selector="ToggleButton.liquid-glass:pointerover /template/ Border#Sheen">
@@ -587,14 +465,7 @@
 
 <Style Selector="ToggleButton.liquid-glass:checked /template/ Border#BaseBorder">
   <Setter Property="BorderBrush" Value="{DynamicResource Brush.Glass.BorderHover}"/>
-  <Setter Property="Background">
-    <RadialGradientBrush Center="35%,40%" RadiusX="80%" RadiusY="80%">
-      <GradientStop Color="#40D8E8F8" Offset="0"/>
-      <GradientStop Color="#30B8D5EF" Offset="0.5"/>
-      <GradientStop Color="#208FB5DF" Offset="0.8"/>
-      <GradientStop Color="#10394D68" Offset="1"/>
-    </RadialGradientBrush>
-  </Setter>
+  <Setter Property="Background" Value="{DynamicResource Brush.Glass.BaseFillChecked}"/>
 </Style>
 
 <Style Selector="ToggleButton.liquid-glass:checked /template/ Border#Sheen">
@@ -603,14 +474,7 @@
 
 <Style Selector="ToggleButton.liquid-glass:pressed /template/ Border#BaseBorder">
   <Setter Property="BorderBrush" Value="{DynamicResource Brush.Glass.BorderPressed}"/>
-  <Setter Property="Background">
-    <RadialGradientBrush Center="35%,40%" RadiusX="80%" RadiusY="80%">
-      <GradientStop Color="#10B8D5EF" Offset="0"/>
-      <GradientStop Color="#0C879BBE" Offset="0.5"/>
-      <GradientStop Color="#086B8CAE" Offset="0.8"/>
-      <GradientStop Color="#04272F43" Offset="1"/>
-    </RadialGradientBrush>
-  </Setter>
+  <Setter Property="Background" Value="{DynamicResource Brush.Glass.BaseFillPressed}"/>
 </Style>
 
 <Style Selector="ToggleButton.liquid-glass:pressed /template/ Border#Sheen">

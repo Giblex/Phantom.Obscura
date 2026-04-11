@@ -95,53 +95,87 @@ namespace PhantomVault.Core.Services
         {
             await Task.Delay(500); // Simulate check duration
 
-            // Check for manifests in the hidden .phantom folder structure
-            var phantomManifestsPath = Path.Combine(usbPath, ".phantom", "manifests");
+            // Discover vault: prefer .pvault containers (v3), fall back to legacy .manifest
+            string? manifestPath = null;
+            string? masterVolumePath = ResolveMasterVolumePath(usbPath);
+            var vaultsPath = Path.Combine(usbPath, ".phantom", "vaults");
+            var manifestsPath = Path.Combine(usbPath, ".phantom", "manifests");
 
-            if (!Directory.Exists(phantomManifestsPath))
+            if (masterVolumePath != null)
             {
-                result.ManifestValid = false;
-                result.Errors.Add(".phantom manifests folder not found");
-                return false;
+                try
+                {
+                    var obscuraVolumeService = new ObscuraVolumeService();
+                    if (!await obscuraVolumeService.IsObscuraVolumeAsync(masterVolumePath).ConfigureAwait(false))
+                    {
+                        result.ManifestValid = false;
+                        result.Errors.Add("Master Obscura volume header is invalid");
+                        return false;
+                    }
+
+                    result.ManifestValid = true;
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    result.ManifestValid = false;
+                    result.Errors.Add($"Master volume verification failed: {ex.Message}");
+                    return false;
+                }
             }
 
-            // Find any manifest files
-            var manifestFiles = Directory.GetFiles(phantomManifestsPath, "*.manifest");
-            if (manifestFiles.Length == 0)
+            if (Directory.Exists(vaultsPath))
             {
-                result.ManifestValid = false;
-                result.Errors.Add("No manifest files found in .phantom folder");
-                return false;
+                var pvaultFiles = Directory.GetFiles(vaultsPath, "*.pvault");
+                if (pvaultFiles.Length > 0)
+                    manifestPath = pvaultFiles[0];
+            }
+            if (manifestPath == null && Directory.Exists(manifestsPath))
+            {
+                var legacyFiles = Directory.GetFiles(manifestsPath, "*.manifest");
+                if (legacyFiles.Length > 0)
+                    manifestPath = legacyFiles[0];
             }
 
-            var manifestPath = manifestFiles[0]; // Use first manifest
-
-            if (!File.Exists(manifestPath))
+            if (manifestPath == null)
             {
                 result.ManifestValid = false;
-                result.Errors.Add("Manifest file not found");
+                result.Errors.Add("No vault files found in .phantom folder");
                 return false;
             }
 
             try
             {
-                // Check file size is reasonable (not too small or suspiciously large)
                 var fileInfo = new FileInfo(manifestPath);
-                if (fileInfo.Length < 100 || fileInfo.Length > 1024 * 1024) // 100 bytes to 1MB
-                {
-                    result.ManifestValid = false;
-                    result.Errors.Add("Manifest file size is invalid");
-                    return false;
-                }
+                bool isContainer = manifestPath.EndsWith(".pvault", StringComparison.OrdinalIgnoreCase);
 
-                // TODO: Verify cryptographic signature when implemented
-                // For now, just check it's readable JSON
-                var content = await File.ReadAllTextAsync(manifestPath);
-                if (string.IsNullOrWhiteSpace(content))
+                // For containers, verify minimum header size; for standalone manifests, check reasonable range
+                if (isContainer)
                 {
-                    result.ManifestValid = false;
-                    result.Errors.Add("Manifest file is empty");
-                    return false;
+                    if (fileInfo.Length < 64) // PHANTOM1 header minimum
+                    {
+                        result.ManifestValid = false;
+                        result.Errors.Add("Container file is too small to be valid");
+                        return false;
+                    }
+                }
+                else
+                {
+                    if (fileInfo.Length < 100 || fileInfo.Length > 1024 * 1024) // 100 bytes to 1MB
+                    {
+                        result.ManifestValid = false;
+                        result.Errors.Add("Manifest file size is invalid");
+                        return false;
+                    }
+
+                    // Structural validation for standalone manifests
+                    var content = await File.ReadAllTextAsync(manifestPath);
+                    if (string.IsNullOrWhiteSpace(content))
+                    {
+                        result.ManifestValid = false;
+                        result.Errors.Add("Manifest file is empty");
+                        return false;
+                    }
                 }
 
                 result.ManifestValid = true;
@@ -304,15 +338,15 @@ namespace PhantomVault.Core.Services
             }
             else if (OperatingSystem.IsMacOS())
             {
-                // TODO: Implement Touch ID/Face ID detection for macOS
-                // Requires LAContext.canEvaluatePolicy check
+                // Touch ID/Face ID requires LAContext via a native binding
+                // (e.g. a MAUI or ObjC-interop helper), which is not yet available.
                 return false;
             }
             else if (OperatingSystem.IsLinux())
             {
-                // TODO: Implement FIDO2 authenticator detection for Linux
-                // Check for /dev/hidraw* devices or fprintd service
-                return false;
+                // Check whether the fprintd service (fingerprint daemon) is available.
+                return File.Exists("/usr/bin/fprintd-verify")
+                    || File.Exists("/usr/lib/fprintd/fprintd");
             }
 
             return false;
@@ -380,6 +414,7 @@ namespace PhantomVault.Core.Services
                 var phantomPath = Path.Combine(usbPath, ".phantom");
                 var manifestsPath = Path.Combine(phantomPath, "manifests");
                 var vaultsPath = Path.Combine(phantomPath, "vaults");
+                var masterVolumePath = ResolveMasterVolumePath(usbPath);
 
                 if (!Directory.Exists(phantomPath))
                 {
@@ -388,21 +423,29 @@ namespace PhantomVault.Core.Services
                     return false;
                 }
 
-                if (!Directory.Exists(manifestsPath) || !Directory.Exists(vaultsPath))
+                bool hasLegacyLayout = Directory.Exists(manifestsPath) || Directory.Exists(vaultsPath);
+                bool hasPackedLayout = !string.IsNullOrEmpty(masterVolumePath);
+
+                if (!hasLegacyLayout && !hasPackedLayout)
                 {
                     result.NoTampering = false;
-                    result.Errors.Add(".phantom folder structure is incomplete");
+                    result.Errors.Add("Neither a packed master volume nor the legacy .phantom vault layout is present");
                     return false;
                 }
 
-                // Check that there are vault files
-                var manifestFiles = Directory.GetFiles(manifestsPath, "*.manifest");
-                var vaultFiles = Directory.GetFiles(vaultsPath, "*.pvault");
+                // Vault files in either format count as present
+                int vaultFileCount = 0;
+                if (Directory.Exists(vaultsPath))
+                    vaultFileCount += Directory.GetFiles(vaultsPath, "*.pvault").Length;
+                if (Directory.Exists(manifestsPath))
+                    vaultFileCount += Directory.GetFiles(manifestsPath, "*.manifest").Length;
+                if (hasPackedLayout)
+                    vaultFileCount++;
 
-                if (manifestFiles.Length == 0 || vaultFiles.Length == 0)
+                if (vaultFileCount == 0)
                 {
                     result.NoTampering = false;
-                    result.Errors.Add("Vault files are missing from .phantom folder");
+                    result.Errors.Add("Vault files are missing from both the packed and legacy layouts");
                     return false;
                 }
 
@@ -438,6 +481,12 @@ namespace PhantomVault.Core.Services
         /// </summary>
         public async Task<bool> QuickSecurityCheckAsync(string usbPath)
         {
+            if (ResolveMasterVolumePath(usbPath) is not null)
+            {
+                await Task.Delay(100); // Minimal delay
+                return true;
+            }
+
             // Check for .phantom folder structure
             var phantomPath = Path.Combine(usbPath, ".phantom");
             if (!Directory.Exists(phantomPath))
@@ -446,18 +495,32 @@ namespace PhantomVault.Core.Services
             var manifestsPath = Path.Combine(phantomPath, "manifests");
             var vaultsPath = Path.Combine(phantomPath, "vaults");
 
-            if (!Directory.Exists(manifestsPath) || !Directory.Exists(vaultsPath))
+            if (!Directory.Exists(manifestsPath) && !Directory.Exists(vaultsPath))
                 return false;
 
-            // Check that at least one vault exists
-            var manifestFiles = Directory.GetFiles(manifestsPath, "*.manifest");
-            var vaultFiles = Directory.GetFiles(vaultsPath, "*.pvault");
+            // Either format counts as a valid vault
+            int count = 0;
+            if (Directory.Exists(vaultsPath))
+                count += Directory.GetFiles(vaultsPath, "*.pvault").Length;
+            if (count == 0 && Directory.Exists(manifestsPath))
+                count += Directory.GetFiles(manifestsPath, "*.manifest").Length;
 
-            if (manifestFiles.Length == 0 || vaultFiles.Length == 0)
+            if (count == 0)
                 return false;
 
             await Task.Delay(100); // Minimal delay
             return true;
+        }
+
+        private static string? ResolveMasterVolumePath(string usbPath)
+        {
+            var candidates = new[]
+            {
+                Path.Combine(usbPath, "system.bin"),
+                Path.Combine(usbPath, ".phantom", "obscura.vol")
+            };
+
+            return candidates.FirstOrDefault(File.Exists);
         }
     }
 

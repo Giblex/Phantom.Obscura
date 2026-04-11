@@ -421,6 +421,13 @@ namespace PhantomVault.Core.Services.Autofill
         /// </summary>
         private string HandleFill(NativeMessage message)
         {
+            var (allowed, reason) = EnsureAutofillAllowed();
+            if (!allowed)
+            {
+                _pendingFill = null;
+                return CreateErrorResponse(reason ?? "Autofill is disabled.");
+            }
+
             if (_pendingFill is null)
                 return CreateSuccessResponse(new { hasFill = false });
 

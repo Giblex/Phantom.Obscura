@@ -1,4 +1,7 @@
+using Avalonia;
 using Avalonia.Controls;
+using Microsoft.Extensions.DependencyInjection;
+using PhantomVault.UI.Services;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
@@ -21,7 +24,9 @@ namespace PhantomVault.UI.Desktop.Controls
                     _isDarkMode = value;
                     OnPropertyChanged();
                     ThemeLabel = value ? "Dark" : "Light";
-                    // TODO: Call ThemeManagerService to switch theme
+
+                    var themeManager = (Application.Current as App)?.Services?.GetService<ThemeManagerService>();
+                    themeManager?.SetTheme(value ? AppTheme.Dark : AppTheme.Light);
                 }
             }
         }

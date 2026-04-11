@@ -1,5 +1,7 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Markup.Xaml;
+using PhantomVault.UI.ViewModels;
 
 namespace PhantomVault.UI.Views.Overlays
 {
@@ -13,6 +15,14 @@ namespace PhantomVault.UI.Views.Overlays
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load(this);
+        }
+
+        private void OnBackgroundClicked(object? sender, PointerPressedEventArgs e)
+        {
+            if (DataContext is VaultViewModel vm)
+            {
+                vm.DismissFlaggedPasswordsPanel();
+            }
         }
     }
 }

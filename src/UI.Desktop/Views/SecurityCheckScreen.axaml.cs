@@ -60,7 +60,7 @@ namespace PhantomVault.UI.Views
                     // Defensive: validate inputs early
                     if (usbPath is null)
                         throw new ArgumentNullException(nameof(usbPath), "USB path was null when navigating to vault.");
-                    
+
                     // If empty path, user cancelled - just close and return to welcome
                     if (string.IsNullOrEmpty(usbPath))
                     {
@@ -81,61 +81,66 @@ namespace PhantomVault.UI.Views
                         return;
                     }
 
-                // Get required services from DI container
-                var app = (App)Application.Current!;
-                var services = app.Services ?? throw new InvalidOperationException("Service provider not initialized.");
-                var dialogService = services.GetRequiredService<DialogService>();
+                    // Get required services from DI container
+                    var app = (App)Application.Current!;
+                    var services = app.Services ?? throw new InvalidOperationException("Service provider not initialized.");
+                    var dialogService = services.GetRequiredService<DialogService>();
 
-                // SECURITY: Enforce USB policy at vault-access boundary
-                // This was deferred from startup so the front page is always reachable.
-                try
-                {
-                    if (Program.PolicyService.IsUsbRequired())
+                    // SECURITY: Enforce USB policy at vault-access boundary
+                    // This was deferred from startup so the front page is always reachable.
+                    try
                     {
-                        var usbResult = Program.PolicyService.EnforceUsbPolicy();
-                        System.Diagnostics.Debug.WriteLine(
-                            $"[SecurityCheck] USB policy enforced. Drive={usbResult.drive?.Name ?? "none"} Serial={usbResult.volumeSerial ?? "n/a"}");
+                        if (Program.PolicyService.IsUsbRequired())
+                        {
+                            var usbResult = Program.PolicyService.EnforceUsbPolicy();
+                            System.Diagnostics.Debug.WriteLine(
+                                $"[SecurityCheck] USB policy enforced. Drive={usbResult.drive?.Name ?? "none"} Serial={usbResult.volumeSerial ?? "n/a"}");
+                        }
                     }
-                }
-                catch (PolicyViolationException pvEx)
-                {
-                    await dialogService.ShowErrorAsync(
-                        "Policy Violation",
-                        $"USB policy enforcement failed: {pvEx.Message}",
-                        this);
-                    return;
-                }
-                catch (System.Security.SecurityException secEx)
-                {
-                    await dialogService.ShowErrorAsync(
-                        "Security Policy Error",
-                        $"Security policy check failed: {secEx.Message}",
-                        this);
-                    return;
-                }
+                    catch (PolicyViolationException pvEx)
+                    {
+                        await dialogService.ShowErrorAsync(
+                            "Policy Violation",
+                            $"USB policy enforcement failed: {pvEx.Message}",
+                            this);
+                        return;
+                    }
+                    catch (System.Security.SecurityException secEx)
+                    {
+                        await dialogService.ShowErrorAsync(
+                            "Security Policy Error",
+                            $"Security policy check failed: {secEx.Message}",
+                            this);
+                        return;
+                    }
 
-                var vaultLockDurationService = services.GetRequiredService<VaultLockDurationService>();
-                var secureTrashService = services.GetRequiredService<SecureTrashService>();
-                var encryptionService = services.GetRequiredService<EncryptionService>();
-                var iconManager = services.GetRequiredService<IconManager>();
-                var usbDetector = services.GetRequiredService<UsbDetector>();
+                    var vaultLockDurationService = services.GetRequiredService<VaultLockDurationService>();
+                    var secureTrashService = services.GetRequiredService<SecureTrashService>();
+                    var encryptionService = services.GetRequiredService<EncryptionService>();
+                    var iconManager = services.GetRequiredService<IconManager>();
+                    var usbDetector = services.GetRequiredService<UsbDetector>();
 
-                // Create VaultUnlockViewModel 
-                var unlockViewModel = new ViewModels.VaultUnlockViewModel(
-                    usbPath,
-                    dialogService,
-                    vaultLockDurationService,
-                    secureTrashService,
-                    encryptionService,
-                    iconManager,
-                    usbDetector);
-                
-                // Show unlock window (it will auto-unlock if keyfile is present)
-                var unlockWindow = new VaultUnlockWindow(unlockViewModel);
-                unlockWindow.Show();
-                
-                // Close security check screen
-                this.Close();
+                    // Create VaultUnlockViewModel 
+                    var unlockViewModel = new ViewModels.VaultUnlockViewModel(
+                        usbPath,
+                        dialogService,
+                        vaultLockDurationService,
+                        secureTrashService,
+                        encryptionService,
+                        iconManager,
+                        usbDetector);
+
+                    // Show unlock window (it will auto-unlock if keyfile is present)
+                    var unlockWindow = new VaultUnlockWindow(unlockViewModel);
+                    unlockWindow.Show();
+
+                    // Transfer MainWindow to unlock window so closing SecurityCheckScreen
+                    // doesn't trigger app shutdown (Avalonia default: OnMainWindowClose)
+                    if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime dt)
+                        dt.MainWindow = unlockWindow;
+
+                    // Close security check screen
+                    this.Close();
                 }
                 catch (Exception ex)
                 {

@@ -29,15 +29,16 @@
                 CornerRadius="{StaticResource Radius.Md}" 
                 Padding="15">
             <StackPanel Spacing="10">
-                <CheckBox Content="Dark theme" 
-                          IsChecked="{Binding IsDarkTheme, Mode=TwoWay}" 
-                          ToolTip.Tip="Enable dark mode for the application"/>
-                <Button Content="Toggle Theme" 
-                        Command="{Binding ToggleThemeCommand}" 
-                        Width="140" 
+                <TextBlock Text="This standalone window is a compact legacy surface. Use the runtime theme window for the full live theme, contrast, and visual settings experience."
+                           FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
+                <Button Content="Open Runtime Theme Settings"
+                        Click="OpenThemeSettings_Click"
+                        Width="220"
                         Height="36"
-                        Classes="liquid-glass"
-                        HorizontalAlignment="Left"/>
+                        HorizontalAlignment="Left"
+                        Classes="liquid-glass"/>
             </StackPanel>
         </Border>
                     </StackPanel>
@@ -122,7 +123,7 @@
                            FontSize="{StaticResource Type.H4.Size}" 
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
-                <TextBlock Text="Use biometric authentication (fingerprint, face recognition) to unlock your vault" 
+                <TextBlock Text="Configure the Windows Hello-backed local authenticator path available on supported Windows devices" 
                            FontSize="{StaticResource Type.Small.Size}"
                            Foreground="{DynamicResource MutedTextBrush}"
                            TextWrapping="Wrap"/>
@@ -142,21 +143,21 @@
                 CornerRadius="{StaticResource Radius.Md}" 
                 Padding="15">
             <StackPanel Spacing="10">
-                <TextBlock Text="Passkey Authentication" 
+                <TextBlock Text="Device Authenticator" 
                            FontSize="{StaticResource Type.H4.Size}" 
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
-                <TextBlock Text="Use hardware security keys (YubiKey, Titan Key) for passwordless vault access" 
+                <TextBlock Text="Manage the current local Windows Hello-backed authenticator flow. Full hardware-key and password-manager passkey coverage is not complete in this build." 
                            FontSize="{StaticResource Type.Small.Size}"
                            Foreground="{DynamicResource MutedTextBrush}"
                            TextWrapping="Wrap"/>
-                <Button Content="Configure Passkeys" 
+                <Button Content="Configure Device Authenticator" 
                         Click="OpenPasskeySettings_Click"
                         Width="200" 
                         Height="36"
                         Classes="liquid-glass"
                         HorizontalAlignment="Left"
-                        ToolTip.Tip="Set up WebAuthn/FIDO2 hardware keys for authentication"/>
+                        ToolTip.Tip="Open the current local device-authenticator settings surface"/>
             </StackPanel>
         </Border>
 

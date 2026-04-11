@@ -150,10 +150,20 @@ public partial class LiquidGlassButton : UserControl
     public static readonly AttachedProperty<double> SheenYProperty =
         AvaloniaProperty.RegisterAttached<LiquidGlassButton, Control, double>("SheenY");
 
+    public static readonly AttachedProperty<double> BorderHighlightAngleProperty =
+        AvaloniaProperty.RegisterAttached<LiquidGlassButton, Control, double>("BorderHighlightAngle");
+
+    public static readonly AttachedProperty<double> BorderHighlightOpacityProperty =
+        AvaloniaProperty.RegisterAttached<LiquidGlassButton, Control, double>("BorderHighlightOpacity", 0.7);
+
     public static double GetSheenX(AvaloniaObject o) => o.GetValue(SheenXProperty);
     public static void SetSheenX(AvaloniaObject o, double v) => o.SetValue(SheenXProperty, v);
     public static double GetSheenY(AvaloniaObject o) => o.GetValue(SheenYProperty);
     public static void SetSheenY(AvaloniaObject o, double v) => o.SetValue(SheenYProperty, v);
+    public static double GetBorderHighlightAngle(AvaloniaObject o) => o.GetValue(BorderHighlightAngleProperty);
+    public static void SetBorderHighlightAngle(AvaloniaObject o, double v) => o.SetValue(BorderHighlightAngleProperty, v);
+    public static double GetBorderHighlightOpacity(AvaloniaObject o) => o.GetValue(BorderHighlightOpacityProperty);
+    public static void SetBorderHighlightOpacity(AvaloniaObject o, double v) => o.SetValue(BorderHighlightOpacityProperty, v);
 
     // ═══════════════════════════════════════════════════════════════════
     // LIQUID PHYSICS STATE
@@ -182,6 +192,11 @@ public partial class LiquidGlassButton : UserControl
     // Border/glow animation
     private double _currentBorderOpacity = 0.5;
     private double _targetBorderOpacity = 0.5;
+    private double _borderHighlightAngle;
+    private double _targetBorderHighlightAngle;
+    private double _borderHighlightAngularVelocity;
+    private double _borderHighlightOpacity = 0.72;
+    private double _targetBorderHighlightOpacity = 0.72;
 
     // Physics profiles: Default for full motion, Reduced for accessibility
     private record PhysicsProfile(
@@ -302,10 +317,15 @@ public partial class LiquidGlassButton : UserControl
         // Micro-inflate on hover (1.0 → 1.03)
         _targetScale = 1.03;
         _targetBorderOpacity = 0.65;
+        _targetBorderHighlightOpacity = 0.9;
 
         if (ShouldReduceMotion())
         {
             ApplyScaleImmediate(_targetScale);
+            if (_btn != null)
+            {
+                SetBorderHighlightOpacity(_btn, _targetBorderHighlightOpacity);
+            }
             return;
         }
         EnsurePhysicsRunning();
@@ -321,10 +341,17 @@ public partial class LiquidGlassButton : UserControl
         _targetSheenX = 0;
         _targetSheenY = 0;
         _targetBorderOpacity = 0.5;
+        _targetBorderHighlightAngle = 0;
+        _targetBorderHighlightOpacity = 0.72;
 
         if (ShouldReduceMotion())
         {
             ApplyScaleImmediate(_targetScale);
+            if (_btn != null)
+            {
+                SetBorderHighlightAngle(_btn, 0);
+                SetBorderHighlightOpacity(_btn, _targetBorderHighlightOpacity);
+            }
             return;
         }
         EnsurePhysicsRunning();
@@ -340,6 +367,14 @@ public partial class LiquidGlassButton : UserControl
         // Map pointer to sheen offset range (±12px max)
         _targetSheenX = ((p.X / _btn.Bounds.Width) - 0.5) * 24;
         _targetSheenY = ((p.Y / _btn.Bounds.Height) - 0.5) * 16;
+
+        var normalizedX = ((p.X / _btn.Bounds.Width) - 0.5) * 2;
+        var normalizedY = ((p.Y / _btn.Bounds.Height) - 0.5) * 2;
+        var radialDistance = Math.Clamp(Math.Sqrt((normalizedX * normalizedX) + (normalizedY * normalizedY)), 0, 1.25);
+
+        // Rotate the bright border segment around the button based on pointer position.
+        _targetBorderHighlightAngle = (Math.Atan2(normalizedY, normalizedX) * (180.0 / Math.PI) + 45.0) * 1.18;
+        _targetBorderHighlightOpacity = 0.72 + (Math.Min(radialDistance, 1.0) * 0.45);
     }
 
     private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
@@ -349,6 +384,7 @@ public partial class LiquidGlassButton : UserControl
         // Compress on press (1.03 → 0.97)
         _targetScale = 0.97;
         _targetBorderOpacity = 0.4;
+        _targetBorderHighlightOpacity = 1.0;
 
         if (ShouldReduceMotion())
         {
@@ -376,10 +412,15 @@ public partial class LiquidGlassButton : UserControl
             _targetScale = 1.0;
         }
         _targetBorderOpacity = _isHovered ? 0.65 : 0.5;
+        _targetBorderHighlightOpacity = _isHovered ? 0.9 : 0.72;
 
         if (ShouldReduceMotion())
         {
             ApplyScaleImmediate(_targetScale);
+            if (_btn != null)
+            {
+                SetBorderHighlightOpacity(_btn, _targetBorderHighlightOpacity);
+            }
             return;
         }
         EnsurePhysicsRunning();
@@ -447,6 +488,15 @@ public partial class LiquidGlassButton : UserControl
         // Note: Border opacity would be applied via attached property if needed
         // For now the XAML handles this via :pointerover states
 
+        // ─── Border highlight orbit ───
+        var angularDelta = NormalizeAngleDelta(_targetBorderHighlightAngle - _borderHighlightAngle);
+        _borderHighlightAngularVelocity = (_borderHighlightAngularVelocity + angularDelta * 0.24) * 0.76;
+        _borderHighlightAngle = NormalizeAngle(_borderHighlightAngle + _borderHighlightAngularVelocity);
+        _borderHighlightOpacity += (_targetBorderHighlightOpacity - _borderHighlightOpacity) * 0.24;
+
+        SetBorderHighlightAngle(_btn, _borderHighlightAngle);
+        SetBorderHighlightOpacity(_btn, _borderHighlightOpacity);
+
         // ─── Idle settling: stop timer when physics are at rest ───
         if (!_isHovered && !_isPressed)
         {
@@ -455,7 +505,9 @@ public partial class LiquidGlassButton : UserControl
                         && Math.Abs(_scaleVelocity) < SettleEpsilon
                         && Math.Abs(_targetScale - _currentScale) < SettleEpsilon
                         && Math.Abs(_targetSheenX - _sheenX) < SettleEpsilon
-                        && Math.Abs(_targetSheenY - _sheenY) < SettleEpsilon;
+                        && Math.Abs(_targetSheenY - _sheenY) < SettleEpsilon
+                        && Math.Abs(NormalizeAngleDelta(_targetBorderHighlightAngle - _borderHighlightAngle)) < 0.05
+                        && Math.Abs(_targetBorderHighlightOpacity - _borderHighlightOpacity) < 0.01;
             if (settled)
             {
                 // Snap to exact rest values and stop ticking
@@ -465,14 +517,47 @@ public partial class LiquidGlassButton : UserControl
                 _scaleVelocity = 0;
                 _sheenVx = 0;
                 _sheenVy = 0;
+                _borderHighlightAngularVelocity = 0;
                 if (_scaleTransform != null)
                 {
                     _scaleTransform.ScaleX = _currentScale;
                     _scaleTransform.ScaleY = _currentScale;
                 }
+                SetBorderHighlightAngle(_btn, _targetBorderHighlightAngle);
+                SetBorderHighlightOpacity(_btn, _targetBorderHighlightOpacity);
                 _physicsTimer?.Stop();
             }
         }
+    }
+
+    private static double NormalizeAngle(double angle)
+    {
+        while (angle > 180)
+        {
+            angle -= 360;
+        }
+
+        while (angle < -180)
+        {
+            angle += 360;
+        }
+
+        return angle;
+    }
+
+    private static double NormalizeAngleDelta(double delta)
+    {
+        while (delta > 180)
+        {
+            delta -= 360;
+        }
+
+        while (delta < -180)
+        {
+            delta += 360;
+        }
+
+        return delta;
     }
 
     /// <summary>

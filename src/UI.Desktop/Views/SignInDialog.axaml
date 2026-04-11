@@ -26,9 +26,11 @@
 
             <TextBlock Text="Other sign-in options" FontWeight="SemiBold" />
             <StackPanel Orientation="Vertical" Spacing="8">
-                <Button Content="Windows Hello / OS Auth (placeholder)" Width="320" Classes="liquid-glass" />
-                <Button Content="Sign in with Google (placeholder)" Width="320" Classes="liquid-glass" />
-                <Button Content="Sign in with Microsoft (placeholder)" Width="320" Classes="liquid-glass" />
+                <Border Classes="glass-panel" Padding="12" CornerRadius="{StaticResource Radius.Md}">
+                    <TextBlock
+                        Text="This build currently supports local vault unlock with passphrase + keyfile. Windows Hello, Google, and Microsoft sign-in are not available in this dialog yet."
+                        TextWrapping="Wrap" />
+                </Border>
 
                 <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                     <TextBlock Text="Manifest:" VerticalAlignment="Center"/>

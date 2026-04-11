@@ -42,7 +42,6 @@ namespace PhantomVault.Core.Tests
             // Assert
             Assert.Equal(plaintext, recovered);
             Assert.Equal(1088, kemCiphertext.Length);
-            Assert.NotNull(encryptedData);
             Assert.Equal(plaintext.Length, encryptedData.Ciphertext.Length);
         }
 

@@ -2,6 +2,8 @@ using System;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using GiblexVault.Security.ZK.Models;
+using GiblexVault.Security.ZK.Primitives;
 using PhantomVault.Core.Models;
 
 namespace PhantomVault.Core.Services
@@ -95,10 +97,6 @@ namespace PhantomVault.Core.Services
             if (string.IsNullOrWhiteSpace(normalizedInput))
                 return false;
 
-            // Hash the input code
-            var inputHash = HashRecoveryCode(normalizedInput);
-            var inputHashBytes = Encoding.UTF8.GetBytes(inputHash);
-
             // Check each recovery code using constant-time comparison
             foreach (var recoveryCode in manifest.RecoveryCodes)
             {
@@ -106,15 +104,25 @@ namespace PhantomVault.Core.Services
                 if (recoveryCode.Used)
                     continue;
 
-                var storedHashBytes = Encoding.UTF8.GetBytes(recoveryCode.Hash);
+                if (!TryParseStoredHash(recoveryCode.Hash, out var salt, out var storedHash))
+                    continue;
 
-                // Constant-time comparison to prevent timing attacks
-                if (CryptographicOperations.FixedTimeEquals(inputHashBytes, storedHashBytes))
+                var inputHash = DeriveRecoveryCodeHash(normalizedInput, salt);
+                try
                 {
-                    // Mark code as used
-                    recoveryCode.Used = true;
-                    recoveryCode.UsedAtUtc = DateTimeOffset.UtcNow;
-                    return true;
+                    if (CryptographicOperations.FixedTimeEquals(inputHash, storedHash))
+                    {
+                        // Mark code as used
+                        recoveryCode.Used = true;
+                        recoveryCode.UsedAtUtc = DateTimeOffset.UtcNow;
+                        return true;
+                    }
+                }
+                finally
+                {
+                    CryptographicOperations.ZeroMemory(inputHash);
+                    CryptographicOperations.ZeroMemory(salt);
+                    CryptographicOperations.ZeroMemory(storedHash);
                 }
             }
 
@@ -172,16 +180,7 @@ namespace PhantomVault.Core.Services
             // Generate unique salt for this code
             var salt = RandomNumberGenerator.GetBytes(16);
 
-            // Hash using Argon2id with strong parameters
-            // Memory: 64MB, Iterations: 3, Parallelism: 1
-            var hash = Argon2Placeholder.Hash(
-                Encoding.UTF8.GetBytes(code),
-                salt,
-                iterations: 3,
-                memorySize: 64 * 1024, // 64 MB
-                parallelism: 1,
-                hashLength: 32,
-                Argon2Type.Argon2id);
+            var hash = DeriveRecoveryCodeHash(code, salt);
 
             // Return salt + hash as base64
             var combined = new byte[salt.Length + hash.Length];
@@ -190,37 +189,57 @@ namespace PhantomVault.Core.Services
 
             return Convert.ToBase64String(combined);
         }
-    }
 
-    /// <summary>
-    /// Argon2 password hashing implementation.
-    /// This is a simplified version - in production, use Konscious.Security.Cryptography.Argon2.
-    /// </summary>
-    internal static class Argon2Placeholder
-    {
-        public static byte[] Hash(
-            byte[] password,
-            byte[] salt,
-            int iterations,
-            int memorySize,
-            int parallelism,
-            int hashLength,
-            Argon2Type type)
+        private static byte[] DeriveRecoveryCodeHash(string code, byte[] salt)
         {
-            // For now, fall back to PBKDF2 with high iteration count
-            // In production, use: using var argon2 = new Argon2id(password)
-            using var pbkdf2 = new Rfc2898DeriveBytes(
-                password,
-                salt,
-                iterations * 50000, // Scale up iterations to compensate for PBKDF2 vs Argon2
-                HashAlgorithmName.SHA256);
+            var normalized = Encoding.UTF8.GetBytes(code);
+            try
+            {
+                var kdfParams = new KdfParams
+                {
+                    Kdf = "argon2id",
+                    Ops = 3,
+                    MemMiB = 64,
+                    Parallelism = 1,
+                    Salt = salt
+                };
 
-            return pbkdf2.GetBytes(hashLength);
+                return Argon2Kdf.DeriveKey(normalized, salt, kdfParams);
+            }
+            finally
+            {
+                CryptographicOperations.ZeroMemory(normalized);
+            }
         }
-    }
 
-    internal enum Argon2Type
-    {
-        Argon2id
+        private static bool TryParseStoredHash(string storedHash, out byte[] salt, out byte[] hash)
+        {
+            salt = Array.Empty<byte>();
+            hash = Array.Empty<byte>();
+
+            try
+            {
+                var combined = Convert.FromBase64String(storedHash);
+                if (combined.Length <= 16)
+                    return false;
+
+                salt = new byte[16];
+                hash = new byte[combined.Length - 16];
+                Buffer.BlockCopy(combined, 0, salt, 0, salt.Length);
+                Buffer.BlockCopy(combined, salt.Length, hash, 0, hash.Length);
+                CryptographicOperations.ZeroMemory(combined);
+                return true;
+            }
+            catch
+            {
+                if (salt.Length > 0)
+                    CryptographicOperations.ZeroMemory(salt);
+                if (hash.Length > 0)
+                    CryptographicOperations.ZeroMemory(hash);
+                salt = Array.Empty<byte>();
+                hash = Array.Empty<byte>();
+                return false;
+            }
+        }
     }
 }

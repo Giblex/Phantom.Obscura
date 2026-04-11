@@ -21,10 +21,12 @@ namespace PhantomVault.Core.Services
     public sealed class BackupService
     {
         private readonly EncryptionService _encryptionService;
+        private readonly PhantomContainerService? _containerService;
 
-        public BackupService(EncryptionService encryptionService)
+        public BackupService(EncryptionService encryptionService, PhantomContainerService? containerService = null)
         {
             _encryptionService = encryptionService;
+            _containerService = containerService;
         }
 
         /// <summary>
@@ -51,12 +53,22 @@ namespace PhantomVault.Core.Services
                 throw new ArgumentException("A passphrase or keyfile must be provided", nameof(passphrase));
             }
 
-            // Read the existing manifest bytes. We backup the encrypted
-            // manifest as‑is rather than attempting to re‑serialize the
-            // <see cref="VaultManifest"/> because the caller may have
-            // additional metadata outside the manifest class. Backing up
-            // the raw file ensures a faithful copy.
-            byte[] plainBytes = await File.ReadAllBytesAsync(manifestPath).ConfigureAwait(false);
+            // Read the manifest bytes. For .pvault containers, extract the
+            // embedded manifest via PhantomContainerService rather than
+            // reading the entire container file.
+            byte[] plainBytes;
+            if (manifestPath.EndsWith(".pvault", StringComparison.OrdinalIgnoreCase) && _containerService != null)
+            {
+                var manifest = _containerService.ReadManifestFromContainer(manifestPath, passphrase, keyfilePath);
+                if (manifest == null)
+                    throw new InvalidOperationException("Failed to read manifest from container.");
+                plainBytes = System.Text.Encoding.UTF8.GetBytes(
+                    System.Text.Json.JsonSerializer.Serialize(manifest));
+            }
+            else
+            {
+                plainBytes = await File.ReadAllBytesAsync(manifestPath).ConfigureAwait(false);
+            }
 
             // Combine passphrase with keyfile contents if provided to
             // increase entropy.

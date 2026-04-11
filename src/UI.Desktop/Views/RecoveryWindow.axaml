@@ -155,8 +155,23 @@
                         <Run Text="You will need one of your recovery codes to proceed. Recovery codes are one-time use only."/>
                     </TextBlock>
 
+                    <!-- Explicit unsupported state -->
+                    <Border Classes="warning-banner" IsVisible="{Binding !IsRecoveryAvailable}">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Recovery Context Required"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource WarningBrush}"/>
+                            <TextBlock Text="{Binding RecoveryAvailabilityMessage}"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            <TextBlock Text="Open recovery from a vault surface that has loaded an actual recovery store, or use the dedicated bundled recovery product when available."
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        </StackPanel>
+                    </Border>
+
                     <!-- Warning about recovery -->
-                    <Border Classes="warning-banner">
+                    <Border Classes="warning-banner" IsVisible="{Binding IsRecoveryAvailable}">
                         <StackPanel Spacing="8">
                             <TextBlock Text="Important Security Information" FontWeight="SemiBold" Foreground="{DynamicResource WarningBrush}"/>
                             <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}">
@@ -174,7 +189,8 @@
 
                     <!-- Remaining codes info -->
                     <Border Background="{DynamicResource ControlBackgroundBrush}"
-                            CornerRadius="8" Padding="16" Margin="0,0,0,16">
+                            CornerRadius="8" Padding="16" Margin="0,0,0,16"
+                            IsVisible="{Binding IsRecoveryAvailable}">
                         <Grid ColumnDefinitions="Auto,*">
                             <TextBlock Grid.Column="0" Text="Recovery Codes Remaining:"
                                        VerticalAlignment="Center"/>
@@ -189,7 +205,16 @@
                             Command="{Binding StartRecoveryCommand}"
                             Classes="liquid-glass primary"
                             HorizontalAlignment="Center"
-                            Width="200" Height="44"/>
+                            Width="200" Height="44"
+                            IsEnabled="{Binding CanStartRecovery}"/>
+
+                    <Button Content="Close"
+                            Command="{Binding CloseCommand}"
+                            Classes="liquid-glass"
+                            HorizontalAlignment="Center"
+                            Width="160"
+                            Margin="0,12,0,0"
+                            IsVisible="{Binding !IsRecoveryAvailable}"/>
                 </StackPanel>
 
                 <!-- Step: Enter Code -->
@@ -484,7 +509,7 @@
                     </ListBox>
 
                     <Button Content="Back"
-                            Click="BackToComplete_Click"
+                            Command="{Binding GoBackToCompleteCommand}"
                             Classes="liquid-glass"
                             HorizontalAlignment="Center"
                             Width="140"

@@ -54,6 +54,14 @@ namespace PhantomVault.UI
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static void AppMain(string[] args)
         {
+#if DEBUG
+            const LogEventLevel minimumLogLevel = LogEventLevel.Debug;
+            const bool allowDebugBuilds = true;
+#else
+            const LogEventLevel minimumLogLevel = LogEventLevel.Information;
+            const bool allowDebugBuilds = false;
+#endif
+
             // SECURITY PHASE 0: Suppress crash dumps before any sensitive data is loaded
             bool dumpSuppressionActive = CrashDumpSuppression.Initialize();
 
@@ -62,7 +70,7 @@ namespace PhantomVault.UI
             Directory.CreateDirectory(logDirectory);
 
             Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
+                .MinimumLevel.Is(minimumLogLevel)
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
                 .Enrich.FromLogContext()
                 .WriteTo.File(
@@ -100,7 +108,7 @@ namespace PhantomVault.UI
                 }
             };
 
-            Log.Information("Starting PhantomVault with args: {Args}", string.Join(" ", args));
+            Log.Information("Starting PhantomVault");
 
             try
             {
@@ -108,9 +116,7 @@ namespace PhantomVault.UI
                 var buildMetadata = BuildIntegrityVerifier.GetBuildMetadata();
                 Log.Information("Build Info: {BuildMetadata}", buildMetadata.ToString());
 
-                // WARNING: For production deployment, change allowDebugBuilds to false
-                // This will prevent DEBUG builds from running
-                BuildIntegrityVerifier.EnforceProductionBuild(allowDebugBuilds: true);
+                BuildIntegrityVerifier.EnforceProductionBuild(allowDebugBuilds);
 
                 // PHASE 2: Initialize and verify security policy
                 // SECURITY: Policy verification is ALWAYS enforced regardless of build type
@@ -224,6 +230,14 @@ namespace PhantomVault.UI
         {
             return AppBuilder.Configure<App>()
                 .UsePlatformDetect()
+                .With(new Win32PlatformOptions
+                {
+                    RenderingMode = new[]
+                    {
+                        Win32RenderingMode.AngleEgl,
+                        Win32RenderingMode.Software
+                    }
+                })
                 .LogToTrace()
                 .UseReactiveUI();
         }

@@ -10,6 +10,7 @@ namespace PhantomVault.UI.Services
     {
         private static bool _privacyModeEnabled;
         private static bool _redactDiagnostics = true;
+        private static bool _debugLoggingEnabled;
 
         public static event EventHandler? PrivacyModeChanged;
 
@@ -34,6 +35,12 @@ namespace PhantomVault.UI.Services
             set => _redactDiagnostics = value;
         }
 
+        public static bool DebugLoggingEnabled
+        {
+            get => _debugLoggingEnabled;
+            set => _debugLoggingEnabled = value;
+        }
+
         public static string MaskText(string? value, string? placeholder = null)
         {
             if (!_privacyModeEnabled)
@@ -46,6 +53,11 @@ namespace PhantomVault.UI.Services
 
         public static void DebugInfo(string category, string message)
         {
+            if (!_debugLoggingEnabled)
+            {
+                return;
+            }
+
             Debug.WriteLine($"[{category}] {message}");
         }
 

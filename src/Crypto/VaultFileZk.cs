@@ -27,6 +27,13 @@ namespace GiblexVault.Security.ZK
         // Stream-based encrypt: reads plaintext from inputStream and writes encrypted file to outputPath
         public static async Task EncryptAsync(Stream inputStream, string outputPath, byte[] masterKey, EngineOptions options, string? note = null)
         {
+            await using var fout = File.Create(outputPath);
+            await EncryptToStreamAsync(inputStream, fout, masterKey, options, note).ConfigureAwait(false);
+        }
+
+        // Stream-to-stream encrypt: keeps plaintext off disk when callers already manage the output stream.
+        public static async Task EncryptToStreamAsync(Stream inputStream, Stream outputStream, byte[] masterKey, EngineOptions options, string? note = null)
+        {
             var salt = new byte[32];
             RandomNumberGenerator.Fill(salt);
             var kdf = new KdfParams { Kdf = "argon2id", Ops = options.ArgonOpsLimit, MemMiB = options.ArgonMemMiB, Parallelism = options.ArgonParallelism, Salt = salt };
@@ -42,20 +49,18 @@ namespace GiblexVault.Security.ZK
             var headerDto = new HeaderDocDto("GV-ZKF", "1", suite, kdf, wrappedDek, note);
             var header = JsonSerializer.SerializeToUtf8Bytes(headerDto, GvZkJsonContext.Default.HeaderDocDto);
 
-            await using var fout = File.Create(outputPath);
             var magic = new byte[] { 0x47, 0x56, 0x2D, 0x5A, 0x4B, 0x46, 0x01, 0x00 };
-            await fout.WriteAsync(magic).ConfigureAwait(false);
+            await outputStream.WriteAsync(magic).ConfigureAwait(false);
             byte[] l = ArrayPool<byte>.Shared.Rent(4);
             try
             {
                 BinaryPrimitives.WriteUInt32LittleEndian(l, (uint)header.Length);
-                await fout.WriteAsync(l, 0, 4).ConfigureAwait(false);
-                await fout.WriteAsync(header).ConfigureAwait(false);
+                await outputStream.WriteAsync(l, 0, 4).ConfigureAwait(false);
+                await outputStream.WriteAsync(header).ConfigureAwait(false);
 
                 var ns = Aead.GetSuite(suite).NonceSize;
                 var buf = ArrayPool<byte>.Shared.Rent(options.ChunkSizeBytes);
 
-                // Create reusable cipher instance for the entire stream
                 IDisposable? cipherDisposable = null;
                 AesGcm? aesGcm = null;
                 Key? xChaChaKey = null;
@@ -79,7 +84,6 @@ namespace GiblexVault.Security.ZK
                         var nonce = new byte[ns];
                         RandomNumberGenerator.Fill(nonce);
 
-                        // Create an exact-sized chunk for the AEAD API which expects an exact-length array
                         var chunk = new byte[r];
                         Buffer.BlockCopy(buf, 0, chunk, 0, r);
 
@@ -89,31 +93,28 @@ namespace GiblexVault.Security.ZK
                         else
                             ct = Aead.EncryptWithAesGcm(aesGcm!, nonce, header, chunk);
 
-                        await fout.WriteAsync(nonce, 0, nonce.Length).ConfigureAwait(false);
+                        await outputStream.WriteAsync(nonce, 0, nonce.Length).ConfigureAwait(false);
                         BinaryPrimitives.WriteUInt32LittleEndian(l, (uint)ct.Length);
-                        await fout.WriteAsync(l, 0, 4).ConfigureAwait(false);
-                        await fout.WriteAsync(ct, 0, ct.Length).ConfigureAwait(false);
+                        await outputStream.WriteAsync(l, 0, 4).ConfigureAwait(false);
+                        await outputStream.WriteAsync(ct, 0, ct.Length).ConfigureAwait(false);
 
-                        // Zero sensitive chunk copy
                         CryptographicOperations.ZeroMemory(chunk);
                     }
                 }
                 finally
                 {
                     cipherDisposable?.Dispose();
-                    // Zero and return the large read buffer
                     CryptographicOperations.ZeroMemory(buf.AsSpan(0, options.ChunkSizeBytes));
                     ArrayPool<byte>.Shared.Return(buf);
                 }
             }
             finally
             {
-                // Return the small length buffer (zero it first)
                 l[0] = l[1] = l[2] = l[3] = 0;
                 ArrayPool<byte>.Shared.Return(l);
+                CryptographicOperations.ZeroMemory(kek);
+                CryptographicOperations.ZeroMemory(dek);
             }
-            CryptographicOperations.ZeroMemory(kek);
-            CryptographicOperations.ZeroMemory(dek);
         }
 
         // File-to-file decrypt delegates to stream implementation

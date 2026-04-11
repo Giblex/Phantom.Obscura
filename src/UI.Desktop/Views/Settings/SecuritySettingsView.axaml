@@ -22,9 +22,9 @@
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
                 
-                <CheckBox Content="Require hardware token" 
+                <CheckBox Content="Require hardware-token presence check" 
                           IsChecked="{Binding RequireHardwareToken, Mode=TwoWay}"
-                          ToolTip.Tip="Use a physical security key for authentication"/>
+                          ToolTip.Tip="Require the supported hardware-token presence check during unlock on compatible Windows builds"/>
                 
                 <CheckBox Content="Require keyfile" 
                           IsChecked="{Binding RequireKeyfile, Mode=TwoWay}"
@@ -94,15 +94,21 @@
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
                 
                 <CheckBox Content="Clear clipboard after copying passwords" 
-                          IsChecked="True"
-                          ToolTip.Tip="Automatically clear clipboard after 30 seconds"/>
+                          IsChecked="{Binding ClearClipboardAfterCopy, Mode=TwoWay}"
+                          ToolTip.Tip="Automatically clear copied secrets after the selected delay"/>
                 
                 <StackPanel Spacing="{StaticResource Space.Sm}">
-                    <TextBlock Text="Clipboard timeout (seconds):" 
+                    <TextBlock Text="Clipboard clear delay:" 
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
-                    <TextBox Width="100" 
-                             HorizontalAlignment="Left"
-                             Text="30"/>
+                    <ComboBox Width="180"
+                              HorizontalAlignment="Left"
+                              SelectedIndex="{Binding ClipboardClearTimeIndex, Mode=TwoWay}">
+                        <ComboBoxItem Content="30 seconds"/>
+                        <ComboBoxItem Content="1 minute"/>
+                        <ComboBoxItem Content="2 minutes"/>
+                        <ComboBoxItem Content="5 minutes"/>
+                        <ComboBoxItem Content="Never"/>
+                    </ComboBox>
                 </StackPanel>
                 
                 <CheckBox Content="Auto-copy TOTP code with password" 
@@ -127,7 +133,7 @@
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
                 
                 <CheckBox Content="Enable screenshot protection" 
-                          IsChecked="{Binding $parent[Window].DataContext.EnableScreenshotProtection, Mode=TwoWay}"
+                          IsChecked="{Binding EnableScreenshotProtection, Mode=TwoWay}"
                           ToolTip.Tip="When enabled, the vault window appears black in screenshots and screen recordings"/>
                 
                 <TextBlock Text="This security feature prevents credential exposure through screenshots, screen recordings, and screen sharing. When enabled, the vault window will be hidden from screen capture tools."
@@ -245,7 +251,7 @@
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
                 
-                <TextBlock Text="Add additional layers of security to protect your vault" 
+                <TextBlock Text="Review the security factors that are currently available for this vault and this device" 
                            FontSize="{StaticResource Type.Small.Size}" 
                            Foreground="{DynamicResource MutedTextBrush}"
                            TextWrapping="Wrap"/>
@@ -272,10 +278,10 @@
                             HorizontalAlignment="Stretch"
                             Margin="6,0,0,12"
                             Height="50"
-                            ToolTip.Tip="Configure passkey/FIDO2 authentication (hardware keys, password managers)">
+                            ToolTip.Tip="Configure the Windows Hello-backed device authenticator for this vault">
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <TextBlock Text="🔑" FontSize="{StaticResource Type.Icon.Size}" VerticalAlignment="Center"/>
-                            <TextBlock Text="Passkey/FIDO2" VerticalAlignment="Center"/>
+                            <TextBlock Text="Device Authenticator" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                     
@@ -286,7 +292,7 @@
                             HorizontalAlignment="Stretch"
                             Margin="0,0,6,0"
                             Height="50"
-                            ToolTip.Tip="Use Windows Hello biometrics (fingerprint, face, PIN)">
+                            ToolTip.Tip="Review Windows Hello availability for face, fingerprint, or PIN-backed unlock">
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <TextBlock Text="👁️" FontSize="{StaticResource Type.Icon.Size}" VerticalAlignment="Center"/>
                             <TextBlock Text="Windows Hello" VerticalAlignment="Center"/>

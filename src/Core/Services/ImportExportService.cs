@@ -52,6 +52,15 @@ namespace PhantomVault.Core.Services
         public string Message { get; set; } = "";
     }
 
+    internal sealed class PhantomVaultJsonExportEnvelope
+    {
+        public DateTimeOffset? ExportDate { get; set; }
+        public string? Version { get; set; }
+        public string? VaultName { get; set; }
+        public int? TotalCredentials { get; set; }
+        public List<Credential>? Credentials { get; set; }
+    }
+
     /// <summary>
     /// Represents a duplicate credential detection result.
     /// </summary>
@@ -99,7 +108,7 @@ namespace PhantomVault.Core.Services
                 var buffer = new byte[4];
                 using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
                 {
-                    fs.Read(buffer, 0, 4);
+                    fs.ReadExactly(buffer, 0, 4);
                 }
 
                 // Check for BOM (Byte Order Mark)
@@ -266,6 +275,10 @@ namespace PhantomVault.Core.Services
 
             try
             {
+                var extension = Path.GetExtension(filePath).ToLowerInvariant();
+                if (extension == ".kdbx")
+                    return "KeePass KDBX";
+
                 // Read first few lines for analysis
                 var lines = await File.ReadAllLinesAsync(filePath, Encoding.UTF8);
                 if (lines.Length == 0) return null;
@@ -388,56 +401,92 @@ namespace PhantomVault.Core.Services
 
             var credentials = new List<Credential>();
 
-            // Auto-detect encoding
+            // Auto-detect encoding and parse full CSV text so quoted newlines are preserved.
             var encoding = DetectFileEncoding(filePath);
-            var lines = await File.ReadAllLinesAsync(filePath, encoding);
+            var content = await File.ReadAllTextAsync(filePath, encoding);
+            var records = ParseCsvRecords(content);
+            if (records.Count < 2) return credentials;
 
-            if (lines.Length < 2) return credentials; // No data rows
+            var header = records[0];
+            var columnMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            for (int i = 0; i < header.Length; i++)
+            {
+                var key = header[i].Trim();
+                if (!string.IsNullOrEmpty(key) && !columnMap.ContainsKey(key))
+                {
+                    columnMap[key] = i;
+                }
+            }
 
-            int totalLines = lines.Length - 1;
+            string GetColumn(string[] row, params string[] names)
+            {
+                foreach (var name in names)
+                {
+                    if (columnMap.TryGetValue(name, out var index) && index < row.Length)
+                    {
+                        return row[index];
+                    }
+                }
+                return string.Empty;
+            }
+
+            int totalRows = records.Count - 1;
             int processed = 0;
 
-            // Skip header row
-            for (int i = 1; i < lines.Length; i++)
+            for (int i = 1; i < records.Count; i++)
             {
-                var line = lines[i].Trim();
-                if (string.IsNullOrEmpty(line)) continue;
+                var row = records[i];
+                if (row.Length == 0) continue;
+                if (row.Length < 4) continue;
 
                 try
                 {
-                    var parts = ParseCsvLine(line);
-                    if (parts.Length < 6) continue; // Minimum required fields
-
                     var cred = new Credential
                     {
-                        Title = parts.Length > 0 ? parts[0] : "",
-                        Username = parts.Length > 1 ? parts[1] : "",
-                        Password = parts.Length > 2 ? parts[2] : "",
-                        Url = parts.Length > 3 ? parts[3] : "",
-                        Notes = parts.Length > 4 ? parts[4] : "",
-                        Group = parts.Length > 5 ? parts[5] : "",
-                        Icon = parts.Length > 6 ? parts[6] : "🔑",
-                        Tags = parts.Length > 7 && !string.IsNullOrEmpty(parts[7])
-                            ? parts[7].Split(';', StringSplitOptions.RemoveEmptyEntries).ToList()
-                            : new List<string>()
+                        Title = GetColumn(row, "Title", "title", "Name", "name"),
+                        Username = GetColumn(row, "Username", "username", "login_username"),
+                        Password = GetColumn(row, "Password", "password", "login_password"),
+                        Url = GetColumn(row, "URL", "url", "login_uri"),
+                        Notes = GetColumn(row, "Notes", "notes", "extra"),
+                        Group = GetColumn(row, "Group", "group", "Folder", "folder", "grouping"),
+                        Icon = "🔑",
+                        Tags = GetColumn(row, "Tags", "tags")
+                            .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                            .ToList()
                     };
 
-                    // Parse dates
-                    if (parts.Length > 8 && DateTimeOffset.TryParse(parts[8], out var created))
+                    if (DateTimeOffset.TryParse(GetColumn(row, "Created", "created"), out var created))
                         cred.CreatedUtc = created;
 
-                    if (parts.Length > 9 && DateTimeOffset.TryParse(parts[9], out var updated))
+                    if (DateTimeOffset.TryParse(GetColumn(row, "LastUpdated", "Last Updated", "lastUpdated"), out var updated))
                         cred.LastUpdatedUtc = updated;
 
-                    if (parts.Length > 10 && !string.IsNullOrEmpty(parts[10]) && DateTimeOffset.TryParse(parts[10], out var expiry))
+                    if (DateTimeOffset.TryParse(GetColumn(row, "Expiry", "expiry", "Expires", "expires"), out var expiry))
                         cred.ExpiryUtc = expiry;
 
-                    credentials.Add(cred);
+                    // Skip completely empty rows.
+                    if (string.IsNullOrWhiteSpace(cred.Title) &&
+                        string.IsNullOrWhiteSpace(cred.Username) &&
+                        string.IsNullOrWhiteSpace(cred.Password) &&
+                        string.IsNullOrWhiteSpace(cred.Url) &&
+                        string.IsNullOrWhiteSpace(cred.Notes))
+                    {
+                        continue;
+                    }
 
+                    // Guard against malformed multiline fragments being interpreted as standalone rows.
+                    if (string.IsNullOrWhiteSpace(cred.Username) &&
+                        string.IsNullOrWhiteSpace(cred.Password) &&
+                        string.IsNullOrWhiteSpace(cred.Url))
+                    {
+                        continue;
+                    }
+
+                    credentials.Add(cred);
                     processed++;
                     progress?.Report(new ImportProgress
                     {
-                        TotalItems = totalLines,
+                        TotalItems = totalRows,
                         ProcessedItems = processed,
                         SuccessCount = credentials.Count,
                         CurrentItem = cred.Title ?? cred.Username ?? "Unknown"
@@ -446,7 +495,6 @@ namespace PhantomVault.Core.Services
                 catch
                 {
                     processed++;
-                    continue;
                 }
             }
 
@@ -684,8 +732,7 @@ namespace PhantomVault.Core.Services
 
             var json = System.Text.Json.JsonSerializer.Serialize(credentials, new System.Text.Json.JsonSerializerOptions
             {
-                WriteIndented = true,
-                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+                WriteIndented = true
             });
 
             await File.WriteAllTextAsync(filePath, json, Encoding.UTF8);
@@ -700,12 +747,36 @@ namespace PhantomVault.Core.Services
             if (!File.Exists(filePath)) throw new FileNotFoundException("JSON file not found", filePath);
 
             var json = await File.ReadAllTextAsync(filePath, Encoding.UTF8);
-            var credentials = System.Text.Json.JsonSerializer.Deserialize<List<Credential>>(json, new System.Text.Json.JsonSerializerOptions
+            var options = new System.Text.Json.JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
-            });
+            };
 
-            return credentials ?? new List<Credential>();
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            if (root.ValueKind == JsonValueKind.Array)
+            {
+                var credentials = System.Text.Json.JsonSerializer.Deserialize<List<Credential>>(json, options);
+                return credentials ?? new List<Credential>();
+            }
+
+            if (root.ValueKind == JsonValueKind.Object)
+            {
+                if (root.TryGetProperty("credentials", out var credentialsElement) && credentialsElement.ValueKind == JsonValueKind.Array)
+                {
+                    var credentials = JsonSerializer.Deserialize<List<Credential>>(credentialsElement.GetRawText(), options);
+                    return credentials ?? new List<Credential>();
+                }
+
+                var envelope = JsonSerializer.Deserialize<PhantomVaultJsonExportEnvelope>(json, options);
+                if (envelope?.Credentials != null)
+                {
+                    return envelope.Credentials;
+                }
+            }
+
+            return new List<Credential>();
         }
 
         private XElement CreateKeePassEntry(Credential cred)
@@ -753,6 +824,73 @@ namespace PhantomVault.Core.Services
             }
 
             return "\"" + value + "\"";
+        }
+
+        private static List<string[]> ParseCsvRecords(string content)
+        {
+            var records = new List<string[]>();
+            if (string.IsNullOrEmpty(content))
+                return records;
+
+            var row = new List<string>();
+            var field = new StringBuilder();
+            bool inQuotes = false;
+
+            for (int i = 0; i < content.Length; i++)
+            {
+                char c = content[i];
+
+                if (c == '"')
+                {
+                    if (inQuotes && i + 1 < content.Length && content[i + 1] == '"')
+                    {
+                        field.Append('"');
+                        i++;
+                    }
+                    else
+                    {
+                        inQuotes = !inQuotes;
+                    }
+                    continue;
+                }
+
+                if (!inQuotes && c == ',')
+                {
+                    row.Add(field.ToString());
+                    field.Clear();
+                    continue;
+                }
+
+                if (!inQuotes && (c == '\n' || c == '\r'))
+                {
+                    row.Add(field.ToString());
+                    field.Clear();
+
+                    // Skip CRLF second char.
+                    if (c == '\r' && i + 1 < content.Length && content[i + 1] == '\n')
+                    {
+                        i++;
+                    }
+
+                    // Avoid emitting a trailing blank record.
+                    if (row.Any(v => !string.IsNullOrEmpty(v)))
+                    {
+                        records.Add(row.ToArray());
+                    }
+                    row.Clear();
+                    continue;
+                }
+
+                field.Append(c);
+            }
+
+            row.Add(field.ToString());
+            if (row.Any(v => !string.IsNullOrEmpty(v)))
+            {
+                records.Add(row.ToArray());
+            }
+
+            return records;
         }
 
         private string[] ParseCsvLine(string line)
@@ -1310,6 +1448,8 @@ namespace PhantomVault.Core.Services
                     case "keepass xml":
                         importedCredentials = await ImportFromKeePassXmlAsync(filePath);
                         break;
+                    case "keepass kdbx":
+                        throw new NotSupportedException("KeePass KDBX import requires an interactive password/keyfile prompt and must be started from the import window.");
                     case "json":
                         importedCredentials = await ImportFromJsonAsync(filePath);
                         break;
@@ -1400,6 +1540,166 @@ namespace PhantomVault.Core.Services
             return result;
         }
 
+        public ImportResult BuildImportResult(
+            List<Credential> importedCredentials,
+            List<Credential> existingCredentials)
+        {
+            var result = new ImportResult();
+            result.TotalProcessed = importedCredentials?.Count ?? 0;
+
+            if (importedCredentials == null || importedCredentials.Count == 0)
+            {
+                return result;
+            }
+
+            var validCredentials = new List<Credential>();
+            int weakPasswordCount = 0;
+            int invalidUrlCount = 0;
+            int expiredCount = 0;
+
+            foreach (var cred in importedCredentials)
+            {
+                if (string.IsNullOrWhiteSpace(cred.Title) && string.IsNullOrWhiteSpace(cred.Username))
+                {
+                    result.Errors.Add("Skipped credential with no title or username");
+                    continue;
+                }
+
+                var warnings = ValidateCredential(cred);
+                foreach (var warning in warnings)
+                {
+                    result.Warnings.Add(warning);
+
+                    if (warning.Contains("Weak password") || warning.Contains("VeryWeak"))
+                        weakPasswordCount++;
+                    if (warning.Contains("Invalid URL"))
+                        invalidUrlCount++;
+                    if (warning.Contains("expired") || warning.Contains("expires in"))
+                        expiredCount++;
+                }
+
+                validCredentials.Add(cred);
+            }
+
+            result.WeakPasswordCount = weakPasswordCount;
+            result.InvalidUrlCount = invalidUrlCount;
+            result.ExpiredCount = expiredCount;
+            result.SuccessfulCredentials = validCredentials;
+
+            if (existingCredentials != null && existingCredentials.Any())
+            {
+                result.Duplicates = DetectDuplicates(validCredentials, existingCredentials);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Backward-compatible import entry point used by older callers/tests.
+        /// Auto-detects format when not provided.
+        /// </summary>
+        public async Task<ImportResult> ImportFromFileAsync(
+            string filePath,
+            List<Credential> existingCredentials,
+            string? format = null,
+            IProgress<ImportProgress>? progress = null)
+        {
+            if (string.IsNullOrWhiteSpace(filePath))
+                throw new ArgumentException("File path cannot be empty", nameof(filePath));
+            if (!File.Exists(filePath))
+                throw new FileNotFoundException("Import file not found", filePath);
+
+            var detected = string.IsNullOrWhiteSpace(format)
+                ? await DetectFormatAsync(filePath)
+                : format;
+
+            if (string.IsNullOrWhiteSpace(detected))
+            {
+                var ext = Path.GetExtension(filePath).ToLowerInvariant();
+                detected = ext switch
+                {
+                    ".csv" => "csv",
+                    ".json" => "json",
+                    ".xml" => "keepass xml",
+                    _ => throw new NotSupportedException($"Unable to detect import format for '{filePath}'.")
+                };
+            }
+
+            var normalized = NormalizeImportFormat(detected);
+            var result = await ImportWithDuplicateDetectionAsync(
+                filePath,
+                normalized,
+                existingCredentials ?? new List<Credential>(),
+                progress);
+
+            if (normalized == "json" && result.Errors.Count > 0)
+            {
+                for (int i = 0; i < result.Errors.Count; i++)
+                {
+                    if (!result.Errors[i].Contains("parse", StringComparison.OrdinalIgnoreCase))
+                    {
+                        result.Errors[i] = $"JSON parse error: {result.Errors[i]}";
+                    }
+                }
+            }
+
+            // Keep legacy behavior: malformed/unsupported content should surface as an error.
+            if (result.SuccessCount == 0 && result.ErrorCount == 0 && result.WarningCount == 0)
+            {
+                if (normalized == "json")
+                {
+                    result.Errors.Add("Unable to parse credentials from JSON content.");
+                }
+                else
+                {
+                    result.Errors.Add("No valid credentials were parsed from the input file.");
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Backward-compatible export entry point used by older callers/tests.
+        /// </summary>
+        public async Task ExportToFileAsync(
+            List<Credential> credentials,
+            string filePath,
+            string format)
+        {
+            if (credentials == null) throw new ArgumentNullException(nameof(credentials));
+            if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("File path cannot be empty", nameof(filePath));
+            if (string.IsNullOrWhiteSpace(format)) throw new ArgumentException("Format cannot be empty", nameof(format));
+
+            var normalized = format.Trim().ToLowerInvariant();
+            switch (normalized)
+            {
+                case "csv":
+                    await ExportToCsvAsync(credentials, filePath);
+                    return;
+                case "json":
+                    await ExportToJsonAsync(credentials, filePath);
+                    return;
+                case "keepass xml":
+                case "xml":
+                    await ExportToKeePassXmlAsync(credentials, filePath);
+                    return;
+                default:
+                    throw new NotSupportedException($"Export format '{format}' is not supported.");
+            }
+        }
+
+        private static string NormalizeImportFormat(string format)
+        {
+            var normalized = format.Trim().ToLowerInvariant();
+            return normalized switch
+            {
+                "edge csv" => "chrome csv",
+                "kdbx" => "keepass kdbx",
+                _ => normalized
+            };
+        }
+
         /// <summary>
         /// Imports credentials from KeeWeb/KeePassXC KDBX database (requires password).
         /// </summary>
@@ -1409,8 +1709,8 @@ namespace PhantomVault.Core.Services
         /// <param name="progress">Optional progress reporter (0-100).</param>
         /// <returns>List of imported credentials.</returns>
         public async Task<List<Credential>> ImportFromKeePassKdbxAsync(
-            string filePath, 
-            string password, 
+            string filePath,
+            string password,
             string? keyfilePath = null,
             IProgress<int>? progress = null)
         {

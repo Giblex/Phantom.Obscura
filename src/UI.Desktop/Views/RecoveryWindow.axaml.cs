@@ -14,6 +14,7 @@ namespace PhantomVault.UI.Views
         public RecoveryWindow()
         {
             InitializeComponent();
+            DataContextChanged += RecoveryWindow_DataContextChanged;
         }
 
         private void InitializeComponent()
@@ -26,19 +27,27 @@ namespace PhantomVault.UI.Views
             Close();
         }
 
-        private void BackToComplete_Click(object? sender, RoutedEventArgs e)
+        private void RecoveryWindow_DataContextChanged(object? sender, EventArgs e)
         {
             if (DataContext is RecoveryViewModel vm)
             {
-                // Navigate back to completion step
-                // This is a simple workaround since we can't set CurrentStep directly
-                // In a full implementation, add a GoBackCommand to the ViewModel
+                vm.CloseRequested -= RecoveryViewModel_CloseRequested;
+                vm.CloseRequested += RecoveryViewModel_CloseRequested;
             }
+        }
+
+        private void RecoveryViewModel_CloseRequested(object? sender, EventArgs e)
+        {
             Close();
         }
 
         protected override void OnClosed(EventArgs e)
         {
+            if (DataContext is RecoveryViewModel vm)
+            {
+                vm.CloseRequested -= RecoveryViewModel_CloseRequested;
+            }
+
             base.OnClosed(e);
 
             // Dispose the ViewModel

@@ -358,18 +358,33 @@ namespace PhantomVault.UI.ViewModels
 
             try
             {
-                // Use the enhanced import with duplicate detection
-                var progress = new Progress<ImportProgress>(p =>
-                {
-                    StatusMessage = $"Importing... {p.PercentComplete}% ({p.ProcessedItems}/{p.TotalItems}) - {p.CurrentItem}";
-                });
+                ImportResult importResult;
 
-                var importResult = await _importExportService.ImportWithDuplicateDetectionAsync(
-                    SelectedFile,
-                    SelectedFormat,
-                    _existingCredentials,
-                    progress
-                );
+                if (string.Equals(SelectedFormat, "KeePass KDBX", StringComparison.OrdinalIgnoreCase))
+                {
+                    var importedCredentials = await ImportFromKdbxAsync();
+                    if (importedCredentials.Count == 0)
+                    {
+                        StatusMessage = "No credentials were imported.";
+                        return;
+                    }
+
+                    importResult = _importExportService.BuildImportResult(importedCredentials, _existingCredentials);
+                }
+                else
+                {
+                    var progress = new Progress<ImportProgress>(p =>
+                    {
+                        StatusMessage = $"Importing... {p.PercentComplete}% ({p.ProcessedItems}/{p.TotalItems}) - {p.CurrentItem}";
+                    });
+
+                    importResult = await _importExportService.ImportWithDuplicateDetectionAsync(
+                        SelectedFile,
+                        SelectedFormat,
+                        _existingCredentials,
+                        progress
+                    );
+                }
 
                 // Handle duplicates if any
                 var credentialsToImport = importResult.SuccessfulCredentials;
@@ -432,6 +447,11 @@ namespace PhantomVault.UI.ViewModels
                 if (credentialsToImport.Any())
                 {
                     ImportCompleted?.Invoke(this, credentialsToImport);
+                    StatusMessage = $"Imported {credentialsToImport.Count} credential(s).";
+                }
+                else
+                {
+                    StatusMessage = "Import completed with no new credentials.";
                 }
 
                 CloseRequested?.Invoke(this, EventArgs.Empty);

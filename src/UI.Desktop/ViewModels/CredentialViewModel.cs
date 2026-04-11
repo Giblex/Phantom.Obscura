@@ -115,6 +115,7 @@ namespace PhantomVault.UI.ViewModels
         public bool IsCreditCardEntry => EntryType == EntryType.CreditCard;
         public bool IsBankAccountEntry => EntryType == EntryType.BankAccount;
         public bool IsTotpEntry => EntryType == EntryType.TotpGenerator;
+        public bool IsPinCodeEntry => EntryType == EntryType.PinCode;
         public bool HasUsername => !string.IsNullOrWhiteSpace(Username);
         public bool HasPassword => !string.IsNullOrWhiteSpace(Password);
 
@@ -318,6 +319,17 @@ namespace PhantomVault.UI.ViewModels
         public bool HasTotpIssuer => !string.IsNullOrWhiteSpace(TotpIssuer);
         public bool HasTotpAccountName => !string.IsNullOrWhiteSpace(TotpAccountName);
 
+        // PIN code details
+        public string PinLabel => _credential.PinLabel;
+        public string PinValue => _credential.PinValue;
+        public string MaskedPinValue => MaskSensitiveValue(PinValue, 0);
+        public string PinCategory => _credential.PinCategory;
+        public string PinIssuer => _credential.PinIssuer;
+        public bool HasPinLabel => !string.IsNullOrWhiteSpace(PinLabel);
+        public bool HasPinValue => !string.IsNullOrWhiteSpace(PinValue);
+        public bool HasPinCategory => !string.IsNullOrWhiteSpace(PinCategory);
+        public bool HasPinIssuer => !string.IsNullOrWhiteSpace(PinIssuer);
+
         public string CurrentTotpCode
         {
             get => _currentTotpCode;
@@ -349,7 +361,7 @@ namespace PhantomVault.UI.ViewModels
         }
 
         public double TotpProgressPercent => TotpTimeStep > 0 ? (double)TotpSecondsRemaining / TotpTimeStep * 100 : 0;
-        
+
         /// <summary>True when fewer than 6 seconds remain — used to trigger urgency color.</summary>
         public bool TotpIsExpiring => TotpSecondsRemaining > 0 && TotpSecondsRemaining <= 5;
 
@@ -532,6 +544,7 @@ namespace PhantomVault.UI.ViewModels
             this.RaisePropertyChanged(nameof(IsCreditCardEntry));
             this.RaisePropertyChanged(nameof(IsBankAccountEntry));
             this.RaisePropertyChanged(nameof(IsTotpEntry));
+            this.RaisePropertyChanged(nameof(IsPinCodeEntry));
             this.RaisePropertyChanged(nameof(HasUsername));
             this.RaisePropertyChanged(nameof(HasPassword));
             this.RaisePropertyChanged(nameof(CardholderName));
@@ -617,6 +630,15 @@ namespace PhantomVault.UI.ViewModels
             this.RaisePropertyChanged(nameof(HasContactAddress));
             this.RaisePropertyChanged(nameof(HasContactCompany));
             this.RaisePropertyChanged(nameof(HasContactJobTitle));
+            this.RaisePropertyChanged(nameof(PinLabel));
+            this.RaisePropertyChanged(nameof(PinValue));
+            this.RaisePropertyChanged(nameof(MaskedPinValue));
+            this.RaisePropertyChanged(nameof(PinCategory));
+            this.RaisePropertyChanged(nameof(PinIssuer));
+            this.RaisePropertyChanged(nameof(HasPinLabel));
+            this.RaisePropertyChanged(nameof(HasPinValue));
+            this.RaisePropertyChanged(nameof(HasPinCategory));
+            this.RaisePropertyChanged(nameof(HasPinIssuer));
         }
 
         private void UpdatePasswordFlagState()
@@ -696,6 +718,11 @@ namespace PhantomVault.UI.ViewModels
                 (
                     BuildJoinedParts(_credential.TotpIssuer, _credential.TotpAccountName),
                     $"{_credential.TotpDigits} digits · {_credential.TotpTimeStep}s"
+                ),
+                EntryType.PinCode =>
+                (
+                    BuildJoinedParts(_credential.PinLabel, _credential.PinIssuer),
+                    _credential.PinCategory
                 ),
                 _ =>
                 (

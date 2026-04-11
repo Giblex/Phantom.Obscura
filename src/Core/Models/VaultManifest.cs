@@ -32,6 +32,102 @@ namespace PhantomVault.Core.Models
         [JsonPropertyName("containerPath")]
         public string ContainerPath { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Relative path to the root authority container for this USB layout.
+        /// This container acts as the setup authority and stores the manifest.
+        /// </summary>
+        [JsonPropertyName("rootContainerPath")]
+        public string? RootContainerPath { get; set; }
+            = null;
+
+        /// <summary>
+        /// Relative path to the object container that stores object payload state
+        /// for the three-container USB layout.
+        /// </summary>
+        [JsonPropertyName("objectContainerPath")]
+        public string? ObjectContainerPath { get; set; }
+            = null;
+
+        /// <summary>
+        /// Relative path to the encrypted recovery container for the USB layout.
+        /// Recovery material must stay within this protected container model.
+        /// </summary>
+        [JsonPropertyName("recoveryContainerPath")]
+        public string? RecoveryContainerPath { get; set; }
+            = null;
+
+        /// <summary>
+        /// Relative path to the encrypted binding record persisted on the USB
+        /// during setup. This file anchors the drive-specific identity.
+        /// </summary>
+        [JsonPropertyName("bindingRecordPath")]
+        public string? BindingRecordPath { get; set; }
+            = null;
+
+        /// <summary>
+        /// Relative path to the encrypted recovery metadata record persisted on
+        /// the USB during setup.
+        /// </summary>
+        [JsonPropertyName("recoveryRecordPath")]
+        public string? RecoveryRecordPath { get; set; }
+            = null;
+
+        /// <summary>
+        /// Relative path to the encrypted provisioning/tier metadata persisted
+        /// during setup. This is used to make storage-tier migration explicit
+        /// and reversible instead of inferred from media layout.
+        /// </summary>
+        [JsonPropertyName("provisioningRecordPath")]
+        public string? ProvisioningRecordPath { get; set; }
+            = null;
+
+        /// <summary>
+        /// Path to the master Obscura volume that hides the inner container
+        /// structure as a single USB-visible blob.
+        /// </summary>
+        [JsonPropertyName("masterVolumePath")]
+        public string? MasterVolumePath { get; set; }
+            = null;
+
+        /// <summary>
+        /// Relative path to a persisted decoy vault payload inside the master
+        /// volume. This allows decoy activation without exposing separate files
+        /// on the USB root.
+        /// </summary>
+        [JsonPropertyName("decoyDatabasePath")]
+        public string? DecoyDatabasePath { get; set; }
+            = null;
+
+        /// <summary>
+        /// Selected user-facing protection tier for this vault.
+        /// </summary>
+        [JsonPropertyName("protectionTier")]
+        public VaultProtectionTier ProtectionTier { get; set; }
+            = VaultProtectionTier.StandardSecure;
+
+        /// <summary>
+        /// Actual storage transport currently used on disk.
+        /// </summary>
+        [JsonPropertyName("effectiveStorageTransport")]
+        public VaultStorageTransport EffectiveStorageTransport { get; set; }
+            = VaultStorageTransport.FileSystem;
+
+        /// <summary>
+        /// Optional stronger storage transport requested by policy but not yet
+        /// active on disk. This keeps migration intent explicit and reversible.
+        /// </summary>
+        [JsonPropertyName("requestedStorageTransport")]
+        public VaultStorageTransport? RequestedStorageTransport { get; set; }
+            = null;
+
+        /// <summary>
+        /// Indicates that the vault was provisioned with enough metadata to
+        /// migrate between supported storage tiers safely.
+        /// </summary>
+        [JsonPropertyName("supportsReversibleTierMigration")]
+        public bool SupportsReversibleTierMigration { get; set; }
+            = true;
+
 
 
         /// <summary>
@@ -105,6 +201,29 @@ namespace PhantomVault.Core.Models
         /// </summary>
         [JsonPropertyName("deviceId")]
         public string? DeviceId { get; set; }
+            = null;
+
+        /// <summary>
+        /// Stable setup-generated identifier for the USB binding record.
+        /// This is distinct from the computed hardware device fingerprint.
+        /// </summary>
+        [JsonPropertyName("usbBindingId")]
+        public string? UsbBindingId { get; set; }
+            = null;
+
+        /// <summary>
+        /// Setup-generated GUID that identifies the USB binding enrollment.
+        /// </summary>
+        [JsonPropertyName("usbBindingGuid")]
+        public string? UsbBindingGuid { get; set; }
+            = null;
+
+        /// <summary>
+        /// System GUUID captured at setup time and folded into the binding chain
+        /// when hardware UUID detection is available.
+        /// </summary>
+        [JsonPropertyName("guuid")]
+        public string? Guuid { get; set; }
             = null;
 
         /// <summary>

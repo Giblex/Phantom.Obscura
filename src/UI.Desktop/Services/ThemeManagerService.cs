@@ -38,7 +38,7 @@ namespace PhantomVault.UI.Services
             "avares://PhantomVault.UI/Assets/Themes/Accents/Accent.Pastel.axaml"
         };
 
-        public AppTheme CurrentTheme { get; private set; } = AppTheme.Dark;
+        public AppTheme CurrentTheme { get; private set; } = AppTheme.Light;
 
         public event EventHandler<AppTheme>? ThemeChanged;
 
@@ -157,16 +157,16 @@ namespace PhantomVault.UI.Services
                 // Remove existing PhantomTheme and HighContrast overlays
                 var toRemove = app.Styles
                     .OfType<StyleInclude>()
-                    .Where(s => s.Source?.OriginalString?.Contains("PhantomTheme") == true || 
+                    .Where(s => s.Source?.OriginalString?.Contains("PhantomTheme") == true ||
                                 s.Source?.OriginalString?.Contains("HighContrast") == true)
                     .ToList();
-                
+
                 foreach (var style in toRemove)
                 {
                     Log($"Removing style: {style.Source?.OriginalString}");
                     app.Styles.Remove(style);
                 }
-                
+
                 Log($"Removed {toRemove.Count} theme overlay(s)");
 
                 // Get the RuntimeThemeService to coordinate window-level theme dictionaries
@@ -178,39 +178,34 @@ namespace PhantomVault.UI.Services
 
                 // Avalonia 11.0+ uses RequestedThemeVariant property
                 string? phantomThemeUri = null;
-                
+
                 switch (theme)
                 {
                     case AppTheme.Light:
                         app.RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Light;
-                        // ALWAYS load the light theme — it provides both Style selectors and token overrides.
-                        // Suspend the dark runtime theme from windows so our light tokens win.
+                        // Load the light theme for base Style selectors.
+                        // Runtime theme (per-window) provides the actual color tokens.
                         phantomThemeUri = PHANTOM_THEME_LIGHT;
-                        runtimeThemeService?.SuspendForLightMode();
-                        Log($"Set RequestedThemeVariant to Light — suspended runtime theme");
+                        Log($"Set RequestedThemeVariant to Light — runtime theme stays active");
                         break;
-                    
+
                     case AppTheme.Dark:
                         app.RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Dark;
                         phantomThemeUri = PHANTOM_THEME_DARK;
-                        // Resume the dark runtime theme on windows so it provides dark tokens.
-                        runtimeThemeService?.ResumeForDarkMode();
-                        Log($"Set RequestedThemeVariant to Dark — resumed runtime theme");
+                        Log($"Set RequestedThemeVariant to Dark — runtime theme stays active");
                         break;
-                    
+
                     case AppTheme.HighContrast:
                         // Use Dark as base with both dark PhantomTheme and high contrast overlay
                         app.RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Dark;
                         phantomThemeUri = PHANTOM_THEME_DARK;
-                        runtimeThemeService?.ResumeForDarkMode();
-                        Log($"Set RequestedThemeVariant to Dark/HighContrast — resumed runtime theme");
+                        Log($"Set RequestedThemeVariant to Dark/HighContrast — runtime theme stays active");
                         break;
-                    
+
                     default:
                         Log($"Unsupported theme: {theme}, defaulting to Dark");
                         app.RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Dark;
                         phantomThemeUri = PHANTOM_THEME_DARK;
-                        runtimeThemeService?.ResumeForDarkMode();
                         break;
                 }
 
@@ -258,7 +253,7 @@ namespace PhantomVault.UI.Services
                         Log($"Failed to load high contrast theme: {ex.Message}");
                     }
                 }
-                
+
                 // Force UI refresh by invalidating all windows
                 if (app.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 {

@@ -1,4 +1,5 @@
 using Avalonia.Markup.Xaml;
+using PhantomVault.UI.ViewModels;
 
 namespace PhantomVault.UI.Views
 {
@@ -7,6 +8,11 @@ namespace PhantomVault.UI.Views
         public SecuritySettingsWindow()
         {
             InitializeComponent();
+
+            if (DataContext == null)
+            {
+                DataContext = new SecuritySettingsViewModel();
+            }
         }
 
         private void InitializeComponent()

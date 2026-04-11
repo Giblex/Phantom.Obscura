@@ -78,6 +78,11 @@ public class UsbKeyFile
         if (string.IsNullOrEmpty(keyFile.PublicKey))
             throw new InvalidOperationException("USB key file missing required 'publicKey' field");
 
+        if (rootVerifier != null && string.IsNullOrEmpty(keyFile.Signature))
+        {
+            throw new CryptographicException("USB key file signature is required when a root verifier is configured");
+        }
+
         // Verify signature if present and verifier provided
         if (!string.IsNullOrEmpty(keyFile.Signature) && rootVerifier != null)
         {

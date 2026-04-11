@@ -16,7 +16,7 @@ namespace PhantomVault.UI.ViewModels.Settings
 {
     public class ThemeSettingsViewModel : ReactiveObject
     {
-        private bool _isDarkTheme = true;
+        private bool _isDarkTheme = false;
         private int _selectedThemeSkin = 0;
         private bool _enableHighContrast = false;
         private int _selectedDisplayScale = 2; // 100%
@@ -77,11 +77,14 @@ namespace PhantomVault.UI.ViewModels.Settings
                 }
             }
         }
-        
+
         private void ApplyTheme()
         {
-            _themeManager.SetTheme(EnableHighContrast ? AppTheme.HighContrast : (IsDarkTheme ? AppTheme.Dark : AppTheme.Light));
-            
+            var theme = EnableHighContrast
+                ? AppTheme.HighContrast
+                : IsDarkTheme ? AppTheme.Dark : AppTheme.Light;
+            _themeManager.SetTheme(theme);
+
             try
             {
                 var settings = SettingsService.Load();
@@ -123,7 +126,7 @@ namespace PhantomVault.UI.ViewModels.Settings
                 // High contrast mode requires app restart for full effect
                 var dialogService = new DialogService();
                 var owner = GetOwnerWindow();
-                
+
                 bool confirmed = await dialogService.ShowConfirmationAsync(
                     "High Contrast Mode",
                     "High contrast mode requires an app restart to take full effect. Restart now?",
@@ -310,7 +313,7 @@ namespace PhantomVault.UI.ViewModels.Settings
             _enableHighContrast = settings.EnableHighContrast;
             _reduceAnimations = settings.ReduceAnimations;
             _reduceTransparency = settings.ReduceTransparency;
-            
+
             // Initialize runtime theme selection
             if (_runtimeThemeService != null && !string.IsNullOrEmpty(settings.SelectedThemeId))
             {
@@ -333,7 +336,7 @@ namespace PhantomVault.UI.ViewModels.Settings
         {
             var skinNames = new[] { "Default", "MidnightBlue", "ForestGreen", "RoyalPurple", "SunsetOrange", "OceanTeal" };
             _themeManager.SetSkin(SelectedThemeSkin);
-            
+
             try
             {
                 var settings = SettingsService.Load();
@@ -350,7 +353,7 @@ namespace PhantomVault.UI.ViewModels.Settings
         {
             // ApplyTheme() already handles the high contrast check
             ApplyTheme();
-            
+
             try
             {
                 var settings = SettingsService.Load();
@@ -383,7 +386,7 @@ namespace PhantomVault.UI.ViewModels.Settings
         private void ApplyAnimationSettings()
         {
             _themeManager.SetEffects(ReduceAnimations, ReduceTransparency);
-            
+
             try
             {
                 var settings = SettingsService.Load();
@@ -400,7 +403,7 @@ namespace PhantomVault.UI.ViewModels.Settings
         private void ApplyTransparencySettings()
         {
             _themeManager.SetEffects(ReduceAnimations, ReduceTransparency);
-            
+
             try
             {
                 var settings = SettingsService.Load();

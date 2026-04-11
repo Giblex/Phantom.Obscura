@@ -1,11 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <!-- Enable nullable reference types and treat warnings as errors for stronger code quality. -->
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <!-- Produce deterministic builds to aid reproducibility and security auditing. -->
     <Deterministic>true</Deterministic>
+    <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
     <!-- Allow unsafe code for memory pinning and zeroization -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- Generate XML documentation file for IntelliSense and API docs -->
@@ -34,13 +35,13 @@
   <ItemGroup>
     <!-- Argon2 implementation used for memory‑hard password derivation. Using
       Isopoh.Cryptography.Argon2 which supports modern .NET and is actively maintained -->
-    <PackageReference Include="Avalonia" Version="11.3.11" />
+    <PackageReference Include="Avalonia" Version="11.3.9" />
     <PackageReference Include="Isopoh.Cryptography.Argon2" Version="2.0.0" />
     <!-- BouncyCastle for post-quantum cryptography (ML-KEM/Kyber) -->
     <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
   <!-- Windows Runtime helpers to bridge WinRT async operations from Windows Hello APIs into Tasks -->
   <PackageReference Include="System.Runtime.WindowsRuntime" Version="4.7.0" />
-    <PackageReference Include="System.Management" Version="8.0.0" />
+    <PackageReference Include="System.Management" Version="9.0.0" />
     <PackageReference Include="KeePassLib.Standard" Version="2.57.1" />
     <!-- Yubico SDK for YubiKey integration -->
     <PackageReference Include="Yubico.YubiKey" Version="1.12.0" />

@@ -77,7 +77,11 @@ public static class WindowProtectionService
 #endif
             return result;
         }
-        catch (Exception ex)
+        catch (Exception
+#if DEBUG
+            ex
+#endif
+        )
         {
 #if DEBUG
             System.Diagnostics.Debug.WriteLine($"[WindowProtectionService] EXCEPTION in EnableScreenshotProtection: {ex.Message}");
@@ -125,7 +129,11 @@ public static class WindowProtectionService
 #endif
             return result;
         }
-        catch (Exception ex)
+        catch (Exception
+#if DEBUG
+            ex
+#endif
+        )
         {
 #if DEBUG
             System.Diagnostics.Debug.WriteLine($"[WindowProtectionService] EXCEPTION in DisableScreenshotProtection: {ex.Message}");

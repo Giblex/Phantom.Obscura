@@ -22,6 +22,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Collections.Generic;
 using GiblexVault.Security.ZK.Models;
+using Giblex.Controls;
 
 namespace PhantomVault.UI
 {
@@ -51,6 +52,7 @@ namespace PhantomVault.UI
         public override void Initialize()
         {
             AvaloniaXamlLoader.Load(this);
+            LiquidGlassScrollChrome.Register();
         }
 
         public override void OnFrameworkInitializationCompleted()
@@ -70,7 +72,9 @@ namespace PhantomVault.UI
             // Use the production implementation with ML-KEM-768 (CRYSTALS-Kyber) for post-quantum security
             services.AddSingleton<IHybridEncryptionService, HybridEncryptionService>();
             // Register the backup service which creates and prunes encrypted manifest backups
-            services.AddSingleton<BackupService>();
+            services.AddSingleton<BackupService>(sp => new BackupService(
+                sp.GetRequiredService<EncryptionService>(),
+                sp.GetRequiredService<PhantomContainerService>()));
             services.AddSingleton<ThemeManagerService>();
             services.AddSingleton<ShadowTrashService>();
             // Register migration service for post‑quantum agility
@@ -83,7 +87,20 @@ namespace PhantomVault.UI
             services.AddSingleton<AuditService>();
             services.AddSingleton<PasskeyService>();
             services.AddSingleton<IPasskeyService>(sp => sp.GetRequiredService<PasskeyService>());
-            services.AddSingleton<ManifestService>();
+            services.AddSingleton<SuiteWorkspaceService>();
+            services.AddSingleton<IntegratedAttestorService>();
+            services.AddSingleton<IntegratedRecoveryService>();
+            services.AddSingleton<PhantomContainerService>();
+            services.AddSingleton<ManifestService>(sp => new ManifestService(
+                sp.GetRequiredService<EncryptionService>(),
+                sp.GetRequiredService<PhantomContainerService>()));
+            services.AddSingleton<UsbArtifactProtectionService>();
+            services.AddSingleton<RecoveryVaultPathResolver>();
+            services.AddSingleton<RecoverySuiteBootstrapService>();
+            services.AddSingleton<ObscuraCredentialIndexService>();
+            services.AddSingleton<BlackSecureRawVolumeService>();
+            services.AddSingleton<ObscuraVolumeService>();
+            services.AddSingleton<VaultTierMigrationService>();
             services.AddSingleton<UsbDetector>();
             services.AddSingleton<IUsbDetector>(sp => sp.GetRequiredService<UsbDetector>());
             services.AddSingleton<UsbBindingService>();
@@ -130,18 +147,22 @@ namespace PhantomVault.UI
             // services.AddSingleton<PhantomVault.Core.Services.Autofill.ICredentialRepository, PhantomVault.Core.Services.Autofill.InMemoryCredentialRepository>();
             // services.AddSingleton<PhantomVault.Core.Services.Autofill.INativeMessagingHost, PhantomVault.Core.Services.Autofill.NativeMessagingHostService>();
 
-// #if ANDROID
-//             // Android: Use Android Autofill Service (integrates with Android Autofill Framework)
-//             services.AddSingleton<PhantomVault.Core.Services.Autofill.IAutofillProvider, PhantomVault.Core.Services.Autofill.AndroidAutofillService>();
-// #else
-//             // Windows/Desktop: Use Windows Autofill Service (integrates with browser extension)
-//             services.AddSingleton<PhantomVault.Core.Services.Autofill.IAutofillProvider, PhantomVault.Core.Services.Autofill.WindowsAutofillService>();
-// #endif
+            // #if ANDROID
+            //             // Android: Use Android Autofill Service (integrates with Android Autofill Framework)
+            //             services.AddSingleton<PhantomVault.Core.Services.Autofill.IAutofillProvider, PhantomVault.Core.Services.Autofill.AndroidAutofillService>();
+            // #else
+            //             // Windows/Desktop: Use Windows Autofill Service (integrates with browser extension)
+            //             services.AddSingleton<PhantomVault.Core.Services.Autofill.IAutofillProvider, PhantomVault.Core.Services.Autofill.WindowsAutofillService>();
+            // #endif
 
             // USB Auto-Inject Services
             // Note: VaultViewModel is registered as Transient, so we'll need to get it dynamically
             // Platform-specific services (Windows)
-            services.AddSingleton<PhantomVault.Platform.Services.IActiveWindowDetector, PhantomVault.Core.Services.Platform.Windows.WindowsActiveWindowDetector>();
+            services.AddSingleton<PhantomVault.Core.Services.Platform.Windows.WindowsActiveWindowDetector>();
+            services.AddSingleton<PhantomVault.Core.Services.Platform.IActiveWindowDetector>(sp =>
+                sp.GetRequiredService<PhantomVault.Core.Services.Platform.Windows.WindowsActiveWindowDetector>());
+            services.AddSingleton<PhantomVault.Platform.Services.IActiveWindowDetector>(sp =>
+                sp.GetRequiredService<PhantomVault.Core.Services.Platform.Windows.WindowsActiveWindowDetector>());
             services.AddSingleton<PhantomVault.Core.Services.Platform.IAutoTypeService, PhantomVault.Core.Services.Platform.Windows.WindowsAutoTypeService>();
 
             // Auto-inject core services
@@ -196,7 +217,7 @@ namespace PhantomVault.UI
             _serviceProvider = services.BuildServiceProvider();
 
             // Enable developer mode for PhantomRecovery integration
-            // TODO: Make this configurable via settings UI
+            // Configurable at runtime via AdvancedSettings > IsRecoveryDeveloperModeEnabled
 #if DEBUG
             RecoveryDeveloperMode.IsEnabled = true;
             RecoveryDeveloperMode.Log("Developer mode enabled for PhantomRecovery integration");
@@ -205,25 +226,26 @@ namespace PhantomVault.UI
             var persistedSettings = SettingsService.Load();
             PrivacyShield.PrivacyModeEnabled = persistedSettings.PrivacyModeEnabled;
             PrivacyShield.RedactDiagnostics = persistedSettings.RedactDiagnosticLogs;
+            PrivacyShield.DebugLoggingEnabled = persistedSettings.EnableDebugLogging;
             // Apply persisted render scale and theme early so windows inherit user preference.
             try
             {
                 var themeManager = _serviceProvider.GetRequiredService<ThemeManagerService>();
                 var scale = Math.Clamp(persistedSettings.RenderScale, 0.8, 1.5);
                 themeManager.SetRenderScale(scale);
-                
+
                 // Apply persisted runtime theme FIRST (before ThemeManagerService loads PhantomTheme)
                 var runtimeThemeService = _serviceProvider.GetRequiredService<IRuntimeThemeService>();
                 if (!string.IsNullOrEmpty(persistedSettings.SelectedThemeId))
                 {
                     runtimeThemeService.Apply(persistedSettings.SelectedThemeId);
                 }
-                
-                // Initialize theme from persisted settings (coordinates with RuntimeThemeService for Light mode)
-                var theme = persistedSettings.EnableHighContrast ? AppTheme.HighContrast : 
-                           (persistedSettings.IsDarkTheme ? AppTheme.Dark : AppTheme.Light);
+
+                var theme = persistedSettings.EnableHighContrast
+                    ? AppTheme.HighContrast
+                    : persistedSettings.IsDarkTheme ? AppTheme.Dark : AppTheme.Light;
                 themeManager.SetTheme(theme);
-                
+
                 // Apply other theme settings
                 themeManager.SetSkin(persistedSettings.ThemeSkin);
                 themeManager.SetEffects(persistedSettings.ReduceAnimations, persistedSettings.ReduceTransparency);

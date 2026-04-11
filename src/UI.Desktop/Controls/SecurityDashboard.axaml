@@ -1,364 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:PhantomVault.UI.Desktop.Controls"
              x:Class="PhantomVault.UI.Desktop.Controls.SecurityDashboard">
 
     <UserControl.Styles>
-        <!-- Liquid glass stat card -->
-        <Style Selector="Border.sec-stat-card">
-            <Setter Property="CornerRadius" Value="14"/>
-            <Setter Property="Padding" Value="18,16"/>
-            <Setter Property="ClipToBounds" Value="True"/>
-            <Setter Property="BoxShadow" Value="0 2 8 0 #18000000"/>
+        <!-- Stat card -->
+        <Style Selector="Border.stat-card">
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="16,14"/>
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#18FFFFFF"/>
-            <Setter Property="Background">
-                <Setter.Value>
-                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                        <GradientStop Color="#10FFFFFF" Offset="0"/>
-                        <GradientStop Color="#06FFFFFF" Offset="0.5"/>
-                        <GradientStop Color="#03FFFFFF" Offset="1"/>
-                    </LinearGradientBrush>
-                </Setter.Value>
-            </Setter>
-            <Setter Property="Transitions">
-                <Transitions>
-                    <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.25" Easing="CubicEaseOut"/>
-                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.25" Easing="CubicEaseOut"/>
-                </Transitions>
-            </Setter>
-        </Style>
-        <Style Selector="Border.sec-stat-card:pointerover">
-            <Setter Property="BoxShadow" Value="0 4 14 0 #28000000"/>
-            <Setter Property="RenderTransform" Value="translateY(-2px)"/>
         </Style>
 
-        <!-- Stat value text -->
-        <Style Selector="TextBlock.stat-value">
+        <Style Selector="TextBlock.stat-number">
             <Setter Property="FontSize" Value="32"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
         </Style>
 
-        <!-- Stat label text -->
         <Style Selector="TextBlock.stat-label">
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
-            <Setter Property="Margin" Value="0,4,0,0"/>
-        </Style>
-
-        <!-- Health score bar -->
-        <Style Selector="ProgressBar.health-score">
-            <Setter Property="Height" Value="6"/>
-            <Setter Property="CornerRadius" Value="3"/>
-            <Setter Property="Minimum" Value="0"/>
-            <Setter Property="Maximum" Value="100"/>
-            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
-            <Setter Property="Background" Value="#15FFFFFF"/>
-            <Setter Property="Transitions">
-                <Transitions>
-                    <DoubleTransition Property="Value" Duration="0:0:0.6" Easing="CubicEaseOut"/>
-                </Transitions>
-            </Setter>
-        </Style>
-
-        <!-- Credential issue row -->
-        <Style Selector="Border.issue-row">
-            <Setter Property="CornerRadius" Value="10"/>
-            <Setter Property="Padding" Value="14,12"/>
-            <Setter Property="Margin" Value="0,0,0,8"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#10FFFFFF"/>
-            <Setter Property="Background">
-                <Setter.Value>
-                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
-                        <GradientStop Color="#08FFFFFF" Offset="0"/>
-                        <GradientStop Color="#04FFFFFF" Offset="1"/>
-                    </LinearGradientBrush>
-                </Setter.Value>
-            </Setter>
-            <Setter Property="Transitions">
-                <Transitions>
-                    <BrushTransition Property="Background" Duration="0:0:0.2"/>
-                </Transitions>
-            </Setter>
-        </Style>
-        <Style Selector="Border.issue-row:pointerover">
-            <Setter Property="Background">
-                <Setter.Value>
-                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
-                        <GradientStop Color="#14FFFFFF" Offset="0"/>
-                        <GradientStop Color="#08FFFFFF" Offset="1"/>
-                    </LinearGradientBrush>
-                </Setter.Value>
-            </Setter>
+            <Setter Property="Margin" Value="0,6,0,0"/>
         </Style>
     </UserControl.Styles>
 
-    <StackPanel Spacing="20">
-
-        <!-- Header Row -->
-        <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,4">
-            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
-                <controls:SvgIcon IconName="Assets/SVG/Current/Security.svg" Width="22" Height="22"
-                                  IconColor="{DynamicResource AccentBrush}"/>
-                <TextBlock Text="Security Overview"
-                           FontSize="{StaticResource Type.Icon.Size}"
-                           FontWeight="Bold"
-                           Foreground="{DynamicResource PrimaryTextBrush}"
-                           VerticalAlignment="Center"/>
-            </StackPanel>
-
-            <Button Grid.Column="2"
-                    Classes="icon-animated"
-                    x:Name="RefreshButton"
-                    ToolTip.Tip="Refresh statistics"
-                    AutomationProperties.Name="Refresh Statistics">
-                <controls:SvgIcon IconName="Assets/SVG/Current/Refresh.svg" Width="18" Height="18"/>
-            </Button>
-        </Grid>
-
-        <!-- Stat Cards Grid: 3 equal columns -->
-        <UniformGrid Columns="3" x:Name="StatsPanel">
-
-            <!-- Total Credentials -->
-            <Border Classes="sec-stat-card" Margin="0,0,10,0">
-                <!-- Subtle accent glow overlay -->
-                <Border.Effect>
-                    <DropShadowEffect OffsetX="0" OffsetY="0" BlurRadius="0" Color="Transparent"/>
-                </Border.Effect>
-                <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto">
-                    <TextBlock Grid.Row="0" Grid.Column="0"
-                               x:Name="TotalCredentialsValue"
-                               Classes="stat-value"
-                               Text="47"/>
-                    <Border Grid.Row="0" Grid.Column="1"
-                            Background="#18FFFFFF" CornerRadius="20"
-                            Width="40" Height="40"
-                            VerticalAlignment="Center">
-                        <controls:SvgIcon IconName="Assets/SVG/Current/Key.svg"
-                                          Width="20" Height="20"
-                                          IconColor="{DynamicResource AccentBrush}"
-                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <TextBlock Grid.Row="1" Grid.ColumnSpan="2"
-                               Classes="stat-label"
-                               Text="Total Credentials"/>
-                    <ProgressBar Grid.Row="2" Grid.ColumnSpan="2"
-                                 Classes="health-score"
-                                 Value="100"
-                                 Margin="0,10,0,0"/>
-                </Grid>
-            </Border>
-
-            <!-- Weak Passwords -->
-            <Border Classes="sec-stat-card" Margin="5,0,5,0">
-                <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto">
-                    <TextBlock Grid.Row="0" Grid.Column="0"
-                               x:Name="WeakPasswordsValue"
-                               Classes="stat-value"
-                               Text="3"
-                               Foreground="{DynamicResource WarningBrush}"/>
-                    <Border Grid.Row="0" Grid.Column="1"
-                            CornerRadius="20"
-                            Width="40" Height="40"
-                            VerticalAlignment="Center">
-                        <Border.Background>
-                            <SolidColorBrush Color="#FFCC6600" Opacity="0.15"/>
-                        </Border.Background>
-                        <Grid>
-                            <controls:SvgIcon IconName="Assets/SVG/Current/Warning.svg"
-                                              Width="20" Height="20"
-                                              IconColor="{DynamicResource WarningBrush}"
-                                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            <!-- Alert pip -->
-                            <Border Background="{DynamicResource WarningBrush}"
-                                    CornerRadius="6" Width="12" Height="12"
-                                    HorizontalAlignment="Right" VerticalAlignment="Top"
-                                    Margin="0,-2,-2,0"
-                                    IsVisible="{Binding HasWeakPasswords}">
-                                <TextBlock Text="!" FontSize="8" FontWeight="Bold"
-                                           Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                        </Grid>
-                    </Border>
-                    <TextBlock Grid.Row="1" Grid.ColumnSpan="2"
-                               Classes="stat-label"
-                               Text="Weak Passwords"/>
-                    <ProgressBar Grid.Row="2" Grid.ColumnSpan="2"
-                                 Classes="health-score"
-                                 Value="30"
-                                 Foreground="{DynamicResource WarningBrush}"
-                                 Margin="0,10,0,0"/>
-                </Grid>
-            </Border>
-
-            <!-- Breached Passwords -->
-            <Border Classes="sec-stat-card" Margin="10,0,0,0">
-                <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto">
-                    <TextBlock Grid.Row="0" Grid.Column="0"
-                               x:Name="BreachedPasswordsValue"
-                               Classes="stat-value"
-                               Text="1"
-                               Foreground="{DynamicResource ErrorBrush}"/>
-                    <Border Grid.Row="0" Grid.Column="1"
-                            CornerRadius="20"
-                            Width="40" Height="40"
-                            VerticalAlignment="Center">
-                        <Border.Background>
-                            <SolidColorBrush Color="#FFCC0000" Opacity="0.15"/>
-                        </Border.Background>
-                        <Grid>
-                            <controls:SvgIcon IconName="Assets/SVG/Current/Warning.svg"
-                                              Width="20" Height="20"
-                                              IconColor="{DynamicResource ErrorBrush}"
-                                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            <!-- Pulsing alert pip -->
-                            <Border Background="{DynamicResource ErrorBrush}"
-                                    CornerRadius="6" Width="12" Height="12"
-                                    HorizontalAlignment="Right" VerticalAlignment="Top"
-                                    Margin="0,-2,-2,0"
-                                    Classes="pulse"
-                                    IsVisible="{Binding HasBreachedPasswords}">
-                                <TextBlock Text="!" FontSize="8" FontWeight="Bold"
-                                           Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                        </Grid>
-                    </Border>
-                    <TextBlock Grid.Row="1" Grid.ColumnSpan="2"
-                               Classes="stat-label"
-                               Text="Breached Passwords"/>
-                    <ProgressBar Grid.Row="2" Grid.ColumnSpan="2"
-                                 Classes="health-score"
-                                 Value="10"
-                                 Foreground="{DynamicResource ErrorBrush}"
-                                 Margin="0,10,0,0"/>
-                </Grid>
-            </Border>
-
-        </UniformGrid>
-
-        <!-- Credentials Requiring Attention -->
-        <Border CornerRadius="14" Padding="20" ClipToBounds="True"
-                BorderThickness="1" BorderBrush="#10FFFFFF">
-            <Border.Background>
-                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                    <GradientStop Color="#0AFFFFFF" Offset="0"/>
-                    <GradientStop Color="#05FFFFFF" Offset="1"/>
-                </LinearGradientBrush>
-            </Border.Background>
-            <StackPanel Spacing="14">
-                <!-- Section header -->
-                <Grid ColumnDefinitions="Auto,8,*,Auto">
-                    <controls:SvgIcon Grid.Column="0"
-                                      IconName="Assets/SVG/Current/Warning.svg"
-                                      Width="18" Height="18"
-                                      IconColor="{DynamicResource WarningBrush}"
-                                      VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="2"
-                               Text="Credentials Requiring Attention"
-                               FontSize="{StaticResource Type.H4.Size}"
-                               FontWeight="SemiBold"
-                               Foreground="{DynamicResource PrimaryTextBrush}"
-                               VerticalAlignment="Center"/>
-                    <Border Grid.Column="3"
-                            Background="#15FFFFFF"
-                            CornerRadius="10"
-                            Padding="10,4"
-                            VerticalAlignment="Center">
-                        <TextBlock x:Name="IssueCountText"
-                                   Text="{Binding WeakCredentials.Count, StringFormat='{}{0} issues'}"
-                                   FontSize="{StaticResource Type.Small.Size}"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource MutedTextBrush}"/>
-                    </Border>
+    <StackPanel Spacing="18" Margin="0">
+        <!-- Main Security Score Card with Open Button -->
+        <Border CornerRadius="14" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1" Padding="20,16">
+            <StackPanel Spacing="12">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Grid.Column="0" Spacing="8" VerticalAlignment="Center">
+                        <TextBlock Text="Security Score" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <TextBlock Text="{Binding SecurityScore}" FontSize="44" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
+                    </StackPanel>
+                    
+                    <Button Grid.Column="1" VerticalAlignment="Center" Classes="liquid-glass" Padding="14,32"
+                            Command="{Binding OpenSecurityDashboardWindowCommand}"
+                            ToolTip.Tip="Open full security dashboard">
+                        <StackPanel Spacing="8" HorizontalAlignment="Center">
+                            <TextBlock Text="📊" FontSize="24" TextAlignment="Center"/>
+                            <TextBlock Text="Full" FontSize="12" TextAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <TextBlock Text="Report" FontSize="12" TextAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        </StackPanel>
+                    </Button>
                 </Grid>
 
-                <TextBlock Text="Sorted by criticality — fix critical issues first"
-                           FontSize="{StaticResource Type.Tiny.Size}"
-                           Foreground="{DynamicResource MutedTextBrush}"
-                           Margin="0,-4,0,0"/>
-
-                <!-- Empty State -->
-                <controls:EmptyState x:Name="EmptyCredentialsState"
-                                    Title="All Clear!"
-                                    Description="Your passwords are secure and strong. No issues detected."
-                                    IsVisible="{Binding !WeakCredentials.Count}"/>
-
-                <!-- Credential issue list -->
-                <ListBox x:Name="WeakCredentialsList"
-                         ItemsSource="{Binding WeakCredentials}"
-                         Background="Transparent"
-                         BorderThickness="0"
-                         MaxHeight="400"
-                         IsVisible="{Binding WeakCredentials.Count}"
-                         AutomationProperties.Name="Weak Credentials List">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Border Classes="issue-row">
-                                <Grid ColumnDefinitions="Auto,12,*,Auto,10,Auto">
-                                    <!-- Severity colour strip -->
-                                    <Border Grid.Column="0"
-                                            Width="4" Height="42"
-                                            CornerRadius="2"
-                                            Background="{Binding SeverityColor}"
-                                            VerticalAlignment="Center"/>
-
-                                    <!-- Info -->
-                                    <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Title}"
-                                                   FontSize="{StaticResource Type.Body.Size}"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                        <StackPanel Orientation="Horizontal" Spacing="8">
-                                            <TextBlock Text="{Binding Username}"
-                                                       FontSize="{StaticResource Type.Small.Size}"
-                                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                            <TextBlock Text="·" FontSize="{StaticResource Type.Small.Size}"
-                                                       Foreground="{DynamicResource MutedTextBrush}"/>
-                                            <TextBlock Text="{Binding MaskedPassword}"
-                                                       FontSize="{StaticResource Type.Tiny.Size}"
-                                                       FontFamily="Consolas"
-                                                       Foreground="{DynamicResource MutedTextBrush}"/>
-                                        </StackPanel>
-                                    </StackPanel>
-
-                                    <!-- Severity badge -->
-                                    <Border Grid.Column="3"
-                                            Background="{Binding SeverityColor}"
-                                            CornerRadius="10"
-                                            Padding="10,4"
-                                            VerticalAlignment="Center"
-                                            Opacity="0.9">
-                                        <TextBlock Text="{Binding IssueLabel}"
-                                                   FontSize="{StaticResource Type.Tiny.Size}"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="White"/>
-                                    </Border>
-
-                                    <!-- Edit button -->
-                                    <Button Grid.Column="5"
-                                            Command="{Binding $parent[ListBox].((controls:SecurityDashboard)DataContext).EditCredentialCommand}"
-                                            CommandParameter="{Binding}"
-                                            Classes="liquid-glass"
-                                            Width="74"
-                                            Height="30"
-                                            VerticalAlignment="Center"
-                                            ToolTip.Tip="Edit credential"
-                                            AutomationProperties.Name="{Binding Title, StringFormat='Edit {0}'}">
-                                        <StackPanel Orientation="Horizontal" Spacing="5">
-                                            <TextBlock Text="✎" FontSize="{StaticResource Type.Label.Size}"/>
-                                            <TextBlock Text="Edit" FontSize="{StaticResource Type.Small.Size}" FontWeight="SemiBold"/>
-                                        </StackPanel>
-                                    </Button>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
+                <ProgressBar Value="{Binding SecurityScore}" Maximum="100" Height="8" CornerRadius="4" Background="{DynamicResource DividerBrush}" Foreground="{DynamicResource AccentBrush}"/>
+                
+                <StackPanel Orientation="Horizontal" Spacing="16">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="✓" Foreground="{DynamicResource SuccessBrush}" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding TwoFactorEnabledCount}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <TextBlock Text="2FA" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="⚠" Foreground="{DynamicResource WarningBrush}"/>
+                        <TextBlock Text="{Binding WeakCredentials.Count}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <TextBlock Text="weak" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="✕" Foreground="{DynamicResource ErrorBrush}" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding BreachedPasswordCount}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <TextBlock Text="breached" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    </StackPanel>
+                </StackPanel>
             </StackPanel>
         </Border>
 
-    </StackPanel>
+        <!-- Quick Stats Grid -->
+        <UniformGrid Columns="2">
+            <Border Classes="stat-card" Margin="0,0,5,0">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="{Binding TotalCount}" Classes="stat-number"/>
+                    <TextBlock Text="Total" Classes="stat-label"/>
+                </StackPanel>
+            </Border>
 
+            <Border Classes="stat-card" Margin="5,0,0,0">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="{Binding ExpiringCredentialCount}" Classes="stat-number" Foreground="{DynamicResource WarningBrush}"/>
+                    <TextBlock Text="Expiring Soon" Classes="stat-label"/>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="stat-card" Margin="0,5,5,0">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="{Binding ReusedPasswordCount}" Classes="stat-number" Foreground="{DynamicResource WarningBrush}"/>
+                    <TextBlock Text="Reused" Classes="stat-label"/>
+                </StackPanel>
+            </Border>
+
+            <Border Classes="stat-card" Margin="5,5,0,0">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="{Binding BreachedPasswordCount}" Classes="stat-number" Foreground="{DynamicResource ErrorBrush}"/>
+                    <TextBlock Text="Breached" Classes="stat-label"/>
+                </StackPanel>
+            </Border>
+        </UniformGrid>
+
+        <!-- Footer Info -->
+        <StackPanel Spacing="6" Margin="0,8,0,4">
+            <TextBlock Text="{Binding LastBreachCheckTime}" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}" TextAlignment="Center"/>
+            <TextBlock Text="Click 'Full Report' for comprehensive analysis" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" TextAlignment="Center" FontStyle="Italic"/>
+        </StackPanel>
+    </StackPanel>
 </UserControl>

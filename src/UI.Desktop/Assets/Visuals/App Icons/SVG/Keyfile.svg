@@ -1,0 +1,41 @@
+<svg
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <!-- File outline -->
+  <path
+    d="M7 3H14L19 8V21H7V3Z"
+    stroke="white"
+    stroke-width="2"
+    fill="none"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M14 3V8H19"
+    stroke="white"
+    stroke-width="2"
+    fill="none"
+    stroke-linejoin="round"
+  />
+
+  <!-- Keyhole (centered in file) -->
+  <circle
+    cx="13"
+    cy="13"
+    r="2"
+    stroke="white"
+    stroke-width="2"
+    fill="none"
+  />
+  <path
+    d="M12 15.5V19H14V15.5"
+    stroke="white"
+    stroke-width="2"
+    fill="none"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>

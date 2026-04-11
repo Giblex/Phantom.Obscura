@@ -207,7 +207,7 @@ namespace PhantomVault.Core.Services
             finally
             {
                 // Zero and return rented buffers.
-                try { if (ciphertextBuf != null) CryptographicOperations.ZeroMemory(ciphertextBuf.AsSpan(0, plaintext.Length)); } catch { }
+                try { if (ciphertextBuf != null) CryptographicOperations.ZeroMemory(ciphertextBuf); } catch { }
                 try { if (tag != null) CryptographicOperations.ZeroMemory(tag.AsSpan(0, 16)); } catch { }
                 try { if (nonce != null) CryptographicOperations.ZeroMemory(nonce.AsSpan(0, 12)); } catch { }
 
@@ -252,8 +252,8 @@ namespace PhantomVault.Core.Services
             }
             finally
             {
-                // Zero and return rented buffer.
-                try { CryptographicOperations.ZeroMemory(plaintextBuf.AsSpan(0, ciphertext.Length)); } catch { }
+                // Zero and return rented buffer (entire rented array, not just ciphertext.Length).
+                try { CryptographicOperations.ZeroMemory(plaintextBuf); } catch { }
                 try { if (plaintextBuf != null) _observer?.OnTransientBufferZeroized(plaintextBuf); } catch { }
                 if (ptHandle.HasValue && ptHandle.Value.IsAllocated) try { ptHandle.Value.Free(); } catch { }
                 try { if (plaintextBuf != null) ArrayPool<byte>.Shared.Return(plaintextBuf); } catch { }

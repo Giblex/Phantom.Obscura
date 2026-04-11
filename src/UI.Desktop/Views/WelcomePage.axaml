@@ -16,6 +16,14 @@
         Background="{DynamicResource WindowBackgroundBrush}"
         Classes="animated-window">
 
+    <views:ThemeAwareWindow.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://PhantomVault.UI/Assets/Themes/PreVaultTheme.axaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </views:ThemeAwareWindow.Resources>
+
     <Design.DataContext>
         <vm:WelcomePageViewModel/>
     </Design.DataContext>
@@ -52,10 +60,16 @@
                         CornerRadius="16"
                         ClipToBounds="True"
                         HorizontalAlignment="Center" VerticalAlignment="Center"
-                        MinWidth="280" MinHeight="160" MaxWidth="920" MaxHeight="260" Padding="0">
-                        <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Phantom Obscura Title + Logo.png"
-                               Stretch="Uniform" MaxWidth="880" MaxHeight="220" Margin="12"
-                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        MinWidth="380" MinHeight="240" MaxWidth="920" MaxHeight="400" Padding="24">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="28">
+                            <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
+                                   Stretch="Uniform" MaxHeight="220"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="Phantom Obscura"
+                                       FontSize="48" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource LogoTitleBrush}"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
                 </Border>
 
                 <TextBlock Text="{Binding AppVersion}"

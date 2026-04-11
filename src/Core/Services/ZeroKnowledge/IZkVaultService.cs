@@ -43,6 +43,12 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
         Task<Stream> OpenFileStreamForViewingAsync(string vaultPath, string? fileRelativePath = null, CancellationToken ct = default);
 
         /// <summary>
+        /// Opens encrypted vault content from an existing stream and returns the decrypted plaintext as a read-only stream.
+        /// This is used when the vault is wrapped by another encrypted container and should not be written to disk.
+        /// </summary>
+        Task<Stream> OpenEncryptedStreamForViewingAsync(Stream encryptedVaultStream, CancellationToken ct = default);
+
+        /// <summary>
         /// Extracts a file from the vault to a secure temporary location.
         /// File is automatically deleted after TTL expires. Temp directory
         /// is restricted to current user and contents are securely wiped.
@@ -78,6 +84,11 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
         /// <param name="encryptedOutputPath">Path where encrypted file should be written</param>
         /// <param name="ct">Cancellation token</param>
         Task EncryptStreamAsync(Stream plaintextStream, string encryptedOutputPath, CancellationToken ct = default);
+
+        /// <summary>
+        /// Encrypts plaintext from one stream into another stream without creating intermediate plaintext files.
+        /// </summary>
+        Task EncryptStreamToStreamAsync(Stream plaintextStream, Stream encryptedOutputStream, CancellationToken ct = default);
 
         /// <summary>
         /// Locks the vault and securely wipes all master keys and sensitive

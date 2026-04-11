@@ -12,6 +12,8 @@
                 <!-- To enable Spanish, uncomment: -->
                 <!-- <ResourceInclude Source="avares://PhantomVault.UI/Resources/Strings.es-ES.axaml"/> -->
             </ResourceDictionary.MergedDictionaries>
+            <!-- Monospace font (theme-independent, must be StaticResource-resolvable) -->
+            <FontFamily x:Key="MonoFontFamily">Consolas</FontFamily>
         </ResourceDictionary>
     </Application.Resources>
 
@@ -107,8 +109,8 @@
         <!-- Shared aqua acrylic material for liquid glass accents -->
     <ExperimentalAcrylicMaterial x:Key="LiquidAcrylic"
                      TintColor="#9FD8FF"
-                                     TintOpacity="0.32"
-                                     MaterialOpacity="0.56"
+                                     TintOpacity="0.18"
+                                     MaterialOpacity="0.38"
                                      FallbackColor="#66FFFFFF"/>
     </Application.Resources>
 </Application>

@@ -11,6 +11,7 @@ using Avalonia.Layout;
 using Avalonia;
 using ReactiveUI;
 using PhantomVault.Core;
+using PhantomVault.Core.Models;
 using PhantomVault.Core.Services;
 using PhantomVault.Core.Services.Security;
 using PhantomVault.UI.Services;
@@ -39,6 +40,7 @@ namespace PhantomVault.UI.ViewModels
         private readonly IHybridEncryptionService _hybridEncryptionService;
         private readonly IDeviceFingerprintProvider? _deviceFingerprintProvider;
         private readonly IDefenceEngine? _defenceEngine;
+        private readonly BlackSecureRawVolumeService _blackSecureRawVolumeService;
 
         private readonly ObservableCollection<string> _removableDrives = new();
         private string? _selectedDrive;
@@ -78,16 +80,13 @@ namespace PhantomVault.UI.ViewModels
             _deviceFingerprintProvider = deviceFingerprintProvider;
             _defenceEngine = defenceEngine;
             _dialogService = new DialogService();
+            _blackSecureRawVolumeService = new BlackSecureRawVolumeService();
 
-            // Populate drives at startup
-            foreach (var drive in _usbDetector.GetRemovableDrives())
-            {
-                _removableDrives.Add(drive);
-            }
+            RefreshDriveSelections();
 
             // Subscribe to hot plug events
-            _usbDetector.RemovableDriveInserted += path => _removableDrives.Add(path);
-            _usbDetector.RemovableDriveRemoved += path => _removableDrives.Remove(path);
+            _usbDetector.RemovableDriveInserted += _ => RefreshDriveSelections();
+            _usbDetector.RemovableDriveRemoved += _ => RefreshDriveSelections();
 
             UnlockCommand = ReactiveCommand.CreateFromTask(async () =>
             {
@@ -100,8 +99,68 @@ namespace PhantomVault.UI.ViewModels
                     Status = "Please select a USB drive.";
                     return;
                 }
-                var manifestPath = Path.Combine(SelectedDrive, "vault.manifest");
-                if (!File.Exists(manifestPath))
+                // Discover vault: prefer the hidden master volume, then fall back to direct container layouts.
+                string? manifestPath = null;
+                string? extractedVolumeRoot = null;
+                string? selectedDriveRoot = _blackSecureRawVolumeService.IsRawSelection(SelectedDrive) ? null : SelectedDrive;
+                string? selectedPhysicalDrivePath = _blackSecureRawVolumeService.IsRawSelection(SelectedDrive)
+                    ? _blackSecureRawVolumeService.TryResolvePhysicalDevicePathFromSelection(SelectedDrive)
+                    : null;
+
+                string? masterVolumePath = ResolveMasterVolumePath(selectedDriveRoot);
+                if (!string.IsNullOrWhiteSpace(masterVolumePath))
+                {
+                    extractedVolumeRoot = Path.Combine(Path.GetTempPath(), "PhantomObscuraSessions", Guid.NewGuid().ToString("N"));
+                    var volumeService = new ObscuraVolumeService();
+                    await volumeService.ExtractVolumeAsync(masterVolumePath, extractedVolumeRoot).ConfigureAwait(false);
+
+                    var extractedRootContainer = Path.Combine(extractedVolumeRoot, "root", "root.pvault");
+                    if (File.Exists(extractedRootContainer))
+                        manifestPath = extractedRootContainer;
+                }
+                else if (!string.IsNullOrWhiteSpace(selectedPhysicalDrivePath) &&
+                         await _blackSecureRawVolumeService.IsBlackSecureVolumeAsync(selectedPhysicalDrivePath).ConfigureAwait(false))
+                {
+                    extractedVolumeRoot = Path.Combine(Path.GetTempPath(), "PhantomObscuraSessions", Guid.NewGuid().ToString("N"));
+                    await _blackSecureRawVolumeService.ExtractVolumeAsync(selectedPhysicalDrivePath, extractedVolumeRoot).ConfigureAwait(false);
+
+                    var extractedRootContainer = Path.Combine(extractedVolumeRoot, "root", "root.pvault");
+                    if (File.Exists(extractedRootContainer))
+                        manifestPath = extractedRootContainer;
+                }
+
+                var rootDir = string.IsNullOrWhiteSpace(selectedDriveRoot) ? null : Path.Combine(selectedDriveRoot, ".phantom", "root");
+                if (manifestPath == null && !string.IsNullOrWhiteSpace(rootDir) && Directory.Exists(rootDir))
+                {
+                    var rootContainers = Directory.GetFiles(rootDir, "*.pvault");
+                    if (rootContainers.Length > 0)
+                        manifestPath = rootContainers[0];
+                }
+
+                var vaultsDir = string.IsNullOrWhiteSpace(selectedDriveRoot) ? null : Path.Combine(selectedDriveRoot, ".phantom", "vaults");
+                if (manifestPath == null && !string.IsNullOrWhiteSpace(vaultsDir) && Directory.Exists(vaultsDir))
+                {
+                    var pvaultFiles = Directory.GetFiles(vaultsDir, "*.pvault");
+                    if (pvaultFiles.Length > 0)
+                        manifestPath = pvaultFiles[0];
+                }
+                if (manifestPath == null)
+                {
+                    var legacyPath = string.IsNullOrWhiteSpace(selectedDriveRoot) ? null : Path.Combine(selectedDriveRoot, "vault.manifest");
+                    if (!string.IsNullOrWhiteSpace(legacyPath) && File.Exists(legacyPath))
+                        manifestPath = legacyPath;
+                }
+                if (manifestPath == null)
+                {
+                    var manifestsDir = string.IsNullOrWhiteSpace(selectedDriveRoot) ? null : Path.Combine(selectedDriveRoot, ".phantom", "manifests");
+                    if (!string.IsNullOrWhiteSpace(manifestsDir) && Directory.Exists(manifestsDir))
+                    {
+                        var legacyFiles = Directory.GetFiles(manifestsDir, "*.manifest");
+                        if (legacyFiles.Length > 0)
+                            manifestPath = legacyFiles[0];
+                    }
+                }
+                if (manifestPath == null)
                 {
                     await _dialogService.ShowErrorAsync(
                         "Vault Not Found",
@@ -118,6 +177,10 @@ namespace PhantomVault.UI.ViewModels
                 {
                     IsBusy = true;
                     var manifest = _manifestService.ReadManifest(manifestPath, password);
+                    if (!string.IsNullOrWhiteSpace(masterVolumePath) && !string.IsNullOrWhiteSpace(extractedVolumeRoot))
+                    {
+                        ResolveRuntimePaths(manifest, extractedVolumeRoot, masterVolumePath);
+                    }
 
                     // Enforce manifest policy (version, signature requirements)
                     try
@@ -150,7 +213,7 @@ namespace PhantomVault.UI.ViewModels
                     }
 
                     // Verify that the vault is bound to this USB device
-                    string deviceId = _usbBindingService.ComputeDeviceId(SelectedDrive!);
+                    string deviceId = _usbBindingService.ComputeDeviceId(selectedPhysicalDrivePath ?? selectedDriveRoot!);
                     if (!string.IsNullOrEmpty(manifest.DeviceId) && !string.Equals(manifest.DeviceId, deviceId, StringComparison.OrdinalIgnoreCase))
                     {
                         await _dialogService.ShowErrorAsync(
@@ -159,7 +222,7 @@ namespace PhantomVault.UI.ViewModels
                             _ownerWindow);
                         Status = "The vault is bound to a different USB device. Please insert the original device.";
                         // Record failed attempt
-                        _intrusionService.RegisterFailedAttempt(manifest, manifestPath, password, null, SelectedDrive!);
+                        _intrusionService.RegisterFailedAttempt(manifest, manifestPath, password, null, selectedPhysicalDrivePath ?? selectedDriveRoot!);
                         return;
                     }
 
@@ -195,26 +258,26 @@ namespace PhantomVault.UI.ViewModels
                             {
                                 await _dialogService.ShowWarningAsync(
                                     "Hardware Token Required",
-                                    "This vault requires a hardware token (YubiKey). Please insert your YubiKey and try again.",
+                                    "This vault requires the configured hardware-token presence check. Insert the expected device and try again.",
                                     _ownerWindow);
-                                Status = "Required hardware token not present.";
-                                _intrusionService.RegisterFailedAttempt(manifest, manifestPath, password, null, SelectedDrive!);
+                                Status = "Required hardware-token presence check failed.";
+                                _intrusionService.RegisterFailedAttempt(manifest, manifestPath, password, null, selectedPhysicalDrivePath ?? selectedDriveRoot!);
                                 return;
                             }
                         }
                         catch (NotImplementedException)
                         {
                             await _dialogService.ShowWarningAsync(
-                                "Feature Not Available",
-                                "Hardware token support is not implemented in this build. Please use a build with YubiKey support enabled.",
+                                "Hardware Token Check Unavailable",
+                                "This vault requires the configured hardware-token presence check, but this device or build cannot perform it. Use a supported Windows build to unlock this vault.",
                                 _ownerWindow);
-                            Status = "Hardware token support is not implemented in this build.";
+                            Status = "Hardware-token presence verification unavailable on this device.";
                             // Do not increment counter when feature missing
                             return;
                         }
                     }
 
-                    // Verify passkey (WebAuthn) if manifest requires it
+                    // Verify the linked device authenticator if the manifest requires it
                     if (!string.IsNullOrEmpty(manifest.PasskeyId))
                     {
                         try
@@ -226,10 +289,10 @@ namespace PhantomVault.UI.ViewModels
 
                             if (!passkeyService.IsSupported)
                             {
-                                Status = "Passkey authentication required but not supported on this platform";
+                                Status = "Device authenticator required but unavailable on this device";
                                 await _dialogService.ShowErrorAsync(
-                                    "Passkey Not Supported",
-                                    "This vault requires passkey authentication, but your platform doesn't support it. Please use a device with biometric authentication.",
+                                    "Device Authenticator Unavailable",
+                                    $"This vault requires the linked local device authenticator, but it is not available right now.\n\nReported status: {passkeyService.AuthenticatorDescription}",
                                     _ownerWindow);
                                 return;
                             }
@@ -241,9 +304,9 @@ namespace PhantomVault.UI.ViewModels
                             // Decode stored credential ID from manifest
                             byte[] credentialId = Convert.FromBase64String(manifest.PasskeyId);
 
-                            Status = "Waiting for passkey authentication...";
+                            Status = "Waiting for device-authenticator verification...";
 
-                            // Request passkey authentication
+                            // Request device-authenticator verification
                             bool passkeyVerified = await passkeyService.AuthenticateAsync(
                                 credentialId,
                                 "PhantomVault",
@@ -251,29 +314,29 @@ namespace PhantomVault.UI.ViewModels
 
                             if (!passkeyVerified)
                             {
-                                Status = "Passkey authentication failed";
-                                _intrusionService.RegisterFailedAttempt(manifest, manifestPath, password, null, SelectedDrive!);
+                                Status = "Device-authenticator verification failed";
+                            _intrusionService.RegisterFailedAttempt(manifest, manifestPath, password, null, selectedPhysicalDrivePath ?? selectedDriveRoot!);
                                 await _dialogService.ShowErrorAsync(
                                     "Authentication Failed",
-                                    "Passkey authentication was denied or failed. Please try again.",
+                                    "The local device-authenticator verification was denied or failed. Please try again.",
                                     _ownerWindow);
                                 return;
                             }
 
-                            Status = "Passkey verified successfully";
+                            Status = "Device authenticator verified successfully";
                         }
                         catch (PlatformNotSupportedException ex)
                         {
-                            Status = "Passkey not supported on this platform";
+                            Status = "Device authenticator not supported on this platform";
                             await _dialogService.ShowErrorAsync(
-                                "Passkey Error",
-                                $"Passkey authentication failed: {ex.Message}",
+                                "Device Authenticator Error",
+                                $"Device-authenticator verification failed: {ex.Message}",
                                 _ownerWindow);
                             return;
                         }
                         catch (InvalidOperationException ex)
                         {
-                            Status = $"Passkey verification error: {ex.Message}";
+                            Status = $"Device-authenticator verification error: {ex.Message}";
                             await _dialogService.ShowErrorAsync(
                                 "Authentication Error",
                                 ex.Message,
@@ -282,10 +345,10 @@ namespace PhantomVault.UI.ViewModels
                         }
                         catch (Exception ex)
                         {
-                            Status = $"Passkey verification error: {ex.Message}";
+                            Status = $"Device-authenticator verification error: {ex.Message}";
                             await _dialogService.ShowErrorAsync(
                                 "Authentication Error",
-                                $"An unexpected error occurred during passkey verification: {ex.Message}",
+                                $"An unexpected error occurred during device-authenticator verification: {ex.Message}",
                                 _ownerWindow);
                             return;
                         }
@@ -377,7 +440,7 @@ namespace PhantomVault.UI.ViewModels
                     if (hybridDek == null && !_zkVaultService.IsUnlocked)
                     {
                         Status = "Unlocking vault with traditional encryption...";
-                        string fallbackDeviceId = _usbBindingService.ComputeDeviceId(SelectedDrive!);
+                        string fallbackDeviceId = _usbBindingService.ComputeDeviceId(selectedPhysicalDrivePath ?? selectedDriveRoot!);
                         bool zkUnlocked = await _zkVaultService.UnlockMasterKeyAsync(password ?? string.Empty, manifest.KeyfilePath, fallbackDeviceId);
 
                         if (!zkUnlocked)
@@ -547,9 +610,13 @@ namespace PhantomVault.UI.ViewModels
                     }
 
                     // Mount container (vault service is now unlocked)
-                    string containerAbs = Path.Combine(SelectedDrive!, manifest.ContainerPath);
+                    string containerAbs = Path.IsPathRooted(manifest.ContainerPath)
+                        ? manifest.ContainerPath
+                        : Path.Combine(selectedDriveRoot!, manifest.ContainerPath);
                     string mountName = "Vault";
-                    string mountPath = await _vaultService.MountVaultAsync(containerAbs, mountName, password ?? string.Empty);
+                    string mountPath = !string.IsNullOrWhiteSpace(extractedVolumeRoot)
+                        ? extractedVolumeRoot
+                        : await _vaultService.MountVaultAsync(containerAbs, mountName, password ?? string.Empty);
 
                     // For Phase 1 vaults: Try to load KEM private key from inside vault
                     if (string.IsNullOrEmpty(manifest.KemCiphertextBase64) &&
@@ -576,7 +643,9 @@ namespace PhantomVault.UI.ViewModels
                     // Record unlock event in audit log
                     try
                     {
-                        string auditPath = Path.Combine(SelectedDrive!, "vault.audit");
+                        string auditPath = !string.IsNullOrWhiteSpace(selectedDriveRoot)
+                            ? Path.Combine(selectedDriveRoot, "vault.audit")
+                            : Path.Combine(mountPath, "vault.audit");
                         _auditService.LogEvent(auditPath, "unlock", $"Vault unlocked and mounted at {mountPath}");
                     }
                     catch
@@ -596,12 +665,23 @@ namespace PhantomVault.UI.ViewModels
                             mountPath,
                             password ?? string.Empty,
                             manifest.KeyfilePath,
-                            SelectedDrive!,
+                            selectedPhysicalDrivePath ?? selectedDriveRoot!,
                             manifestPath,
                             containerAbs));
                 }
                 catch (Exception ex)
                 {
+                    if (!string.IsNullOrWhiteSpace(extractedVolumeRoot) && Directory.Exists(extractedVolumeRoot))
+                    {
+                        try
+                        {
+                            Directory.Delete(extractedVolumeRoot, true);
+                        }
+                        catch
+                        {
+                            // Best effort cleanup only.
+                        }
+                    }
                     Status = ex.Message;
                     // If reading manifest failed due to wrong passphrase
                     // we cannot increment the counter because we cannot
@@ -976,6 +1056,57 @@ namespace PhantomVault.UI.ViewModels
                 // Return null to allow vault operations to proceed without PQ encryption
                 return null;
             }
+        }
+
+        private static string? ResolveMasterVolumePath(string? driveRoot)
+        {
+            if (string.IsNullOrWhiteSpace(driveRoot))
+                return null;
+
+            var candidates = new[]
+            {
+                Path.Combine(driveRoot, "system.bin"),
+                Path.Combine(driveRoot, ".phantom", "obscura.vol")
+            };
+
+            return candidates.FirstOrDefault(File.Exists);
+        }
+
+        private void RefreshDriveSelections()
+        {
+            _removableDrives.Clear();
+            foreach (var drive in _usbDetector.GetRemovableDrives().Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                _removableDrives.Add(drive);
+            }
+
+            foreach (var rawSelection in _blackSecureRawVolumeService.GetSelectableRawDevices())
+            {
+                if (!_removableDrives.Contains(rawSelection))
+                    _removableDrives.Add(rawSelection);
+            }
+        }
+
+        private static void ResolveRuntimePaths(VaultManifest manifest, string extractedRoot, string masterVolumePath)
+        {
+            manifest.MasterVolumePath = masterVolumePath;
+            manifest.RootContainerPath = ResolveExtractedPath(extractedRoot, manifest.RootContainerPath);
+            manifest.ContainerPath = ResolveExtractedPath(extractedRoot, manifest.ContainerPath) ?? manifest.ContainerPath;
+            manifest.ObjectContainerPath = ResolveExtractedPath(extractedRoot, manifest.ObjectContainerPath);
+            manifest.RecoveryContainerPath = ResolveExtractedPath(extractedRoot, manifest.RecoveryContainerPath);
+            manifest.BindingRecordPath = ResolveExtractedPath(extractedRoot, manifest.BindingRecordPath);
+            manifest.RecoveryRecordPath = ResolveExtractedPath(extractedRoot, manifest.RecoveryRecordPath);
+            manifest.DecoyDatabasePath = ResolveExtractedPath(extractedRoot, manifest.DecoyDatabasePath);
+        }
+
+        private static string? ResolveExtractedPath(string extractedRoot, string? relativePath)
+        {
+            if (string.IsNullOrWhiteSpace(relativePath))
+                return relativePath;
+
+            return Path.IsPathRooted(relativePath)
+                ? relativePath
+                : Path.Combine(extractedRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
         }
     }
 

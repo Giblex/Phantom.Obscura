@@ -80,7 +80,7 @@
             <!-- Header -->
             <TextBlock Text="Import Credentials" FontSize="{StaticResource Type.Icon.Size}" FontWeight="SemiBold"/>
             
-            <TextBlock Text="Import credentials from external password managers or export files." 
+            <TextBlock Text="Import credentials from Obscura exports, supported password-manager exports, browser CSV files, or direct KeePass KDBX databases." 
                        TextWrapping="Wrap" 
                        Foreground="{DynamicResource SecondaryTextBrush}"/>
 

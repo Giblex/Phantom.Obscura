@@ -140,6 +140,28 @@ namespace PhantomVault.UI.Services
             }
         }
 
+        public int SecurelyPurgeAll()
+        {
+            lock (_gate)
+            {
+                var activeRecords = _records.Where(r => !r.SecurelyPurged).ToList();
+                foreach (var record in activeRecords)
+                {
+                    SecurelyErase(record.Payload, SecureWipePasses);
+                    record.SecurelyPurged = true;
+                    record.PurgedUtc = DateTimeOffset.UtcNow;
+                    _records.Remove(record);
+                }
+
+                if (activeRecords.Count > 0)
+                {
+                    Save();
+                }
+
+                return activeRecords.Count;
+            }
+        }
+
         private int PurgeExpiredInternal()
         {
             if (!AutoPurgeEnabled)

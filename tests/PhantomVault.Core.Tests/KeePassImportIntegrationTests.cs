@@ -58,7 +58,7 @@ namespace PhantomVault.Core.Tests
         }
 
         [Fact]
-        public async Task ImportKeePass_EmptyDatabase_ReturnsEmptyList()
+        public void ImportKeePass_EmptyDatabase_ReturnsEmptyList()
         {
             // This test validates that the service can handle an empty KeePass database
             // without throwing exceptions. Since creating a valid .kdbx file requires
@@ -74,7 +74,7 @@ namespace PhantomVault.Core.Tests
         }
 
         [Fact]
-        public async Task ImportKeePass_WithGroupHierarchy_PreservesStructure()
+        public void ImportKeePass_WithGroupHierarchy_PreservesStructure()
         {
             // This test would validate that when importing a KeePass database with
             // nested groups like:
@@ -93,7 +93,7 @@ namespace PhantomVault.Core.Tests
         }
 
         [Fact]
-        public async Task ImportKeePass_WithAttachments_ImportsMetadata()
+        public void ImportKeePass_WithAttachments_ImportsMetadata()
         {
             // KeePass supports binary attachments (files stored within entries)
             // This test would validate that attachment metadata is preserved
@@ -103,7 +103,7 @@ namespace PhantomVault.Core.Tests
         }
 
         [Fact]
-        public async Task ImportKeePass_WithCustomFields_PreservesAllFields()
+        public void ImportKeePass_WithCustomFields_PreservesAllFields()
         {
             // KeePass allows custom string fields beyond the standard
             // Title, Username, Password, URL, Notes fields.
@@ -114,7 +114,7 @@ namespace PhantomVault.Core.Tests
         }
 
         [Fact]
-        public async Task ImportKeePass_WithTotpSecrets_ImportsOtpData()
+        public void ImportKeePass_WithTotpSecrets_ImportsOtpData()
         {
             // Modern KeePass databases can store TOTP secrets using plugins
             // like KeeOtp or Tray TOTP. This test validates that TOTP secrets
@@ -124,7 +124,7 @@ namespace PhantomVault.Core.Tests
         }
 
         [Fact]
-        public async Task ImportKeePass_WithPasswordHistory_PreservesHistory()
+        public void ImportKeePass_WithPasswordHistory_PreservesHistory()
         {
             // KeePass maintains a history of previous passwords for each entry.
             // This test validates that password history is imported and accessible.
@@ -133,7 +133,7 @@ namespace PhantomVault.Core.Tests
         }
 
         [Fact]
-        public async Task ImportKeePass_WithExpiredEntries_FlagsAsExpired()
+        public void ImportKeePass_WithExpiredEntries_FlagsAsExpired()
         {
             // KeePass entries can have expiration dates.
             // This test validates that expired entries are correctly identified
@@ -143,7 +143,7 @@ namespace PhantomVault.Core.Tests
         }
 
         [Fact]
-        public async Task ImportKeePass_WithRecycleBin_ExcludesDeletedEntries()
+        public void ImportKeePass_WithRecycleBin_ExcludesDeletedEntries()
         {
             // KeePass has a Recycle Bin group for deleted entries.
             // This test validates that entries in the Recycle Bin are either
@@ -153,7 +153,7 @@ namespace PhantomVault.Core.Tests
         }
 
         [Fact]
-        public async Task ImportKeePass_WithAesKdf_HandlesKeyDerivation()
+        public void ImportKeePass_WithAesKdf_HandlesKeyDerivation()
         {
             // KeePass supports multiple key derivation functions (AES-KDF, Argon2).
             // This test validates that databases using AES-KDF can be imported
@@ -163,7 +163,7 @@ namespace PhantomVault.Core.Tests
         }
 
         [Fact]
-        public async Task ImportKeePass_WithArgon2Kdf_HandlesKeyDerivation()
+        public void ImportKeePass_WithArgon2Kdf_HandlesKeyDerivation()
         {
             // This test validates that databases using Argon2 KDF can be imported.
             // Argon2 is the recommended KDF for new KeePass databases.
@@ -172,7 +172,7 @@ namespace PhantomVault.Core.Tests
         }
 
         [Fact]
-        public async Task ImportKeePass_WithKeyFile_RequiresBothPasswordAndKeyFile()
+        public void ImportKeePass_WithKeyFile_RequiresBothPasswordAndKeyFile()
         {
             // KeePass supports composite keys (password + key file).
             // This test validates that databases requiring both authentication
@@ -182,7 +182,7 @@ namespace PhantomVault.Core.Tests
         }
 
         [Fact]
-        public async Task ImportKeePass_WithTags_PreservesTagsAsCategories()
+        public void ImportKeePass_WithTags_PreservesTagsAsCategories()
         {
             // KeePass 2.x supports entry tags.
             // This test validates that tags are imported and converted to
@@ -192,7 +192,7 @@ namespace PhantomVault.Core.Tests
         }
 
         [Fact]
-        public async Task ImportKeePass_LargeDatabasePerformance_CompletesInReasonableTime()
+        public void ImportKeePass_LargeDatabasePerformance_CompletesInReasonableTime()
         {
             // This test validates that importing a large KeePass database
             // (e.g., 10,000+ entries) completes without timeout and with
@@ -202,7 +202,7 @@ namespace PhantomVault.Core.Tests
         }
 
         [Fact]
-        public async Task ImportKeePass_WithMultipleGroups_MergesIntoExistingCategories()
+        public void ImportKeePass_WithMultipleGroups_MergesIntoExistingCategories()
         {
             // When importing into an existing vault with categories,
             // this test validates that the merge logic works correctly
@@ -212,7 +212,7 @@ namespace PhantomVault.Core.Tests
         }
 
         [Fact]
-        public async Task ImportKeePass_InvalidPassword_ThrowsAuthenticationException()
+        public void ImportKeePass_InvalidPassword_ThrowsAuthenticationException()
         {
             // This test validates that providing an incorrect master password
             // results in a clear authentication error rather than corrupted data.
@@ -221,7 +221,7 @@ namespace PhantomVault.Core.Tests
         }
 
         [Fact]
-        public async Task ImportKeePass_CorruptedDatabase_HandlesGracefully()
+        public void ImportKeePass_CorruptedDatabase_HandlesGracefully()
         {
             // This test validates that a corrupted .kdbx file is handled
             // gracefully with clear error messages rather than crashes.
@@ -234,7 +234,7 @@ namespace PhantomVault.Core.Tests
         /// This serves as documentation for how the feature should work.
         /// </summary>
         [Fact]
-        public async Task ImportKeePass_CompleteWorkflow_DocumentsExpectedBehavior()
+        public void ImportKeePass_CompleteWorkflow_DocumentsExpectedBehavior()
         {
             // Expected workflow:
             // 1. User selects .kdbx file

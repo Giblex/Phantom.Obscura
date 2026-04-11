@@ -5,18 +5,47 @@ using Microsoft.Extensions.Logging;
 namespace PhantomVault.Core.Services.Security
 {
     /// <summary>
-    /// Placeholder implementation of IAuthController.
-    /// TODO: Wire this to actual authentication flow in MainViewModel/VaultViewModel.
+    /// Controls authentication flow and enforces security measures
+    /// (lockouts, key requirements, forced re-auth) on behalf of the DefenceEngine.
     /// </summary>
     public sealed class AuthController : IAuthController
     {
         private readonly ILogger<AuthController>? _logger;
+        private readonly object _lock = new();
         private bool _requirePhantomKeyNextUnlock;
+        private DateTimeOffset? _lockoutEndUtc;
 
         public AuthController(ILogger<AuthController>? logger = null)
         {
             _logger = logger;
         }
+
+        /// <inheritdoc />
+        public bool IsLockedOut
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return _lockoutEndUtc.HasValue && DateTimeOffset.UtcNow < _lockoutEndUtc.Value;
+                }
+            }
+        }
+
+        /// <inheritdoc />
+        public DateTimeOffset? LockoutEndUtc
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return _lockoutEndUtc;
+                }
+            }
+        }
+
+        /// <inheritdoc />
+        public event EventHandler<string>? ReauthenticationRequired;
 
         public async Task AddAuthenticationDelayAsync(TimeSpan delay)
         {
@@ -24,25 +53,23 @@ namespace PhantomVault.Core.Services.Security
             await Task.Delay(delay);
         }
 
-        public async Task EnforceTempLockoutAsync(TimeSpan lockoutDuration)
+        public Task EnforceTempLockoutAsync(TimeSpan lockoutDuration)
         {
-            _logger?.LogWarning("Temporary lockout enforced: {Duration}", lockoutDuration);
-            // TODO: Integrate with authentication flow to block unlock attempts
-            // For now, just log the lockout
-            await Task.CompletedTask;
+            lock (_lock)
+            {
+                _lockoutEndUtc = DateTimeOffset.UtcNow.Add(lockoutDuration);
+            }
+            _logger?.LogWarning("Temporary lockout enforced until {LockoutEnd}", _lockoutEndUtc);
+            return Task.CompletedTask;
         }
 
         public void RequirePhantomKeyForNextUnlock()
         {
             _logger?.LogWarning("PhantomKey will be required for next unlock");
             _requirePhantomKeyNextUnlock = true;
-            // TODO: Integrate with MainViewModel to enforce keyfile requirement
         }
 
-        /// <summary>
-        /// Check if PhantomKey is required and reset the flag after checking.
-        /// Called by authentication flow before unlock.
-        /// </summary>
+        /// <inheritdoc />
         public bool CheckAndResetPhantomKeyRequirement()
         {
             var wasRequired = _requirePhantomKeyNextUnlock;
@@ -53,8 +80,7 @@ namespace PhantomVault.Core.Services.Security
         public void RequireReauthentication(string reason)
         {
             _logger?.LogWarning("Re-authentication required: {Reason}", reason);
-            // TODO: Integrate with MainViewModel to trigger lock and show reason
-            // For now, log the requirement. The calling code should also lock the vault.
+            ReauthenticationRequired?.Invoke(this, reason);
         }
     }
 }

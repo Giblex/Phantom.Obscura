@@ -109,13 +109,50 @@ namespace PhantomVault.UI.Services
                 }
                 else if (OperatingSystem.IsMacOS())
                 {
-                    // TODO: Check macOS accessibility preferences
-                    // defaults read com.apple.universalaccess reduceMotion
+                    try
+                    {
+                        var psi = new System.Diagnostics.ProcessStartInfo("defaults", "read com.apple.universalaccess reduceMotion")
+                        {
+                            RedirectStandardOutput = true,
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        };
+                        using var proc = System.Diagnostics.Process.Start(psi);
+                        if (proc != null)
+                        {
+                            var output = proc.StandardOutput.ReadToEnd().Trim();
+                            proc.WaitForExit(2000);
+                            _reduceMotion = output == "1";
+                        }
+                    }
+                    catch
+                    {
+                        // defaults command may fail if preference doesn't exist
+                    }
                 }
                 else if (OperatingSystem.IsLinux())
                 {
-                    // TODO: Check GNOME/KDE accessibility settings
-                    // gsettings get org.gnome.desktop.interface enable-animations
+                    try
+                    {
+                        var psi = new System.Diagnostics.ProcessStartInfo("gsettings", "get org.gnome.desktop.interface enable-animations")
+                        {
+                            RedirectStandardOutput = true,
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        };
+                        using var proc = System.Diagnostics.Process.Start(psi);
+                        if (proc != null)
+                        {
+                            var output = proc.StandardOutput.ReadToEnd().Trim();
+                            proc.WaitForExit(2000);
+                            // enable-animations=false means reduce motion is ON
+                            _reduceMotion = string.Equals(output, "false", StringComparison.OrdinalIgnoreCase);
+                        }
+                    }
+                    catch
+                    {
+                        // gsettings may not be available on non-GNOME desktops
+                    }
                 }
             }
             catch

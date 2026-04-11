@@ -11,15 +11,13 @@ namespace PhantomVault.UI.Views
 {
     public partial class MainWindow : Window
     {
-        private UserSettings? _settings;
-
         public MainWindow()
         {
             InitializeComponent();
             
             // Load and restore window state from settings
-            _settings = SettingsService.Load();
-            WindowStateManager.RestoreMainWindowState(this, _settings);
+            var settings = SettingsService.Load();
+            WindowStateManager.RestoreMainWindowState(this, settings);
             
             this.Opened += OnOpened;
 
@@ -41,11 +39,11 @@ namespace PhantomVault.UI.Views
 
         private void SaveWindowState()
         {
-            if (_settings != null)
+            SettingsService.Update(settings =>
             {
-                WindowStateManager.SaveMainWindowState(this, _settings);
-                SettingsService.Save(_settings);
-            }
+                WindowStateManager.SaveMainWindowState(this, settings);
+                return 0;
+            });
         }
 
         private void OnOpened(object? sender, EventArgs e)

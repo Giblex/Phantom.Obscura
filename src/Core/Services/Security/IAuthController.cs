@@ -9,6 +9,16 @@ namespace PhantomVault.Core.Services.Security
     public interface IAuthController
     {
         /// <summary>
+        /// True when a temporary lockout is active and authentication should be blocked.
+        /// </summary>
+        bool IsLockedOut { get; }
+
+        /// <summary>
+        /// UTC time when the current lockout expires, or null if no lockout is active.
+        /// </summary>
+        DateTimeOffset? LockoutEndUtc { get; }
+
+        /// <summary>
         /// Adds an artificial delay to the authentication process.
         /// Used to slow down brute-force attacks.
         /// </summary>
@@ -28,10 +38,23 @@ namespace PhantomVault.Core.Services.Security
         void RequirePhantomKeyForNextUnlock();
 
         /// <summary>
+        /// Checks whether PhantomKey is required for the current unlock attempt
+        /// and resets the flag. Called by the authentication flow before unlock.
+        /// </summary>
+        /// <returns>True if PhantomKey was required.</returns>
+        bool CheckAndResetPhantomKeyRequirement();
+
+        /// <summary>
         /// Forces re-authentication with a reason displayed to the user.
         /// Used when security threats are detected.
         /// </summary>
         /// <param name="reason">The reason for requiring re-authentication.</param>
         void RequireReauthentication(string reason);
+
+        /// <summary>
+        /// Raised when the DefenceEngine requires the user to re-authenticate.
+        /// UI layers should subscribe to lock the vault and display the reason.
+        /// </summary>
+        event EventHandler<string>? ReauthenticationRequired;
     }
 }

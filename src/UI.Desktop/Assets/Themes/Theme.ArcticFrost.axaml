@@ -25,6 +25,7 @@
 
     <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#F7FAFC"/>
     <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#EDF2F7"/>
+    <SolidColorBrush x:Key="HeaderBorderBrush" Color="#5A9AAA"/>
     <SolidColorBrush x:Key="FooterBackgroundBrush" Color="#EDF2F7"/>
     <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="CardBackgroundBrush" Color="#FFFFFF"/>
@@ -131,7 +132,7 @@
     <SolidColorBrush x:Key="ErrorBackgroundBrush" Color="#FFF5F5"/>
     <SolidColorBrush x:Key="InfoBackgroundBrush" Color="#EBF8FF"/>
     
-    <FontFamily x:Key="MainFontFamily">Segoe UI</FontFamily>
+    <FontFamily x:Key="MainFontFamily">Segoe UI Variable, Segoe UI</FontFamily>
     
     <Color x:Key="GlobalShadowColor">#A0AEC0</Color>
     <Color x:Key="HeaderAccentColor">#E2E8F0</Color>
@@ -155,7 +156,168 @@
         <GradientStop Color="#00000000" Offset="1"/>
     </LinearGradientBrush>
 
+    <!-- Liquid glass tokens (arctic frost) -->
+    <Color x:Key="Glass.Tint.Light">#E0EBF5</Color>
+    <Color x:Key="Glass.Tint.Mid">#3182CE</Color>
+    <Color x:Key="Glass.Tint.Dark">#1A2332</Color>
+    <Color x:Key="Glass.Tint.Deepest">#1A2332</Color>
+    <Color x:Key="Glass.Sheen.Bright">#FFFFFF</Color>
+    <Color x:Key="Glass.Sheen.Mid">#EBF4FA</Color>
+    <Color x:Key="Glass.Sheen.Soft">#D4E5F0</Color>
+    <SolidColorBrush x:Key="Brush.Glass.Border" Color="#48FFFFFF"/>
+    <SolidColorBrush x:Key="Brush.Glass.BorderHover" Color="#6AFFFFFF"/>
+    <SolidColorBrush x:Key="Brush.Glass.BorderPressed" Color="#30EBF4FA"/>
+    <SolidColorBrush x:Key="Brush.Glass.BorderFocus" Color="#3182CE"/>
+    <SolidColorBrush x:Key="Brush.Glass.EdgeHighlight.Start" Color="#48FFFFFF"/>
+    <SolidColorBrush x:Key="Brush.Glass.EdgeHighlight.Mid" Color="#30E0EBF5"/>
+    <SolidColorBrush x:Key="Brush.Glass.EdgeHighlight.End" Color="#003182CE"/>
+
+    <!-- Light-mode glass layer fills -->
+    <RadialGradientBrush x:Key="Brush.Glass.BaseFill" Center="35%,40%" RadiusX="80%" RadiusY="80%">
+        <GradientStop Color="#10E0EBF5" Offset="0"/>
+        <GradientStop Color="#08D4E5F0" Offset="0.4"/>
+        <GradientStop Color="#04EBF4FA" Offset="0.7"/>
+        <GradientStop Color="#02E0EBF5" Offset="1"/>
+    </RadialGradientBrush>
+    <RadialGradientBrush x:Key="Brush.Glass.BaseFillHover" Center="35%,40%" RadiusX="80%" RadiusY="80%">
+        <GradientStop Color="#18E0EBF5" Offset="0"/>
+        <GradientStop Color="#10D4E5F0" Offset="0.4"/>
+        <GradientStop Color="#08EBF4FA" Offset="0.7"/>
+        <GradientStop Color="#04E0EBF5" Offset="1"/>
+    </RadialGradientBrush>
+    <RadialGradientBrush x:Key="Brush.Glass.BaseFillPressed" Center="35%,40%" RadiusX="80%" RadiusY="80%">
+        <GradientStop Color="#08E0EBF5" Offset="0"/>
+        <GradientStop Color="#04D4E5F0" Offset="0.4"/>
+        <GradientStop Color="#02EBF4FA" Offset="0.7"/>
+        <GradientStop Color="#01E0EBF5" Offset="1"/>
+    </RadialGradientBrush>
+    <RadialGradientBrush x:Key="Brush.Glass.BaseFillChecked" Center="35%,40%" RadiusX="80%" RadiusY="80%">
+        <GradientStop Color="#22E0EBF5" Offset="0"/>
+        <GradientStop Color="#14D4E5F0" Offset="0.4"/>
+        <GradientStop Color="#0CEBF4FA" Offset="0.7"/>
+        <GradientStop Color="#08E0EBF5" Offset="1"/>
+    </RadialGradientBrush>
+    <LinearGradientBrush x:Key="Brush.Glass.InnerShadow" StartPoint="100%,100%" EndPoint="0%,0%">
+        <GradientStop Color="#18D4E5F0" Offset="0"/>
+        <GradientStop Color="#00D4E5F0" Offset="0.4"/>
+    </LinearGradientBrush>
+    <RadialGradientBrush x:Key="Brush.Glass.Sheen" Center="30%,25%" RadiusX="60%" RadiusY="50%">
+        <GradientStop Color="#22FFFFFF" Offset="0"/>
+        <GradientStop Color="#14E0EBF5" Offset="0.2"/>
+        <GradientStop Color="#08D4E5F0" Offset="0.5"/>
+        <GradientStop Color="#00000000" Offset="1"/>
+    </RadialGradientBrush>
+    <LinearGradientBrush x:Key="Brush.Glass.EdgeHighlightBorder" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#48FFFFFF" Offset="0"/>
+        <GradientStop Color="#20E0EBF5" Offset="0.3"/>
+        <GradientStop Color="#00D4E5F0" Offset="0.7"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="Brush.Glass.BottomShadow" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#00000000" Offset="0"/>
+        <GradientStop Color="#00000000" Offset="0.5"/>
+        <GradientStop Color="#14D4E5F0" Offset="1"/>
+    </LinearGradientBrush>
+
+    <Color x:Key="LiquidGlassDropShadow">#223A5874</Color>
+    <Color x:Key="LiquidGlassDropShadowHover">#2C3A5874</Color>
+    <Color x:Key="LiquidGlassDropShadowPressed">#163A5874</Color>
+    <DropShadowEffect x:Key="LiquidGlassButtonEffect" BlurRadius="10" OffsetX="0" OffsetY="3" Color="#3A5874" Opacity="0.14"/>
+    <DropShadowEffect x:Key="LiquidGlassButtonEffectHover" BlurRadius="16" OffsetX="0" OffsetY="4" Color="#3A5874" Opacity="0.20"/>
+    <DropShadowEffect x:Key="LiquidGlassButtonEffectPressed" BlurRadius="5" OffsetX="0" OffsetY="1" Color="#3A5874" Opacity="0.08"/>
+
     <!-- Liquid glass button foreground (dark text on light glass) -->
     <SolidColorBrush x:Key="LiquidGlassButtonForeground" Color="#1A2332"/>
 
+    <!-- ═══ Dashboard sheet overlay ═══ -->
+    <LinearGradientBrush x:Key="DashboardSheetOverlayBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Color="#55D0E0F8" Offset="0"/>
+        <GradientStop Color="#50C8D8F0" Offset="0.5"/>
+        <GradientStop Color="#48D0E0F8" Offset="1"/>
+    </LinearGradientBrush>
+    <Color x:Key="DashboardSheetAcrylicTint">#E0ECF8</Color>
+    <Color x:Key="DashboardSheetAcrylicFallback">#18C8D8F0</Color>
+
+    <!-- ═══ Dashboard glass panel resources ═══ -->
+    <LinearGradientBrush x:Key="DashboardSectionBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#50FFFFFF" Offset="0"/>
+        <GradientStop Color="#40F0F5FA" Offset="0.5"/>
+        <GradientStop Color="#30E8F0F8" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardSectionHoverBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#60FFFFFF" Offset="0"/>
+        <GradientStop Color="#50F0F5FA" Offset="0.5"/>
+        <GradientStop Color="#40E8F0F8" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardSectionBorderBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#20B0C8E0" Offset="0"/>
+        <GradientStop Color="#183182CE" Offset="0.35"/>
+        <GradientStop Color="#10B0C8E0" Offset="0.7"/>
+        <GradientStop Color="#08B0C8E0" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardSectionHoverBorderBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#30B0C8E0" Offset="0"/>
+        <GradientStop Color="#243182CE" Offset="0.35"/>
+        <GradientStop Color="#18B0C8E0" Offset="0.7"/>
+        <GradientStop Color="#0CB0C8E0" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardCardBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#48FFFFFF" Offset="0"/>
+        <GradientStop Color="#3CF2F6FA" Offset="0.5"/>
+        <GradientStop Color="#30E8F0F6" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardCardHoverBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#58FFFFFF" Offset="0"/>
+        <GradientStop Color="#4CF2F6FA" Offset="0.5"/>
+        <GradientStop Color="#40E8F0F6" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardCardPressedBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#38EEF4F8" Offset="0"/>
+        <GradientStop Color="#30E6EEF4" Offset="0.5"/>
+        <GradientStop Color="#28DEE8F0" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardNavBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#44FFFFFF" Offset="0"/>
+        <GradientStop Color="#38F0F4F8" Offset="0.5"/>
+        <GradientStop Color="#2CEAF0F6" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardNavHoverBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#54FFFFFF" Offset="0"/>
+        <GradientStop Color="#48F0F4F8" Offset="0.5"/>
+        <GradientStop Color="#3CEAF0F6" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardNavPressedBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#34EAF0F6" Offset="0"/>
+        <GradientStop Color="#2CE4ECF2" Offset="0.5"/>
+        <GradientStop Color="#24DEE6EE" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardNavPrimaryBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#503182CE" Offset="0"/>
+        <GradientStop Color="#442878BE" Offset="0.5"/>
+        <GradientStop Color="#38206EAE" Offset="1"/>
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="DashboardNavPrimaryBorderBrush" Color="#603182CE"/>
+    <LinearGradientBrush x:Key="DashboardPanelBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#18EEF4FA" Offset="0"/>
+        <GradientStop Color="#10E8F0F6" Offset="0.5"/>
+        <GradientStop Color="#08E2EAF2" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardPanelBorderBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#18A0C0E0" Offset="0"/>
+        <GradientStop Color="#0CA0C0E0" Offset="0.5"/>
+        <GradientStop Color="#06A0C0E0" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardTileBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#30FFFFFF" Offset="0"/>
+        <GradientStop Color="#24F2F6FA" Offset="0.5"/>
+        <GradientStop Color="#1CEAF0F8" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardTileHoverBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#40FFFFFF" Offset="0"/>
+        <GradientStop Color="#34F2F6FA" Offset="0.5"/>
+        <GradientStop Color="#28EAF0F8" Offset="1"/>
+    </LinearGradientBrush>
+    <Color x:Key="DashboardTileBorderColor">#30708898</Color>
+    <Color x:Key="DashboardTileHoverBorderColor">#483182CE</Color>
+    <Color x:Key="DashboardAcrylicTint">#EAF2FA</Color>
+    <Color x:Key="DashboardAcrylicFallback">#10F0F6FC</Color>
 </ResourceDictionary>

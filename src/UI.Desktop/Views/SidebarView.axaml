@@ -13,7 +13,7 @@
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
             <Setter Property="BorderBrush" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding" Value="12,0" />
             <Setter Property="HorizontalContentAlignment" Value="Left" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
@@ -38,52 +38,25 @@
             </Setter>
         </Style>
         <Style Selector="Button.nav-button:pointerover">
-            <Setter Property="Background" Value="{DynamicResource FilterHoverGradient}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource FilterHoverBorderBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Background" Value="#1400E5CC" />
+            <Setter Property="BorderBrush" Value="#2200E5CC" />
         </Style>
         <Style Selector="Button.nav-button.active">
-            <Setter Property="Background">
-                <Setter.Value>
-                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                        <GradientStop Color="#40004258" Offset="0"/>
-                        <GradientStop Color="#30004258" Offset="0.55"/>
-                        <GradientStop Color="#25004258" Offset="1"/>
-                    </LinearGradientBrush>
-                </Setter.Value>
-            </Setter>
+            <Setter Property="Background" Value="#1800E5CC" />
             <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
-            <Setter Property="BorderThickness" Value="1.5" />
+            <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
         </Style>
         <Style Selector="Button.nav-button.active:pointerover">
-            <Setter Property="Background">
-                <Setter.Value>
-                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                        <GradientStop Color="#50004258" Offset="0"/>
-                        <GradientStop Color="#38004258" Offset="0.55"/>
-                        <GradientStop Color="#30004258" Offset="1"/>
-                    </LinearGradientBrush>
-                </Setter.Value>
-            </Setter>
+            <Setter Property="Background" Value="#2200E5CC" />
             <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
         </Style>
         <Style Selector="Button.nav-button:pressed">
-            <Setter Property="Background" Value="{DynamicResource FilterPressedGradient}" />
+            <Setter Property="Background" Value="#1C00E5CC" />
         </Style>
         <Style Selector="Button.nav-button.active:pressed">
-            <Setter Property="Background">
-                <Setter.Value>
-                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                        <GradientStop Color="#50004258" Offset="0"/>
-                        <GradientStop Color="#38004258" Offset="0.55"/>
-                        <GradientStop Color="#30004258" Offset="1"/>
-                    </LinearGradientBrush>
-                </Setter.Value>
-            </Setter>
+            <Setter Property="Background" Value="#2600E5CC" />
             <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
         </Style>
 
         <Style Selector="Button.collapsed-icon">
@@ -116,27 +89,15 @@
         </Style>
 
         <Style Selector="Button.collapsed-icon.active">
-            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-            <Setter Property="BorderThickness" Value="1.5"/>
-        </Style>
-
-        <Style Selector="Button.collapsed-icon.active:pointerover">
+            <Setter Property="Background" Value="#1800E5CC"/>
             <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
 
-        <!-- Active collapsed icon: reuse glass hover/pressed states from LiquidGlass.axaml
-             via the .liquid-glass class on the button itself. Only add the active border accent. -->
-        <Style Selector="Button.collapsed-icon.active /template/ Border#BaseBorder">
-            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Glass.BorderHover}"/>
-        </Style>
-
-        <Style Selector="Button.collapsed-icon.active /template/ Border#Sheen">
-            <Setter Property="Opacity" Value="0.8"/>
-        </Style>
-
-        <Style Selector="Button.collapsed-icon.active:pressed /template/ Border#BaseBorder">
-            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Glass.BorderPressed}"/>
+        <Style Selector="Button.collapsed-icon.active:pointerover">
+            <Setter Property="Background" Value="#2200E5CC"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
         </Style>
 
         <!-- Thin sidebar scrollbar: track + thumb narrower, positioned flush-right -->
@@ -207,19 +168,6 @@
 
                 <!-- Dashboard and Passwords Buttons -->
                 <StackPanel Spacing="6" Margin="0,0,0,12" IsVisible="{Binding !IsSidebarCollapsed}">
-                    <StackPanel.Styles>
-                        <Style Selector="StackPanel">
-                            <Setter Property="Transitions">
-                                <Transitions>
-                                    <DoubleTransition Property="Opacity" Duration="0:0:0.3" Easing="CubicEaseOut"/>
-                                </Transitions>
-                            </Setter>
-                            <Setter Property="Opacity" Value="0"/>
-                        </Style>
-                        <Style Selector="StackPanel[IsVisible=true]">
-                            <Setter Property="Opacity" Value="1"/>
-                        </Style>
-                    </StackPanel.Styles>
                     <Button Command="{Binding ShowDashboardCommand}"
                                   Classes="nav-button"
                                   Classes.active="{Binding IsShowingDashboard}"
@@ -252,20 +200,6 @@
                 
                 <!-- Collapsed Icon-Only View -->
                 <StackPanel Spacing="6" Margin="0,0,0,12" IsVisible="{Binding IsSidebarCollapsed}">
-                    <StackPanel.Styles>
-                        <Style Selector="StackPanel">
-                            <Setter Property="Transitions">
-                                <Transitions>
-                                    <DoubleTransition Property="Opacity" Duration="0:0:0.3" Easing="CubicEaseOut"/>
-                                </Transitions>
-                            </Setter>
-                            <Setter Property="Opacity" Value="0"/>
-                        </Style>
-                        <Style Selector="StackPanel[IsVisible=true]">
-                            <Setter Property="Opacity" Value="1"/>
-                        </Style>
-                    </StackPanel.Styles>
-                    
                     <!-- Expand Button -->
                     <Button Command="{Binding ToggleSidebarCommand}"
                             Classes="liquid-glass collapsed-icon"
@@ -331,7 +265,8 @@
                     <!-- Recovery Icon -->
                     <Button Command="{Binding ToggleRecoveryPanelCommand}"
                             Classes="liquid-glass collapsed-icon"
-                            ToolTip.Tip="Recovery"
+                            ToolTip.Tip="{Binding EmbeddedRecoveryStatus}"
+                            IsEnabled="{Binding IsEmbeddedRecoveryAvailable}"
                             HorizontalAlignment="Center"
                             ClickMode="Press">
                         <controls:SvgIcon IconName="Assets/SVG/Current/Recovery.svg"
@@ -341,7 +276,8 @@
                     <!-- TOTP Icon -->
                     <Button Command="{Binding DashboardViewModel.LaunchPhantomAttestorCommand}"
                             Classes="liquid-glass collapsed-icon"
-                            ToolTip.Tip="PhantomAttestor"
+                            ToolTip.Tip="{Binding DashboardViewModel.AttestorStatus}"
+                            IsEnabled="{Binding DashboardViewModel.IsAttestorAvailable}"
                             HorizontalAlignment="Center"
                             ClickMode="Press">
                         <Viewbox Width="21" Height="21">
@@ -364,7 +300,6 @@
                         <Border.Styles>
                             <Style Selector="Border:pointerover">
                                 <Setter Property="Background" Value="{DynamicResource SidebarHeadingHoverCompositeBrush}"/>
-                                <Setter Property="Padding" Value="6,0"/>
                             </Style>
                         </Border.Styles>
                         <TextBlock Text="QUICK ACCESS"
@@ -670,6 +605,22 @@
                                 <TextBlock Text="Contacts" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
+
+                        <Button Command="{Binding FilterByEntryTypeCommand}"
+                                CommandParameter="PinCode"
+                                Classes="liquid-glass"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Left"
+                                Height="36"
+                                CornerRadius="0"
+                                Background="{DynamicResource ContentBackgroundBrush}"
+                                Foreground="{DynamicResource PrimaryTextBrush}"
+                                Margin="6,1">
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
+                                <Path Data="M7 2h10v4H7z M5 6h14v16H5z M9 10h2 M13 10h2 M9 14h2 M13 14h2 M9 18h6" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" StrokeLineCap="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text="PIN Codes" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
                     </ItemsControl>
                 </StackPanel>
                 
@@ -794,7 +745,7 @@
                 
                 <!-- Flagged Passwords and Recovery Section -->
                 <StackPanel Spacing="{StaticResource Space6}" IsVisible="{Binding !IsSidebarCollapsed}">
-                    <Button Command="{Binding ShowFlaggedPasswordsCommand}"
+                    <Button Command="{Binding OpenSecurityDashboardWindowCommand}"
                             Classes="liquid-glass"
                             Background="{DynamicResource ContentBackgroundBrush}"
                             Foreground="{DynamicResource ControlForegroundBrush}"
@@ -829,12 +780,20 @@
                             Foreground="{DynamicResource ControlForegroundBrush}"
                             HorizontalAlignment="Stretch"
                             HorizontalContentAlignment="Left"
+                            IsEnabled="{Binding IsExternalRecoveryAvailable}"
+                            ToolTip.Tip="{Binding ExternalRecoveryStatus}"
                             Height="32"
                             FontSize="{StaticResource Type.Tiny.Size}"
                             CornerRadius="4"
                             Margin="12,0,12,12">
                         <TextBlock Text="Phantom Recovery" VerticalAlignment="Center"/>
                     </Button>
+
+                    <TextBlock Text="{Binding ExternalRecoveryStatus}"
+                               Margin="12,-6,12,12"
+                               FontSize="{StaticResource Type.Micro.Size}"
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               TextWrapping="Wrap"/>
                 </StackPanel>
             </StackPanel>
         </ScrollViewer>

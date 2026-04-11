@@ -17,9 +17,9 @@ namespace PhantomVault.UI.Views
 
         public WelcomePage()
         {
-            // Enable theme support for welcome page
-            ThemeScope.SetIsThemed(this, true);
-            
+            // Fixed dark navy — pre-vault screens never follow user theme
+            ThemeScope.SetIsThemed(this, false);
+
             InitializeComponent();
 
             // Set up navigation only when DataContext is assigned
@@ -59,21 +59,60 @@ namespace PhantomVault.UI.Views
             try
             {
                 var setupWizard = new SetupWizardWindow();
-                
-                // When wizard closes, show welcome page again or proceed based on result
+                var wizardVm = setupWizard.DataContext as SetupWizardViewModel;
+
+                // When the ViewModel signals vault is ready to create, open the loading window
+                if (wizardVm != null)
+                {
+                    wizardVm.VaultReadyForCreation += async (s, _) =>
+                    {
+                        try
+                        {
+                            // Already on UI thread (fired from button click) — no Dispatcher wrapping needed
+                            var loadingWindow = new VaultCreationLoadingWindow();
+                            loadingWindow.Show();
+                            setupWizard.Hide();
+
+                            loadingWindow.CreationCompleted += (lw, _) =>
+                            {
+                                try
+                                {
+                                    loadingWindow.Close();
+                                    setupWizard.Close();
+                                    OpenVaultWindowWithPreferencePrompt();
+                                }
+                                catch (Exception ex)
+                                {
+                                    Log.Error(ex, "Failed to transition after vault creation");
+                                    this.Show();
+                                }
+                            };
+
+                            await loadingWindow.RunCreationAsync(wizardVm);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex, "Vault creation loading window failed");
+                            setupWizard.Show();
+                        }
+                    };
+                }
+
+                // Track whether vault creation was initiated so we know if wizard
+                // was closed by user (X button) vs closed after successful creation.
+                bool vaultCreationStarted = false;
+
+                if (wizardVm != null)
+                    wizardVm.VaultReadyForCreation += (_, __) => vaultCreationStarted = true;
+
+                // When wizard closes without vault creation, show welcome page again
                 setupWizard.Closed += (s, args) =>
                 {
-                    // Check if vault was created successfully (via ViewModel state)
-                    if (setupWizard.DataContext is SetupWizardViewModel vm && vm.IsCompleting == false && vm.CurrentStep == vm.TotalSteps)
+                    if (!vaultCreationStarted)
                     {
-                        // Vault was created - close welcome page entirely
-                        this.Close();
-                    }
-                    else
-                    {
-                        // User cancelled - show welcome page again
                         this.Show();
                     }
+                    // Otherwise, vault creation flow will handle window transitions
                 };
 
                 setupWizard.Show();
@@ -87,6 +126,77 @@ namespace PhantomVault.UI.Views
                     "Setup Wizard Error",
                     $"Unable to open the setup wizard: {ex.Message}",
                     this);
+            }
+        }
+
+        private async void OpenVaultWindowWithPreferencePrompt()
+        {
+            try
+            {
+                if (Application.Current is not App app || app.Services == null)
+                    return;
+
+                var services = app.Services;
+
+                // Open VaultWindow (same pattern as developer bypass)
+                var vaultViewModel = services.GetRequiredService<VaultViewModel>();
+                var vaultWindow = new VaultWindow { DataContext = vaultViewModel };
+
+                var vaultLockDurationService = services.GetRequiredService<VaultLockDurationService>();
+                vaultLockDurationService.SetActiveSession(null);
+
+                vaultViewModel.SetOwnerWindow(vaultWindow);
+                vaultWindow.Show();
+
+                // Transfer MainWindow before hiding so app doesn't shut down
+                if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime dt)
+                    dt.MainWindow = vaultWindow;
+
+                this.Hide();
+
+                // Check if this is first time (no unlock preference set yet)
+                var settings = SettingsService.Load();
+
+                if (string.IsNullOrEmpty(settings.VaultUnlockPreference))
+                {
+                    // Short delay so the vault window is fully rendered
+                    await Task.Delay(600);
+
+                    var preferenceDialog = new VaultUnlockPreferenceDialog();
+                    var result = await preferenceDialog.ShowDialog<string?>(vaultWindow);
+
+                    if (!string.IsNullOrEmpty(result))
+                    {
+                        settings.VaultUnlockPreference = result;
+
+                        // Also apply the preference to related settings
+                        switch (result)
+                        {
+                            case "Pin":
+                                settings.EnablePinLock = true;
+                                settings.DefaultUsePasskey = false;
+                                break;
+                            case "WindowsHello":
+                                settings.DefaultUsePasskey = true;
+                                settings.EnablePinLock = false;
+                                break;
+                            case "Automatic":
+                                settings.DefaultUsePasskey = false;
+                                settings.EnablePinLock = false;
+                                break;
+                        }
+
+                        SettingsService.Save(settings);
+                    }
+                }
+
+                // Close welcome page – vault is now the main window
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to open vault window after creation");
+                this.Show();
             }
         }
 
@@ -173,19 +283,20 @@ namespace PhantomVault.UI.Views
             usbSetupViewModel.SetOwnerWindow(usbSetupWindow);
 
             usbSetupWindow.Show();
-            this.Close(); // Close WelcomePage so it doesn't linger
+            this.Hide(); // Hide (not Close) — WelcomePage is MainWindow; closing it triggers app shutdown
         }
 
         private void OnNavigateToSecurityCheck(object? sender, string usbPath)
         {
             // Create services for security check
             var encryptionService = new EncryptionService();
-            var manifestService = new ManifestService(encryptionService);
+            var containerService = new PhantomContainerService(encryptionService);
+            var manifestService = new ManifestService(encryptionService, containerService);
             var securityCheckService = new SecurityCheckService(manifestService);
 
             var securityCheckScreen = new SecurityCheckScreen(securityCheckService, usbPath);
             securityCheckScreen.Show();
-            this.Close(); // Close WelcomePage so it doesn't linger
+            this.Hide(); // Hide (not Close) — WelcomePage is MainWindow; closing it triggers app shutdown
         }
 
         private void InitializeComponent()

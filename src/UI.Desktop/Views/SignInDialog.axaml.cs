@@ -57,7 +57,7 @@ namespace PhantomVault.UI.Views
             buttons.Children.Add(ok);
 
             var panel = new StackPanel { Spacing = 8, Margin = new Thickness(8) };
-            panel.Children.Add(new TextBlock { Text = "Enter full path to vault.manifest (or paste path from USB):" });
+            panel.Children.Add(new TextBlock { Text = "Enter full path to vault file (.pvault or .manifest):" });
             panel.Children.Add(tb);
             panel.Children.Add(buttons);
 

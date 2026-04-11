@@ -16,29 +16,47 @@
     </UserControl.Resources>
 
     <UserControl.Styles>
+        <!-- Phantom Liquid Glass Section Panels — theme-aware -->
         <Style Selector="Border.dashboard-section">
-            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource DashboardSectionBg}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DashboardSectionBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="{StaticResource Radius.Lg}"/>
+            <Setter Property="CornerRadius" Value="28"/>
             <Setter Property="Padding" Value="20"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="#000000" BlurRadius="18" Opacity="0.22" OffsetX="0" OffsetY="4"/>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.25"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.25"/>
+                </Transitions>
+            </Setter>
         </Style>
 
-        <!-- Liquid Glass Quick Action Tiles -->
+        <Style Selector="Border.dashboard-section:pointerover">
+            <Setter Property="Background" Value="{DynamicResource DashboardSectionHoverBg}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DashboardSectionHoverBorderBrush}"/>
+        </Style>
+
+        <!-- Phantom Liquid Glass Quick Action Tiles — theme-aware -->
         <Style Selector="Button.dashboard-card">
-            <Setter Property="Background">
+            <Setter Property="Background" Value="{DynamicResource DashboardCardBg}"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+            <Setter Property="BorderBrush">
                 <Setter.Value>
                     <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                        <GradientStop Color="#12FFFFFF" Offset="0"/>
-                        <GradientStop Color="#08FFFFFF" Offset="0.5"/>
-                        <GradientStop Color="#04FFFFFF" Offset="1"/>
+                        <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0"/>
+                        <GradientStop Color="#38FFFFFF" Offset="0.4"/>
+                        <GradientStop Color="#22FFFFFF" Offset="0.6"/>
+                        <GradientStop Color="{DynamicResource TileReflectShadowColor}" Offset="1"/>
                     </LinearGradientBrush>
                 </Setter.Value>
             </Setter>
-            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
-            <Setter Property="BorderBrush" Value="#25FFFFFF"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="CornerRadius" Value="20"/>
             <Setter Property="Padding" Value="8,6"/>
             <Setter Property="MinHeight" Value="52"/>
             <Setter Property="MinWidth" Value="72"/>
@@ -48,68 +66,70 @@
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Effect">
                 <Setter.Value>
-                    <DropShadowEffect BlurRadius="8" OffsetX="2" OffsetY="3" Color="#20000000"/>
+                    <DropShadowEffect BlurRadius="10" OffsetX="0" OffsetY="3" Color="#24000000"/>
                 </Setter.Value>
             </Setter>
             <Setter Property="Transitions">
                 <Transitions>
-                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15"/>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.18"/>
                     <DoubleTransition Property="Opacity" Duration="0:0:0.12"/>
-                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
-                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                    <BrushTransition Property="Background" Duration="0:0:0.18"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.18"/>
                 </Transitions>
             </Setter>
         </Style>
 
         <Style Selector="Button.dashboard-card:pointerover">
-            <Setter Property="Background">
+            <Setter Property="Background" Value="{DynamicResource DashboardCardHoverBg}"/>
+            <Setter Property="BorderBrush">
                 <Setter.Value>
                     <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                        <GradientStop Color="#22FFFFFF" Offset="0"/>
-                        <GradientStop Color="#18B8D4F0" Offset="0.3"/>
-                        <GradientStop Color="#14A0C4E8" Offset="0.7"/>
-                        <GradientStop Color="#10FFFFFF" Offset="1"/>
+                        <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0"/>
+                        <GradientStop Color="#55CFE8FF" Offset="0.35"/>
+                        <GradientStop Color="#30CFE8FF" Offset="0.65"/>
+                        <GradientStop Color="{DynamicResource TileReflectShadowColor}" Offset="1"/>
                     </LinearGradientBrush>
                 </Setter.Value>
             </Setter>
-            <Setter Property="BorderBrush" Value="#50A0D4FF"/>
-            <Setter Property="RenderTransform" Value="scale(1.03)"/>
+            <Setter Property="RenderTransform" Value="scale(1.018)"/>
             <Setter Property="Effect">
                 <Setter.Value>
-                    <DropShadowEffect BlurRadius="12" OffsetX="3" OffsetY="4" Color="#30000000"/>
+                    <DropShadowEffect BlurRadius="14" OffsetX="0" OffsetY="4" Color="#30000000"/>
                 </Setter.Value>
             </Setter>
         </Style>
 
         <Style Selector="Button.dashboard-card:pressed">
-            <Setter Property="Background">
+            <Setter Property="Background" Value="{DynamicResource DashboardCardPressedBg}"/>
+            <Setter Property="BorderBrush">
                 <Setter.Value>
                     <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                        <GradientStop Color="#28B0D0F0" Offset="0"/>
-                        <GradientStop Color="#2090B8E0" Offset="0.5"/>
-                        <GradientStop Color="#18FFFFFF" Offset="1"/>
+                        <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0"/>
+                        <GradientStop Color="#50CFE8FF" Offset="0.4"/>
+                        <GradientStop Color="#28CFE8FF" Offset="0.6"/>
+                        <GradientStop Color="{DynamicResource TileReflectShadowColor}" Offset="1"/>
                     </LinearGradientBrush>
                 </Setter.Value>
             </Setter>
-            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-            <Setter Property="RenderTransform" Value="scale(0.97)"/>
+            <Setter Property="RenderTransform" Value="scale(0.985)"/>
         </Style>
 
-        <!-- Liquid Glass Navigation Tiles -->
+        <!-- Phantom Liquid Glass Navigation Tiles — theme-aware -->
         <Style Selector="Button.dashboard-nav">
-            <Setter Property="Background">
+            <Setter Property="Background" Value="{DynamicResource DashboardNavBg}"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+            <Setter Property="BorderBrush">
                 <Setter.Value>
                     <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                        <GradientStop Color="#10FFFFFF" Offset="0"/>
-                        <GradientStop Color="#08FFFFFF" Offset="0.5"/>
-                        <GradientStop Color="#04FFFFFF" Offset="1"/>
+                        <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0"/>
+                        <GradientStop Color="#34FFFFFF" Offset="0.4"/>
+                        <GradientStop Color="#1EFFFFFF" Offset="0.6"/>
+                        <GradientStop Color="{DynamicResource TileReflectShadowColor}" Offset="1"/>
                     </LinearGradientBrush>
                 </Setter.Value>
             </Setter>
-            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
-            <Setter Property="BorderBrush" Value="#20FFFFFF"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="CornerRadius" Value="22"/>
             <Setter Property="Padding" Value="14,10"/>
             <Setter Property="MinHeight" Value="44"/>
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
@@ -118,70 +138,154 @@
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Effect">
                 <Setter.Value>
-                    <DropShadowEffect BlurRadius="6" OffsetX="1" OffsetY="2" Color="#18000000"/>
+                    <DropShadowEffect BlurRadius="10" OffsetX="0" OffsetY="3" Color="#20000000"/>
                 </Setter.Value>
             </Setter>
             <Setter Property="Transitions">
                 <Transitions>
-                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15"/>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.18"/>
                     <DoubleTransition Property="Opacity" Duration="0:0:0.12"/>
-                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
-                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                    <BrushTransition Property="Background" Duration="0:0:0.18"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.18"/>
                 </Transitions>
             </Setter>
         </Style>
 
         <Style Selector="Button.dashboard-nav:pointerover">
-            <Setter Property="Background">
+            <Setter Property="Background" Value="{DynamicResource DashboardNavHoverBg}"/>
+            <Setter Property="BorderBrush">
                 <Setter.Value>
                     <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                        <GradientStop Color="#20FFFFFF" Offset="0"/>
-                        <GradientStop Color="#16B8D4F0" Offset="0.3"/>
-                        <GradientStop Color="#12A0C4E8" Offset="0.7"/>
-                        <GradientStop Color="#0EFFFFFF" Offset="1"/>
+                        <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0"/>
+                        <GradientStop Color="#50CFE8FF" Offset="0.35"/>
+                        <GradientStop Color="#2CCFE8FF" Offset="0.65"/>
+                        <GradientStop Color="{DynamicResource TileReflectShadowColor}" Offset="1"/>
                     </LinearGradientBrush>
                 </Setter.Value>
             </Setter>
-            <Setter Property="BorderBrush" Value="#45A0D4FF"/>
-            <Setter Property="RenderTransform" Value="scale(1.02)"/>
+            <Setter Property="RenderTransform" Value="scale(1.015)"/>
             <Setter Property="Effect">
                 <Setter.Value>
-                    <DropShadowEffect BlurRadius="10" OffsetX="2" OffsetY="3" Color="#28000000"/>
+                    <DropShadowEffect BlurRadius="14" OffsetX="0" OffsetY="4" Color="#28000000"/>
                 </Setter.Value>
             </Setter>
         </Style>
 
         <Style Selector="Button.dashboard-nav:pressed">
-            <Setter Property="Background">
+            <Setter Property="Background" Value="{DynamicResource DashboardNavPressedBg}"/>
+            <Setter Property="BorderBrush">
                 <Setter.Value>
                     <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                        <GradientStop Color="#25B0D0F0" Offset="0"/>
-                        <GradientStop Color="#1E90B8E0" Offset="0.5"/>
-                        <GradientStop Color="#16FFFFFF" Offset="1"/>
+                        <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0"/>
+                        <GradientStop Color="#48CFE8FF" Offset="0.4"/>
+                        <GradientStop Color="#24CFE8FF" Offset="0.6"/>
+                        <GradientStop Color="{DynamicResource TileReflectShadowColor}" Offset="1"/>
                     </LinearGradientBrush>
                 </Setter.Value>
             </Setter>
-            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-            <Setter Property="RenderTransform" Value="scale(0.98)"/>
+            <Setter Property="RenderTransform" Value="scale(0.985)"/>
         </Style>
 
         <Style Selector="Button.dashboard-nav.primary">
-            <Setter Property="Background">
-                <Setter.Value>
-                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                        <GradientStop Color="#30508CF0" Offset="0"/>
-                        <GradientStop Color="#254070D0" Offset="0.5"/>
-                        <GradientStop Color="#203060B0" Offset="1"/>
-                    </LinearGradientBrush>
-                </Setter.Value>
-            </Setter>
-            <Setter Property="BorderBrush" Value="#40508CF0"/>
+            <Setter Property="Background" Value="{DynamicResource DashboardNavPrimaryBg}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DashboardNavPrimaryBorderBrush}"/>
             <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundBrush}"/>
         </Style>
     </UserControl.Styles>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel Spacing="{StaticResource Space.Xl}" Margin="24,12,24,24">
+    <Panel x:Name="RootPanel">
+        <!-- Grab handle — bottom of sheet (iPhone Control Center style) -->
+        <Border x:Name="GrabHandle"
+                Height="40"
+                VerticalAlignment="Bottom"
+                ZIndex="10"
+                Background="Transparent"
+                Cursor="Hand">
+            <Border Width="62" Height="6"
+                    CornerRadius="3"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Opacity="0.8">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                        <GradientStop Color="#40FFFFFF" Offset="0"/>
+                        <GradientStop Color="#70FFFFFF" Offset="0.5"/>
+                        <GradientStop Color="#40FFFFFF" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+            </Border>
+        </Border>
+        <!-- Liquid glass border highlight overlay for entire dashboard content -->
+        <Border IsHitTestVisible="False"
+                BorderThickness="1.5,0,1.5,1.5"
+                CornerRadius="0,0,24,24"
+                Margin="8,0,8,0">
+            <Border.BorderBrush>
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                    <GradientStop Color="#38CFE8FF" Offset="0"/>
+                    <GradientStop Color="#22FFFFFF" Offset="0.4"/>
+                    <GradientStop Color="#10FFFFFF" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.BorderBrush>
+        </Border>
+        <!-- Bottom sheen — subtle white → cyan gradient -->
+        <Border IsHitTestVisible="False"
+                Height="110"
+                VerticalAlignment="Bottom"
+                CornerRadius="0,0,24,24"
+                ClipToBounds="True"
+                Opacity="1.0">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="50%,100%" EndPoint="50%,0%">
+                    <GradientStop Color="#16FFFFFF" Offset="0"/>
+                    <GradientStop Color="#0ACFE8FF" Offset="0.35"/>
+                    <GradientStop Color="#00000000" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+        </Border>
+        <!-- Radial reflection — subtle cyan bottom-left -->
+        <Border IsHitTestVisible="False"
+                CornerRadius="0,0,24,24"
+                ClipToBounds="True"
+                Opacity="0.7">
+            <Border.Background>
+                <RadialGradientBrush Center="0.18,0.92" RadiusX="0.6" RadiusY="0.5">
+                    <GradientStop Color="#0CCFE8FF" Offset="0"/>
+                    <GradientStop Color="#00000000" Offset="1"/>
+                </RadialGradientBrush>
+            </Border.Background>
+        </Border>
+        <!-- Top absorption — dark fade at top -->
+        <Border IsHitTestVisible="False"
+                CornerRadius="0,0,24,24"
+                ClipToBounds="True"
+                Opacity="0.8">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="50%,100%" EndPoint="50%,0%">
+                    <GradientStop Color="#00000000" Offset="0.55"/>
+                    <GradientStop Color="#08000000" Offset="0.85"/>
+                    <GradientStop Color="#10000000" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+        </Border>
+        <!-- Specular bottom-edge micro highlight line -->
+        <Border IsHitTestVisible="False"
+                Height="1"
+                VerticalAlignment="Bottom"
+                Margin="24,0,24,0"
+                CornerRadius="0.5">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                    <GradientStop Color="#00FFFFFF" Offset="0"/>
+                    <GradientStop Color="#22CFE8FF" Offset="0.2"/>
+                    <GradientStop Color="#30FFFFFF" Offset="0.5"/>
+                    <GradientStop Color="#22CFE8FF" Offset="0.8"/>
+                    <GradientStop Color="#00FFFFFF" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+        </Border>
+        <ScrollViewer x:Name="SheetScroller" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,0,0,44">
+        <StackPanel Spacing="{StaticResource Space.Xl}" Margin="24,4,24,24">
 
             <TextBlock Text="Dashboard"
                        Classes="fade-in"
@@ -240,17 +344,11 @@
 
                     <!-- Collapsible pin-options panel -->
                     <Border IsVisible="{Binding IsCategoryPinOptionsOpen}"
-                            CornerRadius="10"
+                            CornerRadius="16"
                             Padding="14,10"
                             BorderThickness="1"
-                            BorderBrush="#20FFFFFF">
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                <GradientStop Color="#0CFFFFFF" Offset="0"/>
-                                <GradientStop Color="#06FFFFFF" Offset="0.5"/>
-                                <GradientStop Color="#03FFFFFF" Offset="1"/>
-                            </LinearGradientBrush>
-                        </Border.Background>
+                            BorderBrush="{DynamicResource DashboardPanelBorderBrush}"
+                            Background="{DynamicResource DashboardPanelBg}">
                         <StackPanel Spacing="4">
                             <TextBlock Text="Pin categories to Quick Access"
                                        FontSize="{StaticResource Type.Small.Size}"
@@ -301,36 +399,35 @@
                                         Margin="0,0,10,10"
                                         Cursor="Hand">
                                     <Button.Styles>
-                                        <Style Selector="Button:pointerover > Border#CatTileBorder">
-                                            <Setter Property="BorderBrush" Value="#508FB5DF"/>
-                                            <Setter Property="Background">
-                                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                                    <GradientStop Color="#18FFFFFF" Offset="0"/>
-                                                    <GradientStop Color="#12B8D4F0" Offset="0.5"/>
-                                                    <GradientStop Color="#0CFFFFFF" Offset="1"/>
-                                                </LinearGradientBrush>
-                                            </Setter>
+                                        <Style Selector="Button:pointerover Border#CatTileBorder">
+                                            <Setter Property="BorderBrush" Value="{DynamicResource DashboardTileHoverBorderColor}"/>
+                                            <Setter Property="Background" Value="{DynamicResource DashboardTileHoverBg}"/>
                                         </Style>
-                                        <Style Selector="Button:pressed > Border#CatTileBorder">
-                                            <Setter Property="RenderTransform" Value="scale(0.96)"/>
+                                        <Style Selector="Button:pressed Border#CatTileBorder">
+                                            <Setter Property="RenderTransform" Value="scale(0.985)"/>
                                         </Style>
                                     </Button.Styles>
+                                    <Grid Width="110" Height="100">
+                                    <!-- Very subtle frosted glass blur behind tile -->
+                                    <ExperimentalAcrylicBorder IsHitTestVisible="False" CornerRadius="20">
+                                        <ExperimentalAcrylicBorder.Material>
+                                            <ExperimentalAcrylicMaterial
+                                                BackgroundSource="Digger"
+                                                TintColor="{DynamicResource DashboardAcrylicTint}"
+                                                TintOpacity="0.05"
+                                                MaterialOpacity="0.08"
+                                                FallbackColor="{DynamicResource DashboardAcrylicFallback}"/>
+                                        </ExperimentalAcrylicBorder.Material>
+                                    </ExperimentalAcrylicBorder>
                                     <Border x:Name="CatTileBorder"
-                                            Width="110" Height="100"
-                                            CornerRadius="12"
+                                            CornerRadius="20"
                                             Padding="10,10"
                                             ClipToBounds="True"
-                                            BorderThickness="1"
-                                            BorderBrush="#25FFFFFF">
-                                        <Border.Background>
-                                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                                <GradientStop Color="#10FFFFFF" Offset="0"/>
-                                                <GradientStop Color="#06FFFFFF" Offset="0.5"/>
-                                                <GradientStop Color="#03FFFFFF" Offset="1"/>
-                                            </LinearGradientBrush>
-                                        </Border.Background>
+                                            BorderThickness="1.5"
+                                            BorderBrush="{DynamicResource DashboardTileBorderColor}"
+                                            Background="{DynamicResource DashboardTileBg}">
                                         <Border.Effect>
-                                            <DropShadowEffect BlurRadius="8" OffsetX="2" OffsetY="3" Color="#20000000"/>
+                                            <DropShadowEffect BlurRadius="16" OffsetX="0" OffsetY="5" Color="#30000000"/>
                                         </Border.Effect>
                                         <Border.Transitions>
                                             <Transitions>
@@ -396,6 +493,42 @@
                                             </StackPanel>
                                         </Grid>
                                     </Border>
+                                    <!-- Liquid glass: top-left highlight bevel -->
+                                    <Border CornerRadius="20" IsHitTestVisible="False"
+                                            BorderThickness="1,0.8,0,0" ClipToBounds="True">
+                                        <Border.BorderBrush>
+                                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                                <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0"/>
+                                                <GradientStop Color="{DynamicResource TileReflectMidColor}" Offset="0.45"/>
+                                                <GradientStop Color="#00000000" Offset="0.55"/>
+                                            </LinearGradientBrush>
+                                        </Border.BorderBrush>
+                                    </Border>
+                                    <!-- Liquid glass: bottom-right shadow bevel -->
+                                    <Border CornerRadius="20" IsHitTestVisible="False"
+                                            BorderThickness="0,0,1,0.8" ClipToBounds="True">
+                                        <Border.BorderBrush>
+                                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                                <GradientStop Color="#00000000" Offset="0.45"/>
+                                                <GradientStop Color="{DynamicResource TileReflectShadowColor}" Offset="0.6"/>
+                                                <GradientStop Color="{DynamicResource TileReflectShadowColor}" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.BorderBrush>
+                                    </Border>
+                                    <!-- Liquid glass: top-edge micro-specular line -->
+                                    <Border CornerRadius="20" IsHitTestVisible="False"
+                                            BorderThickness="0,0.6,0,0" Opacity="0.45" ClipToBounds="True">
+                                        <Border.BorderBrush>
+                                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                                                <GradientStop Color="#00000000" Offset="0"/>
+                                                <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.15"/>
+                                                <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.5"/>
+                                                <GradientStop Color="{DynamicResource TileReflectMidColor}" Offset="0.85"/>
+                                                <GradientStop Color="#00000000" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.BorderBrush>
+                                    </Border>
+                                    </Grid>
                                 </Button>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -425,37 +558,36 @@
                                         Cursor="Hand">
                                     <Button.Styles>
                                         <Style Selector="Button:pointerover > Border#QuickTileBorder">
-                                            <Setter Property="BorderBrush" Value="#508FB5DF"/>
-                                            <Setter Property="Background">
-                                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                                    <GradientStop Color="#18FFFFFF" Offset="0"/>
-                                                    <GradientStop Color="#12B8D4F0" Offset="0.5"/>
-                                                    <GradientStop Color="#0CFFFFFF" Offset="1"/>
-                                                </LinearGradientBrush>
-                                            </Setter>
+                                            <Setter Property="BorderBrush" Value="{DynamicResource DashboardTileHoverBorderColor}"/>
+                                            <Setter Property="Background" Value="{DynamicResource DashboardTileHoverBg}"/>
                                         </Style>
                                         <Style Selector="Button:pressed > Border#QuickTileBorder">
-                                            <Setter Property="RenderTransform" Value="scale(0.96)"/>
+                                            <Setter Property="RenderTransform" Value="scale(0.985)"/>
                                         </Style>
                                     </Button.Styles>
                                     <!-- Outer wrapper for liquid glass layers -->
                                     <Grid Width="130" Height="100">
+                                        <!-- Very subtle frosted glass blur behind tile -->
+                                        <ExperimentalAcrylicBorder IsHitTestVisible="False" CornerRadius="20">
+                                            <ExperimentalAcrylicBorder.Material>
+                                                <ExperimentalAcrylicMaterial
+                                                    BackgroundSource="Digger"
+                                                    TintColor="{DynamicResource DashboardAcrylicTint}"
+                                                    TintOpacity="0.05"
+                                                    MaterialOpacity="0.08"
+                                                    FallbackColor="{DynamicResource DashboardAcrylicFallback}"/>
+                                            </ExperimentalAcrylicBorder.Material>
+                                        </ExperimentalAcrylicBorder>
                                         <!-- Base tile -->
                                         <Border x:Name="QuickTileBorder"
-                                                CornerRadius="12"
+                                                CornerRadius="20"
                                                 Padding="12,10"
                                                 ClipToBounds="True"
-                                                BorderThickness="1"
-                                                BorderBrush="#25FFFFFF">
-                                            <Border.Background>
-                                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                                    <GradientStop Color="#10FFFFFF" Offset="0"/>
-                                                    <GradientStop Color="#06FFFFFF" Offset="0.5"/>
-                                                    <GradientStop Color="#03FFFFFF" Offset="1"/>
-                                                </LinearGradientBrush>
-                                            </Border.Background>
+                                                BorderThickness="1.5"
+                                                BorderBrush="{DynamicResource DashboardTileBorderColor}"
+                                                Background="{DynamicResource DashboardTileBg}">
                                             <Border.Effect>
-                                                <DropShadowEffect BlurRadius="8" OffsetX="2" OffsetY="3" Color="#20000000"/>
+                                                <DropShadowEffect BlurRadius="16" OffsetX="0" OffsetY="5" Color="#30000000"/>
                                             </Border.Effect>
                                             <Border.Transitions>
                                                 <Transitions>
@@ -518,7 +650,7 @@
                                         </Border>
 
                                         <!-- Liquid glass: top-left highlight bevel -->
-                                        <Border CornerRadius="12"
+                                        <Border CornerRadius="20"
                                                 IsHitTestVisible="False"
                                                 BorderThickness="1,0.8,0,0"
                                                 ClipToBounds="True">
@@ -532,7 +664,7 @@
                                         </Border>
 
                                         <!-- Liquid glass: bottom-right shadow bevel -->
-                                        <Border CornerRadius="12"
+                                        <Border CornerRadius="20"
                                                 IsHitTestVisible="False"
                                                 BorderThickness="0,0,1,0.8"
                                                 ClipToBounds="True">
@@ -546,7 +678,7 @@
                                         </Border>
 
                                         <!-- Liquid glass: top-edge micro-specular line -->
-                                        <Border CornerRadius="12"
+                                        <Border CornerRadius="20"
                                                 IsHitTestVisible="False"
                                                 BorderThickness="0,0.6,0,0"
                                                 Opacity="0.45"
@@ -594,11 +726,11 @@
                     </Grid>
 
                     <Border IsVisible="{Binding IsQuickAccessOptionsOpen}"
-                            Background="{DynamicResource SurfaceBrush}"
-                            BorderBrush="{DynamicResource ControlBorderBrush}"
-                            BorderThickness="1"
-                            CornerRadius="{StaticResource Radius.Md}"
-                            Padding="12,10">
+                            CornerRadius="16"
+                            Padding="12,10"
+                            Background="{DynamicResource DashboardPanelBg}"
+                            BorderBrush="{DynamicResource DashboardPanelBorderBrush}"
+                            BorderThickness="1">
                         <WrapPanel ItemWidth="140" Orientation="Horizontal" HorizontalAlignment="Stretch">
                             <CheckBox Content="Add" IsChecked="{Binding ShowQuickAddPassword, Mode=TwoWay}" Margin="0,0,8,6" FontSize="{StaticResource Type.Label.Size}"/>
                             <CheckBox Content="Generate" IsChecked="{Binding ShowQuickGenerator, Mode=TwoWay}" Margin="0,0,8,6" FontSize="{StaticResource Type.Label.Size}"/>
@@ -623,14 +755,18 @@
                                 IsVisible="{Binding ShowQuickAddPassword}"
                                 ToolTip.Tip="Add a new password entry">
                             <Grid RowDefinitions="Auto,Auto">
-                                <!-- Highlight shimmer on top -->
-                                <Border Grid.RowSpan="2" CornerRadius="10" Opacity="0.15" IsHitTestVisible="False">
-                                    <Border.Background>
-                                        <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
-                                            <GradientStop Color="#40FFFFFF" Offset="0"/>
-                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                <!-- Liquid glass: top-edge micro-specular -->
+                                <Border Grid.RowSpan="2" CornerRadius="18" IsHitTestVisible="False"
+                                        BorderThickness="0,0.5,0,0" Opacity="0.4">
+                                    <Border.BorderBrush>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                                            <GradientStop Color="#00000000" Offset="0"/>
+                                            <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.15"/>
+                                            <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.5"/>
+                                            <GradientStop Color="{DynamicResource TileReflectMidColor}" Offset="0.85"/>
+                                            <GradientStop Color="#00000000" Offset="1"/>
                                         </LinearGradientBrush>
-                                    </Border.Background>
+                                    </Border.BorderBrush>
                                 </Border>
                                 <controls:SvgIcon Grid.Row="0" Preset="{x:Static services:IconPreset.Plus}" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}" HorizontalAlignment="Center"/>
                                 <TextBlock Grid.Row="1" Text="Add" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" TextAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0"/>
@@ -642,13 +778,17 @@
                                 IsVisible="{Binding ShowQuickGenerator}"
                                 ToolTip.Tip="Generate secure passwords">
                             <Grid RowDefinitions="Auto,Auto">
-                                <Border Grid.RowSpan="2" CornerRadius="10" Opacity="0.15" IsHitTestVisible="False">
-                                    <Border.Background>
-                                        <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
-                                            <GradientStop Color="#40FFFFFF" Offset="0"/>
-                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                <Border Grid.RowSpan="2" CornerRadius="18" IsHitTestVisible="False"
+                                        BorderThickness="0,0.5,0,0" Opacity="0.4">
+                                    <Border.BorderBrush>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                                            <GradientStop Color="#00000000" Offset="0"/>
+                                            <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.15"/>
+                                            <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.5"/>
+                                            <GradientStop Color="{DynamicResource TileReflectMidColor}" Offset="0.85"/>
+                                            <GradientStop Color="#00000000" Offset="1"/>
                                         </LinearGradientBrush>
-                                    </Border.Background>
+                                    </Border.BorderBrush>
                                 </Border>
                                 <controls:SvgIcon Grid.Row="0" Preset="{x:Static services:IconPreset.Key}" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}" HorizontalAlignment="Center"/>
                                 <TextBlock Grid.Row="1" Text="Generate" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" TextAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0"/>
@@ -660,13 +800,17 @@
                                 IsVisible="{Binding ShowQuickImport}"
                                 ToolTip.Tip="Import passwords from file">
                             <Grid RowDefinitions="Auto,Auto">
-                                <Border Grid.RowSpan="2" CornerRadius="10" Opacity="0.15" IsHitTestVisible="False">
-                                    <Border.Background>
-                                        <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
-                                            <GradientStop Color="#40FFFFFF" Offset="0"/>
-                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                <Border Grid.RowSpan="2" CornerRadius="18" IsHitTestVisible="False"
+                                        BorderThickness="0,0.5,0,0" Opacity="0.4">
+                                    <Border.BorderBrush>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                                            <GradientStop Color="#00000000" Offset="0"/>
+                                            <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.15"/>
+                                            <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.5"/>
+                                            <GradientStop Color="{DynamicResource TileReflectMidColor}" Offset="0.85"/>
+                                            <GradientStop Color="#00000000" Offset="1"/>
                                         </LinearGradientBrush>
-                                    </Border.Background>
+                                    </Border.BorderBrush>
                                 </Border>
                                 <controls:SvgIcon Grid.Row="0" Preset="{x:Static services:IconPreset.Upload}" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}" HorizontalAlignment="Center"/>
                                 <TextBlock Grid.Row="1" Text="Import" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" TextAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0"/>
@@ -678,13 +822,17 @@
                                 IsVisible="{Binding ShowQuickExport}"
                                 ToolTip.Tip="Export vault data">
                             <Grid RowDefinitions="Auto,Auto">
-                                <Border Grid.RowSpan="2" CornerRadius="10" Opacity="0.15" IsHitTestVisible="False">
-                                    <Border.Background>
-                                        <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
-                                            <GradientStop Color="#40FFFFFF" Offset="0"/>
-                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                <Border Grid.RowSpan="2" CornerRadius="18" IsHitTestVisible="False"
+                                        BorderThickness="0,0.5,0,0" Opacity="0.4">
+                                    <Border.BorderBrush>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                                            <GradientStop Color="#00000000" Offset="0"/>
+                                            <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.15"/>
+                                            <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.5"/>
+                                            <GradientStop Color="{DynamicResource TileReflectMidColor}" Offset="0.85"/>
+                                            <GradientStop Color="#00000000" Offset="1"/>
                                         </LinearGradientBrush>
-                                    </Border.Background>
+                                    </Border.BorderBrush>
                                 </Border>
                                 <controls:SvgIcon Grid.Row="0" Preset="{x:Static services:IconPreset.Download}" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}" HorizontalAlignment="Center"/>
                                 <TextBlock Grid.Row="1" Text="Export" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" TextAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0"/>
@@ -696,13 +844,17 @@
                                 IsVisible="{Binding ShowQuickHealth}"
                                 ToolTip.Tip="Check password health">
                             <Grid RowDefinitions="Auto,Auto">
-                                <Border Grid.RowSpan="2" CornerRadius="10" Opacity="0.15" IsHitTestVisible="False">
-                                    <Border.Background>
-                                        <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
-                                            <GradientStop Color="#40FFFFFF" Offset="0"/>
-                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                <Border Grid.RowSpan="2" CornerRadius="18" IsHitTestVisible="False"
+                                        BorderThickness="0,0.5,0,0" Opacity="0.4">
+                                    <Border.BorderBrush>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                                            <GradientStop Color="#00000000" Offset="0"/>
+                                            <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.15"/>
+                                            <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.5"/>
+                                            <GradientStop Color="{DynamicResource TileReflectMidColor}" Offset="0.85"/>
+                                            <GradientStop Color="#00000000" Offset="1"/>
                                         </LinearGradientBrush>
-                                    </Border.Background>
+                                    </Border.BorderBrush>
                                 </Border>
                                 <controls:SvgIcon Grid.Row="0" IconName="activity" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}" HorizontalAlignment="Center"/>
                                 <TextBlock Grid.Row="1" Text="Health" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" TextAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0"/>
@@ -714,13 +866,17 @@
                                 IsVisible="{Binding ShowQuickPasswords}"
                                 ToolTip.Tip="View all passwords">
                             <Grid RowDefinitions="Auto,Auto">
-                                <Border Grid.RowSpan="2" CornerRadius="10" Opacity="0.15" IsHitTestVisible="False">
-                                    <Border.Background>
-                                        <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
-                                            <GradientStop Color="#40FFFFFF" Offset="0"/>
-                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                <Border Grid.RowSpan="2" CornerRadius="18" IsHitTestVisible="False"
+                                        BorderThickness="0,0.5,0,0" Opacity="0.4">
+                                    <Border.BorderBrush>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                                            <GradientStop Color="#00000000" Offset="0"/>
+                                            <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.15"/>
+                                            <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.5"/>
+                                            <GradientStop Color="{DynamicResource TileReflectMidColor}" Offset="0.85"/>
+                                            <GradientStop Color="#00000000" Offset="1"/>
                                         </LinearGradientBrush>
-                                    </Border.Background>
+                                    </Border.BorderBrush>
                                 </Border>
                                 <controls:SvgIcon Grid.Row="0" Preset="{x:Static services:IconPreset.Key}" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}" HorizontalAlignment="Center"/>
                                 <TextBlock Grid.Row="1" Text="Passwords" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" TextAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0"/>
@@ -733,13 +889,17 @@
                                 IsVisible="{Binding ShowQuickFavorites}"
                                 ToolTip.Tip="View favorite items">
                             <Grid RowDefinitions="Auto,Auto">
-                                <Border Grid.RowSpan="2" CornerRadius="10" Opacity="0.15" IsHitTestVisible="False">
-                                    <Border.Background>
-                                        <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
-                                            <GradientStop Color="#40FFFFFF" Offset="0"/>
-                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                <Border Grid.RowSpan="2" CornerRadius="18" IsHitTestVisible="False"
+                                        BorderThickness="0,0.5,0,0" Opacity="0.4">
+                                    <Border.BorderBrush>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                                            <GradientStop Color="#00000000" Offset="0"/>
+                                            <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.15"/>
+                                            <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.5"/>
+                                            <GradientStop Color="{DynamicResource TileReflectMidColor}" Offset="0.85"/>
+                                            <GradientStop Color="#00000000" Offset="1"/>
                                         </LinearGradientBrush>
-                                    </Border.Background>
+                                    </Border.BorderBrush>
                                 </Border>
                                 <controls:SvgIcon Grid.Row="0" Preset="{x:Static services:IconPreset.Star}" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}" HorizontalAlignment="Center"/>
                                 <TextBlock Grid.Row="1" Text="Favorites" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" TextAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0"/>
@@ -749,15 +909,20 @@
                         <Button Command="{Binding OpenRecoveryCommand}"
                                 Classes="dashboard-card"
                                 IsVisible="{Binding ShowQuickRecovery}"
-                                ToolTip.Tip="Recovery options">
+                                IsEnabled="{Binding IsRecoveryAvailable}"
+                                ToolTip.Tip="{Binding RecoveryStatus}">
                             <Grid RowDefinitions="Auto,Auto">
-                                <Border Grid.RowSpan="2" CornerRadius="10" Opacity="0.15" IsHitTestVisible="False">
-                                    <Border.Background>
-                                        <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
-                                            <GradientStop Color="#40FFFFFF" Offset="0"/>
-                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                <Border Grid.RowSpan="2" CornerRadius="18" IsHitTestVisible="False"
+                                        BorderThickness="0,0.5,0,0" Opacity="0.4">
+                                    <Border.BorderBrush>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                                            <GradientStop Color="#00000000" Offset="0"/>
+                                            <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.15"/>
+                                            <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.5"/>
+                                            <GradientStop Color="{DynamicResource TileReflectMidColor}" Offset="0.85"/>
+                                            <GradientStop Color="#00000000" Offset="1"/>
                                         </LinearGradientBrush>
-                                    </Border.Background>
+                                    </Border.BorderBrush>
                                 </Border>
                                 <controls:SvgIcon Grid.Row="0" Preset="{x:Static services:IconPreset.Shield}" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}" HorizontalAlignment="Center"/>
                                 <TextBlock Grid.Row="1" Text="Recovery" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" TextAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0"/>
@@ -769,13 +934,17 @@
                                 IsVisible="{Binding ShowQuickTotp}"
                                 ToolTip.Tip="TOTP authenticator vault">
                             <Grid RowDefinitions="Auto,Auto">
-                                <Border Grid.RowSpan="2" CornerRadius="10" Opacity="0.15" IsHitTestVisible="False">
-                                    <Border.Background>
-                                        <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
-                                            <GradientStop Color="#40FFFFFF" Offset="0"/>
-                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                <Border Grid.RowSpan="2" CornerRadius="18" IsHitTestVisible="False"
+                                        BorderThickness="0,0.5,0,0" Opacity="0.4">
+                                    <Border.BorderBrush>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                                            <GradientStop Color="#00000000" Offset="0"/>
+                                            <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.15"/>
+                                            <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.5"/>
+                                            <GradientStop Color="{DynamicResource TileReflectMidColor}" Offset="0.85"/>
+                                            <GradientStop Color="#00000000" Offset="1"/>
                                         </LinearGradientBrush>
-                                    </Border.Background>
+                                    </Border.BorderBrush>
                                 </Border>
                                 <controls:SvgIcon Grid.Row="0" Preset="{x:Static services:IconPreset.Clock}" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}" HorizontalAlignment="Center"/>
                                 <TextBlock Grid.Row="1" Text="TOTP" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" TextAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0"/>
@@ -787,13 +956,17 @@
                                 IsVisible="{Binding ShowQuickSecurity}"
                                 ToolTip.Tip="Security settings">
                             <Grid RowDefinitions="Auto,Auto">
-                                <Border Grid.RowSpan="2" CornerRadius="10" Opacity="0.15" IsHitTestVisible="False">
-                                    <Border.Background>
-                                        <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
-                                            <GradientStop Color="#40FFFFFF" Offset="0"/>
-                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                <Border Grid.RowSpan="2" CornerRadius="18" IsHitTestVisible="False"
+                                        BorderThickness="0,0.5,0,0" Opacity="0.4">
+                                    <Border.BorderBrush>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                                            <GradientStop Color="#00000000" Offset="0"/>
+                                            <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.15"/>
+                                            <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.5"/>
+                                            <GradientStop Color="{DynamicResource TileReflectMidColor}" Offset="0.85"/>
+                                            <GradientStop Color="#00000000" Offset="1"/>
                                         </LinearGradientBrush>
-                                    </Border.Background>
+                                    </Border.BorderBrush>
                                 </Border>
                                 <controls:SvgIcon Grid.Row="0" Preset="{x:Static services:IconPreset.Shield}" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}" HorizontalAlignment="Center"/>
                                 <TextBlock Grid.Row="1" Text="Security" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" TextAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0"/>
@@ -805,13 +978,17 @@
                                 IsVisible="{Binding ShowQuickSettings}"
                                 ToolTip.Tip="Application settings">
                             <Grid RowDefinitions="Auto,Auto">
-                                <Border Grid.RowSpan="2" CornerRadius="10" Opacity="0.15" IsHitTestVisible="False">
-                                    <Border.Background>
-                                        <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
-                                            <GradientStop Color="#40FFFFFF" Offset="0"/>
-                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                <Border Grid.RowSpan="2" CornerRadius="18" IsHitTestVisible="False"
+                                        BorderThickness="0,0.5,0,0" Opacity="0.4">
+                                    <Border.BorderBrush>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                                            <GradientStop Color="#00000000" Offset="0"/>
+                                            <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.15"/>
+                                            <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.5"/>
+                                            <GradientStop Color="{DynamicResource TileReflectMidColor}" Offset="0.85"/>
+                                            <GradientStop Color="#00000000" Offset="1"/>
                                         </LinearGradientBrush>
-                                    </Border.Background>
+                                    </Border.BorderBrush>
                                 </Border>
                                 <controls:SvgIcon Grid.Row="0" Preset="{x:Static services:IconPreset.Settings}" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}" HorizontalAlignment="Center"/>
                                 <TextBlock Grid.Row="1" Text="Settings" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" TextAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0"/>
@@ -823,13 +1000,17 @@
                                 IsVisible="{Binding ShowQuickBackup}"
                                 ToolTip.Tip="Backup vault data">
                             <Grid RowDefinitions="Auto,Auto">
-                                <Border Grid.RowSpan="2" CornerRadius="10" Opacity="0.15" IsHitTestVisible="False">
-                                    <Border.Background>
-                                        <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
-                                            <GradientStop Color="#40FFFFFF" Offset="0"/>
-                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                <Border Grid.RowSpan="2" CornerRadius="18" IsHitTestVisible="False"
+                                        BorderThickness="0,0.5,0,0" Opacity="0.4">
+                                    <Border.BorderBrush>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                                            <GradientStop Color="#00000000" Offset="0"/>
+                                            <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.15"/>
+                                            <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.5"/>
+                                            <GradientStop Color="{DynamicResource TileReflectMidColor}" Offset="0.85"/>
+                                            <GradientStop Color="#00000000" Offset="1"/>
                                         </LinearGradientBrush>
-                                    </Border.Background>
+                                    </Border.BorderBrush>
                                 </Border>
                                 <controls:SvgIcon Grid.Row="0" IconName="database" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}" HorizontalAlignment="Center"/>
                                 <TextBlock Grid.Row="1" Text="Backup" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" TextAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0"/>
@@ -856,7 +1037,9 @@
                             </StackPanel>
                         </Button>
                         <Button Command="{Binding OpenRecoveryCommand}"
-                                Classes="dashboard-nav">
+                                Classes="dashboard-nav"
+                                IsEnabled="{Binding IsRecoveryAvailable}"
+                                ToolTip.Tip="{Binding RecoveryStatus}">
                             <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
                                 <controls:SvgIcon IconName="Assets/SVG/Current/Recovery.svg" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}"/>
                                 <TextBlock Text="Recovery" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="{StaticResource Type.H5.Size}" FontWeight="SemiBold" VerticalAlignment="Center"/>
@@ -877,6 +1060,8 @@
                             </StackPanel>
                         </Button>
                         <Button Command="{Binding LaunchPhantomAttestorCommand}"
+                                IsEnabled="{Binding IsAttestorAvailable}"
+                                ToolTip.Tip="{Binding AttestorStatus}"
                                 Classes="dashboard-nav primary">
                             <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
                                 <controls:SvgIcon Preset="{x:Static services:IconPreset.Shield}" Width="20" Height="20" IconColor="{DynamicResource ButtonForegroundBrush}"/>
@@ -928,12 +1113,12 @@
                         <ItemsControl ItemsSource="{Binding RecentActivities}" MaxHeight="400">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="{DynamicResource SurfaceBrush}"
-                                            BorderBrush="{DynamicResource ControlBorderBrush}"
-                                            BorderThickness="1"
-                                            CornerRadius="{StaticResource Radius.Sm}"
+                                    <Border CornerRadius="{StaticResource Radius.Sm}"
                                             Padding="12"
-                                            Margin="0,0,0,8">
+                                            Margin="0,0,0,8"
+                                            Background="{DynamicResource DashboardPanelBg}"
+                                            BorderBrush="{DynamicResource DashboardPanelBorderBrush}"
+                                            BorderThickness="1">
                                         <Grid ColumnDefinitions="Auto,*,Auto">
                                             <controls:SvgIcon Grid.Column="0"
                                                               IconName="edit"
@@ -962,11 +1147,11 @@
 
                         <!-- Empty State -->
                         <Border IsVisible="{Binding !HasRecentActivity}"
-                                Background="{DynamicResource SurfaceBrush}"
-                                BorderBrush="{DynamicResource ControlBorderBrush}"
-                                BorderThickness="1"
                                 CornerRadius="{StaticResource Radius.Sm}"
-                                Padding="32,24">
+                                Padding="32,24"
+                                Background="{DynamicResource DashboardPanelBg}"
+                                BorderBrush="{DynamicResource DashboardPanelBorderBrush}"
+                                BorderThickness="1">
                             <StackPanel Spacing="8" HorizontalAlignment="Center">
                                 <controls:SvgIcon Preset="{x:Static services:IconPreset.Clock}" Width="48" Height="48" IconColor="{DynamicResource MutedTextBrush}"/>
                                 <TextBlock Text="No recent activity"
@@ -1047,14 +1232,18 @@
                                     <DataTemplate>
                                         <Button Command="{Binding $parent[UserControl].DataContext.OpenCredentialCommand}"
                                                 CommandParameter="{Binding}"
-                                                Background="{DynamicResource SurfaceBrush}"
-                                                BorderBrush="{DynamicResource ControlBorderBrush}"
                                                 BorderThickness="1"
                                                 CornerRadius="{StaticResource Radius.Sm}"
                                                 Padding="8"
                                                 Margin="0,0,0,8"
                                                 HorizontalAlignment="Stretch"
                                                 HorizontalContentAlignment="Left">
+                                            <Button.Background>
+                                                <DynamicResourceExtension ResourceKey="DashboardPanelBg"/>
+                                            </Button.Background>
+                                            <Button.BorderBrush>
+                                                <DynamicResourceExtension ResourceKey="DashboardPanelBorderBrush"/>
+                                            </Button.BorderBrush>
                                             <Grid ColumnDefinitions="Auto,*">
                                                 <controls:SvgIcon Grid.Column="0"
                                                                   Preset="{x:Static services:IconPreset.Star}"
@@ -1074,11 +1263,11 @@
 
                             <!-- Empty State -->
                             <Border IsVisible="{Binding !HasFavorites}"
-                                    Background="{DynamicResource SurfaceBrush}"
-                                    BorderBrush="{DynamicResource ControlBorderBrush}"
-                                    BorderThickness="1"
                                     CornerRadius="{StaticResource Radius.Sm}"
-                                    Padding="16">
+                                    Padding="16"
+                                    Background="{DynamicResource DashboardPanelBg}"
+                                    BorderBrush="{DynamicResource DashboardPanelBorderBrush}"
+                                    BorderThickness="1">
                                 <StackPanel Spacing="4" HorizontalAlignment="Center">
                                     <controls:SvgIcon Preset="{x:Static services:IconPreset.Star}" Width="32" Height="32" IconColor="{DynamicResource AccentBrush}"/>
                                     <TextBlock Text="No favorites yet"
@@ -1094,4 +1283,5 @@
 
         </StackPanel>
     </ScrollViewer>
+    </Panel>
 </UserControl>

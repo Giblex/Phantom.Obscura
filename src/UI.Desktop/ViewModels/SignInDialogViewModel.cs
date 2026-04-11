@@ -72,7 +72,7 @@ namespace PhantomVault.UI.ViewModels
             // Validate inputs
             if (string.IsNullOrEmpty(ManifestPath) || !File.Exists(ManifestPath))
             {
-                await ShowDialogMessage("Manifest Missing", "Please select a valid manifest file (vault.manifest) on the USB drive.");
+                await ShowDialogMessage("Manifest Missing", "Please select a valid vault file (.pvault or .manifest) on the USB drive.");
                 return;
             }
 

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using Avalonia;
 using Avalonia.Data.Converters;
 using Avalonia.Media.Imaging;
-using Avalonia;
 
 namespace PhantomVault.UI.Converters
 {
@@ -68,7 +68,7 @@ namespace PhantomVault.UI.Converters
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            throw new NotImplementedException();
+            return AvaloniaProperty.UnsetValue;
         }
 
         /// <summary>

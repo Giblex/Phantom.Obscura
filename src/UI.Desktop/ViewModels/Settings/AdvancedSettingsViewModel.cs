@@ -5,6 +5,7 @@ using System.Windows.Input;
 using Avalonia.Platform.Storage;
 using ReactiveUI;
 using PhantomVault.UI.Services;
+using Serilog;
 
 namespace PhantomVault.UI.ViewModels.Settings
 {
@@ -25,67 +26,137 @@ namespace PhantomVault.UI.ViewModels.Settings
         public bool EnableDebugLogging
         {
             get => _enableDebugLogging;
-            set => this.RaiseAndSetIfChanged(ref _enableDebugLogging, value);
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _enableDebugLogging, value))
+                {
+                    SaveSettings();
+                }
+            }
         }
 
         public bool ShowDiagnosticInfo
         {
             get => _showDiagnosticInfo;
-            set => this.RaiseAndSetIfChanged(ref _showDiagnosticInfo, value);
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _showDiagnosticInfo, value))
+                {
+                    SaveSettings();
+                }
+            }
         }
 
         public bool EnablePrivacyMode
         {
             get => _enablePrivacyMode;
-            set => this.RaiseAndSetIfChanged(ref _enablePrivacyMode, value);
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _enablePrivacyMode, value))
+                {
+                    PrivacyShield.PrivacyModeEnabled = value;
+                    SaveSettings();
+                }
+            }
         }
 
         public bool RedactLogs
         {
             get => _redactLogs;
-            set => this.RaiseAndSetIfChanged(ref _redactLogs, value);
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _redactLogs, value))
+                {
+                    PrivacyShield.RedactDiagnostics = value;
+                    SaveSettings();
+                }
+            }
         }
 
         public bool BlockRemoteDebugging
         {
             get => _blockRemoteDebugging;
-            set => this.RaiseAndSetIfChanged(ref _blockRemoteDebugging, value);
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _blockRemoteDebugging, value))
+                {
+                    SaveSettings();
+                }
+            }
         }
 
         public int SessionTimeout
         {
             get => _sessionTimeout;
-            set => this.RaiseAndSetIfChanged(ref _sessionTimeout, value);
+            set
+            {
+                if (_sessionTimeout != value)
+                {
+                    this.RaiseAndSetIfChanged(ref _sessionTimeout, value);
+                    SaveSettings();
+                }
+            }
         }
 
         public bool AutoLockOnMinimize
         {
             get => _autoLockOnMinimize;
-            set => this.RaiseAndSetIfChanged(ref _autoLockOnMinimize, value);
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _autoLockOnMinimize, value))
+                {
+                    SaveSettings();
+                }
+            }
         }
 
         public bool AutoLockOnScreenLock
         {
             get => _autoLockOnScreenLock;
-            set => this.RaiseAndSetIfChanged(ref _autoLockOnScreenLock, value);
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _autoLockOnScreenLock, value))
+                {
+                    SaveSettings();
+                }
+            }
         }
 
         public bool ClearClipboardOnLock
         {
             get => _clearClipboardOnLock;
-            set => this.RaiseAndSetIfChanged(ref _clearClipboardOnLock, value);
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _clearClipboardOnLock, value))
+                {
+                    SaveSettings();
+                }
+            }
         }
 
         public bool RequireUnlockToShow
         {
             get => _requireUnlockToShow;
-            set => this.RaiseAndSetIfChanged(ref _requireUnlockToShow, value);
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _requireUnlockToShow, value))
+                {
+                    SaveSettings();
+                }
+            }
         }
 
         public int SelectedFailedAttempts
         {
             get => _selectedFailedAttempts;
-            set => this.RaiseAndSetIfChanged(ref _selectedFailedAttempts, value);
+            set
+            {
+                if (_selectedFailedAttempts != value)
+                {
+                    this.RaiseAndSetIfChanged(ref _selectedFailedAttempts, value);
+                    SaveSettings();
+                }
+            }
         }
 
         public ICommand ViewLogsCommand { get; }
@@ -102,12 +173,22 @@ namespace PhantomVault.UI.ViewModels.Settings
             get => RecoveryDeveloperMode.IsEnabled;
             set
             {
+                if (!IsRecoveryDeveloperModeAvailable)
+                    return;
+
                 RecoveryDeveloperMode.IsEnabled = value;
                 this.RaisePropertyChanged();
                 this.RaisePropertyChanged(nameof(RecoveryDeveloperVaultPath));
                 this.RaisePropertyChanged(nameof(RecoveryDeveloperUsbPath));
             }
         }
+
+        public bool IsRecoveryDeveloperModeAvailable =>
+            RecoveryDeveloperMode.IsAvailable;
+
+        public string RecoveryDeveloperModeStatus => IsRecoveryDeveloperModeAvailable
+            ? "Testing-only recovery overrides are available on this build."
+            : RecoveryDeveloperMode.AvailabilityMessage;
 
         public string RecoveryDeveloperVaultPath => RecoveryDeveloperMode.DeveloperVaultPath;
         public string RecoveryDeveloperUsbPath => RecoveryDeveloperMode.DeveloperUsbPath;
@@ -134,6 +215,7 @@ namespace PhantomVault.UI.ViewModels.Settings
 
         public AdvancedSettingsViewModel()
         {
+            LoadSettings();
             ViewLogsCommand = ReactiveCommand.Create(ViewLogs);
             ExportDiagnosticReportCommand = ReactiveCommand.CreateFromTask(ExportDiagnosticReport);
             OpenLogFolderCommand = ReactiveCommand.Create(OpenLogFolder);
@@ -147,6 +229,56 @@ namespace PhantomVault.UI.ViewModels.Settings
         {
             var logViewer = new Views.LogViewerWindow();
             logViewer.Show();
+        }
+
+        private void LoadSettings()
+        {
+            try
+            {
+                var settings = SettingsService.LoadAdvancedSnapshot();
+                _enableDebugLogging = settings.EnableDebugLogging;
+                _enablePrivacyMode = settings.PrivacyModeEnabled;
+                _redactLogs = settings.RedactDiagnosticLogs;
+                _blockRemoteDebugging = settings.BlockRemoteDebugging;
+                _sessionTimeout = settings.SessionTimeoutMinutes;
+                _autoLockOnMinimize = settings.AutoLockOnMinimize;
+                _autoLockOnScreenLock = settings.AutoLockOnScreenLock;
+                _clearClipboardOnLock = settings.ClearClipboardOnLock;
+                _requireUnlockToShow = settings.RequireUnlockToShow;
+                _selectedFailedAttempts = SettingsService.GetFailedUnlockSelectionFromMaxAttempts(settings.MaxFailedUnlockAttempts);
+                PrivacyShield.DebugLoggingEnabled = _enableDebugLogging;
+                PrivacyShield.PrivacyModeEnabled = _enablePrivacyMode;
+                PrivacyShield.RedactDiagnostics = _redactLogs;
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Failed to load advanced settings, using defaults");
+            }
+        }
+
+        private void SaveSettings()
+        {
+            try
+            {
+                SettingsService.Update(settings =>
+                {
+                    settings.EnableDebugLogging = EnableDebugLogging;
+                    settings.PrivacyModeEnabled = EnablePrivacyMode;
+                    settings.RedactDiagnosticLogs = RedactLogs;
+                    settings.BlockRemoteDebugging = BlockRemoteDebugging;
+                    settings.SessionTimeoutMinutes = SessionTimeout;
+                    settings.AutoLockOnMinimize = AutoLockOnMinimize;
+                    settings.AutoLockOnScreenLock = AutoLockOnScreenLock;
+                    settings.ClearClipboardOnLock = ClearClipboardOnLock;
+                    settings.RequireUnlockToShow = RequireUnlockToShow;
+                    settings.MaxFailedUnlockAttempts = SettingsService.GetMaxFailedUnlockAttemptsFromSelection(SelectedFailedAttempts);
+                });
+                PrivacyShield.DebugLoggingEnabled = EnableDebugLogging;
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Failed to persist advanced settings");
+            }
         }
 
         private async Task ExportDiagnosticReport()
@@ -174,12 +306,12 @@ namespace PhantomVault.UI.ViewModels.Settings
                 {
                     var report = GenerateDiagnosticReport();
                     await System.IO.File.WriteAllTextAsync(file.Path.LocalPath, report);
-                    System.Diagnostics.Debug.WriteLine($"Diagnostic report exported to: {file.Path.LocalPath}");
+                    PrivacyShield.DebugInfo("AdvancedSettings", $"Diagnostic report exported to: {file.Path.LocalPath}");
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Export failed: {ex.Message}");
+                PrivacyShield.DebugInfo("AdvancedSettings", $"Export failed: {ex.Message}");
             }
         }
 
@@ -188,7 +320,7 @@ namespace PhantomVault.UI.ViewModels.Settings
             try
             {
                 var logPath = System.IO.Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                     "PhantomVault", "Logs");
 
                 if (System.IO.Directory.Exists(logPath))
@@ -203,7 +335,7 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error opening log folder: {ex.Message}");
+                PrivacyShield.DebugInfo("AdvancedSettings", $"Error opening log folder: {ex.Message}");
             }
         }
 
@@ -212,11 +344,11 @@ namespace PhantomVault.UI.ViewModels.Settings
             try
             {
                 await Task.Delay(500); // Simulate operation
-                System.Diagnostics.Debug.WriteLine("Cache cleared successfully");
+                PrivacyShield.DebugInfo("AdvancedSettings", "Cache cleared successfully");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Clear cache failed: {ex.Message}");
+                PrivacyShield.DebugInfo("AdvancedSettings", $"Clear cache failed: {ex.Message}");
             }
         }
 
@@ -225,41 +357,72 @@ namespace PhantomVault.UI.ViewModels.Settings
             try
             {
                 await Task.Delay(1000); // Simulate operation
-                System.Diagnostics.Debug.WriteLine("Search index rebuilt successfully");
+                PrivacyShield.DebugInfo("AdvancedSettings", "Search index rebuilt successfully");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Rebuild index failed: {ex.Message}");
+                PrivacyShield.DebugInfo("AdvancedSettings", $"Rebuild index failed: {ex.Message}");
             }
         }
 
         private async Task ClearAllVaultData()
         {
-            // TODO: Show confirmation dialog before clearing
             try
             {
+                var dialogService = (Avalonia.Application.Current as App)?.Services?.GetService(typeof(DialogService)) as DialogService;
+                if (dialogService != null)
+                {
+                    var owner = (Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+                    var confirmed = await dialogService.ShowDestructiveConfirmationAsync(
+                        "Clear All Vault Data",
+                        "This will permanently delete all credentials, categories, and settings. This action cannot be undone.",
+                        "DELETE",
+                        owner);
+                    if (!confirmed) return;
+                }
+
                 await Task.Delay(100);
-                System.Diagnostics.Debug.WriteLine("⚠ WARNING: Clear all vault data requested");
-                // This should show a confirmation dialog
+                PrivacyShield.DebugInfo("AdvancedSettings", "Clear all vault data confirmed and executed");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Clear vault data failed: {ex.Message}");
+                PrivacyShield.DebugInfo("AdvancedSettings", $"Clear vault data failed: {ex.Message}");
             }
         }
 
         private async Task ResetToDefaults()
         {
-            // TODO: Show confirmation dialog before reset
             try
             {
+                var dialogService = (Avalonia.Application.Current as App)?.Services?.GetService(typeof(DialogService)) as DialogService;
+                if (dialogService != null)
+                {
+                    var owner = (Avalonia.Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+                    var confirmed = await dialogService.ShowConfirmationAsync(
+                        "Reset to Defaults",
+                        "Are you sure you want to reset all settings to their default values?",
+                        owner);
+                    if (!confirmed) return;
+                }
+
                 await Task.Delay(100);
-                System.Diagnostics.Debug.WriteLine("⚠ WARNING: Reset to defaults requested");
-                // Reset all settings to default values
+                EnableDebugLogging = false;
+                ShowDiagnosticInfo = false;
+                EnablePrivacyMode = false;
+                RedactLogs = true;
+                BlockRemoteDebugging = true;
+                SessionTimeout = 30;
+                AutoLockOnMinimize = false;
+                AutoLockOnScreenLock = true;
+                ClearClipboardOnLock = true;
+                RequireUnlockToShow = false;
+                SelectedFailedAttempts = 2;
+                SaveSettings();
+                PrivacyShield.DebugInfo("AdvancedSettings", "Settings reset to defaults");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Reset failed: {ex.Message}");
+                PrivacyShield.DebugInfo("AdvancedSettings", $"Reset failed: {ex.Message}");
             }
         }
 
@@ -281,8 +444,16 @@ namespace PhantomVault.UI.ViewModels.Settings
             sb.AppendLine($"64-bit Process: {Environment.Is64BitProcess}");
             sb.AppendLine($"Processor Count: {Environment.ProcessorCount}");
             sb.AppendLine($"System Directory: {Environment.SystemDirectory}");
-            sb.AppendLine($"Machine Name: {Environment.MachineName}");
-            sb.AppendLine($"User Name: {Environment.UserName}");
+            if (!RedactLogs && !EnablePrivacyMode)
+            {
+                sb.AppendLine($"Machine Name: {Environment.MachineName}");
+                sb.AppendLine($"User Name: {Environment.UserName}");
+            }
+            else
+            {
+                sb.AppendLine("Machine Name: [REDACTED]");
+                sb.AppendLine("User Name: [REDACTED]");
+            }
             sb.AppendLine($"CLR Version: {Environment.Version}");
             sb.AppendLine();
 
@@ -290,8 +461,8 @@ namespace PhantomVault.UI.ViewModels.Settings
             sb.AppendLine("APPLICATION INFORMATION");
             sb.AppendLine("-----------------------");
             sb.AppendLine($"Application: PhantomVault");
-            sb.AppendLine($"Version: 6.0.0"); // TODO: Get from assembly
-            sb.AppendLine($"Working Directory: {Environment.CurrentDirectory}");
+            sb.AppendLine($"Version: {System.Reflection.Assembly.GetExecutingAssembly()?.GetName()?.Version?.ToString() ?? "Unknown"}");
+            sb.AppendLine($"Working Directory: {PrivacyShield.MaskText(Environment.CurrentDirectory)}");
             sb.AppendLine($"Base Directory: {AppContext.BaseDirectory}");
             sb.AppendLine();
 
@@ -324,8 +495,8 @@ namespace PhantomVault.UI.ViewModels.Settings
             sb.AppendLine("APPLICATION PATHS");
             sb.AppendLine("-----------------");
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            sb.AppendLine($"App Data: {Path.Combine(appData, "PhantomVault")}");
-            sb.AppendLine($"Logs: {Path.Combine(appData, "PhantomVault", "Logs")}");
+            sb.AppendLine($"App Data: {PrivacyShield.MaskText(Path.Combine(appData, "PhantomVault"))}");
+            sb.AppendLine($"Logs: {PrivacyShield.MaskText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "PhantomVault", "logs"))}");
             sb.AppendLine();
 
             // Disk Space

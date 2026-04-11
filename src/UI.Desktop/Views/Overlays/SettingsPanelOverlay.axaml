@@ -25,7 +25,7 @@
 
         <Grid ClipToBounds="True">
             <!-- Transparent area to close panel -->
-            <Border Background="Transparent" />
+            <Border Background="Transparent" PointerPressed="OnBackgroundClicked" />
 
             <!-- Settings Panel Container - Slides in from right -->
             <Border x:Name="SettingsSlideHost"
@@ -178,7 +178,7 @@
                                     <TextBlock Text="Secured Rubbish Bin" VerticalAlignment="Center"/>
                                 </Button>
                                 
-                                <Button Command="{Binding ShowPasswordHealthCommand}"
+                                <Button Command="{Binding OpenSecurityDashboardWindowCommand}"
                                         Classes="liquid-glass"
                                         HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Left"

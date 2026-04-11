@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PhantomVault.UI.Views.EditForms.PinCodeEditForm">
+    
+    <Border x:Name="PinCodePanelBorder" Background="Transparent" IsVisible="{Binding IsPinCodeEntry}">
+        <StackPanel x:Name="PinCodePanel" Spacing="12">
+        <TextBlock Text="PIN Code" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+        <StackPanel Spacing="6">
+            <TextBlock Text="PIN Label" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding PinLabel}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="Bank PIN"/>
+        </StackPanel>
+        <StackPanel Spacing="6">
+            <TextBlock Text="PIN Value" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding PinValue}" PasswordChar="&#x2022;" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="1234"/>
+        </StackPanel>
+        <StackPanel Spacing="6">
+            <TextBlock Text="Category" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding PinCategory}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="Banking"/>
+        </StackPanel>
+        <StackPanel Spacing="6">
+            <TextBlock Text="Issuer" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            <TextBox Text="{Binding PinIssuer}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="Chase Bank"/>
+        </StackPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

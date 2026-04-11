@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -9,12 +10,21 @@ using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.VisualTree;
 using Avalonia.Controls.Primitives;
+using Microsoft.Win32;
 using Microsoft.Extensions.DependencyInjection;
+using PhantomVault.Core.Services;
 using PhantomVault.Core.Services.Security;
 using PhantomVault.UI.Controls;
+using PhantomVault.UI.Desktop.Controls;
 using PhantomVault.UI.Services;
 using PhantomVault.UI.ViewModels;
+using Avalonia.Animation;
+using Avalonia.Animation.Easings;
 using Avalonia.Media;
+using Avalonia.Styling;
+using Avalonia.Threading;
+using System.IO;
+using ReactiveUI;
 
 namespace PhantomVault.UI.Views
 {
@@ -36,8 +46,18 @@ namespace PhantomVault.UI.Views
         private Border? _identityPanelBorder;
         private Border? _wifiPanelBorder;
         private Border? _apiKeyPanelBorder;
+        private Border? _detailPanel;
+        private Border? _detailCard;
+        private Control? _credentialList;
+        private Border? _editPanelOverlay;
+        private Border? _editPanelContainer;
         private VaultViewModel? _currentVaultViewModel;
         private AddEditCredentialViewModel? _currentEditViewModel;
+        private bool _autoLockInProgress;
+        private bool _allowCloseAfterSecureTrashPrompt;
+        private readonly DispatcherTimer _sessionPolicyTimer;
+        private DateTimeOffset? _sessionStartedUtc;
+        private DateTimeOffset? _lastUserActivityUtc;
 
         public VaultWindow()
         {
@@ -59,6 +79,15 @@ namespace PhantomVault.UI.Views
             _identityPanelBorder = this.FindControl<Border>("IdentityPanelBorder");
             _wifiPanelBorder = this.FindControl<Border>("WiFiPanelBorder");
             _apiKeyPanelBorder = this.FindControl<Border>("ApiKeyPanelBorder");
+            _detailPanel = this.FindControl<Border>("DetailPanel");
+            _detailCard = this.FindControl<Border>("DetailCard");
+            _credentialList = this.FindControl<Control>("CredentialList");
+            _editPanelOverlay = this.FindControl<Border>("EditPanelOverlay");
+            _editPanelContainer = this.FindControl<Border>("EditPanelContainer");
+
+            // Clear detail view when clicking outside credential list / detail panel / edit panel
+            AddHandler(PointerPressedEvent, OnWindowPointerPressed, RoutingStrategies.Tunnel);
+            AddHandler(KeyDownEvent, OnWindowKeyDown, RoutingStrategies.Tunnel, handledEventsToo: true);
 
             // Debug instrumentation: find the Add toggle and popup, log their presence and hook toggle events
             try
@@ -102,8 +131,16 @@ namespace PhantomVault.UI.Views
                 headerView.SettingsRequested += (s, e) => OpenSettings_Click(s, e);
             }
 
+            // Wire up dashboard grip peek — click to open dashboard
+            var gripPeek = this.FindControl<Panel>("DashboardGripPeek");
+            if (gripPeek != null)
+            {
+                gripPeek.PointerPressed += DashboardGripPeek_PointerPressed;
+            }
+
             // Enable screenshot protection when window is opened
             this.Opened += VaultWindow_Opened;
+            SettingsService.SettingsChanged += OnSettingsChanged;
 
             // Wire up RecoveryPanel close event
             var recoveryPanel = this.FindControl<Views.RecoveryPanel>("RecoveryPanelControl");
@@ -112,9 +149,12 @@ namespace PhantomVault.UI.Views
                 recoveryPanel.CloseRequested += RecoveryPanel_CloseRequested;
             }
 
+            // Wire up SecurityDashboard for data binding
+            WireUpSecurityDashboard();
+
             // Watch for DataContext changes so we can respond when the EditViewModel is set/updated
             this.DataContextChanged += VaultWindow_DataContextChanged;
-            
+
             // Watch for window size changes to auto-collapse sidebar on small screens
             this.GetObservable(BoundsProperty).Subscribe(bounds =>
             {
@@ -123,9 +163,130 @@ namespace PhantomVault.UI.Views
                     vm.UpdateSidebarVisibility(bounds.Width);
                 }
             });
+
+            this.GetObservable(WindowStateProperty).Subscribe(OnWindowStateChanged);
+            this.Closing += VaultWindow_Closing;
+            this.Closed += VaultWindow_Closed;
+
+            try
+            {
+                SystemEvents.SessionSwitch += OnSystemSessionSwitch;
+            }
+            catch
+            {
+                // Session notifications are best-effort.
+            }
+
+            _sessionPolicyTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(15)
+            };
+            _sessionPolicyTimer.Tick += SessionPolicyTimer_Tick;
 #if DEBUG
             System.Diagnostics.Debug.WriteLine("VaultWindow constructor end");
 #endif
+        }
+
+        private async void VaultWindow_Closing(object? sender, WindowClosingEventArgs e)
+        {
+            if (_allowCloseAfterSecureTrashPrompt)
+            {
+                return;
+            }
+
+            try
+            {
+                await RunAutomatedBackupOnCloseAsync();
+
+                var settings = SettingsService.Load();
+                if (!settings.SecureTrashAutoEmptyOnClose)
+                {
+                    return;
+                }
+
+                var app = Application.Current as App;
+                var secureTrashService = app?.Services?.GetService(typeof(SecureTrashService)) as SecureTrashService;
+                if (secureTrashService == null || secureTrashService.Records.Count == 0)
+                {
+                    return;
+                }
+
+                var dialogService = app?.Services?.GetService(typeof(DialogService)) as DialogService ?? new DialogService();
+
+                if (settings.SecureTrashPromptBeforeDeletion)
+                {
+                    e.Cancel = true;
+
+                    var confirmed = await dialogService.ShowConfirmationAsync(
+                        "Empty Secure Rubbish Bin",
+                        "Auto-empty on close is enabled. Closing this vault window will securely purge all items currently in the secure rubbish bin. Continue?",
+                        this);
+
+                    if (!confirmed)
+                    {
+                        return;
+                    }
+
+                    secureTrashService.SecurelyPurgeAll();
+                    _allowCloseAfterSecureTrashPrompt = true;
+                    Close();
+                    return;
+                }
+
+                secureTrashService.SecurelyPurgeAll();
+            }
+            catch
+            {
+                // Best effort; closing should not be blocked by purge issues.
+            }
+        }
+
+        private async System.Threading.Tasks.Task RunAutomatedBackupOnCloseAsync()
+        {
+            try
+            {
+                if (_currentVaultViewModel == null)
+                {
+                    return;
+                }
+
+                if (!_currentVaultViewModel.TryGetManifestContext(out var manifestPath, out var passphrase, out var keyfilePath))
+                {
+                    return;
+                }
+
+                var services = (Application.Current as App)?.Services;
+                var backupService = services?.GetService(typeof(BackupService)) as BackupService;
+                if (backupService == null)
+                {
+                    return;
+                }
+
+                var fallbackBackupDirectory = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                    "PhantomVault",
+                    "Backups");
+
+                await BackupAutomationService.RunAutomatedBackupIfDueAsync(
+                    backupService,
+                    manifestPath,
+                    passphrase,
+                    keyfilePath,
+                    fallbackBackupDirectory);
+            }
+            catch
+            {
+                // Best effort; automated backup should not prevent window close.
+            }
+        }
+
+        private void DashboardGripPeek_PointerPressed(object? sender, PointerPressedEventArgs e)
+        {
+            if (_currentVaultViewModel != null && !_currentVaultViewModel.IsShowingDashboard)
+            {
+                _currentVaultViewModel.IsShowingDashboard = true;
+                e.Handled = true;
+            }
         }
 
         private void VaultWindow_Opened(object? sender, EventArgs e)
@@ -142,7 +303,7 @@ namespace PhantomVault.UI.Views
                     if (platformHandle != null)
                     {
                         var hwnd = platformHandle.Handle;
-                        
+
                         if (settings.EnableScreenshotProtection)
                         {
                             if (WindowProtectionService.EnableScreenshotProtection(hwnd))
@@ -179,6 +340,30 @@ namespace PhantomVault.UI.Views
                 _ = ex; // Suppress unused variable warning
 #endif
             }
+
+            if (DataContext is VaultViewModel vm)
+            {
+                var settings = SettingsService.Load();
+                if (settings.RequireUnlockToShow && !vm.IsLockscreenVisible)
+                {
+                    TriggerAutoLock(vm, "show");
+                }
+            }
+        }
+
+        private void VaultWindow_Closed(object? sender, EventArgs e)
+        {
+            StopSessionPolicyTracking();
+            SettingsService.SettingsChanged -= OnSettingsChanged;
+
+            try
+            {
+                SystemEvents.SessionSwitch -= OnSystemSessionSwitch;
+            }
+            catch
+            {
+                // Ignore cleanup failures.
+            }
         }
 
         private void VaultWindow_DataContextChanged(object? sender, EventArgs e)
@@ -193,6 +378,7 @@ namespace PhantomVault.UI.Views
                 _currentVaultViewModel = vm;
                 _currentVaultViewModel.PropertyChanged += VaultViewModel_PropertyChanged;
                 HandleEditViewModelChanged(vm.EditViewModel);
+                StartSessionPolicyTracking(restartSession: true);
 
                 try
                 {
@@ -200,7 +386,7 @@ namespace PhantomVault.UI.Views
                     var filtered = vm.FilteredCredentials?.Count ?? 0;
                     var sel = vm.SelectedSettingsContent?.ToString() ?? "<null>";
                     System.IO.File.AppendAllText(debugLogPath, $"[{DateTime.Now:O}] DataContext attached. Filtered={filtered}, SelectedSettingsContent={sel}\n");
-                    
+
                     // (FilteredCount changes will be logged via PropertyChanged handler)
                 }
 #pragma warning disable CA1031 // Catch general exception - debug logging should not crash UI
@@ -224,15 +410,59 @@ namespace PhantomVault.UI.Views
                 HandleEditViewModelChanged(vm.EditViewModel);
             }
 
+            // Trigger edit panel open/close animation
+            if (sender is ViewModels.VaultViewModel vmEdit && e.PropertyName == nameof(vmEdit.IsEditPanelVisible))
+            {
+                if (vmEdit.IsEditPanelVisible)
+                {
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        _ = RunEditPanelOpenAnimation();
+                    }, Avalonia.Threading.DispatcherPriority.Loaded);
+                }
+                else
+                {
+                    // Reset to resting state immediately on close
+                    if (_editPanelOverlay != null)
+                        _editPanelOverlay.Opacity = 1;
+                    if (_editPanelContainer != null)
+                    {
+                        _editPanelContainer.Opacity = 1;
+                        _editPanelContainer.RenderTransform = null;
+                    }
+                }
+            }
+
+            // Auto-focus the PIN pad when lockscreen becomes visible
+            if (sender is ViewModels.VaultViewModel vmLock && e.PropertyName == nameof(vmLock.IsLockscreenVisible))
+            {
+                if (vmLock.IsLockscreenVisible)
+                {
+                    StopSessionPolicyTracking();
+
+                    var settings = SettingsService.Load();
+                    if (settings.ClearClipboardOnLock)
+                    {
+                        _ = ClearClipboardAsync();
+                    }
+
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        var pinPad = this.FindControl<Views.Controls.PinEntryControl>("LockscreenPinPad");
+                        pinPad?.Clear();
+                        pinPad?.FocusPinInput();
+                    }, Avalonia.Threading.DispatcherPriority.Loaded);
+                }
+                else
+                {
+                    StartSessionPolicyTracking(restartSession: true);
+                }
+            }
+
             // Handle screenshot protection toggle
             if (sender is ViewModels.VaultViewModel vm3 && e.PropertyName == nameof(vm3.EnableScreenshotProtection))
             {
-                // Capture the value immediately to avoid re-reading from disk
                 var enableProtection = vm3.EnableScreenshotProtection;
-                var msg = $"[VaultWindow] PropertyChanged: EnableScreenshotProtection = {enableProtection}";
-                Console.WriteLine(msg);
-                System.IO.File.AppendAllText("O:\\screenshot_log.txt", msg + "\n");
-                // Ensure UI thread execution
                 Avalonia.Threading.Dispatcher.UIThread.Post(() => UpdateScreenshotProtection(enableProtection));
             }
 
@@ -270,6 +500,201 @@ namespace PhantomVault.UI.Views
                 if (e.PropertyName == nameof(editVm.IsApiKeyEntry) && editVm.IsApiKeyEntry)
                     ScrollPanelIntoView(_apiKeyPanel);
             }
+        }
+
+        private void OnWindowStateChanged(WindowState state)
+        {
+            if (state != WindowState.Minimized || DataContext is not VaultViewModel vm)
+            {
+                return;
+            }
+
+            var settings = SettingsService.Load();
+            if (settings.AutoLockOnMinimize)
+            {
+                TriggerAutoLock(vm, "minimize");
+            }
+        }
+
+        private void OnSystemSessionSwitch(object? sender, SessionSwitchEventArgs e)
+        {
+            if (e.Reason != SessionSwitchReason.SessionLock || DataContext is not VaultViewModel vm)
+            {
+                return;
+            }
+
+            var settings = SettingsService.Load();
+            if (settings.AutoLockOnScreenLock)
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => TriggerAutoLock(vm, "screen lock"));
+            }
+        }
+
+        private void TriggerAutoLock(VaultViewModel vm, string reason)
+        {
+            if (_autoLockInProgress || vm.IsLockscreenVisible)
+            {
+                return;
+            }
+
+            _autoLockInProgress = true;
+            StopSessionPolicyTracking();
+            vm.LockCommand.Execute(Unit.Default).Subscribe(
+                _ => { },
+                _ => _autoLockInProgress = false,
+                () => _autoLockInProgress = false);
+
+            vm.StatusMessage = $"Vault locked on {reason}";
+        }
+
+        private void OnWindowKeyDown(object? sender, KeyEventArgs e)
+        {
+            RegisterUserActivity();
+        }
+
+        private void SessionPolicyTimer_Tick(object? sender, EventArgs e)
+        {
+            CheckSessionPolicies();
+        }
+
+        private void StartSessionPolicyTracking(bool restartSession)
+        {
+            if (DataContext is not VaultViewModel vm || vm.IsLockscreenVisible)
+            {
+                StopSessionPolicyTracking();
+                return;
+            }
+
+            var now = DateTimeOffset.UtcNow;
+            if (restartSession || _sessionStartedUtc is null)
+            {
+                _sessionStartedUtc = now;
+            }
+
+            _lastUserActivityUtc ??= now;
+
+            if (!_sessionPolicyTimer.IsEnabled)
+            {
+                _sessionPolicyTimer.Start();
+            }
+        }
+
+        private void StopSessionPolicyTracking()
+        {
+            if (_sessionPolicyTimer.IsEnabled)
+            {
+                _sessionPolicyTimer.Stop();
+            }
+        }
+
+        private void RegisterUserActivity()
+        {
+            if (DataContext is not VaultViewModel vm || vm.IsLockscreenVisible)
+            {
+                return;
+            }
+
+            var now = DateTimeOffset.UtcNow;
+            _sessionStartedUtc ??= now;
+            _lastUserActivityUtc = now;
+        }
+
+        private void CheckSessionPolicies()
+        {
+            if (DataContext is not VaultViewModel vm || vm.IsLockscreenVisible)
+            {
+                StopSessionPolicyTracking();
+                return;
+            }
+
+            var settings = SettingsService.Load();
+            var now = DateTimeOffset.UtcNow;
+
+            _sessionStartedUtc ??= now;
+            _lastUserActivityUtc ??= now;
+
+            if (settings.SessionTimeoutMinutes > 0
+                && now - _sessionStartedUtc.Value >= TimeSpan.FromMinutes(settings.SessionTimeoutMinutes))
+            {
+                TriggerAutoLock(vm, "session timeout");
+                return;
+            }
+
+            if (settings.IdleTimeoutMinutes > 0
+                && now - _lastUserActivityUtc.Value >= TimeSpan.FromMinutes(settings.IdleTimeoutMinutes))
+            {
+                TriggerAutoLock(vm, "inactivity");
+            }
+        }
+
+        private async System.Threading.Tasks.Task ClearClipboardAsync()
+        {
+            try
+            {
+                if (Clipboard is not null)
+                {
+                    await Clipboard.SetTextAsync(string.Empty);
+                }
+            }
+            catch (Exception ex)
+            {
+#if DEBUG
+                System.Diagnostics.Debug.WriteLine($"Failed to clear clipboard on lock: {ex.Message}");
+#else
+                _ = ex;
+#endif
+            }
+        }
+
+        private async System.Threading.Tasks.Task RunEditPanelOpenAnimation()
+        {
+            if (_editPanelOverlay == null || _editPanelContainer == null)
+                return;
+
+            // Slide the panel in from the right edge.
+            // Base X is 0 (final resting position); animation starts off-screen.
+            var translate = new TranslateTransform { X = 0, Y = 0 };
+            _editPanelContainer.RenderTransform = translate;
+            _editPanelOverlay.Opacity = 0;
+
+            // Measure how far to push the panel off-screen
+            var slideDistance = _editPanelContainer.Bounds.Width > 0
+                ? _editPanelContainer.Bounds.Width
+                : 500;
+
+            // Overlay fade-in
+            var overlayFade = new Animation
+            {
+                Duration = TimeSpan.FromMilliseconds(300),
+                Easing = new CubicEaseOut(),
+                FillMode = FillMode.Forward,
+                Children =
+                {
+                    new KeyFrame { Cue = new Cue(0), Setters = { new Setter(OpacityProperty, 0.0) } },
+                    new KeyFrame { Cue = new Cue(1), Setters = { new Setter(OpacityProperty, 1.0) } }
+                }
+            };
+
+            // Slide: start at +slideDistance, land at 0
+            var slideAnim = new Animation
+            {
+                Duration = TimeSpan.FromMilliseconds(350),
+                Easing = new CubicEaseOut(),
+                FillMode = FillMode.Forward,
+                Children =
+                {
+                    new KeyFrame { Cue = new Cue(0), Setters = { new Setter(TranslateTransform.XProperty, slideDistance) } },
+                    new KeyFrame { Cue = new Cue(1), Setters = { new Setter(TranslateTransform.XProperty, 0.0) } }
+                }
+            };
+
+            await System.Threading.Tasks.Task.WhenAll(
+                overlayFade.RunAsync(_editPanelOverlay),
+                slideAnim.RunAsync(translate));
+
+            // Lock final state
+            _editPanelOverlay.Opacity = 1;
+            _editPanelContainer.RenderTransform = null;
         }
 
         private void HandleEditViewModelChanged(AddEditCredentialViewModel? newViewModel)
@@ -727,6 +1152,85 @@ namespace PhantomVault.UI.Views
             }
         }
 
+        /// <summary>
+        /// Wire up SecurityDashboard control: bind dashboard metrics and set up refresh action.
+        /// </summary>
+        private void WireUpSecurityDashboard()
+        {
+            var securityDashboard = this.FindControl<SecurityDashboard>("SecurityDashboardControl");
+            if (securityDashboard == null || DataContext is not VaultViewModel vm)
+                return;
+
+            // Bind dashboard metrics from VaultViewModel
+            securityDashboard.Bind(SecurityDashboard.SecurityScoreProperty,
+                this.GetObservable(DataContextProperty)
+                    .SelectMany(dc => (dc as VaultViewModel)?.WhenAnyValue(v => v.SecurityScore) ?? Observable.Empty<int>()));
+
+            securityDashboard.Bind(SecurityDashboard.TotalCredentialsProperty,
+                this.GetObservable(DataContextProperty)
+                    .SelectMany(dc => (dc as VaultViewModel)?.WhenAnyValue(v => v.TotalCount) ?? Observable.Empty<int>()));
+
+            securityDashboard.Bind(SecurityDashboard.WeakPasswordsProperty,
+                this.GetObservable(DataContextProperty)
+                    .SelectMany(dc => (dc as VaultViewModel)?.WhenAnyValue(v => v.WeakCredentials.Count) ?? Observable.Empty<int>()));
+
+            securityDashboard.Bind(SecurityDashboard.BreachedPasswordsProperty,
+                this.GetObservable(DataContextProperty)
+                    .SelectMany(dc => (dc as VaultViewModel)?.WhenAnyValue(v => v.BreachedPasswordCount) ?? Observable.Empty<int>()));
+
+            securityDashboard.Bind(SecurityDashboard.ReusedPasswordsProperty,
+                this.GetObservable(DataContextProperty)
+                    .SelectMany(dc => (dc as VaultViewModel)?.WhenAnyValue(v => v.ReusedPasswordCount) ?? Observable.Empty<int>()));
+
+            securityDashboard.Bind(SecurityDashboard.ExpiringSoonProperty,
+                this.GetObservable(DataContextProperty)
+                    .SelectMany(dc => (dc as VaultViewModel)?.WhenAnyValue(v => v.ExpiringCredentialCount) ?? Observable.Empty<int>()));
+
+            securityDashboard.Bind(SecurityDashboard.TwoFactorEnabledProperty,
+                this.GetObservable(DataContextProperty)
+                    .SelectMany(dc => (dc as VaultViewModel)?.WhenAnyValue(v => v.TwoFactorEnabledCount) ?? Observable.Empty<int>()));
+
+            securityDashboard.Bind(SecurityDashboard.LastBreachCheckProperty,
+                this.GetObservable(DataContextProperty)
+                    .SelectMany(dc => (dc as VaultViewModel)?.WhenAnyValue(v => v.LastBreachCheckTime) ?? Observable.Empty<DateTime?>()));
+
+            // Wire EditCredentialCommand from VaultViewModel
+            securityDashboard.EditCredentialCommand = new SimpleCommand(item =>
+            {
+                if (item is WeakCredentialItem weakItem)
+                {
+                    // Find and select the credential by title from filtered credentials
+                    var credentialVm = vm.FilteredCredentials.FirstOrDefault(c => c.Title == weakItem.Title);
+                    if (credentialVm != null)
+                    {
+                        vm.EditCredentialCommand.Execute(credentialVm).Subscribe();
+                    }
+                }
+            });
+
+            // Wire up the Refresh button in SecurityDashboard  
+            var refreshButton = securityDashboard.FindControl<Button>("RefreshButton");
+            if (refreshButton != null)
+            {
+                refreshButton.Click += (s, e) => RefreshSecurityDashboard_Click();
+            }
+        }
+
+        private void RefreshSecurityDashboard_Click()
+        {
+            if (DataContext is VaultViewModel vm)
+            {
+                // Trigger refresh by toggling dashboard off and on, or call the refresh method directly
+                // For now, we'll call the toggle which will refresh
+                var wasVisible = vm.IsSecurityDashboardVisible;
+                vm.ToggleSecurityDashboardCommand.Execute().Subscribe();
+                if (wasVisible)
+                {
+                    vm.ToggleSecurityDashboardCommand.Execute().Subscribe();
+                }
+            }
+        }
+
         private void CloseMobileDetailOverlay_Click(object? sender, RoutedEventArgs e)
         {
             if (DataContext is VaultViewModel vm)
@@ -885,6 +1389,11 @@ namespace PhantomVault.UI.Views
             }
         }
 
+        private void OnSettingsChanged(object? sender, UserSettingsChangedEventArgs e)
+        {
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => UpdateScreenshotProtection(e.Settings.EnableScreenshotProtection));
+        }
+
         private void RecoveryPanel_CloseRequested(object? sender, EventArgs e)
         {
             if (DataContext is VaultViewModel vm)
@@ -893,5 +1402,68 @@ namespace PhantomVault.UI.Views
                 vm.CloseRecoveryPanel();
             }
         }
+
+        /// <summary>
+        /// Clears the detail view selection when the user clicks outside a credential tile
+        /// or the detail card itself. Gaps, headers, and empty space all trigger a clear.
+        /// </summary>
+        private void OnWindowPointerPressed(object? sender, PointerPressedEventArgs e)
+        {
+            if (DataContext is not VaultViewModel vm) return;
+
+            RegisterUserActivity();
+
+            // Don't interfere while edit overlay is open
+            if (vm.IsEditPanelVisible) return;
+
+            // Nothing to clear
+            if (vm.SelectedCredential is null) return;
+
+            // Walk the visual tree from the hit-test source upward.
+            // Only preserve selection if clicking directly on:
+            //   - The detail card (the actual card content, not surrounding empty space)
+            //   - A credential tile button (Button whose DataContext is CredentialViewModel)
+            var source = e.Source as Visual;
+            while (source is not null)
+            {
+                // Click is on the detail card content — keep selection
+                if (source == _detailCard)
+                    return;
+
+                // Click is on a credential tile button — keep selection
+                // (TileClickCommand will fire on release and set the new selection)
+                if (source is Button btn && btn.DataContext is PhantomVault.UI.ViewModels.CredentialViewModel)
+                    return;
+
+                source = source.GetVisualParent() as Visual;
+            }
+
+            // Click was on gap / header / sidebar / empty space — clear the selection
+            vm.SelectedCredential = null;
+        }
     }
+
+    /// <summary>
+    /// Simple ICommand wrapper for parameterized actions.
+    /// </summary>
+#pragma warning disable CS0067
+    public class SimpleCommand : System.Windows.Input.ICommand
+    {
+        private readonly Action<object?> _execute;
+
+        public event EventHandler? CanExecuteChanged;
+
+        public SimpleCommand(Action<object?> execute)
+        {
+            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
+        }
+
+        public bool CanExecute(object? parameter) => true;
+
+        public void Execute(object? parameter)
+        {
+            _execute(parameter);
+        }
+    }
+#pragma warning restore CS0067
 }

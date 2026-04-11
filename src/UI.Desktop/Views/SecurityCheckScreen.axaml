@@ -16,6 +16,14 @@
         FontSize="{DynamicResource DefaultFontSize}"
         Classes="animated-window">
 
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://PhantomVault.UI/Assets/Themes/PreVaultTheme.axaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
     <Design.DataContext>
         <vm:SecurityCheckScreenViewModel/>
     </Design.DataContext>
@@ -23,45 +31,24 @@
     <Grid RowDefinitions="Auto,*,Auto" Margin="0">
         
         <!-- Header -->
-        <Border Grid.Row="0" Background="{DynamicResource ContentBackgroundBrush}" Padding="20,15">
-            <StackPanel Spacing="8" MaxWidth="700">
+        <Border Grid.Row="0" Background="{DynamicResource ContentBackgroundBrush}" Padding="15,8">
+            <StackPanel Spacing="{StaticResource Space.Sm}">
                 <TextBlock Text="Welcome to Your Vault"
                            FontSize="{StaticResource Type.SubHeading.Size}"
-                           FontWeight="SemiBold"
-                           Foreground="{DynamicResource PrimaryTextBrush}"
+                           FontWeight="Bold"
                            HorizontalAlignment="Center"/>
-                
                 <TextBlock Text="Running security checks to ensure your vault is safe..."
-                           FontSize="{StaticResource Type.Body.Size}"
+                           FontSize="{StaticResource Type.Label.Size}"
                            Foreground="{DynamicResource SecondaryTextBrush}"
-                           HorizontalAlignment="Center"
-                           TextWrapping="Wrap"
-                           TextAlignment="Center"
-                           MaxWidth="600"/>
+                           HorizontalAlignment="Center"/>
             </StackPanel>
         </Border>
 
         <!-- Main Content -->
         <ScrollViewer Grid.Row="1" 
-                      Padding="40,30,40,20" 
                       VerticalScrollBarVisibility="Auto" 
                       HorizontalScrollBarVisibility="Disabled">
-            <StackPanel Spacing="25" Margin="0,0,0,20" MaxWidth="700" HorizontalAlignment="Center">
-
-                <!-- Progress Bar -->
-                <StackPanel Spacing="12">
-                    <ProgressBar Value="{Binding PercentComplete}"
-                                 Minimum="0"
-                                 Maximum="100"
-                                 Height="6"
-                                 IsIndeterminate="False"
-                                 Foreground="{DynamicResource AccentBrush}"/>
-                    
-                    <TextBlock Text="{Binding PercentComplete, StringFormat='{}{0}% complete'}"
-                               FontSize="{StaticResource Type.Label.Size}"
-                               Foreground="{DynamicResource MutedTextBrush}"
-                               HorizontalAlignment="Center"/>
-                </StackPanel>
+            <StackPanel Spacing="25" Margin="40,30,40,20" MaxWidth="700" HorizontalAlignment="Center">
 
                 <!-- Current Check Display - Single Item -->
                 <Border Background="{DynamicResource ControlBackgroundBrush}" 
@@ -116,46 +103,79 @@
             </StackPanel>
         </ScrollViewer>
 
-        <!-- Action Buttons -->
-        <Border Grid.Row="2" Background="{DynamicResource ContentBackgroundBrush}" Padding="25,12">
-            <StackPanel Orientation="Horizontal" 
-                        HorizontalAlignment="Center"
-                        Spacing="15">
+        <!-- Footer: Progress, Status, and Action Buttons -->
+        <Border Grid.Row="2" Background="{DynamicResource FooterBackgroundBrush}" Padding="25,15,25,15">
+            <StackPanel Spacing="18" MaxWidth="700" HorizontalAlignment="Center">
                 
-                <!-- Continue Button (visible when checks pass) -->
-                <Button Command="{Binding ContinueCommand}"
-                        Width="140"
-                        Height="40"
-                        FontSize="{StaticResource Type.H5.Size}"
-                        FontWeight="Bold"
-                        Classes="liquid-glass primary"
-                        IsVisible="{Binding ChecksSuccessful}"
-                        ToolTip.Tip="All security checks passed successfully.">
-                    <TextBlock Text="Continue" TextAlignment="Center"/>
-                </Button>
+                <!-- Progress Bar -->
+                <StackPanel Spacing="{StaticResource Space.Sm}" IsVisible="{Binding IsRunningChecks}">
+                    <ProgressBar Value="{Binding PercentComplete}"
+                                 Minimum="0"
+                                 Maximum="100"
+                                 Height="12"
+                                 Width="600"
+                                 IsIndeterminate="False"
+                                 Foreground="{DynamicResource AccentBrush}"/>
+                    <TextBlock Text="{Binding PercentComplete, StringFormat='{}{0}% complete'}"
+                               FontSize="{StaticResource Type.Small.Size}"
+                               Foreground="{DynamicResource SuccessBrush}"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
 
-                <!-- Retry Button (visible when checks fail) -->
-                <Button Command="{Binding RetryCommand}"
-                        Width="130"
-                        Height="36"
-                        Classes="liquid-glass"
-                        FontSize="{StaticResource Type.Body.Size}"
-                        IsVisible="{Binding !ChecksSuccessful}"
-                        ToolTip.Tip="Some checks failed. Click to re-run the security checks.">
-                    <TextBlock Text="Retry"/>
-                </Button>
+                <!-- Status Message -->
+                <Border Background="{DynamicResource FooterBackgroundBrush}"
+                        Padding="12,10"
+                        CornerRadius="{StaticResource Radius.Md}"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"
+                        Margin="0,5,0,0"
+                        IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                    <TextBlock Text="{Binding StatusMessage}"
+                               FontSize="{StaticResource Type.Small.Size}"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               TextWrapping="Wrap"
+                               HorizontalAlignment="Center"/>
+                </Border>
 
-                <!-- Cancel Button -->
-                <Button Command="{Binding CancelCommand}"
-                        Width="130"
-                        Height="36"
-                        Classes="liquid-glass"
-                        
-                        FontSize="{StaticResource Type.Body.Size}"
-                        IsVisible="{Binding !IsRunningChecks}"
-                        ToolTip.Tip="Cancel and return to the previous screen.">
-                    <TextBlock Text="Cancel"/>
-                </Button>
+                <!-- Action Buttons -->
+                <StackPanel Orientation="Horizontal" 
+                            HorizontalAlignment="Center"
+                            Spacing="15">
+                    
+                    <!-- Cancel Button -->
+                    <Button Command="{Binding CancelCommand}"
+                            Width="140"
+                            Height="42"
+                            FontSize="{StaticResource Type.Body.Size}"
+                            Classes="liquid-glass"
+                            IsEnabled="{Binding !IsRunningChecks}"
+                            ToolTip.Tip="Cancel and return to the previous screen.">
+                        <TextBlock Text="Cancel" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
+
+                    <!-- Retry Button (visible when checks fail) -->
+                    <Button Command="{Binding RetryCommand}"
+                            Width="140"
+                            Height="42"
+                            FontSize="{StaticResource Type.Body.Size}"
+                            Classes="liquid-glass"
+                            IsVisible="{Binding !ChecksSuccessful}"
+                            ToolTip.Tip="Some checks failed. Click to re-run the security checks.">
+                        <TextBlock Text="Retry" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
+
+                    <!-- Continue Button (visible when checks pass) -->
+                    <Button Command="{Binding ContinueCommand}"
+                            Width="160"
+                            Height="42"
+                            FontSize="{StaticResource Type.H5.Size}"
+                            FontWeight="SemiBold"
+                            Classes="liquid-glass primary"
+                            IsVisible="{Binding ChecksSuccessful}"
+                            ToolTip.Tip="All security checks passed successfully.">
+                        <TextBlock Text="Continue" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
+                </StackPanel>
             </StackPanel>
         </Border>
     </Grid>

@@ -39,7 +39,7 @@
                                FontSize="{StaticResource Type.H3.Size}" 
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource HeaderTextBrush}"/>
-                    <TextBlock Text="Biometric authentication" 
+                    <TextBlock Text="Local authenticator settings" 
                                FontSize="{StaticResource Type.Small.Size}"
                                Foreground="{DynamicResource HeaderMutedTextBrush}"/>
                 </StackPanel>
@@ -101,7 +101,7 @@
                                 <TextBlock Grid.Column="0" Text="☝" FontSize="{StaticResource Type.H2.Size}" VerticalAlignment="Center"/>
                                 <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
                                     <TextBlock Text="Fingerprint" FontSize="{StaticResource Type.Label.Size}" FontWeight="Medium"/>
-                                    <TextBlock Text="Use your fingerprint reader" 
+                                    <TextBlock Text="Use your fingerprint reader when supported by Windows Hello" 
                                                FontSize="{StaticResource Type.Tiny.Size}"
                                                Foreground="{DynamicResource MutedTextBrush}"/>
                                 </StackPanel>
@@ -115,7 +115,7 @@
                                 <TextBlock Grid.Column="0" Text="😊" FontSize="{StaticResource Type.H2.Size}" VerticalAlignment="Center"/>
                                 <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
                                     <TextBlock Text="Face Recognition" FontSize="{StaticResource Type.Label.Size}" FontWeight="Medium"/>
-                                    <TextBlock Text="Use your camera for face unlock" 
+                                    <TextBlock Text="Use your camera for face verification when supported by Windows Hello" 
                                                FontSize="{StaticResource Type.Tiny.Size}"
                                                Foreground="{DynamicResource MutedTextBrush}"/>
                                 </StackPanel>
@@ -129,7 +129,7 @@
                                 <TextBlock Grid.Column="0" Text="🔢" FontSize="{StaticResource Type.H2.Size}" VerticalAlignment="Center"/>
                                 <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
                                     <TextBlock Text="PIN" FontSize="{StaticResource Type.Label.Size}" FontWeight="Medium"/>
-                                    <TextBlock Text="Use your Windows Hello PIN" 
+                                    <TextBlock Text="Use your Windows Hello PIN as the fallback local verification method" 
                                                FontSize="{StaticResource Type.Tiny.Size}"
                                                Foreground="{DynamicResource MutedTextBrush}"/>
                                 </StackPanel>
@@ -154,7 +154,7 @@
                                 Height="42"
                                 HorizontalAlignment="Stretch"
                                 IsVisible="{Binding IsWindowsHelloAvailable}">
-                            <TextBlock Text="Enroll Biometric" FontSize="{StaticResource Type.Body.Size}"/>
+                            <TextBlock Text="Set Up Windows Hello" FontSize="{StaticResource Type.Body.Size}"/>
                         </Button>
                         
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="10"
@@ -192,7 +192,7 @@
                                    Foreground="{DynamicResource MutedTextBrush}"
                                    TextWrapping="Wrap"
                                    LineHeight="18">
-Your biometric data is stored securely in the TPM (Trusted Platform Module) and never leaves your device. Windows Hello provides fast and secure authentication.
+Windows Hello handles local verification on supported Windows devices. Depending on the hardware, this may use fingerprint, face recognition, or PIN-backed verification. This window configures the current local-device flow rather than a cross-device passkey ecosystem.
                         </TextBlock>
                     </StackPanel>
                 </Border>

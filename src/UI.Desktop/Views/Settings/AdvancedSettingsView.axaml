@@ -22,9 +22,11 @@
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
                 
                 <CheckBox Content="Enable debug logging" 
+                          IsChecked="{Binding EnableDebugLogging, Mode=TwoWay}"
                           ToolTip.Tip="Log detailed information for troubleshooting"/>
 
                 <CheckBox Content="Show diagnostic information" 
+                          IsChecked="{Binding ShowDiagnosticInfo, Mode=TwoWay}"
                           ToolTip.Tip="Display technical details in UI"/>
 
                 <Button Content="View Application Logs" 
@@ -61,7 +63,7 @@
                                FontSize="{StaticResource Type.Body.Size}" 
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource Brush.Accent}"/>
-                    <TextBlock Text="Enable testing features for PhantomRecovery integration" 
+                    <TextBlock Text="{Binding RecoveryDeveloperModeStatus}" 
                                TextWrapping="Wrap"
                                Foreground="{DynamicResource SecondaryTextBrush}"
                                FontSize="{StaticResource Type.Small.Size}"/>
@@ -69,6 +71,7 @@
                 
                 <CheckBox Content="Enable Developer Mode" 
                           IsChecked="{Binding IsRecoveryDeveloperModeEnabled}"
+                          IsEnabled="{Binding IsRecoveryDeveloperModeAvailable}"
                           ToolTip.Tip="Use simulated USB paths and default credentials for testing"
                           FontWeight="SemiBold"/>
 
@@ -124,27 +127,10 @@
                             </StackPanel>
                         </StackPanel>
 
-                        <Border Background="{DynamicResource WarningBackgroundBrush}"
-                                BorderBrush="{DynamicResource WarningBrush}"
-                                BorderThickness="1"
-                                CornerRadius="4"
-                                Padding="10"
-                                Margin="0,5,0,0">
-                            <StackPanel Spacing="4">
-                                <TextBlock Text="ℹ️ Developer Credentials" 
-                                           FontWeight="SemiBold"
-                                           FontSize="{StaticResource Type.Tiny.Size}"
-                                           Foreground="{DynamicResource WarningBrush}"/>
-                                <TextBlock Text="Master Secret: dev-phantom-recovery-master-2025" 
-                                           FontSize="{StaticResource Type.Micro.Size}"
-                                           FontFamily="{StaticResource MonoFontFamily}"
-                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                <TextBlock Text="Recovery PIN: 1234" 
-                                           FontSize="{StaticResource Type.Micro.Size}"
-                                           FontFamily="{StaticResource MonoFontFamily}"
-                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
-                            </StackPanel>
-                        </Border>
+                        <TextBlock Text="Developer credentials are not shown in the app UI. Use your local recovery test harness documentation if this integration is installed."
+                                   FontSize="{StaticResource Type.Small.Size}"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   TextWrapping="Wrap"/>
                     </StackPanel>
                 </Border>
             </StackPanel>
@@ -163,22 +149,28 @@
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
                 
                 <CheckBox Content="Enable privacy mode" 
+                          IsChecked="{Binding EnablePrivacyMode, Mode=TwoWay}"
                           ToolTip.Tip="Hide sensitive information from screenshots"/>
 
                 <CheckBox Content="Redact logs" 
-                          IsChecked="True"
+                          IsChecked="{Binding RedactLogs, Mode=TwoWay}"
                           ToolTip.Tip="Remove sensitive data from diagnostic logs"/>
 
                 <CheckBox Content="Block remote debugging" 
-                          IsChecked="True"
+                          IsChecked="{Binding BlockRemoteDebugging, Mode=TwoWay}"
                           ToolTip.Tip="Prevent external debugger attachment"/>
+
+                <TextBlock Text="Remote-debug blocking is a hardening preference saved for startup and hardened builds. It is not hot-swapped into an already running process."
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           FontSize="{StaticResource Type.Small.Size}"
+                           TextWrapping="Wrap"/>
 
                 <StackPanel Spacing="8">
                     <TextBlock Text="Session timeout (minutes):" 
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                     <TextBox Width="100" 
                              HorizontalAlignment="Left"
-                             Text="30"
+                             Text="{Binding SessionTimeout, Mode=TwoWay}"
                              ToolTip.Tip="Force logout after inactivity"/>
                 </StackPanel>
             </StackPanel>
@@ -197,17 +189,19 @@
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
                 
                 <CheckBox Content="Auto-lock on minimize" 
+                          IsChecked="{Binding AutoLockOnMinimize, Mode=TwoWay}"
                           ToolTip.Tip="Lock vault when window is minimized"/>
 
                 <CheckBox Content="Auto-lock on screen lock" 
-                          IsChecked="True"
+                          IsChecked="{Binding AutoLockOnScreenLock, Mode=TwoWay}"
                           ToolTip.Tip="Lock vault when Windows is locked"/>
 
                 <CheckBox Content="Clear clipboard on lock" 
-                          IsChecked="True"
+                          IsChecked="{Binding ClearClipboardOnLock, Mode=TwoWay}"
                           ToolTip.Tip="Automatically clear clipboard when locking"/>
 
                 <CheckBox Content="Require unlock to show window" 
+                          IsChecked="{Binding RequireUnlockToShow, Mode=TwoWay}"
                           ToolTip.Tip="Show unlock prompt before displaying vault"/>
 
                 <StackPanel Spacing="8">
@@ -215,13 +209,18 @@
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                     <ComboBox Width="150" 
                               HorizontalAlignment="Left"
-                              SelectedIndex="2">
+                              SelectedIndex="{Binding SelectedFailedAttempts, Mode=TwoWay}">
                         <ComboBoxItem Content="3 attempts"/>
                         <ComboBoxItem Content="5 attempts"/>
                         <ComboBoxItem Content="10 attempts"/>
                         <ComboBoxItem Content="Unlimited"/>
                     </ComboBox>
                 </StackPanel>
+
+                <TextBlock Text="Minimize, screen-lock, clipboard-on-lock, idle timeout, and session timeout apply live in the vault window. Unlock-on-show applies on the next show or lock cycle, and failed-attempt thresholds still depend on the active unlock path."
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           FontSize="{StaticResource Type.Small.Size}"
+                           TextWrapping="Wrap"/>
             </StackPanel>
         </Border>
 

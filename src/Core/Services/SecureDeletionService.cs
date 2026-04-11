@@ -42,7 +42,11 @@ public class SecureDeletionService
         if (!File.Exists(filePath))
             throw new FileNotFoundException("File not found for secure deletion", filePath);
 
+        // Strip ReadOnly / Hidden / System so the overwrite passes can open the file
         var fileInfo = new FileInfo(filePath);
+        if (fileInfo.IsReadOnly || (fileInfo.Attributes & (FileAttributes.Hidden | FileAttributes.System)) != 0)
+            fileInfo.Attributes = FileAttributes.Normal;
+
         long fileSize = fileInfo.Length;
 
         int passes = method switch

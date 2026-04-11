@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:ThemeAwareWindow
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="https://github.com/avaloniaui/design"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:views="clr-namespace:PhantomVault.UI.Views"
+    mc:Ignorable="d"
+    x:Class="PhantomVault.UI.Views.SecurityDashboardWindow"
+    Title="Security Dashboard - Full Analysis"
+    Width="1000"
+    Height="800"
+    MinWidth="1000"
+    MinHeight="700"
+    WindowStartupLocation="CenterScreen"
+    Background="{DynamicResource WindowBackgroundBrush}"
+    Classes="animated-window">
+    
+    <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="0" Background="{DynamicResource WindowBackgroundBrush}">
+        <!-- Header -->
+        <Border Grid.Row="0" 
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource DividerBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="24,16">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="0" Spacing="8" VerticalAlignment="Center">
+                    <TextBlock Text="Security Dashboard"
+                               FontSize="24"
+                               FontWeight="Bold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <TextBlock Text="Overall Score: {Binding SecurityScore}/100 • {Binding TotalCount} passwords • Live updating"
+                               FontSize="12"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <Button Grid.Column="1"
+                        Command="{Binding RefreshSecurityDashboard}"
+                        Classes="liquid-glass"
+                        ToolTip.Tip="Refresh all metrics"
+                        Padding="12,28">
+                    <TextBlock Text="🔄" FontSize="18"/>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Password Strength Tester -->
+        <Border Grid.Row="1"
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource DividerBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="24,16">
+            <StackPanel Spacing="12">
+                <TextBlock Text="Test Password Strength" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                
+                <TextBox Text="{Binding TestPassword}"
+                         Watermark="Type a password to test its strength..."
+                         Padding="12,10"
+                         FontSize="12"
+                         Classes="themed-textbox"/>
+                
+                <StackPanel Spacing="8" IsVisible="{Binding TestPassword.Length}">
+                    <!-- Strength Score -->
+                    <StackPanel Spacing="4">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <TextBlock Grid.Column="0" Text="Strength:" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                            <ProgressBar Grid.Column="1" Margin="8,0" Value="{Binding TestPasswordScore}" Maximum="100" Height="6" Classes="strength-bar"/>
+                            <TextBlock Grid.Column="2" Text="{Binding TestPasswordScore}" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        </Grid>
+                        <TextBlock Text="{Binding TestPasswordStrengthLabel}" FontSize="11" FontWeight="SemiBold" Foreground="{Binding TestPasswordStrengthColor}"/>
+                    </StackPanel>
+
+                    <!-- Suggested Improvement -->
+                    <StackPanel Spacing="4" IsVisible="{Binding HasSuggestedPassword}">
+                        <TextBlock Text="💡 Suggested Stronger Password:" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <Border Background="#F5F5F5" Padding="12,8" CornerRadius="4" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
+                            <TextBlock Text="{Binding SuggestedPassword}" FontFamily="Courier New" FontSize="11" Foreground="{DynamicResource PrimaryTextBrush}" TextWrapping="Wrap"/>
+                        </Border>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Content="Copy Suggestion" Command="{Binding CopySuggestedPasswordCommand}" Classes="liquid-glass" Padding="10,6" FontSize="11"/>
+                            <TextBlock Text="(Similarity: {Binding SimilarityPercentage}%)" FontSize="10" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Quick Stats -->
+        <Border Grid.Row="2"
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource DividerBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="24,16">
+            <Grid ColumnDefinitions="*,*,*,*,*,*">
+                <!-- Total -->
+                <StackPanel Grid.Column="0" Spacing="4" Margin="8,0">
+                    <TextBlock Text="{Binding TotalCount}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <TextBlock Text="Total" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <!-- Weak -->
+                <StackPanel Grid.Column="1" Spacing="4" Margin="8,0">
+                    <TextBlock Text="{Binding WeakCredentials.Count}" FontSize="20" FontWeight="Bold" Foreground="#FFA726"/>
+                    <TextBlock Text="Weak" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <!-- Reused -->
+                <StackPanel Grid.Column="2" Spacing="4" Margin="8,0">
+                    <TextBlock Text="{Binding ReusedPasswordCount}" FontSize="20" FontWeight="Bold" Foreground="#EF5350"/>
+                    <TextBlock Text="Reused" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <!-- Breached -->
+                <StackPanel Grid.Column="3" Spacing="4" Margin="8,0">
+                    <TextBlock Text="{Binding BreachedPasswordCount}" FontSize="20" FontWeight="Bold" Foreground="#E53935"/>
+                    <TextBlock Text="Breached" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <!-- Expiring -->
+                <StackPanel Grid.Column="4" Spacing="4" Margin="8,0">
+                    <TextBlock Text="{Binding ExpiringCredentialCount}" FontSize="20" FontWeight="Bold" Foreground="#AB47BC"/>
+                    <TextBlock Text="Expiring" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+                <!-- 2FA Enabled -->
+                <StackPanel Grid.Column="5" Spacing="4" Margin="8,0">
+                    <TextBlock Text="{Binding TwoFactorEnabledCount}" FontSize="20" FontWeight="Bold" Foreground="#29B6F6"/>
+                    <TextBlock Text="2FA" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main Content: Filters and Passwords List -->
+        <Grid Grid.Row="3" RowDefinitions="Auto,*">
+            <!-- Filter Section -->
+            <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}" Padding="24,16" Margin="0" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Filter by Security Score" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <ToggleButton Classes="liquid-glass" Padding="12,8" Content="Show All" ToolTip.Tip="Show all passwords" IsChecked="{Binding ShowAllFilter}" Command="{Binding FilterShowAllCommand}"/>
+                        <ToggleButton Classes="liquid-glass" Padding="12,8" Content="🔴 Critical (0-40)" ToolTip.Tip="Security score 0-40" IsChecked="{Binding ShowCriticalFilter}" Command="{Binding FilterCriticalCommand}"/>
+                        <ToggleButton Classes="liquid-glass" Padding="12,8" Content="🟠 Low (41-60)" ToolTip.Tip="Security score 41-60" IsChecked="{Binding ShowLowFilter}" Command="{Binding FilterLowCommand}"/>
+                        <ToggleButton Classes="liquid-glass" Padding="12,8" Content="🟡 Medium (61-80)" ToolTip.Tip="Security score 61-80" IsChecked="{Binding ShowMediumFilter}" Command="{Binding FilterMediumCommand}"/>
+                        <ToggleButton Classes="liquid-glass" Padding="12,8" Content="🟢 Good (81-100)" ToolTip.Tip="Security score 81-100" IsChecked="{Binding ShowGoodFilter}" Command="{Binding FilterGoodCommand}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Passwords List -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="24,16" Spacing="12">
+                    <!-- Password Items -->
+                    <ItemsControl ItemsSource="{Binding FilteredCredentialsForDashboard}" Margin="0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:SecurityDashboardWindow}}, Path=DataContext.OpenEditPasswordCommand}" CommandParameter="{Binding Credential}" Background="Transparent" Padding="0" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+                                    <Border CornerRadius="6" Padding="0" Margin="0,0,0,8" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1" Cursor="Hand">
+                                        <Grid ColumnDefinitions="6,*,Auto,Auto,Auto,Auto">
+                                            <!-- Category Color Bar -->
+                                            <Border Grid.Column="0" CornerRadius="5,0,0,5" Background="{Binding CategoryColor}"/>
+                                            
+                                            <!-- Content -->
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center" Margin="12,10">
+                                                <!-- Icon -->
+                                                <Border Width="40" Height="40" CornerRadius="4" Background="{DynamicResource DividerBrush}" VerticalAlignment="Center">
+                                                    <Image Source="{Binding IconBitmap}" Stretch="UniformToFill"/>
+                                                </Border>
+                                                
+                                                <!-- Title & Username -->
+                                                <StackPanel Spacing="3" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding CredentialTitle}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                    <TextBlock Text="{Binding CredentialUsername}" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                </StackPanel>
+                                            </StackPanel>
+
+                                            <!-- Security Score -->
+                                            <StackPanel Grid.Column="2" Margin="12,0" VerticalAlignment="Center" HorizontalAlignment="Center" ToolTip.Tip="Security Score">
+                                                <Border CornerRadius="4" Padding="8,6" Background="{Binding SecurityScoreColor}">
+                                                    <TextBlock Text="{Binding SecurityScore}" FontWeight="Bold" Foreground="White" TextAlignment="Center" FontSize="12"/>
+                                                </Border>
+                                            </StackPanel>
+
+                                            <!-- Status Indicators -->
+                                            <ItemsControl Grid.Column="3" ItemsSource="{Binding StatusIndicators}" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Orientation="Horizontal" Spacing="4"/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border CornerRadius="3" Padding="4,2" ToolTip.Tip="{Binding Tooltip}" Background="{Binding Color}">
+                                                            <TextBlock Text="{Binding Label}" FontSize="9" Foreground="White" FontWeight="SemiBold"/>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+
+                                            <!-- 2FA Status -->
+                                            <TextBlock Grid.Column="4" Text="{Binding IsTwoFactorEnabled}" Margin="12,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                                            <!-- Last Modified -->
+                                            <TextBlock Grid.Column="5" Text="{Binding LastModifiedFormatted}" Margin="12,0,0,0" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        </Grid>
+                                    </Border>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Empty State -->
+                    <TextBlock IsVisible="{Binding !FilteredCredentialsForDashboard.Count}" Text="No passwords to display" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextAlignment="Center" Margin="0,32"/>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</views:ThemeAwareWindow>

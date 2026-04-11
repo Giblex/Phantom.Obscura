@@ -14,11 +14,15 @@
                 <Border Classes="liquid-glass-tile"
                         HorizontalAlignment="Center" VerticalAlignment="Center" Effect="{DynamicResource FrontPageTileBaseShadow}"
                         MinWidth="240" MinHeight="120" MaxWidth="900" MaxHeight="260" Padding="12">
-                    <Grid>
-                        <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Phantom Obscura Title + Logo.png"
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="16">
+                        <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
                                HorizontalAlignment="Center" VerticalAlignment="Center" Stretch="Uniform"
-                               MaxWidth="860" MaxHeight="220" />
-                    </Grid>
+                               MaxHeight="100" />
+                        <TextBlock Text="Phantom Obscura"
+                                   FontSize="28" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource LogoTitleBrush}"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
                 </Border>
 
                 <TextBlock Text="Welcome to Phantom Vault" FontSize="{StaticResource Type.Hero.Size}" FontWeight="Bold" HorizontalAlignment="Center" />

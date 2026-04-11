@@ -9,9 +9,9 @@ using PhantomVault.Core.Services;
 namespace PhantomVault.UI.ViewModels
 {
     /// <summary>
-    /// View model for Passkey (WebAuthn/FIDO2) authentication settings.
-    /// Manages passkey registration, verification, and device management.
-    /// Uses real PasskeyService for Windows Hello/WebAuthn operations.
+    /// View model for the platform-backed device-authenticator settings surface.
+    /// Manages local credential registration, verification, and device management.
+    /// Uses the current platform-backed authenticator surface exposed by PasskeyService.
     /// </summary>
     public sealed class PasskeySettingsViewModel : ReactiveObject
     {
@@ -20,7 +20,7 @@ namespace PhantomVault.UI.ViewModels
         private bool _isPasskeyAvailable;
         private bool _isPasskeyEnabled;
         private bool _hasRegisteredPasskey;
-        private string _registrationStatus = "No passkeys registered";
+        private string _registrationStatus = "No device credentials registered";
         private string _statusMessage = string.Empty;
         private bool _isBusy;
         private string _deviceName = Environment.MachineName;
@@ -102,7 +102,7 @@ namespace PhantomVault.UI.ViewModels
             try
             {
                 IsBusy = true;
-                StatusMessage = "Checking WebAuthn/FIDO2 support...";
+                StatusMessage = "Checking platform authenticator availability...";
 
                 // Use PasskeyService to check real platform authenticator availability
                 IsPasskeyAvailable = _passkeyService.IsSupported;
@@ -113,7 +113,7 @@ namespace PhantomVault.UI.ViewModels
                     HasRegisteredPasskey = await CheckExistingPasskeyAsync().ConfigureAwait(false);
                     
                     StatusMessage = HasRegisteredPasskey 
-                        ? $"Passkey registered on {DeviceName}"
+                        ? $"Device credential registered on {DeviceName}"
                         : _passkeyService.AuthenticatorDescription;
                         
                     if (HasRegisteredPasskey)
@@ -125,7 +125,7 @@ namespace PhantomVault.UI.ViewModels
                 {
                     StatusMessage = _passkeyService.AuthenticatorDescription;
                     HasRegisteredPasskey = false;
-                    RegistrationStatus = "No passkeys registered";
+                    RegistrationStatus = "No device credentials registered";
                 }
             }
             catch (Exception ex)
@@ -144,15 +144,15 @@ namespace PhantomVault.UI.ViewModels
             try
             {
                 IsBusy = true;
-                StatusMessage = "Initiating passkey registration...";
+                StatusMessage = "Starting platform authenticator registration...";
 
                 if (!_passkeyService.IsSupported)
                 {
-                    StatusMessage = "Platform authenticator is not available";
+                    StatusMessage = "The platform authenticator is not available on this device";
                     return;
                 }
 
-                // Generate a cryptographic challenge for the WebAuthn ceremony
+                // Generate a challenge for the current platform-authenticator flow
                 var challenge = new byte[32];
                 RandomNumberGenerator.Fill(challenge);
 
@@ -172,25 +172,25 @@ namespace PhantomVault.UI.ViewModels
                     
                     HasRegisteredPasskey = true;
                     RegistrationStatus = $"Registered on {DeviceName}";
-                    StatusMessage = "Passkey registration successful!";
+                    StatusMessage = "Local device credential registration successful.";
                 }
                 else
                 {
-                    StatusMessage = "Passkey registration was cancelled";
+                    StatusMessage = "Authenticator registration was cancelled.";
                 }
             }
             catch (PlatformNotSupportedException)
             {
-                StatusMessage = "Platform authenticator is not available on this device";
+                StatusMessage = "The platform authenticator is not available on this device";
                 IsPasskeyAvailable = false;
             }
             catch (InvalidOperationException ex)
             {
-                StatusMessage = $"Registration failed: {ex.Message}";
+                StatusMessage = $"Authenticator registration failed: {ex.Message}";
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Registration failed: {ex.Message}";
+                StatusMessage = $"Authenticator registration failed: {ex.Message}";
             }
             finally
             {
@@ -203,18 +203,18 @@ namespace PhantomVault.UI.ViewModels
             try
             {
                 IsBusy = true;
-                StatusMessage = "Removing passkey credentials...";
+                StatusMessage = "Removing stored authenticator credentials...";
 
                 // Remove the stored credential
                 await RemoveStoredPasskeyAsync().ConfigureAwait(false);
 
                 HasRegisteredPasskey = false;
-                RegistrationStatus = "No passkeys registered";
-                StatusMessage = "Passkey credentials removed";
+                RegistrationStatus = "No device credentials registered";
+                StatusMessage = "Stored authenticator credentials removed.";
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Failed to remove passkey: {ex.Message}";
+                StatusMessage = $"Failed to remove stored authenticator credentials: {ex.Message}";
             }
             finally
             {
@@ -227,11 +227,11 @@ namespace PhantomVault.UI.ViewModels
             try
             {
                 IsBusy = true;
-                StatusMessage = "Testing passkey authentication...";
+                StatusMessage = "Testing platform authenticator authentication...";
 
                 if (!_passkeyService.IsSupported)
                 {
-                    StatusMessage = "Platform authenticator is not available";
+                    StatusMessage = "The platform authenticator is not available on this device";
                     return;
                 }
 
@@ -239,11 +239,11 @@ namespace PhantomVault.UI.ViewModels
                 var credentialId = await GetStoredPasskeyCredentialAsync().ConfigureAwait(false);
                 if (credentialId == null || credentialId.Length == 0)
                 {
-                    StatusMessage = "No passkey registered - please register first";
+                    StatusMessage = "No authenticator credential is registered yet. Register one first.";
                     return;
                 }
 
-                // Generate a test challenge for the WebAuthn assertion ceremony
+                // Generate a test challenge for the current authenticator assertion flow
                 var challenge = new byte[32];
                 RandomNumberGenerator.Fill(challenge);
 
@@ -256,20 +256,20 @@ namespace PhantomVault.UI.ViewModels
 
                 if (authenticated)
                 {
-                    StatusMessage = "Passkey authentication test successful!";
+                    StatusMessage = "Authenticator test succeeded.";
                 }
                 else
                 {
-                    StatusMessage = "Passkey authentication test failed - verification declined";
+                    StatusMessage = "Authenticator test failed because verification was declined.";
                 }
             }
             catch (PlatformNotSupportedException)
             {
-                StatusMessage = "Platform authenticator is not available on this device";
+                StatusMessage = "The platform authenticator is not available on this device";
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Authentication test failed: {ex.Message}";
+                StatusMessage = $"Authenticator test failed: {ex.Message}";
             }
             finally
             {

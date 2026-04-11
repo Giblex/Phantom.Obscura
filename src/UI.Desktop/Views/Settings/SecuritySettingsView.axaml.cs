@@ -82,8 +82,8 @@ namespace PhantomVault.UI.Views.Settings
                 {
                     var dialogService = new PhantomVault.UI.Services.DialogService();
                     await dialogService.ShowInfoAsync(
-                        "Backup Codes",
-                        "Emergency backup codes allow you to access your vault if you lose access to your other authentication methods.\n\nFeature coming soon.",
+                        "Recovery Codes",
+                        "Emergency recovery codes are part of the vault's TOTP and recovery workflow, not a separate in-panel generator yet.\n\nUse TOTP setup for accounts that support recovery codes, or open the recovery flow if you need to regain access to a protected vault.",
                         parentWindow);
                 }
             });

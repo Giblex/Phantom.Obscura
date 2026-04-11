@@ -30,11 +30,11 @@
 
             <Button Command="{Binding CreatePasskeyCommand}"
                     IsVisible="{Binding CanCreatePasskey}"
-                    Content="Create Passkey  (via Attestor)"
+                    Content="Open Attestor Passkey Flow"
                     Classes="liquid-glass"
                     HorizontalAlignment="Stretch"
                     HorizontalContentAlignment="Center"
-                    ToolTip.Tip="Register a passkey for this portal using Phantom Attestor"/>
+                    ToolTip.Tip="{Binding AttestorStatus}"/>
 
             <Button Command="{Binding CancelCommand}"
                     Content="Cancel"

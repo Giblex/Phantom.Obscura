@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Linq;
 using System.Security.Cryptography;
@@ -417,7 +419,7 @@ namespace PhantomVault.Core.Tests.Services
             var encrypted = service.Encrypt(plaintext, key, aad);
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 service.Decrypt(encrypted.Ciphertext, encrypted.Nonce, encrypted.Tag, key, wrongAad));
         }
 
@@ -435,7 +437,7 @@ namespace PhantomVault.Core.Tests.Services
             var encrypted = service.Encrypt(plaintext, key);
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 service.Decrypt(encrypted.Ciphertext, encrypted.Nonce, encrypted.Tag, wrongKey));
         }
 
@@ -453,7 +455,7 @@ namespace PhantomVault.Core.Tests.Services
             var encrypted = service.Encrypt(plaintext, key);
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 service.Decrypt(encrypted.Ciphertext, wrongNonce, encrypted.Tag, key));
         }
 
@@ -471,7 +473,7 @@ namespace PhantomVault.Core.Tests.Services
             tamperedCiphertext[0] ^= 0xFF; // Flip bits
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 service.Decrypt(tamperedCiphertext, encrypted.Nonce, encrypted.Tag, key));
         }
 
@@ -489,7 +491,7 @@ namespace PhantomVault.Core.Tests.Services
             tamperedTag[0] ^= 0xFF; // Flip bits
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 service.Decrypt(encrypted.Ciphertext, encrypted.Nonce, tamperedTag, key));
         }
 

@@ -138,7 +138,7 @@ InvalidRow,no,password,here,extra,fields";
         {
             // Arrange
             var csvContent = @"title,username,password,url,notes
-""Special, Title"",""user@example.com"",""Pass""word123"",""https://example.com"",""Multi-line
+""Special, Title"",""user@example.com"",""Pass""""word123"",""https://example.com"",""Multi-line
 notes with, commas""";
 
             var csvFile = CreateTempFile(csvContent, ".csv");
@@ -185,6 +185,39 @@ notes with, commas""";
             Assert.Equal(1, result.SuccessCount);
             Assert.Equal("Test Service", result.SuccessfulCredentials[0].Title);
             Assert.Equal("testuser", result.SuccessfulCredentials[0].Username);
+        }
+
+        [Fact]
+        public async Task ImportFromJson_ObscuraExportEnvelope_ImportsWrappedCredentials()
+        {
+            // Arrange
+            var wrappedJson = """
+            {
+              "exportDate": "2026-04-03T10:15:00Z",
+              "version": "5.0.0",
+              "vaultName": "Primary Vault",
+              "totalCredentials": 1,
+              "credentials": [
+                {
+                  "title": "Wrapped Export",
+                  "username": "wrapped-user",
+                  "password": "WrappedPass123!",
+                  "url": "https://wrapped.example",
+                  "notes": "Exported from vault settings",
+                  "group": "Imported"
+                }
+              ]
+            }
+            """;
+            var jsonFile = CreateTempFile(wrappedJson, ".json");
+
+            // Act
+            var result = await _importExportService.ImportFromFileAsync(jsonFile, new List<Credential>());
+
+            // Assert
+            Assert.Equal(1, result.SuccessCount);
+            Assert.Equal("Wrapped Export", result.SuccessfulCredentials[0].Title);
+            Assert.Equal("wrapped-user", result.SuccessfulCredentials[0].Username);
         }
 
         [Fact]
@@ -473,6 +506,19 @@ Test,user,NewPassword,https://test.com,Updated";
             // Assert
             Assert.True(result.SuccessCount > 0);
             Assert.Contains("äöü", result.SuccessfulCredentials[0].Notes);
+        }
+
+        [Fact]
+        public async Task DetectFormatAsync_KdbxExtension_ReturnsKeePassKdbx()
+        {
+            // Arrange
+            var kdbxFile = CreateTempFile("not-a-real-kdbx-but-extension-matters", ".kdbx");
+
+            // Act
+            var detectedFormat = await _importExportService.DetectFormatAsync(kdbxFile);
+
+            // Assert
+            Assert.Equal("KeePass KDBX", detectedFormat);
         }
 
         #endregion

@@ -61,7 +61,7 @@ namespace PhantomVault.UI.ViewModels
                 }
 
                 // Fallback to light/dark theme
-                CurrentThemeName = settings.IsDarkTheme ? "Phantom Dark" : "Phantom Light";
+                CurrentThemeName = "Phantom Light";
             }
             catch
             {
@@ -148,7 +148,7 @@ namespace PhantomVault.UI.ViewModels
             {
                 var settings = SettingsService.Load();
                 settings.SelectedThemeId = themeId ?? string.Empty;
-                settings.IsDarkTheme = isDark;
+                settings.IsDarkTheme = false;
                 SettingsService.Save(settings);
             }
             catch

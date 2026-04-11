@@ -1,0 +1,25 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <g fill="none" stroke="#FFFFFF" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- Outer timer ring -->
+    <circle cx="256" cy="256" r="120"/>
+
+    <!-- Countdown arc -->
+    <path d="M256 136
+             A120 120 0 0 1 360 196"/>
+
+    <!-- Top timer stem -->
+    <line x1="256" y1="88" x2="256" y2="136"/>
+
+    <!-- Top timer button -->
+    <line x1="224" y1="88" x2="288" y2="88"/>
+
+    <!-- Inner code block -->
+    <rect x="196" y="220" width="120" height="72" rx="14"/>
+
+    <!-- Code lines -->
+    <line x1="220" y1="244" x2="292" y2="244"/>
+    <line x1="220" y1="268" x2="268" y2="268"/>
+
+  </g>
+</svg>

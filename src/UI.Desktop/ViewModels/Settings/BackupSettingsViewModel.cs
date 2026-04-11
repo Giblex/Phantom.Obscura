@@ -2,14 +2,20 @@ using System;
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Reactive;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
+using Microsoft.Extensions.DependencyInjection;
+using PhantomVault.Core.Models;
+using PhantomVault.Core.Services;
 using PhantomVault.UI;
 using PhantomVault.UI.Services;
+using PhantomVault.UI.ViewModels;
+using PhantomVault.UI.Views;
 using PhantomVault.UI.Views.Dialogs;
 using ReactiveUI;
 
@@ -17,43 +23,37 @@ namespace PhantomVault.UI.ViewModels.Settings
 {
     public class BackupSettingsViewModel : ReactiveObject
     {
-        private bool _enableAutomatedBackups = true;
-        private int _selectedFrequency = 0;
-        private string _backupLocation = @"C:\Users\...\PhantomVault\Backups";
-        private bool _encryptBackups = true;
-        private int _selectedRetention = 2;
+        private string _backupLocation = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+            "PhantomVault",
+            "Backups");
         private string _lastBackupTime = "Never";
         private ObservableCollection<string> _backupHistory = new();
-        private bool _backupRecoveryVault = false;
+        private bool _isVaultContextAvailable;
+        private string _vaultContextStatus = "Open settings from an unlocked vault to create or restore backups.";
+        private bool _isRecoveryVaultAvailable;
+        private string _recoveryVaultStatus = "Recovery vault backup becomes available when the current unlocked vault can resolve its PhantomRecovery workspace.";
+        private string _backupHistoryStatus = "History shown here only reflects backups created during this session.";
+        private bool _enableAutomatedBackups;
+        private int _selectedFrequency;
+        private bool _encryptBackups = true;
+        private int _selectedRetention = 2;
+        private bool _isInitializing;
 
-        public bool EnableAutomatedBackups
-        {
-            get => _enableAutomatedBackups;
-            set => this.RaiseAndSetIfChanged(ref _enableAutomatedBackups, value);
-        }
-
-        public int SelectedFrequency
-        {
-            get => _selectedFrequency;
-            set => this.RaiseAndSetIfChanged(ref _selectedFrequency, value);
-        }
+        public bool SupportsScheduledBackups => true;
+        public bool SupportsSnapshotManager => true;
 
         public string BackupLocation
         {
             get => _backupLocation;
-            set => this.RaiseAndSetIfChanged(ref _backupLocation, value);
-        }
-
-        public bool EncryptBackups
-        {
-            get => _encryptBackups;
-            set => this.RaiseAndSetIfChanged(ref _encryptBackups, value);
-        }
-
-        public int SelectedRetention
-        {
-            get => _selectedRetention;
-            set => this.RaiseAndSetIfChanged(ref _selectedRetention, value);
+            set
+            {
+                if (!string.Equals(_backupLocation, value, StringComparison.Ordinal))
+                {
+                    this.RaiseAndSetIfChanged(ref _backupLocation, value);
+                    RefreshAvailability();
+                }
+            }
         }
 
         public string LastBackupTime
@@ -68,10 +68,126 @@ namespace PhantomVault.UI.ViewModels.Settings
             set => this.RaiseAndSetIfChanged(ref _backupHistory, value);
         }
 
-        public bool BackupRecoveryVault
+        public bool IsVaultContextAvailable
         {
-            get => _backupRecoveryVault;
-            set => this.RaiseAndSetIfChanged(ref _backupRecoveryVault, value);
+            get => _isVaultContextAvailable;
+            private set => this.RaiseAndSetIfChanged(ref _isVaultContextAvailable, value);
+        }
+
+        public string VaultContextStatus
+        {
+            get => _vaultContextStatus;
+            private set => this.RaiseAndSetIfChanged(ref _vaultContextStatus, value);
+        }
+
+        public bool IsRecoveryVaultAvailable
+        {
+            get => _isRecoveryVaultAvailable;
+            private set => this.RaiseAndSetIfChanged(ref _isRecoveryVaultAvailable, value);
+        }
+
+        public string RecoveryVaultStatus
+        {
+            get => _recoveryVaultStatus;
+            private set => this.RaiseAndSetIfChanged(ref _recoveryVaultStatus, value);
+        }
+
+        public string BackupHistoryStatus
+        {
+            get => _backupHistoryStatus;
+            private set => this.RaiseAndSetIfChanged(ref _backupHistoryStatus, value);
+        }
+
+        public bool EnableAutomatedBackups
+        {
+            get => _enableAutomatedBackups;
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _enableAutomatedBackups, value) && !_isInitializing)
+                {
+                    PersistBackupSettings();
+                    _ = PersistManifestBackupSettingsAsync();
+                    RefreshAvailability();
+                }
+            }
+        }
+
+        public int SelectedFrequency
+        {
+            get => _selectedFrequency;
+            set
+            {
+                var normalizedValue = Math.Clamp(value, 0, 3);
+                if (_selectedFrequency != normalizedValue)
+                {
+                    this.RaiseAndSetIfChanged(ref _selectedFrequency, normalizedValue);
+                    if (!_isInitializing)
+                    {
+                        PersistBackupSettings();
+                        RefreshAvailability();
+                    }
+                }
+            }
+        }
+
+        public bool EncryptBackups
+        {
+            get => _encryptBackups;
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _encryptBackups, value) && !_isInitializing)
+                {
+                    PersistBackupSettings();
+                    RefreshAvailability();
+                }
+            }
+        }
+
+        public int SelectedRetention
+        {
+            get => _selectedRetention;
+            set
+            {
+                var normalizedValue = Math.Clamp(value, 0, 4);
+                if (_selectedRetention != normalizedValue)
+                {
+                    this.RaiseAndSetIfChanged(ref _selectedRetention, normalizedValue);
+                    if (!_isInitializing)
+                    {
+                        PersistBackupSettings();
+                        _ = PersistManifestBackupSettingsAsync();
+                        RefreshAvailability();
+                    }
+                }
+            }
+        }
+
+        public string ScheduledBackupStatus
+        {
+            get
+            {
+                if (!EnableAutomatedBackups)
+                {
+                    return "Automated backups are disabled.";
+                }
+
+                var lastRun = SettingsService.Load().LastAutomatedBackupUtc;
+                var cadence = SelectedFrequency switch
+                {
+                    0 => "daily",
+                    1 => "weekly",
+                    2 => "monthly",
+                    3 => "on every vault close",
+                    _ => "daily"
+                };
+
+                if (lastRun is null)
+                {
+                    return $"Automated backups are enabled and will run {cadence}.";
+                }
+
+                return $"Automated backups are enabled and will run {cadence}. Last automated backup: {lastRun.Value.LocalDateTime:yyyy-MM-dd HH:mm:ss}.";
+            }
         }
 
         public ICommand BrowseBackupLocationCommand { get; }
@@ -83,9 +199,11 @@ namespace PhantomVault.UI.ViewModels.Settings
         public ICommand RestoreRecoveryVaultCommand { get; }
 
         private readonly SecureBackupManager _secureBackupManager;
+        private readonly BackupService _backupService;
         private readonly DialogService _dialogService;
         private readonly Window? _owner;
         private readonly Func<(string manifestPath, string? passphrase, string? keyfilePath)?> _manifestContextResolver;
+        private readonly RecoveryVaultPathResolver _recoveryVaultPathResolver;
 
         public BackupSettingsViewModel(
             SecureBackupManager? secureBackupManager = null,
@@ -94,20 +212,27 @@ namespace PhantomVault.UI.ViewModels.Settings
             Func<(string manifestPath, string? passphrase, string? keyfilePath)?>? manifestContextResolver = null)
         {
             _secureBackupManager = secureBackupManager ?? ((Application.Current as App)?.Services?.GetService(typeof(SecureBackupManager)) as SecureBackupManager)!;
+            _backupService =
+                ((Application.Current as App)?.Services?.GetService(typeof(BackupService)) as BackupService)
+                ?? CreateBackupService();
             _dialogService = dialogService ?? new DialogService();
             _owner = owner;
             _manifestContextResolver = manifestContextResolver ?? (() => null);
+            _recoveryVaultPathResolver =
+                ((Application.Current as App)?.Services?.GetService(typeof(RecoveryVaultPathResolver)) as RecoveryVaultPathResolver)
+                ?? new RecoveryVaultPathResolver(new UsbArtifactProtectionService(new EncryptionService()));
 
             BrowseBackupLocationCommand = ReactiveCommand.CreateFromTask(BrowseBackupLocation);
             BackupNowCommand = ReactiveCommand.CreateFromTask(BackupNow);
             RestoreFromBackupCommand = ReactiveCommand.CreateFromTask(RestoreFromBackup);
             OpenBackupFolderCommand = ReactiveCommand.Create(OpenBackupFolder);
-            ManageSnapshotsCommand = ReactiveCommand.Create(ManageSnapshots);
+            ManageSnapshotsCommand = ReactiveCommand.CreateFromTask(ManageSnapshotsAsync);
             BackupRecoveryVaultNowCommand = ReactiveCommand.CreateFromTask(BackupRecoveryVaultNow);
             RestoreRecoveryVaultCommand = ReactiveCommand.CreateFromTask(RestoreRecoveryVault);
 
-            // Initialize backup history
-            BackupHistory.Add("No backups found");
+            LoadPersistedSettings();
+            RefreshBackupHistory();
+            RefreshAvailability();
         }
 
         private async Task BrowseBackupLocation()
@@ -129,6 +254,8 @@ namespace PhantomVault.UI.ViewModels.Settings
                 if (folders.Count > 0)
                 {
                     BackupLocation = folders[0].Path.LocalPath;
+                    PersistBackupSettings();
+                    RefreshBackupHistory();
                 }
             }
             catch (Exception ex)
@@ -141,7 +268,7 @@ namespace PhantomVault.UI.ViewModels.Settings
         {
             try
             {
-                var context = _manifestContextResolver();
+                var context = GetManifestContext();
                 if (context == null)
                 {
                     await _dialogService.ShowWarningAsync("Backup Unavailable", "Vault manifest context not available. Open settings from an unlocked vault.", _owner);
@@ -149,24 +276,33 @@ namespace PhantomVault.UI.ViewModels.Settings
                 }
 
                 var (manifestPath, passphrase, keyfilePath) = context.Value;
-                var credentials = await BackupCredentialsDialog.PromptAsync(_owner);
-                if (credentials == null)
+                Directory.CreateDirectory(BackupLocation);
+                string outputFile;
+                if (EncryptBackups)
                 {
-                    return;
+                    var credentials = await BackupCredentialsDialog.PromptAsync(_owner);
+                    if (credentials == null)
+                    {
+                        return;
+                    }
+
+                    outputFile = Path.Combine(BackupLocation, $"vault-backup-{DateTime.UtcNow:yyyyMMddHHmmss}.pvbkp");
+                    var policyPath = Path.Combine(AppContext.BaseDirectory, "Assets", "Policies", "base_policy.signed.json");
+                    var certPath = Path.Combine(AppContext.BaseDirectory, "Assets", "Policies", "obscura_root.crt");
+
+                    _secureBackupManager.CreateBackup(
+                        manifestPath,
+                        policyPath,
+                        certPath,
+                        credentials.Passphrase ?? passphrase ?? string.Empty,
+                        string.IsNullOrWhiteSpace(credentials.KeyfilePath) ? keyfilePath : credentials.KeyfilePath,
+                        credentials.Pin,
+                        outputFile);
                 }
-
-                var outputFile = Path.Combine(BackupLocation, $"vault-backup-{DateTime.UtcNow:yyyyMMddHHmmss}.pvbkp");
-                var policyPath = Path.Combine(AppContext.BaseDirectory, "Assets", "Policies", "base_policy.signed.json");
-                var certPath = Path.Combine(AppContext.BaseDirectory, "Assets", "Policies", "obscura_root.crt");
-
-                _secureBackupManager.CreateBackup(
-                    manifestPath,
-                    policyPath,
-                    certPath,
-                    credentials.Passphrase ?? passphrase ?? string.Empty,
-                    string.IsNullOrWhiteSpace(credentials.KeyfilePath) ? keyfilePath : credentials.KeyfilePath,
-                    credentials.Pin,
-                    outputFile);
+                else
+                {
+                    outputFile = await _backupService.CreateBackupAsync(manifestPath, passphrase, keyfilePath, BackupLocation);
+                }
 
                 var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                 LastBackupTime = timestamp;
@@ -177,6 +313,8 @@ namespace PhantomVault.UI.ViewModels.Settings
                 }
 
                 BackupHistory.Insert(0, $"Backup created: {timestamp}");
+                BackupAutomationService.PruneBackupCount(BackupLocation, SelectedRetention);
+                RefreshBackupHistory();
                 await _dialogService.ShowInfoAsync("Backup Created", $"Backup saved to:\n{outputFile}", _owner);
             }
             catch (Exception ex)
@@ -189,7 +327,7 @@ namespace PhantomVault.UI.ViewModels.Settings
         {
             try
             {
-                var context = _manifestContextResolver();
+                var context = GetManifestContext();
                 if (context == null)
                 {
                     await _dialogService.ShowWarningAsync("Restore Unavailable", "Vault manifest context not available. Open settings from an unlocked vault.", _owner);
@@ -214,22 +352,31 @@ namespace PhantomVault.UI.ViewModels.Settings
                 if (files.Count == 0)
                     return;
 
-                var credentials = await BackupCredentialsDialog.PromptAsync(_owner);
-                if (credentials == null)
-                    return;
-
                 var (manifestPath, passphrase, keyfilePath) = context.Value;
-                var policyPath = Path.Combine(AppContext.BaseDirectory, "Assets", "Policies", "base_policy.signed.json");
-                var certPath = Path.Combine(AppContext.BaseDirectory, "Assets", "Policies", "obscura_root.crt");
+                var selectedPath = files[0].Path.LocalPath;
 
-                _secureBackupManager.RestoreBackup(
-                    files[0].Path.LocalPath,
-                    manifestPath,
-                    policyPath,
-                    certPath,
-                    credentials.Passphrase ?? passphrase ?? string.Empty,
-                    string.IsNullOrWhiteSpace(credentials.KeyfilePath) ? keyfilePath : credentials.KeyfilePath,
-                    credentials.Pin);
+                if (selectedPath.EndsWith(".bak", StringComparison.OrdinalIgnoreCase))
+                {
+                    await _backupService.RestoreBackupAsync(selectedPath, manifestPath, passphrase, keyfilePath);
+                }
+                else
+                {
+                    var credentials = await BackupCredentialsDialog.PromptAsync(_owner);
+                    if (credentials == null)
+                        return;
+
+                    var policyPath = Path.Combine(AppContext.BaseDirectory, "Assets", "Policies", "base_policy.signed.json");
+                    var certPath = Path.Combine(AppContext.BaseDirectory, "Assets", "Policies", "obscura_root.crt");
+
+                    _secureBackupManager.RestoreBackup(
+                        selectedPath,
+                        manifestPath,
+                        policyPath,
+                        certPath,
+                        credentials.Passphrase ?? passphrase ?? string.Empty,
+                        string.IsNullOrWhiteSpace(credentials.KeyfilePath) ? keyfilePath : credentials.KeyfilePath,
+                        credentials.Pin);
+                }
 
                 await _dialogService.ShowInfoAsync("Restore Complete", "Backup restored successfully.", _owner);
             }
@@ -263,10 +410,27 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
         }
 
-        private void ManageSnapshots()
+        private async Task ManageSnapshotsAsync()
         {
-            var snapshotsWindow = new Views.BackupSnapshotsWindow(BackupLocation);
-            snapshotsWindow.Show();
+            var window = new BackupSnapshotsWindow
+            {
+                DataContext = new BackupSnapshotsViewModel(
+                    BackupLocation,
+                    _backupService,
+                    _owner,
+                    _manifestContextResolver)
+            };
+
+            if (_owner != null)
+            {
+                await window.ShowDialog(_owner);
+            }
+            else
+            {
+                window.Show();
+            }
+
+            RefreshBackupHistory();
         }
 
         /// <summary>
@@ -274,53 +438,51 @@ namespace PhantomVault.UI.ViewModels.Settings
         /// </summary>
         private async Task BackupRecoveryVaultNow()
         {
-            if (!BackupRecoveryVault)
-            {
-                await _dialogService.ShowInfoAsync("Backup Disabled", 
-                    "Recovery vault backup is disabled. Enable it first in the settings.", _owner);
-                return;
-            }
-
             try
             {
-                var recoveryVaultPath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "PhantomRecoveryVault"
-                );
-
-                if (!Directory.Exists(recoveryVaultPath))
+                var context = GetManifestContext();
+                if (context == null)
                 {
-                    await _dialogService.ShowWarningAsync("Recovery Vault Not Found", 
-                        "No recovery vault exists to backup.", _owner);
+                    await _dialogService.ShowWarningAsync("Backup Unavailable",
+                        "Recovery container context is only available from an unlocked vault.", _owner);
                     return;
                 }
 
-                // Prompt for backup credentials
-                var credentials = await BackupCredentialsDialog.PromptAsync(_owner);
-                if (credentials == null)
+                var (manifestPath, passphrase, keyfilePath) = context.Value;
+                var manifest = LoadManifest(manifestPath, passphrase, keyfilePath);
+                var resolution = _recoveryVaultPathResolver.Resolve(manifestPath, manifest, passphrase, keyfilePath);
+                if (!resolution.Resolved)
+                {
+                    await _dialogService.ShowWarningAsync("Recovery Vault Not Found",
+                        resolution.Message, _owner);
+                    RefreshAvailability();
                     return;
+                }
 
-                // Create backup filename
+                if (!resolution.HasHeader)
+                {
+                    await _dialogService.ShowWarningAsync("Recovery Vault Not Initialized",
+                        "The PhantomRecovery workspace is resolved, but the vault has not been initialized yet. Open PhantomRecovery once before backing it up.", _owner);
+                    return;
+                }
+
                 var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
                 var backupFileName = $"PhantomRecovery_Backup_{timestamp}.pvbak";
                 var backupPath = Path.Combine(BackupLocation, backupFileName);
 
-                // Ensure backup directory exists
                 Directory.CreateDirectory(BackupLocation);
 
-                // Use IntegratedRecoveryService to backup recovery vault
-                var recoveryService = new IntegratedRecoveryService();
                 await Task.Run(() =>
                 {
-                    // Create encrypted backup of recovery vault
-                    // This would use the same encryption as main vault backups
-                    File.Copy(
-                        Path.Combine(recoveryVaultPath, "recovery.vault"),
-                        backupPath,
-                        overwrite: true
-                    );
+                    if (File.Exists(backupPath))
+                    {
+                        File.Delete(backupPath);
+                    }
+
+                    ZipFile.CreateFromDirectory(resolution.VaultPath, backupPath, CompressionLevel.Optimal, includeBaseDirectory: false);
                 });
 
+                RefreshAvailability();
                 await _dialogService.ShowSuccessAsync("Backup Complete", 
                     $"Recovery vault backed up successfully to:\n{backupPath}", _owner);
             }
@@ -336,15 +498,16 @@ namespace PhantomVault.UI.ViewModels.Settings
         /// </summary>
         private async Task RestoreRecoveryVault()
         {
-            if (!BackupRecoveryVault)
-            {
-                await _dialogService.ShowInfoAsync("Restore Disabled", 
-                    "Recovery vault backup is disabled. Enable it first in the settings.", _owner);
-                return;
-            }
-
             try
             {
+                var context = GetManifestContext();
+                if (context == null)
+                {
+                    await _dialogService.ShowWarningAsync("Restore Unavailable",
+                        "Recovery container context is only available from an unlocked vault.", _owner);
+                    return;
+                }
+
                 var storageProvider = (_owner as Window)?.StorageProvider;
                 if (storageProvider == null)
                     return;
@@ -377,31 +540,253 @@ namespace PhantomVault.UI.ViewModels.Settings
                 if (credentials == null)
                     return;
 
-                var recoveryVaultPath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "PhantomRecoveryVault"
-                );
+                var (manifestPath, passphrase, keyfilePath) = context.Value;
+                var manifest = LoadManifest(manifestPath, passphrase, keyfilePath);
+                var resolution = _recoveryVaultPathResolver.Resolve(manifestPath, manifest, passphrase, keyfilePath);
+                if (!resolution.Resolved)
+                {
+                    await _dialogService.ShowWarningAsync("Restore Unavailable",
+                        resolution.Message, _owner);
+                    return;
+                }
 
-                // Ensure directory exists
-                Directory.CreateDirectory(recoveryVaultPath);
-
-                // Restore the backup
                 await Task.Run(() =>
                 {
-                    File.Copy(
-                        files[0].Path.LocalPath,
-                        Path.Combine(recoveryVaultPath, "recovery.vault"),
-                        overwrite: true
-                    );
+                    var targetPath = _recoveryVaultPathResolver.EnsureDirectory(resolution.VaultPath);
+                    var tempExtractPath = Path.Combine(Path.GetTempPath(), "PhantomRecoveryRestore", Guid.NewGuid().ToString("N"));
+                    Directory.CreateDirectory(tempExtractPath);
+
+                    try
+                    {
+                        ZipFile.ExtractToDirectory(files[0].Path.LocalPath, tempExtractPath);
+                        if (!File.Exists(Path.Combine(tempExtractPath, "header.json")))
+                        {
+                            throw new InvalidOperationException("Selected backup does not contain a PhantomRecovery vault header.");
+                        }
+
+                        foreach (var file in Directory.GetFiles(targetPath))
+                        {
+                            File.Delete(file);
+                        }
+
+                        foreach (var directory in Directory.GetDirectories(targetPath))
+                        {
+                            Directory.Delete(directory, recursive: true);
+                        }
+
+                        CopyDirectory(tempExtractPath, targetPath);
+                    }
+                    finally
+                    {
+                        if (Directory.Exists(tempExtractPath))
+                        {
+                            Directory.Delete(tempExtractPath, recursive: true);
+                        }
+                    }
                 });
 
+                RefreshAvailability();
                 await _dialogService.ShowSuccessAsync("Restore Complete", 
-                    "Recovery vault restored successfully. Please restart the application.", _owner);
+                    "Recovery vault restored successfully. Please restart PhantomRecovery if it is currently open.", _owner);
             }
             catch (Exception ex)
             {
                 await _dialogService.ShowErrorAsync("Restore Failed", 
                     $"Failed to restore recovery vault:\n{ex.Message}", _owner);
+            }
+        }
+
+        private static VaultManifest LoadManifest(string manifestPath, string? passphrase, string? keyfilePath)
+        {
+            var encryptionService = new EncryptionService();
+            var containerService = new PhantomContainerService(encryptionService);
+            var manifestService = new ManifestService(encryptionService, containerService);
+            return manifestService.ReadManifest(manifestPath, passphrase, keyfilePath);
+        }
+
+        private (string manifestPath, string? passphrase, string? keyfilePath)? GetManifestContext()
+        {
+            var context = _manifestContextResolver();
+            RefreshAvailability(context);
+            return context;
+        }
+
+        private void RefreshAvailability((string manifestPath, string? passphrase, string? keyfilePath)? context = null)
+        {
+            context ??= _manifestContextResolver();
+
+            if (context == null)
+            {
+                IsVaultContextAvailable = false;
+                VaultContextStatus = "Open this page from an unlocked vault to create, restore, schedule, or verify encrypted backups.";
+                IsRecoveryVaultAvailable = false;
+                RecoveryVaultStatus = "Recovery vault backup is unavailable until an unlocked vault can resolve its PhantomRecovery workspace.";
+                BackupHistoryStatus = "History shown here only reflects backups created during this app session.";
+                this.RaisePropertyChanged(nameof(ScheduledBackupStatus));
+                return;
+            }
+
+            IsVaultContextAvailable = true;
+            VaultContextStatus = "Manual backup, restore, automated backup scheduling, and snapshot management are available for the currently unlocked vault.";
+            BackupHistoryStatus = $"Backups are written to {BackupLocation}. History reflects backup files currently present in that folder.";
+
+            try
+            {
+                var (manifestPath, passphrase, keyfilePath) = context.Value;
+                var manifest = LoadManifest(manifestPath, passphrase, keyfilePath);
+                var resolution = _recoveryVaultPathResolver.Resolve(manifestPath, manifest, passphrase, keyfilePath);
+
+                if (resolution.Resolved && resolution.HasHeader)
+                {
+                    IsRecoveryVaultAvailable = true;
+                    RecoveryVaultStatus = $"Recovery vault backup and restore are available for the current vault at {resolution.VaultPath}.";
+                }
+                else if (resolution.Resolved)
+                {
+                    IsRecoveryVaultAvailable = true;
+                    RecoveryVaultStatus = resolution.Message;
+                }
+                else
+                {
+                    IsRecoveryVaultAvailable = false;
+                    RecoveryVaultStatus = resolution.Message;
+                }
+            }
+            catch (Exception ex)
+            {
+                IsRecoveryVaultAvailable = false;
+                RecoveryVaultStatus = $"Recovery-container availability could not be verified: {ex.Message}";
+            }
+
+            this.RaisePropertyChanged(nameof(ScheduledBackupStatus));
+        }
+
+        private static BackupService CreateBackupService()
+        {
+            var encryptionService = new EncryptionService();
+            return new BackupService(encryptionService, new PhantomContainerService(encryptionService));
+        }
+
+        private static void CopyDirectory(string sourcePath, string destinationPath)
+        {
+            Directory.CreateDirectory(destinationPath);
+
+            foreach (var directory in Directory.GetDirectories(sourcePath, "*", SearchOption.AllDirectories))
+            {
+                var relativePath = Path.GetRelativePath(sourcePath, directory);
+                Directory.CreateDirectory(Path.Combine(destinationPath, relativePath));
+            }
+
+            foreach (var file in Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories))
+            {
+                var relativePath = Path.GetRelativePath(sourcePath, file);
+                var destinationFile = Path.Combine(destinationPath, relativePath);
+                Directory.CreateDirectory(Path.GetDirectoryName(destinationFile)!);
+                File.Copy(file, destinationFile, overwrite: true);
+            }
+        }
+
+        private void LoadPersistedSettings()
+        {
+            _isInitializing = true;
+            try
+            {
+                var settings = SettingsService.Load();
+                if (!string.IsNullOrWhiteSpace(settings.BackupLocation))
+                {
+                    _backupLocation = settings.BackupLocation;
+                }
+
+                _enableAutomatedBackups = settings.BackupAutomationEnabled;
+                _selectedFrequency = Math.Clamp(settings.BackupFrequencyMode, 0, 3);
+                _encryptBackups = settings.BackupUseEncryption;
+                _selectedRetention = Math.Clamp(settings.BackupRetentionCount, 0, 4);
+            }
+            finally
+            {
+                _isInitializing = false;
+            }
+        }
+
+        private void PersistBackupSettings()
+        {
+            SettingsService.Update(settings =>
+            {
+                settings.BackupAutomationEnabled = EnableAutomatedBackups;
+                settings.BackupFrequencyMode = SelectedFrequency;
+                settings.BackupLocation = BackupLocation;
+                settings.BackupUseEncryption = EncryptBackups;
+                settings.BackupRetentionCount = SelectedRetention;
+            });
+
+            this.RaisePropertyChanged(nameof(ScheduledBackupStatus));
+        }
+
+        private async Task PersistManifestBackupSettingsAsync()
+        {
+            var context = _manifestContextResolver();
+            if (context == null)
+            {
+                return;
+            }
+
+            try
+            {
+                var services = (Application.Current as App)?.Services;
+                var manifestService = services?.GetService<ManifestService>();
+                if (manifestService == null)
+                {
+                    return;
+                }
+
+                var (manifestPath, passphrase, keyfilePath) = context.Value;
+                await Task.Run(() =>
+                {
+                    var manifest = manifestService.ReadManifest(manifestPath, passphrase, keyfilePath);
+                    manifest.AutoBackupEnabled = EnableAutomatedBackups;
+                    manifest.BackupRetentionDays = SelectedRetention switch
+                    {
+                        0 => 7,
+                        1 => 14,
+                        2 => 30,
+                        3 => 90,
+                        _ => 365
+                    };
+                    manifestService.WriteManifest(manifest, manifestPath, passphrase, keyfilePath);
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to persist backup settings to manifest: {ex.Message}");
+            }
+        }
+
+        private void RefreshBackupHistory()
+        {
+            BackupHistory.Clear();
+
+            if (Directory.Exists(BackupLocation))
+            {
+                var historyEntries = Directory.GetFiles(BackupLocation)
+                    .Where(path =>
+                        path.EndsWith(".pvbkp", StringComparison.OrdinalIgnoreCase) ||
+                        path.EndsWith(".pvbackup", StringComparison.OrdinalIgnoreCase) ||
+                        path.EndsWith(".backup", StringComparison.OrdinalIgnoreCase) ||
+                        path.EndsWith(".bak", StringComparison.OrdinalIgnoreCase) ||
+                        path.EndsWith(".pvbak", StringComparison.OrdinalIgnoreCase))
+                    .Select(path => new FileInfo(path))
+                    .OrderByDescending(file => file.CreationTimeUtc)
+                    .Take(20);
+
+                foreach (var file in historyEntries)
+                {
+                    BackupHistory.Add($"{file.CreationTime:yyyy-MM-dd HH:mm:ss}  {file.Name}");
+                }
+            }
+
+            if (BackupHistory.Count == 0)
+            {
+                BackupHistory.Add("No backups found");
             }
         }
     }

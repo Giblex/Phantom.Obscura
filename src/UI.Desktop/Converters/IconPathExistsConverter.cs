@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.IO;
+using Avalonia;
 using Avalonia.Data.Converters;
 
 namespace PhantomVault.UI.Converters
@@ -28,7 +29,7 @@ namespace PhantomVault.UI.Converters
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            throw new NotImplementedException();
+            return AvaloniaProperty.UnsetValue;
         }
 
         /// <summary>

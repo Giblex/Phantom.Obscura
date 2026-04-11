@@ -23,7 +23,7 @@ namespace PhantomVault.UI.ViewModels
     {
         // Note: These services would be injected in a real implementation
         // For now, making the ViewModel simpler without constructor dependencies
-        
+
         private string _welcomeMessage = string.Empty;
         private int _totalCredentials;
         private int _totalCategories;
@@ -45,6 +45,11 @@ namespace PhantomVault.UI.ViewModels
         private bool _showQuickBackup = true;
         private bool _hasQuickAccessCredentials;
         private string _copiedFeedback = string.Empty;
+        private bool _isRecoveryAvailable;
+        private string _recoveryStatus = "Recovery is not available from this build entry point.";
+        private readonly IntegratedAttestorService _integratedAttestorService = new();
+        private bool _isAttestorAvailable;
+        private string _attestorStatus = "PhantomAttestor is not available from this suite build.";
         private bool _isCategoryPinOptionsOpen;
 
         public DashboardViewModel()
@@ -223,10 +228,34 @@ namespace PhantomVault.UI.ViewModels
             set => this.RaiseAndSetIfChanged(ref _hasQuickAccessCredentials, value);
         }
 
+        public bool IsRecoveryAvailable
+        {
+            get => _isRecoveryAvailable;
+            set => this.RaiseAndSetIfChanged(ref _isRecoveryAvailable, value);
+        }
+
+        public string RecoveryStatus
+        {
+            get => _recoveryStatus;
+            set => this.RaiseAndSetIfChanged(ref _recoveryStatus, value);
+        }
+
         public string CopiedFeedback
         {
             get => _copiedFeedback;
             set => this.RaiseAndSetIfChanged(ref _copiedFeedback, value);
+        }
+
+        public bool IsAttestorAvailable
+        {
+            get => _isAttestorAvailable;
+            set => this.RaiseAndSetIfChanged(ref _isAttestorAvailable, value);
+        }
+
+        public string AttestorStatus
+        {
+            get => _attestorStatus;
+            set => this.RaiseAndSetIfChanged(ref _attestorStatus, value);
         }
 
         public ICommand AddPasswordCommand { get; }
@@ -265,6 +294,18 @@ namespace PhantomVault.UI.ViewModels
 
         public SecurityDashboardViewModel? SecurityDashboardViewModel { get; private set; }
 
+        public void SetRecoveryAvailability(bool isAvailable, string status)
+        {
+            IsRecoveryAvailable = isAvailable;
+            RecoveryStatus = status;
+        }
+
+        public void SetAttestorAvailability(bool isAvailable, string status)
+        {
+            IsAttestorAvailable = isAvailable;
+            AttestorStatus = status;
+        }
+
         public async Task LoadDashboardDataAsync()
         {
             try
@@ -278,17 +319,9 @@ namespace PhantomVault.UI.ViewModels
                 };
                 WelcomeMessage = $"{timeOfDay}! Your vault is secure.";
 
-                // TODO: Load actual statistics from vault service
-                // For now, using placeholder data
-                TotalCredentials = 0;
-                TotalCategories = 0;
-                TwoFactorCoverage = 0;
-
-                HasRecentActivity = false;
-                HasFavorites = false;
-
-                // Initialize security dashboard (placeholder - integrate with actual security service)
-                // SecurityDashboardViewModel = new SecurityDashboardViewModel(...);
+                // Statistics (TotalCredentials, TotalCategories, TwoFactorCoverage)
+                // are computed in LoadQuickAccessCredentials when VaultViewModel
+                // passes the real credential and category collections after unlock.
             }
             catch (Exception ex)
             {
@@ -296,30 +329,49 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        private async Task LoadRecentActivityAsync(IEnumerable<Credential> credentials)
+        private void LoadRecentActivityAsync(IEnumerable<Credential> credentials)
         {
-            await Task.Run(() =>
+            RecentActivities.Clear();
+
+            var recent = credentials
+                .OrderByDescending(c => c.LastUpdatedUtc)
+                .Take(10)
+                .ToList();
+
+            foreach (var cred in recent)
             {
-                RecentActivities.Clear();
+                var age = DateTimeOffset.UtcNow - cred.LastUpdatedUtc;
+                var timeAgo = age.TotalMinutes < 1 ? "just now"
+                    : age.TotalHours < 1 ? $"{(int)age.TotalMinutes}m ago"
+                    : age.TotalDays < 1 ? $"{(int)age.TotalHours}h ago"
+                    : age.TotalDays < 30 ? $"{(int)age.TotalDays}d ago"
+                    : $"{cred.LastUpdatedUtc:MMM dd}";
 
-                // TODO: Load actual recent activity from credentials
-                // Placeholder implementation
+                RecentActivities.Add(new ActivityItem
+                {
+                    IconPreset = cred.IsFavorite ? "Star" : "Edit",
+                    Title = cred.Title,
+                    Description = $"Updated — {cred.Category}",
+                    TimeAgo = timeAgo
+                });
+            }
 
-                HasRecentActivity = RecentActivities.Any();
-            });
+            HasRecentActivity = RecentActivities.Any();
         }
 
-        private async Task LoadFavoritesAsync(IEnumerable<Credential> credentials)
+        private void LoadFavoritesAsync(IEnumerable<Credential> credentials)
         {
-            await Task.Run(() =>
-            {
-                FavoriteCredentials.Clear();
+            FavoriteCredentials.Clear();
 
-                // TODO: Load actual favorites from credentials
-                // Placeholder implementation
+            var favorites = credentials
+                .Where(c => c.IsFavorite)
+                .OrderByDescending(c => c.LastUpdatedUtc)
+                .ToList();
 
-                HasFavorites = FavoriteCredentials.Any();
-            });
+            foreach (var cred in favorites)
+                FavoriteCredentials.Add(cred);
+
+            HasFavorites = FavoriteCredentials.Any();
         }
 
         /// <summary>
@@ -357,6 +409,19 @@ namespace PhantomVault.UI.ViewModels
                     QuickAccessCredentials.Add(cred);
 
                 HasQuickAccessCredentials = QuickAccessCredentials.Count > 0 || Categories.Any(c => c.IsPinned);
+
+                // Compute dashboard statistics from the real data
+                TotalCredentials = credList.Count;
+                TotalCategories = Categories.Count;
+                var passwordCreds = credList.Where(c => c.EntryType == EntryType.Password).ToList();
+                TwoFactorCoverage = passwordCreds.Count > 0
+                    ? (int)Math.Round(100.0 * passwordCreds.Count(c => c.HasTotpSecret) / passwordCreds.Count)
+                    : 0;
+
+                // Load recent activity and favorites from underlying credential models
+                var allCredentials = credList.Select(c => c.GetCredential()).ToList();
+                LoadRecentActivityAsync(allCredentials);
+                LoadFavoritesAsync(allCredentials);
             }
             catch (Exception ex)
             {
@@ -485,7 +550,7 @@ namespace PhantomVault.UI.ViewModels
                 return $"{(int)timeSpan.TotalDays} day{((int)timeSpan.TotalDays > 1 ? "s" : "")} ago";
             if (timeSpan.TotalDays < 30)
                 return $"{(int)(timeSpan.TotalDays / 7)} week{((int)(timeSpan.TotalDays / 7) > 1 ? "s" : "")} ago";
-            
+
             return dateTime.ToString("MMM d, yyyy");
         }
 
@@ -530,6 +595,12 @@ namespace PhantomVault.UI.ViewModels
 
         private void OpenRecovery()
         {
+            if (!IsRecoveryAvailable)
+            {
+                CopiedFeedback = RecoveryStatus;
+                return;
+            }
+
             RequestNavigation("Recovery");
         }
 
@@ -545,72 +616,18 @@ namespace PhantomVault.UI.ViewModels
 
         private async Task LaunchPhantomAttestorAsync()
         {
-            try
+            SetAttestorAvailability(_integratedAttestorService.IsAvailable, _integratedAttestorService.AvailabilityMessage);
+
+            if (_integratedAttestorService.TryLaunch(out var errorMessage))
             {
-                // Try to find PhantomAttestor executable
-                var possiblePaths = new[]
-                {
-                    // Development path (relative to PhantomObscuraV6)
-                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "PhantomAttestor", "App", "bin", "Debug", "net8.0", "PhantomAttestor.App.exe"),
-                    // Installed path (same directory)
-                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "PhantomAttestor.App.exe"),
-                    // Sibling build path
-                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "PhantomAttestor", "PhantomAttestor.App.exe")
-                };
-
-                string? attestorPath = null;
-                foreach (var path in possiblePaths)
-                {
-                    var fullPath = Path.GetFullPath(path);
-                    if (File.Exists(fullPath))
-                    {
-                        attestorPath = fullPath;
-                        break;
-                    }
-                }
-
-                if (attestorPath == null)
-                {
-                    // Try using dotnet run for development
-                    var projectPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "PhantomAttestor", "App", "PhantomAttestor.App.csproj");
-                    var fullProjectPath = Path.GetFullPath(projectPath);
-                    
-                    if (File.Exists(fullProjectPath))
-                    {
-                        Log.Information("Launching PhantomAttestor via dotnet run: {ProjectPath}", fullProjectPath);
-                        var psi = new ProcessStartInfo
-                        {
-                            FileName = "dotnet",
-                            Arguments = $"run --project \"{fullProjectPath}\"",
-                            UseShellExecute = false,
-                            CreateNoWindow = false,
-                            WorkingDirectory = Path.GetDirectoryName(fullProjectPath)
-                        };
-                        psi.EnvironmentVariables["PHANTOMATTESTOR_DEV_BYPASS"] = "1";
-                        Process.Start(psi);
-                        Log.Information("PhantomAttestor launched via dotnet run");
-                        return;
-                    }
-                    
-                    Log.Warning("PhantomAttestor not found. Please build or install PhantomAttestor first.");
-                    return;
-                }
-
-                Log.Information("Launching PhantomAttestor: {Path}", attestorPath);
-                var process = new ProcessStartInfo
-                {
-                    FileName = attestorPath,
-                    UseShellExecute = true,
-                    WorkingDirectory = Path.GetDirectoryName(attestorPath)
-                };
-                Process.Start(process);
                 Log.Information("PhantomAttestor launched successfully");
             }
-            catch (Exception ex)
+            else
             {
-                Log.Error(ex, "Failed to launch PhantomAttestor");
+                Log.Warning("PhantomAttestor launch unavailable: {Reason}", errorMessage);
+                AttestorStatus = errorMessage ?? _integratedAttestorService.AvailabilityMessage;
             }
-            
+
             await Task.CompletedTask;
         }
 

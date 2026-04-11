@@ -14,6 +14,7 @@ using PhantomVault.Core.Models;
 public sealed class PolicyEngine
 {
     private readonly ObscuraPolicy _policy;
+    private readonly ECDsa? _rootVerifier;
     
     /// <summary>
     /// Event raised when the UI should be locked due to a policy violation.
@@ -27,9 +28,10 @@ public sealed class PolicyEngine
     /// </summary>
     public event EventHandler<SecretZeroEventArgs>? ZeroSecretsRequested;
 
-    public PolicyEngine(ObscuraPolicy policy)
+    public PolicyEngine(ObscuraPolicy policy, ECDsa? rootVerifier = null)
     {
         _policy = policy;
+        _rootVerifier = rootVerifier;
     }
     
     /// <summary>
@@ -320,18 +322,28 @@ public sealed class PolicyEngine
             // Load the USB key file
             string keyFileJson = File.ReadAllText(keyFilePath);
 
-            // Verify the key file signature (requires root certificate)
-            // Note: In production, you would pass the root verifier here
-            // For now, we load without signature verification but validate structure
+            // Signature verification is mandatory in CryptoKey mode.
+            if (_rootVerifier == null)
+            {
+                System.Diagnostics.Debug.WriteLine("CryptoKey validation failed: no root verifier configured");
+                return false;
+            }
+
+            // Verify the key file signature (requires root certificate verifier).
             UsbKeyFile keyFile;
             try
             {
-                // TODO: Pass root verifier when available for signature verification
-                keyFile = UsbKeyFile.LoadAndVerify(keyFileJson, rootVerifier: null);
+                keyFile = UsbKeyFile.LoadAndVerify(keyFileJson, rootVerifier: _rootVerifier);
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"CryptoKey validation failed: {ex.Message}");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(keyFile.Signature))
+            {
+                System.Diagnostics.Debug.WriteLine("CryptoKey validation failed: key signature missing");
                 return false;
             }
 

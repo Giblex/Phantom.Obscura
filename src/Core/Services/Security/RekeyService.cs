@@ -142,7 +142,8 @@ namespace PhantomVault.Core.Services.Security
         }
 
         /// <summary>
-        /// Legacy synchronous rekey hook used by UI flows. Currently a no-op stub that returns success.
+        /// Legacy synchronous rekey hook used by UI flows.
+        /// Delegates to <see cref="PerformRekeyAsync"/> on the thread-pool.
         /// </summary>
         public bool RekeyVault(
             string manifestPath,
@@ -151,8 +152,17 @@ namespace PhantomVault.Core.Services.Security
             string? currentKeyfilePath,
             string? newKeyfilePath)
         {
-            // TODO: wire to PerformRekeyAsync as needed; returning true to keep existing flows working.
-            return true;
+            if (string.IsNullOrEmpty(currentKeyfilePath))
+                return false;
+
+            var vaultPath = manifestPath.EndsWith(".pvault", StringComparison.OrdinalIgnoreCase)
+                ? manifestPath
+                : Path.ChangeExtension(manifestPath, ".vault");
+            var result = Task.Run(() =>
+                PerformRekeyAsync(vaultPath, manifestPath, currentKeyfilePath, currentPassphrase, usbSerial: null))
+                .GetAwaiter().GetResult();
+
+            return result.Success;
         }
     }
 

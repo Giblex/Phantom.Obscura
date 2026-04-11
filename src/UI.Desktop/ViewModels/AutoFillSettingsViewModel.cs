@@ -158,8 +158,9 @@ namespace PhantomVault.UI.ViewModels
         }
 
         /// <summary>
-        /// When true, shows a "New Entry / Create Passkey" dialog when no stored
-        /// credential matches the detected login portal.
+        /// When true, shows the no-match dialog when no stored credential matches
+        /// the detected login portal. Passkey handoff only appears when Attestor
+        /// integration is linked.
         /// </summary>
         public bool AutoFillShowNewEntryOnNoMatch
         {

@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using ReactiveUI;
 using PhantomVault.UI.Services;
+using PhantomVault.Core.Services;
+using Avalonia.Controls;
 
 namespace PhantomVault.UI.ViewModels
 {
@@ -14,15 +16,25 @@ namespace PhantomVault.UI.ViewModels
     {
         private readonly string _backupLocation;
         private readonly DialogService _dialogService;
+        private readonly BackupService? _backupService;
+        private readonly Func<(string manifestPath, string? passphrase, string? keyfilePath)?>? _manifestContextResolver;
+        private readonly Window? _owner;
         private string _statusMessage = "Ready";
         private ObservableCollection<BackupSnapshotInfo> _snapshots = new();
 
-        public BackupSnapshotsViewModel(string? backupLocation = null)
+        public BackupSnapshotsViewModel(
+            string? backupLocation = null,
+            BackupService? backupService = null,
+            Window? owner = null,
+            Func<(string manifestPath, string? passphrase, string? keyfilePath)?>? manifestContextResolver = null)
         {
             _backupLocation = backupLocation ?? Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "PhantomVault", "Backups");
             _dialogService = new DialogService();
+            _backupService = backupService;
+            _owner = owner;
+            _manifestContextResolver = manifestContextResolver;
 
             RefreshCommand = ReactiveCommand.CreateFromTask(RefreshSnapshots);
             CreateSnapshotCommand = ReactiveCommand.CreateFromTask(CreateSnapshot);
@@ -112,12 +124,32 @@ namespace PhantomVault.UI.ViewModels
 
         private async Task CreateSnapshot()
         {
-            StatusMessage = "Creating backup snapshot...";
+            try
+            {
+                if (_backupService == null || _manifestContextResolver == null)
+                {
+                    StatusMessage = "Snapshot creation requires an open vault.";
+                    return;
+                }
 
-            // This would integrate with the actual backup service
-            await Task.Delay(500);
+                var context = _manifestContextResolver();
+                if (context == null)
+                {
+                    StatusMessage = "Snapshot creation requires an open vault.";
+                    return;
+                }
 
-            StatusMessage = "Snapshot creation requires an open vault. Use 'Backup Now' in Settings.";
+                var (manifestPath, passphrase, keyfilePath) = context.Value;
+                StatusMessage = "Creating backup snapshot...";
+                await _backupService.CreateBackupAsync(manifestPath, passphrase, keyfilePath, _backupLocation);
+                BackupAutomationService.PruneBackupCount(_backupLocation, SettingsService.Load().BackupRetentionCount);
+                await RefreshSnapshots();
+                StatusMessage = "Backup snapshot created.";
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Snapshot creation failed: {ex.Message}";
+            }
         }
 
         private async Task RestoreSnapshot(BackupSnapshotInfo? snapshot)
@@ -137,11 +169,22 @@ namespace PhantomVault.UI.ViewModels
                 if (!confirmed) return;
 
                 StatusMessage = $"Restoring from {snapshot.FileName}...";
+                if (_backupService == null || _manifestContextResolver == null)
+                {
+                    StatusMessage = "Restoration requires vault credentials. Use an unlocked vault.";
+                    return;
+                }
 
-                // Actual restoration would happen here
-                await Task.Delay(1000);
+                var context = _manifestContextResolver();
+                if (context == null)
+                {
+                    StatusMessage = "Restoration requires vault credentials. Use an unlocked vault.";
+                    return;
+                }
 
-                StatusMessage = "Restoration requires vault credentials. Use 'Restore from Backup' in Settings.";
+                var (manifestPath, passphrase, keyfilePath) = context.Value;
+                await _backupService.RestoreBackupAsync(snapshot.FilePath, manifestPath, passphrase, keyfilePath);
+                StatusMessage = $"Restored {snapshot.FileName}";
             }
             catch (Exception ex)
             {

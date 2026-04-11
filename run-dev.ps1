@@ -9,6 +9,8 @@ Write-Host ""
 
 # Set environment variable to enable policy bypass
 $env:PHANTOM_DEV_BYPASS_POLICY = "1"
+$env:MSBUILDDISABLENODEREUSE = "1"
+$env:UseSharedCompilation = "false"
 
 # Run the application
-dotnet run --project src\UI.Desktop\PhantomVault.UI.csproj
+dotnet run --project "src\UI.Desktop\PhantomVault.UI.csproj" /p:UseSharedCompilation=false

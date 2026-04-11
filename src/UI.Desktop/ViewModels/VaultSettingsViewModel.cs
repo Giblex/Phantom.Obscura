@@ -1,4 +1,5 @@
 using System;
+using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -29,6 +30,9 @@ namespace PhantomVault.UI.ViewModels
     {
         private readonly DialogService _dialogService;
         private readonly VaultViewModel? _vaultViewModel;
+        private readonly SecuritySettingsViewModel _securitySettingsViewModel;
+        private readonly Settings.AdvancedSettingsViewModel _advancedSettingsViewModel;
+        private readonly VaultTierMigrationService? _vaultTierMigrationService;
         private Window? _ownerWindow;
 
         private string _currentSectionTitle = "General Settings";
@@ -51,34 +55,20 @@ namespace PhantomVault.UI.ViewModels
         private int _clipboardClearTime = 1; // Default to 1 minute
 
         // Security settings
-        private bool _autoLockEnabled = true;
-        private int _autoLockTime = 1; // Default to 5 minutes
         private int _defaultPasswordLength = 16;
         private bool _includeUppercase = true;
         private bool _includeLowercase = true;
         private bool _includeNumbers = true;
         private bool _includeSymbols = true;
 
-        // Decoy vault settings
-        private bool _enableDecoyVault = true;
-        private int _decoyCredentialCount = 20; // Number of fake credentials to generate
-        private bool _decoyReadOnlyMode = true;
-        private bool _decoyLogActivations = true;
-
         // Auto-fill settings
         private bool _autoFillEnabled = true;
-        private bool _autoFillOnPageLoad;
-        private bool _showAutoFillIcon = true;
 
         // Backup settings
         private bool _autoBackupEnabled;
 
         // Advanced settings
         private bool _enableDebugLogging;
-        private bool _allowConcurrentSessions;
-        private int _encryptionAlgorithmIndex = 0; // Default to AES-256
-        private int _kdfAlgorithmIndex = 0; // Default to Argon2id
-        private int _kdfIterations = 600000; // Default to 600k iterations
 
         // Browser extension and native host status
         private string _extensionStatusColor = "#DC3545"; // Red by default
@@ -140,6 +130,16 @@ namespace PhantomVault.UI.ViewModels
         private int _secureTrashRetentionDays = 30;
         private int _secureTrashWipePasses = 3;
 
+        // Storage tier migration
+        private readonly ObservableCollection<string> _availableMigrationDrives = new();
+        private string _currentProtectionTierText = "Unavailable";
+        private string _currentStorageTransportText = "Unavailable";
+        private string _migrationSummary = "Open settings from an unlocked vault to manage storage-tier migration.";
+        private string _migrationActionText = "Migrate";
+        private string _rollbackSnapshotHint = "A rollback snapshot will be created automatically before migration.";
+        private string? _selectedMigrationTargetDrive;
+        private bool _isMigrationTargetDriveRequired;
+
         /// <summary>
         /// Provides access to theme settings for runtime theme switching.
         /// </summary>
@@ -149,15 +149,18 @@ namespace PhantomVault.UI.ViewModels
         {
             _dialogService = new DialogService();
             _vaultViewModel = vaultViewModel;
+            _securitySettingsViewModel = new SecuritySettingsViewModel();
+            _advancedSettingsViewModel = new Settings.AdvancedSettingsViewModel();
             
             // Initialize theme settings with runtime theme service
             var app = Application.Current as App;
             var themeManager = app?.Services?.GetService(typeof(ThemeManagerService)) as ThemeManagerService;
             var runtimeThemeService = app?.Services?.GetService(typeof(IRuntimeThemeService)) as IRuntimeThemeService;
+            _vaultTierMigrationService = app?.Services?.GetService(typeof(VaultTierMigrationService)) as VaultTierMigrationService;
             ThemeSettings = new Settings.ThemeSettingsViewModel(themeManager, runtimeThemeService);
             
             // Load persisted settings
-            var settings = SettingsService.Load();
+            var settings = SettingsService.LoadVaultSnapshot();
 
             // Initialize privacy and secure trash settings from persisted settings
             try
@@ -173,6 +176,17 @@ namespace PhantomVault.UI.ViewModels
                 _secureTrashWipePasses = settings.SecureTrashWipePasses;
 
                 _clipboardClearTime = settings.ClipboardClearTime;
+                _useDarkTheme = settings.IsDarkTheme;
+                _useGridLayout = settings.PreferGridView;
+                _themeSelection = settings.IsDarkTheme ? 0 : 1;
+                _autoFillEnabled = settings.EnableAutoFill;
+                _defaultPasswordLength = Math.Clamp(settings.DefaultPasswordLength, 8, 128);
+                _includeUppercase = settings.PasswordGeneratorIncludeUppercase;
+                _includeLowercase = settings.PasswordGeneratorIncludeLowercase;
+                _includeNumbers = settings.PasswordGeneratorIncludeNumbers;
+                _includeSymbols = settings.PasswordGeneratorIncludeSymbols;
+                _enableDebugLogging = settings.EnableDebugLogging;
+                PrivacyShield.DebugLoggingEnabled = _enableDebugLogging;
 
                 _isDashboardEnabled = settings.DashboardEnabled;
             }
@@ -223,6 +237,8 @@ namespace PhantomVault.UI.ViewModels
             OpenFlatIconDownloaderCommand = ReactiveCommand.CreateFromTask(OpenFlatIconDownloaderAsync);
             OpenIconManagerCommand = ReactiveCommand.CreateFromTask(OpenIconManagerAsync);
             ApplyThemeCommand = ReactiveCommand.Create(ApplyTheme);
+            RefreshStorageTierMigrationCommand = ReactiveCommand.Create(RefreshStorageTierMigrationState);
+            ExecuteStorageTierMigrationCommand = ReactiveCommand.CreateFromTask(ExecuteStorageTierMigrationAsync);
 
             SetPasskeyStatus(
                 "Windows Hello not linked",
@@ -235,10 +251,11 @@ namespace PhantomVault.UI.ViewModels
                 "YubiKey status not checked",
                 "Insert a YubiKey and choose Configure to view device details.",
                 "#6C757D",
-                "Supports FIDO2 and OTP-capable keys.",
+                "Availability depends on the current Windows session and installed YubiKey tooling.",
                 updateTimestamp: false);
 
             RefreshPasskeyStatus();
+            RefreshStorageTierMigrationState();
 
         }
 
@@ -346,9 +363,15 @@ namespace PhantomVault.UI.ViewModels
             {
                 if (Avalonia.Application.Current is App app)
                 {
+                    var useDarkTheme = ThemeSelection != 1;
                     if (ThemeSelection == 0) app.SetTheme("dark");
                     else if (ThemeSelection == 1) app.SetTheme("light");
                     else app.SetTheme("dark"); // System default fallback
+
+                    SettingsService.Update(settings => settings.IsDarkTheme = useDarkTheme);
+
+                    _useDarkTheme = useDarkTheme;
+                    this.RaisePropertyChanged(nameof(UseDarkTheme));
                     StatusMessage = "Theme applied";
                 }
             }
@@ -364,141 +387,399 @@ namespace PhantomVault.UI.ViewModels
             get => _clipboardClearTime;
             set
             {
-                this.RaiseAndSetIfChanged(ref _clipboardClearTime, value);
+                var sanitized = SettingsService.NormalizeClipboardClearTimeIndex(value);
+                this.RaiseAndSetIfChanged(ref _clipboardClearTime, sanitized);
                 try
                 {
-                    var s = SettingsService.Load();
-                    s.ClipboardClearTime = value;
-                    SettingsService.Save(s);
+                    SettingsService.Update(settings => settings.ClipboardClearTime = sanitized);
                 }
                 catch { /* Ignore persistence failures */ }
+            }
+        }
+
+        private void RefreshStorageTierMigrationState()
+        {
+            _availableMigrationDrives.Clear();
+
+            if (_vaultViewModel == null || _vaultTierMigrationService == null || !_vaultViewModel.TryGetTierMigrationContext(out var context) || context == null)
+            {
+                CurrentProtectionTierText = "Unavailable";
+                CurrentStorageTransportText = "Unavailable";
+                MigrationActionText = "Migration unavailable";
+                MigrationSummary = "Open settings from an unlocked vault to inspect or change the storage tier.";
+                RollbackSnapshotHint = "A rollback snapshot will be created automatically before any supported migration.";
+                IsMigrationTargetDriveRequired = false;
+                SelectedMigrationTargetDrive = null;
+                return;
+            }
+
+            CurrentProtectionTierText = context.ProtectionTier.ToString();
+            CurrentStorageTransportText = context.EffectiveStorageTransport.ToString();
+            bool currentIsBlack = context.ProtectionTier == VaultProtectionTier.BlackSecure;
+            MigrationActionText = currentIsBlack
+                ? "Migrate To Stealth Secure"
+                : "Harden To Black Secure";
+            IsMigrationTargetDriveRequired = currentIsBlack;
+            RollbackSnapshotHint = currentIsBlack
+                ? "The current Black Secure device stays untouched until the Stealth Secure target is written successfully."
+                : "A rollback snapshot of the current transport will be saved before the raw-device rewrite begins.";
+
+            if (currentIsBlack)
+            {
+                foreach (var drive in DriveInfo.GetDrives().Where(d => d.IsReady && d.DriveType == DriveType.Removable))
+                    _availableMigrationDrives.Add(drive.RootDirectory.FullName);
+
+                SelectedMigrationTargetDrive ??= _availableMigrationDrives.FirstOrDefault();
+            }
+            else
+            {
+                SelectedMigrationTargetDrive = null;
+            }
+
+            var targetTier = currentIsBlack ? VaultProtectionTier.StealthSecure : VaultProtectionTier.BlackSecure;
+            var plan = _vaultTierMigrationService.ValidateMigration(context, targetTier, SelectedMigrationTargetDrive);
+            MigrationSummary = plan.Summary;
+        }
+
+        private async Task ExecuteStorageTierMigrationAsync()
+        {
+            if (_vaultViewModel == null || _vaultTierMigrationService == null || !_vaultViewModel.TryGetTierMigrationContext(out var context) || context == null)
+            {
+                StatusMessage = "Vault migration context unavailable.";
+                return;
+            }
+
+            var targetTier = context.ProtectionTier == VaultProtectionTier.BlackSecure
+                ? VaultProtectionTier.StealthSecure
+                : VaultProtectionTier.BlackSecure;
+
+            var plan = _vaultTierMigrationService.ValidateMigration(context, targetTier, SelectedMigrationTargetDrive);
+            MigrationSummary = plan.Summary;
+            if (!plan.CanProceed)
+            {
+                StatusMessage = "Storage-tier migration validation failed.";
+                return;
+            }
+
+            bool confirmed = await _dialogService.ShowConfirmationAsync(
+                "Confirm Storage-Tier Migration",
+                $"{plan.Summary}\n\nProceed with the migration now?",
+                _ownerWindow);
+            if (!confirmed)
+            {
+                StatusMessage = "Storage-tier migration cancelled.";
+                return;
+            }
+
+            IsBusy = true;
+            BusyMessage = "Migrating vault transport...";
+            BusyDetail = $"Switching from {plan.CurrentTier} to {plan.TargetTier}";
+            IsBusyIndeterminate = true;
+
+            try
+            {
+                var result = await _vaultTierMigrationService.MigrateAsync(context, targetTier, SelectedMigrationTargetDrive).ConfigureAwait(false);
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    _vaultViewModel.ApplyTierMigrationResult(result);
+                    CurrentProtectionTierText = result.ProtectionTier.ToString();
+                    CurrentStorageTransportText = result.EffectiveStorageTransport.ToString();
+                    RollbackSnapshotHint = $"Rollback snapshot saved to {result.RollbackDirectory}";
+                    StatusMessage = result.StatusMessage;
+                    MigrationSummary = result.StatusMessage;
+                    RefreshStorageTierMigrationState();
+                });
+
+                await _dialogService.ShowSuccessAsync(
+                    "Storage-Tier Migration Complete",
+                    $"{result.StatusMessage}\n\nRollback snapshot:\n{result.RollbackDirectory}",
+                    _ownerWindow);
+            }
+            catch (Exception ex)
+            {
+                await _dialogService.ShowErrorAsync("Storage-Tier Migration Failed", ex.Message, _ownerWindow);
+                StatusMessage = "Storage-tier migration failed.";
+                MigrationSummary = ex.Message;
+            }
+            finally
+            {
+                IsBusy = false;
+                BusyDetail = string.Empty;
             }
         }
 
         // Security settings properties
         public bool AutoLockEnabled
         {
-            get => _autoLockEnabled;
-            set => this.RaiseAndSetIfChanged(ref _autoLockEnabled, value);
+            get => _securitySettingsViewModel.IdleTimeoutMinutes > 0;
+            set
+            {
+                if (AutoLockEnabled != value)
+                {
+                    try
+                    {
+                        var timeoutMinutes = value ? SettingsService.GetAutoLockMinutesFromSelection(AutoLockTime) : 0;
+                        _securitySettingsViewModel.IdleTimeoutMinutes = timeoutMinutes;
+
+                        this.RaisePropertyChanged();
+                        StatusMessage = value
+                            ? $"Auto-lock enabled ({timeoutMinutes} minute{(timeoutMinutes == 1 ? string.Empty : "s")})"
+                            : "Auto-lock disabled";
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "Failed to persist auto-lock enabled setting");
+                    }
+                }
+            }
         }
 
         public int AutoLockTime
         {
-            get => _autoLockTime;
-            set => this.RaiseAndSetIfChanged(ref _autoLockTime, value);
+            get => SettingsService.GetAutoLockSelectionFromMinutes(_securitySettingsViewModel.IdleTimeoutMinutes);
+            set
+            {
+                if (AutoLockTime != value)
+                {
+                    try
+                    {
+                        var timeoutMinutes = SettingsService.GetAutoLockMinutesFromSelection(value);
+                        if (AutoLockEnabled)
+                        {
+                            _securitySettingsViewModel.IdleTimeoutMinutes = timeoutMinutes;
+                        }
+
+                        this.RaisePropertyChanged();
+                        StatusMessage = $"Auto-lock timeout set to {timeoutMinutes} minute{(timeoutMinutes == 1 ? string.Empty : "s")}";
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "Failed to persist auto-lock timeout setting");
+                    }
+                }
+            }
         }
 
         public int DefaultPasswordLength
         {
             get => _defaultPasswordLength;
-            set => this.RaiseAndSetIfChanged(ref _defaultPasswordLength, value);
+            set
+            {
+                var sanitized = Math.Clamp(value, 8, 128);
+                if (_defaultPasswordLength != sanitized)
+                {
+                    this.RaiseAndSetIfChanged(ref _defaultPasswordLength, sanitized);
+                    PersistPasswordGeneratorDefaults();
+                    StatusMessage = $"Default password length set to {sanitized}";
+                }
+            }
         }
 
         public bool IncludeUppercase
         {
             get => _includeUppercase;
-            set => this.RaiseAndSetIfChanged(ref _includeUppercase, value);
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _includeUppercase, value))
+                {
+                    PersistPasswordGeneratorDefaults();
+                    StatusMessage = value ? "Uppercase letters enabled for generated passwords" : "Uppercase letters disabled for generated passwords";
+                }
+            }
         }
 
         public bool IncludeLowercase
         {
             get => _includeLowercase;
-            set => this.RaiseAndSetIfChanged(ref _includeLowercase, value);
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _includeLowercase, value))
+                {
+                    PersistPasswordGeneratorDefaults();
+                    StatusMessage = value ? "Lowercase letters enabled for generated passwords" : "Lowercase letters disabled for generated passwords";
+                }
+            }
         }
 
         public bool IncludeNumbers
         {
             get => _includeNumbers;
-            set => this.RaiseAndSetIfChanged(ref _includeNumbers, value);
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _includeNumbers, value))
+                {
+                    PersistPasswordGeneratorDefaults();
+                    StatusMessage = value ? "Numbers enabled for generated passwords" : "Numbers disabled for generated passwords";
+                }
+            }
         }
 
         public bool IncludeSymbols
         {
             get => _includeSymbols;
-            set => this.RaiseAndSetIfChanged(ref _includeSymbols, value);
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _includeSymbols, value))
+                {
+                    PersistPasswordGeneratorDefaults();
+                    StatusMessage = value ? "Symbols enabled for generated passwords" : "Symbols disabled for generated passwords";
+                }
+            }
         }
 
         // Decoy vault settings properties
         public bool EnableDecoyVault
         {
-            get => _enableDecoyVault;
-            set => this.RaiseAndSetIfChanged(ref _enableDecoyVault, value);
+            get => _securitySettingsViewModel.EnableDecoyVault;
+            set
+            {
+                if (EnableDecoyVault != value)
+                {
+                    try
+                    {
+                        _securitySettingsViewModel.EnableDecoyVault = value;
+                        this.RaisePropertyChanged();
+                        StatusMessage = value ? "Decoy vault protections enabled" : "Decoy vault protections disabled";
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "Failed to persist decoy vault setting");
+                    }
+                }
+            }
         }
 
         public int DecoyCredentialCount
         {
-            get => _decoyCredentialCount;
-            set => this.RaiseAndSetIfChanged(ref _decoyCredentialCount, value);
+            get => _securitySettingsViewModel.DecoyCredentialCount;
+            set
+            {
+                var sanitized = Math.Clamp(value, 10, 50);
+                if (DecoyCredentialCount != sanitized)
+                {
+                    try
+                    {
+                        _securitySettingsViewModel.DecoyCredentialCount = sanitized;
+                        this.RaisePropertyChanged();
+                        StatusMessage = $"Decoy vault credential count set to {sanitized}";
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "Failed to persist decoy credential count");
+                    }
+                }
+            }
         }
 
         public bool DecoyReadOnlyMode
         {
-            get => _decoyReadOnlyMode;
-            set => this.RaiseAndSetIfChanged(ref _decoyReadOnlyMode, value);
+            get => _securitySettingsViewModel.DecoyReadOnlyMode;
+            set
+            {
+                if (DecoyReadOnlyMode != value)
+                {
+                    try
+                    {
+                        _securitySettingsViewModel.DecoyReadOnlyMode = value;
+                        this.RaisePropertyChanged();
+                        StatusMessage = value ? "Decoy vault opened in read-only mode" : "Decoy vault may allow edits";
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "Failed to persist decoy read-only setting");
+                    }
+                }
+            }
         }
 
         public bool DecoyLogActivations
         {
-            get => _decoyLogActivations;
-            set => this.RaiseAndSetIfChanged(ref _decoyLogActivations, value);
+            get => _securitySettingsViewModel.DecoyLogActivations;
+            set
+            {
+                if (DecoyLogActivations != value)
+                {
+                    try
+                    {
+                        _securitySettingsViewModel.DecoyLogActivations = value;
+                        this.RaisePropertyChanged();
+                        StatusMessage = value ? "Decoy vault activation logging enabled" : "Decoy vault activation logging disabled";
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "Failed to persist decoy logging setting");
+                    }
+                }
+            }
         }
 
         // Auto-fill settings properties
         public bool AutoFillEnabled
         {
             get => _autoFillEnabled;
-            set => this.RaiseAndSetIfChanged(ref _autoFillEnabled, value);
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _autoFillEnabled, value))
+                {
+                    try
+                    {
+                        SettingsService.Update(settings => settings.EnableAutoFill = value);
+                        StatusMessage = value ? "Auto-fill enabled" : "Auto-fill disabled";
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "Failed to persist auto-fill setting");
+                    }
+                }
+            }
         }
 
-        public bool AutoFillOnPageLoad
-        {
-            get => _autoFillOnPageLoad;
-            set => this.RaiseAndSetIfChanged(ref _autoFillOnPageLoad, value);
-        }
+        public bool SupportsPageLoadAutofill => false;
 
-        public bool ShowAutoFillIcon
-        {
-            get => _showAutoFillIcon;
-            set => this.RaiseAndSetIfChanged(ref _showAutoFillIcon, value);
-        }
+        public bool SupportsInlineAutofillIcons => false;
 
         // Backup settings properties
         public bool AutoBackupEnabled
         {
             get => _autoBackupEnabled;
-            set => this.RaiseAndSetIfChanged(ref _autoBackupEnabled, value);
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _autoBackupEnabled, value))
+                {
+                    _ = PersistAutoBackupEnabledAsync(value);
+                }
+            }
         }
 
         // Advanced settings properties
         public bool EnableDebugLogging
         {
-            get => _enableDebugLogging;
-            set => this.RaiseAndSetIfChanged(ref _enableDebugLogging, value);
+            get => _advancedSettingsViewModel.EnableDebugLogging;
+            set
+            {
+                if (EnableDebugLogging != value)
+                {
+                    try
+                    {
+                        _advancedSettingsViewModel.EnableDebugLogging = value;
+                        this.RaisePropertyChanged();
+                        StatusMessage = value ? "Debug logging enabled" : "Debug logging disabled";
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "Failed to persist debug logging setting");
+                    }
+                }
+            }
         }
 
-        public bool AllowConcurrentSessions
-        {
-            get => _allowConcurrentSessions;
-            set => this.RaiseAndSetIfChanged(ref _allowConcurrentSessions, value);
-        }
+        public bool SupportsConcurrentVaultSessions => false;
 
-        public int EncryptionAlgorithmIndex
-        {
-            get => _encryptionAlgorithmIndex;
-            set => this.RaiseAndSetIfChanged(ref _encryptionAlgorithmIndex, value);
-        }
+        public string ActiveEncryptionAlgorithm => "AES-256-GCM";
 
-        public int KdfAlgorithmIndex
-        {
-            get => _kdfAlgorithmIndex;
-            set => this.RaiseAndSetIfChanged(ref _kdfAlgorithmIndex, value);
-        }
+        public string ActiveKdfAlgorithm => "Argon2id";
 
-        public int KdfIterations
-        {
-            get => _kdfIterations;
-            set => this.RaiseAndSetIfChanged(ref _kdfIterations, value);
-        }
+        public string ActiveKdfWorkFactor => "Fixed by the current container format; changing it requires a dedicated rekey or migration flow.";
 
         public string ExtensionStatusColor
         {
@@ -641,6 +922,67 @@ namespace PhantomVault.UI.ViewModels
 
         public bool HasVaultContext => _vaultViewModel != null;
 
+        public string CurrentProtectionTierText
+        {
+            get => _currentProtectionTierText;
+            private set => this.RaiseAndSetIfChanged(ref _currentProtectionTierText, value);
+        }
+
+        public string CurrentStorageTransportText
+        {
+            get => _currentStorageTransportText;
+            private set => this.RaiseAndSetIfChanged(ref _currentStorageTransportText, value);
+        }
+
+        public string MigrationSummary
+        {
+            get => _migrationSummary;
+            private set => this.RaiseAndSetIfChanged(ref _migrationSummary, value);
+        }
+
+        public string MigrationActionText
+        {
+            get => _migrationActionText;
+            private set => this.RaiseAndSetIfChanged(ref _migrationActionText, value);
+        }
+
+        public string RollbackSnapshotHint
+        {
+            get => _rollbackSnapshotHint;
+            private set => this.RaiseAndSetIfChanged(ref _rollbackSnapshotHint, value);
+        }
+
+        public ObservableCollection<string> AvailableMigrationDrives => _availableMigrationDrives;
+
+        public string? SelectedMigrationTargetDrive
+        {
+            get => _selectedMigrationTargetDrive;
+            set
+            {
+                if (string.Equals(_selectedMigrationTargetDrive, value, StringComparison.Ordinal))
+                    return;
+
+                this.RaiseAndSetIfChanged(ref _selectedMigrationTargetDrive, value);
+
+                if (IsMigrationTargetDriveRequired &&
+                    _vaultTierMigrationService != null &&
+                    _vaultViewModel != null &&
+                    _vaultViewModel.TryGetTierMigrationContext(out var context) &&
+                    context != null)
+                {
+                    MigrationSummary = _vaultTierMigrationService
+                        .ValidateMigration(context, VaultProtectionTier.StealthSecure, value)
+                        .Summary;
+                }
+            }
+        }
+
+        public bool IsMigrationTargetDriveRequired
+        {
+            get => _isMigrationTargetDriveRequired;
+            private set => this.RaiseAndSetIfChanged(ref _isMigrationTargetDriveRequired, value);
+        }
+
         public bool IsBusy
         {
             get => _isBusy;
@@ -716,6 +1058,8 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> ResetToDefaultsCommand { get; }
         public ReactiveCommand<Unit, Unit> CloseCommand { get; }
         public ReactiveCommand<Unit, Unit> OpenFlatIconDownloaderCommand { get; }
+        public ReactiveCommand<Unit, Unit> RefreshStorageTierMigrationCommand { get; }
+        public ReactiveCommand<Unit, Unit> ExecuteStorageTierMigrationCommand { get; }
 
         // Quick action commands used by settings UI
         public ReactiveCommand<Unit, Unit> OpenAddEntryCommand { get; }
@@ -732,10 +1076,16 @@ namespace PhantomVault.UI.ViewModels
                 {
                     try
                     {
+                        SettingsService.Update(settings => settings.IsDarkTheme = value);
+
+                        ThemeSelection = value ? 0 : 1;
+
                         if (Avalonia.Application.Current is App app)
                         {
                             app.SetTheme(value ? "dark" : "light");
                         }
+
+                        StatusMessage = value ? "Dark theme enabled" : "Light theme enabled";
                     }
                     catch (Exception ex)
                     {
@@ -748,7 +1098,31 @@ namespace PhantomVault.UI.ViewModels
         public bool UseGridLayout
         {
             get => _useGridLayout;
-            set => this.RaiseAndSetIfChanged(ref _useGridLayout, value);
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _useGridLayout, value))
+                {
+                    try
+                    {
+                        SettingsService.Update(settings => settings.PreferGridView = value);
+
+                        if (_vaultViewModel != null)
+                        {
+                            _vaultViewModel.IsGridView = value;
+                            _vaultViewModel.GridViewIconPath = value
+                                ? "Assets/SVG/Current/List.svg"
+                                : "Assets/SVG/Current/Grid.svg";
+                            _vaultViewModel.StatusMessage = value ? "Grid view enabled" : "List view enabled";
+                        }
+
+                        StatusMessage = value ? "Grid layout enabled" : "List layout enabled";
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "Failed to persist grid layout preference");
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -764,9 +1138,7 @@ namespace PhantomVault.UI.ViewModels
                 {
                     try
                     {
-                        var s = SettingsService.Load();
-                        s.DashboardEnabled = value;
-                        SettingsService.Save(s);
+                        SettingsService.Update(settings => settings.DashboardEnabled = value);
 
                         // Propagate to VaultViewModel so it takes effect immediately
                         if (_vaultViewModel != null)
@@ -785,17 +1157,15 @@ namespace PhantomVault.UI.ViewModels
         // Privacy & diagnostics (persisted)
         public bool PrivacyModeEnabled
         {
-            get => _privacyModeEnabled;
+            get => _advancedSettingsViewModel.EnablePrivacyMode;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _privacyModeEnabled, value))
+                if (PrivacyModeEnabled != value)
                 {
                     try
                     {
-                        PrivacyShield.PrivacyModeEnabled = value;
-                        var s = SettingsService.Load();
-                        s.PrivacyModeEnabled = value;
-                        SettingsService.Save(s);
+                        _advancedSettingsViewModel.EnablePrivacyMode = value;
+                        this.RaisePropertyChanged();
                     }
                     catch (Exception ex)
                     {
@@ -807,17 +1177,15 @@ namespace PhantomVault.UI.ViewModels
 
         public bool RedactDiagnosticLogs
         {
-            get => _redactDiagnosticLogs;
+            get => _advancedSettingsViewModel.RedactLogs;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _redactDiagnosticLogs, value))
+                if (RedactDiagnosticLogs != value)
                 {
                     try
                     {
-                        PrivacyShield.RedactDiagnostics = value;
-                        var s = SettingsService.Load();
-                        s.RedactDiagnosticLogs = value;
-                        SettingsService.Save(s);
+                        _advancedSettingsViewModel.RedactLogs = value;
+                        this.RaisePropertyChanged();
                     }
                     catch (Exception ex)
                     {
@@ -837,9 +1205,8 @@ namespace PhantomVault.UI.ViewModels
                 {
                     try
                     {
-                        var s = SettingsService.Load();
-                        s.SecureTrashEnabled = value;
-                        SettingsService.Save(s);
+                        SettingsService.Update(settings => settings.SecureTrashEnabled = value);
+                        ApplySecureTrashConfiguration();
                     }
                     catch (Exception ex)
                     {
@@ -858,9 +1225,8 @@ namespace PhantomVault.UI.ViewModels
                 {
                     try
                     {
-                        var s = SettingsService.Load();
-                        s.SecureTrashAutoPurge = value;
-                        SettingsService.Save(s);
+                        SettingsService.Update(settings => settings.SecureTrashAutoPurge = value);
+                        ApplySecureTrashConfiguration();
                     }
                     catch (Exception ex)
                     {
@@ -878,9 +1244,8 @@ namespace PhantomVault.UI.ViewModels
                 this.RaiseAndSetIfChanged(ref _secureTrashRetentionDays, value);
                 try
                 {
-                    var s = SettingsService.Load();
-                    s.SecureTrashRetentionDays = value;
-                    SettingsService.Save(s);
+                    SettingsService.Update(settings => settings.SecureTrashRetentionDays = value);
+                    ApplySecureTrashConfiguration();
                 }
                 catch (Exception ex)
                 {
@@ -897,14 +1262,31 @@ namespace PhantomVault.UI.ViewModels
                 this.RaiseAndSetIfChanged(ref _secureTrashWipePasses, value);
                 try
                 {
-                    var s = SettingsService.Load();
-                    s.SecureTrashWipePasses = value;
-                    SettingsService.Save(s);
+                    SettingsService.Update(settings => settings.SecureTrashWipePasses = value);
+                    ApplySecureTrashConfiguration();
                 }
                 catch (Exception ex)
                 {
                     Log.Error(ex, "Failed to save SecureTrashWipePasses setting");
                 }
+            }
+        }
+
+        private void ApplySecureTrashConfiguration()
+        {
+            try
+            {
+                var services = (Avalonia.Application.Current as App)?.Services;
+                var secureTrashService = services?.GetService(typeof(SecureTrashService)) as SecureTrashService;
+                secureTrashService?.ApplyConfiguration(
+                    _secureTrashEnabled,
+                    _secureTrashAutoPurge,
+                    _secureTrashRetentionDays,
+                    _secureTrashWipePasses);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to apply secure trash configuration");
             }
         }
 
@@ -1072,10 +1454,76 @@ namespace PhantomVault.UI.ViewModels
         private async System.Threading.Tasks.Task ConfigureTwoFactorAsync()
         {
             await _dialogService.ShowInfoAsync(
-                "Two-Factor Authentication (Coming Soon)",
-                "Full two-factor enrollment is under active development and will ship in an upcoming build.\n\nPlanned options include:\n• YubiKey hardware tokens\n• Windows Hello / Touch ID\n• TOTP authenticator apps\n\nStay tuned—this preview keeps the menu item visible so you know what is on the roadmap.",
+                "Security Factor Overview",
+                "This build already exposes separate security-factor workflows from Vault Settings.\n\nAvailable now:\n• TOTP setup and recovery codes\n• Windows Hello linking on supported Windows devices\n• YubiKey presence checks when the local integration is available\n\nUse the dedicated TOTP, Windows Hello, and hardware-token sections to configure each factor.",
                 _ownerWindow);
-            StatusMessage = "Two-factor authentication coming soon.";
+            StatusMessage = "Security factor overview opened.";
+        }
+
+        private void PersistPasswordGeneratorDefaults()
+        {
+            try
+            {
+                SettingsService.Update(settings =>
+                {
+                    settings.DefaultPasswordLength = Math.Clamp(_defaultPasswordLength, 8, 128);
+                    settings.PasswordGeneratorIncludeUppercase = _includeUppercase;
+                    settings.PasswordGeneratorIncludeLowercase = _includeLowercase;
+                    settings.PasswordGeneratorIncludeNumbers = _includeNumbers;
+                    settings.PasswordGeneratorIncludeSymbols = _includeSymbols;
+                });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to persist password generator defaults");
+            }
+        }
+
+        private async System.Threading.Tasks.Task PersistAutoBackupEnabledAsync(bool value)
+        {
+            if (_vaultViewModel == null)
+            {
+                StatusMessage = "Open settings from an unlocked vault to change automatic backups.";
+                return;
+            }
+
+            if (!_vaultViewModel.TryGetManifestContext(out var manifestPath, out var passphrase, out var keyfilePath))
+            {
+                StatusMessage = "Manifest context unavailable for automatic backup setting.";
+                return;
+            }
+
+            var services = (Avalonia.Application.Current as App)?.Services;
+            var manifestService = services?.GetService(typeof(ManifestService)) as ManifestService;
+            if (manifestService == null || !File.Exists(manifestPath))
+            {
+                StatusMessage = "Manifest service unavailable for automatic backup setting.";
+                return;
+            }
+
+            try
+            {
+                await Task.Run(() =>
+                {
+                    var manifest = manifestService.ReadManifest(
+                        manifestPath,
+                        string.IsNullOrEmpty(passphrase) ? null : passphrase,
+                        string.IsNullOrEmpty(keyfilePath) ? null : keyfilePath);
+                    manifest.AutoBackupEnabled = value;
+                    manifestService.WriteManifest(
+                        manifest,
+                        manifestPath,
+                        string.IsNullOrEmpty(passphrase) ? null : passphrase,
+                        string.IsNullOrEmpty(keyfilePath) ? null : keyfilePath);
+                });
+
+                StatusMessage = value ? "Automatic backups enabled" : "Automatic backups disabled";
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to persist automatic backup setting");
+                StatusMessage = "Failed to update automatic backup setting";
+            }
         }
 
         private void SetPasskeyStatus(string statusText, string detail, string accentHex, string actionHint, bool updateTimestamp = true)
@@ -2710,12 +3158,16 @@ namespace PhantomVault.UI.ViewModels
         {
             try
             {
+                var importedAnyCredentials = false;
+
                 // Create and show the import window with existing credentials for duplicate detection
                 var importWindow = new ImportWindow(_credentials);
 
                 // Wire up the import window's event (not the ViewModel's) to receive imported credentials
                 importWindow.ImportCompleted += (sender, importedCredentials) =>
                 {
+                    importedAnyCredentials = importedCredentials.Count > 0;
+
                     // Add imported credentials to local collection
                     _credentials.AddRange(importedCredentials);
 
@@ -2731,7 +3183,9 @@ namespace PhantomVault.UI.ViewModels
                     await importWindow.ShowDialog(_ownerWindow);
                 }
 
-                StatusMessage = "Import completed successfully";
+                StatusMessage = importedAnyCredentials
+                    ? "Import completed successfully"
+                    : "Import window closed";
             }
             catch (Exception ex)
             {
@@ -3078,10 +3532,10 @@ namespace PhantomVault.UI.ViewModels
             if (confirmed)
             {
                 await _dialogService.ShowWarningAsync(
-                    "Data Cleared",
-                    "This feature is disabled in demo mode.\n\nIn production, this would securely wipe all vault data.",
+                    "Secure Wipe Unavailable",
+                    "Secure vault wiping is not available from this settings screen in the current build.\n\nLeave the vault mounted only long enough to export what you need, then remove the data from the owning device once a dedicated wipe flow is available.",
                     _ownerWindow);
-                StatusMessage = "Clear data operation cancelled (demo mode)";
+                StatusMessage = "Secure wipe unavailable from settings.";
             }
         }
 
@@ -3096,6 +3550,8 @@ namespace PhantomVault.UI.ViewModels
             {
                 // Reset to defaults
                 ThemeSelection = 0;
+                UseDarkTheme = true;
+                UseGridLayout = false;
                 ClipboardClearTime = 1;
                 AutoLockEnabled = true;
                 AutoLockTime = 1;
@@ -3105,11 +3561,8 @@ namespace PhantomVault.UI.ViewModels
                 IncludeNumbers = true;
                 IncludeSymbols = true;
                 AutoFillEnabled = true;
-                AutoFillOnPageLoad = false;
-                ShowAutoFillIcon = true;
                 AutoBackupEnabled = false;
                 EnableDebugLogging = false;
-                AllowConcurrentSessions = false;
 
                 StatusMessage = "Settings reset to defaults";
             }

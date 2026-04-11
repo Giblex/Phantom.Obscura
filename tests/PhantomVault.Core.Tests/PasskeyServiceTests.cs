@@ -29,6 +29,7 @@ namespace PhantomVault.Core.Tests
 
             Assert.NotNull(description);
             Assert.True(description.Length > 0);
+            Assert.DoesNotContain("not implemented", description, StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact]

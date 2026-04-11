@@ -142,7 +142,7 @@
                                 </Border.Transitions>
 
                                 <Border x:Name="CategoryTile"
-                                        Background="{DynamicResource ControlBackgroundBrush}"
+                                        Background="{DynamicResource TileGlassBrush}"
                                         BorderBrush="{DynamicResource ControlBorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="12"

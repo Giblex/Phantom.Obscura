@@ -7,16 +7,18 @@ namespace PhantomVault.UI.ViewModels.AutoFill
     /// <summary>
     /// ViewModel for the dialog shown when no stored credential matches the
     /// currently active login portal. Allows the user to add a new credential
-    /// entry or create a passkey for the portal.
+    /// entry and, when Attestor is linked, hand off passkey creation for the portal.
     /// </summary>
     public sealed class NoMatchFoundViewModel : ReactiveObject
     {
         private readonly bool _attestorLinked;
+        private readonly string _attestorStatus;
 
-        public NoMatchFoundViewModel(string portalIdentifier, bool attestorLinked = false)
+        public NoMatchFoundViewModel(string portalIdentifier, bool attestorLinked = false, string? attestorStatus = null)
         {
             PortalIdentifier = portalIdentifier;
             _attestorLinked = attestorLinked;
+            _attestorStatus = attestorStatus ?? "PhantomAttestor is not currently available from this suite build.";
 
             CanCreatePasskey = attestorLinked;
 
@@ -30,9 +32,13 @@ namespace PhantomVault.UI.ViewModels.AutoFill
 
         /// <summary>Human-readable message shown in the dialog body.</summary>
         public string Message =>
-            $"No saved credential found for \"{PortalIdentifier}\".\nWould you like to add one now?";
+            CanCreatePasskey
+                ? $"No saved credential found for \"{PortalIdentifier}\".\nYou can add one here or open the linked Attestor passkey flow."
+                : $"No saved credential found for \"{PortalIdentifier}\".\nYou can add one here now.";
 
-        /// <summary>True when Attestor is linked and passkey creation is available.</summary>
+        public string AttestorStatus => _attestorStatus;
+
+        /// <summary>True when Attestor is linked and passkey handoff is available.</summary>
         public bool CanCreatePasskey { get; }
 
         public ReactiveCommand<Unit, Unit> AddNewEntryCommand { get; }

@@ -217,8 +217,9 @@ namespace PhantomVault.UI.ViewModels
                 }
 
                 // Check if vault already exists
+                var pvaultPath = Path.Combine(_selectedDrive, "vault.pvault");
                 var manifestPath = Path.Combine(_selectedDrive, "vault.manifest");
-                if (File.Exists(manifestPath))
+                if (File.Exists(pvaultPath) || File.Exists(manifestPath))
                 {
                     bool proceed = await _dialogService.ShowConfirmationAsync(
                         "Vault Already Exists",

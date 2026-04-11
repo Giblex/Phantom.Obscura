@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.IO;
 using System.Linq;
@@ -54,6 +56,18 @@ namespace PhantomVault.Core.Tests
             }
         }
 
+        private void WriteManifest(VaultManifest manifest, string manifestPath, string? password, string? keyfilePath = null, string? usbSerial = null, bool requireDualFactor = false)
+        {
+            using var securePassword = string.IsNullOrEmpty(password) ? SecurePassword.Empty() : SecurePassword.FromString(password);
+            _manifestService.WriteManifestSecure(manifest, manifestPath, securePassword, keyfilePath, usbSerial, requireDualFactor);
+        }
+
+        private VaultManifest ReadManifest(string manifestPath, string? password, string? keyfilePath = null, string? usbSerial = null, bool requireDualFactor = false)
+        {
+            using var securePassword = string.IsNullOrEmpty(password) ? SecurePassword.Empty() : SecurePassword.FromString(password);
+            return _manifestService.ReadManifestSecure(manifestPath, securePassword, keyfilePath, usbSerial, requireDualFactor);
+        }
+
         #region Phase 2 Vault Lifecycle Tests
 
         [Fact]
@@ -84,11 +98,11 @@ namespace PhantomVault.Core.Tests
             };
 
             // Act - Phase 1: Create manifest
-            _manifestService.WriteManifest(manifest, manifestPath, password);
+            WriteManifest(manifest, manifestPath, password);
             Assert.True(File.Exists(manifestPath), "Manifest file should be created");
 
             // Act - Phase 2: Read and decrypt manifest
-            var loadedManifest = _manifestService.ReadManifest(manifestPath, password);
+            var loadedManifest = ReadManifest(manifestPath, password);
             Assert.NotNull(loadedManifest);
             Assert.NotNull(loadedManifest.KemPublicKeyBase64); // Phase 2 has KEM fields
             Assert.NotNull(loadedManifest.KemCiphertextBase64);
@@ -153,7 +167,7 @@ namespace PhantomVault.Core.Tests
         }
 
         [Fact]
-        public async Task Phase2_ManifestFields_ContainsAllRequiredPhase2Data()
+        public void Phase2_ManifestFields_ContainsAllRequiredPhase2Data()
         {
             // Arrange
             string password = "SecurePassword456!";
@@ -173,8 +187,8 @@ namespace PhantomVault.Core.Tests
             };
 
             // Act
-            _manifestService.WriteManifest(manifest, manifestPath, password);
-            var loaded = _manifestService.ReadManifest(manifestPath, password);
+            WriteManifest(manifest, manifestPath, password);
+            var loaded = ReadManifest(manifestPath, password);
 
             // Assert - All Phase 2 fields present
             Assert.NotNull(loaded.KemPublicKeyBase64); // Presence indicates Phase 2
@@ -184,7 +198,7 @@ namespace PhantomVault.Core.Tests
         }
 
         [Fact]
-        public async Task Phase2_HybridDekDerivation_IsDeterministic()
+        public void Phase2_HybridDekDerivation_IsDeterministic()
         {
             // Arrange
             string password = "TestPassword789!";
@@ -222,13 +236,13 @@ namespace PhantomVault.Core.Tests
                 CreatedUtc = DateTime.UtcNow
             };
 
-            _manifestService.WriteManifest(manifest, manifestPath, correctPassword);
+            WriteManifest(manifest, manifestPath, correctPassword);
 
             // Act & Assert - Wrong password should fail to decrypt manifest
             // AuthenticationTagMismatchException is a subtype of CryptographicException
             Assert.ThrowsAny<System.Security.Cryptography.CryptographicException>(() =>
             {
-                _manifestService.ReadManifest(manifestPath, wrongPassword);
+                ReadManifest(manifestPath, wrongPassword);
             });
         }
 
@@ -307,8 +321,8 @@ namespace PhantomVault.Core.Tests
             };
 
             // Act
-            _manifestService.WriteManifest(phase1Manifest, manifestPath, password);
-            var loaded = _manifestService.ReadManifest(manifestPath, password);
+            WriteManifest(phase1Manifest, manifestPath, password);
+            var loaded = ReadManifest(manifestPath, password);
 
             // Assert - Phase 1 has no KEM fields
             Assert.Null(loaded.KemPublicKeyBase64);
@@ -371,8 +385,8 @@ namespace PhantomVault.Core.Tests
             };
 
             // Act
-            _manifestService.WriteManifest(legacyManifest, manifestPath, password);
-            var loaded = _manifestService.ReadManifest(manifestPath, password);
+            WriteManifest(legacyManifest, manifestPath, password);
+            var loaded = ReadManifest(manifestPath, password);
 
             // Assert - Should work with traditional encryption (no KEM fields)
             Assert.Null(loaded.KemPublicKeyBase64);
@@ -440,7 +454,8 @@ namespace PhantomVault.Core.Tests
             {
                 using (var stream = await _zkVaultService.OpenFileStreamForViewingAsync(vaultFile))
                 {
-                    await stream.ReadAsync(new byte[1024], 0, 1024);
+                    var buffer = new byte[1024];
+                    await stream.ReadAtLeastAsync(buffer, 1, throwOnEndOfStream: false);
                 }
             });
 
@@ -514,7 +529,7 @@ namespace PhantomVault.Core.Tests
         }
 
         [Fact]
-        public async Task SecurityTest_DifferentPasswords_ProduceDifferentKeys()
+        public void SecurityTest_DifferentPasswords_ProduceDifferentKeys()
         {
             // Arrange
             string password1 = "Password1!";

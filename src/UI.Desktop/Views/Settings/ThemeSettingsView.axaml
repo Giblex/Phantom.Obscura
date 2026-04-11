@@ -136,14 +136,7 @@
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                     
-                        <ToggleSwitch Content="Dark mode" 
-                              IsChecked="{Binding IsDarkTheme, Mode=TwoWay}"
-                              ToolTip.Tip="Switch between light and dark mode"
-                              HorizontalAlignment="Left"/>
 
-                        <CheckBox Content="Enable high contrast mode" 
-                                  IsChecked="{Binding EnableHighContrast}"
-                                  ToolTip.Tip="Increase contrast for better visibility"/>
 
                         <StackPanel Spacing="8">
                             <TextBlock Text="Display scale:" 

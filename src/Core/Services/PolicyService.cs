@@ -52,7 +52,7 @@ public class PolicyService : IDisposable
         }
 
         _policy = ObscuraPolicy.FromVerifiedJson(policyJson);
-        _engine = new PolicyEngine(_policy);
+        _engine = new PolicyEngine(_policy, rootVerifier);
         _synchronizer = new PolicySynchronizer(_policy);
     }
 

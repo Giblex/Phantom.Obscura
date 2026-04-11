@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-  <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+  <TargetFramework>net9.0-windows10.0.19041.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -31,8 +31,8 @@
          have been moved to Legacy folder. Stub replacements are in use. -->
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.11" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.11" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.9" />
     <ProjectReference Include="..\Core\PhantomVault.Core.csproj" />
     <ProjectReference Include="..\Platform\PhantomVault.Platform.csproj" />
     <ProjectReference Include="..\Crypto\GiblexVault.Security.ZK.csproj" />
@@ -40,15 +40,15 @@
     <ProjectReference Include="..\..\..\Phantom.Shared\Giblex.AssetShield\Giblex.AssetShield.csproj" />
     <!-- <ProjectReference Include="..\..\..\PhantomRecovery\PhantomRecovery.App\PhantomRecovery.App.csproj" /> -->
     <!-- <ProjectReference Include="..\..\..\PhantomRecovery\PhantomRecovery.Core\PhantomRecovery.Core.csproj" /> -->
-    <PackageReference Include="Avalonia" Version="11.3.11" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.3.11" />
+    <PackageReference Include="Avalonia" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.9" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.9" />
-    <PackageReference Include="Avalonia.Skia" Version="11.3.11" />
+    <PackageReference Include="Avalonia.Skia" Version="11.3.9" />
     <PackageReference Include="SkiaSharp" Version="3.119.1" />
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="Avalonia.Markup.Xaml.Loader" Version="11.3.11" />
+    <PackageReference Include="Avalonia.Markup.Xaml.Loader" Version="11.3.9" />
     <PackageReference Include="Avalonia.Svg.Skia" Version="11.0.0" />
     <PackageReference Include="Avalonia.Xaml.Interactivity" Version="11.3.0.6" />
     <PackageReference Include="Isopoh.Cryptography.Argon2" Version="2.0.0" />
@@ -85,7 +85,7 @@
     <!-- Include extracted XAML resources for modular UI architecture -->
     <!-- Note: .axaml files are auto-included by the Avalonia SDK as AvaloniaResource.
          Explicit includes would cause duplicate key errors at startup. -->
-    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+    <PackageReference Include="System.Text.Json" Version="9.0.0" />
     <PackageReference Include="ZXing.Net" Version="0.16.9" />
     <PackageReference Include="ZXing.Net.Bindings.SkiaSharp" Version="0.16.14" />
   </ItemGroup>

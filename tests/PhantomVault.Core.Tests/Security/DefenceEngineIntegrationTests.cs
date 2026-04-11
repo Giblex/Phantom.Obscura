@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -32,6 +34,10 @@ namespace PhantomVault.Core.Tests.Security
             public bool PhantomKeyRequired { get; private set; }
             public string? ReauthReason { get; private set; }
 
+            public bool IsLockedOut => LockoutEndUtc.HasValue && DateTimeOffset.UtcNow < LockoutEndUtc.Value;
+            public DateTimeOffset? LockoutEndUtc { get; private set; }
+            public event EventHandler<string>? ReauthenticationRequired;
+
             public Task AddAuthenticationDelayAsync(TimeSpan delay)
             {
                 ExecutedActions.Add($"AddDelay:{delay.TotalSeconds}s");
@@ -43,6 +49,7 @@ namespace PhantomVault.Core.Tests.Security
             {
                 ExecutedActions.Add($"TempLockout:{duration.TotalMinutes}m");
                 LastLockoutDuration = duration;
+                LockoutEndUtc = DateTimeOffset.UtcNow.Add(duration);
                 return Task.CompletedTask;
             }
 
@@ -52,10 +59,18 @@ namespace PhantomVault.Core.Tests.Security
                 PhantomKeyRequired = true;
             }
 
+            public bool CheckAndResetPhantomKeyRequirement()
+            {
+                var was = PhantomKeyRequired;
+                PhantomKeyRequired = false;
+                return was;
+            }
+
             public void RequireReauthentication(string reason)
             {
                 ExecutedActions.Add($"RequireReauth:{reason}");
                 ReauthReason = reason;
+                ReauthenticationRequired?.Invoke(this, reason);
             }
         }
 
@@ -101,6 +116,8 @@ namespace PhantomVault.Core.Tests.Security
             public List<string> ExecutedActions { get; } = new();
             public bool ClipboardCleared { get; private set; }
             public bool CachesScrubbed { get; private set; }
+
+            public void RegisterClipboardClearer(Func<Task> clearer) { }
 
             public Task ClearClipboardAsync()
             {

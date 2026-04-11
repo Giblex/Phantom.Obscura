@@ -404,6 +404,107 @@
                                 </Button>
                             </StackPanel>
                         </Border>
+
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="15"
+                                Margin="0,10,0,0"
+                                IsVisible="{Binding HasVaultContext}">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Storage Tier Migration"
+                                           FontSize="{StaticResource Type.Label.Size}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                <TextBlock Text="Switch this vault between Stealth Secure and Black Secure with a guarded validation pass and automatic rollback snapshot."
+                                           FontSize="{StaticResource Type.Tiny.Size}"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           TextWrapping="Wrap"/>
+
+                                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="8">
+                                    <Border Grid.Column="0"
+                                            Background="{DynamicResource WindowBackgroundBrush}"
+                                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="{DynamicResource Radius.Sm}"
+                                            Padding="10">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="Current Tier"
+                                                       FontSize="{StaticResource Type.Micro.Size}"
+                                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                                            <TextBlock Text="{Binding CurrentProtectionTierText}"
+                                                       FontWeight="SemiBold"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Grid.Column="1"
+                                            Background="{DynamicResource WindowBackgroundBrush}"
+                                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="{DynamicResource Radius.Sm}"
+                                            Padding="10">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="Current Transport"
+                                                       FontSize="{StaticResource Type.Micro.Size}"
+                                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                                            <TextBlock Text="{Binding CurrentStorageTransportText}"
+                                                       FontWeight="SemiBold"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+
+                                <StackPanel Spacing="8" IsVisible="{Binding IsMigrationTargetDriveRequired}">
+                                    <TextBlock Text="Stealth Secure Target Drive"
+                                               FontSize="{StaticResource Type.Label.Size}"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    <ComboBox ItemsSource="{Binding AvailableMigrationDrives}"
+                                              SelectedItem="{Binding SelectedMigrationTargetDrive}"
+                                              Height="40"
+                                              FontSize="{StaticResource Type.Body.Size}"/>
+                                    <TextBlock Text="Choose the mounted removable drive that should receive the Stealth Secure packed volume."
+                                               FontSize="{StaticResource Type.Micro.Size}"
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               TextWrapping="Wrap"/>
+                                </StackPanel>
+
+                                <Border Background="{DynamicResource WindowBackgroundBrush}"
+                                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="{DynamicResource Radius.Sm}"
+                                        Padding="12">
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="Validation Summary"
+                                                   FontSize="{StaticResource Type.Micro.Size}"
+                                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                                        <TextBlock Text="{Binding MigrationSummary}"
+                                                   TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <TextBlock Text="{Binding RollbackSnapshotHint}"
+                                           FontSize="{StaticResource Type.Micro.Size}"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           TextWrapping="Wrap"/>
+
+                                <WrapPanel>
+                                    <Button Command="{Binding RefreshStorageTierMigrationCommand}"
+                                            Classes="liquid-glass"
+                                            Background="{DynamicResource ContentBackgroundBrush}"
+                                            Height="42"
+                                            MinWidth="190"
+                                            Margin="0,0,10,10">
+                                        <TextBlock Text="Refresh Migration Status" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Button>
+                                    <Button Command="{Binding ExecuteStorageTierMigrationCommand}"
+                                            Classes="liquid-glass"
+                                            Background="{DynamicResource ContentBackgroundBrush}"
+                                            Height="42"
+                                            MinWidth="220"
+                                            Margin="0,0,10,10">
+                                        <TextBlock Text="{Binding MigrationActionText}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Button>
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
                         
                         <!-- Archive and Delete Vault -->
                         <Border Background="{DynamicResource ControlBackgroundBrush}"
@@ -631,7 +732,7 @@
                                            FontSize="{StaticResource Type.Label.Size}" 
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                <TextBlock Text="Add extra security with passkeys, YubiKey or biometrics" 
+                                <TextBlock Text="Review TOTP, Windows Hello, and hardware-key status for this vault" 
                                            FontSize="{StaticResource Type.Tiny.Size}" 
                                            Foreground="{DynamicResource MutedTextBrush}"
                                            Margin="0,0,0,8"/>
@@ -654,7 +755,7 @@
                                                     <TextBlock Text="⌘"
                                                                FontSize="{StaticResource Type.H3.Size}"
                                                                VerticalAlignment="Center"/>
-                                                    <TextBlock Text="Windows Hello Passkey"
+                                                    <TextBlock Text="Windows Hello"
                                                                FontSize="{StaticResource Type.Label.Size}"
                                                                FontWeight="SemiBold"
                                                                Foreground="{DynamicResource SecondaryTextBrush}"
@@ -683,7 +784,7 @@
                                                         Height="38"
                                                         MinWidth="170">
                                                     <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                                                        <TextBlock Text="Link Windows Hello" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="Check Windows Hello" VerticalAlignment="Center"/>
                                                     </StackPanel>
                                                 </Button>
                                             </StackPanel>
@@ -707,7 +808,7 @@
                                                     <TextBlock Text="�"
                                                                FontSize="{StaticResource Type.H3.Size}"
                                                                VerticalAlignment="Center"/>
-                                                    <TextBlock Text="Hardware Token (YubiKey)"
+                                                    <TextBlock Text="Hardware-Token Presence Check"
                                                                FontSize="{StaticResource Type.Label.Size}"
                                                                FontWeight="SemiBold"
                                                                Foreground="{DynamicResource SecondaryTextBrush}"
@@ -804,7 +905,7 @@
                                     </Border>
                                 </StackPanel>
 
-                                <TextBlock Text="Passkeys provide passwordless authentication using biometrics or PINs"
+                                <TextBlock Text="The current device-authenticator flow uses local Windows Hello verification with biometrics or PIN when supported"
                                            FontSize="{StaticResource Type.Micro.Size}"
                                            Foreground="{DynamicResource SubtleBrush}"
                                            TextWrapping="Wrap"
@@ -873,13 +974,18 @@
                             </StackPanel>
                         </Border>
                         
-                        <CheckBox IsChecked="{Binding AutoFillOnPageLoad}"
+                        <CheckBox IsChecked="{Binding SupportsPageLoadAutofill, Mode=OneWay}"
                                   Content="Auto-fill on page load"
-                                  IsEnabled="{Binding AutoFillEnabled}"/>
+                                  IsEnabled="False"/>
                         
-                        <CheckBox IsChecked="{Binding ShowAutoFillIcon}"
+                        <CheckBox IsChecked="{Binding SupportsInlineAutofillIcons, Mode=OneWay}"
                                   Content="Show auto-fill icon in input fields"
-                                  IsEnabled="{Binding AutoFillEnabled}"/>
+                                  IsEnabled="False"/>
+
+                        <TextBlock Text="Page-load auto-fill and inline field icons are not wired in this desktop build yet. Use the dedicated browser-extension flow instead."
+                                   FontSize="{StaticResource Type.Micro.Size}"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   TextWrapping="Wrap"/>
                         
                         <!-- Browser Extension Management -->
                         <Border Background="{DynamicResource ControlBackgroundBrush}"
@@ -1021,7 +1127,7 @@
                                            FontSize="{StaticResource Type.Label.Size}" 
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                <TextBlock Text="Import credentials from other password managers (CSV, KeePass, Bitwarden, LastPass, 1Password, Chrome, Edge, Firefox)" 
+                                <TextBlock Text="Import credentials from supported JSON and CSV exports. Direct KeePass .kdbx import is not bundled in this build." 
                                            FontSize="{StaticResource Type.Tiny.Size}" 
                                            Foreground="{DynamicResource MutedTextBrush}"
                                            TextWrapping="Wrap"/>
@@ -1073,7 +1179,7 @@
                                             Classes="liquid-glass"
                                             HorizontalAlignment="Stretch"
                                             Height="40">
-                                        <TextBlock Text="Export KeePass" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Export KeePass XML" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Button>
                                 </Grid>
                                 <TextBlock Text="⚠ Exported files contain unencrypted passwords. Store them securely!" 
@@ -1138,6 +1244,11 @@
                         
                         <CheckBox IsChecked="{Binding AutoBackupEnabled}"
                                   Content="Automatic daily backups"/>
+
+                        <TextBlock Text="This toggle updates the active vault manifest. Open settings from an unlocked vault if you want the change to persist."
+                                   FontSize="{StaticResource Type.Micro.Size}"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   TextWrapping="Wrap"/>
                         
                     </StackPanel>
                     
@@ -1151,9 +1262,20 @@
                         
                         <CheckBox IsChecked="{Binding EnableDebugLogging}"
                                   Content="Enable debug logging"/>
+
+                        <TextBlock Text="Debug logging now controls developer diagnostics written through Obscura's runtime privacy shield."
+                                   FontSize="{StaticResource Type.Micro.Size}"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   TextWrapping="Wrap"/>
                         
-                        <CheckBox IsChecked="{Binding AllowConcurrentSessions}"
-                                  Content="Allow multiple vault sessions"/>
+                        <CheckBox IsChecked="{Binding SupportsConcurrentVaultSessions, Mode=OneWay}"
+                                  Content="Allow multiple vault sessions"
+                                  IsEnabled="False"/>
+
+                        <TextBlock Text="Concurrent multi-session vault access is not implemented in this build. This control is shown for roadmap visibility only."
+                                   FontSize="{StaticResource Type.Micro.Size}"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   TextWrapping="Wrap"/>
 
                         <!-- Encryption Settings -->
                         <Border Background="{DynamicResource ControlBackgroundBrush}"
@@ -1173,49 +1295,37 @@
                                     <TextBlock Text="Primary Encryption Algorithm" 
                                                FontSize="{StaticResource Type.Small.Size}" 
                                                Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                    <ComboBox SelectedIndex="{Binding EncryptionAlgorithmIndex}"
-                                              Height="40"
-                                              HorizontalAlignment="Stretch">
-                                        <ComboBoxItem Content="AES-256 (Recommended)"/>
-                                        <ComboBoxItem Content="ChaCha20-Poly1305"/>
-                                        <ComboBoxItem Content="Serpent-256"/>
-                                        <ComboBoxItem Content="Twofish-256"/>
-                                    </ComboBox>
+                                    <TextBlock Text="{Binding ActiveEncryptionAlgorithm}"
+                                               FontSize="{StaticResource Type.Label.Size}"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"
+                                               TextWrapping="Wrap"/>
                                 </StackPanel>
                                 
                                 <StackPanel Spacing="8">
                                     <TextBlock Text="Key Derivation Function" 
                                                FontSize="{StaticResource Type.Small.Size}" 
                                                Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                    <ComboBox SelectedIndex="{Binding KdfAlgorithmIndex}"
-                                              Height="40"
-                                              HorizontalAlignment="Stretch">
-                                        <ComboBoxItem Content="Argon2id (Recommended)"/>
-                                        <ComboBoxItem Content="PBKDF2-HMAC-SHA512"/>
-                                        <ComboBoxItem Content="Scrypt"/>
-                                    </ComboBox>
+                                    <TextBlock Text="{Binding ActiveKdfAlgorithm}"
+                                               FontSize="{StaticResource Type.Label.Size}"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"
+                                               TextWrapping="Wrap"/>
                                 </StackPanel>
                                 
                                 <StackPanel Spacing="8">
-                                    <Grid ColumnDefinitions="200,*">
-                                        <TextBlock Grid.Column="0"
-                                                   Text="KDF Iterations" 
-                                                   FontSize="{StaticResource Type.Small.Size}" 
-                                                   Foreground="{DynamicResource SecondaryTextBrush}"
-                                                   VerticalAlignment="Center"/>
-                                        <NumericUpDown Grid.Column="1"
-                                                       Value="{Binding KdfIterations}"
-                                                       Minimum="100000"
-                                                       Maximum="10000000"
-                                                       Increment="100000"
-                                                       Width="180"
-                                                       Margin="12,0,0,0"
-                                                       HorizontalAlignment="Left"
-                                                       Height="40"/>
-                                    </Grid>
-                                    <TextBlock Text="Higher iterations = More secure but slower unlock times" 
+                                    <TextBlock Text="KDF Work Factor" 
+                                               FontSize="{StaticResource Type.Small.Size}" 
+                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    <TextBlock Text="{Binding ActiveKdfWorkFactor}"
+                                               FontSize="{StaticResource Type.Label.Size}"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"
+                                               TextWrapping="Wrap"/>
+                                    <TextBlock Text="Higher KDF cost improves brute-force resistance but must be changed through a safe migration flow." 
                                                FontSize="{StaticResource Type.Micro.Size}" 
                                                Foreground="{DynamicResource MutedTextBrush}"/>
+                                    <TextBlock Text="Changing encryption primitives for an existing vault requires a dedicated rekey/migration flow and is not supported from this settings screen yet."
+                                               FontSize="{StaticResource Type.Micro.Size}"
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               TextWrapping="Wrap"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
@@ -1499,12 +1609,11 @@
                                             <ComboBoxItem Content="90 days" />
                                         </ComboBox>
                                     </StackPanel>
-                                    <Button Content="View Deleted Items"
-                                            Classes="liquid-glass"
-                                            Height="36"
-                                            Width="200"
-                                            HorizontalAlignment="Left"
-                                            Margin="28,10,0,0"/>
+                                    <TextBlock Text="Deleted-item browsing is not available from this screen yet. Restore and review actions still need a dedicated vault view."
+                                               FontSize="{StaticResource Type.Tiny.Size}"
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               TextWrapping="Wrap"
+                                               Margin="28,10,0,0"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
@@ -1537,12 +1646,11 @@
                                                Foreground="{DynamicResource WarningBrush}"
                                                TextWrapping="Wrap"
                                                Margin="28,5,0,0"/>
-                                    <Button Content="Scan for Duplicates Now"
-                                            Classes="liquid-glass"
-                                            Height="36"
-                                            Width="220"
-                                            HorizontalAlignment="Left"
-                                            Margin="0,10,0,0"/>
+                                    <TextBlock Text="Duplicate scanning still needs a dedicated analysis pass and is not wired from this settings screen yet."
+                                               FontSize="{StaticResource Type.Tiny.Size}"
+                                               Foreground="{DynamicResource MutedTextBrush}"
+                                               TextWrapping="Wrap"
+                                               Margin="0,10,0,0"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
@@ -1581,12 +1689,11 @@
                                                FontWeight="SemiBold"
                                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                                 </Grid>
-                                <Button Content="Empty Rubbish Bin Now"
-                                        Classes="danger"
-                                        Height="36"
-                                        Width="220"
-                                        HorizontalAlignment="Left"
-                                        Margin="0,15,0,0"/>
+                                <TextBlock Text="Permanent rubbish-bin emptying is not exposed from settings in this build."
+                                           FontSize="{StaticResource Type.Tiny.Size}"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           TextWrapping="Wrap"
+                                           Margin="0,15,0,0"/>
                             </StackPanel>
                         </Border>
                         
@@ -1627,29 +1734,16 @@
                                        TextAlignment="Center"/>
                         </StackPanel>
                         
-                        <StackPanel Spacing="8" Margin="0,20,0,0">
-                            <Button Background="{DynamicResource ContentBackgroundBrush}"
-                                    Classes="liquid-glass"
-                                    HorizontalAlignment="Center"
-                                    Width="200"
-                                    Height="36">
-                                <TextBlock Text="View License"/>
-                            </Button>
-                            <Button Background="{DynamicResource ContentBackgroundBrush}"
-                                    Classes="liquid-glass"
-                                    HorizontalAlignment="Center"
-                                    Width="200"
-                                    Height="36">
-                                <TextBlock Text="Visit Website"/>
-                            </Button>
-                            <Button Background="{DynamicResource ContentBackgroundBrush}"
-                                    Classes="liquid-glass"
-                                    HorizontalAlignment="Center"
-                                    Width="200"
-                                    Height="36">
-                                <TextBlock Text="Contact Support"/>
-                            </Button>
-                        </StackPanel>
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
+                                Padding="16"
+                                Margin="0,20,0,0">
+                            <TextBlock Text="Release resources such as license text, support links, and the product website are not bundled into this desktop settings window yet."
+                                       FontSize="{StaticResource Type.Tiny.Size}"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       TextWrapping="Wrap"
+                                       TextAlignment="Center"/>
+                        </Border>
                         
                         <TextBlock Text="© 2025 PhantomVault. All rights reserved." 
                                    FontSize="{StaticResource Type.Micro.Size}" 

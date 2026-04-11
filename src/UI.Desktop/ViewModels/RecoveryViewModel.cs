@@ -22,6 +22,10 @@ namespace PhantomVault.UI.ViewModels
         private RecoveryStore? _recoveryStore;
         private RecoverySession? _session;
         private CancellationTokenSource? _delayCts;
+        private bool _isRecoveryAvailable;
+        private string _recoveryAvailabilityMessage =
+            "This recovery wizard needs an initialized recovery store from an unlocked vault. " +
+            "The standalone recovery surface is not ready from this Obscura entry point yet.";
 
         // Step state
         private RecoveryStep _currentStep = RecoveryStep.Welcome;
@@ -77,6 +81,10 @@ namespace PhantomVault.UI.ViewModels
             SelectDomainCommand = ReactiveCommand.CreateFromTask<CryptoDomain>(SelectDomainAsync);
             CompleteRecoveryCommand = ReactiveCommand.Create(CompleteRecovery);
             ViewAuditHistoryCommand = ReactiveCommand.Create(ViewAuditHistory);
+            GoBackToCompleteCommand = ReactiveCommand.Create(GoBackToComplete);
+            CloseCommand = ReactiveCommand.Create(RequestClose);
+
+            StatusMessage = RecoveryAvailabilityMessage;
         }
 
         #region Properties
@@ -97,6 +105,24 @@ namespace PhantomVault.UI.ViewModels
         {
             get => _statusMessage;
             private set => this.RaiseAndSetIfChanged(ref _statusMessage, value);
+        }
+
+        public bool IsRecoveryAvailable
+        {
+            get => _isRecoveryAvailable;
+            private set
+            {
+                this.RaiseAndSetIfChanged(ref _isRecoveryAvailable, value);
+                this.RaisePropertyChanged(nameof(CanStartRecovery));
+            }
+        }
+
+        public bool CanStartRecovery => IsRecoveryAvailable && _session != null && _recoveryStore != null;
+
+        public string RecoveryAvailabilityMessage
+        {
+            get => _recoveryAvailabilityMessage;
+            private set => this.RaiseAndSetIfChanged(ref _recoveryAvailabilityMessage, value);
         }
 
         public string ErrorMessage
@@ -217,6 +243,10 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<CryptoDomain, Unit> SelectDomainCommand { get; }
         public ReactiveCommand<Unit, Unit> CompleteRecoveryCommand { get; }
         public ReactiveCommand<Unit, Unit> ViewAuditHistoryCommand { get; }
+        public ReactiveCommand<Unit, Unit> GoBackToCompleteCommand { get; }
+        public ReactiveCommand<Unit, Unit> CloseCommand { get; }
+
+        public event EventHandler? CloseRequested;
 
         #endregion
 
@@ -228,6 +258,8 @@ namespace PhantomVault.UI.ViewModels
         public void Initialize(RecoveryStore store, string? deviceFingerprint = null, string? appVersion = null)
         {
             _recoveryStore = store ?? throw new ArgumentNullException(nameof(store));
+            IsRecoveryAvailable = true;
+            RecoveryAvailabilityMessage = string.Empty;
 
             // Update remaining codes
             RemainingCodes = _auditService.GetRemainingCodeCount(store);
@@ -260,6 +292,9 @@ namespace PhantomVault.UI.ViewModels
                 appVersion);
 
             CurrentStep = RecoveryStep.Welcome;
+            StatusMessage = RemainingCodes > 0
+                ? "Recovery context loaded."
+                : "Recovery context loaded, but there are no unused recovery codes remaining.";
         }
 
         /// <summary>
@@ -283,8 +318,9 @@ namespace PhantomVault.UI.ViewModels
         {
             if (_session == null || _recoveryStore == null)
             {
-                ErrorMessage = "Recovery not initialized";
-                HasError = true;
+                RecoveryAvailabilityMessage =
+                    "Recovery is not available from this surface until an unlocked vault provides recovery context.";
+                StatusMessage = RecoveryAvailabilityMessage;
                 return;
             }
 
@@ -451,13 +487,29 @@ namespace PhantomVault.UI.ViewModels
         private void CompleteRecovery()
         {
             _session?.Complete();
-            // Raise event for window to close
+            RequestClose();
         }
 
         private void ViewAuditHistory()
         {
+            if (!IsRecoveryAvailable || _recoveryStore == null)
+            {
+                StatusMessage = RecoveryAvailabilityMessage;
+                return;
+            }
+
             LoadAuditHistory();
             CurrentStep = RecoveryStep.AuditHistory;
+        }
+
+        private void GoBackToComplete()
+        {
+            CurrentStep = IsRecoveryAvailable ? RecoveryStep.Complete : RecoveryStep.Welcome;
+        }
+
+        private void RequestClose()
+        {
+            CloseRequested?.Invoke(this, EventArgs.Empty);
         }
 
         private void LoadAuditHistory()

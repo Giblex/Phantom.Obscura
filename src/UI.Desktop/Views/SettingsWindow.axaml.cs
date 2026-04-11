@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using PhantomVault.Core.Services.Security;
 using PhantomVault.Core.Services;
 using PhantomVault.UI.ViewModels;
 using PhantomVault.UI.Services;
@@ -14,6 +15,12 @@ namespace PhantomVault.UI.Views
         public SettingsWindow()
         {
             InitializeComponent();
+
+            if (DataContext == null)
+            {
+                var defenceSettings = (Avalonia.Application.Current as App)?.Services?.GetService(typeof(IDefenceSettingsService)) as IDefenceSettingsService;
+                DataContext = new SettingsViewModel(defenceSettings);
+            }
         }
 
         private void InitializeComponent()
@@ -40,7 +47,7 @@ namespace PhantomVault.UI.Views
         {
             await HandleEventAsync(async () =>
             {
-                // Create Passkey settings window
+                // Create device-authenticator settings window
                 var viewModel = new PasskeySettingsViewModel();
                 var window = new PasskeySettingsWindow
                 {
@@ -78,6 +85,23 @@ namespace PhantomVault.UI.Views
                     DataContext = viewModel
                 };
                 viewModel.SetOwnerWindow(window);
+
+                await window.ShowDialog(this);
+            });
+        }
+
+        private async void OpenThemeSettings_Click(object? sender, RoutedEventArgs e)
+        {
+            await HandleEventAsync(async () =>
+            {
+                var app = (App)Avalonia.Application.Current!;
+                var themeManager = app.Services?.GetService(typeof(ThemeManagerService)) as ThemeManagerService;
+                var runtimeThemeService = app.Services?.GetService(typeof(IRuntimeThemeService)) as IRuntimeThemeService;
+
+                var window = new ThemeSettingsWindow
+                {
+                    DataContext = new PhantomVault.UI.ViewModels.Settings.ThemeSettingsViewModel(themeManager, runtimeThemeService)
+                };
 
                 await window.ShowDialog(this);
             });

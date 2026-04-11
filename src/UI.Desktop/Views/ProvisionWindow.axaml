@@ -335,11 +335,11 @@
 
                         <!-- Hardware Token -->
                         <StackPanel Spacing="10">
-                            <CheckBox Content="Require Hardware Token (YubiKey)"
+                            <CheckBox Content="Require Hardware-Token Presence Check"
                                       IsChecked="{Binding RequiresHardwareToken, Mode=TwoWay}"
                                       FontSize="{StaticResource Type.Body.Size}"
                                       HorizontalAlignment="Center"
-                                      ToolTip.Tip="Require a physical YubiKey device to unlock your vault (most secure option)"/>
+                                      ToolTip.Tip="Require the supported hardware-token presence check used by this build before unlock"/>
             <TextBlock Text="Adds an extra security layer requiring a physical device"
                                        FontSize="{StaticResource Type.Tiny.Size}"
                                        Foreground="{DynamicResource MutedTextBrush}"
@@ -363,12 +363,12 @@
 
                         <!-- Passkey -->
                         <StackPanel Spacing="10">
-                            <CheckBox Content="Enable Passkey Support"
+                            <CheckBox Content="Enable Device Authenticator Support"
                                       IsChecked="{Binding UsePasskey, Mode=TwoWay}"
                                       FontSize="{StaticResource Type.Body.Size}"
                                       HorizontalAlignment="Center"
-                                      ToolTip.Tip="Enable passwordless authentication using FIDO2/WebAuthn (biometrics, security keys)"/>
-            <TextBlock Text="Use FIDO2/WebAuthn for passwordless authentication"
+                                      ToolTip.Tip="Enable the current local device-authenticator path available in this build"/>
+            <TextBlock Text="Enable the current local device-authenticator flow for compatible Windows devices"
                                        FontSize="{StaticResource Type.Tiny.Size}"
                                        Foreground="{DynamicResource MutedTextBrush}"
                                        Margin="0,0,0,0"
@@ -510,7 +510,7 @@
                                            FontWeight="SemiBold"
                                            VerticalAlignment="Center"/>
                             </StackPanel>
-                            <TextBlock Text="Use fingerprint or face recognition to unlock your vault"
+                            <TextBlock Text="Configure the Windows Hello-backed local authenticator path on supported Windows devices"
                                        FontSize="{StaticResource Type.Small.Size}"
                                        Foreground="{DynamicResource MutedTextBrush}"
                                        TextWrapping="Wrap"/>
@@ -531,20 +531,20 @@
                         <StackPanel Spacing="{StaticResource Space.Md}">
                             <StackPanel Orientation="Horizontal" Spacing="10">
                                 <TextBlock Text="🔑" FontSize="{StaticResource Type.Icon.Size}" VerticalAlignment="Center"/>
-                                <TextBlock Text="Passkey Authentication"
+                                <TextBlock Text="Device Authenticator"
                                            FontSize="{StaticResource Type.H4.Size}"
                                            FontWeight="SemiBold"
                                            VerticalAlignment="Center"/>
                             </StackPanel>
-                            <TextBlock Text="Use hardware security keys (YubiKey, Titan Key) for passwordless access"
+                            <TextBlock Text="Open the current local device-authenticator settings surface. Full hardware-key and cross-device passkey coverage is not complete in this build."
                                        FontSize="{StaticResource Type.Small.Size}"
                                        Foreground="{DynamicResource MutedTextBrush}"
                                        TextWrapping="Wrap"/>
-                            <Button Content="Configure Passkeys"
+                            <Button Content="Configure Device Authenticator"
                                     Click="ConfigurePasskeys_Click"
                                     Height="36"
                                     HorizontalAlignment="Stretch"
-                                    ToolTip.Tip="Set up WebAuthn/FIDO2 hardware keys"/>
+                                    ToolTip.Tip="Open the current local device-authenticator settings surface"/>
                         </StackPanel>
                     </Border>
 
@@ -592,7 +592,7 @@
                                        Foreground="{DynamicResource MutedTextBrush}"
                                        TextWrapping="Wrap"
                                        Margin="26,0,0,0">
-                                You can configure these authentication methods now or later from the Settings menu. They are optional but highly recommended for enhanced security.
+                                You can configure these authentication methods now or later from the Settings menu. TOTP is fully usable today. Windows Hello-backed local authentication depends on device support, and broader hardware-key flows are still limited in this build.
                             </TextBlock>
                         </StackPanel>
                     </Border>

@@ -42,6 +42,9 @@ namespace PhantomVault.UI.ViewModels.Settings
 
         public ObservableCollection<Credential> Credentials { get; }
 
+        public List<string> FilteredCredentialTitles { get; private set; } = new();
+        public string FilterLabel { get; private set; } = string.Empty;
+
         public PasswordHealthReport Report
         {
             get => _report;
@@ -270,23 +273,73 @@ namespace PhantomVault.UI.ViewModels.Settings
 
         private async Task ExportReportAsync()
         {
-            // TODO: Implement export to PDF or CSV
-            await Task.CompletedTask;
+            if (!HasReport) return;
+
+            try
+            {
+                var topLevel = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+                    ? desktop.MainWindow
+                    : null;
+                if (topLevel == null) return;
+
+                var file = await topLevel.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
+                {
+                    Title = "Export Password Health Report",
+                    DefaultExtension = "csv",
+                    SuggestedFileName = $"PasswordHealthReport_{DateTime.Now:yyyyMMdd_HHmmss}.csv",
+                    FileTypeChoices = new[]
+                    {
+                        new Avalonia.Platform.Storage.FilePickerFileType("CSV File") { Patterns = new[] { "*.csv" } },
+                        new Avalonia.Platform.Storage.FilePickerFileType("Text File") { Patterns = new[] { "*.txt" } }
+                    }
+                });
+
+                if (file != null)
+                {
+                    var sb = new System.Text.StringBuilder();
+                    sb.AppendLine("Category,Count,Details");
+                    sb.AppendLine($"Total Credentials,{Report.TotalCredentials},");
+                    sb.AppendLine($"Weak Passwords,{Report.WeakCount},\"{string.Join("; ", Report.WeakTitles)}\"");
+                    sb.AppendLine($"Reused Passwords,{Report.ReusedCount},\"{string.Join("; ", Report.ReusedTitles.Distinct())}\"");
+                    sb.AppendLine($"Old Passwords,{Report.OldCount},\"{string.Join("; ", Report.OldTitles)}\"");
+                    sb.AppendLine($"Average Entropy,{Report.AverageEntropy:F1} bits,");
+                    sb.AppendLine($"Security Score,{SecurityScore},");
+                    await System.IO.File.WriteAllTextAsync(file.Path.LocalPath, sb.ToString());
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Export report failed: {ex.Message}");
+            }
         }
 
         private void ViewWeakPasswords()
         {
-            // TODO: Open detailed view of weak passwords
+            // Filter the credentials list to show only weak entries
+            if (!HasReport || Report.WeakCount == 0) return;
+            var weakSet = new System.Collections.Generic.HashSet<string>(Report.WeakTitles, StringComparer.OrdinalIgnoreCase);
+            FilteredCredentialTitles = Report.WeakTitles;
+            FilterLabel = $"Weak Passwords ({Report.WeakCount})";
+            this.RaisePropertyChanged(nameof(FilteredCredentialTitles));
+            this.RaisePropertyChanged(nameof(FilterLabel));
         }
 
         private void ViewReusedPasswords()
         {
-            // TODO: Open detailed view of reused passwords
+            if (!HasReport || Report.ReusedCount == 0) return;
+            FilteredCredentialTitles = Report.ReusedTitles.Distinct().ToList();
+            FilterLabel = $"Reused Passwords ({Report.ReusedCount})";
+            this.RaisePropertyChanged(nameof(FilteredCredentialTitles));
+            this.RaisePropertyChanged(nameof(FilterLabel));
         }
 
         private void ViewOldPasswords()
         {
-            // TODO: Open detailed view of old passwords
+            if (!HasReport || Report.OldCount == 0) return;
+            FilteredCredentialTitles = Report.OldTitles;
+            FilterLabel = $"Outdated Passwords ({Report.OldCount})";
+            this.RaisePropertyChanged(nameof(FilteredCredentialTitles));
+            this.RaisePropertyChanged(nameof(FilterLabel));
         }
 
         private async void UpdateThresholdsAsync()

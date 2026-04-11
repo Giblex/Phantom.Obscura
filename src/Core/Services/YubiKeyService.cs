@@ -264,6 +264,48 @@ namespace PhantomVault.Core.Services
         }
 
         /// <summary>
+        /// Backward-compatible assertion verification for older call sites that pass
+        /// the service assertion result type.
+        /// </summary>
+        public bool VerifyAssertion(Fido2AssertionResult assertion, byte[] challenge, byte[] publicKeyBytes)
+        {
+            if (challenge == null || challenge.Length == 0)
+                throw new ArgumentException("Challenge cannot be null or empty", nameof(challenge));
+            if (publicKeyBytes == null || publicKeyBytes.Length == 0)
+                throw new ArgumentException("Public key cannot be null or empty", nameof(publicKeyBytes));
+            if (assertion == null)
+                throw new ArgumentNullException(nameof(assertion));
+
+            // The assertion is already verified in Authenticate().
+            return assertion.IsValid;
+        }
+
+        /// <summary>
+        /// Backward-compatible assertion verification for callers that keep the raw
+        /// Yubico SDK assertion object.
+        /// </summary>
+        public bool VerifyAssertion(GetAssertionData assertion, byte[] challenge, byte[] publicKeyBytes)
+        {
+            if (challenge == null || challenge.Length == 0)
+                throw new ArgumentException("Challenge cannot be null or empty", nameof(challenge));
+            if (publicKeyBytes == null || publicKeyBytes.Length == 0)
+                throw new ArgumentException("Public key cannot be null or empty", nameof(publicKeyBytes));
+            if (assertion == null)
+                throw new ArgumentNullException(nameof(assertion));
+
+            try
+            {
+                var publicKey = CoseKey.Create(new ReadOnlyMemory<byte>(publicKeyBytes), out _);
+                var clientDataHash = SHA256.HashData(challenge);
+                return assertion.VerifyAssertion(publicKey, new ReadOnlyMemory<byte>(clientDataHash));
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Verifies that a YubiKey matches the expected serial number.
         /// </summary>
         public bool VerifyDeviceMatch(int expectedSerial)

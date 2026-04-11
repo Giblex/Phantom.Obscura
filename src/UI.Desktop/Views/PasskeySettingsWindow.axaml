@@ -8,7 +8,7 @@
         mc:Ignorable="d" d:DesignWidth="520" d:DesignHeight="600"
         x:Class="PhantomVault.UI.Views.PasskeySettingsWindow"
         x:DataType="vm:PasskeySettingsViewModel"
-        Title="Passkey Settings"
+        Title="Device Authenticator Settings"
         Width="520" Height="600"
         MinWidth="480" MinHeight="500"
         WindowStartupLocation="CenterOwner"
@@ -25,11 +25,11 @@
                 Background="{DynamicResource HeaderBackgroundBrush}" 
                 Padding="24,20">
             <StackPanel Spacing="{StaticResource Space.Xs}">
-                <TextBlock Text="Passkey / FIDO2 Authentication"
+                <TextBlock Text="Device Authenticator"
                            FontSize="{StaticResource Type.Icon.Size}"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource HeaderTextBrush}"/>
-                <TextBlock Text="Use hardware keys, password managers, or platform authenticators"
+                <TextBlock Text="Configure the current local Windows Hello-backed authenticator flow for this device"
                            FontSize="{StaticResource Type.Label.Size}"
                            Foreground="{DynamicResource HeaderMutedTextBrush}"/>
             </StackPanel>
@@ -63,8 +63,8 @@
                         Margin="0,0,0,16">
                     <Grid ColumnDefinitions="*,Auto">
                         <StackPanel Grid.Column="0" Spacing="{StaticResource Space.Xs}">
-                            <TextBlock Text="Enable Passkey" FontSize="{StaticResource Type.Body.Size}" FontWeight="Medium" Foreground="{DynamicResource PrimaryTextBrush}"/>
-                            <TextBlock Text="Unlock vault with FIDO2 authenticator (hardware key or password manager)"
+                            <TextBlock Text="Enable Device Authenticator" FontSize="{StaticResource Type.Body.Size}" FontWeight="Medium" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <TextBlock Text="Enable the local device-authenticator flow currently supported by this build"
                                        FontSize="{StaticResource Type.Small.Size}"
                                        Foreground="{DynamicResource MutedTextBrush}"
                                        TextWrapping="Wrap"/>
@@ -100,7 +100,7 @@
                         Margin="0,0,0,16">
                     <StackPanel Spacing="{StaticResource Space.Md}">
                         <TextBlock Text="Registration" FontSize="{StaticResource Type.Body.Size}" FontWeight="Medium" Foreground="{DynamicResource PrimaryTextBrush}"/>
-                        <TextBlock Text="Register a FIDO2 authenticator to enable passwordless access. This works with hardware security keys (YubiKey, Titan), password managers (1Password, Bitwarden), or platform authenticators."
+                        <TextBlock Text="Register the authenticator flow exposed by the current build. Today this is centered on the local Windows Hello-backed path rather than a full cross-device passkey ecosystem."
                                    FontSize="{StaticResource Type.Small.Size}"
                                    Foreground="{DynamicResource MutedTextBrush}"
                                    TextWrapping="Wrap"/>
@@ -110,7 +110,7 @@
                                 IsVisible="{Binding IsPasskeyAvailable}"
                                 HorizontalAlignment="Stretch"
                                 Height="42">
-                            <TextBlock Text="Register Passkey" FontSize="{StaticResource Type.Body.Size}"/>
+                                <TextBlock Text="Register on This Device" FontSize="{StaticResource Type.Body.Size}"/>
                         </Button>
                         
                         <StackPanel Spacing="{StaticResource Space.Sm}" IsVisible="{Binding HasRegisteredPasskey}">
@@ -124,7 +124,7 @@
                                     Classes="liquid-glass"
                                     HorizontalAlignment="Stretch"
                                     Height="42">
-                                <TextBlock Text="Remove Passkey" FontSize="{StaticResource Type.Body.Size}"/>
+                                <TextBlock Text="Remove Stored Credential" FontSize="{StaticResource Type.Body.Size}"/>
                             </Button>
                         </StackPanel>
                     </StackPanel>
@@ -138,12 +138,11 @@
                         Padding="16"
                         Margin="0,0,0,16">
                     <StackPanel Spacing="10">
-                        <TextBlock Text="Supported Authenticators" FontSize="{StaticResource Type.Body.Size}" FontWeight="Medium" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <TextBlock Text="Current Build Scope" FontSize="{StaticResource Type.Body.Size}" FontWeight="Medium" Foreground="{DynamicResource PrimaryTextBrush}"/>
                         <StackPanel Spacing="6">
-                            <TextBlock Text="• Hardware Keys: YubiKey 5, Titan, Nitrokey" FontSize="{StaticResource Type.Small.Size}" Foreground="{DynamicResource MutedTextBrush}"/>
-                            <TextBlock Text="• Password Managers: 1Password, Bitwarden, Dashlane" FontSize="{StaticResource Type.Small.Size}" Foreground="{DynamicResource MutedTextBrush}"/>
-                            <TextBlock Text="• Platform: Windows Hello, Touch ID, Face ID" FontSize="{StaticResource Type.Small.Size}" Foreground="{DynamicResource MutedTextBrush}"/>
-                            <TextBlock Text="• Any FIDO2/WebAuthn certified authenticator" FontSize="{StaticResource Type.Small.Size}" Foreground="{DynamicResource MutedTextBrush}"/>
+                            <TextBlock Text="• Primary path: Windows Hello-backed local authenticator support" FontSize="{StaticResource Type.Small.Size}" Foreground="{DynamicResource MutedTextBrush}"/>
+                            <TextBlock Text="• Hardware security keys and password-manager passkeys are not fully surfaced in this window yet" FontSize="{StaticResource Type.Small.Size}" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap"/>
+                            <TextBlock Text="• macOS and Linux platform passkeys are not implemented in this build" FontSize="{StaticResource Type.Small.Size}" Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>

@@ -51,29 +51,32 @@ namespace PhantomVault.UI.Services.AutoFill
         private readonly ITotpFieldPoller _totpPoller;
         private readonly TotpService _totpService;
         private readonly WindowsNativeLoginDetector _nativeDetector;
+        private readonly IntegratedAttestorService _integratedAttestorService;
 
         private ICredentialProvider? _credentialProvider;
         private VaultManifest? _manifest;
 
         public AutoFillOrchestrator(
-            IActiveWindowDetector windowDetector,
-            ICredentialMatchingEngine matchingEngine,
-            IAutoInjectPolicyEngine policyEngine,
-            CorePlatform.IAutoTypeService autoTypeService,
-            ITotpFieldPoller totpPoller,
-            TotpService totpService,
-            WindowsNativeLoginDetector nativeDetector)
-        {
-            _windowDetector = windowDetector;
-            _matchingEngine = matchingEngine;
-            _policyEngine = policyEngine;
-            _autoTypeService = autoTypeService;
-            _totpPoller = totpPoller;
-            _totpService = totpService;
-            _nativeDetector = nativeDetector;
-        }
+        IActiveWindowDetector windowDetector,
+        ICredentialMatchingEngine matchingEngine,
+        IAutoInjectPolicyEngine policyEngine,
+        CorePlatform.IAutoTypeService autoTypeService,
+        ITotpFieldPoller totpPoller,
+        TotpService totpService,
+        WindowsNativeLoginDetector nativeDetector,
+        IntegratedAttestorService integratedAttestorService)
+    {
+        _windowDetector = windowDetector;
+        _matchingEngine = matchingEngine;
+        _policyEngine = policyEngine;
+        _autoTypeService = autoTypeService;
+        _totpPoller = totpPoller;
+        _totpService = totpService;
+        _nativeDetector = nativeDetector;
+        _integratedAttestorService = integratedAttestorService;
+    }
 
-        /// <inheritdoc/>
+        // Implement interface member SetVaultContext
         public void SetVaultContext(ICredentialProvider provider, VaultManifest manifest)
         {
             _credentialProvider = provider;
@@ -323,9 +326,16 @@ namespace PhantomVault.UI.Services.AutoFill
 
                         await Dispatcher.UIThread.InvokeAsync(async () =>
                         {
-                            var vm = new NoMatchFoundViewModel(portalId);
+                            var vm = new NoMatchFoundViewModel(
+                                portalId,
+                                _integratedAttestorService.IsAvailable,
+                                _integratedAttestorService.AvailabilityMessage);
                             var dialog = new NoMatchFoundWindow { DataContext = vm };
-                            await dialog.ShowAsync();
+                            var result = await dialog.ShowAsync();
+                            if (result == NoMatchResult.CreatePasskey)
+                            {
+                                _integratedAttestorService.TryLaunch(out _);
+                            }
                         });
 
                         state = State.Done;

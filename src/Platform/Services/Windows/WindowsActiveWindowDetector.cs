@@ -6,6 +6,8 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using PhantomVault.Core.Models.AutoInject;
 using PhantomVault.Platform.Services;
+using CoreActiveWindowDetector = PhantomVault.Core.Services.Platform.IActiveWindowDetector;
+using PlatformActiveWindowDetector = PhantomVault.Platform.Services.IActiveWindowDetector;
 
 namespace PhantomVault.Core.Services.Platform.Windows
 {
@@ -14,7 +16,7 @@ namespace PhantomVault.Core.Services.Platform.Windows
     /// with UI Automation support for native login form detection via
     /// <see cref="WindowsNativeLoginDetector"/>.
     /// </summary>
-    public class WindowsActiveWindowDetector : IActiveWindowDetector
+    public class WindowsActiveWindowDetector : PlatformActiveWindowDetector, CoreActiveWindowDetector
     {
         private readonly WindowsNativeLoginDetector _nativeDetector = new();
         [DllImport("user32.dll")]

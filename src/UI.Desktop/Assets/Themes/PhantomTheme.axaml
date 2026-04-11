@@ -6,17 +6,18 @@
     <Style>
         <Style.Resources>
             <!-- Color Palette -->
-            <!-- Main Background: Light Navy Blue with Charcoal blend (#2B3A4A) -->
-            <SolidColorBrush x:Key="WindowBackgroundBrush">#39506A</SolidColorBrush>
+            <!-- Main Background: Deep Navy -->
+            <SolidColorBrush x:Key="WindowBackgroundBrush">#1E2A38</SolidColorBrush>
             
-            <!-- Header Background: Slightly darker navy (#3D4F61) -->
-            <SolidColorBrush x:Key="HeaderBackgroundBrush">#3D4F61</SolidColorBrush>
+            <!-- Header Background: Deep teal -->
+            <SolidColorBrush x:Key="HeaderBackgroundBrush">#162030</SolidColorBrush>
+            <SolidColorBrush x:Key="HeaderBorderBrush">Transparent</SolidColorBrush>
             
-            <!-- Footer Background: Darker charcoal-navy (#34424F) -->
-            <SolidColorBrush x:Key="FooterBackgroundBrush">#34424F</SolidColorBrush>
+            <!-- Footer Background: Darkest navy -->
+            <SolidColorBrush x:Key="FooterBackgroundBrush">#141C28</SolidColorBrush>
             
-            <!-- Content Background: Slightly lighter than main (#35475B) -->
-            <SolidColorBrush x:Key="ContentBackgroundBrush">#35475B</SolidColorBrush>
+            <!-- Content Background: Deep base surface -->
+            <SolidColorBrush x:Key="ContentBackgroundBrush">#1A2535</SolidColorBrush>
             
             <!-- Accent Color: Pastel Duller Blue (#6B8CAE) -->
             <SolidColorBrush x:Key="AccentBrush">#6B8CAE</SolidColorBrush>
@@ -30,7 +31,7 @@
             <!-- Text Colors -->
             <SolidColorBrush x:Key="PrimaryTextBrush">#FFFFFF</SolidColorBrush>
             <SolidColorBrush x:Key="SecondaryTextBrush">#E0E6ED</SolidColorBrush>
-            <SolidColorBrush x:Key="MutedTextBrush">#B0B8C0</SolidColorBrush>
+            <SolidColorBrush x:Key="MutedTextBrush">#D0D8E0</SolidColorBrush>
             <SolidColorBrush x:Key="DisabledTextBrush">#7A8590</SolidColorBrush>
             
             <!-- Control Backgrounds -->
@@ -44,14 +45,14 @@
             <SolidColorBrush x:Key="WarningBrush">#FFC107</SolidColorBrush>
             <SolidColorBrush x:Key="ErrorBrush">#F48771</SolidColorBrush>
             
-            <!-- Dialog/Info Background Colors - Dull Navy Blue -->
-            <SolidColorBrush x:Key="SuccessBackgroundBrush">#3D4F61</SolidColorBrush>
-            <SolidColorBrush x:Key="WarningBackgroundBrush">#3D4F61</SolidColorBrush>
-            <SolidColorBrush x:Key="ErrorBackgroundBrush">#3D4F61</SolidColorBrush>
-            <SolidColorBrush x:Key="InfoBackgroundBrush">#3D4F61</SolidColorBrush>
+            <!-- Dialog/Info Background Colors -->
+            <SolidColorBrush x:Key="SuccessBackgroundBrush">#1A2A38</SolidColorBrush>
+            <SolidColorBrush x:Key="WarningBackgroundBrush">#1A2A38</SolidColorBrush>
+            <SolidColorBrush x:Key="ErrorBackgroundBrush">#1A2A38</SolidColorBrush>
+            <SolidColorBrush x:Key="InfoBackgroundBrush">#1A2A38</SolidColorBrush>
             
             <!-- Font Family -->
-            <FontFamily x:Key="MainFontFamily">Segoe UI</FontFamily>
+            <FontFamily x:Key="MainFontFamily">Segoe UI Variable, Segoe UI</FontFamily>
             
             <!-- Text Selection Colors -->
             <!-- Light grey selection for dark theme -->
@@ -59,26 +60,26 @@
             <SolidColorBrush x:Key="TextCaretBrush">#FFFFFF</SolidColorBrush>
 
             <!-- FIXED: Dark input surface for dark theme (was light #F5F7FA) -->
-            <SolidColorBrush x:Key="InputBackgroundBrush">#4A5C6E</SolidColorBrush>
+            <SolidColorBrush x:Key="InputBackgroundBrush">#2A3A4E</SolidColorBrush>
             <SolidColorBrush x:Key="InputForegroundBrush">#FFFFFF</SolidColorBrush>
             <!-- IMPROVED: Better contrast placeholder text for dark theme -->
             <SolidColorBrush x:Key="InputPlaceholderBrush">#C5CDD5</SolidColorBrush>
 
             <!-- ADDED: Dropdown/Flyout brushes for dark theme -->
-            <SolidColorBrush x:Key="FlyoutPresenterBackground">#35475B</SolidColorBrush>
-            <SolidColorBrush x:Key="MenuFlyoutPresenterBackground">#35475B</SolidColorBrush>
-            <SolidColorBrush x:Key="ComboBoxDropDownBackground">#35475B</SolidColorBrush>
-            <SolidColorBrush x:Key="PopupBackgroundBrush">#35475B</SolidColorBrush>
-            <SolidColorBrush x:Key="SystemControlBackgroundChromeMediumLowBrush">#35475B</SolidColorBrush>
+            <SolidColorBrush x:Key="FlyoutPresenterBackground">#222E3E</SolidColorBrush>
+            <SolidColorBrush x:Key="MenuFlyoutPresenterBackground">#222E3E</SolidColorBrush>
+            <SolidColorBrush x:Key="ComboBoxDropDownBackground">#222E3E</SolidColorBrush>
+            <SolidColorBrush x:Key="PopupBackgroundBrush">#222E3E</SolidColorBrush>
+            <SolidColorBrush x:Key="SystemControlBackgroundChromeMediumLowBrush">#222E3E</SolidColorBrush>
             <SolidColorBrush x:Key="SystemControlForegroundBaseHighBrush">#FFFFFF</SolidColorBrush>
 
             <!-- ComboBox item states for dark theme - SUBTLER: Barely visible highlights -->
-            <SolidColorBrush x:Key="ComboBoxItemBackground">#35475B</SolidColorBrush>
+            <SolidColorBrush x:Key="ComboBoxItemBackground">#222E3E</SolidColorBrush>
             <!-- SUBTLER: Barely noticeable hover (was #4A5C6E) -->
-            <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver">#3A4D62</SolidColorBrush>
+            <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver">#283848</SolidColorBrush>
             <!-- SUBTLER: Subtle pressed/selected (was #556D8A) -->
-            <SolidColorBrush x:Key="ComboBoxItemBackgroundPressed">#3F5368</SolidColorBrush>
-            <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected">#3F5368</SolidColorBrush>
+            <SolidColorBrush x:Key="ComboBoxItemBackgroundPressed">#2E4050</SolidColorBrush>
+            <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected">#2E4050</SolidColorBrush>
             <SolidColorBrush x:Key="ComboBoxItemForeground">#FFFFFF</SolidColorBrush>
             <SolidColorBrush x:Key="ComboBoxItemForegroundPointerOver">#FFFFFF</SolidColorBrush>
             <SolidColorBrush x:Key="ComboBoxItemForegroundPressed">#FFFFFF</SolidColorBrush>
@@ -89,7 +90,100 @@
             <SolidColorBrush x:Key="FocusBorderBrush">#7FA3C3</SolidColorBrush>
             <SolidColorBrush x:Key="FocusGlowBrush">#406B8CAE</SolidColorBrush>
             <x:Double x:Key="FocusBorderThickness">2</x:Double>
-        </Style.Resources>
+        
+            <!-- ═══ Dashboard sheet overlay (transparent glass behind dashboard) ═══ -->
+            <LinearGradientBrush x:Key="DashboardSheetOverlayBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+                <GradientStop Color="#68102035" Offset="0"/>
+                <GradientStop Color="#600E1C30" Offset="0.5"/>
+                <GradientStop Color="#58102035" Offset="1"/>
+            </LinearGradientBrush>
+            <Color x:Key="DashboardSheetAcrylicTint">#1E2A38</Color>
+            <Color x:Key="DashboardSheetAcrylicFallback">#18182838</Color>
+
+            <!-- ═══ Dashboard glass panel resources ═══ -->
+            <LinearGradientBrush x:Key="DashboardSectionBg" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#5C15253A" Offset="0"/>
+                <GradientStop Color="#50101E30" Offset="0.5"/>
+                <GradientStop Color="#48101B2E" Offset="1"/>
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="DashboardSectionHoverBg" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#6818293F" Offset="0"/>
+                <GradientStop Color="#5C142236" Offset="0.5"/>
+                <GradientStop Color="#521C2438" Offset="1"/>
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="DashboardSectionBorderBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#38FFFFFF" Offset="0"/>
+                <GradientStop Color="#28CFE8FF" Offset="0.35"/>
+                <GradientStop Color="#18FFFFFF" Offset="0.7"/>
+                <GradientStop Color="#10FFFFFF" Offset="1"/>
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="DashboardSectionHoverBorderBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#44FFFFFF" Offset="0"/>
+                <GradientStop Color="#30CFE8FF" Offset="0.35"/>
+                <GradientStop Color="#20FFFFFF" Offset="0.7"/>
+                <GradientStop Color="#14FFFFFF" Offset="1"/>
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="DashboardCardBg" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#5420364D" Offset="0"/>
+                <GradientStop Color="#4A1A2C3E" Offset="0.5"/>
+                <GradientStop Color="#40152232" Offset="1"/>
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="DashboardCardHoverBg" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#62253A55" Offset="0"/>
+                <GradientStop Color="#5620334A" Offset="0.5"/>
+                <GradientStop Color="#4A1B2D40" Offset="1"/>
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="DashboardCardPressedBg" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#481A2C42" Offset="0"/>
+                <GradientStop Color="#4016253A" Offset="0.5"/>
+                <GradientStop Color="#3A121F30" Offset="1"/>
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="DashboardNavBg" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#501C3048" Offset="0"/>
+                <GradientStop Color="#4616263A" Offset="0.5"/>
+                <GradientStop Color="#3C121E30" Offset="1"/>
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="DashboardNavHoverBg" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#5E223650" Offset="0"/>
+                <GradientStop Color="#521C2E44" Offset="0.5"/>
+                <GradientStop Color="#4818263A" Offset="1"/>
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="DashboardNavPressedBg" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#46162840" Offset="0"/>
+                <GradientStop Color="#3E122234" Offset="0.5"/>
+                <GradientStop Color="#38101C2C" Offset="1"/>
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="DashboardNavPrimaryBg" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#5C304878" Offset="0"/>
+                <GradientStop Color="#52283E68" Offset="0.5"/>
+                <GradientStop Color="#48203458" Offset="1"/>
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="DashboardNavPrimaryBorderBrush" Color="#50508CF0"/>
+            <LinearGradientBrush x:Key="DashboardPanelBg" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#141A2838" Offset="0"/>
+                <GradientStop Color="#0C152030" Offset="0.5"/>
+                <GradientStop Color="#08101820" Offset="1"/>
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="DashboardPanelBorderBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#1CCFE8FF" Offset="0"/>
+                <GradientStop Color="#0CCFE8FF" Offset="0.5"/>
+                <GradientStop Color="#06CFE8FF" Offset="1"/>
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="DashboardTileBg" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#221D3148" Offset="0"/>
+                <GradientStop Color="#1A16263A" Offset="0.5"/>
+                <GradientStop Color="#1415212E" Offset="1"/>
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="DashboardTileHoverBg" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#2820364D" Offset="0"/>
+                <GradientStop Color="#1E1A2C3E" Offset="0.5"/>
+                <GradientStop Color="#16152232" Offset="1"/>
+            </LinearGradientBrush>
+            <Color x:Key="DashboardTileBorderColor">#48FFFFFF</Color>
+            <Color x:Key="DashboardTileHoverBorderColor">#55CFE8FF</Color>
+            <Color x:Key="DashboardAcrylicTint">#14203A</Color>
+            <Color x:Key="DashboardAcrylicFallback">#0C15253A</Color>
+</Style.Resources>
     </Style>
     
     <!-- Global Text Style -->

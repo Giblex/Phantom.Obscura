@@ -42,7 +42,11 @@
                                FontSize="{StaticResource Type.H4.Size}" 
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
-                    <CheckBox Content="Require hardware token" 
+                    <TextBlock Text="This standalone window covers the compact core policy set. Clipboard timing, screenshot protection, recovery, and richer authentication workflows live in the in-vault settings panel."
+                               FontSize="{StaticResource Type.Small.Size}"
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               TextWrapping="Wrap"/>
+                    <CheckBox Content="Require hardware-token presence check" 
                               IsChecked="{Binding RequireHardwareToken, Mode=TwoWay}"/>
                     <CheckBox Content="Require keyfile" 
                               IsChecked="{Binding RequireKeyfile, Mode=TwoWay}"/>

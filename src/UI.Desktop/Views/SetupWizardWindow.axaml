@@ -2,12 +2,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:PhantomVault.UI.ViewModels"
         xmlns:views="clr-namespace:PhantomVault.UI.Views"
+        xmlns:controls="clr-namespace:PhantomVault.UI.Desktop.Controls"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="700"
         x:Class="PhantomVault.UI.Views.SetupWizardWindow"
         x:DataType="vm:SetupWizardViewModel"
-        Title="PhantomVault Setup Wizard"
+        Title="Phantom Obscura Setup Wizard"
         Width="900" Height="780"
         MinWidth="800" MinHeight="700"
         WindowStartupLocation="CenterScreen"
@@ -15,6 +16,98 @@
         Icon="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Parent Icon.ico"
         Background="{DynamicResource WindowBackgroundBrush}"
         Classes="animated-window">
+
+    <views:ThemeAwareWindow.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://PhantomVault.UI/Assets/Themes/PreVaultTheme.axaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </views:ThemeAwareWindow.Resources>
+
+    <!-- Strip default button chrome from step progress buttons -->
+    <views:ThemeAwareWindow.Styles>
+        <Style Selector="Button.step-btn">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+        <Style Selector="Button.step-btn /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="Button.step-btn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+        </Style>
+        <Style Selector="Button.step-btn:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+        </Style>
+        <Style Selector="Button.step-btn:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+        </Style>
+
+        <!-- Override RadioButton checked indicator: neutral light blue instead of accent green -->
+        <Style Selector="RadioButton:checked /template/ Ellipse#CheckGlyph">
+            <Setter Property="Fill" Value="#C8D5E0"/>
+        </Style>
+        <Style Selector="RadioButton:checked /template/ Border#OuterBorder">
+            <Setter Property="BorderBrush" Value="#C8D5E0"/>
+        </Style>
+        <Style Selector="RadioButton:checked:pointerover /template/ Border#OuterBorder">
+            <Setter Property="BorderBrush" Value="#E0E6ED"/>
+        </Style>
+        <Style Selector="RadioButton:checked:pointerover /template/ Ellipse#CheckGlyph">
+            <Setter Property="Fill" Value="#E0E6ED"/>
+        </Style>
+        <Style Selector="RadioButton:pointerover /template/ Border#OuterBorder">
+            <Setter Property="BorderBrush" Value="#8B9CB3"/>
+        </Style>
+
+        <!-- Override CheckBox checked indicator: neutral light blue instead of accent green -->
+        <Style Selector="CheckBox:checked /template/ Border#NormalRectangle">
+            <Setter Property="Background" Value="#C8D5E0"/>
+            <Setter Property="BorderBrush" Value="#C8D5E0"/>
+        </Style>
+        <Style Selector="CheckBox:checked:pointerover /template/ Border#NormalRectangle">
+            <Setter Property="Background" Value="#E0E6ED"/>
+            <Setter Property="BorderBrush" Value="#E0E6ED"/>
+        </Style>
+        <Style Selector="CheckBox:pointerover /template/ Border#NormalRectangle">
+            <Setter Property="BorderBrush" Value="#8B9CB3"/>
+        </Style>
+
+        <!-- Solid primary button (non-frosted Next button) -->
+        <Style Selector="Button.solid-primary">
+            <Setter Property="Background" Value="#1C2D42"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#40FFFFFF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Button.solid-primary /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#1C2D42"/>
+            <Setter Property="BorderBrush" Value="#40FFFFFF"/>
+            <Setter Property="CornerRadius" Value="8"/>
+        </Style>
+        <Style Selector="Button.solid-primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#24384F"/>
+            <Setter Property="BorderBrush" Value="#50FFFFFF"/>
+        </Style>
+        <Style Selector="Button.solid-primary:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#162235"/>
+            <Setter Property="BorderBrush" Value="#30FFFFFF"/>
+        </Style>
+        <Style Selector="Button.solid-primary:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#111B2A"/>
+            <Setter Property="BorderBrush" Value="#20FFFFFF"/>
+        </Style>
+    </views:ThemeAwareWindow.Styles>
 
     <Design.DataContext>
         <vm:SetupWizardViewModel/>
@@ -29,16 +122,17 @@
             <Grid RowDefinitions="Auto,Auto,Auto">
                 <!-- App Title and Logo -->
                 <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="12" Margin="0,0,0,16">
-                    <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Parent Icon.ico"
-                           Width="40" Height="40" VerticalAlignment="Center"/>
-                    <TextBlock Text="PhantomVault Setup"
+                    <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Security.svg"
+                                      IconColor="White" IconSize="36"
+                                      Width="36" Height="36" VerticalAlignment="Center"/>
+                    <TextBlock Text="Phantom Obscura Setup Wizard"
                                FontSize="{StaticResource Type.H2.Size}"
                                FontWeight="Bold"
                                Foreground="{DynamicResource PrimaryTextBrush}"
                                VerticalAlignment="Center"/>
                 </StackPanel>
 
-                <!-- Step Progress Bar - Clickable for completed steps -->
+                <!-- Step Progress Bar - Liquid glass circles with dark teal -->
                 <Grid Grid.Row="1" Margin="20,0,20,12">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -50,20 +144,31 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
+                    <!-- Connection lines between steps -->
+                    <Canvas Grid.Column="0" Grid.ColumnSpan="7" Height="32" VerticalAlignment="Top" Margin="50,0">
+                        <Line StartPoint="0,16" EndPoint="100,16" Stroke="#30FFFFFF" StrokeThickness="2"/>
+                        <Line StartPoint="100,16" EndPoint="200,16" Stroke="#30FFFFFF" StrokeThickness="2"/>
+                        <Line StartPoint="200,16" EndPoint="300,16" Stroke="#30FFFFFF" StrokeThickness="2"/>
+                        <Line StartPoint="300,16" EndPoint="400,16" Stroke="#30FFFFFF" StrokeThickness="2"/>
+                        <Line StartPoint="400,16" EndPoint="500,16" Stroke="#30FFFFFF" StrokeThickness="2"/>
+                        <Line StartPoint="500,16" EndPoint="600,16" Stroke="#30FFFFFF" StrokeThickness="2"
+                              IsVisible="{Binding UsesExtendedProgress}"/>
+                    </Canvas>
+
                     <!-- Step 1: Welcome -->
-                    <Button Grid.Column="0" 
+                    <Button Grid.Column="0" Classes="step-btn"
                             Command="{Binding GoToStepCommand}" CommandParameter="1"
                             IsEnabled="{Binding CurrentStep, Converter={x:Static views:StepClickableConverter.Instance}, ConverterParameter=1}"
                             Background="Transparent" BorderThickness="0" Padding="0"
                             HorizontalAlignment="Center" VerticalAlignment="Stretch"
                             Cursor="{Binding CurrentStep, Converter={x:Static views:StepCursorConverter.Instance}, ConverterParameter=1}">
                         <StackPanel HorizontalAlignment="Center" Spacing="4">
-                            <Border Width="32" Height="32" CornerRadius="16"
+                            <Border Width="36" Height="36" CornerRadius="18"
                                     Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=1}"
-                                    BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2">
-                                <TextBlock Text="1" FontSize="{StaticResource Type.Small.Size}" FontWeight="Bold"
-                                           Foreground="{DynamicResource PrimaryTextBrush}"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    BorderBrush="#40FFFFFF" BorderThickness="2">
+                                <controls:SvgIcon Preset="Info" IconColor="White" IconSize="20"
+                                                  Width="20" Height="20"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <TextBlock Text="Welcome" FontSize="{StaticResource Type.Mini.Size}" 
                                        Foreground="{DynamicResource SecondaryTextBrush}"
@@ -72,19 +177,19 @@
                     </Button>
 
                     <!-- Step 2: Security -->
-                    <Button Grid.Column="1"
+                    <Button Grid.Column="1" Classes="step-btn"
                             Command="{Binding GoToStepCommand}" CommandParameter="2"
                             IsEnabled="{Binding CurrentStep, Converter={x:Static views:StepClickableConverter.Instance}, ConverterParameter=2}"
                             Background="Transparent" BorderThickness="0" Padding="0"
                             HorizontalAlignment="Center" VerticalAlignment="Stretch"
                             Cursor="{Binding CurrentStep, Converter={x:Static views:StepCursorConverter.Instance}, ConverterParameter=2}">
                         <StackPanel HorizontalAlignment="Center" Spacing="4">
-                            <Border Width="32" Height="32" CornerRadius="16"
+                            <Border Width="36" Height="36" CornerRadius="18"
                                     Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=2}"
-                                    BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2">
-                                <TextBlock Text="2" FontSize="{StaticResource Type.Small.Size}" FontWeight="Bold"
-                                           Foreground="{DynamicResource PrimaryTextBrush}"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    BorderBrush="#40FFFFFF" BorderThickness="2">
+                                <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Password Strength.svg" IconColor="White" IconSize="20"
+                                                  Width="20" Height="20"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <TextBlock Text="Security" FontSize="{StaticResource Type.Mini.Size}"
                                        Foreground="{DynamicResource SecondaryTextBrush}"
@@ -92,20 +197,41 @@
                         </StackPanel>
                     </Button>
 
-                    <!-- Step 3: Storage -->
-                    <Button Grid.Column="2"
+                    <!-- Step 3: PhantomKey -->
+                    <Button Grid.Column="2" Classes="step-btn"
                             Command="{Binding GoToStepCommand}" CommandParameter="3"
                             IsEnabled="{Binding CurrentStep, Converter={x:Static views:StepClickableConverter.Instance}, ConverterParameter=3}"
                             Background="Transparent" BorderThickness="0" Padding="0"
                             HorizontalAlignment="Center" VerticalAlignment="Stretch"
                             Cursor="{Binding CurrentStep, Converter={x:Static views:StepCursorConverter.Instance}, ConverterParameter=3}">
                         <StackPanel HorizontalAlignment="Center" Spacing="4">
-                            <Border Width="32" Height="32" CornerRadius="16"
+                            <Border Width="36" Height="36" CornerRadius="18"
                                     Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=3}"
-                                    BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2">
-                                <TextBlock Text="3" FontSize="{StaticResource Type.Small.Size}" FontWeight="Bold"
-                                           Foreground="{DynamicResource PrimaryTextBrush}"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    BorderBrush="#40FFFFFF" BorderThickness="2">
+                                <controls:SvgIcon Preset="Shield" IconColor="White" IconSize="20"
+                                                  Width="20" Height="20"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="PhantomKey" FontSize="{StaticResource Type.Mini.Size}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Step 4: Storage -->
+                    <Button Grid.Column="3" Classes="step-btn"
+                            Command="{Binding GoToStepCommand}" CommandParameter="4"
+                            IsEnabled="{Binding CurrentStep, Converter={x:Static views:StepClickableConverter.Instance}, ConverterParameter=4}"
+                            Background="Transparent" BorderThickness="0" Padding="0"
+                            HorizontalAlignment="Center" VerticalAlignment="Stretch"
+                            Cursor="{Binding CurrentStep, Converter={x:Static views:StepCursorConverter.Instance}, ConverterParameter=4}">
+                        <StackPanel HorizontalAlignment="Center" Spacing="4">
+                            <Border Width="36" Height="36" CornerRadius="18"
+                                    Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=4}"
+                                    BorderBrush="#40FFFFFF" BorderThickness="2">
+                                <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Storage Location.svg" IconColor="White" IconSize="20"
+                                                  Width="20" Height="20"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <TextBlock Text="Storage" FontSize="{StaticResource Type.Mini.Size}"
                                        Foreground="{DynamicResource SecondaryTextBrush}"
@@ -113,20 +239,20 @@
                         </StackPanel>
                     </Button>
 
-                    <!-- Step 4: Keyfile -->
-                    <Button Grid.Column="3"
-                            Command="{Binding GoToStepCommand}" CommandParameter="4"
-                            IsEnabled="{Binding CurrentStep, Converter={x:Static views:StepClickableConverter.Instance}, ConverterParameter=4}"
+                    <!-- Step 5: Keyfile -->
+                    <Button Grid.Column="4" Classes="step-btn"
+                            Command="{Binding GoToStepCommand}" CommandParameter="5"
+                            IsEnabled="{Binding CurrentStep, Converter={x:Static views:StepClickableConverter.Instance}, ConverterParameter=5}"
                             Background="Transparent" BorderThickness="0" Padding="0"
                             HorizontalAlignment="Center" VerticalAlignment="Stretch"
-                            Cursor="{Binding CurrentStep, Converter={x:Static views:StepCursorConverter.Instance}, ConverterParameter=4}">
+                            Cursor="{Binding CurrentStep, Converter={x:Static views:StepCursorConverter.Instance}, ConverterParameter=5}">
                         <StackPanel HorizontalAlignment="Center" Spacing="4">
-                            <Border Width="32" Height="32" CornerRadius="16"
-                                    Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=4}"
-                                    BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2">
-                                <TextBlock Text="4" FontSize="{StaticResource Type.Small.Size}" FontWeight="Bold"
-                                           Foreground="{DynamicResource PrimaryTextBrush}"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Border Width="36" Height="36" CornerRadius="18"
+                                    Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=5}"
+                                    BorderBrush="#40FFFFFF" BorderThickness="2">
+                                <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Keyfile.svg" IconColor="White" IconSize="20"
+                                                  Width="20" Height="20"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <TextBlock Text="Keyfile" FontSize="{StaticResource Type.Mini.Size}"
                                        Foreground="{DynamicResource SecondaryTextBrush}"
@@ -134,56 +260,44 @@
                         </StackPanel>
                     </Button>
 
-                    <!-- Step 5: Hello -->
-                    <Button Grid.Column="4"
-                            Command="{Binding GoToStepCommand}" CommandParameter="5"
-                            IsEnabled="{Binding CurrentStep, Converter={x:Static views:StepClickableConverter.Instance}, ConverterParameter=5}"
-                            Background="Transparent" BorderThickness="0" Padding="0"
-                            HorizontalAlignment="Center" VerticalAlignment="Stretch"
-                            Cursor="{Binding CurrentStep, Converter={x:Static views:StepCursorConverter.Instance}, ConverterParameter=5}">
-                        <StackPanel HorizontalAlignment="Center" Spacing="4">
-                            <Border Width="32" Height="32" CornerRadius="16"
-                                    Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=5}"
-                                    BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2">
-                                <TextBlock Text="5" FontSize="{StaticResource Type.Small.Size}" FontWeight="Bold"
-                                           Foreground="{DynamicResource PrimaryTextBrush}"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <TextBlock Text="Hello" FontSize="{StaticResource Type.Mini.Size}"
-                                       Foreground="{DynamicResource SecondaryTextBrush}"
-                                       HorizontalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
+                    <!-- Step 6: Remnants or Complete (not clickable) -->
+                    <StackPanel Grid.Column="5" HorizontalAlignment="Center" Spacing="4"
+                                IsVisible="{Binding UsesExtendedProgress}">
+                        <Border Width="36" Height="36" CornerRadius="18"
+                                Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=6}"
+                                BorderBrush="#40FFFFFF" BorderThickness="2">
+                            <controls:SvgIcon Preset="AlertTriangle" IconColor="White" IconSize="20"
+                                              Width="20" Height="20"
+                                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="Remnants" FontSize="{StaticResource Type.Mini.Size}"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
 
-                    <!-- Step 6: Auth -->
-                    <Button Grid.Column="5"
-                            Command="{Binding GoToStepCommand}" CommandParameter="6"
-                            IsEnabled="{Binding CurrentStep, Converter={x:Static views:StepClickableConverter.Instance}, ConverterParameter=6}"
-                            Background="Transparent" BorderThickness="0" Padding="0"
-                            HorizontalAlignment="Center" VerticalAlignment="Stretch"
-                            Cursor="{Binding CurrentStep, Converter={x:Static views:StepCursorConverter.Instance}, ConverterParameter=6}">
-                        <StackPanel HorizontalAlignment="Center" Spacing="4">
-                            <Border Width="32" Height="32" CornerRadius="16"
-                                    Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=6}"
-                                    BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2">
-                                <TextBlock Text="6" FontSize="{StaticResource Type.Small.Size}" FontWeight="Bold"
-                                           Foreground="{DynamicResource PrimaryTextBrush}"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <TextBlock Text="Auth" FontSize="{StaticResource Type.Mini.Size}"
-                                       Foreground="{DynamicResource SecondaryTextBrush}"
-                                       HorizontalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
+                    <StackPanel Grid.Column="5" HorizontalAlignment="Center" Spacing="4"
+                                IsVisible="{Binding !UsesExtendedProgress}">
+                        <Border Width="36" Height="36" CornerRadius="18"
+                                Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=6}"
+                                BorderBrush="#40FFFFFF" BorderThickness="2">
+                            <controls:SvgIcon Preset="Check" IconColor="White" IconSize="20"
+                                              Width="20" Height="20"
+                                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="Complete" FontSize="{StaticResource Type.Mini.Size}"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
 
-                    <!-- Step 7: Complete (not clickable - can only reach via completion) -->
-                    <StackPanel Grid.Column="6" HorizontalAlignment="Center" Spacing="4">
-                        <Border Width="32" Height="32" CornerRadius="16"
+                    <!-- Step 7: Final review/complete when remnants are present -->
+                    <StackPanel Grid.Column="6" HorizontalAlignment="Center" Spacing="4"
+                                IsVisible="{Binding UsesExtendedProgress}">
+                        <Border Width="36" Height="36" CornerRadius="18"
                                 Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=7}"
-                                BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2">
-                            <TextBlock Text="✓" FontSize="{StaticResource Type.Small.Size}" FontWeight="Bold"
-                                       Foreground="{DynamicResource PrimaryTextBrush}"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                BorderBrush="#40FFFFFF" BorderThickness="2">
+                            <controls:SvgIcon Preset="Check" IconColor="White" IconSize="20"
+                                              Width="20" Height="20"
+                                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <TextBlock Text="Complete" FontSize="{StaticResource Type.Mini.Size}"
                                    Foreground="{DynamicResource SecondaryTextBrush}"
@@ -221,14 +335,15 @@
                             <StackPanel Spacing="16">
                                 <!-- Animated Icon -->
                                 <Border Width="64" Height="64" CornerRadius="32"
-                                        Background="{DynamicResource AccentBrush}"
+                                        Background="#111B2A"
                                         HorizontalAlignment="Center">
-                                    <Image Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Key/Key_teal.png"
-                                           Width="32" Height="32"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Security.svg"
+                                                      IconColor="White" IconSize="32"
+                                                      Width="32" Height="32"
+                                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
 
-                                <TextBlock Text="Welcome to PhantomVault"
+                                <TextBlock Text="Welcome to Phantom Obscura"
                                            FontSize="{StaticResource Type.H2.Size}"
                                            FontWeight="Bold"
                                            Foreground="{DynamicResource PrimaryTextBrush}"
@@ -239,12 +354,12 @@
                                            Foreground="{DynamicResource SecondaryTextBrush}"
                                            TextAlignment="Center"
                                            LineHeight="24">
-                                    This wizard will guide you through setting up your secure password vault.
-                                    PhantomVault uses military-grade post-quantum encryption to protect your credentials.
+                                    This wizard will guide you through setting up your secure vault.
+                                    Phantom Obscura uses military-grade post-quantum encryption to protect your credentials.
                                 </TextBlock>
 
                                 <!-- Feature Highlights -->
-                                <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                <Border Background="#162235"
                                         CornerRadius="{StaticResource Radius.Lg}"
                                         Padding="20,16"
                                         Margin="0,12,0,0">
@@ -256,23 +371,28 @@
                                         
                                         <StackPanel Spacing="8">
                                             <StackPanel Orientation="Horizontal" Spacing="10">
-                                                <Image Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Settings/settings_teal.png" Width="18" Height="18" VerticalAlignment="Center"/>
+                                                <controls:SvgIcon Preset="Settings" IconColor="White" IconSize="22" Width="22" Height="22" VerticalAlignment="Center"/>
                                                 <TextBlock Text="Security level tailored to your needs"
                                                            Foreground="{DynamicResource SecondaryTextBrush}"/>
                                             </StackPanel>
                                             <StackPanel Orientation="Horizontal" Spacing="10">
-                                                <Image Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Folders/3917418_teal.png" Width="18" Height="18" VerticalAlignment="Center"/>
-                                                <TextBlock Text="Secure storage on USB or local drive"
+                                                <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Storage Location.svg" IconColor="White" IconSize="22" Width="22" Height="22" VerticalAlignment="Center"/>
+                                                <TextBlock Text="USB-bound encrypted storage with device binding"
                                                            Foreground="{DynamicResource SecondaryTextBrush}"/>
                                             </StackPanel>
                                             <StackPanel Orientation="Horizontal" Spacing="10">
-                                                <Image Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Key/Key_electric_blue.png" Width="18" Height="18" VerticalAlignment="Center"/>
+                                                <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Keyfile.svg" IconColor="White" IconSize="22" Width="22" Height="22" VerticalAlignment="Center"/>
                                                 <TextBlock Text="Secure keyfile generation (required)"
                                                            Foreground="{DynamicResource SecondaryTextBrush}"/>
                                             </StackPanel>
                                             <StackPanel Orientation="Horizontal" Spacing="10">
-                                                <Image Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Key/Key_purple.png" Width="18" Height="18" VerticalAlignment="Center"/>
-                                                <TextBlock Text="Optional master password for extra protection"
+                                                <controls:SvgIcon Preset="Shield" IconColor="White" IconSize="22" Width="22" Height="22" VerticalAlignment="Center"/>
+                                                <TextBlock Text="PhantomKey hardware binding for maximum protection"
+                                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                                <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Password.svg" IconColor="White" IconSize="22" Width="22" Height="22" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Master password support, required for Black Secure"
                                                            Foreground="{DynamicResource SecondaryTextBrush}"/>
                                             </StackPanel>
                                         </StackPanel>
@@ -297,7 +417,7 @@
                                            FontSize="{StaticResource Type.Small.Size}"
                                            Foreground="{DynamicResource MutedTextBrush}"
                                            LineHeight="20">
-                                    By using PhantomVault, you agree to take responsibility for the security of your master password
+                                    By using Phantom Obscura, you agree to take responsibility for the security of your master password
                                     and any keyfiles. We cannot recover your data if you lose access to your credentials.
                                     Your vault is encrypted locally and never transmitted to external servers.
                                 </TextBlock>
@@ -325,13 +445,17 @@
                                 BorderThickness="1">
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Image Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Settings/settings_teal.png" Width="32" Height="32" VerticalAlignment="Center"/>
+                                    <Border Width="40" Height="40" CornerRadius="20" Background="#111B2A">
+                                        <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Password Strength.svg" IconColor="White" IconSize="24"
+                                                          Width="24" Height="24"
+                                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
                                     <StackPanel>
-                                        <TextBlock Text="Choose Your Security Level"
+                                        <TextBlock Text="Choose Your Protection Tier"
                                                    FontSize="{StaticResource Type.H3.Size}"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                        <TextBlock Text="Select the protection level that matches your needs"
+                                        <TextBlock Text="Select the storage and privacy tier that matches your threat model"
                                                    FontSize="{StaticResource Type.Small.Size}"
                                                    Foreground="{DynamicResource MutedTextBrush}"/>
                                     </StackPanel>
@@ -348,11 +472,12 @@
                                             Padding="20,16"
                                             Margin="0,0,0,12"
                                             BorderThickness="2"
-                                            Cursor="Hand">
+                                            Cursor="Hand"
+                                            Tapped="SecurityLevelCard_Tapped">
                                         <Grid ColumnDefinitions="Auto,*">
                                             <RadioButton Grid.Column="0"
                                                          GroupName="SecurityLevel"
-                                                         IsChecked="{Binding Name, Converter={x:Static views:SecurityLevelSelectedConverter.Instance}}"
+                                                         IsChecked="{Binding IsSelected, Mode=OneWay}"
                                                          VerticalAlignment="Top"
                                                          Margin="0,4,16,0"/>
                                             <StackPanel Grid.Column="1" Spacing="8">
@@ -362,13 +487,13 @@
                                                                FontWeight="SemiBold"
                                                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                                                     <Border IsVisible="{Binding Name, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                                            Background="{DynamicResource AccentBrush}"
+                                                            Background="#111B2A"
                                                             CornerRadius="4"
                                                             Padding="8,2"
                                                             VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding RecommendedFor}"
                                                                    FontSize="{StaticResource Type.Micro.Size}"
-                                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
                                                     </Border>
                                                 </StackPanel>
                                                 
@@ -382,7 +507,7 @@
                                                         <DataTemplate>
                                                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,2">
                                                                 <TextBlock Text="✓" FontSize="{StaticResource Type.Small.Size}" 
-                                                                           Foreground="{DynamicResource SuccessBrush}"/>
+                                                                           Foreground="White"/>
                                                                 <TextBlock Text="{Binding}"
                                                                            FontSize="{StaticResource Type.Small.Size}"
                                                                            Foreground="{DynamicResource MutedTextBrush}"/>
@@ -396,11 +521,138 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
+
                     </StackPanel>
                 </Border>
 
-                <!-- Step 3: Storage Location -->
+                <!-- Step 3: PhantomKey Setup -->
                 <Border IsVisible="{Binding CurrentStep, Converter={x:Static views:StepVisibilityConverter.Instance}, ConverterParameter=3}"
+                        Classes="fade-in">
+                    <StackPanel Spacing="20" MaxWidth="700" HorizontalAlignment="Center">
+                        <!-- Enable PhantomKey -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                CornerRadius="{StaticResource Radius.Xl}"
+                                Padding="24,20"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <Border Width="40" Height="40" CornerRadius="20" Background="#111B2A">
+                                        <controls:SvgIcon Preset="Shield" IconColor="White" IconSize="24"
+                                                          Width="24" Height="24"
+                                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="PhantomKey Hardware Binding"
+                                                   FontSize="{StaticResource Type.H4.Size}"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                        <TextBlock Text="Hardware-based vault authentication"
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <CheckBox IsChecked="{Binding EnablePhantomKey}" Margin="0,4,0,0">
+                                    <TextBlock Text="Enable PhantomKey hardware binding"
+                                               FontSize="{StaticResource Type.Body.Size}"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                </CheckBox>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- What is PhantomKey -->
+                        <Border Background="#162235" CornerRadius="12" Padding="20,16"
+                                IsVisible="{Binding EnablePhantomKey}">
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="What is PhantomKey?"
+                                           FontSize="{StaticResource Type.H4.Size}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                <TextBlock TextWrapping="Wrap"
+                                           FontSize="{StaticResource Type.Body.Size}"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           LineHeight="22">
+                                    PhantomKey binds your vault to a physical hardware key, ensuring that
+                                    your vault can only be accessed when the registered device is connected.
+                                    This adds a critical layer of protection against unauthorized access.
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- How it works -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                CornerRadius="{StaticResource Radius.Xl}"
+                                Padding="24,20"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1"
+                                IsVisible="{Binding EnablePhantomKey}">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="How it works"
+                                           FontSize="{StaticResource Type.H4.Size}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+                                <StackPanel Spacing="8">
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Border Width="28" Height="28" CornerRadius="14" Background="#1C2D42">
+                                            <TextBlock Text="1" FontSize="13" FontWeight="Bold"
+                                                       Foreground="White"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Text="Connect a USB security key or hardware token"
+                                                   FontSize="{StaticResource Type.Body.Size}"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Border Width="28" Height="28" CornerRadius="14" Background="#1C2D42">
+                                            <TextBlock Text="2" FontSize="13" FontWeight="Bold"
+                                                       Foreground="White"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Text="Register the device as your PhantomKey"
+                                                   FontSize="{StaticResource Type.Body.Size}"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <Border Width="28" Height="28" CornerRadius="14" Background="#1C2D42">
+                                            <TextBlock Text="3" FontSize="13" FontWeight="Bold"
+                                                       Foreground="White"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Text="Your vault will require this key to unlock"
+                                                   FontSize="{StaticResource Type.Body.Size}"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Note -->
+                        <Border Background="#162235" CornerRadius="8" Padding="14,10"
+                                IsVisible="{Binding EnablePhantomKey}">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <controls:SvgIcon Preset="Info" IconColor="{DynamicResource MutedTextBrush}" IconSize="20"
+                                                  Width="20" Height="20" VerticalAlignment="Top" Margin="0,2,0,0"/>
+                                <TextBlock TextWrapping="Wrap"
+                                           FontSize="{StaticResource Type.Small.Size}"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           LineHeight="20">
+                                    PhantomKey registration will be completed after vault creation.
+                                    You can configure your hardware key from Security Settings at any time.
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- Step 4: USB Storage -->
+                <Border IsVisible="{Binding CurrentStep, Converter={x:Static views:StepVisibilityConverter.Instance}, ConverterParameter=4}"
                         Classes="fade-in">
                     <StackPanel Spacing="20" MaxWidth="700" HorizontalAlignment="Center">
                         <!-- Explanation -->
@@ -411,13 +663,17 @@
                                 BorderThickness="1">
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Image Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Folders/3917418_teal.png" Width="32" Height="32" VerticalAlignment="Center"/>
+                                    <Border Width="40" Height="40" CornerRadius="20" Background="#111B2A">
+                                        <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Storage Location.svg" IconColor="White" IconSize="24"
+                                                          Width="24" Height="24"
+                                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
                                     <StackPanel>
-                                        <TextBlock Text="Select Storage Location"
+                                        <TextBlock Text="USB Storage Configuration"
                                                    FontSize="{StaticResource Type.H3.Size}"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                        <TextBlock Text="Choose where your encrypted vault will be stored"
+                                        <TextBlock Text="Configure your USB-bound encrypted vault storage"
                                                    FontSize="{StaticResource Type.Small.Size}"
                                                    Foreground="{DynamicResource MutedTextBrush}"/>
                                     </StackPanel>
@@ -428,39 +684,35 @@
                                            Foreground="{DynamicResource SecondaryTextBrush}"
                                            LineHeight="22"
                                            Margin="0,8,0,0">
-                                    USB storage is recommended for maximum security - your vault travels with you and 
-                                    isn't accessible when the drive is disconnected. Local storage is convenient but 
-                                    offers less physical security.
+                                    Your encrypted vault will be stored on a USB drive for maximum physical security. 
+                                    The vault is only accessible when the drive is connected and cannot be decrypted 
+                                    from another device.
                                 </TextBlock>
                             </StackPanel>
                         </Border>
 
-                        <!-- USB Option -->
+                        <!-- USB Drive Selection -->
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 CornerRadius="{StaticResource Radius.Xl}"
                                 Padding="20,16"
-                                BorderBrush="{Binding SelectedStorageLocation, Converter={x:Static views:StorageLocationBorderConverter.Instance}, ConverterParameter=USB}"
-                                BorderThickness="2"
-                                Cursor="Hand">
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="2">
                             <Grid ColumnDefinitions="Auto,*,Auto">
-                                <RadioButton Grid.Column="0"
-                                             GroupName="StorageLocation"
-                                             IsChecked="{Binding SelectedStorageLocation, Converter={x:Static views:StorageLocationConverter.Instance}, ConverterParameter=USB}"
-                                             VerticalAlignment="Center"
-                                             Margin="0,0,16,0"/>
+                                <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18" Background="#111B2A"
+                                        VerticalAlignment="Center" Margin="0,0,16,0">
+                                    <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Storage Location.svg" IconColor="White" IconSize="22"
+                                                      Width="22" Height="22"
+                                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
                                 <StackPanel Grid.Column="1" Spacing="6">
-                                    <StackPanel Orientation="Horizontal" Spacing="10">
-                                        <Image Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Folders/3917418_electric_blue.png" Width="22" Height="22" VerticalAlignment="Center"/>
-                                        <TextBlock Text="USB Drive (Recommended)"
-                                                   FontSize="{StaticResource Type.H4.Size}"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                    </StackPanel>
-                                    <TextBlock Text="Store your vault on a removable USB drive for maximum security"
+                                    <TextBlock Text="Select USB Drive"
+                                               FontSize="{StaticResource Type.H4.Size}"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    <TextBlock Text="Choose the USB drive for your encrypted vault storage"
                                                FontSize="{StaticResource Type.Small.Size}"
                                                Foreground="{DynamicResource MutedTextBrush}"/>
                                     
-                                    <!-- USB Drive Selection -->
                                     <Border Background="{DynamicResource ControlBackgroundBrush}"
                                             CornerRadius="{StaticResource Radius.Md}"
                                             Padding="12,8"
@@ -475,59 +727,43 @@
                                     <StackPanel Orientation="Horizontal" Spacing="8"
                                                 IsVisible="{Binding !UsbDetected}"
                                                 Margin="0,8,0,0">
-                                        <Image Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Information empty (2)/Information empty (2)_deeper_pink_red.png" Width="16" Height="16" VerticalAlignment="Center"/>
+                                        <controls:SvgIcon Preset="AlertTriangle" IconColor="{DynamicResource WarningBrush}" IconSize="20"
+                                                          Width="20" Height="20" VerticalAlignment="Center"/>
                                         <TextBlock Text="No USB drives detected. Please connect a USB drive."
                                                    FontSize="{StaticResource Type.Small.Size}"
                                                    Foreground="{DynamicResource WarningBrush}"/>
                                     </StackPanel>
+
+                                    <!-- Remaining USB Space -->
+                                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0"
+                                                IsVisible="{Binding RemainingUsbSpaceDisplay, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                        <controls:SvgIcon Preset="Database" IconColor="White" IconSize="20"
+                                                          Width="20" Height="20" VerticalAlignment="Center"/>
+                                        <TextBlock FontSize="{StaticResource Type.Small.Size}" Foreground="{DynamicResource SecondaryTextBrush}">
+                                            <Run Text="Available space: "/>
+                                            <Run Text="{Binding RemainingUsbSpaceDisplay}"/>
+                                        </TextBlock>
+                                    </StackPanel>
                                 </StackPanel>
                                 <Button Grid.Column="2"
                                         Command="{Binding LoadStepDataCommand}"
-                                        Content="↻ Refresh"
+                                        Content="Refresh"
                                         Classes="liquid-glass"
                                         Width="90" Height="32"
                                         VerticalAlignment="Top"/>
                             </Grid>
                         </Border>
 
-                        <!-- Local Option -->
-                        <Border Background="{DynamicResource CardBackgroundBrush}"
-                                CornerRadius="{StaticResource Radius.Xl}"
-                                Padding="20,16"
-                                BorderBrush="{Binding SelectedStorageLocation, Converter={x:Static views:StorageLocationBorderConverter.Instance}, ConverterParameter=Local}"
-                                BorderThickness="2"
-                                Cursor="Hand">
-                            <Grid ColumnDefinitions="Auto,*">
-                                <RadioButton Grid.Column="0"
-                                             GroupName="StorageLocation"
-                                             IsChecked="{Binding SelectedStorageLocation, Converter={x:Static views:StorageLocationConverter.Instance}, ConverterParameter=Local}"
-                                             VerticalAlignment="Center"
-                                             Margin="0,0,16,0"/>
-                                <StackPanel Grid.Column="1" Spacing="6">
-                                    <StackPanel Orientation="Horizontal" Spacing="10">
-                                        <Image Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Folders/3917418_purple.png" Width="22" Height="22" VerticalAlignment="Center"/>
-                                        <TextBlock Text="Local Storage"
-                                                   FontSize="{StaticResource Type.H4.Size}"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                    </StackPanel>
-                                    <TextBlock Text="Store your vault in your Documents folder (less secure but more convenient)"
-                                               FontSize="{StaticResource Type.Small.Size}"
-                                               Foreground="{DynamicResource MutedTextBrush}"/>
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-
-                        <!-- USB Device Binding Option (shown when USB is selected) -->
+                        <!-- USB Device Binding -->
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 CornerRadius="{StaticResource Radius.Xl}"
                                 Padding="20,16"
                                 BorderBrush="{DynamicResource ControlBorderBrush}"
-                                BorderThickness="1"
-                                IsVisible="{Binding SelectedStorageLocation, Converter={x:Static views:StorageLocationConverter.Instance}, ConverterParameter=USB}">
+                                BorderThickness="1">
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Image Source="avares://PhantomVault.UI/Assets/Visuals/Cat Icons/Locked/Locked_teal.png" Width="24" Height="24" VerticalAlignment="Center"/>
+                                    <controls:SvgIcon Preset="Lock" IconColor="White" IconSize="24"
+                                                      Width="24" Height="24" VerticalAlignment="Center"/>
                                     <TextBlock Text="USB Device Binding"
                                                FontSize="{StaticResource Type.H4.Size}"
                                                FontWeight="SemiBold"
@@ -553,9 +789,10 @@
                                         Padding="12,8"
                                         IsVisible="{Binding UsbDeviceId, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <TextBlock Text="✓" FontSize="{StaticResource Type.Body.Size}" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" VerticalAlignment="Center"/>
+                                        <controls:SvgIcon Preset="Check" IconColor="White" IconSize="20"
+                                                          Width="20" Height="20" VerticalAlignment="Center"/>
                                         <TextBlock FontSize="{StaticResource Type.Small.Size}"
-                                                   Foreground="{DynamicResource SuccessBrush}">
+                                                   Foreground="White">
                                             <Run Text="Device ID: "/>
                                             <Run Text="{Binding UsbDeviceId}" FontFamily="{StaticResource MonoFontFamily}"/>
                                         </TextBlock>
@@ -563,11 +800,102 @@
                                 </Border>
                             </StackPanel>
                         </Border>
+
+                        <!-- GUUID Binding -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                CornerRadius="{StaticResource Radius.Xl}"
+                                Padding="20,16"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <Border Width="36" Height="36" CornerRadius="18" Background="#111B2A">
+                                        <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Link.svg" IconColor="White" IconSize="22"
+                                                          Width="22" Height="22"
+                                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel>
+                                        <TextBlock Text="GUUID Binding"
+                                                   FontSize="{StaticResource Type.H4.Size}"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                        <TextBlock Text="Globally unique identifier binding for vault identity"
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <CheckBox IsChecked="{Binding EnableGuuidBinding}" Margin="0,4,0,0">
+                                    <TextBlock Text="Enable GUUID binding"
+                                               FontSize="{StaticResource Type.Body.Size}"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                </CheckBox>
+
+                                <Border Background="#162235" CornerRadius="8" Padding="12,8"
+                                        IsVisible="{Binding GuuidValue, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <controls:SvgIcon Preset="Check" IconColor="White" IconSize="20"
+                                                          Width="20" Height="20" VerticalAlignment="Center"/>
+                                        <TextBlock FontSize="{StaticResource Type.Small.Size}" Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   FontFamily="{StaticResource MonoFontFamily}"
+                                                   Text="{Binding GuuidValue}"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Encrypted Container -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                CornerRadius="{StaticResource Radius.Xl}"
+                                Padding="20,16"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <Border Width="36" Height="36" CornerRadius="18" Background="#111B2A">
+                                        <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Encrypted Container.svg" IconColor="White" IconSize="22"
+                                                          Width="22" Height="22"
+                                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel>
+                                        <TextBlock Text="Encrypted Container"
+                                                   FontSize="{StaticResource Type.H4.Size}"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                        <TextBlock Text="Create an encrypted container for vault data isolation"
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <CheckBox IsChecked="{Binding EnableEncryptedContainer}" Margin="0,4,0,0">
+                                    <TextBlock Text="Enable encrypted container"
+                                               FontSize="{StaticResource Type.Body.Size}"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                </CheckBox>
+
+                                <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,4,0,0"
+                                            IsVisible="{Binding EnableEncryptedContainer}">
+                                    <TextBlock Text="Container size:"
+                                               FontSize="{StaticResource Type.Body.Size}"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               VerticalAlignment="Center"/>
+                                    <ComboBox SelectedItem="{Binding EncryptedContainerSize}"
+                                              Width="140">
+                                        <ComboBoxItem Content="128 MB"/>
+                                        <ComboBoxItem Content="256 MB"/>
+                                        <ComboBoxItem Content="512 MB"/>
+                                        <ComboBoxItem Content="1 GB"/>
+                                        <ComboBoxItem Content="2 GB"/>
+                                    </ComboBox>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </Border>
 
-                <!-- Step 4: Keyfile & Password -->
-                <Border IsVisible="{Binding CurrentStep, Converter={x:Static views:StepVisibilityConverter.Instance}, ConverterParameter=4}"
+                <!-- Step 5: Keyfile & Password -->
+                <Border IsVisible="{Binding CurrentStep, Converter={x:Static views:StepVisibilityConverter.Instance}, ConverterParameter=5}"
                         Classes="fade-in">
                     <StackPanel Spacing="20" MaxWidth="700" HorizontalAlignment="Center">
                         <!-- Keyfile Section (Required) -->
@@ -578,39 +906,42 @@
                                 BorderThickness="2">
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Image Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Key/Key_teal.png" Width="32" Height="32" VerticalAlignment="Center"/>
+                                    <Border Width="40" Height="40" CornerRadius="20" Background="#111B2A">
+                                        <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Keyfile.svg" IconColor="White" IconSize="24"
+                                                          Width="24" Height="24"
+                                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
                                     <StackPanel>
-                                        <TextBlock Text="Keyfile Configuration"
+                                        <TextBlock Text="{Binding KeyMaterialSectionTitle}"
                                                    FontSize="{StaticResource Type.H3.Size}"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                        <TextBlock Text="Required - Your vault will be secured with a unique keyfile"
+                                        <TextBlock Text="{Binding KeyMaterialSectionSubtitle}"
                                                    FontSize="{StaticResource Type.Small.Size}"
                                                    Foreground="{DynamicResource AccentBrush}"
                                                    FontWeight="SemiBold"/>
                                     </StackPanel>
                                 </StackPanel>
 
-                                <TextBlock TextWrapping="Wrap"
+                                <TextBlock Text="{Binding KeyMaterialDescription}"
+                                           TextWrapping="Wrap"
                                            FontSize="{StaticResource Type.Body.Size}"
                                            Foreground="{DynamicResource SecondaryTextBrush}"
                                            LineHeight="22"
-                                           Margin="0,8,0,0">
-                                    A keyfile is a cryptographic file that acts as your primary authentication method.
-                                    Store it securely on your USB drive or in a safe location. Without this file, 
-                                    your vault cannot be accessed.
-                                </TextBlock>
+                                           Margin="0,8,0,0"/>
 
                                 <!-- Keyfile Option Selection -->
                                 <Border Background="{DynamicResource ControlBackgroundBrush}"
                                         CornerRadius="{StaticResource Radius.Md}"
                                         Padding="16,12"
-                                        Margin="0,8,0,0">
+                                        Margin="0,8,0,0"
+                                        IsVisible="{Binding SupportsExternalKeyfile}">
                                     <StackPanel Spacing="12">
                                         <!-- Generate New Keyfile Option -->
                                         <RadioButton IsChecked="{Binding !UseExistingKeyfile}" GroupName="KeyfileOption">
                                             <StackPanel Orientation="Horizontal" Spacing="10">
-                                                <Image Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Add/Add_teal.png" Width="20" Height="20" VerticalAlignment="Center"/>
+                                                <controls:SvgIcon Preset="Plus" IconColor="White" IconSize="20"
+                                                                  Width="20" Height="20" VerticalAlignment="Center"/>
                                                 <TextBlock Text="Generate a new keyfile"
                                                            FontSize="{StaticResource Type.Body.Size}"
                                                            FontWeight="SemiBold"
@@ -622,7 +953,8 @@
                                         <!-- Use Existing Keyfile Option -->
                                         <RadioButton IsChecked="{Binding UseExistingKeyfile}" GroupName="KeyfileOption">
                                             <StackPanel Orientation="Horizontal" Spacing="10">
-                                                <Image Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Folders/3917418_teal.png" Width="20" Height="20" VerticalAlignment="Center"/>
+                                                <controls:SvgIcon Preset="Folder" IconColor="White" IconSize="20"
+                                                                  Width="20" Height="20" VerticalAlignment="Center"/>
                                                 <TextBlock Text="Use an existing keyfile"
                                                            FontSize="{StaticResource Type.Body.Size}"
                                                            FontWeight="SemiBold"
@@ -662,10 +994,10 @@
                                                            Foreground="{DynamicResource SecondaryTextBrush}"
                                                            TextWrapping="Wrap"/>
                                                 <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding KeyfileSelected}">
-                                                    <TextBlock Text="✓" FontSize="{StaticResource Type.Body.Size}" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="✓" FontSize="{StaticResource Type.Body.Size}" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
                                                     <TextBlock Text="Keyfile validated"
                                                                FontSize="{StaticResource Type.Small.Size}"
-                                                               Foreground="{DynamicResource SuccessBrush}"/>
+                                                               Foreground="White"/>
                                                 </StackPanel>
                                             </StackPanel>
                                         </Border>
@@ -673,14 +1005,15 @@
                                 </Border>
 
                                 <!-- Keyfile Generation Info (shown when Generate is selected) -->
-                                <Border IsVisible="{Binding !UseExistingKeyfile}"
+                                <Border IsVisible="{Binding ShowGeneratedKeyfileInfo}"
                                         Background="{DynamicResource ControlBackgroundBrush}"
                                         CornerRadius="{StaticResource Radius.Md}"
                                         Padding="16,12"
                                         Margin="0,4,0,0">
                                     <StackPanel Spacing="8">
                                         <StackPanel Orientation="Horizontal" Spacing="8">
-                                            <Image Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Information empty (2)/Information empty (2)_teal.png" Width="18" Height="18" VerticalAlignment="Center"/>
+                                            <controls:SvgIcon Preset="Info" IconColor="White" IconSize="20"
+                                                              Width="20" Height="20" VerticalAlignment="Center"/>
                                             <TextBlock Text="Keyfile will be generated when you complete setup"
                                                        FontSize="{StaticResource Type.Body.Size}"
                                                        FontWeight="SemiBold"
@@ -697,6 +1030,32 @@
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                                     </StackPanel>
                                 </Border>
+
+                                <Border IsVisible="{Binding IsBlackSecureSelected}"
+                                        Background="{DynamicResource ControlBackgroundBrush}"
+                                        CornerRadius="{StaticResource Radius.Md}"
+                                        Padding="16,12"
+                                        Margin="0,4,0,0">
+                                    <StackPanel Spacing="8">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <controls:SvgIcon Preset="Info" IconColor="White" IconSize="20"
+                                                              Width="20" Height="20" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Black Secure authentication path"
+                                                       FontSize="{StaticResource Type.Body.Size}"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                        </StackPanel>
+                                        <TextBlock Text="• Physical USB device path is used instead of a browsable filesystem"
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <TextBlock Text="• Master password is required"
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <TextBlock Text="• External keyfile browsing is disabled for this tier"
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    </StackPanel>
+                                </Border>
                             </StackPanel>
                         </Border>
 
@@ -708,21 +1067,23 @@
                                 BorderThickness="1">
                             <StackPanel Spacing="16">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Image Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Key/Key_purple.png" Width="24" Height="24" VerticalAlignment="Center"/>
+                                    <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Password.svg" IconColor="White" IconSize="24"
+                                                      Width="24" Height="24" VerticalAlignment="Center"/>
                                     <StackPanel>
-                                        <TextBlock Text="Optional Master Password"
+                                        <TextBlock Text="{Binding PasswordSectionTitle}"
                                                    FontSize="{StaticResource Type.H4.Size}"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                        <TextBlock Text="Add an extra layer of protection with a password"
+                                        <TextBlock Text="{Binding PasswordSectionDescription}"
                                                    FontSize="{StaticResource Type.Small.Size}"
                                                    Foreground="{DynamicResource MutedTextBrush}"/>
                                     </StackPanel>
                                 </StackPanel>
 
                                 <!-- Enable Password Checkbox -->
-                                <CheckBox IsChecked="{Binding UsePassword}" Margin="0,8,0,0">
-                                    <TextBlock Text="Enable master password (recommended for extra security)"
+                                <CheckBox IsChecked="{Binding UsePassword}" Margin="0,8,0,0"
+                                          IsVisible="{Binding ShowPasswordToggle}">
+                                    <TextBlock Text="{Binding PasswordToggleText}"
                                                FontSize="{StaticResource Type.Body.Size}"
                                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                                 </CheckBox>
@@ -784,7 +1145,8 @@
                                             Height="36"
                                             HorizontalAlignment="Left">
                                         <StackPanel Orientation="Horizontal" Spacing="8">
-                                            <Image Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Generate empty/Generate empty_teal.png" Width="16" Height="16" VerticalAlignment="Center"/>
+                                            <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Generate dice.svg" IconColor="White" IconSize="20"
+                                                              Width="20" Height="20" VerticalAlignment="Center"/>
                                             <TextBlock Text="Generate Strong Password"
                                                        Foreground="{DynamicResource ButtonTextBrush}"/>
                                         </StackPanel>
@@ -795,216 +1157,119 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Step 5: Windows Hello -->
-                <Border IsVisible="{Binding CurrentStep, Converter={x:Static views:StepVisibilityConverter.Instance}, ConverterParameter=5}"
+                <!-- Step 6 (conditional): Remnant Actions — only shown when remnants are detected on the USB drive -->
+                <Border IsVisible="{Binding IsRemnantStep}"
                         Classes="fade-in">
                     <StackPanel Spacing="20" MaxWidth="700" HorizontalAlignment="Center">
-                        <!-- Windows Hello Header -->
+                        <!-- Remnant Detection Header -->
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 CornerRadius="{StaticResource Radius.Xl}"
                                 Padding="24,20"
-                                BorderBrush="{DynamicResource AccentBrush}"
+                                BorderBrush="{DynamicResource WarningBrush}"
                                 BorderThickness="2">
                             <StackPanel Spacing="12">
-                                <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
-                                    <Image Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Key/Key_electric_blue.png" Width="36" Height="36" VerticalAlignment="Center"/>
-                                    <TextBlock Text="Windows Hello Biometrics"
-                                               FontSize="{StaticResource Type.H2.Size}"
-                                               FontWeight="Bold"
-                                               Foreground="{DynamicResource PrimaryTextBrush}"
-                                               VerticalAlignment="Center"/>
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <Border Width="44" Height="44" CornerRadius="22" Background="#3B1A0D">
+                                        <controls:SvgIcon Preset="AlertTriangle" IconColor="#AE8B6B" IconSize="28"
+                                                          Width="28" Height="28"
+                                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Remnant Detection"
+                                                   FontSize="{StaticResource Type.H3.Size}"
+                                                   FontWeight="Bold"
+                                                   Foreground="{DynamicResource WarningBrush}"/>
+                                        <TextBlock Text="Previous vault remnants were detected on this drive"
+                                                   FontSize="{StaticResource Type.Body.Size}"
+                                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                                    </StackPanel>
                                 </StackPanel>
-
-                                <TextBlock Text="Use fingerprint, face recognition, or PIN to quickly unlock your vault."
-                                           FontSize="{StaticResource Type.Body.Size}"
-                                           Foreground="{DynamicResource SecondaryTextBrush}"
-                                           TextAlignment="Center"/>
                             </StackPanel>
                         </Border>
 
-                        <!-- Windows Hello Status -->
+                        <!-- Detected Remnants List -->
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 CornerRadius="{StaticResource Radius.Xl}"
                                 Padding="24,20"
                                 BorderBrush="{DynamicResource ControlBorderBrush}"
                                 BorderThickness="1">
-                            <StackPanel Spacing="16">
-                                <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Border Width="48" Height="48" CornerRadius="24"
-                                            Background="{Binding WindowsHelloAvailable, Converter={x:Static views:BoolToStatusBackgroundConverter.Instance}}">
-                                        <TextBlock Text="{Binding WindowsHelloAvailable, Converter={x:Static views:BoolToCheckConverter.Instance}}"
-                                                   FontSize="{StaticResource Type.Icon.Size}" FontWeight="Bold"
-                                                   Foreground="{DynamicResource PrimaryTextBrush}"
-                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding WindowsHelloStatus}"
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Detected Files"
+                                           FontSize="{StaticResource Type.H4.Size}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+                                <ItemsControl ItemsSource="{Binding DetectedRemnants}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                                    CornerRadius="6" Padding="10,8" Margin="0,0,0,4">
+                                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                                    <controls:SvgIcon Grid.Column="0" Preset="File" IconColor="{DynamicResource MutedTextBrush}" IconSize="20"
+                                                                      Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                    <StackPanel Grid.Column="1">
+                                                        <TextBlock Text="{Binding FileName}"
+                                                                   FontSize="{StaticResource Type.Body.Size}"
+                                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                        <TextBlock Text="{Binding FilePath}"
+                                                                   FontSize="{StaticResource Type.Micro.Size}"
+                                                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                                                    </StackPanel>
+                                                    <TextBlock Grid.Column="2" Text="{Binding FileSize}"
+                                                               FontSize="{StaticResource Type.Small.Size}"
+                                                               Foreground="{DynamicResource MutedTextBrush}"
+                                                               VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Remnant Action Selection -->
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                CornerRadius="{StaticResource Radius.Xl}"
+                                Padding="24,20"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="Choose an Action"
+                                           FontSize="{StaticResource Type.H4.Size}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+                                <RadioButton GroupName="RemnantAction"
+                                             IsChecked="{Binding WipeRemnantsSelected, Mode=TwoWay}">
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="Securely wipe remnants before creating vault"
                                                    FontSize="{StaticResource Type.Body.Size}"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                        <TextBlock Text="Biometric authentication for quick access"
-                                                   FontSize="{StaticResource Type.Small.Size}"
-                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                    </StackPanel>
-                                </StackPanel>
-
-                                <CheckBox IsChecked="{Binding EnableWindowsHello}"
-                                          IsEnabled="{Binding WindowsHelloAvailable}"
-                                          Margin="60,0,0,0">
-                                    <TextBlock Text="Enable Windows Hello for vault unlock"
-                                               FontSize="{StaticResource Type.Body.Size}"
-                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                </CheckBox>
-
-                                <Border Background="{DynamicResource ControlBackgroundBrush}"
-                                        CornerRadius="{StaticResource Radius.Lg}"
-                                        Padding="16,12"
-                                        Margin="0,8,0,0">
-                                    <StackPanel Spacing="8">
-                                        <TextBlock Text="Benefits of Windows Hello:"
-                                                   FontSize="{StaticResource Type.Small.Size}"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                        <TextBlock Text="• Unlock vault with fingerprint or face"
-                                                   FontSize="{StaticResource Type.Small.Size}"
-                                                   Foreground="{DynamicResource MutedTextBrush}"/>
-                                        <TextBlock Text="• No need to enter password each time"
-                                                   FontSize="{StaticResource Type.Small.Size}"
-                                                   Foreground="{DynamicResource MutedTextBrush}"/>
-                                        <TextBlock Text="• Hardware-backed security"
+                                        <TextBlock Text="Recommended — removes old vault files to prevent conflicts"
                                                    FontSize="{StaticResource Type.Small.Size}"
                                                    Foreground="{DynamicResource MutedTextBrush}"/>
                                     </StackPanel>
-                                </Border>
+                                </RadioButton>
+
+                                <RadioButton GroupName="RemnantAction"
+                                             IsChecked="{Binding IgnoreRemnantsSelected, Mode=TwoWay}">
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="Ignore remnants and proceed"
+                                                   FontSize="{StaticResource Type.Body.Size}"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <TextBlock Text="Keep existing files — remnants will remain on the drive"
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                                    </StackPanel>
+                                </RadioButton>
                             </StackPanel>
                         </Border>
                     </StackPanel>
                 </Border>
 
-                <!-- Step 6: Passkeys & TOTP -->
-                <Border IsVisible="{Binding CurrentStep, Converter={x:Static views:StepVisibilityConverter.Instance}, ConverterParameter=6}"
-                        Classes="fade-in">
-                    <StackPanel Spacing="20" MaxWidth="700" HorizontalAlignment="Center">
-                        <!-- Auth Header -->
-                        <Border Background="{DynamicResource CardBackgroundBrush}"
-                                CornerRadius="{StaticResource Radius.Xl}"
-                                Padding="24,20"
-                                BorderBrush="{DynamicResource AccentBrush}"
-                                BorderThickness="2">
-                            <StackPanel Spacing="12">
-                                <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
-                                    <Image Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Key/Key_purple.png" Width="36" Height="36" VerticalAlignment="Center"/>
-                                    <TextBlock Text="Additional Authentication"
-                                               FontSize="{StaticResource Type.H2.Size}"
-                                               FontWeight="Bold"
-                                               Foreground="{DynamicResource PrimaryTextBrush}"
-                                               VerticalAlignment="Center"/>
-                                </StackPanel>
-
-                                <TextBlock Text="Configure passkeys and time-based codes for enhanced security."
-                                           FontSize="{StaticResource Type.Body.Size}"
-                                           Foreground="{DynamicResource SecondaryTextBrush}"
-                                           TextAlignment="Center"/>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Passkeys Section -->
-                        <Border Background="{DynamicResource CardBackgroundBrush}"
-                                CornerRadius="{StaticResource Radius.Xl}"
-                                Padding="24,20"
-                                BorderBrush="{DynamicResource ControlBorderBrush}"
-                                BorderThickness="1">
-                            <StackPanel Spacing="16">
-                                <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Image Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Key/Key_teal.png" Width="28" Height="28" VerticalAlignment="Center"/>
-                                    <TextBlock Text="Passkeys (FIDO2)"
-                                               FontSize="{StaticResource Type.H4.Size}"
-                                               FontWeight="SemiBold"
-                                               Foreground="{DynamicResource PrimaryTextBrush}"
-                                               VerticalAlignment="Center"/>
-                                </StackPanel>
-
-                                <TextBlock Text="Use hardware security keys or platform authenticators for passwordless login."
-                                           FontSize="{StaticResource Type.Body.Size}"
-                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
-
-                                <CheckBox IsChecked="{Binding EnablePasskeys}">
-                                    <TextBlock Text="Enable passkey authentication"
-                                               FontSize="{StaticResource Type.Body.Size}"
-                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                </CheckBox>
-
-                                <Border Background="{DynamicResource ControlBackgroundBrush}"
-                                        CornerRadius="{StaticResource Radius.Lg}"
-                                        Padding="16,12"
-                                        IsVisible="{Binding EnablePasskeys}">
-                                    <StackPanel Spacing="8">
-                                        <TextBlock Text="Compatible with:"
-                                                   FontSize="{StaticResource Type.Small.Size}"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                        <TextBlock Text="• YubiKey, Titan Security Key"
-                                                   FontSize="{StaticResource Type.Small.Size}"
-                                                   Foreground="{DynamicResource MutedTextBrush}"/>
-                                        <TextBlock Text="• Windows Hello, Touch ID, Face ID"
-                                                   FontSize="{StaticResource Type.Small.Size}"
-                                                   Foreground="{DynamicResource MutedTextBrush}"/>
-                                        <TextBlock Text="• Android biometrics, iCloud Keychain"
-                                                   FontSize="{StaticResource Type.Small.Size}"
-                                                   Foreground="{DynamicResource MutedTextBrush}"/>
-                                    </StackPanel>
-                                </Border>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- TOTP Section -->
-                        <Border Background="{DynamicResource CardBackgroundBrush}"
-                                CornerRadius="{StaticResource Radius.Xl}"
-                                Padding="24,20"
-                                BorderBrush="{DynamicResource ControlBorderBrush}"
-                                BorderThickness="1">
-                            <StackPanel Spacing="16">
-                                <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Image Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/History/History_purple.png" Width="28" Height="28" VerticalAlignment="Center"/>
-                                    <TextBlock Text="Time-Based Codes (TOTP)"
-                                               FontSize="{StaticResource Type.H4.Size}"
-                                               FontWeight="SemiBold"
-                                               Foreground="{DynamicResource PrimaryTextBrush}"
-                                               VerticalAlignment="Center"/>
-                                </StackPanel>
-
-                                <TextBlock Text="Add an extra layer of security with time-based one-time passwords from your authenticator app."
-                                           FontSize="{StaticResource Type.Body.Size}"
-                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
-
-                                <CheckBox IsChecked="{Binding EnableTotp}">
-                                    <TextBlock Text="Enable TOTP two-factor authentication"
-                                               FontSize="{StaticResource Type.Body.Size}"
-                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                </CheckBox>
-
-                                <Border Background="{DynamicResource ControlBackgroundBrush}"
-                                        CornerRadius="{StaticResource Radius.Lg}"
-                                        Padding="16,12"
-                                        IsVisible="{Binding EnableTotp}">
-                                    <StackPanel Spacing="12">
-                                        <TextBlock Text="Setup will be completed after vault creation."
-                                                   FontSize="{StaticResource Type.Small.Size}"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                        <TextBlock Text="You'll scan a QR code with your authenticator app (Google Authenticator, Authy, 1Password, etc.)"
-                                                   FontSize="{StaticResource Type.Small.Size}"
-                                                   Foreground="{DynamicResource MutedTextBrush}"
-                                                   TextWrapping="Wrap"/>
-                                    </StackPanel>
-                                </Border>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </Border>
-
-                <!-- Step 7: Summary and Completion -->
-                <Border IsVisible="{Binding CurrentStep, Converter={x:Static views:StepVisibilityConverter.Instance}, ConverterParameter=7}"
+                <!-- Review and Completion (final step — step 6 or 7 depending on remnant detection) -->
+                <Border IsVisible="{Binding IsReviewStep}"
                         Classes="fade-in">
                     <StackPanel Spacing="20" MaxWidth="700" HorizontalAlignment="Center">
                         <!-- Summary Header -->
@@ -1015,7 +1280,11 @@
                                 BorderThickness="2">
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
-                                    <Image Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Favourites checked/Favourites checked_teal.png" Width="36" Height="36" VerticalAlignment="Center"/>
+                                    <Border Width="44" Height="44" CornerRadius="22" Background="#111B2A">
+                                        <controls:SvgIcon Preset="Check" IconColor="White" IconSize="28"
+                                                          Width="28" Height="28"
+                                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
                                     <TextBlock Text="Ready to Create Your Vault!"
                                                FontSize="{StaticResource Type.H2.Size}"
                                                FontWeight="Bold"
@@ -1044,9 +1313,10 @@
 
                                 <StackPanel Spacing="12">
                                     <Grid ColumnDefinitions="Auto,*">
-                                        <Image Grid.Column="0" Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Settings/settings_teal.png" Width="22" Height="22" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                        <controls:SvgIcon Grid.Column="0" Preset="Settings" IconColor="White" IconSize="32"
+                                                          Width="32" Height="32" Margin="0,0,12,0" VerticalAlignment="Center"/>
                                         <StackPanel Grid.Column="1">
-                                            <TextBlock Text="Security Level"
+                                            <TextBlock Text="Protection Tier"
                                                        FontSize="{StaticResource Type.Small.Size}"
                                                        Foreground="{DynamicResource MutedTextBrush}"/>
                                             <TextBlock Text="{Binding SelectedSecurityLevel}"
@@ -1057,7 +1327,8 @@
                                     </Grid>
 
                                     <Grid ColumnDefinitions="Auto,*">
-                                        <Image Grid.Column="0" Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Folders/3917418_teal.png" Width="22" Height="22" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                        <controls:SvgIcon Grid.Column="0" IconName="Assets/Visuals/App Icons/SVG/Storage Location.svg" IconColor="White" IconSize="32"
+                                                          Width="32" Height="32" Margin="0,0,12,0" VerticalAlignment="Center"/>
                                         <StackPanel Grid.Column="1">
                                             <TextBlock Text="Storage Location"
                                                        FontSize="{StaticResource Type.Small.Size}"
@@ -1070,7 +1341,8 @@
                                     </Grid>
 
                                     <Grid ColumnDefinitions="Auto,*">
-                                        <Image Grid.Column="0" Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Key/Key_teal.png" Width="22" Height="22" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                        <controls:SvgIcon Grid.Column="0" IconName="Assets/Visuals/App Icons/SVG/Keyfile.svg" IconColor="White" IconSize="32"
+                                                          Width="32" Height="32" Margin="0,0,12,0" VerticalAlignment="Center"/>
                                         <StackPanel Grid.Column="1">
                                             <TextBlock Text="Keyfile"
                                                        FontSize="{StaticResource Type.Small.Size}"
@@ -1078,12 +1350,13 @@
                                             <TextBlock Text="Will be generated"
                                                        FontSize="{StaticResource Type.Body.Size}"
                                                        FontWeight="SemiBold"
-                                                       Foreground="{DynamicResource AccentBrush}"/>
+                                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
                                         </StackPanel>
                                     </Grid>
 
                                     <Grid ColumnDefinitions="Auto,*">
-                                        <Image Grid.Column="0" Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Key/Key_purple.png" Width="22" Height="22" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                        <controls:SvgIcon Grid.Column="0" IconName="Assets/Visuals/App Icons/SVG/Password.svg" IconColor="White" IconSize="32"
+                                                          Width="32" Height="32" Margin="0,0,12,0" VerticalAlignment="Center"/>
                                         <StackPanel Grid.Column="1">
                                             <TextBlock Text="Master Password"
                                                        FontSize="{StaticResource Type.Small.Size}"
@@ -1095,39 +1368,74 @@
                                         </StackPanel>
                                     </Grid>
 
+                                    <!-- Authentication info note -->
+                                    <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                            CornerRadius="8" Padding="14,10">
+                                        <StackPanel Orientation="Horizontal" Spacing="10">
+                                            <controls:SvgIcon Preset="Info" IconColor="{DynamicResource AccentBrush}" IconSize="20"
+                                                              Width="20" Height="20" VerticalAlignment="Top" Margin="0,2,0,0"/>
+                                            <TextBlock Text="Additional authentication (Windows Hello, Passkeys, TOTP, PIN) can be configured in Security Settings after vault creation."
+                                                       FontSize="{StaticResource Type.Small.Size}"
+                                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                                       TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- PhantomKey Hardware Binding -->
                                     <Grid ColumnDefinitions="Auto,*">
-                                        <Image Grid.Column="0" Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Key/Key_electric_blue.png" Width="22" Height="22" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                        <controls:SvgIcon Grid.Column="0" Preset="Shield" IconColor="White" IconSize="32"
+                                                          Width="32" Height="32" Margin="0,0,12,0" VerticalAlignment="Center"/>
                                         <StackPanel Grid.Column="1">
-                                            <TextBlock Text="Windows Hello"
+                                            <TextBlock Text="PhantomKey Hardware Binding"
                                                        FontSize="{StaticResource Type.Small.Size}"
                                                        Foreground="{DynamicResource MutedTextBrush}"/>
-                                            <TextBlock Text="{Binding EnableWindowsHello, Converter={x:Static views:BoolToEnabledConverter.Instance}}"
+                                            <TextBlock Text="{Binding EnablePhantomKey, Converter={x:Static views:BoolToEnabledConverter.Instance}}"
                                                        FontSize="{StaticResource Type.Body.Size}"
                                                        FontWeight="SemiBold"
                                                        Foreground="{DynamicResource PrimaryTextBrush}"/>
                                         </StackPanel>
                                     </Grid>
 
+                                    <!-- GUUID Binding -->
                                     <Grid ColumnDefinitions="Auto,*">
-                                        <Image Grid.Column="0" Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/Key/Key_teal.png" Width="22" Height="22" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                        <controls:SvgIcon Grid.Column="0" IconName="Assets/Visuals/App Icons/SVG/Link.svg" IconColor="White" IconSize="32"
+                                                          Width="32" Height="32" Margin="0,0,12,0" VerticalAlignment="Center"/>
                                         <StackPanel Grid.Column="1">
-                                            <TextBlock Text="Passkeys"
+                                            <TextBlock Text="GUUID Binding"
                                                        FontSize="{StaticResource Type.Small.Size}"
                                                        Foreground="{DynamicResource MutedTextBrush}"/>
-                                            <TextBlock Text="{Binding EnablePasskeys, Converter={x:Static views:BoolToEnabledConverter.Instance}}"
+                                            <TextBlock Text="{Binding EnableGuuidBinding, Converter={x:Static views:BoolToEnabledConverter.Instance}}"
                                                        FontSize="{StaticResource Type.Body.Size}"
                                                        FontWeight="SemiBold"
                                                        Foreground="{DynamicResource PrimaryTextBrush}"/>
                                         </StackPanel>
                                     </Grid>
 
+                                    <!-- Encrypted Container -->
                                     <Grid ColumnDefinitions="Auto,*">
-                                        <Image Grid.Column="0" Source="avares://PhantomVault.UI/Assets/Visuals/App Icons/History/History_purple.png" Width="22" Height="22" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                        <controls:SvgIcon Grid.Column="0" IconName="Assets/Visuals/App Icons/SVG/Encrypted Container.svg" IconColor="White" IconSize="32"
+                                                          Width="32" Height="32" Margin="0,0,12,0" VerticalAlignment="Center"/>
                                         <StackPanel Grid.Column="1">
-                                            <TextBlock Text="TOTP"
+                                            <TextBlock Text="Encrypted Container"
                                                        FontSize="{StaticResource Type.Small.Size}"
                                                        Foreground="{DynamicResource MutedTextBrush}"/>
-                                            <TextBlock Text="{Binding EnableTotp, Converter={x:Static views:BoolToEnabledConverter.Instance}}"
+                                            <TextBlock Text="{Binding EnableEncryptedContainer, Converter={x:Static views:BoolToEnabledConverter.Instance}}"
+                                                       FontSize="{StaticResource Type.Body.Size}"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Remnant Detection (only when remnants were detected) -->
+                                    <Grid ColumnDefinitions="Auto,*"
+                                          IsVisible="{Binding HasRemnants}">
+                                        <controls:SvgIcon Grid.Column="0" Preset="AlertTriangle" IconColor="#AE8B6B" IconSize="32"
+                                                          Width="32" Height="32" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="Remnant Action"
+                                                       FontSize="{StaticResource Type.Small.Size}"
+                                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                                            <TextBlock Text="{Binding SelectedRemnantAction}"
                                                        FontSize="{StaticResource Type.Body.Size}"
                                                        FontWeight="SemiBold"
                                                        Foreground="{DynamicResource PrimaryTextBrush}"/>
@@ -1193,7 +1501,7 @@
                             Width="140" Height="40"
                             FontSize="{StaticResource Type.Body.Size}"
                             FontWeight="SemiBold"
-                            Classes="liquid-glass primary"
+                            Classes="solid-primary"
                             IsEnabled="{Binding CanGoNext}"/>
                 </StackPanel>
             </Grid>

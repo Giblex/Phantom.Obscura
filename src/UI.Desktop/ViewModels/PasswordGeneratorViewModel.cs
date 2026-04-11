@@ -33,6 +33,8 @@ namespace PhantomVault.UI.ViewModels
 
         public PasswordGeneratorViewModel()
         {
+            LoadPreferences();
+
             // Default color
             _passwordStrengthColor = new SolidColorBrush(Color.Parse("#6B8CAE"));
 
@@ -59,7 +61,11 @@ namespace PhantomVault.UI.ViewModels
                     x => x.IncludeSymbols,
                     x => x.AvoidAmbiguous,
                     x => x.EasyToRead)
-                .Subscribe(_ => GeneratePassword());
+                .Subscribe(_ =>
+                {
+                    SavePreferences();
+                    GeneratePassword();
+                });
 
             // Generate initial password
             GeneratePassword();
@@ -100,6 +106,41 @@ namespace PhantomVault.UI.ViewModels
         {
             get => _includeSymbols;
             set => this.RaiseAndSetIfChanged(ref _includeSymbols, value);
+        }
+
+        private void LoadPreferences()
+        {
+            try
+            {
+                var settings = SettingsService.Load();
+                _passwordLength = Math.Clamp(settings.DefaultPasswordLength, 8, 128);
+                _includeUppercase = settings.PasswordGeneratorIncludeUppercase;
+                _includeLowercase = settings.PasswordGeneratorIncludeLowercase;
+                _includeNumbers = settings.PasswordGeneratorIncludeNumbers;
+                _includeSymbols = settings.PasswordGeneratorIncludeSymbols;
+            }
+            catch
+            {
+                // Best-effort only; generator has sensible defaults already.
+            }
+        }
+
+        private void SavePreferences()
+        {
+            try
+            {
+                var settings = SettingsService.Load();
+                settings.DefaultPasswordLength = Math.Clamp(PasswordLength, 8, 128);
+                settings.PasswordGeneratorIncludeUppercase = IncludeUppercase;
+                settings.PasswordGeneratorIncludeLowercase = IncludeLowercase;
+                settings.PasswordGeneratorIncludeNumbers = IncludeNumbers;
+                settings.PasswordGeneratorIncludeSymbols = IncludeSymbols;
+                SettingsService.Save(settings);
+            }
+            catch
+            {
+                // Best-effort only; generation should still work if persistence fails.
+            }
         }
 
         public bool AvoidAmbiguous

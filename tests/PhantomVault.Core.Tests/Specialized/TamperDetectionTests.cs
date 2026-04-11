@@ -37,7 +37,7 @@ namespace PhantomVault.Core.Tests.Specialized
             tamperedCiphertext[index] ^= 0xFF;
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 service.Decrypt(tamperedCiphertext, encrypted.Nonce, encrypted.Tag, key));
         }
 
@@ -57,7 +57,7 @@ namespace PhantomVault.Core.Tests.Specialized
             tamperedTag[0] ^= 0x01;
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 service.Decrypt(encrypted.Ciphertext, encrypted.Nonce, tamperedTag, key));
         }
 
@@ -77,7 +77,7 @@ namespace PhantomVault.Core.Tests.Specialized
             tamperedNonce[0] ^= 0x01;
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 service.Decrypt(encrypted.Ciphertext, tamperedNonce, encrypted.Tag, key));
         }
 
@@ -95,7 +95,7 @@ namespace PhantomVault.Core.Tests.Specialized
             var encrypted = service.Encrypt(plaintext, key, aad);
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 service.Decrypt(encrypted.Ciphertext, encrypted.Nonce, encrypted.Tag, key, tamperedAad));
         }
 
@@ -134,8 +134,8 @@ namespace PhantomVault.Core.Tests.Specialized
             };
             tamperedResult.Ciphertext[0] ^= 0xFF;
 
-            // Act & Assert
-            Assert.Throws<CryptographicException>(() =>
+            // Act & Assert — BouncyCastle layers throw InvalidCipherTextException (not CryptographicException)
+            Assert.ThrowsAny<Exception>(() =>
                 service.DecryptLayered(tamperedResult, masterKey, salt));
         }
 
@@ -165,7 +165,7 @@ namespace PhantomVault.Core.Tests.Specialized
             tamperedResult.Tag1[0] ^= 0xFF;
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 service.DecryptLayered(tamperedResult, masterKey, salt));
         }
 
@@ -197,7 +197,7 @@ namespace PhantomVault.Core.Tests.Specialized
             tamperedResult.Tag2[0] ^= 0xFF;
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 service.DecryptLayered(tamperedResult, masterKey, salt));
         }
 
@@ -227,7 +227,7 @@ namespace PhantomVault.Core.Tests.Specialized
             tamperedResult.Nonce1[0] ^= 0xFF;
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 service.DecryptLayered(tamperedResult, masterKey, salt));
         }
 
@@ -289,7 +289,7 @@ namespace PhantomVault.Core.Tests.Specialized
             tamperedCiphertext[byteIndex] ^= flipMask;
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 service.Decrypt(tamperedCiphertext, encrypted.Nonce, encrypted.Tag, key));
         }
 
@@ -334,7 +334,7 @@ namespace PhantomVault.Core.Tests.Specialized
             var extendedCiphertext = encrypted.Ciphertext.Concat(new byte[] { 0xFF, 0xFF }).ToArray();
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 service.Decrypt(extendedCiphertext, encrypted.Nonce, encrypted.Tag, key));
         }
 
@@ -364,7 +364,7 @@ namespace PhantomVault.Core.Tests.Specialized
             }
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 service.Decrypt(reorderedCiphertext, encrypted.Nonce, encrypted.Tag, key));
         }
 
@@ -386,7 +386,7 @@ namespace PhantomVault.Core.Tests.Specialized
             var encrypted = service.Encrypt(plaintext, key, context1);
 
             // Act & Assert - Try to decrypt with different context
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 service.Decrypt(encrypted.Ciphertext, encrypted.Nonce, encrypted.Tag, key, context2));
         }
 
@@ -406,7 +406,7 @@ namespace PhantomVault.Core.Tests.Specialized
             var encrypted = service.EncryptLayered(plaintext, masterKey, SecurityLevel.Standard, salt, context1);
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 service.DecryptLayered(encrypted, masterKey, salt, context2));
         }
 
@@ -468,7 +468,7 @@ namespace PhantomVault.Core.Tests.Specialized
             };
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 service.DecryptLayered(substitutedResult, masterKey, salt));
         }
 
@@ -523,7 +523,7 @@ namespace PhantomVault.Core.Tests.Specialized
             // All tamper attempts should throw
             foreach (var test in tamperTests)
             {
-                Assert.Throws<CryptographicException>(test);
+                Assert.ThrowsAny<CryptographicException>(test);
             }
         }
 

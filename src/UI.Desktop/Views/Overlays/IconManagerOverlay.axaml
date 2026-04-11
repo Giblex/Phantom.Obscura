@@ -26,7 +26,7 @@
 
         <Grid ClipToBounds="True">
             <!-- Transparent area to close panel -->
-            <Border Background="Transparent" />
+            <Border Background="Transparent" PointerPressed="OnBackgroundClicked" />
 
             <!-- Icon Manager Container - Slides in from right -->
             <Border x:Name="IconManagerSlideHost" 

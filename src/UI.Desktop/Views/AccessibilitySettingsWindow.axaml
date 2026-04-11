@@ -83,20 +83,7 @@
                                        VerticalAlignment="Center"/>
                         </StackPanel>
 
-                        <!-- Dark/Light Theme Toggle -->
-                        <StackPanel Spacing="12">
-                            <TextBlock Text="Color Mode"
-                                       FontSize="{StaticResource Type.Body.Size}"
-                                       FontWeight="SemiBold"/>
-                            <CheckBox Content="Use dark theme"
-                                      IsChecked="{Binding IsDarkTheme, Mode=TwoWay}"
-                                      FontSize="{StaticResource Type.Label.Size}"/>
-                            <Button Content="Toggle Theme"
-                                    Command="{Binding ToggleThemeCommand}"
-                                    Width="150"
-                                    Height="36"
-                                    HorizontalAlignment="Left"/>
-                        </StackPanel>
+
 
                         <!-- Theme Skin Selection -->
                         <StackPanel Spacing="12" Margin="0,10,0,0">

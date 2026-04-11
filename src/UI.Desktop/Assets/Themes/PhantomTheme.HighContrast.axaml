@@ -7,6 +7,7 @@
             <!-- High contrast backgrounds - Pure black base -->
             <SolidColorBrush x:Key="WindowBackgroundBrush">#000000</SolidColorBrush>
             <SolidColorBrush x:Key="HeaderBackgroundBrush">#000000</SolidColorBrush>
+            <SolidColorBrush x:Key="HeaderBorderBrush">Transparent</SolidColorBrush>
             <SolidColorBrush x:Key="FooterBackgroundBrush">#000000</SolidColorBrush>
             <SolidColorBrush x:Key="ContentBackgroundBrush">#000000</SolidColorBrush>
 
@@ -85,7 +86,7 @@
             <SolidColorBrush x:Key="WarningBackgroundBrush">#000000</SolidColorBrush>
             <SolidColorBrush x:Key="ErrorBackgroundBrush">#000000</SolidColorBrush>
             <SolidColorBrush x:Key="InfoBackgroundBrush">#000000</SolidColorBrush>
-            <FontFamily x:Key="MainFontFamily">Segoe UI</FontFamily>
+            <FontFamily x:Key="MainFontFamily">Segoe UI Variable, Segoe UI</FontFamily>
 
             <!-- Overlay utilities -->
             <SolidColorBrush x:Key="OverlayBackgroundLightBrush">#000000</SolidColorBrush>
@@ -142,16 +143,18 @@
             <SolidColorBrush x:Key="Brush.Navy900">#000000</SolidColorBrush>
             <SolidColorBrush x:Key="Brush.SurfaceAlt">#1A1A1A</SolidColorBrush>
 
-            <!-- Typography Tokens (same as other themes) -->
+            <!-- Typography Tokens (bumped +1px for sharper Skia rendering) -->
             <x:Double x:Key="Type.Display.Size">48</x:Double>
             <x:Double x:Key="Type.H1.Size">32</x:Double>
             <x:Double x:Key="Type.H2.Size">24</x:Double>
-            <x:Double x:Key="Type.H3.Size">18</x:Double>
-            <x:Double x:Key="Type.H4.Size">16</x:Double>
-            <x:Double x:Key="Type.Body.Size">14</x:Double>
-            <x:Double x:Key="Type.Label.Size">13</x:Double>
-            <x:Double x:Key="Type.Small.Size">12</x:Double>
-            <x:Double x:Key="Type.Tiny.Size">11</x:Double>
+            <x:Double x:Key="Type.H3.Size">19</x:Double>
+            <x:Double x:Key="Type.H4.Size">17</x:Double>
+            <x:Double x:Key="Type.Body.Size">15</x:Double>
+            <x:Double x:Key="Type.Label.Size">14</x:Double>
+            <x:Double x:Key="Type.Small.Size">13</x:Double>
+            <x:Double x:Key="Type.Tiny.Size">12</x:Double>
+            <x:Double x:Key="Type.Micro.Size">11</x:Double>
+            <x:Double x:Key="Type.Mini.Size">10</x:Double>
             <FontWeight x:Key="Type.Weight.Light">Light</FontWeight>
             <FontWeight x:Key="Type.Weight.Medium">Medium</FontWeight>
             <FontWeight x:Key="Type.Weight.SemiBold">SemiBold</FontWeight>
@@ -195,7 +198,99 @@
             <!-- BoxShadow presets disabled -->
             <BoxShadows x:Key="SlideOutPanelShadow">0 0 0 0 #00000000</BoxShadows>
             <BoxShadows x:Key="FlaggedPanelShadow">0 0 0 0 #00000000</BoxShadows>
-        </Style.Resources>
+        
+    <LinearGradientBrush x:Key="DashboardSheetOverlayBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Color="#70000010" Offset="0"/>
+        <GradientStop Color="#68000018" Offset="0.5"/>
+        <GradientStop Color="#60000010" Offset="1"/>
+    </LinearGradientBrush>
+    <Color x:Key="DashboardSheetAcrylicTint">#000008</Color>
+    <Color x:Key="DashboardSheetAcrylicFallback">#18000010</Color>
+
+            <!-- ═══ Dashboard glass panel resources ═══ -->
+    <LinearGradientBrush x:Key="DashboardSectionBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#7C000000" Offset="0"/>
+        <GradientStop Color="#70000000" Offset="0.5"/>
+        <GradientStop Color="#64000000" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardSectionHoverBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#88000000" Offset="0"/>
+        <GradientStop Color="#7C000000" Offset="0.5"/>
+        <GradientStop Color="#70000000" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardSectionBorderBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#38FFFFFF" Offset="0"/>
+        <GradientStop Color="#4000FFFF" Offset="0.35"/>
+        <GradientStop Color="#18FFFFFF" Offset="0.7"/>
+        <GradientStop Color="#10FFFFFF" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardSectionHoverBorderBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#44FFFFFF" Offset="0"/>
+        <GradientStop Color="#5000FFFF" Offset="0.35"/>
+        <GradientStop Color="#20FFFFFF" Offset="0.7"/>
+        <GradientStop Color="#14FFFFFF" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardCardBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#70000000" Offset="0"/>
+        <GradientStop Color="#64000000" Offset="0.5"/>
+        <GradientStop Color="#58000000" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardCardHoverBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#80000000" Offset="0"/>
+        <GradientStop Color="#74000000" Offset="0.5"/>
+        <GradientStop Color="#68000000" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardCardPressedBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#60000000" Offset="0"/>
+        <GradientStop Color="#58000000" Offset="0.5"/>
+        <GradientStop Color="#50000000" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardNavBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#6C000000" Offset="0"/>
+        <GradientStop Color="#60000000" Offset="0.5"/>
+        <GradientStop Color="#54000000" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardNavHoverBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#7C000000" Offset="0"/>
+        <GradientStop Color="#70000000" Offset="0.5"/>
+        <GradientStop Color="#64000000" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardNavPressedBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#5C000000" Offset="0"/>
+        <GradientStop Color="#54000000" Offset="0.5"/>
+        <GradientStop Color="#4C000000" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardNavPrimaryBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#7C002030" Offset="0"/>
+        <GradientStop Color="#70001828" Offset="0.5"/>
+        <GradientStop Color="#64001020" Offset="1"/>
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="DashboardNavPrimaryBorderBrush" Color="#8000FFFF"/>
+    <LinearGradientBrush x:Key="DashboardPanelBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#20000000" Offset="0"/>
+        <GradientStop Color="#18000000" Offset="0.5"/>
+        <GradientStop Color="#10000000" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardPanelBorderBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#3000FFFF" Offset="0"/>
+        <GradientStop Color="#2000FFFF" Offset="0.5"/>
+        <GradientStop Color="#1000FFFF" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardTileBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#30000000" Offset="0"/>
+        <GradientStop Color="#28000000" Offset="0.5"/>
+        <GradientStop Color="#20000000" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardTileHoverBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#38000000" Offset="0"/>
+        <GradientStop Color="#30000000" Offset="0.5"/>
+        <GradientStop Color="#28000000" Offset="1"/>
+    </LinearGradientBrush>
+    <Color x:Key="DashboardTileBorderColor">#70FFFFFF</Color>
+    <Color x:Key="DashboardTileHoverBorderColor">#7000FFFF</Color>
+    <Color x:Key="DashboardAcrylicTint">#000000</Color>
+    <Color x:Key="DashboardAcrylicFallback">#0C000000</Color>
+</Style.Resources>
     </Style>
 
     <!-- Base control styles for high contrast -->

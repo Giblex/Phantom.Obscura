@@ -35,11 +35,14 @@ namespace PhantomVault.UI.ViewModels
         private bool _enablePinLock;
         private bool _usePinLockForAutoLock;
         private bool _autoCopyTotpWithPassword;
+        private int _clipboardClearTimeIndex;
+        private bool _enableScreenshotProtection;
         private string? _manifestPath; // Track current vault's manifest path
 
         // Decoy vault properties
         private bool _autoActivateDecoyOnTamper = true;
         private int _decoyCredentialCount = 25;
+        private bool _decoyReadOnlyMode = true;
         private bool _logDecoyActivation = true;
         private bool _isDecoyCurrentlyActive;
 
@@ -57,15 +60,21 @@ namespace PhantomVault.UI.ViewModels
             _tamperDetectionService = tamperDetectionService;
             _securityOptions = securityOptions ?? new SecurityOptions();
 
-            var settings = SettingsService.Load();
+            var settings = SettingsService.LoadSecuritySnapshot();
             _enablePinLock = settings.EnablePinLock;
             _usePinLockForAutoLock = settings.UsePinLockForAutoLock;
             _autoCopyTotpWithPassword = settings.AutoCopyTotpWithPassword;
+            _requireHardwareToken = settings.RequireHardwareToken;
+            _requireKeyfile = settings.RequireKeyfile;
+            _idleTimeoutMinutes = settings.IdleTimeoutMinutes;
+            _clipboardClearTimeIndex = settings.ClipboardClearTime;
+            _enableScreenshotProtection = settings.EnableScreenshotProtection;
 
             // Load decoy settings
-            _autoActivateDecoyOnTamper = _securityOptions.AutoActivateDecoyOnTamper;
-            _decoyCredentialCount = _securityOptions.DecoyCredentialCount;
-            _logDecoyActivation = _securityOptions.LogDecoyActivation;
+            _autoActivateDecoyOnTamper = settings.EnableDecoyVault;
+            _decoyCredentialCount = settings.DecoyCredentialCount;
+            _decoyReadOnlyMode = settings.DecoyReadOnlyMode;
+            _logDecoyActivation = settings.DecoyLogActivations;
             _isDecoyCurrentlyActive = _tamperDetectionService?.IsDecoyActive ?? false;
 
             SaveCommand = ReactiveCommand.CreateFromTask(SaveSettingsAsync,
@@ -117,10 +126,21 @@ namespace PhantomVault.UI.ViewModels
                 await Task.Delay(300);
 
                 // Persist simple settings used by the UI.
-                var settings = SettingsService.Load();
-                settings.EnablePinLock = EnablePinLock;
-                settings.UsePinLockForAutoLock = UsePinLockForAutoLock;
-                SettingsService.Save(settings);
+                PersistSettings(settings =>
+                {
+                    settings.EnablePinLock = EnablePinLock;
+                    settings.UsePinLockForAutoLock = UsePinLockForAutoLock;
+                    settings.RequireHardwareToken = RequireHardwareToken;
+                    settings.RequireKeyfile = RequireKeyfile;
+                    settings.IdleTimeoutMinutes = IdleTimeoutMinutes;
+                    settings.ClipboardClearTime = ClipboardClearTimeIndex;
+                    settings.AutoCopyTotpWithPassword = AutoCopyTotpWithPassword;
+                    settings.EnableScreenshotProtection = EnableScreenshotProtection;
+                    settings.EnableDecoyVault = EnableDecoyVault;
+                    settings.DecoyCredentialCount = DecoyCredentialCount;
+                    settings.DecoyReadOnlyMode = DecoyReadOnlyMode;
+                    settings.DecoyLogActivations = DecoyLogActivations;
+                });
                 
                 LastSaved = DateTimeOffset.UtcNow;
                 SaveButtonText = "✓ Saved";
@@ -146,19 +166,38 @@ namespace PhantomVault.UI.ViewModels
         public bool RequireHardwareToken
         {
             get => _requireHardwareToken;
-            set => this.RaiseAndSetIfChanged(ref _requireHardwareToken, value);
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _requireHardwareToken, value))
+                {
+                    PersistSettings(settings => settings.RequireHardwareToken = value);
+                }
+            }
         }
 
         public bool RequireKeyfile
         {
             get => _requireKeyfile;
-            set => this.RaiseAndSetIfChanged(ref _requireKeyfile, value);
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _requireKeyfile, value))
+                {
+                    PersistSettings(settings => settings.RequireKeyfile = value);
+                }
+            }
         }
 
         public int IdleTimeoutMinutes
         {
             get => _idleTimeoutMinutes;
-            set => this.RaiseAndSetIfChanged(ref _idleTimeoutMinutes, value);
+            set
+            {
+                if (_idleTimeoutMinutes != value)
+                {
+                    this.RaiseAndSetIfChanged(ref _idleTimeoutMinutes, value);
+                    PersistSettings(settings => settings.IdleTimeoutMinutes = value);
+                }
+            }
         }
 
         public bool IsBusy
@@ -187,14 +226,15 @@ namespace PhantomVault.UI.ViewModels
             {
                 this.RaiseAndSetIfChanged(ref _enablePinLock, value);
                 // Persist immediately so lockscreen behavior is consistent.
-                var settings = SettingsService.Load();
-                settings.EnablePinLock = value;
-                if (!value)
+                SettingsService.Update(settings =>
                 {
-                    settings.UsePinLockForAutoLock = false;
-                    this.RaiseAndSetIfChanged(ref _usePinLockForAutoLock, false);
-                }
-                SettingsService.Save(settings);
+                    settings.EnablePinLock = value;
+                    if (!value)
+                    {
+                        settings.UsePinLockForAutoLock = false;
+                        this.RaiseAndSetIfChanged(ref _usePinLockForAutoLock, false);
+                    }
+                });
             }
         }
 
@@ -204,9 +244,7 @@ namespace PhantomVault.UI.ViewModels
             set
             {
                 this.RaiseAndSetIfChanged(ref _usePinLockForAutoLock, value);
-                var settings = SettingsService.Load();
-                settings.UsePinLockForAutoLock = value;
-                SettingsService.Save(settings);
+                SettingsService.Update(settings => settings.UsePinLockForAutoLock = value);
             }
         }
 
@@ -216,9 +254,53 @@ namespace PhantomVault.UI.ViewModels
             set
             {
                 this.RaiseAndSetIfChanged(ref _autoCopyTotpWithPassword, value);
-                var settings = SettingsService.Load();
-                settings.AutoCopyTotpWithPassword = value;
-                SettingsService.Save(settings);
+                SettingsService.Update(settings => settings.AutoCopyTotpWithPassword = value);
+            }
+        }
+
+        public int ClipboardClearTimeIndex
+        {
+            get => _clipboardClearTimeIndex;
+            set
+            {
+                var sanitized = SettingsService.NormalizeClipboardClearTimeIndex(value);
+                if (_clipboardClearTimeIndex != sanitized)
+                {
+                    this.RaiseAndSetIfChanged(ref _clipboardClearTimeIndex, sanitized);
+                    this.RaisePropertyChanged(nameof(ClearClipboardAfterCopy));
+                    PersistSettings(settings => settings.ClipboardClearTime = sanitized);
+                }
+            }
+        }
+
+        public bool ClearClipboardAfterCopy
+        {
+            get => SettingsService.IsClipboardAutoClearEnabled(ClipboardClearTimeIndex);
+            set
+            {
+                if (value)
+                {
+                    if (!SettingsService.IsClipboardAutoClearEnabled(ClipboardClearTimeIndex))
+                    {
+                        ClipboardClearTimeIndex = 1;
+                    }
+                }
+                else
+                {
+                    ClipboardClearTimeIndex = 4;
+                }
+            }
+        }
+
+        public bool EnableScreenshotProtection
+        {
+            get => _enableScreenshotProtection;
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _enableScreenshotProtection, value))
+                {
+                    PersistSettings(settings => settings.EnableScreenshotProtection = value);
+                }
             }
         }
 
@@ -402,19 +484,64 @@ namespace PhantomVault.UI.ViewModels
         public bool AutoActivateDecoyOnTamper
         {
             get => _autoActivateDecoyOnTamper;
-            set => this.RaiseAndSetIfChanged(ref _autoActivateDecoyOnTamper, value);
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _autoActivateDecoyOnTamper, value))
+                {
+                    this.RaisePropertyChanged(nameof(EnableDecoyVault));
+                    SaveDecoySettings();
+                }
+            }
         }
 
         public int DecoyCredentialCount
         {
             get => _decoyCredentialCount;
-            set => this.RaiseAndSetIfChanged(ref _decoyCredentialCount, value);
+            set
+            {
+                if (_decoyCredentialCount != value)
+                {
+                    this.RaiseAndSetIfChanged(ref _decoyCredentialCount, value);
+                    SaveDecoySettings();
+                }
+            }
         }
 
         public bool LogDecoyActivation
         {
             get => _logDecoyActivation;
-            set => this.RaiseAndSetIfChanged(ref _logDecoyActivation, value);
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _logDecoyActivation, value))
+                {
+                    this.RaisePropertyChanged(nameof(DecoyLogActivations));
+                    SaveDecoySettings();
+                }
+            }
+        }
+
+        public bool EnableDecoyVault
+        {
+            get => AutoActivateDecoyOnTamper;
+            set => AutoActivateDecoyOnTamper = value;
+        }
+
+        public bool DecoyReadOnlyMode
+        {
+            get => _decoyReadOnlyMode;
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _decoyReadOnlyMode, value))
+                {
+                    SaveDecoySettings();
+                }
+            }
+        }
+
+        public bool DecoyLogActivations
+        {
+            get => LogDecoyActivation;
+            set => LogDecoyActivation = value;
         }
 
         public bool IsDecoyCurrentlyActive
@@ -431,9 +558,18 @@ namespace PhantomVault.UI.ViewModels
             _securityOptions.AutoActivateDecoyOnTamper = AutoActivateDecoyOnTamper;
             _securityOptions.DecoyCredentialCount = DecoyCredentialCount;
             _securityOptions.LogDecoyActivation = LogDecoyActivation;
+            PersistSettings(settings =>
+            {
+                settings.EnableDecoyVault = EnableDecoyVault;
+                settings.DecoyCredentialCount = DecoyCredentialCount;
+                settings.DecoyReadOnlyMode = DecoyReadOnlyMode;
+                settings.DecoyLogActivations = DecoyLogActivations;
+            });
+        }
 
-            // Persist to defence-rules.json or similar storage
-            // For now, SecurityOptions are passed by DI and should be persisted by the application
+        private static void PersistSettings(Action<UserSettings> update)
+        {
+            SettingsService.Update(update);
         }
 
         private async Task PreviewDecoyVaultAsync()

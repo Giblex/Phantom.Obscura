@@ -1,0 +1,21 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <g fill="none" stroke="#FFFFFF" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- Device outline -->
+    <rect x="144" y="96" width="224" height="320" rx="40"/>
+
+    <!-- Secure chip / credential container -->
+    <rect x="192" y="192" width="128" height="128" rx="20"/>
+
+    <!-- Keyhole -->
+    <circle cx="256" cy="240" r="16"/>
+    <line x1="256" y1="256" x2="256" y2="288"/>
+
+    <!-- Authentication signal -->
+    <path d="M208 160H304"/>
+
+    <!-- Bottom trust indicator -->
+    <path d="M216 352H296"/>
+
+  </g>
+</svg>

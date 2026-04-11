@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Security.Cryptography;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -190,6 +191,7 @@ namespace PhantomVault.UI.ViewModels
             _isApiKeyEntry = entryType == EntryType.ApiKey;
             _isContactEntry = entryType == EntryType.Contact;
             _isTotpEntry = entryType == EntryType.TotpGenerator;
+            _isPinCodeEntry = entryType == EntryType.PinCode;
 
             // Initialize TOTP secret input from existing credential
             _totpSecretInput = _existingCredential?.TotpSecret ?? string.Empty;
@@ -218,6 +220,7 @@ namespace PhantomVault.UI.ViewModels
             this.RaisePropertyChanged(nameof(IsApiKeyEntry));
             this.RaisePropertyChanged(nameof(IsContactEntry));
             this.RaisePropertyChanged(nameof(IsTotpEntry));
+            this.RaisePropertyChanged(nameof(IsPinCodeEntry));
             this.RaisePropertyChanged(nameof(ShowPasswordField));
             this.RaisePropertyChanged(nameof(ShowPasswordGenerator));
             this.RaisePropertyChanged(nameof(ShowPasswordStrength));
@@ -227,7 +230,7 @@ namespace PhantomVault.UI.ViewModels
             this.RaisePropertyChanged(nameof(ShowPasswordFields));
             this.RaisePropertyChanged(nameof(ShowCategorySelector));
             this.RaisePropertyChanged(nameof(ShowIconSelector));
-            
+
             Console.WriteLine($"[ADD/EDIT VM] After RaisePropertyChanged: IsCreditCardEntry={IsCreditCardEntry}, IsPasswordEntry={IsPasswordEntry}");
 
             // Commands
@@ -339,6 +342,7 @@ namespace PhantomVault.UI.ViewModels
         private bool _isTotpEntry;
         private bool _isApiKeyEntry;
         private bool _isContactEntry;
+        private bool _isPinCodeEntry;
 
         public EntryType EntryType => _existingCredential?.EntryType ?? EntryType.Password;
 
@@ -388,6 +392,12 @@ namespace PhantomVault.UI.ViewModels
         {
             get => _isTotpEntry;
             private set => this.RaiseAndSetIfChanged(ref _isTotpEntry, value);
+        }
+
+        public bool IsPinCodeEntry
+        {
+            get => _isPinCodeEntry;
+            private set => this.RaiseAndSetIfChanged(ref _isPinCodeEntry, value);
         }
 
         public bool ShowPasswordField => (IsPasswordEntry && !IsSecureNoteEntry) || IsWiFiEntry;
@@ -696,6 +706,28 @@ namespace PhantomVault.UI.ViewModels
         {
             get => _existingCredential?.BankBranchAddress ?? string.Empty;
             set { if (_existingCredential != null) { _existingCredential.BankBranchAddress = value; this.RaisePropertyChanged(); } }
+        }
+
+        // PIN Code properties
+        public string PinLabel
+        {
+            get => _existingCredential?.PinLabel ?? string.Empty;
+            set { if (_existingCredential != null) { _existingCredential.PinLabel = value; this.RaisePropertyChanged(); } }
+        }
+        public string PinValue
+        {
+            get => _existingCredential?.PinValue ?? string.Empty;
+            set { if (_existingCredential != null) { _existingCredential.PinValue = value; this.RaisePropertyChanged(); } }
+        }
+        public string PinCategory
+        {
+            get => _existingCredential?.PinCategory ?? string.Empty;
+            set { if (_existingCredential != null) { _existingCredential.PinCategory = value; this.RaisePropertyChanged(); } }
+        }
+        public string PinIssuer
+        {
+            get => _existingCredential?.PinIssuer ?? string.Empty;
+            set { if (_existingCredential != null) { _existingCredential.PinIssuer = value; this.RaisePropertyChanged(); } }
         }
 
         // Identity Document properties
@@ -1156,6 +1188,12 @@ namespace PhantomVault.UI.ViewModels
                 credential.TotpAlgorithm = _existingCredential.TotpAlgorithm;
                 credential.TotpIssuer = _existingCredential.TotpIssuer;
                 credential.TotpAccountName = _existingCredential.TotpAccountName;
+
+                // PIN Code fields
+                credential.PinLabel = _existingCredential.PinLabel;
+                credential.PinValue = _existingCredential.PinValue;
+                credential.PinCategory = _existingCredential.PinCategory;
+                credential.PinIssuer = _existingCredential.PinIssuer;
             }
 
             // Apply TOTP secret from input field
@@ -1200,28 +1238,26 @@ namespace PhantomVault.UI.ViewModels
             const string lowerChars = "abcdefghijklmnopqrstuvwxyz";
             const string digitChars = "0123456789";
             const string symbolChars = "!@#$%^&*()_+-=[]{}|;:,.<>?";
-
-            var random = new Random();
             var password = new System.Text.StringBuilder();
 
             // Ensure at least one of each type
-            password.Append(upperChars[random.Next(upperChars.Length)]);
-            password.Append(lowerChars[random.Next(lowerChars.Length)]);
-            password.Append(digitChars[random.Next(digitChars.Length)]);
-            password.Append(symbolChars[random.Next(symbolChars.Length)]);
+            password.Append(upperChars[RandomNumberGenerator.GetInt32(upperChars.Length)]);
+            password.Append(lowerChars[RandomNumberGenerator.GetInt32(lowerChars.Length)]);
+            password.Append(digitChars[RandomNumberGenerator.GetInt32(digitChars.Length)]);
+            password.Append(symbolChars[RandomNumberGenerator.GetInt32(symbolChars.Length)]);
 
             // Fill remaining with random characters
             string allChars = upperChars + lowerChars + digitChars + symbolChars;
             for (int i = 4; i < 16; i++)
             {
-                password.Append(allChars[random.Next(allChars.Length)]);
+                password.Append(allChars[RandomNumberGenerator.GetInt32(allChars.Length)]);
             }
 
             // Shuffle the password
             var chars = password.ToString().ToCharArray();
             for (int i = chars.Length - 1; i > 0; i--)
             {
-                int j = random.Next(i + 1);
+                int j = RandomNumberGenerator.GetInt32(i + 1);
                 (chars[i], chars[j]) = (chars[j], chars[i]);
             }
 

@@ -4,6 +4,7 @@ using System.IO;
 using System.Security;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using GiblexVault.Security.ZK;
@@ -24,9 +25,12 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
         private byte[]? _masterKey;
         private readonly EngineOptions _opts;
         private readonly string _pepperPath;
+        private readonly string _verifierPath;
         private readonly SemaphoreSlim _lock = new(1, 1);
         private readonly Dictionary<string, int> _tempFileRefCounts = new();
         private readonly List<SecureTempFile> _tempFiles = new();
+        private const string MasterKeyVerifierPlaintext = "PhantomVault.MasterKeyVerifier.v1";
+        private static readonly byte[] MasterKeyVerifierAad = Encoding.UTF8.GetBytes(MasterKeyVerifierPlaintext);
 
         public bool IsUnlocked => _masterKey != null;
 
@@ -37,6 +41,10 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "PhantomVault",
                 "pepper.dpapi"
+            );
+            _verifierPath = Path.Combine(
+                Path.GetDirectoryName(_pepperPath)!,
+                "master.verifier.json"
             );
         }
 
@@ -55,7 +63,7 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                 }
 
                 // Load or create pepper
-                byte[] pepper = await LoadOrCreatePepperAsync();
+                var (pepper, createdPepper) = await LoadOrCreatePepperAsync();
 
                 // Build combined secret: password + pepper + keyfile
                 byte[] pwdBytes = Encoding.UTF8.GetBytes(password);
@@ -72,7 +80,7 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                 }
 
                 // Apply device binding if provided
-                byte[] salt = LoadOrCreateSalt();
+                var (salt, createdSalt) = LoadOrCreateSalt();
                 if (!string.IsNullOrEmpty(deviceId))
                 {
                     salt = DeviceBinding.DeviceSalt(deviceId, salt);
@@ -96,8 +104,13 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                 CryptographicOperations.ZeroMemory(keyfileBytes);
                 CryptographicOperations.ZeroMemory(combined);
 
-                // In production: verify MK by attempting to decrypt a test value
-                // For now, assume success
+                if (!await ValidateOrInitializeMasterKeyVerifierAsync(_masterKey, createdPepper || createdSalt).ConfigureAwait(false))
+                {
+                    CryptographicOperations.ZeroMemory(_masterKey);
+                    _masterKey = null;
+                    return false;
+                }
+
                 return true;
             }
             catch (Exception)
@@ -191,6 +204,31 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                 CryptographicOperations.ZeroMemory(decryptedBytes);
 
                 return ms;
+            }
+            finally
+            {
+                _lock.Release();
+            }
+        }
+
+        /// <summary>
+        /// Opens encrypted vault content from an existing stream and decrypts it fully in memory.
+        /// This avoids materializing wrapped vault payloads on the host filesystem.
+        /// </summary>
+        public async Task<Stream> OpenEncryptedStreamForViewingAsync(Stream encryptedVaultStream, CancellationToken ct = default)
+        {
+            if (!IsUnlocked)
+                throw new InvalidOperationException("Vault is locked. Call UnlockMasterKeyAsync first.");
+            if (encryptedVaultStream == null || !encryptedVaultStream.CanRead)
+                throw new ArgumentException("Encrypted vault stream must be readable", nameof(encryptedVaultStream));
+
+            await _lock.WaitAsync(ct);
+            try
+            {
+                var plaintextStream = new MemoryStream();
+                await VaultFileZk.DecryptToStreamAsync(encryptedVaultStream, plaintextStream, _masterKey!, _opts).ConfigureAwait(false);
+                plaintextStream.Position = 0;
+                return plaintextStream;
             }
             finally
             {
@@ -365,6 +403,25 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
         }
 
         /// <summary>
+        /// Encrypts plaintext from one stream into another encrypted stream.
+        /// </summary>
+        public async Task EncryptStreamToStreamAsync(Stream plaintextStream, Stream encryptedOutputStream, CancellationToken ct = default)
+        {
+            if (!IsUnlocked)
+                throw new InvalidOperationException("Vault is locked. Call UnlockMasterKeyAsync first.");
+            if (plaintextStream == null || !plaintextStream.CanRead)
+                throw new ArgumentException("Plaintext stream must be readable", nameof(plaintextStream));
+            if (encryptedOutputStream == null || !encryptedOutputStream.CanWrite)
+                throw new ArgumentException("Encrypted output stream must be writable", nameof(encryptedOutputStream));
+
+            await VaultFileZk.EncryptToStreamAsync(plaintextStream, encryptedOutputStream, _masterKey!, _opts).ConfigureAwait(false);
+            if (encryptedOutputStream.CanSeek)
+            {
+                encryptedOutputStream.Position = 0;
+            }
+        }
+
+        /// <summary>
         /// Locks vault and wipes all sensitive key material from memory.
         /// </summary>
         public async Task LockAndWipeKeysAsync()
@@ -461,7 +518,7 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
         /// <summary>
         /// Loads existing pepper or creates new one with DPAPI protection.
         /// </summary>
-        private async Task<byte[]> LoadOrCreatePepperAsync()
+        private async Task<(byte[] Pepper, bool Created)> LoadOrCreatePepperAsync()
         {
             var appDataDir = Path.GetDirectoryName(_pepperPath)!;
             Directory.CreateDirectory(appDataDir);
@@ -476,7 +533,7 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                         // DPAPI-protected pepper only supported on Windows.
                         throw new PlatformNotSupportedException("Pepper sealing is only supported on Windows. The application must be run on Windows or use a cross-platform sealing mechanism.");
                     }
-                    return SecurityTuning.UnsealPepper(sealedPepper);
+                    return (SecurityTuning.UnsealPepper(sealedPepper), false);
                 }
                 catch
                 {
@@ -491,18 +548,18 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                 // This is a last-resort fallback and should be replaced by a cross-platform key protection.
                 var fallback = RandomNumberGenerator.GetBytes(64);
                 await File.WriteAllBytesAsync(_pepperPath, fallback);
-                return fallback;
+                return (fallback, true);
             }
 
             var protectedPepper = SecurityTuning.CreatePepperProtected();
             await File.WriteAllBytesAsync(_pepperPath, protectedPepper);
-            return SecurityTuning.UnsealPepper(protectedPepper);
+            return (SecurityTuning.UnsealPepper(protectedPepper), true);
         }
 
         /// <summary>
         /// Loads or creates the master salt for key derivation.
         /// </summary>
-        private byte[] LoadOrCreateSalt()
+        private (byte[] Salt, bool Created) LoadOrCreateSalt()
         {
             var saltPath = Path.Combine(
                 Path.GetDirectoryName(_pepperPath)!,
@@ -513,7 +570,7 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
             {
                 try
                 {
-                    return File.ReadAllBytes(saltPath);
+                    return (File.ReadAllBytes(saltPath), false);
                 }
                 catch
                 {
@@ -524,7 +581,83 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
             // Create new salt
             var salt = RandomNumberGenerator.GetBytes(32);
             File.WriteAllBytes(saltPath, salt);
-            return salt;
+            return (salt, true);
+        }
+
+        private async Task<bool> ValidateOrInitializeMasterKeyVerifierAsync(byte[] masterKey, bool allowBootstrap)
+        {
+            if (File.Exists(_verifierPath))
+            {
+                return await ValidateMasterKeyVerifierAsync(masterKey).ConfigureAwait(false);
+            }
+
+            if (!allowBootstrap)
+            {
+                // Legacy install with no verifier yet. Preserve compatibility without
+                // inventing trust state from an unknown password attempt.
+                return true;
+            }
+
+            await WriteMasterKeyVerifierAsync(masterKey).ConfigureAwait(false);
+            return true;
+        }
+
+        private async Task<bool> ValidateMasterKeyVerifierAsync(byte[] masterKey)
+        {
+            try
+            {
+                var verifierBytes = await File.ReadAllBytesAsync(_verifierPath).ConfigureAwait(false);
+                var verifier = JsonSerializer.Deserialize<MasterKeyVerifierRecord>(verifierBytes);
+                if (verifier == null)
+                {
+                    return false;
+                }
+
+                var nonce = Convert.FromBase64String(verifier.Nonce);
+                var ciphertext = Convert.FromBase64String(verifier.Ciphertext);
+                var plaintext = Aead.Decrypt(CipherSuite.Aes256Gcm, masterKey, nonce, MasterKeyVerifierAad, ciphertext);
+                try
+                {
+                    return CryptographicOperations.FixedTimeEquals(
+                        plaintext,
+                        Encoding.UTF8.GetBytes(MasterKeyVerifierPlaintext));
+                }
+                finally
+                {
+                    CryptographicOperations.ZeroMemory(plaintext);
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private async Task WriteMasterKeyVerifierAsync(byte[] masterKey)
+        {
+            var nonce = RandomNumberGenerator.GetBytes(12);
+            var plaintext = Encoding.UTF8.GetBytes(MasterKeyVerifierPlaintext);
+            try
+            {
+                var ciphertext = Aead.Encrypt(CipherSuite.Aes256Gcm, masterKey, nonce, MasterKeyVerifierAad, plaintext);
+                try
+                {
+                    var verifier = new MasterKeyVerifierRecord(
+                        Convert.ToBase64String(nonce),
+                        Convert.ToBase64String(ciphertext));
+                    var json = JsonSerializer.SerializeToUtf8Bytes(verifier);
+                    await File.WriteAllBytesAsync(_verifierPath, json).ConfigureAwait(false);
+                }
+                finally
+                {
+                    CryptographicOperations.ZeroMemory(ciphertext);
+                }
+            }
+            finally
+            {
+                CryptographicOperations.ZeroMemory(plaintext);
+                CryptographicOperations.ZeroMemory(nonce);
+            }
         }
 
         public void Dispose()
@@ -561,4 +694,5 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
     /// Represents a secure temporary file with expiration tracking
     /// </summary>
     internal sealed record SecureTempFile(string FilePath, string DirectoryPath, DateTimeOffset ExpiresAt);
+    internal sealed record MasterKeyVerifierRecord(string Nonce, string Ciphertext);
 }

@@ -5,13 +5,14 @@ using PhantomVault.Core.Models;
 namespace PhantomVault.Core.Services
 {
     /// <summary>
-    /// Interface for WebAuthn/FIDO2 passkey operations. Platform-specific
-    /// implementations will provide biometric or hardware-based authentication.
+    /// Interface for the platform-backed device-authenticator flow used by this build.
+    /// The current implementation primarily exposes a local Windows Hello path rather
+    /// than a full cross-device WebAuthn ecosystem.
     /// </summary>
     public interface IPasskeyService
     {
         /// <summary>
-        /// Indicates whether passkey support is available on the current platform.
+        /// Indicates whether the current platform-backed authenticator is available.
         /// </summary>
         bool IsSupported { get; }
 
@@ -21,8 +22,8 @@ namespace PhantomVault.Core.Services
         bool IsBiometricAvailable { get; }
 
         /// <summary>
-        /// Registers a new passkey with the platform authenticator.
-        /// This creates a hardware-bound credential that can be used for future authentications.
+        /// Registers a new device-bound credential with the platform authenticator.
+        /// This creates a local credential that can be used for future authentications.
         /// </summary>
         /// <param name="userId">Unique identifier for the user/vault.</param>
         /// <param name="userName">Display name for the user/vault.</param>
@@ -32,7 +33,7 @@ namespace PhantomVault.Core.Services
         Task<byte[]> RegisterAsync(string userId, string userName, string rpId, byte[] challenge);
 
         /// <summary>
-        /// Authenticates the user using a previously registered passkey.
+        /// Authenticates the user using a previously registered device credential.
         /// This will typically prompt for biometric or PIN verification.
         /// </summary>
         /// <param name="credentialId">The credential ID from registration.</param>
@@ -42,13 +43,12 @@ namespace PhantomVault.Core.Services
         Task<bool> AuthenticateAsync(byte[] credentialId, string rpId, byte[] challenge);
 
         /// <summary>
-        /// Gets a human-readable description of the authenticator type
-        /// (e.g., "Windows Hello", "Touch ID", "Face ID", "Fingerprint").
+        /// Gets a human-readable description of the authenticator exposed by the current build.
         /// </summary>
         string AuthenticatorDescription { get; }
 
         /// <summary>
-        /// Rotates a passkey credential by creating a new one and securely deleting the old.
+        /// Rotates a device credential by creating a new one and securely deleting the old.
         /// This improves security by ensuring potentially compromised credentials are invalidated.
         /// </summary>
         /// <param name="oldCredentialId">The credential ID to rotate</param>

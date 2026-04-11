@@ -93,7 +93,7 @@
                                FontSize="{StaticResource Type.Body.Size}"
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
-                    <TextBlock Text="Inserting your USB key automatically detects the active login portal and fills your credentials. Passkeys are used when available. Requires vault to be unlocked."
+                    <TextBlock Text="Inserting your USB key automatically detects the active login portal and fills matching credentials. Native passkey sign-in remains browser or OS driven, and Attestor-linked passkey handoff is separate from this fill path. Requires vault to be unlocked."
                                FontSize="{StaticResource Type.Small.Size}"
                                Foreground="{DynamicResource MutedTextBrush}"
                                TextWrapping="Wrap"/>
@@ -111,7 +111,7 @@
                               ToolTip.Tip="After filling username and password, wait for a 2FA code field to appear and fill it automatically"/>
                     <CheckBox IsChecked="{Binding AutoFillShowNewEntryOnNoMatch}"
                               Content="Show 'New Entry' dialog when no credential matches"
-                              ToolTip.Tip="When no stored credential matches the active login portal, offer to add a new entry or create a passkey"/>
+                              ToolTip.Tip="When no stored credential matches the active login portal, offer to add a new entry and, if Attestor is linked, open its passkey flow"/>
                 </StackPanel>
             </StackPanel>
         </Border>

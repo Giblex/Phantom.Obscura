@@ -33,6 +33,9 @@ namespace PhantomVault.UI.ViewModels.Settings
         private string _oldestItem = "N/A";
         private bool _autoEmptyOnClose = false;
         private bool _promptBeforeDeletion = true;
+        private string _recoveryRetentionStatus = "Shadow snapshots can be created before you empty the bin in this app session, and retention settings are applied to the secure rubbish bin service.";
+        private string _duplicateAutomationStatus = "Manual duplicate scans are available for secure-bin records, and duplicate preferences can be configured from this panel.";
+        private string _cleanupAutomationStatus = "Prompt-before-delete applies in this app session, and auto-empty on vault close can be configured here.";
         private readonly DialogService _dialogService;
         private readonly Func<string[]?> _trashItemsProvider;
         private readonly ShadowTrashService _shadowTrashService;
@@ -44,8 +47,13 @@ namespace PhantomVault.UI.ViewModels.Settings
             get => _selectedErasureMethod;
             set
             {
-                this.RaiseAndSetIfChanged(ref _selectedErasureMethod, value);
-                UpdateMethodDescription();
+                if (_selectedErasureMethod != value)
+                {
+                    this.RaiseAndSetIfChanged(ref _selectedErasureMethod, value);
+                    UpdateMethodDescription();
+                    PersistSettings();
+                    ApplySecureTrashConfiguration();
+                }
             }
         }
 
@@ -58,31 +66,70 @@ namespace PhantomVault.UI.ViewModels.Settings
         public bool EnableRecovery
         {
             get => _enableRecovery;
-            set => this.RaiseAndSetIfChanged(ref _enableRecovery, value);
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _enableRecovery, value))
+                {
+                    PersistSettings();
+                    ApplySecureTrashConfiguration();
+                    UpdateStatusMessages();
+                }
+            }
         }
 
         public int SelectedRetentionPeriod
         {
             get => _selectedRetentionPeriod;
-            set => this.RaiseAndSetIfChanged(ref _selectedRetentionPeriod, value);
+            set
+            {
+                if (_selectedRetentionPeriod != value)
+                {
+                    this.RaiseAndSetIfChanged(ref _selectedRetentionPeriod, value);
+                    PersistSettings();
+                    ApplySecureTrashConfiguration();
+                    UpdateStatusMessages();
+                }
+            }
         }
 
         public bool EnableDuplicateDetection
         {
             get => _enableDuplicateDetection;
-            set => this.RaiseAndSetIfChanged(ref _enableDuplicateDetection, value);
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _enableDuplicateDetection, value))
+                {
+                    PersistSettings();
+                    UpdateStatusMessages();
+                }
+            }
         }
 
         public bool AutoDeleteDuplicates
         {
             get => _autoDeleteDuplicates;
-            set => this.RaiseAndSetIfChanged(ref _autoDeleteDuplicates, value);
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _autoDeleteDuplicates, value))
+                {
+                    PersistSettings();
+                    UpdateStatusMessages();
+                }
+            }
         }
 
         public int SelectedScanFrequency
         {
             get => _selectedScanFrequency;
-            set => this.RaiseAndSetIfChanged(ref _selectedScanFrequency, value);
+            set
+            {
+                if (_selectedScanFrequency != value)
+                {
+                    this.RaiseAndSetIfChanged(ref _selectedScanFrequency, value);
+                    PersistSettings();
+                    UpdateStatusMessages();
+                }
+            }
         }
 
         public int ItemsInBin
@@ -106,13 +153,45 @@ namespace PhantomVault.UI.ViewModels.Settings
         public bool AutoEmptyOnClose
         {
             get => _autoEmptyOnClose;
-            set => this.RaiseAndSetIfChanged(ref _autoEmptyOnClose, value);
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _autoEmptyOnClose, value))
+                {
+                    PersistSettings();
+                    UpdateStatusMessages();
+                }
+            }
         }
 
         public bool PromptBeforeDeletion
         {
             get => _promptBeforeDeletion;
-            set => this.RaiseAndSetIfChanged(ref _promptBeforeDeletion, value);
+            set
+            {
+                if (this.RaiseAndSetIfChanged(ref _promptBeforeDeletion, value))
+                {
+                    PersistSettings();
+                    UpdateStatusMessages();
+                }
+            }
+        }
+
+        public string RecoveryRetentionStatus
+        {
+            get => _recoveryRetentionStatus;
+            set => this.RaiseAndSetIfChanged(ref _recoveryRetentionStatus, value);
+        }
+
+        public string DuplicateAutomationStatus
+        {
+            get => _duplicateAutomationStatus;
+            set => this.RaiseAndSetIfChanged(ref _duplicateAutomationStatus, value);
+        }
+
+        public string CleanupAutomationStatus
+        {
+            get => _cleanupAutomationStatus;
+            set => this.RaiseAndSetIfChanged(ref _cleanupAutomationStatus, value);
         }
 
         public ICommand ScanForDuplicatesCommand { get; }
@@ -134,11 +213,14 @@ namespace PhantomVault.UI.ViewModels.Settings
             _trashItemsProvider = trashItemsProvider ?? (() => Array.Empty<string>());
 
             ScanForDuplicatesCommand = ReactiveCommand.CreateFromTask(ScanForDuplicates);
-            ViewDeletedItemsCommand = ReactiveCommand.Create(ViewDeletedItems);
+            ViewDeletedItemsCommand = ReactiveCommand.CreateFromTask(ViewDeletedItemsAsync);
             EmptyBinCommand = ReactiveCommand.CreateFromTask(EmptyBin);
             RestoreShadowSnapshotCommand = ReactiveCommand.CreateFromTask(RestoreShadowSnapshotAsync);
 
+            LoadSettings();
             UpdateMethodDescription();
+            ApplySecureTrashConfiguration();
+            UpdateStatusMessages();
             RefreshStats();
         }
 
@@ -153,6 +235,64 @@ namespace PhantomVault.UI.ViewModels.Settings
                 4 => "Enhanced (1000+ passes)\n\nExtreme paranoia mode. Overwrites data over 1000 times. Extremely slow and generally unnecessary. Only use for the most sensitive data when time is not a constraint.",
                 _ => "Unknown method"
             };
+        }
+
+        private void LoadSettings()
+        {
+            var settings = SettingsService.Load();
+            _enableRecovery = settings.SecureTrashCreateSnapshotBeforePurge;
+            _selectedRetentionPeriod = MapRetentionDaysToIndex(settings.SecureTrashRetentionDays);
+            _enableDuplicateDetection = settings.SecureTrashDuplicateDetectionEnabled;
+            _autoDeleteDuplicates = settings.SecureTrashAutoDeleteDuplicates;
+            _selectedScanFrequency = Math.Clamp(settings.SecureTrashDuplicateScanFrequency, 0, 3);
+            _autoEmptyOnClose = settings.SecureTrashAutoEmptyOnClose;
+            _promptBeforeDeletion = settings.SecureTrashPromptBeforeDeletion;
+            _selectedErasureMethod = Math.Clamp(settings.SecureTrashErasureMethod, 0, 4);
+        }
+
+        private void PersistSettings()
+        {
+            SettingsService.Update(settings =>
+            {
+                settings.SecureTrashCreateSnapshotBeforePurge = EnableRecovery;
+                settings.SecureTrashRetentionDays = MapRetentionIndexToDays(SelectedRetentionPeriod);
+                settings.SecureTrashDuplicateDetectionEnabled = EnableDuplicateDetection;
+                settings.SecureTrashAutoDeleteDuplicates = AutoDeleteDuplicates;
+                settings.SecureTrashDuplicateScanFrequency = SelectedScanFrequency;
+                settings.SecureTrashAutoEmptyOnClose = AutoEmptyOnClose;
+                settings.SecureTrashPromptBeforeDeletion = PromptBeforeDeletion;
+                settings.SecureTrashErasureMethod = SelectedErasureMethod;
+                settings.SecureTrashEnabled = EnableRecovery;
+                settings.SecureTrashAutoPurge = true;
+                settings.SecureTrashWipePasses = MapErasureMethodToWipePasses(SelectedErasureMethod);
+            });
+        }
+
+        private void ApplySecureTrashConfiguration()
+        {
+            _secureTrashService.ApplyConfiguration(
+                EnableRecovery,
+                autoPurgeEnabled: true,
+                retentionDays: MapRetentionIndexToDays(SelectedRetentionPeriod),
+                secureWipePasses: MapErasureMethodToWipePasses(SelectedErasureMethod));
+        }
+
+        private void UpdateStatusMessages()
+        {
+            var retentionDays = MapRetentionIndexToDays(SelectedRetentionPeriod);
+            RecoveryRetentionStatus = EnableRecovery
+                ? $"Deleted items stay recoverable for {retentionDays} day{(retentionDays == 1 ? string.Empty : "s")} before secure purge. Empty-bin actions can also create a protected shadow snapshot first."
+                : "Recovery snapshots before purge are disabled. Deleted items are securely purged immediately instead of entering a recovery period.";
+
+            DuplicateAutomationStatus = EnableDuplicateDetection
+                ? AutoDeleteDuplicates
+                    ? $"Duplicate review is enabled and duplicate scans are configured for {DescribeScanFrequency(SelectedScanFrequency)} checks. Matching secure-bin duplicates can be purged when you run a scan."
+                    : $"Duplicate review is enabled with a {DescribeScanFrequency(SelectedScanFrequency)} scan preference. Scans currently report matches and let you decide what to purge."
+                : "Duplicate review is disabled. Use the scan action to inspect secure-bin duplicates manually.";
+
+            CleanupAutomationStatus = AutoEmptyOnClose
+                ? "The secure rubbish bin will be emptied when the vault window closes. If confirmation is enabled, the app will prompt before purging."
+                : "The secure rubbish bin stays intact when the vault window closes. Prompt-before-delete still applies to manual empty-bin actions.";
         }
 
         private async Task ScanForDuplicates()
@@ -181,6 +321,34 @@ namespace PhantomVault.UI.ViewModels.Settings
                     ? "No duplicates detected in secure bin."
                     : "Possible duplicates:\n- " + string.Join("\n- ", dupes);
 
+                if (dupes.Count > 0 && AutoDeleteDuplicates)
+                {
+                    var duplicateGroups = records
+                        .GroupBy(r =>
+                        {
+                            var title = (r.Payload?.Title ?? string.Empty).Trim().ToLowerInvariant();
+                            var user = (r.Payload?.Username ?? string.Empty).Trim().ToLowerInvariant();
+                            return $"{title}|{user}";
+                        })
+                        .Where(g => g.Count() > 1)
+                        .ToList();
+
+                    var purged = 0;
+                    foreach (var group in duplicateGroups)
+                    {
+                        foreach (var duplicate in group.Skip(1))
+                        {
+                            if (_secureTrashService.SecurelyPurge(duplicate.Id))
+                            {
+                                purged++;
+                            }
+                        }
+                    }
+
+                    RefreshStats();
+                    message += $"\n\nAuto-delete removed {purged} duplicate secure-bin item(s).";
+                }
+
                 await _dialogService.ShowInfoAsync("Duplicate Scan", message, _owner);
             }
             catch (Exception ex)
@@ -189,7 +357,7 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
         }
 
-        private async void ViewDeletedItems()
+        private async Task ViewDeletedItemsAsync()
         {
             try
             {
@@ -339,6 +507,42 @@ namespace PhantomVault.UI.ViewModels.Settings
                 4 => SecureDeletionService.DeletionMethod.EnhancedOverwrite,
                 _ => SecureDeletionService.DeletionMethod.StandardSecure
             };
+
+        private static int MapRetentionIndexToDays(int selectedRetentionPeriod) => selectedRetentionPeriod switch
+        {
+            <= 0 => 1,
+            1 => 7,
+            2 => 30,
+            3 => 90,
+            _ => 365
+        };
+
+        private static int MapRetentionDaysToIndex(int retentionDays) => retentionDays switch
+        {
+            <= 1 => 0,
+            <= 7 => 1,
+            <= 30 => 2,
+            <= 90 => 3,
+            _ => 4
+        };
+
+        private static int MapErasureMethodToWipePasses(int erasureMethod) => erasureMethod switch
+        {
+            0 => 1,
+            1 => 3,
+            2 => 7,
+            3 => 10,
+            4 => 10,
+            _ => 3
+        };
+
+        private static string DescribeScanFrequency(int selectedScanFrequency) => selectedScanFrequency switch
+        {
+            0 => "daily",
+            1 => "weekly",
+            2 => "monthly",
+            _ => "manual"
+        };
 
         private void RefreshStats()
         {

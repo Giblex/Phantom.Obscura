@@ -1,0 +1,59 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Fixed Giblex dark navy theme for pre-vault screens (WelcomePage, SecurityCheckScreen,
+         SetupWizardWindow, VaultUnlockWindow, VaultCreationLoadingWindow).
+         Merged into each window's Resources so these screens never change with app theme.
+         Colors sourced from Theme.GiblexDark.axaml (exact match of giblex.com.au dark mode). -->
+
+    <!-- Surface tokens -->
+    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#071018"/>
+    <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#081D24"/>
+    <SolidColorBrush x:Key="FooterBackgroundBrush" Color="#071018"/>
+    <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#0C1620"/>
+    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#101E2B"/>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#101E2B"/>
+    <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#0A1420"/>
+    <SolidColorBrush x:Key="ControlBorderBrush" Color="#273642"/>
+    <SolidColorBrush x:Key="FooterBorderBrush" Color="Transparent"/>
+
+    <!-- Accent tokens (website teal) -->
+    <SolidColorBrush x:Key="AccentBrush" Color="#55C3CF"/>
+    <SolidColorBrush x:Key="LogoTitleBrush" Color="#55C3CF"/>
+
+    <!-- Text tokens -->
+    <SolidColorBrush x:Key="PrimaryTextBrush" Color="#ECF7FB"/>
+    <SolidColorBrush x:Key="HeaderTextBrush" Color="#ECF7FB"/>
+    <SolidColorBrush x:Key="ButtonTextBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="SecondaryTextBrush" Color="#C5DDE5"/>
+    <SolidColorBrush x:Key="MutedTextBrush" Color="#95AEBB"/>
+
+    <!-- Status tokens -->
+    <SolidColorBrush x:Key="ErrorBrush" Color="#EF4444"/>
+    <SolidColorBrush x:Key="SuccessBrush" Color="#4ADE80"/>
+    <SolidColorBrush x:Key="SuccessTextBrush" Color="#4ADE80"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="#FBBF24"/>
+
+    <!-- Shadows -->
+    <DropShadowEffect x:Key="FooterGroundedShadow" Color="#071018" Opacity="0.2" BlurRadius="8"/>
+    <DropShadowEffect x:Key="FrontPageTileBaseShadow" Color="#071018" Opacity="0.25" BlurRadius="16"/>
+
+    <!-- Liquid glass tokens for buttons/tiles -->
+    <Color x:Key="Glass.Tint.Light">#0C1620</Color>
+    <Color x:Key="Glass.Tint.Mid">#55C3CF</Color>
+    <Color x:Key="Glass.Tint.Dark">#071018</Color>
+    <Color x:Key="Glass.Tint.Deepest">#071018</Color>
+    <Color x:Key="Glass.Sheen.Bright">#162435</Color>
+    <Color x:Key="Glass.Sheen.Mid">#101E2B</Color>
+    <Color x:Key="Glass.Sheen.Soft">#0C1620</Color>
+    <SolidColorBrush x:Key="Brush.Glass.Border" Color="#3055C3CF"/>
+    <SolidColorBrush x:Key="Brush.Glass.BorderHover" Color="#50178EA0"/>
+    <SolidColorBrush x:Key="Brush.Glass.BorderPressed" Color="#40071018"/>
+    <SolidColorBrush x:Key="Brush.Glass.BorderFocus" Color="#55C3CF"/>
+    <SolidColorBrush x:Key="LiquidGlassButtonForeground" Color="#ECF7FB"/>
+    <SolidColorBrush x:Key="TileGlassBrush">#AA0C1620</SolidColorBrush>
+
+    <!-- Font tokens -->
+    <FontFamily x:Key="MainFontFamily">Segoe UI</FontFamily>
+    <FontFamily x:Key="DefaultFontFamily">Segoe UI</FontFamily>
+    <x:Double x:Key="DefaultFontSize">14</x:Double>
+</ResourceDictionary>

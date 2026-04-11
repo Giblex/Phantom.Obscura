@@ -44,22 +44,22 @@ namespace PhantomVault.Core.Services
             {
                 if (IsSupported)
                 {
-                    return "Windows Hello (Fingerprint, Face, or PIN)";
+                    return "Windows Hello local authenticator (fingerprint, face, or PIN)";
                 }
 
                 if (OperatingSystem.IsMacOS())
                 {
-                    return "Touch ID / Face ID (not implemented)";
+                    return "Platform passkeys are not available in this build on macOS";
                 }
 
                 if (OperatingSystem.IsLinux())
                 {
-                    return "FIDO2 Security Key (not implemented)";
+                    return "Platform passkeys are not available in this build on Linux";
                 }
 
                 if (OperatingSystem.IsWindows())
                 {
-                    return "Windows Hello not available";
+                    return "Windows Hello is unavailable on this device or in the current session";
                 }
 
                 return "Platform authenticator not available";

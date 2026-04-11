@@ -251,7 +251,7 @@ namespace PhantomVault.Core.Tests.Specialized
 
             // Act & Assert - Restore with wrong password should fail
             var wrongKey = service.DeriveKey(wrongPassword.AsSpan(), salt);
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 service.Decrypt(encrypted.Ciphertext, encrypted.Nonce, encrypted.Tag, wrongKey));
         }
 
@@ -495,7 +495,7 @@ namespace PhantomVault.Core.Tests.Specialized
             Assert.Equal(data, finalDecrypted);
 
             // Old password should no longer work
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 encryptionService.Decrypt(reencrypted.Ciphertext, reencrypted.Nonce, reencrypted.Tag, oldKey));
         }
 

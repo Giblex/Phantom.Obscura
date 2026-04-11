@@ -18,11 +18,12 @@ namespace PhantomVault.UI.ViewModels
     public sealed class SettingsViewModel : ReactiveObject
     {
         private readonly IDefenceSettingsService? _defenceSettings;
-        private bool _isDarkTheme = true;
+        private bool _isDarkTheme = false;
 
         public SettingsViewModel(IDefenceSettingsService? defenceSettingsService = null)
         {
             _defenceSettings = defenceSettingsService;
+            _isDarkTheme = SettingsService.Load().IsDarkTheme;
 
             // Initialize Password Security ViewModel
             PasswordSecurityViewModel = new PasswordSecurityViewModel();
@@ -36,6 +37,9 @@ namespace PhantomVault.UI.ViewModels
                     if (Avalonia.Application.Current is App app)
                     {
                         app.SetTheme(IsDarkTheme ? "dark" : "light");
+                        var settings = SettingsService.Load();
+                        settings.IsDarkTheme = IsDarkTheme;
+                        SettingsService.Save(settings);
                     }
                 }
                 catch

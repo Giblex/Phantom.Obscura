@@ -11,9 +11,9 @@ using PhantomVault.Core.Services;
 namespace PhantomVault.UI.ViewModels
 {
     /// <summary>
-    /// View model for Windows Hello biometric authentication settings.
-    /// Manages Windows Hello enrollment, verification, and configuration.
-    /// Uses real Windows Hello APIs via Windows.Security.Credentials.
+    /// View model for Windows Hello settings.
+    /// Manages Windows Hello-backed enrollment, verification, and configuration.
+    /// Uses the current platform-backed authenticator service.
     /// </summary>
     public sealed class WindowsHelloSettingsViewModel : ReactiveObject
     {
@@ -113,12 +113,12 @@ namespace PhantomVault.UI.ViewModels
                     if (biometricAvailable)
                     {
                         StatusMessage = IsBiometricEnrolled 
-                            ? "Windows Hello is enrolled and ready" 
-                            : "Windows Hello is available - enroll to use biometric unlock";
+                            ? "Windows Hello is set up and ready"
+                            : "Windows Hello is available. Set it up to use this local authenticator flow.";
                     }
                     else
                     {
-                        StatusMessage = "Windows Hello is available (PIN only - no biometric hardware detected)";
+                        StatusMessage = "Windows Hello is available, but biometric hardware was not detected. PIN-based verification may still work.";
                     }
                 }
                 else
@@ -152,7 +152,7 @@ namespace PhantomVault.UI.ViewModels
             try
             {
                 IsBusy = true;
-                StatusMessage = "Starting Windows Hello enrollment...";
+                StatusMessage = "Starting Windows Hello setup...";
 
                 if (!_passkeyService.IsSupported)
                 {
@@ -180,11 +180,11 @@ namespace PhantomVault.UI.ViewModels
                     
                     IsBiometricEnrolled = true;
                     EnrollmentStatus = "Enrolled - Biometric authentication active";
-                    StatusMessage = "Windows Hello enrollment successful!";
+                    StatusMessage = "Windows Hello setup completed successfully.";
                 }
                 else
                 {
-                    StatusMessage = "Windows Hello enrollment was cancelled";
+                    StatusMessage = "Windows Hello setup was cancelled.";
                 }
             }
             catch (PlatformNotSupportedException)
@@ -211,14 +211,14 @@ namespace PhantomVault.UI.ViewModels
             try
             {
                 IsBusy = true;
-                StatusMessage = "Removing Windows Hello credentials...";
+                StatusMessage = "Removing stored Windows Hello credentials...";
 
                 // Remove the stored credential ID
                 await RemoveStoredCredentialAsync().ConfigureAwait(false);
 
                 IsBiometricEnrolled = false;
                 EnrollmentStatus = "Not enrolled";
-                StatusMessage = "Windows Hello credentials removed";
+                StatusMessage = "Stored Windows Hello credentials removed.";
             }
             catch (Exception ex)
             {
@@ -235,7 +235,7 @@ namespace PhantomVault.UI.ViewModels
             try
             {
                 IsBusy = true;
-                StatusMessage = "Testing biometric authentication...";
+                StatusMessage = "Testing Windows Hello authentication...";
 
                 if (!_passkeyService.IsSupported)
                 {
@@ -247,7 +247,7 @@ namespace PhantomVault.UI.ViewModels
                 var credentialId = await GetStoredCredentialIdAsync().ConfigureAwait(false);
                 if (credentialId == null || credentialId.Length == 0)
                 {
-                    StatusMessage = "No Windows Hello credential enrolled - please enroll first";
+                    StatusMessage = "No Windows Hello credential is enrolled yet. Set one up first.";
                     return;
                 }
 
@@ -264,11 +264,11 @@ namespace PhantomVault.UI.ViewModels
 
                 if (authenticated)
                 {
-                    StatusMessage = "Biometric authentication test successful!";
+                    StatusMessage = "Windows Hello authentication test succeeded.";
                 }
                 else
                 {
-                    StatusMessage = "Biometric authentication test failed - verification declined";
+                    StatusMessage = "Windows Hello authentication test failed because verification was declined.";
                 }
             }
             catch (PlatformNotSupportedException)
@@ -277,7 +277,7 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Authentication test failed: {ex.Message}";
+                StatusMessage = $"Windows Hello authentication test failed: {ex.Message}";
             }
             finally
             {

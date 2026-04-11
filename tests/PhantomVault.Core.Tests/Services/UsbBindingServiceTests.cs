@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.IO;
 using System.Linq;
@@ -128,19 +130,20 @@ namespace PhantomVault.Core.Tests.Services
 
             try
             {
-                // Act
-                var hiddenFilePath = service.CreateHiddenDeviceId(tempDir, vaultSalt);
+                // Act — CreateHiddenDeviceId returns the device ID string, not the file path
+                var deviceId = service.CreateHiddenDeviceId(tempDir, vaultSalt);
+                var hiddenFilePath = Path.Combine(tempDir, ".phantom_device_id");
 
                 // Assert
-                Assert.NotNull(hiddenFilePath);
+                Assert.NotNull(deviceId);
+                Assert.NotEmpty(deviceId);
                 Assert.True(File.Exists(hiddenFilePath), "Hidden device ID file should exist");
-                Assert.Contains(".phantom_device_id", hiddenFilePath);
 
-                // Verify file content is valid JSON
+                // Verify file content is valid encrypted envelope (v2 format)
                 var content = File.ReadAllText(hiddenFilePath);
-                Assert.Contains("deviceId", content);
-                Assert.Contains("timestamp", content);
-                Assert.Contains("signature", content);
+                Assert.Contains("version", content);
+                Assert.Contains("nonce", content);
+                Assert.Contains("ciphertext", content);
             }
             finally
             {
@@ -194,11 +197,15 @@ namespace PhantomVault.Core.Tests.Services
             try
             {
                 // Create hidden device ID
-                var hiddenFilePath = service.CreateHiddenDeviceId(tempDir, vaultSalt);
+                service.CreateHiddenDeviceId(tempDir, vaultSalt);
+                var hiddenFilePath = Path.Combine(tempDir, ".phantom_device_id");
 
-                // Tamper with file content
+                // Remove Hidden+System attributes so we can overwrite the file
+                File.SetAttributes(hiddenFilePath, FileAttributes.Normal);
+
+                // Tamper with file content (flip a character in the ciphertext)
                 var content = File.ReadAllText(hiddenFilePath);
-                var tamperedContent = content.Replace("deviceId", "tampered");
+                var tamperedContent = content.Remove(content.Length / 2, 1).Insert(content.Length / 2, "X");
                 File.WriteAllText(hiddenFilePath, tamperedContent);
 
                 // Act & Assert
@@ -326,8 +333,9 @@ namespace PhantomVault.Core.Tests.Services
 
             try
             {
-                // Act
-                var hiddenFilePath = service.CreateHiddenDeviceId(tempDir, vaultSalt);
+                // Act — CreateHiddenDeviceId returns a device ID string, not a file path
+                service.CreateHiddenDeviceId(tempDir, vaultSalt);
+                var hiddenFilePath = Path.Combine(tempDir, ".phantom_device_id");
 
                 // Assert
                 var attributes = File.GetAttributes(hiddenFilePath);
@@ -428,15 +436,22 @@ namespace PhantomVault.Core.Tests.Services
             {
                 // Act - Complete high-assurance binding workflow
                 // Step 1: Create hidden device ID
-                var hiddenFilePath = service.CreateHiddenDeviceId(tempDir, vaultSalt);
+                var deviceId = service.CreateHiddenDeviceId(tempDir, vaultSalt);
+                var hiddenFilePath = Path.Combine(tempDir, ".phantom_device_id");
                 Assert.True(File.Exists(hiddenFilePath));
+                Assert.NotEmpty(deviceId);
 
                 // Step 2: Compute high-assurance device ID
                 var highAssuranceId = service.ComputeHighAssuranceDeviceId(tempDir, vaultSalt);
                 Assert.NotNull(highAssuranceId);
 
-                // Step 3: Verify binding
-                service.EnsureBoundToDevice(tempDir, highAssuranceId);
+                // Step 3: Verify basic device binding (EnsureBoundToDevice checks ComputeDeviceId)
+                var basicDeviceId = service.ComputeDeviceId(tempDir);
+                service.EnsureBoundToDevice(tempDir, basicDeviceId);
+
+                // Verify high-assurance ID is consistent across calls
+                var highAssuranceId2 = service.ComputeHighAssuranceDeviceId(tempDir, vaultSalt);
+                Assert.Equal(highAssuranceId, highAssuranceId2);
 
                 // Step 4: Verify reading hidden device ID works
                 var readDeviceId = service.ReadHiddenDeviceId(tempDir, vaultSalt);
@@ -537,13 +552,15 @@ namespace PhantomVault.Core.Tests.Services
             try
             {
                 // Create hidden device ID
-                var hiddenFilePath = service.CreateHiddenDeviceId(tempDir, vaultSalt);
+                service.CreateHiddenDeviceId(tempDir, vaultSalt);
+                var hiddenFilePath = Path.Combine(tempDir, ".phantom_device_id");
 
-                // Read and modify the device ID in the file
+                // Remove Hidden+System attributes so we can overwrite the file
+                File.SetAttributes(hiddenFilePath, FileAttributes.Normal);
+
+                // Read and modify bytes in the encrypted file to corrupt it
                 var content = File.ReadAllText(hiddenFilePath);
-                var modified = content.Replace(
-                    content.Substring(content.IndexOf("deviceId") + 12, 10),
-                    "FFFFFFFFFF");
+                var modified = content.Remove(content.Length / 2, 1).Insert(content.Length / 2, "Z");
                 File.WriteAllText(hiddenFilePath, modified);
 
                 // Act & Assert - Should fail signature verification

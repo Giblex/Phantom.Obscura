@@ -10,7 +10,7 @@
     <Border Classes="header-surface"
             Background="{DynamicResource HeaderBackgroundBrush}" 
             Padding="{StaticResource DialogPadding}"
-            BorderBrush="{DynamicResource ControlBorderBrush}"
+            BorderBrush="{DynamicResource HeaderBorderBrush}"
             BorderThickness="0,0,0,1"
             CornerRadius="0,0,12,12"
             ClipToBounds="True"
@@ -24,7 +24,7 @@
                     <TextBlock Text="PhantomObscura" 
                                FontSize="{StaticResource Type.H4.Size}" 
                                FontWeight="Bold"
-                               Foreground="{DynamicResource HeaderTextBrush}"/>
+                               Foreground="{DynamicResource LogoTitleBrush}"/>
                     <TextBlock Text="{Binding VaultName}" 
                                FontSize="{StaticResource Type.Tiny.Size}" 
                                Classes="header-muted"/>
@@ -88,7 +88,7 @@
                         ToolTipText="Toggle list/grid view"
                         IsVisible="{Binding !IsShowingSecureTrash}">
                     <controls:LiquidGlassButton.ButtonContent>
-                        <dcontrols:SvgIcon IconName="{Binding GridViewIconPath}" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <dcontrols:SvgIcon IconName="{Binding GridViewIconPath}" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center" IconColor="{DynamicResource HeaderSvgIconColor}" />
                     </controls:LiquidGlassButton.ButtonContent>
                 </controls:LiquidGlassButton>
             </Grid>
@@ -176,6 +176,13 @@
                                             Padding="12,8">
                                         <TextBlock Text="→ Contact / Personal Info" FontSize="{StaticResource Type.Small.Size}"/>
                                     </Button>
+                                    <Button Command="{Binding AddPinCodeCommand}"
+                                            Classes="liquid-glass"
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            Padding="12,8">
+                                        <TextBlock Text="→ PIN Code" FontSize="{StaticResource Type.Small.Size}"/>
+                                    </Button>
                                     
                                     <Separator Margin="0,8" Background="{DynamicResource ControlBorderBrush}"/>
                                     
@@ -219,7 +226,7 @@
                             </Border>
                         </Flyout>
                     </Button.Flyout>
-                    <dcontrols:SvgIcon IconName="Assets/SVG/Current/Drop menu.svg" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <dcontrols:SvgIcon IconName="Assets/SVG/Current/Drop menu.svg" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center" IconColor="{DynamicResource HeaderSvgIconColor}" />
                 </Button>
 
                 <!-- Settings Button (Separate) -->
@@ -234,7 +241,7 @@
                         HorizontalContentAlignment="Center"
                         VerticalContentAlignment="Center"
                         ToolTip.Tip="Vault settings">
-                    <dcontrols:SvgIcon IconName="Assets/SVG/Current/Settings.svg" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <dcontrols:SvgIcon IconName="Assets/SVG/Current/Settings.svg" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center" IconColor="{DynamicResource HeaderSvgIconColor}" />
                 </Button>
             </StackPanel>
         </Grid>

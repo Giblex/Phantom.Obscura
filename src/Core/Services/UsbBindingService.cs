@@ -95,6 +95,25 @@ namespace PhantomVault.Core.Services
 
             if (OperatingSystem.IsWindows())
             {
+                if (IsPhysicalDrivePath(driveRoot))
+                {
+                    int diskIndex = ParsePhysicalDriveIndex(driveRoot);
+
+                    if (TryGetGptGuidsByDiskIndex(diskIndex, out string? rawDiskGuid, out string? rawPartitionGuid))
+                    {
+                        string combined = $"GPT:{rawDiskGuid}|{rawPartitionGuid}";
+                        byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(combined));
+                        return Convert.ToHexString(hash);
+                    }
+
+                    if (TryGetDiskSerialNumberByDiskIndex(diskIndex, out string? physicalDiskSerial) &&
+                        !string.IsNullOrEmpty(physicalDiskSerial))
+                    {
+                        byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes($"DISK:{physicalDiskSerial}"));
+                        return Convert.ToHexString(hash);
+                    }
+                }
+
                 // Priority 1: GPT Disk GUID + Partition GUID (strongest - 128-bit random each)
                 if (TryGetGptGuids(driveRoot, out string? diskGuid, out string? partitionGuid))
                 {
@@ -137,6 +156,16 @@ namespace PhantomVault.Core.Services
 
             if (OperatingSystem.IsWindows())
             {
+                if (IsPhysicalDrivePath(driveRoot))
+                {
+                    int diskIndex = ParsePhysicalDriveIndex(driveRoot);
+                    if (TryGetGptGuidsByDiskIndex(diskIndex, out _, out _))
+                        return DeviceBindingStrength.GptGuid;
+
+                    if (TryGetDiskSerialNumberByDiskIndex(diskIndex, out string? rawDiskSerial) && !string.IsNullOrEmpty(rawDiskSerial))
+                        return DeviceBindingStrength.DiskSerial;
+                }
+
                 if (TryGetGptGuids(driveRoot, out _, out _))
                     return DeviceBindingStrength.GptGuid;
 
@@ -271,6 +300,54 @@ namespace PhantomVault.Core.Services
             }
         }
 
+        [SupportedOSPlatform("windows")]
+        private static bool TryGetGptGuidsByDiskIndex(int diskIndex, out string? diskGuid, out string? partitionGuid)
+        {
+            diskGuid = null;
+            partitionGuid = null;
+
+            if (!OperatingSystem.IsWindows())
+                return false;
+
+            try
+            {
+                using var storagePartitionQuery = new ManagementObjectSearcher(
+                    @"root\Microsoft\Windows\Storage",
+                    $"SELECT Guid, DiskNumber FROM MSFT_Partition WHERE DiskNumber = {diskIndex}");
+
+                foreach (ManagementObject storagePart in storagePartitionQuery.Get())
+                {
+                    var guid = storagePart["Guid"]?.ToString();
+                    if (!string.IsNullOrEmpty(guid))
+                    {
+                        partitionGuid = guid.Trim('{', '}');
+                        break;
+                    }
+                }
+
+                using var diskQuery = new ManagementObjectSearcher(
+                    @"root\Microsoft\Windows\Storage",
+                    $"SELECT Guid FROM MSFT_Disk WHERE Number = {diskIndex}");
+
+                foreach (ManagementObject disk in diskQuery.Get())
+                {
+                    var guid = disk["Guid"]?.ToString();
+                    if (!string.IsNullOrEmpty(guid))
+                    {
+                        diskGuid = guid.Trim('{', '}');
+                        break;
+                    }
+                }
+
+                return !string.IsNullOrEmpty(diskGuid) && !string.IsNullOrEmpty(partitionGuid);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"GPT GUID lookup by disk index failed: {ex.Message}");
+                return false;
+            }
+        }
+
         /// <summary>
         /// Attempts to retrieve the physical disk serial number via WMI.
         /// This is the manufacturer-assigned serial, which is harder to spoof than
@@ -311,6 +388,48 @@ namespace PhantomVault.Core.Services
             }
 
             return false;
+        }
+
+        [SupportedOSPlatform("windows")]
+        private static bool TryGetDiskSerialNumberByDiskIndex(int diskIndex, out string? serialNumber)
+        {
+            serialNumber = null;
+
+            if (!OperatingSystem.IsWindows())
+                return false;
+
+            try
+            {
+                using var diskQuery = new ManagementObjectSearcher(
+                    $"SELECT SerialNumber FROM Win32_DiskDrive WHERE Index = {diskIndex}");
+
+                foreach (ManagementObject disk in diskQuery.Get())
+                {
+                    serialNumber = disk["SerialNumber"]?.ToString()?.Trim();
+                    if (!string.IsNullOrEmpty(serialNumber))
+                        return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Disk serial number lookup by disk index failed: {ex.Message}");
+            }
+
+            return false;
+        }
+
+        private static bool IsPhysicalDrivePath(string path)
+            => path.StartsWith(@"\\.\PHYSICALDRIVE", StringComparison.OrdinalIgnoreCase);
+
+        private static int ParsePhysicalDriveIndex(string physicalDrivePath)
+        {
+            const string token = "PHYSICALDRIVE";
+            int offset = physicalDrivePath.LastIndexOf(token, StringComparison.OrdinalIgnoreCase);
+            if (offset < 0)
+                throw new ArgumentException($"Not a physical drive path: {physicalDrivePath}", nameof(physicalDrivePath));
+
+            string number = physicalDrivePath[(offset + token.Length)..];
+            return int.Parse(number);
         }
         #endregion
 

@@ -8,6 +8,7 @@
     xmlns:details="clr-namespace:PhantomVault.UI.Views.Details"
     xmlns:editforms="clr-namespace:PhantomVault.UI.Views.EditForms"
     xmlns:overlays="clr-namespace:PhantomVault.UI.Views.Overlays"
+    xmlns:pinctrl="clr-namespace:PhantomVault.UI.Views.Controls"
     xmlns:components="clr-namespace:PhantomVault.UI.Components.Fields"
     xmlns:nav="clr-namespace:PhantomVault.UI.Components.Navigation"
     
@@ -142,54 +143,30 @@
         </Style>
 
         <Style Selector="ToggleButton.quick-filter:pointerover">
-            <Setter Property="Background" Value="{DynamicResource FilterHoverGradient}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource FilterHoverBorderBrush}" />
+            <Setter Property="Background" Value="#1400E5CC" />
+            <Setter Property="BorderBrush" Value="#2200E5CC" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
 
         <Style Selector="ToggleButton.quick-filter:checked">
-            <Setter Property="Background">
-                <Setter.Value>
-                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                        <GradientStop Color="#40004258" Offset="0"/>
-                        <GradientStop Color="#30004258" Offset="0.55"/>
-                        <GradientStop Color="#25004258" Offset="1"/>
-                    </LinearGradientBrush>
-                </Setter.Value>
-            </Setter>
+            <Setter Property="Background" Value="#1800E5CC" />
             <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
-            <Setter Property="BorderThickness" Value="1.5" />
+            <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
         </Style>
 
         <Style Selector="ToggleButton.quick-filter:checked:pointerover">
-            <Setter Property="Background">
-                <Setter.Value>
-                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                        <GradientStop Color="#40004258" Offset="0"/>
-                        <GradientStop Color="#2C004258" Offset="0.55"/>
-                        <GradientStop Color="#24004258" Offset="1"/>
-                    </LinearGradientBrush>
-                </Setter.Value>
-            </Setter>
+            <Setter Property="Background" Value="#2200E5CC" />
             <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
 
         <Style Selector="ToggleButton.quick-filter:pressed">
-            <Setter Property="Background" Value="{DynamicResource FilterPressedGradient}" />
+            <Setter Property="Background" Value="#1C00E5CC" />
         </Style>
 
         <Style Selector="ToggleButton.quick-filter:checked:pressed">
-            <Setter Property="Background">
-                <Setter.Value>
-                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                        <GradientStop Color="#40004258" Offset="0"/>
-                        <GradientStop Color="#2C004258" Offset="0.55"/>
-                        <GradientStop Color="#24004258" Offset="1"/>
-                    </LinearGradientBrush>
-                </Setter.Value>
-            </Setter>
+            <Setter Property="Background" Value="#2600E5CC" />
             <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
@@ -215,11 +192,11 @@
                                     BorderBrush="{TemplateBinding BorderBrush}"
                                     BorderThickness="{TemplateBinding BorderThickness}"
                                     CornerRadius="{TemplateBinding CornerRadius}"/>
-                            <!-- Per-category color highlight - always visible when color is set -->
+                            <!-- Per-category color highlight remains subtle so shell chrome stays quiet -->
                             <Border x:Name="ColorHighlight"
                                     CornerRadius="{TemplateBinding CornerRadius}"
                                     Background="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource HexToBrushConverter}}"
-                                    Opacity="0.15"
+                                    Opacity="0.08"
                                     IsHitTestVisible="False">
                                 <Border.Transitions>
                                     <Transitions>
@@ -237,66 +214,48 @@
         </Style>
 
         <Style Selector="ToggleButton.category-filter:pointerover /template/ Border#ColorHighlight">
-            <Setter Property="Opacity" Value="0.25"/>
+            <Setter Property="Opacity" Value="0.14"/>
         </Style>
 
         <Style Selector="ToggleButton.category-filter:pointerover /template/ Border#BackBorder">
-            <Setter Property="Background">
-                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                    <GradientStop Color="#18000000" Offset="0"/>
-                    <GradientStop Color="#10000000" Offset="1"/>
-                </LinearGradientBrush>
-            </Setter>
-            <Setter Property="BorderBrush" Value="#20000000" />
+            <Setter Property="Background" Value="#0F00E5CC" />
+            <Setter Property="BorderBrush" Value="#1A00E5CC" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
 
         <Style Selector="ToggleButton.category-filter:checked /template/ Border#ColorHighlight">
-            <Setter Property="Opacity" Value="0.35"/>
+            <Setter Property="Opacity" Value="0.18"/>
         </Style>
 
         <Style Selector="ToggleButton.category-filter:checked /template/ Border#BackBorder">
-            <Setter Property="Background">
-                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                    <GradientStop Color="#20000000" Offset="0"/>
-                    <GradientStop Color="#14000000" Offset="1"/>
-                </LinearGradientBrush>
-            </Setter>
-            <Setter Property="BorderBrush" Value="#25000000" />
+            <Setter Property="Background" Value="#1400E5CC" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
 
         <Style Selector="ToggleButton.category-filter:checked:pointerover /template/ Border#ColorHighlight">
-            <Setter Property="Opacity" Value="0.45"/>
+            <Setter Property="Opacity" Value="0.22"/>
         </Style>
 
         <Style Selector="ToggleButton.category-filter:pressed /template/ Border#ColorHighlight">
-            <Setter Property="Opacity" Value="0.20"/>
+            <Setter Property="Opacity" Value="0.12"/>
         </Style>
 
         <Style Selector="ToggleButton.category-filter:pressed /template/ Border#BackBorder">
-            <Setter Property="Background">
-                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                    <GradientStop Color="#28000000" Offset="0"/>
-                    <GradientStop Color="#1C000000" Offset="1"/>
-                </LinearGradientBrush>
-            </Setter>
+            <Setter Property="Background" Value="#1200E5CC" />
         </Style>
 
         <Style Selector="ToggleButton.category-filter:checked:pressed /template/ Border#ColorHighlight">
-            <Setter Property="Opacity" Value="0.35"/>
+            <Setter Property="Opacity" Value="0.18"/>
         </Style>
 
         <Style Selector="ToggleButton.category-filter:checked:pressed /template/ Border#BackBorder">
-            <Setter Property="Background">
-                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                    <GradientStop Color="#28000000" Offset="0"/>
-                    <GradientStop Color="#1C000000" Offset="1"/>
-                </LinearGradientBrush>
-            </Setter>
-            <Setter Property="BorderBrush" Value="#30000000" />
+            <Setter Property="Background" Value="#1800E5CC" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
+
+
     </Window.Styles>
     
     <DockPanel LastChildFill="True">
@@ -304,8 +263,8 @@
         <!-- Footer/Status Bar - Docked to Bottom FIRST -->
         <views:StatusBarView DockPanel.Dock="Bottom" DataContext="{Binding}" />
         
-        <!-- Header/Toolbar - Docked to Top -->
-        <views:HeaderView x:Name="HeaderView" DockPanel.Dock="Top" DataContext="{Binding}" />
+        <!-- Header/Toolbar - Docked to Top, ZIndex keeps it above the dashboard sheet -->
+        <views:HeaderView x:Name="HeaderView" DockPanel.Dock="Top" DataContext="{Binding}" ZIndex="200" />
         
         <!-- Key Rotation Banner - Docked below header -->
         <Border DockPanel.Dock="Top" 
@@ -384,14 +343,10 @@
             </Grid>
         </Border>
         
-        <!-- Main Content Area -->
-        <Grid>
-            <!-- Category Landing Page -->
-            <views:CategoryLandingView DataContext="{Binding CategoryLandingViewModel}"
-                                      IsVisible="{Binding IsShowingCategoryLanding}"/>
-            
+        <!-- Main Content Area — ClipToBounds keeps the dashboard sheet from painting over the header -->
+        <Grid ClipToBounds="True">
             <!-- Vault View (Sidebar + Credential List + Detail View) -->
-            <Grid x:Name="VaultGrid" IsVisible="{Binding !IsShowingCategoryLanding}">
+            <Grid x:Name="VaultGrid">
                 <Grid.ColumnDefinitions>
                     <!-- Sidebar column - collapses to icon-only (80px) when collapsed, full (220px) when expanded -->
                     <ColumnDefinition>
@@ -421,22 +376,72 @@
                 </views:SidebarView.Transitions>
             </views:SidebarView>
 
-            <!-- Middle: Credentials List (Column 1 only) -->
-            <views:CredentialListView Grid.Column="1"
-                                     DataContext="{Binding}" 
-                                     IsVisible="{Binding !IsShowingDashboard}"
-                                     IsHitTestVisible="{Binding !IsShowingDashboard}" />
+            <!-- Middle: Credentials List (Column 1 only) — always visible behind dashboard -->
+            <views:CredentialListView x:Name="CredentialList" Grid.Column="1"
+                                     DataContext="{Binding}" />
             
-            <!-- Dashboard View (Spans columns 1 and 2 to overlay entire area) -->
-            <!-- Wrapped in Panel to force complete recreation on visibility changes -->
-            <Panel Grid.Column="1" Grid.ColumnSpan="2"
+            <!-- Persistent grip bar peek — interactive pull handle when dashboard is closed -->
+            <Panel x:Name="DashboardGripPeek"
+                   Grid.Column="1" Grid.ColumnSpan="2"
+                   ZIndex="50"
+                   VerticalAlignment="Top"
+                   Height="24"
+                   Margin="0,0,0,0"
+                   IsVisible="{Binding !IsShowingDashboard}"
+                   IsHitTestVisible="True"
+                   Cursor="Hand"
+                   Background="Transparent">
+                <Border Width="56" Height="5"
+                        CornerRadius="2.5"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Opacity="0.50">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                            <GradientStop Color="#28FFFFFF" Offset="0"/>
+                            <GradientStop Color="#58FFFFFF" Offset="0.5"/>
+                            <GradientStop Color="#28FFFFFF" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Border.Transitions>
+                        <Transitions>
+                            <DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+                        </Transitions>
+                    </Border.Transitions>
+                </Border>
+            </Panel>
+
+            <!-- Dashboard Sheet — slides down from under header, overlays vault -->
+            <Panel x:Name="DashboardSheet" Grid.Column="1" Grid.ColumnSpan="2"
                    ZIndex="100"
-                   IsVisible="{Binding IsShowingDashboard}"
                    IsHitTestVisible="{Binding IsShowingDashboard}"
-                   Background="{DynamicResource WindowBackgroundBrush}"
                    ClipToBounds="True">
-                <views:DashboardView DataContext="{Binding DashboardViewModel}"
-                                    IsVisible="{Binding $parent[Panel].IsVisible}"/>
+                <!-- Layer 0: Frosted glass blur behind dashboard (theme-aware) -->
+                <ExperimentalAcrylicBorder IsHitTestVisible="False" CornerRadius="0,0,24,24">
+                    <ExperimentalAcrylicBorder.Material>
+                        <ExperimentalAcrylicMaterial
+                            BackgroundSource="Digger"
+                            TintColor="{DynamicResource DashboardSheetAcrylicTint}"
+                            TintOpacity="0.08"
+                            MaterialOpacity="0.18"
+                            FallbackColor="{DynamicResource DashboardSheetAcrylicFallback}"/>
+                    </ExperimentalAcrylicBorder.Material>
+                </ExperimentalAcrylicBorder>
+                <!-- Layer 1: Theme-aware transparent glass overlay — content behind shows through -->
+                <Border IsHitTestVisible="False" CornerRadius="0,0,24,24"
+                        Background="{DynamicResource DashboardSheetOverlayBrush}"/>
+                <!-- Layer 2: Liquid glass bottom-edge highlight -->
+                <Border IsHitTestVisible="False" CornerRadius="0,0,24,24">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0%,100%" EndPoint="0%,0%">
+                            <GradientStop Color="#14FFFFFF" Offset="0"/>
+                            <GradientStop Color="#08CFE8FF" Offset="0.12"/>
+                            <GradientStop Color="#00000000" Offset="0.35"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                </Border>
+                <!-- Layer 3: Dashboard content -->
+                <views:DashboardView DataContext="{Binding DashboardViewModel}"/>
             </Panel>
             
         <!-- Resizable GridSplitter between credential list and detail panel -->
@@ -462,10 +467,18 @@
                 </MultiBinding>
             </Border.IsVisible>
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                    <Grid Margin="32,20,32,20">
+                    <Grid Margin="20,20,20,20">
                         <StackPanel IsVisible="{Binding !IsShowingSecureTrash}" Classes="fade-toggle">
                         <!-- When SelectedCredential is not null -->
-                        <StackPanel Spacing="24" IsVisible="{Binding SelectedCredential, Converter={x:Static ObjectConverters.IsNotNull}}" Classes="fade-toggle">
+                        <Border x:Name="DetailCard"
+                                Background="{DynamicResource CardBackgroundBrush}"
+                                CornerRadius="16"
+                                Padding="28,24"
+                                BoxShadow="{DynamicResource DetailCardShadow}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1"
+                                IsVisible="{Binding SelectedCredential, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <StackPanel Spacing="24" Classes="fade-toggle">
                         <!-- Header with Icon on left, text inline to the right - actions pinned top-right -->
                         <Grid ColumnDefinitions="Auto,16,*,Auto" HorizontalAlignment="Stretch">
                             <!-- Icon -->
@@ -557,6 +570,9 @@
                             <details:ContactDetailView DataContext="{Binding}"
                                 IsVisible="{Binding SelectedCredential.IsContactEntry}" />
 
+                            <details:PinCodeDetailView DataContext="{Binding}"
+                                IsVisible="{Binding SelectedCredential.IsPinCodeEntry}" />
+
                             <details:UrlDetailSection DataContext="{Binding}"
                                 IsVisible="{Binding SelectedCredential.HasUrl}" />
 
@@ -575,6 +591,7 @@
                             <details:DetailActionButtons DataContext="{Binding}" />
                         </StackPanel>
                     </StackPanel>
+                    </Border>
                     
                     <!-- Empty State when SelectedCredential is null -->
                     <StackPanel Spacing="20" 
@@ -1000,7 +1017,7 @@
                         
                         <!-- Edit Panel Content -->
             <Border x:Name="EditPanel"
-                                Background="{DynamicResource WindowBackgroundBrush}"
+                                Background="{DynamicResource HeaderBackgroundBrush}"
                                 BorderBrush="{DynamicResource ControlBorderBrush}"
                                 BorderThickness="1,0,0,0"
                                 BoxShadow="{DynamicResource SlideOutPanelShadow}">
@@ -1057,7 +1074,7 @@
                             
                             <!-- Header -->
                             <Border Grid.Row="0" 
-                                    Background="{DynamicResource HeaderBackgroundBrush}" 
+                                    Background="{DynamicResource WindowBackgroundBrush}" 
                                     Padding="25,30,10,20"
                                     BorderBrush="{DynamicResource ControlBorderBrush}"
                                     BorderThickness="0,0,0,1"
@@ -1622,6 +1639,8 @@
 
                                     <editforms:ContactEditForm DataContext="{Binding}" />
 
+                                    <editforms:PinCodeEditForm DataContext="{Binding}" />
+
                                     <!-- Tags -->
                                     <StackPanel Spacing="8" Margin="0,0,0,0">
                                         <TextBlock Text="Tags" 
@@ -1894,32 +1913,13 @@
                                    MaxWidth="500"
                                    IsVisible="{Binding LockscreenError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
-                        <!-- PIN unlock (soft lock only) -->
-                        <StackPanel Spacing="12" IsVisible="{Binding PinUnlockAvailable}" MinWidth="380">
-                            <TextBlock Text="PIN" 
-                                       FontSize="{StaticResource Type.Label.Size}" 
-                                       Foreground="{DynamicResource SecondaryTextBrush}"
-                                       HorizontalAlignment="Center"/>
-                            <TextBox Text="{Binding LockscreenPin, Mode=TwoWay}"
-                                     PasswordChar="●"
-                                     Watermark="Enter PIN"
-                                     Background="{DynamicResource ControlBackgroundBrush}"
-                                     Foreground="{DynamicResource PrimaryTextBrush}"
-                                     BorderBrush="{DynamicResource ControlBorderBrush}"
-                                     BorderThickness="1"
-                                     Height="44"
-                                     Padding="14,10"
-                                     FontSize="{StaticResource Type.H4.Size}"
-                                     HorizontalAlignment="Stretch"/>
-                            <Button Content="Unlock"
-                                    Command="{Binding UnlockWithPinCommand}"
-                                    Classes="liquid-glass"
-                                    HorizontalAlignment="Center"
-                                    Width="200"
-                                    Height="44"
-                                    FontSize="{StaticResource Type.H5.Size}"
-                                    FontWeight="SemiBold"/>
-                        </StackPanel>
+                        <!-- PIN unlock (soft lock only) — NumPad control -->
+                        <pinctrl:PinEntryControl x:Name="LockscreenPinPad"
+                                                  Pin="{Binding LockscreenPin, Mode=TwoWay}"
+                                                  UnlockCommand="{Binding UnlockWithPinCommand}"
+                                                  MinLength="4"
+                                                  MaxLength="8"
+                                                  IsVisible="{Binding PinUnlockAvailable}"/>
 
                         <Button Content="Use passphrase instead"
                                 Command="{Binding ShowPassphraseFallbackCommand}"

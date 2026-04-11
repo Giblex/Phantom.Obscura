@@ -1,15 +1,30 @@
+#nullable enable
+
 using System;
 using System.IO;
 using System.Security;
 using System.Text.Json;
 using PhantomVault.Core.Models;
 using PhantomVault.Core.Services;
+using PhantomVault.Core.Utils;
 using Xunit;
 
 namespace PhantomVault.Core.Tests
 {
     public class ManifestServiceTests
     {
+        private static void WriteManifest(ManifestService service, VaultManifest manifest, string filePath, string? passphrase, string? keyfilePath = null, string? usbSerial = null, bool requireDualFactor = false)
+        {
+            using var securePassword = string.IsNullOrEmpty(passphrase) ? SecurePassword.Empty() : SecurePassword.FromString(passphrase);
+            service.WriteManifestSecure(manifest, filePath, securePassword, keyfilePath, usbSerial, requireDualFactor);
+        }
+
+        private static VaultManifest ReadManifest(ManifestService service, string filePath, string? passphrase, string? keyfilePath = null, string? usbSerial = null, bool requireDualFactor = false)
+        {
+            using var securePassword = string.IsNullOrEmpty(passphrase) ? SecurePassword.Empty() : SecurePassword.FromString(passphrase);
+            return service.ReadManifestSecure(filePath, securePassword, keyfilePath, usbSerial, requireDualFactor);
+        }
+
         [Fact]
         public void TryReadManifest_ReturnsFalse_ForMissingFile()
         {
@@ -68,7 +83,7 @@ namespace PhantomVault.Core.Tests
                 var presetSalt = new byte[] { 0x2A, 0x5C, 0x11, 0x9F, 0x88, 0x37, 0x4B, 0x0D, 0x71, 0xEF, 0xC4, 0x55, 0x66, 0x90, 0xAB, 0xCD };
                 manifest.SaltBase64 = Convert.ToBase64String(presetSalt);
 
-                svc.WriteManifest(manifest, path, "phase2-passphrase", null);
+                WriteManifest(svc, manifest, path, "phase2-passphrase", null);
 
                 string payloadJson = File.ReadAllText(path);
                 using var doc = JsonDocument.Parse(payloadJson);
@@ -76,8 +91,69 @@ namespace PhantomVault.Core.Tests
 
                 Assert.Equal(manifest.SaltBase64, storedSalt);
 
-                var roundTrip = svc.ReadManifest(path, "phase2-passphrase", null);
+                var roundTrip = ReadManifest(svc, path, "phase2-passphrase", null);
                 Assert.Equal(manifest.SaltBase64, roundTrip.SaltBase64);
+            }
+            finally
+            {
+                try { if (File.Exists(path)) File.Delete(path); } catch { }
+            }
+        }
+
+        [Fact]
+        public void WriteManifest_UsesMinimalHeader_ForCurrentStandaloneFormat()
+        {
+            var enc = new EncryptionService();
+            var svc = new ManifestService(enc);
+            string path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".manifest");
+
+            try
+            {
+                var manifest = new VaultManifest
+                {
+                    VaultName = "MinimalHeaderVault",
+                    ContainerPath = "vaults/minimal.pvault",
+                    ContainerSizeBytes = 2048
+                };
+
+                WriteManifest(svc, manifest, path, "minimal-header-pass", null, "USB-HEADER-1");
+
+                using var doc = JsonDocument.Parse(File.ReadAllText(path));
+                var root = doc.RootElement;
+
+                Assert.Equal(2, root.GetProperty("formatVersion").GetInt32());
+                Assert.True(root.TryGetProperty("suite", out _));
+                Assert.False(root.TryGetProperty("containerPath", out _));
+                Assert.False(root.TryGetProperty("usbSerial", out _));
+                Assert.False(root.TryGetProperty("aad", out _));
+                Assert.False(root.TryGetProperty("timestamp", out _));
+                Assert.False(root.TryGetProperty("manifestSequence", out _));
+            }
+            finally
+            {
+                try { if (File.Exists(path)) File.Delete(path); } catch { }
+            }
+        }
+
+        [Fact]
+        public void WriteManifest_RejectsAbsoluteContainerObjectPath()
+        {
+            var enc = new EncryptionService();
+            var svc = new ManifestService(enc);
+            string path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".manifest");
+
+            try
+            {
+                var manifest = new VaultManifest
+                {
+                    VaultName = "AbsolutePathVault",
+                    ContainerPath = Path.Combine(Path.GetTempPath(), "absolute.pvault")
+                };
+
+                var ex = Assert.Throws<ArgumentException>(() =>
+                    WriteManifest(svc, manifest, path, "absolute-path-pass", null));
+
+                Assert.Contains("relative", ex.Message, StringComparison.OrdinalIgnoreCase);
             }
             finally
             {
@@ -105,13 +181,13 @@ namespace PhantomVault.Core.Tests
                 };
 
                 // Write manifest bound to USB
-                svc.WriteManifest(manifest, path, "password", null, usbSerial);
+                WriteManifest(svc, manifest, path, "password", null, usbSerial);
 
                 // Act & Assert - Try to read without USB serial
                 var ex = Assert.Throws<SecurityException>(() => 
-                    svc.ReadManifest(path, "password", null, null));
+                    ReadManifest(svc, path, "password", null, null));
 
-                Assert.Contains("USB device must be connected", ex.Message);
+                Assert.Contains("device context", ex.Message, StringComparison.OrdinalIgnoreCase);
             }
             finally
             {
@@ -138,13 +214,13 @@ namespace PhantomVault.Core.Tests
                 };
 
                 // Write manifest bound to one USB
-                svc.WriteManifest(manifest, path, "password", null, originalSerial);
+                WriteManifest(svc, manifest, path, "password", null, originalSerial);
 
                 // Act & Assert - Try to read with different USB serial
                 var ex = Assert.Throws<SecurityException>(() => 
-                    svc.ReadManifest(path, "password", null, wrongSerial));
+                    ReadManifest(svc, path, "password", null, wrongSerial));
 
-                Assert.Contains("USB serial mismatch", ex.Message);
+                Assert.Contains("supplied device context", ex.Message, StringComparison.OrdinalIgnoreCase);
             }
             finally
             {
@@ -170,10 +246,10 @@ namespace PhantomVault.Core.Tests
                 };
 
                 // Write manifest bound to USB
-                svc.WriteManifest(manifest, path, "password", null, usbSerial);
+                WriteManifest(svc, manifest, path, "password", null, usbSerial);
 
                 // Act - Read with matching USB serial
-                var result = svc.ReadManifest(path, "password", null, usbSerial);
+                var result = ReadManifest(svc, path, "password", null, usbSerial);
 
                 // Assert
                 Assert.NotNull(result);
@@ -206,8 +282,8 @@ namespace PhantomVault.Core.Tests
                 };
 
                 // Act
-                svc.WriteManifest(manifest, path, "password", null);
-                var result = svc.ReadManifest(path, "password", null);
+                WriteManifest(svc, manifest, path, "password", null);
+                var result = ReadManifest(svc, path, "password", null);
 
                 // Assert - Signature should be present
                 Assert.NotNull(result.IntegritySignatureBase64);
@@ -332,8 +408,8 @@ namespace PhantomVault.Core.Tests
                 };
 
                 // Act - Write with keyfile only (null password)
-                svc.WriteManifest(manifest, manifestPath, null, keyfilePath);
-                var result = svc.ReadManifest(manifestPath, null, keyfilePath);
+                WriteManifest(svc, manifest, manifestPath, null, keyfilePath);
+                var result = ReadManifest(svc, manifestPath, null, keyfilePath);
 
                 // Assert
                 Assert.NotNull(result);
@@ -367,8 +443,8 @@ namespace PhantomVault.Core.Tests
                 };
 
                 // Act - Write with both password and keyfile (dual-factor)
-                svc.WriteManifest(manifest, manifestPath, "password123", keyfilePath, null, requireDualFactor: true);
-                var result = svc.ReadManifest(manifestPath, "password123", keyfilePath, null, requireDualFactor: true);
+                WriteManifest(svc, manifest, manifestPath, "password123", keyfilePath, null, requireDualFactor: true);
+                var result = ReadManifest(svc, manifestPath, "password123", keyfilePath, null, requireDualFactor: true);
 
                 // Assert
                 Assert.NotNull(result);
@@ -398,11 +474,11 @@ namespace PhantomVault.Core.Tests
                 };
 
                 // Write without dual-factor requirement
-                svc.WriteManifest(manifest, manifestPath, "password", null);
+                WriteManifest(svc, manifest, manifestPath, "password", null);
 
                 // Act & Assert - Try to read with dual-factor but no keyfile
                 var ex = Assert.Throws<ArgumentException>(() => 
-                    svc.ReadManifest(manifestPath, "password", null, null, requireDualFactor: true));
+                    ReadManifest(svc, manifestPath, "password", null, null, requireDualFactor: true));
 
                 Assert.Contains("BOTH", ex.Message);
             }

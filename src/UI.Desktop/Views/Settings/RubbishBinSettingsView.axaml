@@ -74,29 +74,28 @@
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
                 
-                <CheckBox Content="Enable recovery period" 
-                          IsChecked="True"
-                          x:Name="EnableRecoveryCheckBox"
-                          ToolTip.Tip="Allow recovery of deleted items for a limited time"/>
+                <CheckBox Content="Create a shadow snapshot before emptying the bin in this session" 
+                          IsChecked="{Binding EnableRecovery}"
+                          ToolTip.Tip="Prompts for backup credentials and creates an encrypted shadow snapshot before purge"/>
 
-                <StackPanel Spacing="8" IsEnabled="{Binding #EnableRecoveryCheckBox.IsChecked}">
+                <StackPanel Spacing="8" IsEnabled="{Binding EnableRecovery}">
                     <TextBlock Text="Retention period:" 
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                     <ComboBox Width="200" 
                               HorizontalAlignment="Left"
-                              SelectedIndex="2">
+                              SelectedIndex="{Binding SelectedRetentionPeriod}">
                         <ComboBoxItem Content="1 day"/>
                         <ComboBoxItem Content="7 days"/>
-                        <ComboBoxItem Content="30 days (Recommended)"/>
+                        <ComboBoxItem Content="30 days"/>
                         <ComboBoxItem Content="90 days"/>
                         <ComboBoxItem Content="1 year"/>
                     </ComboBox>
                 </StackPanel>
 
-                <TextBlock Text="After the retention period, items are permanently erased using the selected method" 
+                <TextBlock Text="{Binding RecoveryRetentionStatus}" 
                            TextWrapping="Wrap"
                            FontStyle="Italic"
-                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                           Foreground="{DynamicResource SecondaryTextBrush}"/>
                 <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,10,0,0">
                     <Button Content="Restore Shadow Snapshot"
                             Command="{Binding RestoreShadowSnapshotCommand}"
@@ -121,26 +120,31 @@
                            TextWrapping="Wrap"
                            Foreground="{DynamicResource SecondaryTextBrush}"/>
 
-                <CheckBox Content="Enable duplicate detection" 
-                          x:Name="EnableDuplicateDetection"
-                          ToolTip.Tip="Scan for duplicate entries automatically"/>
+                <CheckBox Content="Enable duplicate detection"
+                          IsChecked="{Binding EnableDuplicateDetection}"
+                          ToolTip.Tip="Use configured duplicate checks for secure-bin records"/>
 
-                <CheckBox Content="Auto-delete duplicates" 
-                          IsEnabled="{Binding #EnableDuplicateDetection.IsChecked}"
-                          ToolTip.Tip="Automatically move duplicates to bin"/>
+                <CheckBox Content="Auto-delete duplicates"
+                          IsChecked="{Binding AutoDeleteDuplicates}"
+                          IsEnabled="{Binding EnableDuplicateDetection}"
+                          ToolTip.Tip="Purge duplicate secure-bin entries during duplicate scans"/>
 
-                <StackPanel Spacing="8" IsEnabled="{Binding #EnableDuplicateDetection.IsChecked}">
+                <StackPanel Spacing="8" IsEnabled="{Binding EnableDuplicateDetection}">
                     <TextBlock Text="Scan frequency:" 
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                     <ComboBox Width="200" 
                               HorizontalAlignment="Left"
-                              SelectedIndex="1">
+                              SelectedIndex="{Binding SelectedScanFrequency}">
                         <ComboBoxItem Content="Daily"/>
                         <ComboBoxItem Content="Weekly"/>
                         <ComboBoxItem Content="Monthly"/>
                         <ComboBoxItem Content="Manual only"/>
                     </ComboBox>
                 </StackPanel>
+
+                <TextBlock Text="{Binding DuplicateAutomationStatus}"
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource SecondaryTextBrush}"/>
 
                 <Button Content="Scan for Duplicates Now" 
                         Width="200" 
@@ -218,11 +222,16 @@
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
                 
                 <CheckBox Content="Auto-empty bin on vault close" 
+                          IsChecked="{Binding AutoEmptyOnClose}"
                           ToolTip.Tip="Permanently erase all deleted items when closing vault"/>
 
                 <CheckBox Content="Prompt before permanent deletion" 
-                          IsChecked="True"
+                          IsChecked="{Binding PromptBeforeDeletion}"
                           ToolTip.Tip="Show confirmation dialog before erasing items"/>
+
+                <TextBlock Text="{Binding CleanupAutomationStatus}"
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource SecondaryTextBrush}"/>
 
                 <TextBlock Text="⚠ WARNING: Permanent deletion using secure erasure cannot be undone" 
                            TextWrapping="Wrap"

@@ -21,6 +21,7 @@ namespace PhantomVault.UI.ViewModels
         private string _statusMessage = string.Empty;
         private string? _detectedUsbPath;
         private readonly DialogService _dialogService;
+        private readonly BlackSecureRawVolumeService _blackSecureRawVolumeService;
         private Window? _ownerWindow;
 
         public event EventHandler<string>? NavigateToSecurityCheck;
@@ -33,6 +34,7 @@ namespace PhantomVault.UI.ViewModels
         public WelcomePageViewModel()
         {
             _dialogService = new DialogService();
+            _blackSecureRawVolumeService = new BlackSecureRawVolumeService();
 
 #if DEBUG
             IsDeveloperBypassVisible = true;
@@ -64,7 +66,7 @@ namespace PhantomVault.UI.ViewModels
         public string FeatureList =>
             "• Post-quantum cryptography (ML-KEM-768)\n" +
             "• USB-bound vault storage\n" +
-            "• Hardware token support (YubiKey)\n" +
+            "• Optional hardware-token presence checks on supported Windows builds\n" +
             "• GiblexVaultContainer encryption\n" +
             "• KeePass import capability\n" +
             "• TOTP 2FA generator\n" +
@@ -117,20 +119,57 @@ namespace PhantomVault.UI.ViewModels
 
                 foreach (var drive in drives)
                 {
-                    // Check for .phantom folder structure
-                    var phantomPath = Path.Combine(drive.RootDirectory.FullName, ".phantom", "manifests");
-                    if (Directory.Exists(phantomPath))
+                    // Prefer .pvault containers (v3), fall back to legacy .manifest files
+                    var rootPath = Path.Combine(drive.RootDirectory.FullName, ".phantom", "root");
+                    var vaultsPath = Path.Combine(drive.RootDirectory.FullName, ".phantom", "vaults");
+                    var manifestsPath = Path.Combine(drive.RootDirectory.FullName, ".phantom", "manifests");
+                    var packedVolumePath = ResolveMasterVolumePath(drive.RootDirectory.FullName);
+
+                    bool found = false;
+                    if (!string.IsNullOrEmpty(packedVolumePath))
+                        found = true;
+                    if (!found && Directory.Exists(rootPath))
                     {
-                        // Check if any manifest files exist
-                        var manifestFiles = Directory.GetFiles(phantomPath, "*.manifest");
-                        if (manifestFiles.Length > 0)
-                        {
-                            HasExistingVault = true;
-                            _detectedUsbPath = drive.RootDirectory.FullName;
-                            StatusMessage = $"Found existing vault on {drive.Name}";
-                            await Task.Delay(1000); // Show message briefly
-                            return;
-                        }
+                        var rootContainers = Directory.GetFiles(rootPath, "*.pvault");
+                        if (rootContainers.Length > 0)
+                            found = true;
+                    }
+                    if (!found && Directory.Exists(vaultsPath))
+                    {
+                        var pvaultFiles = Directory.GetFiles(vaultsPath, "*.pvault");
+                        if (pvaultFiles.Length > 0)
+                            found = true;
+                    }
+                    if (!found && Directory.Exists(manifestsPath))
+                    {
+                        var legacyFiles = Directory.GetFiles(manifestsPath, "*.manifest");
+                        if (legacyFiles.Length > 0)
+                            found = true;
+                    }
+
+                    if (found)
+                    {
+                        HasExistingVault = true;
+                        _detectedUsbPath = drive.RootDirectory.FullName;
+                        StatusMessage = $"Found existing vault on {drive.Name}";
+                        await Task.Delay(1000); // Show message briefly
+                        return;
+                    }
+                }
+
+                foreach (var rawSelection in _blackSecureRawVolumeService.GetSelectableRawDevices())
+                {
+                    var physicalDrivePath = _blackSecureRawVolumeService.TryResolvePhysicalDevicePathFromSelection(rawSelection);
+                    if (string.IsNullOrWhiteSpace(physicalDrivePath))
+                        continue;
+
+                    if (await _blackSecureRawVolumeService.IsBlackSecureVolumeAsync(physicalDrivePath).ConfigureAwait(false))
+                    {
+                        HasExistingVault = true;
+                        _detectedUsbPath = rawSelection;
+                        StatusMessage = "Found existing Black Secure vault on removable device";
+                        await Task.Delay(1000);
+                        return;
                     }
                 }
 
@@ -178,6 +217,17 @@ namespace PhantomVault.UI.ViewModels
             await Task.Delay(500);
 
             NavigateToSecurityCheck?.Invoke(this, _detectedUsbPath);
+        }
+
+        private static string? ResolveMasterVolumePath(string usbPath)
+        {
+            var candidates = new[]
+            {
+                Path.Combine(usbPath, "system.bin"),
+                Path.Combine(usbPath, ".phantom", "obscura.vol")
+            };
+
+            return candidates.FirstOrDefault(File.Exists);
         }
     }
 }

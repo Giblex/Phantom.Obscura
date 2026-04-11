@@ -136,9 +136,8 @@ namespace PhantomVault.UI.ViewModels
             if (_ownerWindow != null) return _ownerWindow;
             if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
                 return desktop.MainWindow;
-            // Fallback: create a temporary invisible window as owner (last resort to avoid null)
-            // In practice, this should never be reached if SetOwnerWindow was called.
-            return new Window { Opacity = 0, ShowInTaskbar = false };
+            // No usable owner — caller must guard against null
+            throw new InvalidOperationException("No owner window available for dialog. Ensure SetOwnerWindow was called.");
         }
 
         /// <summary>
@@ -324,7 +323,7 @@ namespace PhantomVault.UI.ViewModels
         public async Task AddCategoryAsync()
         {
             int nextOrder = Categories.Any() ? Categories.Max(c => c.Order) + 1 : 0;
-            
+
             // Generate unique name
             string baseName = "New Category";
             string uniqueName = baseName;
@@ -334,22 +333,22 @@ namespace PhantomVault.UI.ViewModels
                 uniqueName = $"{baseName} ({counter})";
                 counter++;
             }
-            
+
             // Load default color from preferences
             var settings = SettingsService.Load();
             var defaultColor = settings.DefaultCategoryColor;
-            
+
             Debug.WriteLine($"[CATEGORY-MGR] AddCategory: Loading default color from settings: '{defaultColor ?? "null"}'");
-            
-            var item = new CategoryItem 
-            { 
-                Name = uniqueName, 
-                Icon = "/Assets/Visuals/Cat Icons/Bookmark/3914133 (1)_purple.png", 
+
+            var item = new CategoryItem
+            {
+                Name = uniqueName,
+                Icon = "/Assets/Visuals/Cat Icons/Bookmark/3914133 (1)_purple.png",
                 Order = nextOrder,
                 TileColor = defaultColor ?? "#E9D5FF" // Apply saved preference or default purple
             };
             Categories.Add(item);
-            
+
             Debug.WriteLine($"[CATEGORY-MGR] AddCategory: Created '{item.Name}' with color '{item.TileColor ?? "null"}'");
             await PersistAsync();
             // Prompt to move entries into this category
@@ -510,14 +509,15 @@ namespace PhantomVault.UI.ViewModels
                     vm.UpdateCategoryColors(colorMap);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Best-effort persistence; surface errors via owner window if possible
-                if (_ownerWindow != null)
+                // Best-effort persistence; surface errors via dialog service
+                Debug.WriteLine($"[CATEGORY-MGR] PersistAsync failed: {ex.Message}");
+                try
                 {
-                    var dialog = new Window { Title = "Save Failed", Content = new Avalonia.Controls.TextBlock { Text = "Failed to save categories to manifest.", TextWrapping = Avalonia.Media.TextWrapping.Wrap }, Width = 420, Height = 160 };
-                    await dialog.ShowDialog(_ownerWindow);
+                    await _dialogService.ShowWarningAsync("Save Failed", "Failed to save categories to manifest.", _ownerWindow);
                 }
+                catch { /* dialog itself failed — nothing more we can do */ }
             }
             finally
             {
@@ -657,7 +657,8 @@ namespace PhantomVault.UI.ViewModels
                 try
                 {
                     await Task.Delay(delayMs, cts.Token);
-                    await PersistAsync();
+                    // PersistAsync may show dialogs — must run on UI thread
+                    await Dispatcher.UIThread.InvokeAsync(() => PersistAsync());
                 }
                 catch (TaskCanceledException) { }
             });
@@ -857,7 +858,7 @@ namespace PhantomVault.UI.ViewModels
                 var iconManagerWindow = new IconManagerWindow { DataContext = iconManagerVm };
                 iconManagerVm.SetOwnerWindow(iconManagerWindow, GetOwnerWindow());
                 await iconManagerWindow.ShowDialog(GetOwnerWindow());
-                
+
                 // Save icon library path preference
                 var settings = SettingsService.Load();
                 var iconsPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "Icons");
@@ -873,11 +874,11 @@ namespace PhantomVault.UI.ViewModels
         private void ApplyColor(PaletteSelection selection)
         {
             if (selection == null || selection.Item == null) return;
-            
+
             Debug.WriteLine($"[CATEGORY-MGR] ApplyColor: Applying color '{selection.Color ?? "null"}' to '{selection.Item.Name}'");
-            
+
             selection.Item.TileColor = selection.Color; // can be null to clear
-            
+
             // Save as default color preference if a color was selected (not cleared)
             if (!string.IsNullOrEmpty(selection.Color))
             {
@@ -886,7 +887,7 @@ namespace PhantomVault.UI.ViewModels
                 SettingsService.Save(settings);
                 Debug.WriteLine($"[CATEGORY-MGR] ApplyColor: Saved '{selection.Color}' as default category color");
             }
-            
+
             DebouncedPersist();
             PublishToVaultManager();
         }

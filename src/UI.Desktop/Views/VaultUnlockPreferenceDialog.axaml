@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                        xmlns:views="clr-namespace:PhantomVault.UI.Views"
+                        xmlns:controls="clr-namespace:PhantomVault.UI.Desktop.Controls"
+                        x:Class="PhantomVault.UI.Views.VaultUnlockPreferenceDialog"
+                        Title="Vault Unlock Preference"
+                        Width="520" Height="480"
+                        CanResize="False"
+                        WindowStartupLocation="CenterOwner"
+                        Background="{DynamicResource WindowBackgroundBrush}"
+                        Classes="animated-window"
+                        SystemDecorations="BorderOnly">
+
+    <Window.Styles>
+        <!-- Option card hover effect -->
+        <Style Selector="Border.option-card">
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="20,16"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.2"/>
+                    <BrushTransition Property="Background" Duration="0:0:0.2"/>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15" Easing="CubicEaseOut"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.option-card:pointerover">
+            <Setter Property="BorderBrush" Value="#6BB3AE"/>
+            <Setter Property="Background" Value="#0A6BB3AE"/>
+            <Setter Property="RenderTransform" Value="scale(1.01)"/>
+        </Style>
+        <Style Selector="Border.option-card.selected">
+            <Setter Property="BorderBrush" Value="#6BB3AE"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Background" Value="#156BB3AE"/>
+        </Style>
+
+        <!-- Confirm button -->
+        <Style Selector="Button.confirm-btn">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.3"/>
+                </Transitions>
+            </Setter>
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="*,Auto" Margin="32,28">
+
+        <StackPanel Spacing="24">
+            <!-- Header -->
+            <StackPanel Spacing="8" HorizontalAlignment="Center">
+                <TextBlock Text="How would you like to unlock your vault?"
+                           FontSize="22"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="Choose your preferred unlock method. You can change this later in Settings."
+                           FontSize="13"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           HorizontalAlignment="Center"
+                           TextWrapping="Wrap"
+                           TextAlignment="Center"/>
+            </StackPanel>
+
+            <!-- Option Cards -->
+            <StackPanel Spacing="10">
+
+                <!-- PIN Option -->
+                <Border x:Name="PinCard" Classes="option-card" PointerPressed="PinCard_PointerPressed">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Border Grid.Column="0" Width="44" Height="44" CornerRadius="22"
+                                Background="#156BB3AE" Margin="0,0,16,0"
+                                VerticalAlignment="Center">
+                            <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Key.svg"
+                                              IconColor="#6BB3AE" Width="22" Height="22"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                            <TextBlock Text="PIN Code"
+                                       FontSize="16" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <TextBlock Text="Quick 4-6 digit PIN for fast access"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                        </StackPanel>
+                        <Border x:Name="PinCheck" Grid.Column="2" Width="24" Height="24" CornerRadius="12"
+                                Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="2" VerticalAlignment="Center">
+                            <TextBlock Text="✓" FontSize="14" FontWeight="Bold"
+                                       Foreground="#6BB3AE" HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" IsVisible="False"
+                                       x:Name="PinCheckMark"/>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- Windows Hello Option -->
+                <Border x:Name="HelloCard" Classes="option-card" PointerPressed="HelloCard_PointerPressed">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Border Grid.Column="0" Width="44" Height="44" CornerRadius="22"
+                                Background="#158FB5DF" Margin="0,0,16,0"
+                                VerticalAlignment="Center">
+                            <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Security.svg"
+                                              IconColor="#8FB5DF" Width="22" Height="22"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                            <TextBlock Text="Windows Hello"
+                                       FontSize="16" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <TextBlock Text="Local Windows Hello verification using fingerprint, face recognition, or device PIN"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                        </StackPanel>
+                        <Border x:Name="HelloCheck" Grid.Column="2" Width="24" Height="24" CornerRadius="12"
+                                Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="2" VerticalAlignment="Center">
+                            <TextBlock Text="✓" FontSize="14" FontWeight="Bold"
+                                       Foreground="#8FB5DF" HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" IsVisible="False"
+                                       x:Name="HelloCheckMark"/>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- Automatic Option -->
+                <Border x:Name="AutoCard" Classes="option-card" PointerPressed="AutoCard_PointerPressed">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Border Grid.Column="0" Width="44" Height="44" CornerRadius="22"
+                                Background="#15B0BEC5" Margin="0,0,16,0"
+                                VerticalAlignment="Center">
+                            <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/lock.svg"
+                                              IconColor="#B0BEC5" Width="22" Height="22"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                            <TextBlock Text="Automatic"
+                                       FontSize="16" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <TextBlock Text="Open automatically when USB is inserted"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                        </StackPanel>
+                        <Border x:Name="AutoCheck" Grid.Column="2" Width="24" Height="24" CornerRadius="12"
+                                Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="2" VerticalAlignment="Center">
+                            <TextBlock Text="✓" FontSize="14" FontWeight="Bold"
+                                       Foreground="#B0BEC5" HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" IsVisible="False"
+                                       x:Name="AutoCheckMark"/>
+                        </Border>
+                    </Grid>
+                </Border>
+
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Confirm Button -->
+        <Button x:Name="ConfirmButton"
+                Grid.Row="1"
+                Content="Confirm"
+                Classes="liquid-glass primary confirm-btn"
+                Width="160" Height="42"
+                FontSize="15" FontWeight="SemiBold"
+                HorizontalAlignment="Center"
+                Margin="0,20,0,0"
+                IsEnabled="False"
+                Click="ConfirmButton_Click"/>
+    </Grid>
+
+</views:ThemeAwareWindow>

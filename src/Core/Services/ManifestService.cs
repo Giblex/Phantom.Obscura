@@ -22,12 +22,23 @@ namespace PhantomVault.Core.Services
     /// </summary>
     public sealed class ManifestService
     {
+        private const int CurrentStandaloneManifestFormatVersion = 2;
+        private const string CurrentStandaloneManifestSuite = "manifest.aes256gcm.argon2id.v2";
         private readonly EncryptionService _encryptionService;
+        private readonly PhantomContainerService? _containerService;
 
-        public ManifestService(EncryptionService encryptionService)
+        public ManifestService(EncryptionService encryptionService, PhantomContainerService? containerService = null)
         {
             _encryptionService = encryptionService;
+            _containerService = containerService;
         }
+
+        /// <summary>
+        /// Returns true when the given path points to a .pvault container
+        /// (manifest embedded inside the container rather than a standalone file).
+        /// </summary>
+        private static bool IsContainerPath(string path)
+            => path.EndsWith(".pvault", StringComparison.OrdinalIgnoreCase);
 
         /// <summary>
         /// Writes an encrypted manifest to disk. The manifest itself is
@@ -47,6 +58,15 @@ namespace PhantomVault.Core.Services
         {
             if (manifest == null) throw new ArgumentNullException(nameof(manifest));
             if (string.IsNullOrEmpty(filePath)) throw new ArgumentException("File path must be provided", nameof(filePath));
+
+            // Route .pvault paths to the container service (v3 embedded manifest)
+            if (IsContainerPath(filePath))
+            {
+                if (_containerService == null)
+                    throw new InvalidOperationException("PhantomContainerService is required for container-embedded manifests");
+                _containerService.UpdateManifestInContainer(filePath, manifest, passphrase, keyfilePath);
+                return;
+            }
 
             // Dual-factor authentication: BOTH passphrase AND keyfile required
             if (requireDualFactor)
@@ -110,90 +130,20 @@ namespace PhantomVault.Core.Services
             });
             byte[] plainBytes = Encoding.UTF8.GetBytes(json);
 
-            // Validate inputs before constructing AAD
-            string containerPath = manifest.ContainerPath ?? string.Empty;
+            string containerPath = NormalizeContainerObjectId(manifest.ContainerPath);
+            manifest.ContainerPath = containerPath;
+            ValidateUsbSerial(usbSerial);
 
-            // Validate container path - prevent path traversal and ensure absolute path
-            if (!string.IsNullOrEmpty(containerPath))
-            {
-                try
-                {
-                    // Normalize the path to prevent traversal attacks including Unicode normalization
-                    var fullPath = Path.GetFullPath(containerPath);
-
-                    // Verify the path is absolute
-                    if (!Path.IsPathRooted(fullPath))
-                    {
-                        throw new ArgumentException($"Container path must be absolute: {containerPath}");
-                    }
-
-                    // Ensure canonicalized path matches input (prevents relative paths disguised as absolute)
-                    // This catches cases like "C:\vault\..\..\..\sensitive" which GetFullPath would normalize
-                    var normalizedInput = Path.GetFullPath(containerPath);
-                    if (!string.Equals(fullPath, normalizedInput, StringComparison.OrdinalIgnoreCase))
-                    {
-                        throw new ArgumentException($"Container path failed canonicalization check: {containerPath}");
-                    }
-
-                    // Additional check: Ensure the path doesn't escape to parent directories
-                    // by checking that it doesn't contain path traversal sequences AFTER normalization
-                    var pathSegments = fullPath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-                    if (pathSegments.Any(segment => segment == "." || segment == ".."))
-                    {
-                        throw new ArgumentException($"Container path contains path traversal sequences: {containerPath}");
-                    }
-
-                    // Prevent null byte injection (path truncation attack)
-                    if (containerPath.Contains('\0'))
-                    {
-                        throw new ArgumentException("Container path contains null bytes");
-                    }
-                }
-                catch (Exception ex) when (ex is not ArgumentException)
-                {
-                    throw new ArgumentException($"Invalid container path: {containerPath}", ex);
-                }
-            }
-
-            // Validate USB serial number format if provided
-            if (!string.IsNullOrEmpty(usbSerial))
-            {
-                // USB serial should be alphanumeric with limited special chars
-                if (!System.Text.RegularExpressions.Regex.IsMatch(usbSerial, @"^[A-Za-z0-9\-_]+$"))
-                {
-                    throw new ArgumentException($"Invalid USB serial number format: {usbSerial}. Must contain only alphanumeric characters, hyphens, and underscores.");
-                }
-
-                if (usbSerial.Length > 128) // Reasonable limit
-                {
-                    throw new ArgumentException($"USB serial number too long: {usbSerial.Length} characters (max 128)");
-                }
-            }
-
-            // Bind the manifest ciphertext to the container path using AES-GCM AAD so that
-            // a copied manifest cannot be replayed for a different container file.
-            // Also bind to USB serial, monotonic counter, and policy hash for additional security.
-            long timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            string aadString = string.IsNullOrEmpty(usbSerial)
-                ? containerPath
-                : $"{containerPath}|USB:{usbSerial}";
-            aadString = $"{aadString}|TS:{timestamp}";
-            aadString = $"{aadString}|SEQ:{manifest.ManifestSequence}";
-            if (!string.IsNullOrEmpty(manifest.PolicyHashBase64))
-                aadString = $"{aadString}|POL:{manifest.PolicyHashBase64}";
-            byte[] aad = Encoding.UTF8.GetBytes(aadString);
+            byte[] aad = BuildStandaloneManifestAad(filePath, usbSerial);
             var encResult = _encryptionService.Encrypt(plainBytes, key, aad);
 
-            // Assemble a payload for disk. We store base64 encoded values in
-            // JSON to facilitate interoperability and simple parsing.
+            // Persist only the minimum public header material required to bootstrap
+            // key derivation and detect the payload format. All binding metadata stays
+            // inside the encrypted manifest body.
             var payload = new
             {
-                algorithm = manifest.Algorithm,
-                containerPath,
-                usbSerial = usbSerial ?? string.Empty,
-                aad = Convert.ToBase64String(aad),
-                timestamp,
-                manifestSequence = manifest.ManifestSequence,
+                formatVersion = CurrentStandaloneManifestFormatVersion,
+                suite = CurrentStandaloneManifestSuite,
                 salt = manifest.SaltBase64,
                 nonce = Convert.ToBase64String(encResult.Nonce),
                 tag = Convert.ToBase64String(encResult.Tag),
@@ -279,33 +229,20 @@ namespace PhantomVault.Core.Services
                 byte[] plainBytes = Encoding.UTF8.GetBytes(json);
                 try
                 {
-                    // Validate inputs before constructing AAD
-                    string containerPath = manifest.ContainerPath ?? string.Empty;
-                    ValidateContainerPath(containerPath);
+                    string containerPath = NormalizeContainerObjectId(manifest.ContainerPath);
+                    manifest.ContainerPath = containerPath;
                     ValidateUsbSerial(usbSerial);
 
-                    // Bind manifest ciphertext to container path, USB serial, sequence, and policy hash using AAD
-                    long timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                    string aadString = string.IsNullOrEmpty(usbSerial)
-                        ? containerPath
-                        : $"{containerPath}|USB:{usbSerial}";
-                    aadString = $"{aadString}|TS:{timestamp}";
-                    aadString = $"{aadString}|SEQ:{manifest.ManifestSequence}";
-                    if (!string.IsNullOrEmpty(manifest.PolicyHashBase64))
-                        aadString = $"{aadString}|POL:{manifest.PolicyHashBase64}";
-                    byte[] aad = Encoding.UTF8.GetBytes(aadString);
+                    byte[] aad = BuildStandaloneManifestAad(filePath, usbSerial);
 
                     var encResult = _encryptionService.Encrypt(plainBytes, key, aad);
 
-                    // Assemble payload for disk
+                    // Persist only the minimum public header material required to
+                    // bootstrap key derivation and payload format detection.
                     var payload = new
                     {
-                        algorithm = manifest.Algorithm,
-                        containerPath,
-                        usbSerial = usbSerial ?? string.Empty,
-                        aad = Convert.ToBase64String(aad),
-                        timestamp,
-                        manifestSequence = manifest.ManifestSequence,
+                        formatVersion = CurrentStandaloneManifestFormatVersion,
+                        suite = CurrentStandaloneManifestSuite,
                         salt = manifest.SaltBase64,
                         nonce = Convert.ToBase64String(encResult.Nonce),
                         tag = Convert.ToBase64String(encResult.Tag),
@@ -343,13 +280,51 @@ namespace PhantomVault.Core.Services
         [Obsolete("Use ReadManifestSecure overload with SecurePassword for better memory security")]
         public VaultManifest ReadManifest(string filePath, string? passphrase, string? keyfilePath = null, string? usbSerial = null, bool requireDualFactor = false)
         {
+            using var securePassphrase = string.IsNullOrEmpty(passphrase)
+                ? SecurePassword.Empty()
+                : SecurePassword.FromString(passphrase);
+            return ReadManifestSecure(filePath, securePassphrase, keyfilePath, usbSerial, requireDualFactor);
+        }
+
+        /// <summary>
+        /// Reads an encrypted manifest from disk using secure password handling.
+        /// This method ensures password buffers can be wiped after key derivation.
+        /// </summary>
+        public VaultManifest ReadManifestSecure(string filePath, SecurePassword passphrase, string? keyfilePath = null, string? usbSerial = null, bool requireDualFactor = false)
+        {
             if (string.IsNullOrEmpty(filePath)) throw new ArgumentException("File path must be provided", nameof(filePath));
+            if (passphrase == null) throw new ArgumentNullException(nameof(passphrase));
+
+            // Route .pvault paths to the container service (v3 embedded manifest)
+            if (IsContainerPath(filePath))
+            {
+                if (_containerService == null)
+                    throw new InvalidOperationException("PhantomContainerService is required for container-embedded manifests");
+                if (!File.Exists(filePath))
+                    throw new FileNotFoundException("Container not found", filePath);
+
+                // Container service still accepts string credentials today.
+                string? containerPassphrase = passphrase.IsEmpty ? null : new string(passphrase.AsSpan());
+                try
+                {
+                    return _containerService.ReadManifestFromContainer(filePath, containerPassphrase, keyfilePath)
+                        ?? throw new FileNotFoundException("No embedded manifest found in container", filePath);
+                }
+                finally
+                {
+                    if (containerPassphrase != null)
+                    {
+                        containerPassphrase = new string('\0', containerPassphrase.Length);
+                    }
+                }
+            }
+
             if (!File.Exists(filePath)) throw new FileNotFoundException("Manifest file not found", filePath);
 
             // Dual-factor authentication: BOTH passphrase AND keyfile required
             if (requireDualFactor)
             {
-                if (string.IsNullOrEmpty(passphrase) || string.IsNullOrEmpty(keyfilePath))
+                if (passphrase.IsEmpty || string.IsNullOrEmpty(keyfilePath))
                 {
                     throw new ArgumentException("Dual-factor authentication requires BOTH a passphrase AND a keyfile");
                 }
@@ -357,7 +332,7 @@ namespace PhantomVault.Core.Services
             else
             {
                 // Legacy mode: at least one authentication method (passphrase OR keyfile) must be provided
-                if (string.IsNullOrEmpty(passphrase) && string.IsNullOrEmpty(keyfilePath))
+                if (passphrase.IsEmpty && string.IsNullOrEmpty(keyfilePath))
                 {
                     throw new ArgumentException("Either a passphrase or keyfile must be provided");
                 }
@@ -387,42 +362,52 @@ namespace PhantomVault.Core.Services
                 string ciphertextBase64 = root.GetProperty("ciphertext").GetString() ?? throw new FormatException("Missing ciphertext");
 
                 byte[] aad;
+                bool usesMinimalHeader = false;
                 string? storedUsbSerial = null;
                 long storedTimestamp = 0;
-                
-                if (root.TryGetProperty("usbSerial", out var usbElement) && usbElement.ValueKind == JsonValueKind.String)
-                {
-                    storedUsbSerial = usbElement.GetString();
-                }
-                
-                if (root.TryGetProperty("timestamp", out var tsElement) && tsElement.ValueKind == JsonValueKind.Number)
-                {
-                    storedTimestamp = tsElement.GetInt64();
-                }
 
-                if (root.TryGetProperty("aad", out var aadElement) && aadElement.ValueKind == JsonValueKind.String)
+                if (root.TryGetProperty("formatVersion", out var formatVersionElement) &&
+                    formatVersionElement.ValueKind == JsonValueKind.Number &&
+                    formatVersionElement.GetInt32() >= CurrentStandaloneManifestFormatVersion)
                 {
-                    string? aadBase64 = aadElement.GetString();
-                    aad = string.IsNullOrEmpty(aadBase64) ? Array.Empty<byte>() : Convert.FromBase64String(aadBase64);
-                }
-                else if (root.TryGetProperty("containerPath", out var containerElement) && containerElement.ValueKind == JsonValueKind.String)
-                {
-                    string? pathValue = containerElement.GetString();
-                    // Reconstruct AAD with USB serial if present
-                    string aadString = string.IsNullOrEmpty(storedUsbSerial)
-                        ? (pathValue ?? string.Empty)
-                        : $"{pathValue}|USB:{storedUsbSerial}";
-                    if (storedTimestamp > 0)
-                    {
-                        aadString = $"{aadString}|TS:{storedTimestamp}";
-                    }
-                    aad = Encoding.UTF8.GetBytes(aadString);
+                    usesMinimalHeader = true;
+                    aad = BuildStandaloneManifestAad(filePath, usbSerial);
                 }
                 else
                 {
-                    throw new FormatException("Manifest payload missing associated data binding (aad/containerPath). The file may be from an unsupported version.");
+                    if (root.TryGetProperty("usbSerial", out var usbElement) && usbElement.ValueKind == JsonValueKind.String)
+                    {
+                        storedUsbSerial = usbElement.GetString();
+                    }
+
+                    if (root.TryGetProperty("timestamp", out var tsElement) && tsElement.ValueKind == JsonValueKind.Number)
+                    {
+                        storedTimestamp = tsElement.GetInt64();
+                    }
+
+                    if (root.TryGetProperty("aad", out var aadElement) && aadElement.ValueKind == JsonValueKind.String)
+                    {
+                        string? aadBase64 = aadElement.GetString();
+                        aad = string.IsNullOrEmpty(aadBase64) ? Array.Empty<byte>() : Convert.FromBase64String(aadBase64);
+                    }
+                    else if (root.TryGetProperty("containerPath", out var containerElement) && containerElement.ValueKind == JsonValueKind.String)
+                    {
+                        string? pathValue = containerElement.GetString();
+                        string aadString = string.IsNullOrEmpty(storedUsbSerial)
+                            ? (pathValue ?? string.Empty)
+                            : $"{pathValue}|USB:{storedUsbSerial}";
+                        if (storedTimestamp > 0)
+                        {
+                            aadString = $"{aadString}|TS:{storedTimestamp}";
+                        }
+                        aad = Encoding.UTF8.GetBytes(aadString);
+                    }
+                    else
+                    {
+                        throw new FormatException("Manifest payload missing associated data binding (aad/containerPath). The file may be from an unsupported version.");
+                    }
                 }
-                
+
                 // Validate USB serial format if stored in manifest
                 if (!string.IsNullOrEmpty(storedUsbSerial))
                 {
@@ -445,7 +430,7 @@ namespace PhantomVault.Core.Services
                         throw new SecurityException($"USB serial mismatch. Expected: {storedUsbSerial}, Got: {usbSerial}");
                     }
                 }
-                
+
                 // If manifest was bound to a USB device, require USB serial on read
                 // This prevents reading a USB-bound manifest without the USB device present
                 if (!string.IsNullOrEmpty(storedUsbSerial) && string.IsNullOrEmpty(usbSerial))
@@ -458,58 +443,75 @@ namespace PhantomVault.Core.Services
                 byte[] tag = Convert.FromBase64String(tagBase64);
                 byte[] ciphertext = Convert.FromBase64String(ciphertextBase64);
 
-                // Combine passphrase with keyfile if present.
-                // If no passphrase, use empty string as base.
                 bool requireKeyfileMaterial = requireDualFactor || !string.IsNullOrEmpty(keyfilePath);
-                string combinedSecret = CombineSecret(passphrase, keyfilePath, requireKeyfileMaterial);
-
-                // Derive encryption key (KEK) from passphrase+keyfile
-                // Phase 2 Note: Manifest always uses traditional KEK, not hybrid
+                using var combinedSecret = SecurePasswordCombiner.Combine(passphrase, keyfilePath, requireKeyfileMaterial);
                 byte[] key = _encryptionService.DeriveKey(combinedSecret.AsSpan(), salt);
-
-                // Validate timestamp to detect replay attacks and clock skew
-                if (storedTimestamp > 0)
+                try
                 {
-                    var currentTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                    var ageSeconds = currentTimestamp - storedTimestamp;
-
-                    // Check for future timestamps (clock skew or tampering)
-                    const long MaxClockSkewSeconds = 300; // 5 minutes tolerance
-                    if (ageSeconds < -MaxClockSkewSeconds)
+                    // Validate timestamp to detect replay attacks and clock skew
+                    if (!usesMinimalHeader && storedTimestamp > 0)
                     {
-                        throw new SecurityException($"Manifest timestamp is in the future by {Math.Abs(ageSeconds)} seconds. Possible clock skew or replay attack.");
+                        var currentTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                        var ageSeconds = currentTimestamp - storedTimestamp;
+
+                        // Check for future timestamps (clock skew or tampering)
+                        const long MaxClockSkewSeconds = 300; // 5 minutes tolerance
+                        if (ageSeconds < -MaxClockSkewSeconds)
+                        {
+                            throw new SecurityException($"Manifest timestamp is in the future by {Math.Abs(ageSeconds)} seconds. Possible clock skew or replay attack.");
+                        }
+
+                        // Warn on old timestamps but allow (for legitimate old manifests)
+                        const long MaxAgeSeconds = 31536000; // 1 year
+                        if (ageSeconds > MaxAgeSeconds)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"WARNING: Manifest timestamp is {ageSeconds / 86400} days old. Possible replay attack or very old manifest.");
+                            // Don't throw - allow old manifests, but log for auditing
+                        }
                     }
 
-                    // Warn on old timestamps but allow (for legitimate old manifests)
-                    const long MaxAgeSeconds = 31536000; // 1 year
-                    if (ageSeconds > MaxAgeSeconds)
+                    byte[] plaintext;
+                    try
                     {
-                        System.Diagnostics.Debug.WriteLine($"WARNING: Manifest timestamp is {ageSeconds / 86400} days old. Possible replay attack or very old manifest.");
-                        // Don't throw - allow old manifests, but log for auditing
+                        plaintext = _encryptionService.Decrypt(ciphertext, nonce, tag, key, aad);
+                    }
+                    catch (CryptographicException) when (usesMinimalHeader)
+                    {
+                        throw new SecurityException(string.IsNullOrEmpty(usbSerial)
+                            ? "Manifest binding validation failed. Ensure the correct device context is present before opening this manifest."
+                            : "Manifest binding validation failed. The supplied device context or credentials did not match this manifest.");
+                    }
+                    try
+                    {
+                        string json = Encoding.UTF8.GetString(plaintext);
+                        var manifest = JsonSerializer.Deserialize<VaultManifest>(json) ?? throw new FormatException("Failed to parse manifest");
+                        manifest.ContainerPath = NormalizeContainerObjectId(manifest.ContainerPath);
+
+                        // Verify integrity signature if present (defense-in-depth)
+                        VerifyIntegritySignature(manifest, key, requireSignature: false);
+
+                        if (!usesMinimalHeader &&
+                            root.TryGetProperty("containerPath", out var pathElement) &&
+                            pathElement.ValueKind == JsonValueKind.String)
+                        {
+                            string boundPath = NormalizeContainerObjectId(pathElement.GetString());
+                            if (!string.IsNullOrEmpty(boundPath) && !string.Equals(boundPath, manifest.ContainerPath, StringComparison.Ordinal))
+                            {
+                                throw new SecurityException("Manifest integrity check failed: container path binding mismatch.");
+                            }
+                        }
+
+                        return manifest;
+                    }
+                    finally
+                    {
+                        Array.Clear(plaintext, 0, plaintext.Length);
                     }
                 }
-
-                byte[] plaintext = _encryptionService.Decrypt(ciphertext, nonce, tag, key, aad);
-                string json = Encoding.UTF8.GetString(plaintext);
-                var manifest = JsonSerializer.Deserialize<VaultManifest>(json) ?? throw new FormatException("Failed to parse manifest");
-
-                // Verify integrity signature if present (defense-in-depth)
-                VerifyIntegritySignature(manifest, key, requireSignature: false);
-
-                if (root.TryGetProperty("containerPath", out var pathElement) && pathElement.ValueKind == JsonValueKind.String)
+                finally
                 {
-                    string? boundPath = pathElement.GetString();
-                    if (!string.IsNullOrEmpty(boundPath) && !string.Equals(boundPath, manifest.ContainerPath, StringComparison.Ordinal))
-                    {
-                        throw new SecurityException("Manifest integrity check failed: container path binding mismatch.");
-                    }
+                    CryptographicOperations.ZeroMemory(key);
                 }
-
-                // Wipe sensitive material.
-                Array.Clear(key, 0, key.Length);
-                Array.Clear(plaintext, 0, plaintext.Length);
-
-                return manifest;
             }
         }
 
@@ -694,47 +696,66 @@ namespace PhantomVault.Core.Services
         }
 
         /// <summary>
-        /// Validates container path to prevent path traversal and ensure absolute path.
+        /// Validates and canonicalizes the container object identifier used inside
+        /// the encrypted manifest. Object IDs must be relative and portable.
         /// </summary>
-        private static void ValidateContainerPath(string containerPath)
+        private static string NormalizeContainerObjectId(string? containerPath)
         {
-            if (string.IsNullOrEmpty(containerPath)) return;
+            if (string.IsNullOrWhiteSpace(containerPath))
+            {
+                return string.Empty;
+            }
 
             try
             {
-                // Normalize the path to prevent traversal attacks
-                var fullPath = Path.GetFullPath(containerPath);
-
-                // Verify the path is absolute
-                if (!Path.IsPathRooted(fullPath))
+                if (containerPath.Contains('\0'))
                 {
-                    throw new ArgumentException($"Container path must be absolute: {containerPath}");
+                    throw new ArgumentException("Container path contains null bytes");
                 }
 
-                // Ensure canonicalized path matches input
-                var normalizedInput = Path.GetFullPath(containerPath);
-                if (!string.Equals(fullPath, normalizedInput, StringComparison.OrdinalIgnoreCase))
+                string normalized = containerPath
+                    .Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar)
+                    .Trim();
+
+                if (Path.IsPathRooted(normalized))
                 {
-                    throw new ArgumentException($"Container path failed canonicalization check: {containerPath}");
+                    throw new ArgumentException($"Container path must be relative to the vault layout: {containerPath}");
                 }
 
-                // Ensure no path traversal sequences after normalization
-                var pathSegments = fullPath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                var pathSegments = normalized.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
                 if (pathSegments.Any(segment => segment == "." || segment == ".."))
                 {
                     throw new ArgumentException($"Container path contains path traversal sequences: {containerPath}");
                 }
 
-                // Prevent null byte injection
-                if (containerPath.Contains('\0'))
+                if (normalized.StartsWith(Path.DirectorySeparatorChar))
                 {
-                    throw new ArgumentException("Container path contains null bytes");
+                    throw new ArgumentException($"Container path must not start with a directory separator: {containerPath}");
                 }
+
+                return string.Join("/", pathSegments);
             }
             catch (Exception ex) when (ex is not ArgumentException)
             {
                 throw new ArgumentException($"Invalid container path: {containerPath}", ex);
             }
+        }
+
+        private static byte[] BuildStandaloneManifestAad(string filePath, string? usbSerial)
+        {
+            string objectId = Path.GetFileName(filePath);
+            if (string.IsNullOrWhiteSpace(objectId))
+            {
+                throw new ArgumentException("Manifest file path must include a file name.", nameof(filePath));
+            }
+
+            string aadString = $"OBJ:{objectId}";
+            if (!string.IsNullOrEmpty(usbSerial))
+            {
+                aadString = $"{aadString}|USB:{usbSerial}";
+            }
+
+            return Encoding.UTF8.GetBytes(aadString);
         }
 
         /// <summary>

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace PhantomVault.Core.Services
@@ -54,7 +55,7 @@ namespace PhantomVault.Core.Services
             // Biometric Authentication
             _featureStatus["Biometric.WindowsHello"] = new FeatureStatus
             {
-                IsAvailable = OperatingSystem.IsWindows() && OperatingSystem.IsWindowsVersionAtLeast(10),
+                IsAvailable = CheckWindowsHelloAvailable(),
                 IsFullyImplemented = false,
                 Description = "Windows Hello biometric authentication",
                 LimitationMessage = "Windows Hello integration requires additional platform-specific implementation. " +
@@ -209,10 +210,36 @@ namespace PhantomVault.Core.Services
 
         private bool CheckVeraCryptAvailable()
         {
-            // This would check if VeraCrypt is installed
-            // For now, return true to assume it's available
-            // In production, this should check common installation paths
-            return true;
+            if (!OperatingSystem.IsWindows())
+            {
+                return false;
+            }
+
+            var candidates = new[]
+            {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "VeraCrypt", "VeraCrypt.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "VeraCrypt", "VeraCrypt.exe")
+            };
+
+            return candidates.Any(File.Exists);
+        }
+
+        private bool CheckWindowsHelloAvailable()
+        {
+            if (!OperatingSystem.IsWindows() || !OperatingSystem.IsWindowsVersionAtLeast(10))
+            {
+                return false;
+            }
+
+            try
+            {
+                var passkeyService = new PasskeyService();
+                return passkeyService.IsSupported;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 

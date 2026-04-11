@@ -1,0 +1,416 @@
+<?xml version="1.0" encoding="utf-8"?>
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                        xmlns:views="clr-namespace:PhantomVault.UI.Views"
+                        xmlns:controls="clr-namespace:PhantomVault.UI.Desktop.Controls"
+                        x:Class="PhantomVault.UI.Views.VaultCreationLoadingWindow"
+                        Title="Phantom Obscura"
+                        Width="720" Height="560"
+                        MinWidth="720" MinHeight="560"
+                        CanResize="False"
+                        WindowStartupLocation="CenterScreen"
+                        Background="{DynamicResource WindowBackgroundBrush}"
+                        Classes="animated-window"
+                        SystemDecorations="BorderOnly">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://PhantomVault.UI/Assets/Themes/PreVaultTheme.axaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Window.Styles>
+        <!-- Pulsing glow ring — opacity only (scale driven by code-behind) -->
+        <Style Selector="Border.pulse-ring">
+            <Style.Animations>
+                <Animation Duration="0:0:2.4" IterationCount="INFINITE" Easing="CubicEaseInOut">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="0.15"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="50%">
+                        <Setter Property="Opacity" Value="0.45"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="0.15"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+
+        <Style Selector="Border.pulse-ring-delay">
+            <Style.Animations>
+                <Animation Duration="0:0:2.4" IterationCount="INFINITE" Easing="CubicEaseInOut" Delay="0:0:0.8">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="0.1"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="50%">
+                        <Setter Property="Opacity" Value="0.35"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="0.1"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+
+        <Style Selector="Border.pulse-ring-delay2">
+            <Style.Animations>
+                <Animation Duration="0:0:2.4" IterationCount="INFINITE" Easing="CubicEaseInOut" Delay="0:0:1.6">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="0.05"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="50%">
+                        <Setter Property="Opacity" Value="0.25"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="0.05"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+
+        <!-- Fade in for status text -->
+        <Style Selector="TextBlock.fade-status">
+            <Style.Animations>
+                <Animation Duration="0:0:1.5" IterationCount="INFINITE" Easing="CubicEaseInOut">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="0.5"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="50%">
+                        <Setter Property="Opacity" Value="1.0"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="0.5"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+
+        <!-- Progress bar smooth fill -->
+        <Style Selector="Border.progress-fill">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Width" Duration="0:0:0.6" Easing="CubicEaseInOut"/>
+                </Transitions>
+            </Setter>
+        </Style>
+
+        <!-- Completion checkmark fade-in -->
+        <Style Selector="Border.check-appear">
+            <Setter Property="Opacity" Value="0"/>
+            <Setter Property="RenderTransform" Value="scale(0.5, 0.5)"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.5" Easing="CubicEaseOut"/>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.5" Easing="BackEaseOut"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.check-appear.visible">
+            <Setter Property="Opacity" Value="1"/>
+            <Setter Property="RenderTransform" Value="scale(1, 1)"/>
+        </Style>
+
+        <!-- Phase step item base -->
+        <Style Selector="Border.phase-step">
+            <Setter Property="Opacity" Value="0.3"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.4" Easing="CubicEaseInOut"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.phase-step.active">
+            <Setter Property="Opacity" Value="1.0"/>
+        </Style>
+        <Style Selector="Border.phase-step.completed">
+            <Setter Property="Opacity" Value="0.6"/>
+        </Style>
+
+        <!-- Scan line sweep -->
+        <Style Selector="Border.scan-line">
+            <Setter Property="Opacity" Value="0"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="*">
+        <Panel>
+            <!-- ═══ Background hex data columns (left + right) ═══ -->
+            <TextBlock x:Name="HexColumnLeft"
+                       FontFamily="Consolas,Courier New,monospace"
+                       FontSize="10"
+                       Foreground="#0CFFFFFF"
+                       LineHeight="14"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Stretch"
+                       Margin="24,20,0,20"
+                       TextWrapping="Wrap"
+                       Width="80"
+                       ClipToBounds="True"
+                       IsHitTestVisible="False"/>
+
+            <TextBlock x:Name="HexColumnRight"
+                       FontFamily="Consolas,Courier New,monospace"
+                       FontSize="10"
+                       Foreground="#0CFFFFFF"
+                       LineHeight="14"
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Stretch"
+                       Margin="0,20,24,20"
+                       TextWrapping="Wrap"
+                       Width="80"
+                       TextAlignment="Right"
+                       ClipToBounds="True"
+                       IsHitTestVisible="False"/>
+
+            <!-- ═══ Scan line (horizontal sweep) ═══ -->
+            <Border x:Name="ScanLine"
+                    Classes="scan-line"
+                    Height="1"
+                    VerticalAlignment="Top"
+                    Margin="60,0"
+                    IsHitTestVisible="False">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                        <GradientStop Color="#006BB3AE" Offset="0"/>
+                        <GradientStop Color="#306BB3AE" Offset="0.3"/>
+                        <GradientStop Color="#506BB3AE" Offset="0.5"/>
+                        <GradientStop Color="#306BB3AE" Offset="0.7"/>
+                        <GradientStop Color="#006BB3AE" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+            </Border>
+
+            <!-- ═══ Main content (centered) ═══ -->
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="24">
+
+                <!-- ═══ Animated logo area with pulsing rings + orbit dots + segmented ring ═══ -->
+                <Panel Width="200" Height="200" HorizontalAlignment="Center">
+
+                    <!-- Outer pulse ring 3 -->
+                    <Border x:Name="PulseRing3"
+                            Classes="pulse-ring-delay2"
+                            Width="190" Height="190"
+                            CornerRadius="95"
+                            BorderBrush="#1A6BB3AE"
+                            BorderThickness="1.5"
+                            RenderTransformOrigin="0.5,0.5"
+                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Border.RenderTransform>
+                            <ScaleTransform ScaleX="0.95" ScaleY="0.95"/>
+                        </Border.RenderTransform>
+                    </Border>
+
+                    <!-- Outer pulse ring 2 -->
+                    <Border x:Name="PulseRing2"
+                            Classes="pulse-ring-delay"
+                            Width="160" Height="160"
+                            CornerRadius="80"
+                            BorderBrush="#2A6BB3AE"
+                            BorderThickness="1.5"
+                            RenderTransformOrigin="0.5,0.5"
+                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Border.RenderTransform>
+                            <ScaleTransform ScaleX="0.9" ScaleY="0.9"/>
+                        </Border.RenderTransform>
+                    </Border>
+
+                    <!-- Inner pulse ring -->
+                    <Border x:Name="PulseRing1"
+                            Classes="pulse-ring"
+                            Width="130" Height="130"
+                            CornerRadius="65"
+                            BorderBrush="#406BB3AE"
+                            BorderThickness="2"
+                            RenderTransformOrigin="0.5,0.5"
+                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Border.RenderTransform>
+                            <ScaleTransform ScaleX="0.85" ScaleY="0.85"/>
+                        </Border.RenderTransform>
+                    </Border>
+
+                    <!-- Segmented ring — tick marks rendered as small dots in a circle -->
+                    <Canvas x:Name="SegmentedRing"
+                            Width="175" Height="175"
+                            RenderTransformOrigin="0.5,0.5"
+                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Canvas.RenderTransform>
+                            <RotateTransform Angle="0"/>
+                        </Canvas.RenderTransform>
+                        <!-- Tick marks populated in code-behind -->
+                    </Canvas>
+
+                    <!-- Inner segmented ring (opposite direction) -->
+                    <Canvas x:Name="SegmentedRingInner"
+                            Width="140" Height="140"
+                            RenderTransformOrigin="0.5,0.5"
+                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Canvas.RenderTransform>
+                            <RotateTransform Angle="0"/>
+                        </Canvas.RenderTransform>
+                    </Canvas>
+
+                    <!-- Orbiting dot ring 1 -->
+                    <Border x:Name="OrbitDot1"
+                            Width="150" Height="150"
+                            RenderTransformOrigin="0.5,0.5"
+                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Border.RenderTransform>
+                            <RotateTransform Angle="0"/>
+                        </Border.RenderTransform>
+                        <Ellipse Width="6" Height="6"
+                                 Fill="#8FB5DF"
+                                 VerticalAlignment="Top"
+                                 HorizontalAlignment="Center"/>
+                    </Border>
+
+                    <!-- Orbiting dot ring 2 (reverse) -->
+                    <Border x:Name="OrbitDot2"
+                            Width="170" Height="170"
+                            RenderTransformOrigin="0.5,0.5"
+                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Border.RenderTransform>
+                            <RotateTransform Angle="0"/>
+                        </Border.RenderTransform>
+                        <Ellipse Width="4" Height="4"
+                                 Fill="#6BB3AE"
+                                 VerticalAlignment="Top"
+                                 HorizontalAlignment="Center"/>
+                    </Border>
+
+                    <!-- Orbiting dot ring 3 (slow, large orbit) -->
+                    <Border x:Name="OrbitDot3"
+                            Width="195" Height="195"
+                            RenderTransformOrigin="0.5,0.5"
+                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Border.RenderTransform>
+                            <RotateTransform Angle="180"/>
+                        </Border.RenderTransform>
+                        <Ellipse Width="3" Height="3"
+                                 Fill="#508FB5DF"
+                                 VerticalAlignment="Top"
+                                 HorizontalAlignment="Center"/>
+                    </Border>
+
+                    <!-- Center logo with glass surround -->
+                    <Border Width="80" Height="80"
+                            CornerRadius="40"
+                            Background="#15FFFFFF"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                            ClipToBounds="True">
+                        <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
+                               Width="52" Height="52"
+                               Stretch="Uniform"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+
+                    <!-- Completion checkmark (hidden until done) -->
+                    <Border x:Name="CompletionCheck"
+                            Classes="check-appear"
+                            Width="36" Height="36"
+                            CornerRadius="18"
+                            Background="#2A4CAF50"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Margin="0,0,-60,-60"
+                            RenderTransformOrigin="0.5,0.5"
+                            IsVisible="False">
+                        <TextBlock Text="✓"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   Foreground="#4CAF50"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+                    </Border>
+                </Panel>
+
+                <!-- ═══ Title ═══ -->
+                <TextBlock Text="Creating Your Vault"
+                           x:Name="LoadingTitle"
+                           FontSize="26"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"
+                           HorizontalAlignment="Center"/>
+
+                <!-- ═══ Status message (cipher-scramble effect in code-behind) ═══ -->
+                <TextBlock x:Name="StatusText"
+                           Text="Initializing secure environment..."
+                           Classes="fade-status"
+                           FontSize="14"
+                           Foreground="{DynamicResource SecondaryTextBrush}"
+                           HorizontalAlignment="Center"/>
+
+                <!-- ═══ Cipher detail text (scrambles through random chars before revealing) ═══ -->
+                <TextBlock x:Name="StepDetailText"
+                           Text=""
+                           FontFamily="Consolas,Courier New,monospace"
+                           FontSize="11"
+                           Foreground="#6B8FB5DF"
+                           HorizontalAlignment="Center"
+                           Opacity="0.8"/>
+
+                <!-- ═══ Progress bar track ═══ -->
+                <Grid Width="400" HorizontalAlignment="Center" RowDefinitions="Auto,8,Auto">
+
+                    <!-- Progress percentage + label -->
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                        <TextBlock x:Name="ProgressLabel"
+                                   Text="INITIALIZING"
+                                   FontFamily="Consolas,Courier New,monospace"
+                                   FontSize="9"
+                                   Foreground="#506BB3AE"
+                                   FontWeight="Bold"
+                                   LetterSpacing="2"
+                                   VerticalAlignment="Center"/>
+                        <TextBlock x:Name="ProgressPercent"
+                                   Grid.Column="1"
+                                   Text="0%"
+                                   FontFamily="Consolas,Courier New,monospace"
+                                   FontSize="9"
+                                   Foreground="#506BB3AE"
+                                   FontWeight="Bold"
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <!-- Progress bar -->
+                    <Border Grid.Row="2" Height="3"
+                            CornerRadius="1.5"
+                            Background="#10FFFFFF"
+                            HorizontalAlignment="Stretch">
+                        <Border x:Name="ProgressFill"
+                                Classes="progress-fill"
+                                Width="0" Height="3"
+                                CornerRadius="1.5"
+                                HorizontalAlignment="Left">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                                    <GradientStop Color="#6BB3AE" Offset="0"/>
+                                    <GradientStop Color="#8FB5DF" Offset="0.6"/>
+                                    <GradientStop Color="#A78BDF" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                    </Border>
+                </Grid>
+
+                <!-- ═══ Phase checklist ═══ -->
+                <StackPanel x:Name="PhaseChecklist" Spacing="4" HorizontalAlignment="Center" Margin="0,4,0,0">
+                    <!-- Phase items created dynamically in code-behind -->
+                </StackPanel>
+
+                <!-- ═══ Entropy / hash readout ═══ -->
+                <TextBlock x:Name="HashReadout"
+                           Text=""
+                           FontFamily="Consolas,Courier New,monospace"
+                           FontSize="9"
+                           Foreground="#1AFFFFFF"
+                           HorizontalAlignment="Center"
+                           LetterSpacing="1"
+                           Margin="0,4,0,0"/>
+
+            </StackPanel>
+        </Panel>
+    </Grid>
+
+</views:ThemeAwareWindow>

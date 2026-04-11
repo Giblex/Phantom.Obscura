@@ -62,12 +62,15 @@ namespace PhantomVault.Core.Tests
             foreach (var cred in allEntries)
             {
                 Assert.NotEmpty(cred.Title);
-                // At least one identifying field should be set
+                // At least one identifying field should be set per entry type
                 Assert.True(
                     !string.IsNullOrEmpty(cred.Username) ||
                     !string.IsNullOrEmpty(cred.Password) ||
                     !string.IsNullOrEmpty(cred.ApiKeyValue) ||
-                    !string.IsNullOrEmpty(cred.WiFiSSID));
+                    !string.IsNullOrEmpty(cred.WiFiSSID) ||
+                    !string.IsNullOrEmpty(cred.CardNumber) ||
+                    !string.IsNullOrEmpty(cred.IdNumber),
+                    $"Credential '{cred.Title}' (type={cred.EntryType}) has no identifying fields set");
             }
         }
 

@@ -119,6 +119,14 @@ namespace PhantomVault.UI.Services
                     "Giblex Glass Navy",
                     new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.GiblexGlassNavy.axaml")),
                 new ThemeDescriptor(
+                    "GiblexDark",
+                    "Giblex Dark",
+                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.GiblexDark.axaml")),
+                new ThemeDescriptor(
+                    "GiblexWebsite",
+                    "Giblex Light",
+                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.GiblexWebsite.axaml")),
+                new ThemeDescriptor(
                     "ClassicLight",
                     "Classic Light",
                     new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.ClassicLight.axaml")),
@@ -156,7 +164,7 @@ namespace PhantomVault.UI.Services
                     new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.Cyberpunk.axaml")),
             };
 
-            _currentThemeId = "ClassicDark";
+            _currentThemeId = "GiblexWebsite";
 
             // Discover and register custom themes from disk
             LoadCustomThemes();
@@ -206,10 +214,10 @@ namespace PhantomVault.UI.Services
             _themes.Remove(theme);
             CustomThemeGenerator.DeleteCustomTheme(theme.Uri.LocalPath);
 
-            // If the removed theme was active, switch to ClassicDark
+            // If the removed theme was active, switch to Giblex Website
             if (_currentThemeId == themeId)
             {
-                Apply("ClassicDark");
+                Apply("GiblexWebsite");
             }
 
             return true;

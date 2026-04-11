@@ -74,7 +74,7 @@ namespace PhantomVault.Core.Tests.Crypto.Primitives
             var ciphertext = Aead.Encrypt(CipherSuite.XChaCha20Poly1305, key, nonce, aad, plaintext);
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 Aead.Decrypt(CipherSuite.XChaCha20Poly1305, wrongKey, nonce, aad, ciphertext));
         }
 
@@ -94,7 +94,7 @@ namespace PhantomVault.Core.Tests.Crypto.Primitives
             var ciphertext = Aead.Encrypt(CipherSuite.XChaCha20Poly1305, key, nonce, aad, plaintext);
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 Aead.Decrypt(CipherSuite.XChaCha20Poly1305, key, wrongNonce, aad, ciphertext));
         }
 
@@ -113,7 +113,7 @@ namespace PhantomVault.Core.Tests.Crypto.Primitives
             var ciphertext = Aead.Encrypt(CipherSuite.XChaCha20Poly1305, key, nonce, aad, plaintext);
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 Aead.Decrypt(CipherSuite.XChaCha20Poly1305, key, nonce, wrongAad, ciphertext));
         }
 
@@ -135,7 +135,7 @@ namespace PhantomVault.Core.Tests.Crypto.Primitives
             tamperedCiphertext[0] ^= 0xFF;
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 Aead.Decrypt(CipherSuite.XChaCha20Poly1305, key, nonce, aad, tamperedCiphertext));
         }
 
@@ -144,7 +144,7 @@ namespace PhantomVault.Core.Tests.Crypto.Primitives
         {
             // Arrange
             var algorithm = XChaCha20Poly1305.XChaCha20Poly1305;
-            var key = Key.Create(algorithm);
+            var key = Key.Create(algorithm, new KeyCreationParameters { ExportPolicy = KeyExportPolicies.AllowPlaintextExport });
             var nonce = new byte[24];
             var aad = Encoding.UTF8.GetBytes("metadata");
             var plaintext = Encoding.UTF8.GetBytes("Test message");
@@ -256,7 +256,7 @@ namespace PhantomVault.Core.Tests.Crypto.Primitives
             var ciphertext = Aead.Encrypt(CipherSuite.Aes256Gcm, key, nonce, aad, plaintext);
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 Aead.Decrypt(CipherSuite.Aes256Gcm, wrongKey, nonce, aad, ciphertext));
         }
 
@@ -276,7 +276,7 @@ namespace PhantomVault.Core.Tests.Crypto.Primitives
             var ciphertext = Aead.Encrypt(CipherSuite.Aes256Gcm, key, nonce, aad, plaintext);
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 Aead.Decrypt(CipherSuite.Aes256Gcm, key, wrongNonce, aad, ciphertext));
         }
 
@@ -295,7 +295,7 @@ namespace PhantomVault.Core.Tests.Crypto.Primitives
             var ciphertext = Aead.Encrypt(CipherSuite.Aes256Gcm, key, nonce, aad, plaintext);
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 Aead.Decrypt(CipherSuite.Aes256Gcm, key, nonce, wrongAad, ciphertext));
         }
 
@@ -317,7 +317,7 @@ namespace PhantomVault.Core.Tests.Crypto.Primitives
             tamperedCiphertext[ciphertext.Length - 1] ^= 0xFF; // Tamper with tag
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 Aead.Decrypt(CipherSuite.Aes256Gcm, key, nonce, aad, tamperedCiphertext));
         }
 
@@ -474,7 +474,7 @@ namespace PhantomVault.Core.Tests.Crypto.Primitives
             var ciphertext = Aead.Encrypt(CipherSuite.Aes256Gcm, key, nonce, aad1, plaintext);
 
             // Assert - Different AAD should cause decryption failure
-            Assert.Throws<CryptographicException>(() =>
+            Assert.ThrowsAny<CryptographicException>(() =>
                 Aead.Decrypt(CipherSuite.Aes256Gcm, key, nonce, aad2, ciphertext));
         }
 
@@ -663,8 +663,8 @@ namespace PhantomVault.Core.Tests.Crypto.Primitives
             RandomNumberGenerator.Fill(key);
             RandomNumberGenerator.Fill(nonce);
 
-            // Act & Assert
-            Assert.Throws<ArgumentException>(() =>
+            // Act & Assert — .NET 9 may throw ArgumentOutOfRangeException (derives from ArgumentException)
+            Assert.ThrowsAny<ArgumentException>(() =>
                 Aead.Decrypt(CipherSuite.Aes256Gcm, key, nonce, aad, invalidCiphertext));
         }
 
@@ -695,8 +695,8 @@ namespace PhantomVault.Core.Tests.Crypto.Primitives
         public void CipherSuite_HasExpectedValues()
         {
             // Assert - Verify enum values are as expected
-            Assert.Equal(0, (int)CipherSuite.XChaCha20Poly1305);
-            Assert.Equal(1, (int)CipherSuite.Aes256Gcm);
+            Assert.Equal(0, (int)CipherSuite.Aes256Gcm);
+            Assert.Equal(1, (int)CipherSuite.XChaCha20Poly1305);
         }
 
         #endregion

@@ -266,7 +266,7 @@ namespace PhantomVault.Core.Tests.Services
             var publicKey = new byte[64];
 
             Assert.Throws<ArgumentNullException>(() =>
-                _service.VerifyAssertion(null!, challenge, publicKey));
+                _service.VerifyAssertion((GetAssertionData)null!, challenge, publicKey));
         }
 
         [Fact]
@@ -342,7 +342,7 @@ namespace PhantomVault.Core.Tests.Services
         public void SetPin_TooLongPin_ThrowsArgumentException()
         {
             Assert.Throws<ArgumentException>(() =>
-                _service.SetPin("123456789")); // More than 8 characters
+                _service.SetPin(new string('1', 64))); // More than 63 UTF-8 bytes
         }
 
         [Fact(Skip = "Requires physical YubiKey - DESTRUCTIVE TEST")]

@@ -76,7 +76,7 @@ namespace PhantomVault.Core.Tests
                     var s = System.Text.Encoding.UTF8.GetString(dec);
                     if (s == "original payload")
                     {
-                        Assert.False(true, "Tampered file decrypted to the original payload (unexpected)");
+                        Assert.Fail("Tampered file decrypted to the original payload (unexpected)");
                     }
                 }
                 catch (Exception)
