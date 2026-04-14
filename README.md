@@ -58,7 +58,8 @@ Obscura is aiming at a higher-assurance local vault product rather than a generi
 - `src/Core/Services/RecoveryCodeService.cs` still uses a PBKDF2 placeholder where Argon2-backed recovery-code protection is implied.
 - `src/Core/Services/YubiKeyService.Implementation.cs` still throws `FeatureNotImplementedException` for FIDO2 register/auth/reset flows.
 - `src/UI.Desktop/Views/SignInDialog.axaml` still exposes Windows Hello / Google / Microsoft sign-in buttons as placeholders.
-- `src/UI.Desktop/Services/IntegratedRecoveryServiceStub.cs`, `RecoveryDeveloperModeStub.cs`, and `Views/RecoveryPanelStub.cs` are still active shim layers.
+- `src/UI.Desktop/Services/IntegratedRecoveryServiceStub.cs`, `RecoveryDeveloperModeStub.cs`, and `Views/RecoveryPanelStub.cs` are still active shim layers (note: `RecoveryPanelStub.cs` now displays informational UI with "Recovery Not Available" title and descriptive guidance instead of being an empty stub).
+- `src/UI.Desktop/Views/MainWindow.axaml.cs` — `OpenAutoFillSettings_Click` now has try/catch for `InvalidOperationException` with a user-friendly "Not Available" dialog (prevents crash when AutoFill DI services are not registered).
 - `src/UI.Desktop/Converters` still contains multiple `ConvertBack` implementations that throw `NotImplementedException`.
 - `src/Autofill` has meaningful backend work, but the documented browser extension layer is not present in the current tree.
 - `Tools/Obscura.Keysmith/certs` contains a `.crt` and `.pfx` in the repository.
@@ -94,10 +95,10 @@ Obscura is aiming at a higher-assurance local vault product rather than a generi
 
 ### Tier 2 - Desktop Product Hardening
 
-1. Replace desktop recovery shims with real integration or clearly gate the feature behind availability checks.
+1. Replace desktop recovery shims with real integration or clearly gate the feature behind availability checks. *(Partial: `RecoveryPanelStub.cs` now shows informational UI instead of being empty.)*
 2. Remove placeholder sign-in options from `SignInDialog` until they are functional.
 3. Replace throwing `ConvertBack` implementations with safe no-op behavior where reverse conversion is not supported.
-4. Audit the desktop app for any other placeholder-only UX that still appears user-facing.
+4. Audit the desktop app for any other placeholder-only UX that still appears user-facing. *(Partial: `OpenAutoFillSettings_Click` now catches missing DI services with user-friendly dialog.)*
 
 ### Tier 3 - Autofill And Platform Completion
 
@@ -123,3 +124,13 @@ Obscura is aiming at a higher-assurance local vault product rather than a generi
 ## Overall Verdict
 
 Obscura has more originality and stronger security ambition than most indie password managers. Its best parts are legitimately interesting. It is not production-ready yet, though, because several of the trust guarantees it wants to claim are still simulated, placeholder-backed, or only partially enforced.
+
+## Recently Applied Fixes
+
+| Fix | File | Change |
+|-----|------|--------|
+| AutoFill crash prevention | `MainWindow.axaml.cs` | `OpenAutoFillSettings_Click` wrapped in try/catch with "Not Available" dialog when DI services are missing |
+| Recovery stub communication | `RecoveryPanelStub.cs` | Empty stub replaced with StackPanel containing "Recovery Not Available" title and descriptive guidance |
+| Credential storage warnings | `WindowsHelloSettingsViewModel.cs`, `PasskeySettingsViewModel.cs` | `#warning SECURITY` directives added above DPAPI credential storage methods flagging migration to Credential Manager |
+| Dark theme input styling | `PreVaultTheme.Dark.axaml` | Added `InputBackgroundBrush` and `InputForegroundBrush` for readable text inputs in dark mode |
+| Font family fallback | `PreVaultTheme.axaml` | Applied `"Segoe UI Variable, Segoe UI"` fallback pattern for consistent typography |

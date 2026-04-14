@@ -22,6 +22,8 @@ namespace PhantomVault.UI.Services
 
         public string? ResolveRecoveryExecutablePath()
             => ResolveExecutablePath(
+                Path.Combine("Phantom.Recovery", "PhantomRecovery.App", "bin", "Debug", "net9.0", "PhantomRecovery.App.exe"),
+                Path.Combine("Phantom.Recovery", "PhantomRecovery.App", "bin", "Release", "net9.0", "PhantomRecovery.App.exe"),
                 Path.Combine("Phantom.Recovery", "PhantomRecovery.App", "bin", "Debug", "net8.0", "PhantomRecovery.App.exe"),
                 Path.Combine("Phantom.Recovery", "PhantomRecovery.App", "bin", "Release", "net8.0", "PhantomRecovery.App.exe"),
                 "PhantomRecovery.App.exe");

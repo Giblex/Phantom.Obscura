@@ -147,14 +147,36 @@ namespace PhantomVault.UI.Views
             window.Show();
         }
 
-        public void OpenAutoFillSettings_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        public async void OpenAutoFillSettings_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
         {
-            var app = (App)Application.Current!;
-            var window = new AutoFillSettingsWindow
+            try
             {
-                DataContext = app.Services!.GetRequiredService<AutoFillSettingsViewModel>()
-            };
-            window.Show();
+                var app = (App)Application.Current!;
+                var window = new AutoFillSettingsWindow
+                {
+                    DataContext = app.Services!.GetRequiredService<AutoFillSettingsViewModel>()
+                };
+                window.Show();
+            }
+            catch (InvalidOperationException)
+            {
+                // AutoFill services are not yet registered in DI.
+                var dialog = new Window
+                {
+                    Title = "Not Available",
+                    Width = 360,
+                    Height = 150,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Content = new Avalonia.Controls.TextBlock
+                    {
+                        Text = "AutoFill settings are not available yet. This feature is still under development.",
+                        TextWrapping = Avalonia.Media.TextWrapping.Wrap,
+                        Margin = new Avalonia.Thickness(24),
+                        VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+                    }
+                };
+                await dialog.ShowDialog(this);
+            }
         }
 
         public void OpenAddPasswordWindow_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)

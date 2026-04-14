@@ -265,8 +265,9 @@
                     <!-- Recovery Icon -->
                     <Button Command="{Binding ToggleRecoveryPanelCommand}"
                             Classes="liquid-glass collapsed-icon"
-                            ToolTip.Tip="{Binding EmbeddedRecoveryStatus}"
+                            ToolTip.Tip="Recovery • Click to toggle Recovery panel"
                             IsEnabled="{Binding IsEmbeddedRecoveryAvailable}"
+                            Opacity="{Binding IsEmbeddedRecoveryAvailable, Converter={StaticResource BoolToOpacityConverter}, FallbackValue=1}"
                             HorizontalAlignment="Center"
                             ClickMode="Press">
                         <controls:SvgIcon IconName="Assets/SVG/Current/Recovery.svg"
@@ -768,10 +769,16 @@
                     <Border Background="Transparent"
                             Margin="0,6,0,6"
                             Padding="12,0">
-                        <TextBlock Text="RECOVERY"
-                                   FontSize="{StaticResource Type.Tiny.Size}"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="RECOVERY"
+                                       FontSize="{StaticResource Type.Tiny.Size}"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                            <Ellipse Width="6" Height="6"
+                                     VerticalAlignment="Center"
+                                     Fill="{DynamicResource SuccessBrush}"
+                                     IsVisible="{Binding IsExternalRecoveryAvailable}"/>
+                        </StackPanel>
                     </Border>
 
                     <Button Command="{Binding OpenPhantomRecoveryCommand}"
@@ -781,19 +788,26 @@
                             HorizontalAlignment="Stretch"
                             HorizontalContentAlignment="Left"
                             IsEnabled="{Binding IsExternalRecoveryAvailable}"
+                            Opacity="{Binding IsExternalRecoveryAvailable, Converter={StaticResource BoolToOpacityConverter}, FallbackValue=1}"
                             ToolTip.Tip="{Binding ExternalRecoveryStatus}"
                             Height="32"
                             FontSize="{StaticResource Type.Tiny.Size}"
                             CornerRadius="4"
                             Margin="12,0,12,12">
-                        <TextBlock Text="Phantom Recovery" VerticalAlignment="Center"/>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <controls:SvgIcon IconName="Assets/SVG/Current/Recovery.svg"
+                                              Width="16" Height="16" IconColor="{DynamicResource PrimaryTextBrush}"
+                                              VerticalAlignment="Center"/>
+                            <TextBlock Text="Phantom Recovery" VerticalAlignment="Center"/>
+                        </StackPanel>
                     </Button>
 
                     <TextBlock Text="{Binding ExternalRecoveryStatus}"
                                Margin="12,-6,12,12"
                                FontSize="{StaticResource Type.Micro.Size}"
                                Foreground="{DynamicResource MutedTextBrush}"
-                               TextWrapping="Wrap"/>
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding !IsExternalRecoveryAvailable}"/>
                 </StackPanel>
             </StackPanel>
         </ScrollViewer>

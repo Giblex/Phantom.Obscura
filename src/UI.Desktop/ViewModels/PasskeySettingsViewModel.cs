@@ -296,6 +296,7 @@ namespace PhantomVault.UI.ViewModels
         /// <summary>
         /// Stores the passkey credential ID securely using DPAPI.
         /// </summary>
+#warning SECURITY: Passkey credential ID is stored as a DPAPI-protected file. Migrate to Windows Credential Manager or vault-encrypted storage before release.
         private static Task StorePasskeyCredentialAsync(byte[] credentialId)
         {
             var credentialPath = GetPasskeyStoragePath();

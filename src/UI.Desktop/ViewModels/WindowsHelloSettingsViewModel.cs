@@ -306,6 +306,7 @@ namespace PhantomVault.UI.ViewModels
         /// In a production app, this would be stored in the Windows Credential Manager
         /// or in the vault manifest encrypted.
         /// </summary>
+#warning SECURITY: Credential ID is stored as a DPAPI-protected file. Migrate to Windows Credential Manager or vault-encrypted storage before release.
         private static Task StoreCredentialIdAsync(byte[] credentialId)
         {
             // Store in isolated storage or user profile

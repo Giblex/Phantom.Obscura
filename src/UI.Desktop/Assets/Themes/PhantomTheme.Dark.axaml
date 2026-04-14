@@ -257,9 +257,9 @@
             <SolidColorBrush x:Key="TextSelectionBrush">#60A0A0A0</SolidColorBrush>
             <SolidColorBrush x:Key="TextCaretBrush">#FFFFFF</SolidColorBrush>
 
-            <!-- Input surface (off-white across themes) -->
-            <SolidColorBrush x:Key="InputBackgroundBrush">#F5F7FA</SolidColorBrush>
-            <SolidColorBrush x:Key="InputForegroundBrush">#1F2937</SolidColorBrush>
+            <!-- Input surface (dark-adapted for dark theme) -->
+            <SolidColorBrush x:Key="InputBackgroundBrush">#1E2530</SolidColorBrush>
+            <SolidColorBrush x:Key="InputForegroundBrush">#E8ECF1</SolidColorBrush>
             <!-- Lighter placeholder for better hierarchy (PRIORITY 13) -->
             <SolidColorBrush x:Key="InputPlaceholderBrush">#8A9AAA</SolidColorBrush>
             <!-- Subtle highlight for TextBox/Border hover & focus states (theme-adaptive) -->

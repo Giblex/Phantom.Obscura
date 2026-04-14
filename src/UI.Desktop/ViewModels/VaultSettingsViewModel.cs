@@ -3482,38 +3482,34 @@ namespace PhantomVault.UI.ViewModels
         {
             try
             {
-                var topLevel = TopLevel.GetTopLevel(_ownerWindow);
-                if (topLevel == null) return;
-
-                var storageProvider = topLevel.StorageProvider;
-                if (storageProvider == null)
+                var importViewModel = new ImportViewModel(_credentials)
                 {
-                    await _dialogService.ShowWarningAsync("Error", "File picker not available", _ownerWindow);
-                    return;
+                    SelectedFormat = "KeePass KDBX",
+                    StatusMessage = "Select a KeePass KDBX database to import into this vault."
+                };
+
+                var importWindow = new ImportWindow(importViewModel);
+                var importedAnyCredentials = false;
+
+                importWindow.ImportCompleted += (_, importedCredentials) =>
+                {
+                    importedAnyCredentials = importedCredentials.Count > 0;
+                    _credentials.AddRange(importedCredentials);
+                    OnCredentialsImported?.Invoke(importedCredentials);
+                };
+
+                if (_ownerWindow != null)
+                {
+                    await importWindow.ShowDialog(_ownerWindow);
+                }
+                else
+                {
+                    importWindow.Show();
                 }
 
-                var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-                {
-                    Title = "Import from KeePass Database",
-                    AllowMultiple = false,
-                    FileTypeFilter = new[]
-                    {
-                        new FilePickerFileType("KeePass Database") { Patterns = new[] { "*.kdbx" } },
-                        new FilePickerFileType("All Files") { Patterns = new[] { "*" } }
-                    }
-                });
-
-                if (files.Count > 0)
-                {
-                    var file = files[0];
-
-                    await _dialogService.ShowInfoAsync(
-                        "KeePass Import",
-                        $"Selected file: {file.Name}\n\nKeePass import requires the KeePassLib library for decrypting .kdbx files.\n\nThis feature is currently in development.\n\nYou can use 'Export to CSV' from KeePass, then use our CSV import feature as a workaround.",
-                        _ownerWindow);
-
-                    StatusMessage = "KeePass import in development - use CSV export from KeePass instead";
-                }
+                StatusMessage = importedAnyCredentials
+                    ? "KeePass database imported successfully"
+                    : "KeePass import cancelled";
             }
             catch (Exception ex)
             {
