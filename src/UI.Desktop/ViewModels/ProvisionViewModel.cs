@@ -41,7 +41,7 @@ namespace PhantomVault.UI.ViewModels
         private readonly ObservableCollection<string> _drives = new();
 
         private string? _vaultName;
-        private int _volumeSizeMb = 1024;
+        private int _volumeSizeMb = 5120;
         private string? _passphrase;
         private string? _confirmPassphrase;
         private string? _keyfilePath;

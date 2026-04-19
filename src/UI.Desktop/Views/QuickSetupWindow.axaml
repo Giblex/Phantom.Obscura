@@ -1,0 +1,219 @@
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PhantomVault.UI.ViewModels"
+        xmlns:views="clr-namespace:PhantomVault.UI.Views"
+        xmlns:controls="clr-namespace:PhantomVault.UI.Desktop.Controls"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="820" d:DesignHeight="760"
+        x:Class="PhantomVault.UI.Views.QuickSetupWindow"
+        x:DataType="vm:SetupWizardViewModel"
+        Title="Default Phantom Obscura Setup"
+        Width="820" Height="760"
+        WindowStartupLocation="CenterOwner"
+        CanResize="True"
+        Background="{DynamicResource WindowBackgroundBrush}">
+
+    <views:ThemeAwareWindow.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://PhantomVault.UI/Assets/Themes/PreVaultTheme.axaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </views:ThemeAwareWindow.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        <Border Grid.Row="0" Background="{DynamicResource HeaderBackgroundBrush}" Padding="24,16,24,14">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="14">
+                <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
+                       Width="58" Height="58" Stretch="Uniform"/>
+                <StackPanel Spacing="4" VerticalAlignment="Center">
+                    <TextBlock Text="Default Secure Setup"
+                               FontSize="{StaticResource Type.H2.Size}"
+                               FontFamily="{DynamicResource TitleFontFamily}"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <TextBlock Text="Ghost Secured profile with PhantomKey, dual keyfiles, 1 GB encrypted container, and automatic remnant cleanup."
+                               FontSize="{StaticResource Type.Small.Size}"
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               TextWrapping="Wrap"
+                               MaxWidth="560"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Margin="36,24,36,24" Spacing="18" MaxWidth="720" HorizontalAlignment="Center">
+                <Border Background="{DynamicResource CardBackgroundBrush}"
+                        CornerRadius="18"
+                        Padding="22,18"
+                        BoxShadow="0 4 16 0 #40000000">
+                    <StackPanel Spacing="14">
+                        <TextBlock Text="Vault Identity"
+                                   FontSize="{StaticResource Type.H3.Size}"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <TextBox Text="{Binding VaultName}"
+                                 Watermark="Enter your vault name"
+                                 MaxLength="64"/>
+                        <TextBlock Text="USB Storage Target"
+                                   FontSize="{StaticResource Type.Body.Size}"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <ComboBox ItemsSource="{Binding AvailableUsbDrives}"
+                                  SelectedItem="{Binding SelectedUsbPath}"
+                                  PlaceholderText="Select a USB drive"/>
+                        <CheckBox IsChecked="{Binding AcceptedTerms}">
+                            <TextBlock Text="I understand that this default profile will create a hardware-bound vault and I accept the terms and conditions."
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        </CheckBox>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="{DynamicResource CardBackgroundBrush}"
+                        CornerRadius="18"
+                        Padding="22,18"
+                        BoxShadow="0 4 16 0 #40000000">
+                    <StackPanel Spacing="14">
+                        <TextBlock Text="Master Password"
+                                   FontSize="{StaticResource Type.H3.Size}"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <CheckBox IsChecked="{Binding UsePassword}">
+                            <TextBlock Text="Use a master password"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        </CheckBox>
+
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                            <TextBox Grid.Column="0"
+                                     Text="{Binding MasterPassword}"
+                                     PasswordChar="•"
+                                     Watermark="Enter master password"/>
+                            <Button Grid.Column="1"
+                                    Command="{Binding ToggleMasterPasswordRevealCommand}"
+                                    Classes="liquid-glass"
+                                    Height="42"
+                                    Width="92">
+                                <TextBlock Text="{Binding MasterPasswordRevealGlyph}"/>
+                            </Button>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                            <TextBox Grid.Column="0"
+                                     Text="{Binding ConfirmPassword}"
+                                     PasswordChar="•"
+                                     Watermark="Confirm master password"/>
+                            <Button Grid.Column="1"
+                                    Command="{Binding ToggleConfirmPasswordRevealCommand}"
+                                    Classes="liquid-glass"
+                                    Height="42"
+                                    Width="92">
+                                <TextBlock Text="{Binding ConfirmPasswordRevealGlyph}"/>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="{DynamicResource CardBackgroundBrush}"
+                        CornerRadius="18"
+                        Padding="22,18"
+                        BoxShadow="0 4 16 0 #40000000">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="Authentication"
+                                   FontSize="{StaticResource Type.H3.Size}"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+                        <StackPanel Spacing="12">
+                            <CheckBox IsChecked="{Binding EnableWindowsHello}">
+                                <TextBlock Text="Require Windows Hello"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            </CheckBox>
+                            <Button Command="{Binding WindowsHelloOnboarding.EnrollBiometricCommand}"
+                                    Classes="liquid-glass"
+                                    Height="40"
+                                    HorizontalAlignment="Left">
+                                <TextBlock Text="Set Up Windows Hello"/>
+                            </Button>
+                            <TextBlock Text="{Binding WindowsHelloOnboarding.StatusMessage}"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       FontSize="{StaticResource Type.Small.Size}"/>
+                        </StackPanel>
+
+                        <StackPanel Spacing="12">
+                            <CheckBox IsChecked="{Binding EnablePasskeys}">
+                                <TextBlock Text="Require Passkey"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            </CheckBox>
+                            <Button Command="{Binding PasskeyOnboarding.RegisterPasskeyCommand}"
+                                    Classes="liquid-glass"
+                                    Height="40"
+                                    HorizontalAlignment="Left">
+                                <TextBlock Text="Register Passkey"/>
+                            </Button>
+                            <TextBlock Text="{Binding PasskeyOnboarding.StatusMessage}"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       FontSize="{StaticResource Type.Small.Size}"/>
+                        </StackPanel>
+
+                        <StackPanel Spacing="12">
+                            <CheckBox IsChecked="{Binding EnableTotp}">
+                                <TextBlock Text="Require TOTP"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            </CheckBox>
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <Button Command="{Binding TotpOnboarding.GenerateTotpSecretCommand}"
+                                        Classes="liquid-glass"
+                                        Height="40">
+                                    <TextBlock Text="Generate Secret"/>
+                                </Button>
+                                <Button Command="{Binding TotpOnboarding.VerifyTotpCodeCommand}"
+                                        Classes="liquid-glass"
+                                        Height="40">
+                                    <TextBlock Text="Verify TOTP"/>
+                                </Button>
+                            </StackPanel>
+                            <TextBox Text="{Binding TotpOnboarding.TotpSecret}"
+                                     IsReadOnly="True"
+                                     Watermark="Generate a secret to begin"/>
+                            <TextBox Text="{Binding TotpOnboarding.TestCode}"
+                                     Watermark="Enter 6-digit code to verify"/>
+                            <TextBlock Text="{Binding TotpOnboarding.StatusMessage}"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       FontSize="{StaticResource Type.Small.Size}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Border Grid.Row="2"
+                Background="{DynamicResource FooterBackgroundBrush}"
+                Padding="24,14,24,18"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                BorderThickness="0,1,0,0">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="{Binding StatusMessage}"
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource SecondaryTextBrush}"
+                           VerticalAlignment="Center"
+                           MaxWidth="440"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12">
+                    <Button Click="Back_Click"
+                            Classes="liquid-glass"
+                            Width="140"
+                            Height="42">
+                        <TextBlock Text="Back"/>
+                    </Button>
+                    <Button Click="CreateVault_Click"
+                            Classes="liquid-glass"
+                            Width="160"
+                            Height="42">
+                        <TextBlock Text="Create Default Vault"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</views:ThemeAwareWindow>

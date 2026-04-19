@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
@@ -6,6 +7,7 @@ using Avalonia.Data;
 using Avalonia.Data.Converters;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Threading;
 using PhantomVault.UI.Services;
 using PhantomVault.UI.ViewModels;
 
@@ -16,6 +18,10 @@ namespace PhantomVault.UI.Views
     /// </summary>
     public partial class SetupWizardWindow : ThemeAwareWindow
     {
+        private bool _entropyLeftPressed;
+        private bool _entropyRightPressed;
+        private readonly DialogService _dialogService = new();
+
         public SetupWizardWindow()
         {
             // Fixed dark navy — pre-vault screens never follow user theme
@@ -24,6 +30,7 @@ namespace PhantomVault.UI.Views
             var viewModel = new SetupWizardViewModel();
             viewModel.SetOwnerWindow(this);
             DataContext = viewModel;
+            viewModel.PropertyChanged += ViewModelOnPropertyChanged;
         }
 
         public SetupWizardWindow(SetupWizardViewModel viewModel)
@@ -33,6 +40,18 @@ namespace PhantomVault.UI.Views
             InitializeComponent();
             viewModel.SetOwnerWindow(this);
             DataContext = viewModel;
+            viewModel.PropertyChanged += ViewModelOnPropertyChanged;
+        }
+
+        private void ViewModelOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(SetupWizardViewModel.CurrentStep))
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    MainScrollViewer.Offset = new Vector(0, 0);
+                }, DispatcherPriority.Render);
+            }
         }
 
         private void SecurityLevelCard_Tapped(object? sender, TappedEventArgs e)
@@ -43,6 +62,60 @@ namespace PhantomVault.UI.Views
             {
                 vm.SelectedSecurityLevel = option.Name;
             }
+        }
+
+        private async void SecurityLevelHelp_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            if (sender is not Control control || control.DataContext is not SecurityLevelOption option)
+                return;
+
+            var message =
+                $"{option.Name}\n\n" +
+                $"Plain-English version:\n{option.FriendlySummary}\n\n" +
+                $"Think of it like this:\n{GetSecurityMetaphor(option.Name)}\n\n" +
+                $"Security boost:\nAbout {option.SecurityIncreasePercent}% compared with a bare-minimum vault setup.\n\n" +
+                $"Why you would pick it:\n{option.Description}";
+
+            await _dialogService.ShowInfoAsync($"{option.Name} explained", message, this);
+            e.Handled = true;
+        }
+
+        private static string GetSecurityMetaphor(string optionName)
+        {
+            return optionName switch
+            {
+                "Standard Secure" => "Like keeping valuables in a locked drawer. It is sensible, solid, and easy to live with.",
+                "Ghost Secured" => "Like hiding that locked drawer behind a bookcase as well. A snoop has a much harder time even realising where to look.",
+                "Phantom Secured" => "Like storing the valuables in a bunker that forgot how to be obvious. Great protection, but definitely not the casual mode.",
+                _ => "It adds more locks, less visibility, and fewer easy mistakes."
+            };
+        }
+
+        private void EntropyCaptureSurface_PointerMoved(object? sender, PointerEventArgs e)
+        {
+            if (sender is not Control control || DataContext is not SetupWizardViewModel vm)
+                return;
+
+            var point = e.GetPosition(control);
+            vm.RecordEntropyPointerSample(point.X, point.Y, _entropyLeftPressed, _entropyRightPressed);
+        }
+
+        private void EntropyCaptureSurface_PointerPressed(object? sender, PointerPressedEventArgs e)
+        {
+            UpdateEntropyButtonState(e.GetCurrentPoint(sender as Visual));
+            EntropyCaptureSurface_PointerMoved(sender, e);
+        }
+
+        private void EntropyCaptureSurface_PointerReleased(object? sender, PointerReleasedEventArgs e)
+        {
+            UpdateEntropyButtonState(e.GetCurrentPoint(sender as Visual));
+            EntropyCaptureSurface_PointerMoved(sender, e);
+        }
+
+        private void UpdateEntropyButtonState(PointerPoint point)
+        {
+            _entropyLeftPressed = point.Properties.IsLeftButtonPressed;
+            _entropyRightPressed = point.Properties.IsRightButtonPressed;
         }
     }
 
@@ -79,18 +152,15 @@ namespace PhantomVault.UI.Views
             {
                 if (currentStep > targetStep)
                 {
-                    // Completed step - solid accent
-                    return new SolidColorBrush(Color.Parse("#111B2A"));
+                    return new SolidColorBrush(Color.Parse("#173042"));
                 }
                 else if (currentStep == targetStep)
                 {
-                    // Current step - highlighted
-                    return new SolidColorBrush(Color.Parse("#1C2D42"));
+                    return new SolidColorBrush(Color.Parse("#1F3F55"));
                 }
                 else
                 {
-                    // Pending step - transparent
-                    return new SolidColorBrush(Color.Parse("#20FFFFFF"));
+                    return new SolidColorBrush(Color.Parse("#152434"));
                 }
             }
             return new SolidColorBrush(Colors.Transparent);

@@ -529,15 +529,7 @@ namespace PhantomVault.Core.Services
                 return combined;
             }
 
-            if (!File.Exists(keyfilePath))
-            {
-                string failureReason = keyfileRequired
-                    ? $"Keyfile required but not found at path '{keyfilePath}'."
-                    : $"Keyfile path '{keyfilePath}' could not be resolved.";
-                throw new SecurityException(failureReason);
-            }
-
-            byte[] keyfileBytes = File.ReadAllBytes(keyfilePath);
+            byte[] keyfileBytes = CompositeKeyfilePath.ReadCombinedBytes(keyfilePath, keyfileRequired);
             try
             {
                 return combined + Convert.ToBase64String(keyfileBytes);

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ReactiveUI;
 using Avalonia.Controls;
 using PhantomVault.Core.Services;
+using PhantomVault.UI.Services;
 
 namespace PhantomVault.UI.ViewModels
 {
@@ -302,28 +303,15 @@ namespace PhantomVault.UI.ViewModels
         }
 
         /// <summary>
-        /// Stores the credential ID in a secure location.
-        /// In a production app, this would be stored in the Windows Credential Manager
-        /// or in the vault manifest encrypted.
+        /// Stores the Windows Hello credential ID in the Windows Credential Manager.
         /// </summary>
-#warning SECURITY: Credential ID is stored as a DPAPI-protected file. Migrate to Windows Credential Manager or vault-encrypted storage before release.
         private static Task StoreCredentialIdAsync(byte[] credentialId)
         {
-            // Store in isolated storage or user profile
-            var credentialPath = GetCredentialStoragePath();
-            var directory = System.IO.Path.GetDirectoryName(credentialPath);
-            if (!string.IsNullOrEmpty(directory) && !System.IO.Directory.Exists(directory))
-            {
-                System.IO.Directory.CreateDirectory(directory);
-            }
-            
-            // Encrypt the credential ID with DPAPI for the current user
-            var protectedData = System.Security.Cryptography.ProtectedData.Protect(
+            WindowsCredentialStore.WriteSecret(
+                VaultCredentialName,
                 credentialId,
-                System.Text.Encoding.UTF8.GetBytes(VaultCredentialName),
-                System.Security.Cryptography.DataProtectionScope.CurrentUser);
-            
-            System.IO.File.WriteAllBytes(credentialPath, protectedData);
+                "Phantom Obscura Windows Hello credential identifier");
+
             return Task.CompletedTask;
         }
 
@@ -332,21 +320,9 @@ namespace PhantomVault.UI.ViewModels
         /// </summary>
         private static Task<byte[]?> GetStoredCredentialIdAsync()
         {
-            var credentialPath = GetCredentialStoragePath();
-            if (!System.IO.File.Exists(credentialPath))
-            {
-                return Task.FromResult<byte[]?>(null);
-            }
-
             try
             {
-                var protectedData = System.IO.File.ReadAllBytes(credentialPath);
-                var credentialId = System.Security.Cryptography.ProtectedData.Unprotect(
-                    protectedData,
-                    System.Text.Encoding.UTF8.GetBytes(VaultCredentialName),
-                    System.Security.Cryptography.DataProtectionScope.CurrentUser);
-                
-                return Task.FromResult<byte[]?>(credentialId);
+                return Task.FromResult<byte[]?>(WindowsCredentialStore.ReadSecret(VaultCredentialName));
             }
             catch
             {
@@ -359,21 +335,8 @@ namespace PhantomVault.UI.ViewModels
         /// </summary>
         private static Task RemoveStoredCredentialAsync()
         {
-            var credentialPath = GetCredentialStoragePath();
-            if (System.IO.File.Exists(credentialPath))
-            {
-                System.IO.File.Delete(credentialPath);
-            }
+            WindowsCredentialStore.DeleteSecret(VaultCredentialName);
             return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Gets the path for storing the credential ID securely.
-        /// </summary>
-        private static string GetCredentialStoragePath()
-        {
-            var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            return System.IO.Path.Combine(appDataPath, "PhantomVault", "WindowsHello", "credential.bin");
         }
     }
 }

@@ -53,17 +53,7 @@ namespace PhantomVault.Core.Utils
                 return new SecurePasswordCombiner(buffer);
             }
 
-            // Validate keyfile exists
-            if (!File.Exists(keyfilePath))
-            {
-                string failureReason = keyfileRequired
-                    ? $"Keyfile required but not found at path '{keyfilePath}'."
-                    : $"Keyfile path '{keyfilePath}' could not be resolved.";
-                throw new SecurityException(failureReason);
-            }
-
-            // Read keyfile into memory
-            byte[] keyfileBytes = File.ReadAllBytes(keyfilePath);
+            byte[] keyfileBytes = CompositeKeyfilePath.ReadCombinedBytes(keyfilePath, keyfileRequired);
             byte[]? keyfileBase64Bytes = null;
             char[]? keyfileBase64Chars = null;
 

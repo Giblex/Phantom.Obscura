@@ -25,7 +25,7 @@
         <!-- Pulsing glow ring — opacity only (scale driven by code-behind) -->
         <Style Selector="Border.pulse-ring">
             <Style.Animations>
-                <Animation Duration="0:0:2.4" IterationCount="INFINITE" Easing="CubicEaseInOut">
+                <Animation Duration="0:0:3.2" IterationCount="INFINITE" Easing="CubicEaseInOut">
                     <KeyFrame Cue="0%">
                         <Setter Property="Opacity" Value="0.15"/>
                     </KeyFrame>
@@ -41,7 +41,7 @@
 
         <Style Selector="Border.pulse-ring-delay">
             <Style.Animations>
-                <Animation Duration="0:0:2.4" IterationCount="INFINITE" Easing="CubicEaseInOut" Delay="0:0:0.8">
+                <Animation Duration="0:0:3.2" IterationCount="INFINITE" Easing="CubicEaseInOut" Delay="0:0:1.0">
                     <KeyFrame Cue="0%">
                         <Setter Property="Opacity" Value="0.1"/>
                     </KeyFrame>
@@ -57,7 +57,7 @@
 
         <Style Selector="Border.pulse-ring-delay2">
             <Style.Animations>
-                <Animation Duration="0:0:2.4" IterationCount="INFINITE" Easing="CubicEaseInOut" Delay="0:0:1.6">
+                <Animation Duration="0:0:3.2" IterationCount="INFINITE" Easing="CubicEaseInOut" Delay="0:0:2.0">
                     <KeyFrame Cue="0%">
                         <Setter Property="Opacity" Value="0.05"/>
                     </KeyFrame>
@@ -295,13 +295,13 @@
                     </Border>
 
                     <!-- Center logo with glass surround -->
-                    <Border Width="80" Height="80"
-                            CornerRadius="40"
+                    <Border Width="96" Height="96"
+                            CornerRadius="48"
                             Background="#15FFFFFF"
                             HorizontalAlignment="Center" VerticalAlignment="Center"
                             ClipToBounds="True">
                         <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
-                               Width="52" Height="52"
+                               Width="70" Height="70"
                                Stretch="Uniform"
                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>

@@ -12,6 +12,7 @@ using GiblexVault.Security.ZK.Container;
 using GiblexVault.Security.ZK.Models;
 using GiblexVault.Security.ZK.Primitives;
 using GiblexVault.Security.ZK.Util;
+using PhantomVault.Core.Utils;
 
 namespace PhantomVault.Core.Services.ZeroKnowledge
 {
@@ -67,8 +68,8 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
 
                 // Build combined secret: password + pepper + keyfile
                 byte[] pwdBytes = Encoding.UTF8.GetBytes(password);
-                byte[] keyfileBytes = !string.IsNullOrEmpty(keyfilePath) && File.Exists(keyfilePath)
-                    ? await File.ReadAllBytesAsync(keyfilePath)
+                byte[] keyfileBytes = !string.IsNullOrEmpty(keyfilePath)
+                    ? await CompositeKeyfilePath.ReadCombinedBytesAsync(keyfilePath, required: true).ConfigureAwait(false)
                     : Array.Empty<byte>();
 
                 byte[] combined = new byte[pwdBytes.Length + pepper.Length + keyfileBytes.Length];

@@ -66,7 +66,10 @@ namespace PhantomVault.UI.ViewModels
                 Formats.Select(f => new ImportMethod { Name = f, IconSource = GetIconForFormat(f) })
             );
 
-            BrowseCommand = ReactiveCommand.CreateFromTask(BrowseForFileAsync);
+            BrowseCommand = ReactiveCommand.CreateFromTask(async () =>
+            {
+                await BrowseForFileAsync();
+            });
             ImportCommand = ReactiveCommand.CreateFromTask(ExecuteImportAsync,
                 this.WhenAnyValue(x => x.SelectedFile, x => x.IsImporting,
                     (file, importing) => !string.IsNullOrEmpty(file) && !importing));
@@ -74,10 +77,10 @@ namespace PhantomVault.UI.ViewModels
             {
                 // Set selected format and immediately open file picker; start import automatically after file selection
                 SelectedFormat = format;
-                await BrowseForFileAsync();
+                var fileSelected = await BrowseForFileAsync();
 
                 // If a file was selected, start the import immediately
-                if (!string.IsNullOrEmpty(SelectedFile))
+                if (fileSelected && !string.IsNullOrEmpty(SelectedFile))
                 {
                     // Small delay to allow UI to update status/preview
                     await Task.Delay(120);
@@ -219,9 +222,10 @@ namespace PhantomVault.UI.ViewModels
             return loaded;
         }
 
-        private async Task BrowseForFileAsync()
+        private async Task<bool> BrowseForFileAsync()
         {
-            if (_ownerWindow == null) return;
+            if (_ownerWindow == null)
+                return false;
 
             var options = new FilePickerOpenOptions
             {
@@ -240,6 +244,15 @@ namespace PhantomVault.UI.ViewModels
 
             var files = await _ownerWindow.StorageProvider.OpenFilePickerAsync(options);
 
+            if (files.Count == 0)
+            {
+                SelectedFile = string.Empty;
+                PreviewCount = 0;
+                PreviewCredentials.Clear();
+                StatusMessage = "Import selection cancelled.";
+                return false;
+            }
+
             if (files.Count > 0)
             {
                 SelectedFile = files[0].Path.LocalPath;
@@ -250,7 +263,10 @@ namespace PhantomVault.UI.ViewModels
 
                 // Load preview
                 await LoadPreviewAsync();
+                return true;
             }
+
+            return false;
         }
 
         private async Task AutoDetectFormatAsync()

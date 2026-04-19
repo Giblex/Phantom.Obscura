@@ -14,6 +14,13 @@ namespace PhantomVault.Core.Services
     /// </summary>
     public class SecurityCheckService
     {
+        private static readonly TimeSpan ManifestCheckDelay = TimeSpan.FromMilliseconds(1400);
+        private static readonly TimeSpan UsbHealthCheckDelay = TimeSpan.FromMilliseconds(1280);
+        private static readonly TimeSpan HardwareTokenCheckDelay = TimeSpan.FromMilliseconds(1120);
+        private static readonly TimeSpan BiometricCheckDelay = TimeSpan.FromMilliseconds(1100);
+        private static readonly TimeSpan AntiTamperCheckDelay = TimeSpan.FromMilliseconds(1360);
+        private static readonly TimeSpan CheckTransitionDelay = TimeSpan.FromMilliseconds(520);
+
         private readonly ManifestService _manifestService;
         private readonly YubiKeyService? _yubiKeyService;
 
@@ -59,18 +66,40 @@ namespace PhantomVault.Core.Services
                     CurrentCheck = name,
                     PercentComplete = (completedWeight * 100) / totalWeight,
                     IsComplete = false
+                    ,
+                    CheckPassed = false,
+                    CheckFailed = false
                 });
 
                 try
                 {
                     bool passed = await check();
                     result.ChecksPassed += passed ? 1 : 0;
+
+                    progress?.Report(new SecurityCheckProgress
+                    {
+                        CurrentCheck = name,
+                        PercentComplete = Math.Min(99, ((completedWeight + weight) * 100) / totalWeight),
+                        IsComplete = false,
+                        CheckPassed = passed,
+                        CheckFailed = !passed
+                    });
                 }
                 catch (Exception ex)
                 {
                     result.Errors.Add($"{name}: {ex.Message}");
+
+                    progress?.Report(new SecurityCheckProgress
+                    {
+                        CurrentCheck = name,
+                        PercentComplete = Math.Min(99, ((completedWeight + weight) * 100) / totalWeight),
+                        IsComplete = false,
+                        CheckPassed = false,
+                        CheckFailed = true
+                    });
                 }
 
+                await Task.Delay(CheckTransitionDelay).ConfigureAwait(false);
                 completedWeight += weight;
             }
 
@@ -93,7 +122,7 @@ namespace PhantomVault.Core.Services
         /// </summary>
         private async Task<bool> VerifyManifestIntegrityAsync(string usbPath, SecurityCheckResult result)
         {
-            await Task.Delay(500); // Simulate check duration
+            await Task.Delay(ManifestCheckDelay).ConfigureAwait(false);
 
             // Discover vault: prefer .pvault containers (v3), fall back to legacy .manifest
             string? manifestPath = null;
@@ -194,7 +223,7 @@ namespace PhantomVault.Core.Services
         /// </summary>
         private async Task<bool> CheckUsbHealthAsync(string usbPath, SecurityCheckResult result)
         {
-            await Task.Delay(400); // Simulate check duration
+            await Task.Delay(UsbHealthCheckDelay).ConfigureAwait(false);
 
             try
             {
@@ -252,7 +281,7 @@ namespace PhantomVault.Core.Services
         /// </summary>
         private async Task<bool> DetectHardwareTokensAsync(SecurityCheckResult result)
         {
-            await Task.Delay(300); // Simulate check duration
+            await Task.Delay(HardwareTokenCheckDelay).ConfigureAwait(false);
 
             try
             {
@@ -293,7 +322,7 @@ namespace PhantomVault.Core.Services
         /// </summary>
         private async Task<bool> CheckBiometricAvailabilityAsync(SecurityCheckResult result)
         {
-            await Task.Delay(200); // Simulate check duration
+            await Task.Delay(BiometricCheckDelay).ConfigureAwait(false);
 
             try
             {
@@ -406,7 +435,7 @@ namespace PhantomVault.Core.Services
         /// </summary>
         private async Task<bool> CheckForTamperingAsync(string usbPath, SecurityCheckResult result)
         {
-            await Task.Delay(600); // Simulate check duration
+            await Task.Delay(AntiTamperCheckDelay).ConfigureAwait(false);
 
             try
             {

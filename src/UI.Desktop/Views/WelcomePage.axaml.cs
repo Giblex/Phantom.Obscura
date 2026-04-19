@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 using PhantomVault.Core.Services;
+using PhantomVault.UI.Models;
 using PhantomVault.UI.Services;
 using PhantomVault.UI.ViewModels;
 using Serilog;
@@ -33,6 +34,7 @@ namespace PhantomVault.UI.Views
                 _currentViewModel.NavigateToUsbSetup -= OnNavigateToUsbSetup;
                 _currentViewModel.NavigateToSecurityCheck -= OnNavigateToSecurityCheck;
                 _currentViewModel.NavigateToSetupWizard -= OnNavigateToSetupWizard;
+                _currentViewModel.NavigateToQuickSetup -= OnNavigateToQuickSetup;
                 _currentViewModel.DeveloperBypassRequested -= OnDeveloperBypass;
             }
 
@@ -45,6 +47,7 @@ namespace PhantomVault.UI.Views
                 viewModel.NavigateToUsbSetup += OnNavigateToUsbSetup;
                 viewModel.NavigateToSecurityCheck += OnNavigateToSecurityCheck;
                 viewModel.NavigateToSetupWizard += OnNavigateToSetupWizard;
+                viewModel.NavigateToQuickSetup += OnNavigateToQuickSetup;
                 viewModel.DeveloperBypassRequested += OnDeveloperBypass;
                 _currentViewModel = viewModel;
             }
@@ -70,6 +73,8 @@ namespace PhantomVault.UI.Views
                         {
                             // Already on UI thread (fired from button click) — no Dispatcher wrapping needed
                             var loadingWindow = new VaultCreationLoadingWindow();
+                            if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime dt)
+                                dt.MainWindow = loadingWindow;
                             loadingWindow.Show();
                             setupWizard.Hide();
 
@@ -79,7 +84,20 @@ namespace PhantomVault.UI.Views
                                 {
                                     loadingWindow.Close();
                                     setupWizard.Close();
-                                    OpenVaultWindowWithPreferencePrompt();
+                                    if (!string.IsNullOrWhiteSpace(wizardVm.SelectedUsbPath))
+                                    {
+                                        OnNavigateToSecurityCheck(this, new DetectedVaultLaunchRequest
+                                        {
+                                            UsbPath = NormalizeDriveRoot(wizardVm.SelectedUsbPath),
+                                            UsbDisplayName = wizardVm.SelectedUsbPath,
+                                            VaultPath = NormalizeDriveRoot(wizardVm.SelectedUsbPath),
+                                            DisplayName = "Newly created vault"
+                                        });
+                                    }
+                                    else
+                                    {
+                                        OpenVaultWindowWithPreferencePrompt();
+                                    }
                                 }
                                 catch (Exception ex)
                                 {
@@ -125,6 +143,86 @@ namespace PhantomVault.UI.Views
                 _ = dialogService.ShowErrorAsync(
                     "Setup Wizard Error",
                     $"Unable to open the setup wizard: {ex.Message}",
+                    this);
+            }
+        }
+
+        private void OnNavigateToQuickSetup(object? sender, EventArgs e)
+        {
+            try
+            {
+                var quickVm = new SetupWizardViewModel();
+                quickVm.ConfigureForQuickSetup();
+                var quickWindow = new QuickSetupWindow(quickVm);
+                bool vaultCreationStarted = false;
+
+                quickVm.VaultReadyForCreation += async (s, _) =>
+                {
+                    vaultCreationStarted = true;
+                    try
+                    {
+                        var loadingWindow = new VaultCreationLoadingWindow();
+                        if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime dt)
+                            dt.MainWindow = loadingWindow;
+
+                        loadingWindow.Show();
+                        quickWindow.Hide();
+
+                        loadingWindow.CreationCompleted += (lw, _) =>
+                        {
+                            try
+                            {
+                                loadingWindow.Close();
+                                quickWindow.Close();
+                                if (!string.IsNullOrWhiteSpace(quickVm.SelectedUsbPath))
+                                {
+                                    OnNavigateToSecurityCheck(this, new DetectedVaultLaunchRequest
+                                    {
+                                        UsbPath = NormalizeDriveRoot(quickVm.SelectedUsbPath),
+                                        UsbDisplayName = quickVm.SelectedUsbPath,
+                                        VaultPath = NormalizeDriveRoot(quickVm.SelectedUsbPath),
+                                        DisplayName = quickVm.EffectiveVaultName
+                                    });
+                                }
+                                else
+                                {
+                                    OpenVaultWindowWithPreferencePrompt();
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.Error(ex, "Failed to transition after quick setup vault creation");
+                                this.Show();
+                            }
+                        };
+
+                        await loadingWindow.RunCreationAsync(quickVm);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "Quick setup loading flow failed");
+                        quickWindow.Show();
+                    }
+                };
+
+                quickWindow.Closed += (_, _) =>
+                {
+                    if (!vaultCreationStarted)
+                    {
+                        this.Show();
+                    }
+                };
+
+                quickWindow.Show();
+                this.Hide();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to open quick setup");
+                var dialogService = new DialogService();
+                _ = dialogService.ShowErrorAsync(
+                    "Default Setup Error",
+                    $"Unable to open default setup: {ex.Message}",
                     this);
             }
         }
@@ -189,15 +287,25 @@ namespace PhantomVault.UI.Views
                         SettingsService.Save(settings);
                     }
                 }
-
-                // Close welcome page – vault is now the main window
-                this.Close();
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "Failed to open vault window after creation");
                 this.Show();
             }
+        }
+
+        private static string NormalizeDriveRoot(string usbPathDisplay)
+        {
+            var driveRoot = usbPathDisplay.Length >= 2 ? usbPathDisplay.Substring(0, 3) : usbPathDisplay;
+            if (usbPathDisplay.Contains(" - ", StringComparison.Ordinal))
+            {
+                driveRoot = usbPathDisplay.Split(" - ")[0].Trim();
+                if (!driveRoot.EndsWith("\\", StringComparison.Ordinal))
+                    driveRoot += "\\";
+            }
+
+            return driveRoot;
         }
 
         private void OnNavigateToUsbSetup(object? sender, EventArgs e)
@@ -238,7 +346,13 @@ namespace PhantomVault.UI.Views
                     Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
                         // Navigate to security check which will open the vault
-                        OnNavigateToSecurityCheck(s, usbDrivePath);
+                        OnNavigateToSecurityCheck(s, new DetectedVaultLaunchRequest
+                        {
+                            UsbPath = usbDrivePath,
+                            UsbDisplayName = usbDrivePath,
+                            VaultPath = usbDrivePath,
+                            DisplayName = "Provisioned vault"
+                        });
 
                         // Close provision window
                         foreach (var window in Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop2 ? desktop2.Windows : Array.Empty<Window>())
@@ -286,7 +400,7 @@ namespace PhantomVault.UI.Views
             this.Hide(); // Hide (not Close) — WelcomePage is MainWindow; closing it triggers app shutdown
         }
 
-        private void OnNavigateToSecurityCheck(object? sender, string usbPath)
+        private void OnNavigateToSecurityCheck(object? sender, DetectedVaultLaunchRequest request)
         {
             // Create services for security check
             var encryptionService = new EncryptionService();
@@ -294,7 +408,9 @@ namespace PhantomVault.UI.Views
             var manifestService = new ManifestService(encryptionService, containerService);
             var securityCheckService = new SecurityCheckService(manifestService);
 
-            var securityCheckScreen = new SecurityCheckScreen(securityCheckService, usbPath);
+            var securityCheckScreen = new SecurityCheckScreen(securityCheckService, request);
+            if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime dt)
+                dt.MainWindow = securityCheckScreen;
             securityCheckScreen.Show();
             this.Hide(); // Hide (not Close) — WelcomePage is MainWindow; closing it triggers app shutdown
         }
@@ -378,7 +494,16 @@ namespace PhantomVault.UI.Views
         {
             await HandleEventAsync(async () =>
             {
-                var import = new ImportWindow();
+                var importViewModel = new ImportViewModel();
+                var import = new ImportWindow(importViewModel);
+                import.ImportCompleted += async (_, credentials) =>
+                {
+                    PendingImportStagingService.SavePendingImports(credentials);
+                    await new DialogService().ShowInfoAsync(
+                        "Imports Staged",
+                        $"{credentials.Count} credential(s) were staged and will be imported into your vault after the next successful unlock.",
+                        this);
+                };
                 await import.ShowDialog(this);
             });
         }

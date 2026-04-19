@@ -70,13 +70,13 @@ namespace PhantomVault.UI.Views
         // Phase definitions
         private static readonly (string Icon, string Label)[] Phases =
         {
-            ("\u25B7", "INITIALIZE"),      // ▷
-            ("\u25B7", "STRUCTURE"),
-            ("\u25B7", "KEYGEN"),
-            ("\u25B7", "USB BIND"),
-            ("\u25B7", "ENCRYPT"),
+            ("\u25B7", "INITIALIZE"),
+            ("\u25B7", "STAGING"),
+            ("\u25B7", "KEYFILE"),
+            ("\u25B7", "BIND"),
+            ("\u25B7", "CONTAINERS"),
+            ("\u25B7", "TRANSPORT"),
             ("\u25B7", "FINALIZE"),
-            ("\u25B7", "VERIFY"),
         };
 
         public VaultCreationLoadingWindow()
@@ -266,34 +266,34 @@ namespace PhantomVault.UI.Views
         private void AnimateOrbitDots(double elapsed)
         {
             if (_orbitDot1?.RenderTransform is RotateTransform rot1)
-                rot1.Angle = (elapsed / 3.0 * 360.0) % 360.0;
+                rot1.Angle = (elapsed / 6.5 * 360.0) % 360.0;
 
             if (_orbitDot2?.RenderTransform is RotateTransform rot2)
-                rot2.Angle = 360.0 - ((elapsed / 4.5 * 360.0) % 360.0);
+                rot2.Angle = 360.0 - ((elapsed / 8.5 * 360.0) % 360.0);
 
             if (_orbitDot3?.RenderTransform is RotateTransform rot3)
-                rot3.Angle = (elapsed / 7.0 * 360.0) % 360.0;
+                rot3.Angle = (elapsed / 11.0 * 360.0) % 360.0;
         }
 
         private void AnimatePulseRings(double elapsed)
         {
             if (_pulseRing1?.RenderTransform is ScaleTransform s1)
             {
-                double t = (Math.Sin(elapsed * 2.0 * Math.PI / 2.4) + 1.0) / 2.0;
+                double t = (Math.Sin(elapsed * 2.0 * Math.PI / 3.2) + 1.0) / 2.0;
                 double s = 0.85 + t * 0.20;
                 s1.ScaleX = s; s1.ScaleY = s;
             }
 
             if (_pulseRing2?.RenderTransform is ScaleTransform s2)
             {
-                double t = (Math.Sin((elapsed - 0.8) * 2.0 * Math.PI / 2.4) + 1.0) / 2.0;
+                double t = (Math.Sin((elapsed - 1.0) * 2.0 * Math.PI / 3.2) + 1.0) / 2.0;
                 double s = 0.9 + t * 0.20;
                 s2.ScaleX = s; s2.ScaleY = s;
             }
 
             if (_pulseRing3?.RenderTransform is ScaleTransform s3)
             {
-                double t = (Math.Sin((elapsed - 1.6) * 2.0 * Math.PI / 2.4) + 1.0) / 2.0;
+                double t = (Math.Sin((elapsed - 2.0) * 2.0 * Math.PI / 3.2) + 1.0) / 2.0;
                 double s = 0.95 + t * 0.20;
                 s3.ScaleX = s; s3.ScaleY = s;
             }
@@ -303,11 +303,11 @@ namespace PhantomVault.UI.Views
         {
             // Outer tick ring — slow clockwise
             if (_segmentedRing?.RenderTransform is RotateTransform segRot)
-                segRot.Angle = (elapsed / 12.0 * 360.0) % 360.0;
+                segRot.Angle = (elapsed / 18.0 * 360.0) % 360.0;
 
             // Inner tick ring — slow counter-clockwise
             if (_segmentedRingInner?.RenderTransform is RotateTransform segRotInner)
-                segRotInner.Angle = 360.0 - ((elapsed / 8.0 * 360.0) % 360.0);
+                segRotInner.Angle = 360.0 - ((elapsed / 14.0 * 360.0) % 360.0);
         }
 
         private void AnimateHexColumns(double elapsed)
@@ -349,7 +349,7 @@ namespace PhantomVault.UI.Views
             if (_scanLine == null) return;
 
             // Sweep down over 3 seconds, then reset
-            double period = 3.0;
+            double period = 4.8;
             double t = (elapsed % period) / period; // 0→1
             double windowHeight = 560.0;
 
@@ -361,7 +361,7 @@ namespace PhantomVault.UI.Views
         {
             if (!_isScrambling || _stepDetailText == null) return;
 
-            _scrambleProgress += 0.06; // speed of reveal
+            _scrambleProgress += 0.035; // speed of reveal
 
             if (_scrambleProgress >= 1.0)
             {
@@ -413,44 +413,9 @@ namespace PhantomVault.UI.Views
 
             try
             {
-                // Phase 0: Initializing
-                await AnimateProgress(0, 15, "Initializing secure environment...",
-                    "Seeding CSPRNG entropy pool", "INITIALIZING", 0);
-                await Task.Delay(400);
-
-                // Phase 1: Creating directory structure
-                await AnimateProgress(15, 28, "Creating vault structure...",
-                    "Allocating encrypted file segments", "STRUCTURING", 1);
-                await Task.Delay(300);
-
-                // Phase 2: Generating keyfile
-                await AnimateProgress(28, 45, "Generating cryptographic keyfile...",
-                    "AES-256 / HKDF-SHA512 derivation", "KEYGEN", 2);
-                await Task.Delay(350);
-
-                // Phase 3: USB binding
-                await AnimateProgress(45, 58, "Binding to USB device...",
-                    "Computing HMAC-SHA256 device signature", "USB BIND", 3);
-                await Task.Delay(300);
-
-                // Phase 4: Run actual vault creation
-                await AnimateProgress(58, 78, "Encrypting vault manifest...",
-                    "AES-256-GCM stream cipher active", "ENCRYPTING", 4);
-
-                // Execute the actual vault creation logic
+                ApplyProvisioningProgress(0, 3, "Initializing secure provisioning...", "Handing off the validated setup plan to the provisioning engine.");
+                _wizardViewModel.ProvisioningProgressChanged += OnProvisioningProgressChanged;
                 await _wizardViewModel.ExecuteVaultCreationAsync();
-
-                // Phase 5: Finalizing
-                await AnimateProgress(78, 92, "Finalizing vault configuration...",
-                    "Writing sealed metadata block", "FINALIZING", 5);
-                await Task.Delay(400);
-
-                // Phase 6: Verify
-                await AnimateProgress(92, 100, "Verifying vault integrity...",
-                    "HMAC verification passed", "VERIFYING", 6);
-                await Task.Delay(300);
-
-                // Complete
                 await ShowCompletion();
                 await Task.Delay(900);
 
@@ -482,6 +447,44 @@ namespace PhantomVault.UI.Views
                         _hashReadout.Text = "";
                 });
             }
+            finally
+            {
+                if (_wizardViewModel != null)
+                    _wizardViewModel.ProvisioningProgressChanged -= OnProvisioningProgressChanged;
+            }
+        }
+
+        private void OnProvisioningProgressChanged(object? sender, ProvisioningProgressEventArgs e)
+        {
+            ApplyProvisioningProgress(e.PhaseIndex, e.Percent, e.Status, e.Detail);
+        }
+
+        private void ApplyProvisioningProgress(int phaseIndex, double percent, string status, string detail)
+        {
+            _currentPercent = percent;
+            const double maxWidth = 400.0;
+
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (_progressFill != null)
+                    _progressFill.Width = maxWidth * (percent / 100.0);
+
+                if (_statusText != null)
+                    _statusText.Text = status;
+
+                if (_progressPercent != null)
+                    _progressPercent.Text = $"{Math.Clamp((int)Math.Round(percent), 0, 100)}%";
+
+                if (_progressLabel != null)
+                    _progressLabel.Text = phaseIndex >= 0 && phaseIndex < Phases.Length
+                        ? Phases[phaseIndex].Label
+                        : "PROVISIONING";
+
+                _targetDetailText = detail;
+                _scrambleProgress = 0;
+                _isScrambling = true;
+                UpdatePhaseChecklist(phaseIndex);
+            });
         }
 
         private async Task AnimateProgress(double fromPercent, double toPercent, string status,

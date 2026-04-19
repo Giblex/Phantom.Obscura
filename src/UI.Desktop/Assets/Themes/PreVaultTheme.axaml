@@ -7,13 +7,13 @@
 
     <!-- Surface tokens -->
     <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#071018"/>
-    <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#081D24"/>
+    <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#09202A"/>
     <SolidColorBrush x:Key="FooterBackgroundBrush" Color="#071018"/>
     <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#0C1620"/>
-    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#101E2B"/>
-    <SolidColorBrush x:Key="SurfaceBrush" Color="#101E2B"/>
+    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#152838"/>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#152838"/>
     <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#0A1420"/>
-    <SolidColorBrush x:Key="ControlBorderBrush" Color="#273642"/>
+    <SolidColorBrush x:Key="ControlBorderBrush" Color="#395264"/>
     <SolidColorBrush x:Key="FooterBorderBrush" Color="Transparent"/>
 
     <!-- Accent tokens (website teal) -->
@@ -53,7 +53,8 @@
     <SolidColorBrush x:Key="TileGlassBrush">#AA0C1620</SolidColorBrush>
 
     <!-- Font tokens -->
-    <FontFamily x:Key="MainFontFamily">Segoe UI</FontFamily>
-    <FontFamily x:Key="DefaultFontFamily">Segoe UI</FontFamily>
+    <FontFamily x:Key="TitleFontFamily">Soeding UI, Aptos, Segoe UI</FontFamily>
+    <FontFamily x:Key="MainFontFamily">Aptos, Segoe UI</FontFamily>
+    <FontFamily x:Key="DefaultFontFamily">Aptos, Segoe UI</FontFamily>
     <x:Double x:Key="DefaultFontSize">14</x:Double>
 </ResourceDictionary>

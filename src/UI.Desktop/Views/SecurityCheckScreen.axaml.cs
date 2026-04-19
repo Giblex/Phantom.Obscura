@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using PhantomVault.Core;
 using PhantomVault.Core.Services;
+using PhantomVault.UI.Models;
 using PhantomVault.UI.Services;
 using PhantomVault.UI.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,9 +25,9 @@ namespace PhantomVault.UI.Views
             this.DataContextChanged += OnDataContextChanged;
         }
 
-        public SecurityCheckScreen(SecurityCheckService securityCheckService, string usbPath) : this()
+        public SecurityCheckScreen(SecurityCheckService securityCheckService, DetectedVaultLaunchRequest launchRequest) : this()
         {
-            var viewModel = new SecurityCheckScreenViewModel(securityCheckService, usbPath);
+            var viewModel = new SecurityCheckScreenViewModel(securityCheckService, launchRequest);
             viewModel.SetOwnerWindow(this);
 
             DataContext = viewModel;
@@ -50,13 +51,15 @@ namespace PhantomVault.UI.Views
             }
         }
 
-        private void OnNavigateToVault(object? sender, string usbPath)
+        private void OnNavigateToVault(object? sender, DetectedVaultLaunchRequest launchRequest)
         {
             // Ensure we're on the UI thread
             Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
             {
                 try
                 {
+                    var usbPath = launchRequest?.UsbPath ?? string.Empty;
+
                     // Defensive: validate inputs early
                     if (usbPath is null)
                         throw new ArgumentNullException(nameof(usbPath), "USB path was null when navigating to vault.");
@@ -128,7 +131,8 @@ namespace PhantomVault.UI.Views
                         secureTrashService,
                         encryptionService,
                         iconManager,
-                        usbDetector);
+                        usbDetector,
+                        launchRequest?.VaultPath);
 
                     // Show unlock window (it will auto-unlock if keyfile is present)
                     var unlockWindow = new VaultUnlockWindow(unlockViewModel);

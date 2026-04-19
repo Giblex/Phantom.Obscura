@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using ReactiveUI;
 using Avalonia.Controls;
 using PhantomVault.Core.Services;
+using PhantomVault.UI.Services;
 
 namespace PhantomVault.UI.ViewModels
 {
@@ -294,25 +295,15 @@ namespace PhantomVault.UI.ViewModels
         }
 
         /// <summary>
-        /// Stores the passkey credential ID securely using DPAPI.
+        /// Stores the passkey credential ID in the Windows Credential Manager.
         /// </summary>
-#warning SECURITY: Passkey credential ID is stored as a DPAPI-protected file. Migrate to Windows Credential Manager or vault-encrypted storage before release.
         private static Task StorePasskeyCredentialAsync(byte[] credentialId)
         {
-            var credentialPath = GetPasskeyStoragePath();
-            var directory = System.IO.Path.GetDirectoryName(credentialPath);
-            if (!string.IsNullOrEmpty(directory) && !System.IO.Directory.Exists(directory))
-            {
-                System.IO.Directory.CreateDirectory(directory);
-            }
-            
-            // Encrypt the credential ID with DPAPI for the current user
-            var protectedData = ProtectedData.Protect(
+            WindowsCredentialStore.WriteSecret(
+                PasskeyCredentialName,
                 credentialId,
-                System.Text.Encoding.UTF8.GetBytes(PasskeyCredentialName),
-                DataProtectionScope.CurrentUser);
-            
-            System.IO.File.WriteAllBytes(credentialPath, protectedData);
+                "Phantom Obscura platform authenticator credential identifier");
+
             return Task.CompletedTask;
         }
 
@@ -321,21 +312,9 @@ namespace PhantomVault.UI.ViewModels
         /// </summary>
         private static Task<byte[]?> GetStoredPasskeyCredentialAsync()
         {
-            var credentialPath = GetPasskeyStoragePath();
-            if (!System.IO.File.Exists(credentialPath))
-            {
-                return Task.FromResult<byte[]?>(null);
-            }
-
             try
             {
-                var protectedData = System.IO.File.ReadAllBytes(credentialPath);
-                var credentialId = ProtectedData.Unprotect(
-                    protectedData,
-                    System.Text.Encoding.UTF8.GetBytes(PasskeyCredentialName),
-                    DataProtectionScope.CurrentUser);
-                
-                return Task.FromResult<byte[]?>(credentialId);
+                return Task.FromResult<byte[]?>(WindowsCredentialStore.ReadSecret(PasskeyCredentialName));
             }
             catch
             {
@@ -348,21 +327,8 @@ namespace PhantomVault.UI.ViewModels
         /// </summary>
         private static Task RemoveStoredPasskeyAsync()
         {
-            var credentialPath = GetPasskeyStoragePath();
-            if (System.IO.File.Exists(credentialPath))
-            {
-                System.IO.File.Delete(credentialPath);
-            }
+            WindowsCredentialStore.DeleteSecret(PasskeyCredentialName);
             return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Gets the path for storing the passkey credential ID securely.
-        /// </summary>
-        private static string GetPasskeyStoragePath()
-        {
-            var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            return System.IO.Path.Combine(appDataPath, "PhantomVault", "Passkey", "credential.bin");
         }
     }
 }

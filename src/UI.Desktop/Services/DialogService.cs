@@ -43,7 +43,7 @@ namespace PhantomVault.UI.Services
             {
                 Text = title,
                 FontSize = 18,
-                FontWeight = Avalonia.Media.FontWeight.Bold,
+                FontWeight = Avalonia.Media.FontWeight.Normal,
                 Foreground = Avalonia.Media.Brushes.White,
                 Margin = new Avalonia.Thickness(0, 0, 0, 15)
             });
@@ -99,7 +99,7 @@ namespace PhantomVault.UI.Services
             {
                 Text = title,
                 FontSize = 18,
-                FontWeight = Avalonia.Media.FontWeight.Bold,
+                FontWeight = Avalonia.Media.FontWeight.Normal,
                 Foreground = Avalonia.Media.Brushes.White,
                 Margin = new Avalonia.Thickness(0, 0, 0, 15)
             });
@@ -157,7 +157,7 @@ namespace PhantomVault.UI.Services
                 {
                     Text = title ?? "Error",
                     FontSize = 18,
-                    FontWeight = Avalonia.Media.FontWeight.Bold,
+                    FontWeight = Avalonia.Media.FontWeight.Normal,
                     Foreground = Avalonia.Media.Brushes.White,
                     Margin = new Avalonia.Thickness(0, 0, 0, 15)
                 });
@@ -178,7 +178,7 @@ namespace PhantomVault.UI.Services
                     HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
                     Background = Avalonia.Media.Brushes.White,
                     Foreground = Avalonia.Media.Brushes.DarkRed,
-                    FontWeight = Avalonia.Media.FontWeight.Bold
+                    FontWeight = Avalonia.Media.FontWeight.Normal
                 };
 
                 // Create TextBlock for button content instead of using Content property directly
@@ -256,6 +256,116 @@ namespace PhantomVault.UI.Services
                     // Complete failure - at least we logged to console
                 }
             }
+        }
+
+        /// <summary>
+        /// Shows a confirmation dialog and returns true when the user accepts.
+        /// </summary>
+        public async Task<bool> ShowConfirmationAsync(
+            string title,
+            string message,
+            string confirmText = "Continue",
+            string cancelText = "Cancel",
+            Window? owner = null)
+        {
+            var dialog = new Window
+            {
+                Title = title,
+                Width = 520,
+                Height = 260,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                CanResize = false,
+                Background = new SolidColorBrush(Color.Parse("#071018"))
+            };
+
+            bool result = false;
+
+            var panel = new StackPanel
+            {
+                Margin = new Thickness(24),
+                Spacing = 18
+            };
+
+            panel.Children.Add(new TextBlock
+            {
+                Text = title,
+                FontSize = 20,
+                FontWeight = FontWeight.Normal,
+                Foreground = Brushes.White
+            });
+
+            panel.Children.Add(new TextBlock
+            {
+                Text = message,
+                FontSize = 14,
+                TextWrapping = TextWrapping.Wrap,
+                Foreground = new SolidColorBrush(Color.Parse("#C5DDE5")),
+                LineHeight = 22
+            });
+
+            var buttonRow = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Spacing = 12,
+                HorizontalAlignment = HorizontalAlignment.Right
+            };
+
+            var cancelButton = new Button
+            {
+                Width = 120,
+                Height = 40,
+                Background = new SolidColorBrush(Color.Parse("#0C1620")),
+                BorderBrush = new SolidColorBrush(Color.Parse("#395264")),
+                BorderThickness = new Thickness(1),
+                Foreground = Brushes.White,
+                Content = new TextBlock
+                {
+                    Text = cancelText,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center
+                }
+            };
+
+            var confirmButton = new Button
+            {
+                Width = 160,
+                Height = 40,
+                Background = new SolidColorBrush(Color.Parse("#173042")),
+                BorderBrush = new SolidColorBrush(Color.Parse("#55C3CF")),
+                BorderThickness = new Thickness(1),
+                Foreground = Brushes.White,
+                Content = new TextBlock
+                {
+                    Text = confirmText,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center
+                }
+            };
+
+            cancelButton.Click += (_, _) =>
+            {
+                result = false;
+                dialog.Close();
+            };
+
+            confirmButton.Click += (_, _) =>
+            {
+                result = true;
+                dialog.Close();
+            };
+
+            buttonRow.Children.Add(cancelButton);
+            buttonRow.Children.Add(confirmButton);
+            panel.Children.Add(buttonRow);
+
+            dialog.Content = panel;
+
+            if (owner != null)
+                await dialog.ShowDialog(owner);
+            else
+                dialog.Show();
+
+            return result;
         }
 
         /// <summary>

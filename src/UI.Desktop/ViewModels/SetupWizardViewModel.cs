@@ -19,6 +19,7 @@ using CommunityToolkit.Mvvm.Input;
 using PhantomVault.Core.Models;
 using PhantomVault.Core.Services;
 using PhantomVault.Core.Services.Security;
+using PhantomVault.UI.Services;
 using Serilog;
 
 namespace PhantomVault.UI.ViewModels
@@ -29,18 +30,25 @@ namespace PhantomVault.UI.ViewModels
     /// </summary>
     public partial class SetupWizardViewModel : ObservableObject
     {
+        private const int GeneratedKeyfileSizeBytes = 256 * 1024;
+
         private Window? _ownerWindow;
+        private readonly DialogService _dialogService = new();
         private readonly EncryptionService _encryptionService;
         private readonly ManifestService _manifestService;
         private readonly UsbBindingService _usbBindingService;
         private readonly PhantomContainerService _containerService;
         private readonly UsbArtifactProtectionService _usbArtifactProtectionService;
         private readonly BlackSecureRawVolumeService _blackSecureRawVolumeService;
+        private EntropyKeyfileGenerator? _entropyKeyfileGenerator;
+        private byte[]? _stagedGeneratedKeyfileBytes;
+        private bool _revertingCriticalToggle;
+        private bool _generatedPasswordWasAutoCreated;
         [ObservableProperty]
         private int _currentStep = 1;
 
         [ObservableProperty]
-        private int _totalSteps = 6;
+        private int _totalSteps = 7;
 
         [ObservableProperty]
         private string _currentStepTitle = "Welcome";
@@ -106,6 +114,27 @@ namespace PhantomVault.UI.ViewModels
         [ObservableProperty]
         private string _keyfileStatus = "A new keyfile will be generated";
 
+        [ObservableProperty]
+        private string _keyfileGenerationStatus = "Move your pointer across the entropy field until the keyfile can be sealed.";
+
+        [ObservableProperty]
+        private int _entropyCollectedBits;
+
+        [ObservableProperty]
+        private int _entropyRequiredBits = 256;
+
+        [ObservableProperty]
+        private int _entropySampleCount;
+
+        [ObservableProperty]
+        private bool _entropyKeyfileSealed;
+
+        [ObservableProperty]
+        private bool _revealMasterPassword;
+
+        [ObservableProperty]
+        private bool _revealConfirmPassword;
+
         // USB Binding
         [ObservableProperty]
         private string? _usbSerialNumber;
@@ -132,7 +161,7 @@ namespace PhantomVault.UI.ViewModels
         private bool _enableEncryptedContainer;
 
         [ObservableProperty]
-        private string _encryptedContainerSize = "256 MB";
+        private string _encryptedContainerSize = "1 GB";
 
         // USB Remnant Detection
         [ObservableProperty]
@@ -147,8 +176,11 @@ namespace PhantomVault.UI.ViewModels
         [ObservableProperty]
         private string _remainingUsbSpaceDisplay = string.Empty;
 
-        /// <summary>True when CurrentStep is the dynamically-positioned remnant step (step 6, only when HasRemnants).</summary>
-        public bool IsRemnantStep => HasRemnants && CurrentStep == 6;
+        /// <summary>True when CurrentStep is the additional authentication step.</summary>
+        public bool IsAuthenticationStep => CurrentStep == 6;
+
+        /// <summary>True when CurrentStep is the dynamically-positioned remnant step (step 7, only when HasRemnants).</summary>
+        public bool IsRemnantStep => HasRemnants && CurrentStep == 7;
 
         /// <summary>True when CurrentStep is the final review/summary step (always TotalSteps).</summary>
         public bool IsReviewStep => CurrentStep == TotalSteps;
@@ -218,6 +250,9 @@ namespace PhantomVault.UI.ViewModels
         [ObservableProperty]
         private string? _statusMessage;
 
+        public string MasterPasswordRevealGlyph => RevealMasterPassword ? "Hide" : "Reveal";
+        public string ConfirmPasswordRevealGlyph => RevealConfirmPassword ? "Hide" : "Reveal";
+
         public ObservableCollection<SecurityLevelOption> SecurityLevels { get; } = new()
         {
             new SecurityLevelOption
@@ -230,52 +265,65 @@ namespace PhantomVault.UI.ViewModels
                     "Lowest operational risk and easiest support/recovery path",
                     "Best for broad compatibility and reversible migration into higher tiers"
                 },
-                RecommendedFor = "Default supportable baseline"
+                RecommendedFor = "Default supportable baseline",
+                FriendlySummary = "Encrypted containers on your filesystem — easy to manage and recover.",
+                SecurityIncreasePercent = 0
             },
             new SecurityLevelOption
             {
-                Name = "Stealth Secure",
+                Name = "Ghost Secured",
                 Description = "Recommended for most users. Packs the canonical container layout into a concealed master volume while preserving reversibility.",
                 Features = new[]
                 {
                     "Single packed master volume built from the same canonical inner layout",
                     "Reduced visible structure and better artifact minimisation",
-                    "Clean migration path back to Standard or forward to Black Secure"
+                    "Clean migration path back to Standard or forward to Phantom Secured"
                 },
                 RecommendedFor = "Recommended",
+                FriendlySummary = "Concealed master volume with reduced visible structure — recommended for most users.",
+                SecurityIncreasePercent = 35,
                 IsSelected = true
             },
             new SecurityLevelOption
             {
-                Name = "Black Secure",
-                Description = "Expert profile that writes the canonical vault layout directly to the USB device as a raw Black Secure transport.",
+                Name = "Phantom Secured",
+                Description = "Expert profile that writes the canonical vault layout directly to the USB device as a raw Phantom Secured transport.",
                 Features = new[]
                 {
                     "USB is bound and reopened through the physical device path instead of a browsable filesystem",
                     "Requires a master password and device-bound factors without an external keyfile path",
                     "Provisioned with reversible migration metadata and rollback-ready storage records"
                 },
-                RecommendedFor = "Expert / adversarial"
+                RecommendedFor = "Expert / adversarial",
+                FriendlySummary = "Raw device-bound transport — maximum concealment for expert and adversarial scenarios.",
+                SecurityIncreasePercent = 70
             }
         };
 
         public bool IsBlackSecureSelected => GetSelectedProtectionTier() == VaultProtectionTier.BlackSecure;
         public bool SupportsExternalKeyfile => !IsBlackSecureSelected;
         public bool ShowGeneratedKeyfileInfo => SupportsExternalKeyfile && !UseExistingKeyfile;
+        public bool RequiresGeneratedKeyfileEntropy => ShowGeneratedKeyfileInfo;
+        public int EntropyProgressPercent => Math.Min(100, (EntropyCollectedBits * 100) / Math.Max(1, EntropyRequiredBits));
+        public bool CanSealEntropyKeyfile => RequiresGeneratedKeyfileEntropy && !EntropyKeyfileSealed && (_entropyKeyfileGenerator?.CanFinalize ?? false);
         public bool ShowPasswordToggle => !IsBlackSecureSelected;
+
+        public WindowsHelloSettingsViewModel WindowsHelloOnboarding { get; }
+        public PasskeySettingsViewModel PasskeyOnboarding { get; }
+        public TotpSettingsViewModel TotpOnboarding { get; }
         public string KeyMaterialSectionTitle => IsBlackSecureSelected ? "Device-Bound Authentication" : "Keyfile Configuration";
         public string KeyMaterialSectionSubtitle => IsBlackSecureSelected
-            ? "Black Secure disables the external keyfile path and binds the vault directly to the selected USB device."
+            ? "Phantom Secured disables the external keyfile path and binds the vault directly to the selected USB device."
             : "Required - Your vault will be secured with a unique keyfile";
         public string KeyMaterialDescription => IsBlackSecureSelected
-            ? "Black Secure uses a raw-device transport with USB binding, provisioning metadata, and a required master password. There is no external keyfile file to browse or store separately."
+            ? "Phantom Secured uses a raw-device transport with USB binding, provisioning metadata, and a required master password. There is no external keyfile file to browse or store separately."
             : "A keyfile is a cryptographic file that acts as your primary authentication method. Store it securely on your USB drive or in a safe location. Without this file, your vault cannot be accessed.";
         public string PasswordSectionTitle => IsBlackSecureSelected ? "Required Master Password" : "Optional Master Password";
         public string PasswordSectionDescription => IsBlackSecureSelected
-            ? "Black Secure requires a master password because the USB does not expose a browsable filesystem or external keyfile path."
+            ? "Phantom Secured requires a master password because the USB does not expose a browsable filesystem or external keyfile path."
             : "Add an extra layer of protection with a password";
         public string PasswordToggleText => IsBlackSecureSelected
-            ? "Black Secure requires a master password"
+            ? "Phantom Secured requires a master password"
             : "Enable master password (recommended for extra security)";
 
         public SetupWizardViewModel()
@@ -287,14 +335,28 @@ namespace PhantomVault.UI.ViewModels
             _usbBindingService = new UsbBindingService();
             _usbArtifactProtectionService = new UsbArtifactProtectionService(_encryptionService);
             _blackSecureRawVolumeService = new BlackSecureRawVolumeService();
+            WindowsHelloOnboarding = new WindowsHelloSettingsViewModel();
+            PasskeyOnboarding = new PasskeySettingsViewModel();
+            TotpOnboarding = new TotpSettingsViewModel
+            {
+                VaultName = "PhantomObscura"
+            };
 
             var settings = PhantomVault.UI.Services.SettingsService.Load();
             SelectedSecurityLevel = settings.DefaultVaultProtectionTier switch
             {
                 nameof(VaultProtectionTier.StandardSecure) => "Standard Secure",
-                nameof(VaultProtectionTier.BlackSecure) => "Black Secure",
-                _ => "Stealth Secure"
+                nameof(VaultProtectionTier.BlackSecure) => "Phantom Secured",
+                _ => "Ghost Secured"
             };
+
+            if (SupportsExternalKeyfile && !UseExistingKeyfile)
+            {
+                InitializeEntropyKeyfileGenerator();
+            }
+
+            EnableGuuidBinding = true;
+            EnableEncryptedContainer = true;
         }
 
         /// <summary>
@@ -303,6 +365,9 @@ namespace PhantomVault.UI.ViewModels
         public void SetOwnerWindow(Window owner)
         {
             _ownerWindow = owner;
+            WindowsHelloOnboarding.SetOwnerWindow(owner);
+            PasskeyOnboarding.SetOwnerWindow(owner);
+            TotpOnboarding.SetOwnerWindow(owner);
         }
 
         [RelayCommand]
@@ -339,6 +404,7 @@ namespace PhantomVault.UI.ViewModels
             UseExistingKeyfile = false;
             KeyfileSelected = false;
             KeyfileStatus = "A new keyfile will be generated";
+            InitializeEntropyKeyfileGenerator();
         }
 
         [RelayCommand]
@@ -418,8 +484,16 @@ namespace PhantomVault.UI.ViewModels
                     await DetectUsbSerialAsync();
                     break;
 
+                case 5: // Keyfile & Password
+                    PrepareGeneratedKeyfileFlow();
+                    break;
+
+                case 6: // Additional authentication
+                    TotpOnboarding.VaultName = "PhantomObscura";
+                    break;
+
                 default:
-                    // Summary is always the last step (6 or 7 depending on remnants)
+                    // Summary is always the last step (7 or 8 depending on remnants)
                     if (CurrentStep == TotalSteps)
                         GenerateSummary();
                     break;
@@ -455,8 +529,18 @@ namespace PhantomVault.UI.ViewModels
                     break;
 
                 case 5: // Keyfile & Password
-                    // Keyfile is always generated - no validation needed
-                    // Password is optional, but if provided, must match confirmation
+                    if (SupportsExternalKeyfile && UseExistingKeyfile && !KeyfileSelected)
+                    {
+                        StatusMessage = "Please select an existing keyfile before continuing.";
+                        return false;
+                    }
+
+                    if (RequiresGeneratedKeyfileEntropy && !EntropyKeyfileSealed)
+                    {
+                        StatusMessage = "Collect and seal keyfile entropy before continuing.";
+                        return false;
+                    }
+
                     if (UsePassword)
                     {
                         if (string.IsNullOrEmpty(MasterPassword))
@@ -477,7 +561,27 @@ namespace PhantomVault.UI.ViewModels
                     }
                     else if (GetSelectedProtectionTier() == VaultProtectionTier.BlackSecure)
                     {
-                        StatusMessage = "Black Secure requires a master password because the USB will not expose a browsable filesystem or external keyfile path.";
+                        StatusMessage = "Phantom Secured requires a master password because the USB will not expose a browsable filesystem or external keyfile path.";
+                        return false;
+                    }
+                    break;
+
+                case 6: // Additional authentication
+                    if (EnableWindowsHello && !WindowsHelloOnboarding.IsBiometricEnrolled)
+                    {
+                        StatusMessage = "Complete Windows Hello enrollment or switch it off before continuing.";
+                        return false;
+                    }
+
+                    if (EnablePasskeys && !PasskeyOnboarding.HasRegisteredPasskey)
+                    {
+                        StatusMessage = "Register a device passkey or switch the passkey requirement off before continuing.";
+                        return false;
+                    }
+
+                    if (EnableTotp && (!TotpOnboarding.HasTotpSecret || !TotpOnboarding.IsTotpEnabled))
+                    {
+                        StatusMessage = "Generate and verify your TOTP authenticator before continuing.";
                         return false;
                     }
                     break;
@@ -495,12 +599,14 @@ namespace PhantomVault.UI.ViewModels
                 3 => "PhantomKey Setup",
                 4 => "Select Storage Location",
                 5 => "Keyfile & Password",
+                6 => "Additional Authentication",
                 _ when IsRemnantStep => "Remnant Actions",
                 _ when IsReviewStep => "Review and Complete",
                 _ => "Setup"
             };
 
             // Notify computed step-visibility properties
+            OnPropertyChanged(nameof(IsAuthenticationStep));
             OnPropertyChanged(nameof(IsRemnantStep));
             OnPropertyChanged(nameof(IsReviewStep));
 
@@ -641,7 +747,7 @@ namespace PhantomVault.UI.ViewModels
                     DetectedRemnants.Add(remnant);
 
                 HasRemnants = DetectedRemnants.Count > 0;
-                TotalSteps = HasRemnants ? 7 : 6;
+                TotalSteps = HasRemnants ? 8 : 7;
                 RemainingUsbSpaceDisplay = scanResults.remainingUsbSpace;
 
                 if (CurrentStep > TotalSteps)
@@ -721,8 +827,11 @@ namespace PhantomVault.UI.ViewModels
 
             MasterPassword = new string(password);
             ConfirmPassword = MasterPassword;
+            RevealMasterPassword = false;
+            RevealConfirmPassword = false;
+            _generatedPasswordWasAutoCreated = true;
             AnalyzePasswordStrength();
-            StatusMessage = "Strong password generated. Please save it in a secure location.";
+            StatusMessage = "Strong password generated. It will be staged as a one-time encrypted recovery item on the selected USB.";
         }
 
         [RelayCommand]
@@ -863,14 +972,65 @@ namespace PhantomVault.UI.ViewModels
             summary += $"• Encrypted Container: {(EnableEncryptedContainer ? $"Enabled ({EncryptedContainerSize})" : "Disabled")}\n";
             summary += selectedTier == VaultProtectionTier.BlackSecure
                 ? "• Key Material: Device-bound raw transport with no external keyfile path\n"
-                : $"• Keyfile: {(UseExistingKeyfile && !string.IsNullOrWhiteSpace(KeyfilePath) ? Path.GetFileName(KeyfilePath) : "Will be generated")}\n";
+                : $"• Keyfile: {(UseExistingKeyfile && !string.IsNullOrWhiteSpace(KeyfilePath) ? Path.GetFileName(KeyfilePath) : EntropyKeyfileSealed ? "Entropy-blended staged keyfile" : "Pending entropy seal")}\n";
             summary += $"• Master Password: {(UsePassword ? "Configured" : "Not used")}\n";
+            summary += $"• Windows Hello: {(EnableWindowsHello ? (WindowsHelloOnboarding.IsBiometricEnrolled ? "Enrolled" : "Pending") : "Not enabled")}\n";
+            summary += $"• Passkey: {(EnablePasskeys ? (PasskeyOnboarding.HasRegisteredPasskey ? "Registered" : "Pending") : "Not enabled")}\n";
+            summary += $"• TOTP: {(EnableTotp ? (TotpOnboarding.IsTotpEnabled ? "Verified" : "Pending") : "Not enabled")}\n";
             if (HasRemnants)
                 summary += $"• Remnant Action: {SelectedRemnantAction}\n";
             summary += "\nReversible Measures: Provisioning metadata and canonical inner-container paths will be preserved for future tier migration.\n";
             summary += $"\nEncryption: AES-256-GCM with {(selectedTier == VaultProtectionTier.BlackSecure ? "raw-device transport wrapper" : "canonical container profile")}\n";
 
             SetupSummary = summary;
+        }
+
+        // ── Quick-Setup helpers (called from WelcomePage / QuickSetupWindow) ──
+
+        /// <summary>The display-ready vault name used by quick-setup callers.</summary>
+        public string EffectiveVaultName => "PhantomObscura";
+
+        /// <summary>Pre-configures the view-model for the quick-setup flow so the full wizard can be bypassed.</summary>
+        public void ConfigureForQuickSetup()
+        {
+            AcceptedTerms = true;
+            SelectedSecurityLevel = "Ghost Secured";
+            SelectedStorageLocation = "USB";
+            EnableUsbBinding = true;
+            EnableGuuidBinding = false;
+            EnablePhantomKey = false;
+            EnableEncryptedContainer = false;
+            UsePassword = true;
+        }
+
+        /// <summary>Detects available USB drives and applies sensible defaults for the quick-setup path.</summary>
+        public async Task InitializeQuickSetupAsync()
+        {
+            await DetectUsbDrivesAsync();
+
+            if (AvailableUsbDrives.Count > 0 && string.IsNullOrEmpty(SelectedUsbPath))
+                SelectedUsbPath = AvailableUsbDrives[0];
+        }
+
+        /// <summary>Validates that all required quick-setup inputs are present before provisioning.</summary>
+        public Task<bool> ValidateQuickSetupAsync()
+        {
+            if (!UsePassword || string.IsNullOrWhiteSpace(MasterPassword))
+                return Task.FromResult(false);
+
+            if (MasterPassword != ConfirmPassword)
+                return Task.FromResult(false);
+
+            if (string.IsNullOrWhiteSpace(SelectedUsbPath))
+                return Task.FromResult(false);
+
+            return Task.FromResult(true);
+        }
+
+        /// <summary>Kicks off provisioning for the quick-setup flow, delegating to the existing creation pipeline.</summary>
+        public async Task BeginProvisioningAsync()
+        {
+            await ExecuteVaultCreationAsync();
         }
 
         /// <summary>Raised when vault creation completes so the UI can transition to the loading window flow.</summary>
@@ -913,6 +1073,7 @@ namespace PhantomVault.UI.ViewModels
                 IsCompleting = true;
                 StatusMessage = "Creating your vault...";
                 Log.Information("ExecuteVaultCreationAsync starting");
+                ReportProvisioningStage(0, 5, "Initializing secure provisioning...", "Validating selected protection tier and storage targets.");
 
                 // ─── Determine vault path ───
                 string vaultPath;
@@ -925,6 +1086,10 @@ namespace PhantomVault.UI.ViewModels
                 PhantomVault.UI.Services.SettingsService.Update(settings =>
                 {
                     settings.DefaultVaultProtectionTier = selectedTier.ToString();
+                    settings.PendingPostCreateAuthOnboarding = false;
+                    settings.PendingSetupWindowsHello = false;
+                    settings.PendingSetupPasskey = false;
+                    settings.PendingSetupTotp = false;
                 });
                 if (usePackedMasterVolume)
                 {
@@ -940,6 +1105,7 @@ namespace PhantomVault.UI.ViewModels
                 const string recoveryRecordRelativePath = "recovery/recovery.record.pmeta";
                 const string provisioningRecordRelativePath = "root/storage-tier.provisioning.pmeta";
                 const string decoyDatabaseRelativePath = "decoy/decoy.database.pmeta";
+                const string generatedPasswordRecordRelativePath = "bootstrap/generated-password.pmeta";
 
                 if (SelectedStorageLocation == "USB" && !string.IsNullOrEmpty(SelectedUsbPath))
                 {
@@ -970,13 +1136,14 @@ namespace PhantomVault.UI.ViewModels
                 string recoveryRecordPath = Path.Combine(workingRoot, recoveryRecordRelativePath.Replace('/', Path.DirectorySeparatorChar));
                 string provisioningRecordPath = Path.Combine(workingRoot, provisioningRecordRelativePath.Replace('/', Path.DirectorySeparatorChar));
                 string decoyDatabasePath = Path.Combine(workingRoot, decoyDatabaseRelativePath.Replace('/', Path.DirectorySeparatorChar));
+                string generatedPasswordRecordPath = Path.Combine(vaultPath, generatedPasswordRecordRelativePath.Replace('/', Path.DirectorySeparatorChar));
 
                 // ─── Wipe remnants FIRST (before creating directories) ───
                 // Must happen before directory creation because the cleanup will
                 // delete an empty .phantom dir — which is the one we're about to use.
                 if (HasRemnants && SelectedRemnantAction == "WipeRemnants" && DetectedRemnants.Count > 0)
                 {
-                    StatusMessage = "Securely wiping remnant files...";
+                    ReportProvisioningStage(1, 14, "Securely wiping remnant files...", "Removing prior protected artifacts before provisioning the new vault.");
                     Log.Information("Wiping {Count} remnant file(s)", DetectedRemnants.Count);
 
                     // Collect parent .phantom directories so we can remove protections and clean up
@@ -1040,6 +1207,7 @@ namespace PhantomVault.UI.ViewModels
                 }
 
                 // ─── Create vault directories (after remnant wipe so they aren't deleted) ───
+                ReportProvisioningStage(1, 22, "Creating canonical vault structure...", "Preparing staged root, vault, object, and recovery paths.");
                 Directory.CreateDirectory(vaultPath);
                 Directory.CreateDirectory(Path.GetDirectoryName(rootContainerPath)!);
                 Directory.CreateDirectory(Path.GetDirectoryName(objectContainerPath)!);
@@ -1065,12 +1233,13 @@ namespace PhantomVault.UI.ViewModels
                 if (usesExternalKeyfile && UseExistingKeyfile && KeyfileSelected)
                 {
                     keyfilePath = KeyfilePath;
-                    StatusMessage = "Using existing keyfile...";
+                    ReportProvisioningStage(2, 34, "Using existing keyfile...", "Reusing the operator-supplied keyfile for container provisioning.");
                     Log.Information("Using existing keyfile: {KeyfilePath}", keyfilePath);
                 }
                 else if (usesExternalKeyfile)
                 {
                     keyfilePath = Path.Combine(vaultPath, "vault.key");
+                    ReportProvisioningStage(2, 38, "Writing entropy-blended keyfile...", "Persisting the staged pointer-derived keyfile and wrapping it in place.");
                     await GenerateKeyfileAsync(keyfilePath);
 
                     // Encrypt the keyfile in-place: read raw → encrypt → overwrite with encrypted blob
@@ -1082,8 +1251,9 @@ namespace PhantomVault.UI.ViewModels
                 }
                 else
                 {
+                    ReportProvisioningStage(2, 34, "Skipping external keyfile path...", "Phantom Secured uses password and device-bound factors instead of a browsable keyfile.");
                     KeyfilePath = null;
-                    StatusMessage = "Black Secure uses password plus device-bound factors without an external keyfile path.";
+                    StatusMessage = "Phantom Secured uses password plus device-bound factors without an external keyfile path.";
                 }
 
                 // ─── USB device binding ───
@@ -1096,7 +1266,7 @@ namespace PhantomVault.UI.ViewModels
                     !string.IsNullOrEmpty(driveRoot) &&
                     !_blackSecureRawVolumeService.TryResolvePhysicalDevicePathFromDriveRoot(driveRoot, out blackSecurePhysicalDevicePath))
                 {
-                    throw new InvalidOperationException("Unable to resolve the selected USB drive to a physical device for Black Secure provisioning.");
+                    throw new InvalidOperationException("Unable to resolve the selected USB drive to a physical device for Phantom Secured provisioning.");
                 }
 
                 if (SelectedStorageLocation == "USB" && !string.IsNullOrEmpty(driveRoot) && EnableUsbBinding)
@@ -1108,6 +1278,7 @@ namespace PhantomVault.UI.ViewModels
 
                         if (EnablePhantomKey)
                         {
+                            ReportProvisioningStage(3, 48, "Binding PhantomKey hardware context...", "Computing the high-assurance device binding record.");
                             // PhantomKey: high-assurance binding with hidden device ID file
                             deviceId = _usbBindingService.InitializeHighAssuranceBinding(driveRoot, salt);
                             Log.Information("PhantomKey high-assurance binding established: {DeviceId}", deviceId);
@@ -1115,6 +1286,7 @@ namespace PhantomVault.UI.ViewModels
                         }
                         else
                         {
+                            ReportProvisioningStage(3, 48, "Binding USB device identity...", "Computing the device-bound identifier for this transport.");
                             // Standard binding: compute device ID from drive properties
                             deviceId = _usbBindingService.ComputeDeviceId(
                                 selectedTier == VaultProtectionTier.BlackSecure && !string.IsNullOrWhiteSpace(blackSecurePhysicalDevicePath)
@@ -1209,7 +1381,10 @@ namespace PhantomVault.UI.ViewModels
                 // TOTP secret generation
                 if (EnableTotp)
                 {
-                    manifest.TotpSecret = GenerateSecureTotpSecret();
+                    ReportProvisioningStage(4, 58, "Generating manifest authentication material...", "Adding TOTP metadata and sealing the root manifest.");
+                    manifest.TotpSecret = !string.IsNullOrWhiteSpace(TotpOnboarding.TotpSecret)
+                        ? TotpOnboarding.TotpSecret
+                        : throw new InvalidOperationException("TOTP was enabled, but no verified TOTP secret is staged.");
                     StatusMessage = "Generated TOTP secret...";
                     Log.Information("TOTP secret generated");
                 }
@@ -1226,6 +1401,7 @@ namespace PhantomVault.UI.ViewModels
                 if (EnableEncryptedContainer)
                 {
                     manifest.ContainerSizeBytes = containerSpecs[1].SizeBytes;
+                    ReportProvisioningStage(4, 68, "Creating encrypted container set...", "Provisioning root, vault, object, and recovery containers.");
 
                     foreach (var containerSpec in containerSpecs)
                     {
@@ -1248,6 +1424,7 @@ namespace PhantomVault.UI.ViewModels
                 else
                 {
                     manifest.ContainerSizeBytes = containerSpecs[1].SizeBytes;
+                    ReportProvisioningStage(4, 68, "Creating encrypted container set...", "Provisioning root, vault, object, and recovery containers.");
 
                     foreach (var containerSpec in containerSpecs)
                     {
@@ -1389,9 +1566,27 @@ namespace PhantomVault.UI.ViewModels
                     keyfilePath,
                     "decoy-database");
 
+                if (_generatedPasswordWasAutoCreated && UsePassword && !string.IsNullOrWhiteSpace(MasterPassword))
+                {
+                    await _usbArtifactProtectionService.WriteEncryptedJsonAsync(
+                        generatedPasswordRecordPath,
+                        new GeneratedPasswordBootstrapRecord
+                        {
+                            Password = MasterPassword,
+                            Prompt = "Please reveal password and save somewhere safe, this will be deleted.",
+                            CreatedUtc = DateTimeOffset.UtcNow
+                        },
+                        manifest,
+                        passphrase,
+                        keyfilePath,
+                        "generated-password-bootstrap");
+
+                    StatusMessage = "Generated password staged as a one-time encrypted recovery item on the USB.";
+                }
+
                 if (selectedTier == VaultProtectionTier.BlackSecure)
                 {
-                    StatusMessage = "Writing Black Secure raw-device volume...";
+                    ReportProvisioningStage(5, 84, "Writing Phantom Secured raw-device volume...", "Projecting the staged canonical layout directly to the physical device.");
                     await _blackSecureRawVolumeService.CreateVolumeFromDirectoryAsync(
                         blackSecurePhysicalDevicePath!,
                         stagingRoot!,
@@ -1401,7 +1596,7 @@ namespace PhantomVault.UI.ViewModels
                 }
                 else if (usePackedMasterVolume)
                 {
-                    StatusMessage = "Packing master Obscura volume...";
+                    ReportProvisioningStage(5, 84, "Packing master Obscura volume...", "Packing the canonical staged layout into the concealed transport volume.");
                     var obscuraVolumeService = new ObscuraVolumeService();
                     await obscuraVolumeService.CreateVolumeFromDirectoryAsync(volumePath!, stagingRoot!, CancellationToken.None);
                     Directory.Delete(stagingRoot!, true);
@@ -1409,7 +1604,7 @@ namespace PhantomVault.UI.ViewModels
                 }
                 else
                 {
-                    StatusMessage = "Writing direct canonical container layout...";
+                    ReportProvisioningStage(5, 84, "Writing direct canonical container layout...", "Leaving the canonical container set directly on the selected transport.");
                 }
 
                 // Manifest is now embedded inside the container (v3 format) —
@@ -1420,7 +1615,7 @@ namespace PhantomVault.UI.ViewModels
                 // strips these protections first, then securely overwrites.
                 VaultFileProtection.HardenVaultFiles(vaultPath);
 
-                StatusMessage = "Vault created successfully!";
+                ReportProvisioningStage(6, 100, "Vault created successfully!", "Protection metadata, transport records, and hardened vault paths are all in place.");
                 Log.Information("ExecuteVaultCreationAsync completed successfully");
             }
             catch (Exception ex)
@@ -1675,15 +1870,24 @@ namespace PhantomVault.UI.ViewModels
 
         private async Task GenerateKeyfileAsync(string keyfilePath)
         {
-            // Generate a cryptographically secure random keyfile
-            var keyData = new byte[256]; // 256 bytes = 2048 bits
-            using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())
+            if (_stagedGeneratedKeyfileBytes == null || _stagedGeneratedKeyfileBytes.Length == 0)
             {
-                rng.GetBytes(keyData);
+                throw new InvalidOperationException("No staged entropy-blended keyfile material is available.");
             }
 
-            await File.WriteAllBytesAsync(keyfilePath, keyData);
-            StatusMessage = "Keyfile generated successfully.";
+            try
+            {
+                await File.WriteAllBytesAsync(keyfilePath, _stagedGeneratedKeyfileBytes);
+                KeyfileStatus = $"Entropy-blended keyfile staged for {Path.GetFileName(keyfilePath)}.";
+                StatusMessage = "Entropy-blended keyfile generated successfully.";
+            }
+            finally
+            {
+                CryptographicOperations.ZeroMemory(_stagedGeneratedKeyfileBytes);
+                _stagedGeneratedKeyfileBytes = null;
+                EntropyKeyfileSealed = false;
+                PrepareGeneratedKeyfileFlow();
+            }
         }
 
         [RelayCommand]
@@ -1718,16 +1922,21 @@ namespace PhantomVault.UI.ViewModels
                 UseExistingKeyfile = false;
                 KeyfilePath = null;
                 KeyfileSelected = false;
-                KeyfileStatus = "Black Secure uses password plus device-bound factors; no external keyfile path is provisioned.";
+                KeyfileStatus = "Phantom Secured uses password plus device-bound factors; no external keyfile path is provisioned.";
+                ResetEntropyKeyfileState();
             }
             else if (!UseExistingKeyfile)
             {
                 KeyfileStatus = "A new keyfile will be generated";
+                InitializeEntropyKeyfileGenerator();
             }
 
             OnPropertyChanged(nameof(IsBlackSecureSelected));
             OnPropertyChanged(nameof(SupportsExternalKeyfile));
             OnPropertyChanged(nameof(ShowGeneratedKeyfileInfo));
+            OnPropertyChanged(nameof(RequiresGeneratedKeyfileEntropy));
+            OnPropertyChanged(nameof(EntropyProgressPercent));
+            OnPropertyChanged(nameof(CanSealEntropyKeyfile));
             OnPropertyChanged(nameof(ShowPasswordToggle));
             OnPropertyChanged(nameof(KeyMaterialSectionTitle));
             OnPropertyChanged(nameof(KeyMaterialSectionSubtitle));
@@ -1737,9 +1946,31 @@ namespace PhantomVault.UI.ViewModels
             OnPropertyChanged(nameof(PasswordToggleText));
         }
 
+        partial void OnRevealMasterPasswordChanged(bool value)
+        {
+            OnPropertyChanged(nameof(MasterPasswordRevealGlyph));
+        }
+
+        partial void OnRevealConfirmPasswordChanged(bool value)
+        {
+            OnPropertyChanged(nameof(ConfirmPasswordRevealGlyph));
+        }
+
         partial void OnUseExistingKeyfileChanged(bool value)
         {
             OnPropertyChanged(nameof(ShowGeneratedKeyfileInfo));
+            OnPropertyChanged(nameof(RequiresGeneratedKeyfileEntropy));
+            OnPropertyChanged(nameof(CanSealEntropyKeyfile));
+
+            if (value)
+            {
+                ResetEntropyKeyfileState();
+                KeyfileGenerationStatus = "Existing keyfile mode selected.";
+            }
+            else if (SupportsExternalKeyfile)
+            {
+                InitializeEntropyKeyfileGenerator();
+            }
         }
 
         private VaultProtectionTier GetSelectedProtectionTier()
@@ -1747,6 +1978,8 @@ namespace PhantomVault.UI.ViewModels
             {
                 "Standard Secure" => VaultProtectionTier.StandardSecure,
                 "Black Secure" => VaultProtectionTier.BlackSecure,
+                "Phantom Secured" => VaultProtectionTier.BlackSecure,
+                "Ghost Secured" => VaultProtectionTier.StealthSecure,
                 _ => VaultProtectionTier.StealthSecure
             };
 
@@ -1774,13 +2007,207 @@ namespace PhantomVault.UI.ViewModels
 
         partial void OnMasterPasswordChanged(string value)
         {
+            if (_generatedPasswordWasAutoCreated && !string.Equals(value, ConfirmPassword, StringComparison.Ordinal))
+            {
+                _generatedPasswordWasAutoCreated = false;
+            }
             AnalyzePasswordStrength();
         }
 
         partial void OnConfirmPasswordChanged(string value)
         {
+            if (_generatedPasswordWasAutoCreated && !string.Equals(value, MasterPassword, StringComparison.Ordinal))
+            {
+                _generatedPasswordWasAutoCreated = false;
+            }
             PasswordsMatch = MasterPassword == ConfirmPassword;
         }
+
+        partial void OnEnableUsbBindingChanged(bool value)
+        {
+            _ = ConfirmSecurityReductionAsync(value, nameof(EnableUsbBinding), () => EnableUsbBinding = true);
+        }
+
+        partial void OnEnableGuuidBindingChanged(bool value)
+        {
+            _ = ConfirmSecurityReductionAsync(value, nameof(EnableGuuidBinding), () => EnableGuuidBinding = true);
+        }
+
+        partial void OnEnableEncryptedContainerChanged(bool value)
+        {
+            _ = ConfirmSecurityReductionAsync(value, nameof(EnableEncryptedContainer), () => EnableEncryptedContainer = true);
+        }
+
+        private async Task ConfirmSecurityReductionAsync(bool newValue, string toggleName, Action restoreAction)
+        {
+            if (newValue || _revertingCriticalToggle || _ownerWindow == null)
+                return;
+
+            var approved = await _dialogService.ShowConfirmationAsync(
+                "Reduce Vault Protection?",
+                "Are you sure? This will significantly weaken the vault.",
+                "Weaken Vault",
+                "Keep Protection",
+                _ownerWindow);
+
+            if (approved)
+            {
+                StatusMessage = toggleName switch
+                {
+                    nameof(EnableEncryptedContainer) => "Encrypted container disabled. Vault hardening reduced.",
+                    nameof(EnableGuuidBinding) => "GUUID binding disabled. Hardware binding reduced.",
+                    nameof(EnableUsbBinding) => "USB binding disabled. Device-bound protection reduced.",
+                    _ => "Vault protection reduced."
+                };
+                return;
+            }
+
+            _revertingCriticalToggle = true;
+            try
+            {
+                restoreAction();
+            }
+            finally
+            {
+                _revertingCriticalToggle = false;
+            }
+
+            StatusMessage = "Protection setting restored.";
+        }
+
+        [RelayCommand]
+        private void ToggleMasterPasswordReveal()
+        {
+            RevealMasterPassword = !RevealMasterPassword;
+        }
+
+        [RelayCommand]
+        private void ToggleConfirmPasswordReveal()
+        {
+            RevealConfirmPassword = !RevealConfirmPassword;
+        }
+
+        public event EventHandler<ProvisioningProgressEventArgs>? ProvisioningProgressChanged;
+
+        public void RecordEntropyPointerSample(double x, double y, bool leftPressed, bool rightPressed)
+        {
+            if (!RequiresGeneratedKeyfileEntropy || EntropyKeyfileSealed)
+                return;
+
+            PrepareGeneratedKeyfileFlow();
+            _entropyKeyfileGenerator?.AddMouseSample(x, y, leftPressed, rightPressed);
+
+            if (_entropyKeyfileGenerator == null)
+                return;
+
+            EntropyCollectedBits = _entropyKeyfileGenerator.CollectedEntropyBits;
+            EntropySampleCount = _entropyKeyfileGenerator.SampleCount;
+            KeyfileGenerationStatus = _entropyKeyfileGenerator.CanFinalize
+                ? "Entropy threshold reached. Seal the staged keyfile to continue."
+                : $"Entropy collected: {EntropyCollectedBits}/{EntropyRequiredBits} bits.";
+
+            OnPropertyChanged(nameof(EntropyProgressPercent));
+            OnPropertyChanged(nameof(CanSealEntropyKeyfile));
+        }
+
+        [RelayCommand]
+        private void ResetEntropyKeyfile()
+        {
+            InitializeEntropyKeyfileGenerator();
+        }
+
+        [RelayCommand]
+        private void SealEntropyKeyfile()
+        {
+            if (!RequiresGeneratedKeyfileEntropy)
+                return;
+
+            PrepareGeneratedKeyfileFlow();
+            if (_entropyKeyfileGenerator == null || !_entropyKeyfileGenerator.CanFinalize)
+            {
+                StatusMessage = "Keep moving the pointer until enough entropy has been collected.";
+                return;
+            }
+
+            var result = _entropyKeyfileGenerator.FinalizeKeyMaterial(GeneratedKeyfileSizeBytes);
+            _stagedGeneratedKeyfileBytes = result.KeyMaterial;
+            EntropyCollectedBits = result.CollectedEntropyBits;
+            EntropySampleCount = result.SampleCount;
+            EntropyKeyfileSealed = true;
+            KeyfileStatus = $"Entropy-blended keyfile is sealed and ready ({result.CollectedEntropyBits} bits from {result.SampleCount} samples).";
+            KeyfileGenerationStatus = "Entropy sealed. The keyfile will be written and wrapped during provisioning.";
+            StatusMessage = "Entropy keyfile staged successfully.";
+
+            _entropyKeyfileGenerator.Dispose();
+            _entropyKeyfileGenerator = null;
+
+            OnPropertyChanged(nameof(EntropyProgressPercent));
+            OnPropertyChanged(nameof(CanSealEntropyKeyfile));
+        }
+
+        private void PrepareGeneratedKeyfileFlow()
+        {
+            if (!RequiresGeneratedKeyfileEntropy)
+                return;
+
+            if (_entropyKeyfileGenerator == null && !EntropyKeyfileSealed)
+                InitializeEntropyKeyfileGenerator();
+        }
+
+        private void InitializeEntropyKeyfileGenerator()
+        {
+            ResetEntropyKeyfileState();
+
+            _entropyKeyfileGenerator = new EntropyKeyfileGenerator();
+            EntropyRequiredBits = _entropyKeyfileGenerator.MinimumRequiredBits;
+            KeyfileGenerationStatus = "Move your pointer across the entropy field until the keyfile can be sealed.";
+            KeyfileStatus = "Entropy-blended keyfile not sealed yet.";
+
+            OnPropertyChanged(nameof(EntropyProgressPercent));
+            OnPropertyChanged(nameof(CanSealEntropyKeyfile));
+        }
+
+        private void ResetEntropyKeyfileState()
+        {
+            _entropyKeyfileGenerator?.Dispose();
+            _entropyKeyfileGenerator = null;
+
+            if (_stagedGeneratedKeyfileBytes != null)
+            {
+                CryptographicOperations.ZeroMemory(_stagedGeneratedKeyfileBytes);
+                _stagedGeneratedKeyfileBytes = null;
+            }
+
+            EntropyCollectedBits = 0;
+            EntropySampleCount = 0;
+            EntropyKeyfileSealed = false;
+            EntropyRequiredBits = 256;
+
+            OnPropertyChanged(nameof(EntropyProgressPercent));
+            OnPropertyChanged(nameof(CanSealEntropyKeyfile));
+        }
+
+        private void ReportProvisioningStage(int phaseIndex, double percent, string status, string detail)
+        {
+            StatusMessage = status;
+            ProvisioningProgressChanged?.Invoke(this, new ProvisioningProgressEventArgs(phaseIndex, percent, status, detail));
+        }
+    }
+
+    public sealed class ProvisioningProgressEventArgs : EventArgs
+    {
+        public ProvisioningProgressEventArgs(int phaseIndex, double percent, string status, string detail)
+        {
+            PhaseIndex = phaseIndex;
+            Percent = percent;
+            Status = status;
+            Detail = detail;
+        }
+
+        public int PhaseIndex { get; }
+        public double Percent { get; }
+        public string Status { get; }
+        public string Detail { get; }
     }
 
     public partial class SecurityLevelOption : ObservableObject
@@ -1789,6 +2216,8 @@ namespace PhantomVault.UI.ViewModels
         public string Description { get; set; } = string.Empty;
         public string[] Features { get; set; } = Array.Empty<string>();
         public string RecommendedFor { get; set; } = string.Empty;
+        public string FriendlySummary { get; set; } = string.Empty;
+        public int SecurityIncreasePercent { get; set; }
 
         [ObservableProperty]
         private bool _isSelected;
@@ -1966,5 +2395,12 @@ namespace PhantomVault.UI.ViewModels
             }
             return null;
         }
+    }
+
+    internal sealed class GeneratedPasswordBootstrapRecord
+    {
+        public string Password { get; init; } = string.Empty;
+        public string Prompt { get; init; } = string.Empty;
+        public DateTimeOffset CreatedUtc { get; init; }
     }
 }

@@ -5,8 +5,8 @@
         x:Class="PhantomVault.UI.Views.VaultUnlockWindow"
         x:DataType="vm:VaultUnlockViewModel"
         Title="Unlocking Vault"
-        Width="500"
-        Height="300"
+        Width="520"
+        Height="340"
         MinWidth="450"
         MinHeight="250"
         CanResize="False"
@@ -30,9 +30,9 @@
         </Style>
     </Window.Styles>
 
-    <Grid RowDefinitions="Auto,*,Auto" Margin="30">
+    <Grid RowDefinitions="Auto,*,Auto" Margin="34,28">
         <!-- Header -->
-        <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,24">
+        <StackPanel Grid.Row="0" Spacing="10" Margin="0,0,0,28">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
                 <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
                        Width="32" Height="32" VerticalAlignment="Center"/>
@@ -50,7 +50,7 @@
 
         <!-- Status Content -->
         <StackPanel Grid.Row="1" 
-                    Spacing="16"
+                    Spacing="22"
                     VerticalAlignment="Center">
             
             <!-- Progress Indicator with Icon -->
@@ -72,21 +72,26 @@
                        Foreground="{DynamicResource PrimaryTextBrush}"
                        TextAlignment="Center"
                        TextWrapping="Wrap"
-                       Margin="0,8,0,0"
+                       Margin="0,12,0,0"
                        AutomationProperties.Name="Unlock Status"
                        AutomationProperties.LiveSetting="Assertive"/>
 
             <!-- Progress Bar with Percentage -->
-            <StackPanel Spacing="8" Margin="40,16,40,0" IsVisible="{Binding IsBusy}"
+            <StackPanel Spacing="12" Margin="32,26,32,0" IsVisible="{Binding IsBusy}"
                         AutomationProperties.Name="Unlock Progress">
                 <Grid ColumnDefinitions="*,Auto">
-                    <ProgressBar Grid.Column="0"
-                                 Value="{Binding ProgressPercent}"
-                                 Maximum="100"
-                                 Height="6"
-                                 CornerRadius="3"
-                                 Foreground="{DynamicResource AccentBrush}"
-                                 AutomationProperties.Name="Unlock progress bar"/>
+                    <Border Grid.Column="0"
+                            Background="#12212E"
+                            CornerRadius="8"
+                            Padding="4">
+                        <ProgressBar Value="{Binding ProgressPercent}"
+                                     Maximum="100"
+                                     Height="10"
+                                     CornerRadius="6"
+                                     Foreground="{DynamicResource AccentBrush}"
+                                     Background="#12212E"
+                                     AutomationProperties.Name="Unlock progress bar"/>
+                    </Border>
                     <TextBlock Grid.Column="1"
                                Text="{Binding ProgressPercent, StringFormat={}{0}%}"
                                FontSize="{StaticResource Type.Small.Size}"
@@ -105,6 +110,6 @@
                    FontSize="{StaticResource Type.Tiny.Size}"
                    Foreground="{DynamicResource MutedTextBrush}"
                    HorizontalAlignment="Center"
-                   Margin="0,24,0,0"/>
+                   Margin="0,30,0,0"/>
     </Grid>
 </Window>

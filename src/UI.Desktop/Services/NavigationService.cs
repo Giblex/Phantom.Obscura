@@ -2,6 +2,7 @@ using System;
 using Avalonia.Controls;
 using Microsoft.Extensions.DependencyInjection;
 using PhantomVault.Core.Services;
+using PhantomVault.UI.Models;
 using PhantomVault.UI.Views;
 using PhantomVault.UI.ViewModels;
 
@@ -65,7 +66,16 @@ namespace PhantomVault.UI.Services
         /// <param name="usbPath">Path to USB drive to validate</param>
         public void ShowSecurityCheck(string usbPath)
         {
-            var window = new SecurityCheckScreen(_securityCheckService, usbPath);
+            var launchRequest = new DetectedVaultLaunchRequest
+            {
+                UsbPath = usbPath,
+                UsbDisplayName = usbPath,
+                VaultPath = usbPath,
+                DisplayName = "Detected vault",
+                AutoOpenEligible = false
+            };
+
+            var window = new SecurityCheckScreen(_securityCheckService, launchRequest);
 
             if (window.DataContext is SecurityCheckScreenViewModel viewModel)
             {

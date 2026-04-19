@@ -259,6 +259,15 @@ namespace PhantomVault.UI.Services
         public bool DefaultUseTotp { get; set; } = false;
 
         /// <summary>
+        /// Shows post-create authentication onboarding on the next successful unlock.
+        /// </summary>
+        public bool PendingPostCreateAuthOnboarding { get; set; } = false;
+
+        public bool PendingSetupWindowsHello { get; set; } = false;
+        public bool PendingSetupPasskey { get; set; } = false;
+        public bool PendingSetupTotp { get; set; } = false;
+
+        /// <summary>
         /// Default setting for enabling Windows Hello/Passkey on new vaults.
         /// </summary>
         public bool DefaultUsePasskey { get; set; } = false;

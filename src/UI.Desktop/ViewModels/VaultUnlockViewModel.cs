@@ -5,6 +5,7 @@ using System.Management;
 using System.Reactive;
 using System.Runtime.Versioning;
 using System.Security.Cryptography;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -36,6 +37,7 @@ namespace PhantomVault.UI.ViewModels
         private readonly UsbDetector _usbDetector;
         private readonly UnlockThrottleService _throttleService;
         private readonly BlackSecureRawVolumeService _blackSecureRawVolumeService;
+        private readonly string? _preferredVaultPath;
 
         private bool _isBusy;
         private string _status = "Searching for vault...";
@@ -49,7 +51,8 @@ namespace PhantomVault.UI.ViewModels
             SecureTrashService secureTrashService,
             EncryptionService encryptionService,
             IconManager iconManager,
-            UsbDetector usbDetector)
+            UsbDetector usbDetector,
+            string? preferredVaultPath = null)
         {
             _usbPath = usbPath ?? throw new ArgumentNullException(nameof(usbPath));
             _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
@@ -61,6 +64,7 @@ namespace PhantomVault.UI.ViewModels
             _usbDetector = usbDetector ?? throw new ArgumentNullException(nameof(usbDetector));
             _throttleService = new UnlockThrottleService();
             _blackSecureRawVolumeService = new BlackSecureRawVolumeService();
+            _preferredVaultPath = preferredVaultPath;
         }
 
         /// <summary>
@@ -86,10 +90,43 @@ namespace PhantomVault.UI.ViewModels
 
                 var keyFiles = Directory.GetFiles(searchPath, "*.key", SearchOption.TopDirectoryOnly);
                 if (keyFiles.Length > 0)
-                    return keyFiles[0];
+                {
+                    var usbKeyfilePath = keyFiles[0];
+                    var hostCompanionPath = TryResolveHostCompanionKeyfilePath(drivePath);
+                    return string.IsNullOrWhiteSpace(hostCompanionPath)
+                        ? usbKeyfilePath
+                        : PhantomVault.Core.Utils.CompositeKeyfilePath.Compose(usbKeyfilePath, hostCompanionPath);
+                }
             }
 
             return null;
+        }
+
+        private static string? TryResolveHostCompanionKeyfilePath(string drivePath)
+        {
+            try
+            {
+                var locatorPath = Path.Combine(drivePath, ".phantom", "host-key", "companion.locator");
+                if (!File.Exists(locatorPath))
+                    return null;
+
+                var locator = JsonSerializer.Deserialize<HostCompanionLocator>(File.ReadAllText(locatorPath));
+                if (locator == null || string.IsNullOrWhiteSpace(locator.HostCompanionKeyfilePath))
+                    return null;
+
+                return File.Exists(locator.HostCompanionKeyfilePath)
+                    ? locator.HostCompanionKeyfilePath
+                    : null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private sealed class HostCompanionLocator
+        {
+            public string HostCompanionKeyfilePath { get; set; } = string.Empty;
         }
 
         public bool IsBusy
@@ -156,6 +193,20 @@ namespace PhantomVault.UI.ViewModels
                 string? manifestPath = null;
                 var masterVolumePath = string.IsNullOrWhiteSpace(selectedDriveRoot) ? null : ResolveMasterVolumePath(selectedDriveRoot);
 
+                if (!string.IsNullOrWhiteSpace(_preferredVaultPath))
+                {
+                    if (_preferredVaultPath.EndsWith(".pvault", StringComparison.OrdinalIgnoreCase) ||
+                        _preferredVaultPath.EndsWith(".manifest", StringComparison.OrdinalIgnoreCase))
+                    {
+                        manifestPath = _preferredVaultPath;
+                    }
+                    else if (_preferredVaultPath.EndsWith("system.bin", StringComparison.OrdinalIgnoreCase) ||
+                             _preferredVaultPath.EndsWith("obscura.vol", StringComparison.OrdinalIgnoreCase))
+                    {
+                        masterVolumePath = _preferredVaultPath;
+                    }
+                }
+
                 if (masterVolumePath != null)
                 {
                     extractedVolumeRoot = Path.Combine(Path.GetTempPath(), "PhantomObscuraSessions", Guid.NewGuid().ToString("N"));
@@ -180,7 +231,7 @@ namespace PhantomVault.UI.ViewModels
                 }
 
                 // Prefer the root authority container for the three-container layout.
-                if (Directory.Exists(rootPath))
+                if (manifestPath == null && Directory.Exists(rootPath))
                 {
                     var rootContainers = Directory.GetFiles(rootPath, "*.pvault");
                     if (rootContainers.Length > 0)
@@ -188,7 +239,7 @@ namespace PhantomVault.UI.ViewModels
                 }
 
                 // Fall back to legacy single-container layout.
-                if (Directory.Exists(vaultsPath))
+                if (manifestPath == null && Directory.Exists(vaultsPath))
                 {
                     var pvaultFiles = Directory.GetFiles(vaultsPath, "*.pvault");
                     if (pvaultFiles.Length > 0)
@@ -400,7 +451,7 @@ namespace PhantomVault.UI.ViewModels
                     _iconManager);
 
                 // Set the manifest context with the user's password for manifest decryption
-                vaultViewModel.SetManifestContext(manifestPath, password, null);
+                vaultViewModel.SetManifestContext(manifestPath, password, keyfilePath);
 
                 ProgressPercent = 95;
                 Status = "Preparing vault interface...";
@@ -422,11 +473,16 @@ namespace PhantomVault.UI.ViewModels
                 Status = "Vault unlocked!";
                 vaultWindow.Show();
 
-                // Transfer MainWindow to vault window so closing the unlock window
-                // doesn't trigger app shutdown (Avalonia default: OnMainWindowClose)
+                // Transfer MainWindow immediately before any follow-up dialogs or cleanup.
+                // This prevents the app from shutting down if the transient unlock window
+                // closes while bootstrap/import dialogs are still being processed.
                 if (Avalonia.Application.Current?.ApplicationLifetime
                     is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime dt)
                     dt.MainWindow = vaultWindow;
+
+                await RevealGeneratedPasswordBootstrapAsync(selectedDriveRoot, testManifest!, password, keyfilePath);
+                await ApplyPendingImportsAsync(vaultViewModel, vaultWindow);
+                await ShowAuthenticationOnboardingAsync(vaultWindow);
 
                 // ── Wire AutoFill orchestrator with the unlocked vault ────────────
                 try
@@ -549,6 +605,131 @@ namespace PhantomVault.UI.ViewModels
         {
             manifest.MasterVolumePath = masterVolumePath;
             ResolveExtractedRuntimePaths(manifest, extractedRoot);
+        }
+
+        private async Task RevealGeneratedPasswordBootstrapAsync(
+            string? selectedDriveRoot,
+            VaultManifest manifest,
+            string? password,
+            string? keyfilePath)
+        {
+            if (string.IsNullOrWhiteSpace(selectedDriveRoot))
+                return;
+
+            var bootstrapPath = Path.Combine(selectedDriveRoot, ".phantom", "bootstrap", "generated-password.pmeta");
+            if (!File.Exists(bootstrapPath))
+                return;
+
+            try
+            {
+                var bootstrapRecord = _usbArtifactProtectionService.ReadEncryptedJson<GeneratedPasswordBootstrapRecord>(
+                    bootstrapPath,
+                    manifest,
+                    password,
+                    keyfilePath,
+                    "generated-password-bootstrap");
+
+                await _dialogService.ShowInfoAsync(
+                    "Generated Password",
+                    $"{bootstrapRecord.Prompt}\n\n{bootstrapRecord.Password}",
+                    _ownerWindow);
+
+                File.Delete(bootstrapPath);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[VaultUnlock] Failed to reveal generated password bootstrap: {ex.Message}");
+            }
+        }
+
+        private async Task ApplyPendingImportsAsync(VaultViewModel vaultViewModel, Window vaultWindow)
+        {
+            if (!PendingImportStagingService.HasPendingImports())
+                return;
+
+            try
+            {
+                await Task.Delay(400).ConfigureAwait(false);
+                var pendingImports = PendingImportStagingService.LoadPendingImports();
+                if (pendingImports.Count == 0)
+                    return;
+
+                foreach (var credential in pendingImports)
+                {
+                    vaultViewModel.AddCredentialFromImport(credential);
+                }
+
+                PendingImportStagingService.Clear();
+
+                await _dialogService.ShowInfoAsync(
+                    "Imported Credentials Added",
+                    $"{pendingImports.Count} staged credential(s) were imported into this vault.",
+                    vaultWindow);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[VaultUnlock] Failed to apply pending imports: {ex.Message}");
+            }
+        }
+
+        private async Task ShowAuthenticationOnboardingAsync(Window vaultWindow)
+        {
+            try
+            {
+                var settings = SettingsService.Load();
+                if (!settings.PendingPostCreateAuthOnboarding)
+                    return;
+
+                await _dialogService.ShowInfoAsync(
+                    "Authentication Onboarding",
+                    "Next, Phantom Obscura will walk through Windows Hello, passkey, and TOTP setup pages for this new vault.",
+                    vaultWindow);
+
+                if (settings.PendingSetupWindowsHello)
+                {
+                    var helloVm = new WindowsHelloSettingsViewModel();
+                    var helloWindow = new WindowsHelloSettingsWindow
+                    {
+                        DataContext = helloVm
+                    };
+                    helloVm.SetOwnerWindow(helloWindow);
+                    await helloWindow.ShowDialog(vaultWindow);
+                }
+
+                if (settings.PendingSetupPasskey)
+                {
+                    var passkeyVm = new PasskeySettingsViewModel();
+                    var passkeyWindow = new PasskeySettingsWindow
+                    {
+                        DataContext = passkeyVm
+                    };
+                    passkeyVm.SetOwnerWindow(passkeyWindow);
+                    await passkeyWindow.ShowDialog(vaultWindow);
+                }
+
+                if (settings.PendingSetupTotp)
+                {
+                    var totpVm = new TotpSettingsViewModel();
+                    var totpWindow = new TotpSettingsWindow
+                    {
+                        DataContext = totpVm
+                    };
+                    totpVm.SetOwnerWindow(totpWindow);
+                    await totpWindow.ShowDialog(vaultWindow);
+                }
+
+                SettingsService.Update(updated =>
+                {
+                    updated.PendingPostCreateAuthOnboarding = false;
+                    updated.PendingSetupWindowsHello = false;
+                    updated.PendingSetupPasskey = false;
+                    updated.PendingSetupTotp = false;
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[VaultUnlock] Authentication onboarding failed: {ex.Message}");
+            }
         }
 
         private static void ResolveExtractedRuntimePaths(VaultManifest manifest, string extractedRoot)

@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using PhantomVault.Core.Models;
+using PhantomVault.Core.Utils;
 
 namespace PhantomVault.Core.Services
 {
@@ -752,9 +753,9 @@ namespace PhantomVault.Core.Services
                 }
 
                 // Derive key from keyfile using HKDF
-                if (!string.IsNullOrEmpty(keyfilePath) && File.Exists(keyfilePath))
+                if (!string.IsNullOrEmpty(keyfilePath))
                 {
-                    byte[] keyfileBytes = await File.ReadAllBytesAsync(keyfilePath);
+                    byte[] keyfileBytes = await CompositeKeyfilePath.ReadCombinedBytesAsync(keyfilePath, required: true).ConfigureAwait(false);
                     try
                     {
                         // Use HKDF to derive a key from the keyfile contents
@@ -835,9 +836,9 @@ namespace PhantomVault.Core.Services
                 else
                     passwordKey = new byte[32];
 
-                if (!string.IsNullOrEmpty(keyfilePath) && File.Exists(keyfilePath))
+                if (!string.IsNullOrEmpty(keyfilePath))
                 {
-                    byte[] keyfileBytes = File.ReadAllBytes(keyfilePath);
+                    byte[] keyfileBytes = CompositeKeyfilePath.ReadCombinedBytes(keyfilePath, required: true);
                     try
                     {
                         keyfileKey = HKDF.DeriveKey(

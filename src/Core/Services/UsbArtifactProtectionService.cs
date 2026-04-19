@@ -175,9 +175,9 @@ namespace PhantomVault.Core.Services
                 CryptographicOperations.ZeroMemory(passphraseBytes);
             }
 
-            if (!string.IsNullOrEmpty(keyfilePath) && File.Exists(keyfilePath))
+            if (!string.IsNullOrEmpty(keyfilePath))
             {
-                var keyfileBytes = File.ReadAllBytes(keyfilePath);
+                var keyfileBytes = CompositeKeyfilePath.ReadCombinedBytes(keyfilePath, required: true);
                 try
                 {
                     buffer.Write(keyfileBytes, 0, keyfileBytes.Length);
