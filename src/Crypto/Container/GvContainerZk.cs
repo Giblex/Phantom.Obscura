@@ -204,6 +204,10 @@ namespace GiblexVault.Security.ZK.Container
             {
                 var toc = ReadToc(fs, header, suite, cek);
 
+                // Find the end of all existing data (may include entries after the old TOC)
+                long entryPosition = fs.Length;
+                fs.Position = entryPosition;
+
                 var fileInfo = new FileInfo(filePath);
                 long realLength = fileInfo.Length;
                 long padLen = options.Profile == EncryptionProfile.Paranoid ? PadLen(realLength) : realLength;
@@ -261,8 +265,14 @@ namespace GiblexVault.Security.ZK.Container
                 fs.Write(ct);
 
                 var name = options.Profile == EncryptionProfile.Paranoid ? HashName(entryName, cek) : entryName;
-                toc.Entries.Add(new Entry(name, realLength, offset, ct.Length + ns + 4, wrapped));
+                toc.Entries.Add(new Entry(name, realLength, entryPosition, ct.Length + ns + 4, wrapped));
+
+                // Truncate to tocStart to remove old TOC, then write new TOC at tocStart
+                // This prevents the new TOC from overwriting entries when it grows
+                fs.SetLength(tocStart);
+                fs.Position = tocStart;
                 WriteToc(fs, tocStart, header, suite, cek, toc);
+
                 CryptographicOperations.ZeroMemory(dek);
             }
             CryptographicOperations.ZeroMemory(cek);
