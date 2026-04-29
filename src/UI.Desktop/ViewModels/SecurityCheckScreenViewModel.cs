@@ -38,6 +38,7 @@ namespace PhantomVault.UI.ViewModels
         private CoreSecurityCheckResult? _checkResult;
         private readonly DialogService _dialogService;
         private Window? _ownerWindow;
+        private int _completedCheckCount;
 
         public event EventHandler<DetectedVaultLaunchRequest>? NavigateToVault;
 
@@ -342,7 +343,7 @@ namespace PhantomVault.UI.ViewModels
             if (completedStatus.HasValue || (expectedName is "Hardware Tokens" or "Biometric Availability" && CheckResult != null))
                 return 100;
 
-            return IsCheckActive(expectedName) ? 56 : 0;
+            return IsCheckActive(expectedName) ? 72 : 0;
         }
 
         private static IBrush GetBrushForCheck(bool? completedStatus, bool isActive)
@@ -417,6 +418,7 @@ namespace PhantomVault.UI.ViewModels
             IsRunningChecks = true;
             ChecksComplete = false;
             ChecksSuccessful = false;
+            _completedCheckCount = 0;
             PercentComplete = 0;
             StatusMessage = "Starting security checks...";
 
@@ -428,11 +430,11 @@ namespace PhantomVault.UI.ViewModels
                     Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
                         CurrentCheckName = update.CurrentCheck;
-                        PercentComplete = update.PercentComplete;
 
                         // Format display with status
                         if (update.IsComplete)
                         {
+                            PercentComplete = 100;
                             StatusMessage = "All checks complete!";
                             CurrentCheckDisplay = "All checks complete!";
                             CurrentCheckPassed = false;
@@ -440,6 +442,8 @@ namespace PhantomVault.UI.ViewModels
                         }
                         else if (update.CheckFailed)
                         {
+                            _completedCheckCount = Math.Min(5, _completedCheckCount + 1);
+                            PercentComplete = _completedCheckCount * 20;
                             CurrentCheckDisplay = $"{update.CurrentCheck}: Failed";
                             StatusMessage = $"Check failed: {update.CurrentCheck}";
                             CurrentCheckPassed = false;
@@ -447,6 +451,8 @@ namespace PhantomVault.UI.ViewModels
                         }
                         else if (update.CheckPassed && update.PercentComplete > 0)
                         {
+                            _completedCheckCount = Math.Min(5, _completedCheckCount + 1);
+                            PercentComplete = _completedCheckCount * 20;
                             CurrentCheckDisplay = $"{update.CurrentCheck}: Passed";
                             StatusMessage = $"Running check: {update.CurrentCheck}...";
                             CurrentCheckPassed = true;
@@ -454,6 +460,7 @@ namespace PhantomVault.UI.ViewModels
                         }
                         else
                         {
+                            PercentComplete = _completedCheckCount * 20;
                             CurrentCheckDisplay = $"{update.CurrentCheck}...";
                             StatusMessage = $"Running check: {update.CurrentCheck}...";
                             CurrentCheckPassed = false;
@@ -464,7 +471,7 @@ namespace PhantomVault.UI.ViewModels
                     });
                 });
 
-                CheckResult = await _securityCheckService.RunSecurityChecksAsync(_usbPath, progress);
+                CheckResult = await _securityCheckService.RunSecurityChecksAsync(_usbPath, _launchRequest.VaultPath, progress);
 
                 // Marshal property updates to UI thread - NO DIALOGS, just update state
                 await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>

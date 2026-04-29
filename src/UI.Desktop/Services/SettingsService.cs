@@ -283,6 +283,12 @@ namespace PhantomVault.UI.Services
         /// </summary>
         public string? LastAuthenticationMethod { get; set; }
 
+        /// <summary>
+        /// Absolute paths to vaults stored locally (not on a USB drive).
+        /// Populated at provisioning time so the welcome screen can discover them without a USB scan.
+        /// </summary>
+        public List<string> KnownLocalVaultPaths { get; set; } = new();
+
         // ===== AutoFill Preferences =====
 
         /// <summary>

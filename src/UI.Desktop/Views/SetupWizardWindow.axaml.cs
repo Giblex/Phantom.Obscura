@@ -20,7 +20,6 @@ namespace PhantomVault.UI.Views
     {
         private bool _entropyLeftPressed;
         private bool _entropyRightPressed;
-        private readonly DialogService _dialogService = new();
 
         public SetupWizardWindow()
         {
@@ -62,33 +61,6 @@ namespace PhantomVault.UI.Views
             {
                 vm.SelectedSecurityLevel = option.Name;
             }
-        }
-
-        private async void SecurityLevelHelp_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
-        {
-            if (sender is not Control control || control.DataContext is not SecurityLevelOption option)
-                return;
-
-            var message =
-                $"{option.Name}\n\n" +
-                $"Plain-English version:\n{option.FriendlySummary}\n\n" +
-                $"Think of it like this:\n{GetSecurityMetaphor(option.Name)}\n\n" +
-                $"Security boost:\nAbout {option.SecurityIncreasePercent}% compared with a bare-minimum vault setup.\n\n" +
-                $"Why you would pick it:\n{option.Description}";
-
-            await _dialogService.ShowInfoAsync($"{option.Name} explained", message, this);
-            e.Handled = true;
-        }
-
-        private static string GetSecurityMetaphor(string optionName)
-        {
-            return optionName switch
-            {
-                "Standard Secure" => "Like keeping valuables in a locked drawer. It is sensible, solid, and easy to live with.",
-                "Ghost Secured" => "Like hiding that locked drawer behind a bookcase as well. A snoop has a much harder time even realising where to look.",
-                "Phantom Secured" => "Like storing the valuables in a bunker that forgot how to be obvious. Great protection, but definitely not the casual mode.",
-                _ => "It adds more locks, less visibility, and fewer easy mistakes."
-            };
         }
 
         private void EntropyCaptureSurface_PointerMoved(object? sender, PointerEventArgs e)

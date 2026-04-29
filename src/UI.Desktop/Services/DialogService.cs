@@ -139,6 +139,8 @@ namespace PhantomVault.UI.Services
         /// </summary>
         public async Task ShowErrorAsync(string title, string message, Window? owner = null)
         {
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+            {
             try
             {
                 var dialog = new Window
@@ -256,6 +258,7 @@ namespace PhantomVault.UI.Services
                     // Complete failure - at least we logged to console
                 }
             }
+            });
         }
 
         /// <summary>

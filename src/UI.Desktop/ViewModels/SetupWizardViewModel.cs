@@ -8,6 +8,7 @@ using System.Runtime.Versioning;
 using System.Security.AccessControl;
 using System.Security.Cryptography;
 using System.Security.Principal;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,6 +20,7 @@ using CommunityToolkit.Mvvm.Input;
 using PhantomVault.Core.Models;
 using PhantomVault.Core.Services;
 using PhantomVault.Core.Services.Security;
+using PhantomVault.Core.Utils;
 using PhantomVault.UI.Services;
 using Serilog;
 
@@ -31,6 +33,13 @@ namespace PhantomVault.UI.ViewModels
     public partial class SetupWizardViewModel : ObservableObject
     {
         private const int GeneratedKeyfileSizeBytes = 256 * 1024;
+        private const string PhantomKeyBridgeWorkspaceRelativePath = "vaults/phantomkey";
+        private const string PhantomKeyBridgeManifestRelativePath = "vaults/phantomkey/bridge.manifest.json";
+        private const string PhantomKeyContinuityRelativePath = "vaults/phantomkey/phantomkey.continuity.pmeta";
+        private const string PhantomKeyPolicyRelativePath = "vaults/phantomkey/phantomkey.policy.pmeta";
+        private const string PhantomKeyConsumerMapRelativePath = "vaults/phantomkey/phantomkey.consumer-map.pmeta";
+        private const string PhantomKeyAuditLogRelativePath = "vaults/phantomkey/phantomkey.audit.log";
+        private const string PhantomKeyBridgeReceiptRelativePath = "root/phantomkey.bridge.pmeta";
 
         private Window? _ownerWindow;
         private readonly DialogService _dialogService = new();
@@ -64,11 +73,14 @@ namespace PhantomVault.UI.ViewModels
 
         // Step 1: Welcome
         [ObservableProperty]
+        private string _vaultName = "My Vault";
+
+        [ObservableProperty]
         private bool _acceptedTerms;
 
         // Step 2: Security Level
         [ObservableProperty]
-        private string _selectedSecurityLevel = "Stealth Secure";
+        private string _selectedSecurityLevel = "Ghost Secured";
 
         [ObservableProperty]
         private string _securityDescription = "Recommended for most users. Packs the vault into a single concealed master volume while preserving reversible migration.";
@@ -85,6 +97,12 @@ namespace PhantomVault.UI.ViewModels
 
         [ObservableProperty]
         private ObservableCollection<string> _availableUsbDrives = new();
+
+        /// <summary>
+        /// Maps display string to (driveLetter, volumeLabel, deviceId, sizeGb).
+        /// Used to validate USB device immutability and prevent device swapping.
+        /// </summary>
+        private Dictionary<string, (string driveLetter, string volumeLabel, string deviceId, long sizeGb)> _usbDeviceMap = new();
 
         // Step 4: Keyfile & Password
         [ObservableProperty]
@@ -141,6 +159,9 @@ namespace PhantomVault.UI.ViewModels
 
         [ObservableProperty]
         private string? _usbDeviceId;
+
+        [ObservableProperty]
+        private bool _revealUsbDeviceId;
 
         [ObservableProperty]
         private bool _enableUsbBinding = true;
@@ -252,6 +273,12 @@ namespace PhantomVault.UI.ViewModels
 
         public string MasterPasswordRevealGlyph => RevealMasterPassword ? "Hide" : "Reveal";
         public string ConfirmPasswordRevealGlyph => RevealConfirmPassword ? "Hide" : "Reveal";
+        public string DisplayUsbDeviceId => string.IsNullOrWhiteSpace(UsbDeviceId)
+            ? "Unavailable"
+            : RevealUsbDeviceId
+                ? UsbDeviceId
+                : MaskSensitiveIdentifier(UsbDeviceId);
+        public string UsbDeviceIdToggleText => RevealUsbDeviceId ? "Hide" : "Reveal";
 
         public ObservableCollection<SecurityLevelOption> SecurityLevels { get; } = new()
         {
@@ -266,8 +293,9 @@ namespace PhantomVault.UI.ViewModels
                     "Best for broad compatibility and reversible migration into higher tiers"
                 },
                 RecommendedFor = "Default supportable baseline",
-                FriendlySummary = "Encrypted containers on your filesystem — easy to manage and recover.",
-                SecurityIncreasePercent = 0
+                FriendlySummary = "Like keeping valuables in a sturdy locked drawer. Simple, solid, and easy to live with.",
+                SecurityIncreasePercent = 35,
+                SecurityHelpText = "Standard Secure is the straightforward option. Think of it like a strong locked drawer: your stuff is protected, it is easy to understand, and support and recovery are simpler."
             },
             new SecurityLevelOption
             {
@@ -280,8 +308,9 @@ namespace PhantomVault.UI.ViewModels
                     "Clean migration path back to Standard or forward to Phantom Secured"
                 },
                 RecommendedFor = "Recommended",
-                FriendlySummary = "Concealed master volume with reduced visible structure — recommended for most users.",
-                SecurityIncreasePercent = 35,
+                FriendlySummary = "Like hiding that locked drawer behind a bookcase too. Harder to notice, still practical to use.",
+                SecurityIncreasePercent = 68,
+                SecurityHelpText = "Ghost Secured adds concealment as well as protection. It is like hiding the locked drawer behind a bookcase, so a snoop has a harder time even noticing where to look.",
                 IsSelected = true
             },
             new SecurityLevelOption
@@ -295,8 +324,9 @@ namespace PhantomVault.UI.ViewModels
                     "Provisioned with reversible migration metadata and rollback-ready storage records"
                 },
                 RecommendedFor = "Expert / adversarial",
-                FriendlySummary = "Raw device-bound transport — maximum concealment for expert and adversarial scenarios.",
-                SecurityIncreasePercent = 70
+                FriendlySummary = "Like storing everything in a bunker that forgot how to be obvious. Strongest, but definitely stricter.",
+                SecurityIncreasePercent = 88,
+                SecurityHelpText = "Phantom Secured is the bunker option. It gives the most aggressive hardening and concealment, but it expects you to be comfortable with a stricter, more expert-oriented setup."
             }
         };
 
@@ -325,6 +355,24 @@ namespace PhantomVault.UI.ViewModels
         public string PasswordToggleText => IsBlackSecureSelected
             ? "Phantom Secured requires a master password"
             : "Enable master password (recommended for extra security)";
+        public string PhantomKeyBridgeLocationDescription
+        {
+            get
+            {
+                var selectedTier = GetSelectedProtectionTier();
+                return selectedTier switch
+                {
+                    VaultProtectionTier.BlackSecure => "Phantom Key stays in its own sibling bridge workspace at vaults/phantomkey inside the raw-device transport.",
+                    VaultProtectionTier.StealthSecure => "Phantom Key stays in its own sibling bridge workspace at vaults/phantomkey inside the concealed master transport.",
+                    _ => string.IsNullOrWhiteSpace(SelectedUsbPath)
+                        ? "Phantom Key stays in its own encrypted bridge workspace at .phantom/vaults/phantomkey."
+                        : $"Phantom Key stays in its own encrypted bridge workspace at {Path.Combine(ExtractDriveRoot(SelectedUsbPath), ".phantom", "vaults", "phantomkey")}."
+                };
+            }
+        }
+
+        public string PhantomKeyTrustBoundarySummary =>
+            "Obscura consumes Phantom Key through sealed bridge records only. No passkeys, private keys, recovery secrets, or raw credential material are copied into the vault setup flow.";
 
         public SetupWizardViewModel()
         {
@@ -339,7 +387,7 @@ namespace PhantomVault.UI.ViewModels
             PasskeyOnboarding = new PasskeySettingsViewModel();
             TotpOnboarding = new TotpSettingsViewModel
             {
-                VaultName = "PhantomObscura"
+                VaultName = EffectiveVaultName
             };
 
             var settings = PhantomVault.UI.Services.SettingsService.Load();
@@ -478,6 +526,10 @@ namespace PhantomVault.UI.ViewModels
         {
             switch (CurrentStep)
             {
+                case 3: // PhantomKey Setup
+                    OnPropertyChanged(nameof(IsBlackSecureSelected));
+                    break;
+
                 case 4: // Storage Location
                     await DetectUsbDrivesAsync();
                     // Detect USB serial when USB is selected
@@ -489,7 +541,9 @@ namespace PhantomVault.UI.ViewModels
                     break;
 
                 case 6: // Additional authentication
-                    TotpOnboarding.VaultName = "PhantomObscura";
+                    TotpOnboarding.VaultName = EffectiveVaultName;
+                    await DetectWindowsHelloAsync();
+                    await DetectPasskeysAsync();
                     break;
 
                 default:
@@ -505,6 +559,12 @@ namespace PhantomVault.UI.ViewModels
             switch (CurrentStep)
             {
                 case 1: // Welcome
+                    if (string.IsNullOrWhiteSpace(VaultName))
+                    {
+                        StatusMessage = "Please enter a vault name to continue.";
+                        return false;
+                    }
+
                     if (!AcceptedTerms)
                     {
                         StatusMessage = "Please accept the terms and conditions to continue.";
@@ -596,7 +656,7 @@ namespace PhantomVault.UI.ViewModels
             {
                 1 => "Welcome to Phantom Obscura",
                 2 => "Choose Security Level",
-                3 => "PhantomKey Setup",
+                3 => "PhantomKey Bridge Setup",
                 4 => "Select Storage Location",
                 5 => "Keyfile & Password",
                 6 => "Additional Authentication",
@@ -617,22 +677,35 @@ namespace PhantomVault.UI.ViewModels
 
         private async Task DetectUsbDrivesAsync()
         {
-            var detectedDrives = await Task.Run(() =>
+            var (detectedDrives, usbMap) = await Task.Run(() =>
             {
                 var drives = DriveInfo.GetDrives();
                 var results = new List<string>();
+                var map = new Dictionary<string, (string driveLetter, string volumeLabel, string deviceId, long sizeGb)>();
 
                 foreach (var drive in drives)
                 {
                     if (drive.DriveType == DriveType.Removable && drive.IsReady)
                     {
-                        var displayName = $"{drive.Name} - {drive.VolumeLabel} ({drive.TotalSize / 1024 / 1024 / 1024} GB)";
+                        var driveLetter = drive.Name.TrimEnd('\\');
+                        var volumeLabel = drive.VolumeLabel;
+                        var sizeGb = drive.TotalSize / 1024 / 1024 / 1024;
+
+                        // Get physical device ID using WMI for device binding
+                        var deviceId = GetPhysicalDeviceId(driveLetter);
+
+                        // Display format: "ID: xxxxxxxx (C:) VolumeLabel [123 GB]"
+                        var displayName = $"ID: {deviceId[..8]} ({driveLetter}) {volumeLabel} [{sizeGb} GB]";
                         results.Add(displayName);
+
+                        map[displayName] = (driveLetter, volumeLabel, deviceId, sizeGb);
                     }
                 }
 
-                return results;
+                return (results, map);
             });
+
+            _usbDeviceMap = usbMap;
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
@@ -662,19 +735,69 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets the physical device ID for a USB drive using WMI.
+        /// Uses volume serial number as the primary identifier.
+        /// Falls back to a hash of drive properties if WMI fails.
+        /// </summary>
+        [SupportedOSPlatform("windows")]
+        private static string GetPhysicalDeviceId(string driveLetter)
+        {
+            try
+            {
+                // Validate that driveLetter is a single alpha character before embedding in WQL
+                var letter = driveLetter.TrimEnd('\\', '/').TrimEnd(':');
+                if (letter.Length != 1 || !char.IsLetter(letter[0]))
+                    throw new ArgumentException($"Unexpected drive letter value: {driveLetter}");
+
+                // Try using WMI to get volume serial number
+                var scope = new ManagementScope(@"\\.\root\cimv2");
+                scope.Connect();
+
+                var query = new ObjectQuery($"SELECT SerialNumber FROM Win32_LogicalDisk WHERE Name = '{letter}:'");
+                var searcher = new ManagementObjectSearcher(scope, query);
+
+                foreach (var disk in searcher.Get())
+                {
+                    var serialNumber = disk["SerialNumber"]?.ToString();
+                    if (!string.IsNullOrEmpty(serialNumber))
+                    {
+                        return serialNumber;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, "WMI query failed for drive {Drive}, falling back to property hash", driveLetter);
+            }
+
+            // Fallback: generate hash from drive properties
+            try
+            {
+                var drive = new DriveInfo(driveLetter);
+                var props = $"{drive.Name}{drive.VolumeLabel}{drive.TotalSize}{drive.DriveFormat}";
+                using var sha = SHA256.Create();
+                var hash = sha.ComputeHash(Encoding.UTF8.GetBytes(props));
+                return Convert.ToHexString(hash);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Could not compute device ID from drive properties, using stable letter hash");
+                using var sha = SHA256.Create();
+                var hash = sha.ComputeHash(Encoding.UTF8.GetBytes(driveLetter.ToUpperInvariant()));
+                return Convert.ToHexString(hash);
+            }
+        }
+
         private async Task ScanForRemnantsAsync()
         {
-            var driveRoot = SelectedUsbPath;
-            if (driveRoot != null && driveRoot.Contains(" - "))
-            {
-                driveRoot = driveRoot.Split(" - ")[0].Trim();
-                if (!driveRoot.EndsWith("\\")) driveRoot += "\\";
-            }
+            var driveRoot = ExtractDriveRoot(SelectedUsbPath);
             if (string.IsNullOrEmpty(driveRoot))
                 return;
 
             var scanResults = await Task.Run(() =>
             {
+                var seenPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 var remnants = new List<DetectedRemnant>();
                 var searchPatterns = new[]
                 {
@@ -695,6 +818,9 @@ namespace PhantomVault.UI.ViewModels
                     {
                         foreach (var file in Directory.GetFiles(driveRoot, pattern, SearchOption.AllDirectories))
                         {
+                            if (!seenPaths.Add(file))
+                                continue;
+
                             var info = new FileInfo(file);
                             var fileType = Path.GetFileName(file).ToLowerInvariant() switch
                             {
@@ -720,9 +846,17 @@ namespace PhantomVault.UI.ViewModels
                             });
                         }
                     }
-                    catch
+                    catch (UnauthorizedAccessException)
                     {
-                        // Skip inaccessible directories during the scan.
+                        Log.Debug("Skipped inaccessible directory during vault artifact scan");
+                    }
+                    catch (DirectoryNotFoundException)
+                    {
+                        Log.Debug("Directory was deleted during vault artifact scan");
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Warning(ex, "Error scanning for vault artifacts with pattern {Pattern}", pattern);
                     }
                 }
 
@@ -732,8 +866,9 @@ namespace PhantomVault.UI.ViewModels
                     var drive = new DriveInfo(driveRoot[..1]);
                     remainingUsbSpace = $"{FormatFileSize(drive.AvailableFreeSpace)} free of {FormatFileSize(drive.TotalSize)}";
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Log.Warning(ex, "Could not determine USB space for drive {Drive}", driveRoot);
                     remainingUsbSpace = "Unknown";
                 }
 
@@ -769,49 +904,61 @@ namespace PhantomVault.UI.ViewModels
 
         private async Task DetectUsbSerialAsync()
         {
-            await Task.Run(() =>
+            string? deviceId = null;
+            string? errorMessage = null;
+            bool isUsbSelected = SelectedStorageLocation == "USB" && !string.IsNullOrEmpty(SelectedUsbPath);
+
+            if (isUsbSelected)
             {
-                if (SelectedStorageLocation == "USB" && !string.IsNullOrEmpty(SelectedUsbPath))
+                await Task.Run(() =>
                 {
                     try
                     {
-                        // Extract drive letter from the selected path (e.g., "E:\" from "E:\ - My USB (16 GB)")
-                        var driveLetter = SelectedUsbPath.Length >= 2 ? SelectedUsbPath.Substring(0, 3) : SelectedUsbPath;
-                        if (SelectedUsbPath.Contains(" - "))
+                        var driveLetter = ExtractDriveRoot(SelectedUsbPath);
+                        if (string.IsNullOrEmpty(driveLetter))
                         {
-                            driveLetter = SelectedUsbPath.Split(" - ")[0].Trim();
-                            if (!driveLetter.EndsWith("\\")) driveLetter += "\\";
+                            errorMessage = "Invalid USB device selection.";
+                            return;
                         }
 
-                        UsbDeviceId = _usbBindingService.ComputeDeviceId(driveLetter);
-                        UsbSerialNumber = UsbDeviceId;
-                        StatusMessage = $"USB bound to device ID: {UsbDeviceId}";
+                        deviceId = _usbBindingService.ComputeDeviceId(driveLetter);
                     }
                     catch (Exception ex)
                     {
-                        UsbDeviceId = null;
-                        UsbSerialNumber = null;
-                        StatusMessage = $"Could not detect USB serial: {ex.Message}";
+                        errorMessage = $"Could not detect USB serial: {ex.Message}";
                     }
-                }
-                else
-                {
-                    UsbDeviceId = null;
-                    UsbSerialNumber = null;
-                }
+                });
+            }
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                UsbDeviceId = deviceId;
+                UsbSerialNumber = deviceId;
+                StatusMessage = errorMessage ?? (deviceId != null ? "USB device binding ready." : null);
             });
         }
 
         partial void OnSelectedUsbPathChanged(string? value)
         {
+            // Validate USB device ID hasn't changed (prevents device swapping)
+            if (!string.IsNullOrEmpty(value) && _usbDeviceMap.ContainsKey(value))
+            {
+                var (_, _, deviceId, _) = _usbDeviceMap[value];
+                Log.Debug("USB device selected with physical ID: {DeviceId}", deviceId[..8]);
+            }
+
             // Re-detect USB serial when selection changes
             _ = DetectUsbSerialAsync();
 
             // Also scan for remnants on the newly-selected drive
             if (!string.IsNullOrEmpty(value))
             {
-                _ = ScanForRemnantsAsync();
+                _ = ScanForRemnantsAsync().ContinueWith(
+                    t => Log.Error(t.Exception, "Remnant scan failed for selected USB path"),
+                    System.Threading.Tasks.TaskContinuationOptions.OnlyOnFaulted);
             }
+
+            OnPropertyChanged(nameof(PhantomKeyBridgeLocationDescription));
         }
 
         [RelayCommand]
@@ -840,34 +987,36 @@ namespace PhantomVault.UI.ViewModels
             if (string.IsNullOrEmpty(MasterPassword))
             {
                 PasswordStrength = "None";
+                PasswordsMatch = MasterPassword == ConfirmPassword;
                 return;
             }
 
             int score = 0;
 
-            // Length
-            if (string.IsNullOrEmpty(MasterPassword))
-            {
-                PasswordStrength = "None";
-                PasswordsMatch = true;
-                return;
-            }
+            // Length scoring (more stringent)
+            if (MasterPassword.Length >= 8) score += 1;
+            if (MasterPassword.Length >= 12) score += 2;
+            if (MasterPassword.Length >= 16) score += 2;
+            if (MasterPassword.Length >= 20) score += 2;
 
-            if (MasterPassword.Length >= 12) score++;
-            if (MasterPassword.Length >= 16) score++;
-            if (MasterPassword.Length >= 20) score++;
+            // Character type diversity (increased weight)
+            bool hasUpper = System.Text.RegularExpressions.Regex.IsMatch(MasterPassword, "[A-Z]");
+            bool hasLower = System.Text.RegularExpressions.Regex.IsMatch(MasterPassword, "[a-z]");
+            bool hasDigit = System.Text.RegularExpressions.Regex.IsMatch(MasterPassword, "[0-9]");
+            bool hasSpecial = System.Text.RegularExpressions.Regex.IsMatch(MasterPassword, "[^A-Za-z0-9]");
 
-            // Complexity
-            if (System.Text.RegularExpressions.Regex.IsMatch(MasterPassword, "[A-Z]")) score++;
-            if (System.Text.RegularExpressions.Regex.IsMatch(MasterPassword, "[a-z]")) score++;
-            if (System.Text.RegularExpressions.Regex.IsMatch(MasterPassword, "[0-9]")) score++;
-            if (System.Text.RegularExpressions.Regex.IsMatch(MasterPassword, "[^A-Za-z0-9]")) score++;
+            int diversityScore = (hasUpper ? 1 : 0) + (hasLower ? 1 : 0) + (hasDigit ? 1 : 0) + (hasSpecial ? 1 : 0);
+            score += diversityScore * 2;
+
+            // Penalty for sequential or repeated characters
+            if (System.Text.RegularExpressions.Regex.IsMatch(MasterPassword, "(.)\\1{2,}"))
+                score -= 2;
 
             PasswordStrength = score switch
             {
-                <= 2 => "Weak",
-                <= 4 => "Fair",
-                <= 6 => "Good",
+                <= 4 => "Weak",
+                <= 8 => "Fair",
+                <= 12 => "Good",
                 _ => "Excellent"
             };
 
@@ -876,29 +1025,29 @@ namespace PhantomVault.UI.ViewModels
 
         private async Task DetectWindowsHelloAsync()
         {
-            await Task.Run(() =>
+            await Task.Run(async () =>
             {
                 try
                 {
-                    // Check if Windows Hello is available on this system
-                    // This is a simplified check - in production, use Windows.Security.Credentials.KeyCredentialManager
+                    if (!OperatingSystem.IsWindows())
+                    {
+                        WindowsHelloAvailable = false;
+                        WindowsHelloStatus = "Windows Hello requires Windows 10 or later.";
+                        return;
+                    }
+
+                    // Fallback to OS version check for Windows Hello availability
                     var osVersion = Environment.OSVersion;
                     WindowsHelloAvailable = osVersion.Platform == PlatformID.Win32NT &&
                                            osVersion.Version.Major >= 10;
 
-                    if (WindowsHelloAvailable)
-                    {
-                        WindowsHelloStatus = "Windows Hello is available on this device.";
-                        StatusMessage = "Windows Hello detected. You can enable biometric authentication.";
-                    }
-                    else
-                    {
-                        WindowsHelloStatus = "Windows Hello is not available on this device.";
-                        StatusMessage = "Windows Hello not available. You can skip this step.";
-                    }
+                    WindowsHelloStatus = WindowsHelloAvailable
+                        ? "Windows Hello may be available (check device settings)."
+                            : "Windows Hello is not available on this device.";
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Log.Warning(ex, "Windows Hello detection failed");
                     WindowsHelloAvailable = false;
                     WindowsHelloStatus = "Unable to detect Windows Hello status.";
                 }
@@ -927,13 +1076,14 @@ namespace PhantomVault.UI.ViewModels
                             secret[i] = base32Chars[RandomNumberGenerator.GetInt32(base32Chars.Length)];
                         }
                         TotpSecretKey = new string(secret);
-                        TotpQrCodeUri = $"otpauth://totp/PhantomObscura:User?secret={TotpSecretKey}&issuer=PhantomObscura";
+                        TotpQrCodeUri = $"otpauth://totp/{Uri.EscapeDataString(EffectiveVaultName)}:User?secret={TotpSecretKey}&issuer={Uri.EscapeDataString(EffectiveVaultName)}";
                     }
 
                     StatusMessage = "Configure additional authentication methods.";
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Log.Warning(ex, "Passkey detection failed");
                     PasskeysAvailable = false;
                     PasskeysStatus = "Unable to detect passkey support.";
                 }
@@ -950,7 +1100,7 @@ namespace PhantomVault.UI.ViewModels
                 secret[i] = base32Chars[RandomNumberGenerator.GetInt32(base32Chars.Length)];
             }
             TotpSecretKey = new string(secret);
-            TotpQrCodeUri = $"otpauth://totp/PhantomObscura:User?secret={TotpSecretKey}&issuer=PhantomObscura";
+            TotpQrCodeUri = $"otpauth://totp/{Uri.EscapeDataString(EffectiveVaultName)}:User?secret={TotpSecretKey}&issuer={Uri.EscapeDataString(EffectiveVaultName)}";
             StatusMessage = "TOTP secret generated. Scan the QR code with your authenticator app.";
         }
 
@@ -969,6 +1119,11 @@ namespace PhantomVault.UI.ViewModels
             summary += $"• USB Device Binding: {(EnableUsbBinding ? "Enabled" : "Disabled")}\n";
             summary += $"• GUUID Binding: {(EnableGuuidBinding ? "Enabled" : "Disabled")}\n";
             summary += $"• Phantom Key: {(EnablePhantomKey ? "Enabled" : "Disabled")}\n";
+            if (EnablePhantomKey)
+            {
+                summary += $"• Phantom Key Bridge: {PhantomKeyBridgeLocationDescription}\n";
+                summary += $"• Trust Boundary: {PhantomKeyTrustBoundarySummary}\n";
+            }
             summary += $"• Encrypted Container: {(EnableEncryptedContainer ? $"Enabled ({EncryptedContainerSize})" : "Disabled")}\n";
             summary += selectedTier == VaultProtectionTier.BlackSecure
                 ? "• Key Material: Device-bound raw transport with no external keyfile path\n"
@@ -988,7 +1143,9 @@ namespace PhantomVault.UI.ViewModels
         // ── Quick-Setup helpers (called from WelcomePage / QuickSetupWindow) ──
 
         /// <summary>The display-ready vault name used by quick-setup callers.</summary>
-        public string EffectiveVaultName => "PhantomObscura";
+        public string EffectiveVaultName => string.IsNullOrWhiteSpace(VaultName)
+            ? "PhantomObscura"
+            : VaultName.Trim();
 
         /// <summary>Pre-configures the view-model for the quick-setup flow so the full wizard can be bypassed.</summary>
         public void ConfigureForQuickSetup()
@@ -997,7 +1154,7 @@ namespace PhantomVault.UI.ViewModels
             SelectedSecurityLevel = "Ghost Secured";
             SelectedStorageLocation = "USB";
             EnableUsbBinding = true;
-            EnableGuuidBinding = false;
+            EnableGuuidBinding = true;
             EnablePhantomKey = false;
             EnableEncryptedContainer = false;
             UsePassword = true;
@@ -1015,6 +1172,9 @@ namespace PhantomVault.UI.ViewModels
         /// <summary>Validates that all required quick-setup inputs are present before provisioning.</summary>
         public Task<bool> ValidateQuickSetupAsync()
         {
+            if (string.IsNullOrWhiteSpace(VaultName))
+                return Task.FromResult(false);
+
             if (!UsePassword || string.IsNullOrWhiteSpace(MasterPassword))
                 return Task.FromResult(false);
 
@@ -1067,7 +1227,20 @@ namespace PhantomVault.UI.ViewModels
         /// </summary>
         public async Task ExecuteVaultCreationAsync()
         {
+            if (IsCompleting)
+            {
+                Log.Warning("ExecuteVaultCreationAsync called while already in progress — ignoring re-entrant call");
+                return;
+            }
+
             string? stagingRoot = null;
+            string? volumePath = null;
+            string? vaultPath = null;
+            string? blackSecurePhysicalDevicePath = null;
+            string? hostCompanionKeyfilePath = null;
+            string? hostCompanionLocatorPath = null;
+            var cleanupFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var cleanupDirectories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             try
             {
                 IsCompleting = true;
@@ -1076,24 +1249,18 @@ namespace PhantomVault.UI.ViewModels
                 ReportProvisioningStage(0, 5, "Initializing secure provisioning...", "Validating selected protection tier and storage targets.");
 
                 // ─── Determine vault path ───
-                string vaultPath;
-                string? volumePath = null;
                 string? driveRoot = null;
                 var selectedTier = GetSelectedProtectionTier();
                 var effectiveTransport = GetEffectiveStorageTransport(selectedTier);
                 var requestedTransport = GetRequestedStorageTransport(selectedTier);
                 bool usePackedMasterVolume = effectiveTransport == VaultStorageTransport.PackedVolume;
-                PhantomVault.UI.Services.SettingsService.Update(settings =>
-                {
-                    settings.DefaultVaultProtectionTier = selectedTier.ToString();
-                    settings.PendingPostCreateAuthOnboarding = false;
-                    settings.PendingSetupWindowsHello = false;
-                    settings.PendingSetupPasskey = false;
-                    settings.PendingSetupTotp = false;
-                });
+                bool needsOnboarding = (EnableWindowsHello && !WindowsHelloOnboarding.IsBiometricEnrolled)
+                                   || (EnablePasskeys && !PasskeyOnboarding.HasRegisteredPasskey)
+                                   || (EnableTotp && !TotpOnboarding.IsTotpEnabled);
                 if (usePackedMasterVolume)
                 {
                     stagingRoot = Path.Combine(Path.GetTempPath(), "PhantomObscuraSetup", Guid.NewGuid().ToString("N"));
+                    cleanupDirectories.Add(stagingRoot);
                 }
 
                 const string rootContainerRelativePath = "root/root.pvault";
@@ -1106,6 +1273,7 @@ namespace PhantomVault.UI.ViewModels
                 const string provisioningRecordRelativePath = "root/storage-tier.provisioning.pmeta";
                 const string decoyDatabaseRelativePath = "decoy/decoy.database.pmeta";
                 const string generatedPasswordRecordRelativePath = "bootstrap/generated-password.pmeta";
+                const string phantomKeyBridgeNotes = "Phantom Key operates from its own sealed bridge workspace. Obscura consumes policy and binding records without importing private credential material.";
 
                 if (SelectedStorageLocation == "USB" && !string.IsNullOrEmpty(SelectedUsbPath))
                 {
@@ -1114,6 +1282,7 @@ namespace PhantomVault.UI.ViewModels
                     if (usePackedMasterVolume)
                     {
                         volumePath = Path.Combine(driveRoot, "system.bin");
+                        cleanupFiles.Add(volumePath);
                     }
                 }
                 else
@@ -1124,6 +1293,7 @@ namespace PhantomVault.UI.ViewModels
                     if (usePackedMasterVolume)
                     {
                         volumePath = Path.Combine(vaultPath, "obscura.vol");
+                        cleanupFiles.Add(volumePath);
                     }
                 }
 
@@ -1137,6 +1307,13 @@ namespace PhantomVault.UI.ViewModels
                 string provisioningRecordPath = Path.Combine(workingRoot, provisioningRecordRelativePath.Replace('/', Path.DirectorySeparatorChar));
                 string decoyDatabasePath = Path.Combine(workingRoot, decoyDatabaseRelativePath.Replace('/', Path.DirectorySeparatorChar));
                 string generatedPasswordRecordPath = Path.Combine(vaultPath, generatedPasswordRecordRelativePath.Replace('/', Path.DirectorySeparatorChar));
+                string phantomKeyBridgeRootPath = Path.Combine(workingRoot, PhantomKeyBridgeWorkspaceRelativePath.Replace('/', Path.DirectorySeparatorChar));
+                string phantomKeyBridgeManifestPath = Path.Combine(workingRoot, PhantomKeyBridgeManifestRelativePath.Replace('/', Path.DirectorySeparatorChar));
+                string phantomKeyContinuityPath = Path.Combine(workingRoot, PhantomKeyContinuityRelativePath.Replace('/', Path.DirectorySeparatorChar));
+                string phantomKeyPolicyPath = Path.Combine(workingRoot, PhantomKeyPolicyRelativePath.Replace('/', Path.DirectorySeparatorChar));
+                string phantomKeyConsumerMapPath = Path.Combine(workingRoot, PhantomKeyConsumerMapRelativePath.Replace('/', Path.DirectorySeparatorChar));
+                string phantomKeyAuditLogPath = Path.Combine(workingRoot, PhantomKeyAuditLogRelativePath.Replace('/', Path.DirectorySeparatorChar));
+                string phantomKeyBridgeReceiptPath = Path.Combine(workingRoot, PhantomKeyBridgeReceiptRelativePath.Replace('/', Path.DirectorySeparatorChar));
 
                 // ─── Wipe remnants FIRST (before creating directories) ───
                 // Must happen before directory creation because the cleanup will
@@ -1148,6 +1325,7 @@ namespace PhantomVault.UI.ViewModels
 
                     // Collect parent .phantom directories so we can remove protections and clean up
                     var phantomDirsToClean = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    var remnantFailures = new List<string>();
 
                     foreach (var remnant in DetectedRemnants.ToList())
                     {
@@ -1171,7 +1349,8 @@ namespace PhantomVault.UI.ViewModels
                         }
                         catch (Exception ex)
                         {
-                            Log.Warning(ex, "Failed to wipe remnant file: {FilePath}", remnant.FilePath);
+                            Log.Error(ex, "Failed to wipe remnant file: {FilePath}", remnant.FilePath);
+                            remnantFailures.Add(remnant.FilePath);
                         }
                     }
 
@@ -1197,8 +1376,14 @@ namespace PhantomVault.UI.ViewModels
                         }
                         catch (Exception ex)
                         {
-                            Log.Warning(ex, "Failed to clean up .phantom directory: {Dir}", cleanDir);
+                            Log.Error(ex, "Failed to clean up .phantom directory: {Dir}", cleanDir);
+                            remnantFailures.Add(cleanDir);
                         }
+                    }
+
+                    if (remnantFailures.Count > 0)
+                    {
+                        throw new InvalidOperationException("Provisioning aborted because one or more prior Phantom artifacts could not be securely removed.");
                     }
 
                     DetectedRemnants.Clear();
@@ -1214,6 +1399,11 @@ namespace PhantomVault.UI.ViewModels
                 Directory.CreateDirectory(Path.GetDirectoryName(recoveryContainerPath)!);
                 Directory.CreateDirectory(Path.Combine(workingRoot, recoveryVaultWorkspaceRelativePath.Replace('/', Path.DirectorySeparatorChar)));
                 Directory.CreateDirectory(Path.GetDirectoryName(decoyDatabasePath)!);
+                if (EnablePhantomKey)
+                {
+                    Directory.CreateDirectory(phantomKeyBridgeRootPath);
+                }
+                cleanupDirectories.Add(vaultPath);
 
                 // Hide the .phantom folder so vault contents aren't visible in file explorers
                 var phantomDirInfo = new DirectoryInfo(vaultPath);
@@ -1226,6 +1416,8 @@ namespace PhantomVault.UI.ViewModels
                 // ─── Generate vault salt (shared across all crypto operations) ───
                 byte[] salt = _encryptionService.GenerateSalt(32);
                 string? passphrase = UsePassword ? MasterPassword : null;
+                string bindingId = Guid.NewGuid().ToString("N");
+                string bindingGuid = Guid.NewGuid().ToString("D");
 
                 // ─── Handle keyfile ───
                 string? keyfilePath = null;
@@ -1238,16 +1430,33 @@ namespace PhantomVault.UI.ViewModels
                 }
                 else if (usesExternalKeyfile)
                 {
-                    keyfilePath = Path.Combine(vaultPath, "vault.key");
+                    string primaryKeyfilePath = Path.Combine(vaultPath, "vault.key");
+                    string companionLocatorPath = Path.Combine(vaultPath, "host-key", "companion.locator");
                     ReportProvisioningStage(2, 38, "Writing entropy-blended keyfile...", "Persisting the staged pointer-derived keyfile and wrapping it in place.");
-                    await GenerateKeyfileAsync(keyfilePath);
+                    await GenerateKeyfileAsync(primaryKeyfilePath);
+                    cleanupFiles.Add(primaryKeyfilePath);
 
-                    // Encrypt the keyfile in-place: read raw → encrypt → overwrite with encrypted blob
-                    await EncryptFileInPlaceAsync(keyfilePath, salt, passphrase);
+                    hostCompanionKeyfilePath = await GenerateSecondaryKeyfileAsync(primaryKeyfilePath, companionLocatorPath, bindingId);
+                    hostCompanionLocatorPath = companionLocatorPath;
+                    if (!string.IsNullOrWhiteSpace(hostCompanionKeyfilePath))
+                    {
+                        cleanupFiles.Add(hostCompanionKeyfilePath);
+                        cleanupDirectories.Add(Path.GetDirectoryName(hostCompanionKeyfilePath)!);
+                    }
 
+                    if (!string.IsNullOrWhiteSpace(hostCompanionLocatorPath))
+                    {
+                        cleanupFiles.Add(hostCompanionLocatorPath);
+                        cleanupDirectories.Add(Path.GetDirectoryName(hostCompanionLocatorPath)!);
+                    }
+
+                    // Encrypt the USB-visible primary keyfile in-place while keeping the host companion raw.
+                    await EncryptFileInPlaceAsync(primaryKeyfilePath, salt, passphrase);
+
+                    keyfilePath = CompositeKeyfilePath.Compose(primaryKeyfilePath, hostCompanionKeyfilePath);
                     KeyfilePath = keyfilePath;
                     StatusMessage = "Generated and encrypted keyfile...";
-                    Log.Information("Generated and encrypted keyfile at: {KeyfilePath}", keyfilePath);
+                    Log.Information("Generated key material with USB keyfile {PrimaryKeyfilePath} and companion keyfile {HostCompanionKeyfilePath}", primaryKeyfilePath, hostCompanionKeyfilePath);
                 }
                 else
                 {
@@ -1258,9 +1467,6 @@ namespace PhantomVault.UI.ViewModels
 
                 // ─── USB device binding ───
                 string? deviceId = null;
-                string? bindingId = null;
-                string? bindingGuid = null;
-                string? blackSecurePhysicalDevicePath = null;
                 if (selectedTier == VaultProtectionTier.BlackSecure &&
                     SelectedStorageLocation == "USB" &&
                     !string.IsNullOrEmpty(driveRoot) &&
@@ -1304,8 +1510,7 @@ namespace PhantomVault.UI.ViewModels
                     }
                     catch (Exception ex)
                     {
-                        Log.Warning(ex, "Could not bind to USB device");
-                        StatusMessage = $"Warning: Could not bind to USB device: {ex.Message}";
+                        throw new InvalidOperationException("Provisioning aborted because the selected USB device could not be bound securely.", ex);
                     }
                 }
 
@@ -1342,8 +1547,7 @@ namespace PhantomVault.UI.ViewModels
                     }
                     catch (Exception ex)
                     {
-                        Log.Warning(ex, "GUUID detection failed");
-                        StatusMessage = $"Warning: GUUID binding failed: {ex.Message}";
+                        throw new InvalidOperationException("Provisioning aborted because the required hardware GUUID binding could not be established.", ex);
                     }
                 }
 
@@ -1351,7 +1555,7 @@ namespace PhantomVault.UI.ViewModels
                 var manifest = new VaultManifest
                 {
                     Version = 3,
-                    VaultName = "PhantomObscura",
+                    VaultName = EffectiveVaultName,
                     ContainerPath = vaultContainerRelativePath,
                     RootContainerPath = rootContainerRelativePath,
                     ObjectContainerPath = objectContainerRelativePath,
@@ -1397,17 +1601,33 @@ namespace PhantomVault.UI.ViewModels
                     (recoveryContainerPath, 64L * 1024 * 1024, null)
                 };
 
-                // ─── Create mandatory three-container layout ───
-                if (EnableEncryptedContainer)
+                // ─── Create mandatory container layout ───
+                manifest.ContainerSizeBytes = containerSpecs[1].SizeBytes;
+                ReportProvisioningStage(4, 68, "Creating encrypted container set...", "Provisioning root, vault, object, and recovery containers.");
+
+                await using var initialVaultPayload = await BuildInitialVaultPayloadAsync(manifest, passphrase, keyfilePath)
+                    .ConfigureAwait(false);
+
+                foreach (var containerSpec in containerSpecs)
                 {
-                    manifest.ContainerSizeBytes = containerSpecs[1].SizeBytes;
-                    ReportProvisioningStage(4, 68, "Creating encrypted container set...", "Provisioning root, vault, object, and recovery containers.");
+                    StatusMessage = $"Creating {Path.GetFileNameWithoutExtension(containerSpec.Path)} container...";
+                    Log.Information("Creating encrypted container: {Size} bytes at {Path}", containerSpec.SizeBytes, containerSpec.Path);
 
-                    foreach (var containerSpec in containerSpecs)
+                    if (string.Equals(containerSpec.Path, vaultContainerPath, StringComparison.OrdinalIgnoreCase))
                     {
-                        StatusMessage = $"Creating {Path.GetFileNameWithoutExtension(containerSpec.Path)} container...";
-                        Log.Information("Creating encrypted container: {Size} bytes at {Path}", containerSpec.SizeBytes, containerSpec.Path);
-
+                        initialVaultPayload.Position = 0;
+                        await _containerService.CreateContainerFromStreamAsync(
+                            containerSpec.Path,
+                            initialVaultPayload,
+                            containerSpec.SizeBytes,
+                            passphrase,
+                            keyfilePath,
+                            manifest: null,
+                            progress: null,
+                            cancellationToken: CancellationToken.None);
+                    }
+                    else
+                    {
                         await _containerService.CreateContainerAsync(
                             containerSpec.Path,
                             containerSpec.SizeBytes,
@@ -1417,29 +1637,10 @@ namespace PhantomVault.UI.ViewModels
                             progress: null,
                             cancellationToken: CancellationToken.None);
                     }
-
-                    StatusMessage = "Three-container layout created...";
-                    Log.Information("Encrypted three-container layout created successfully");
                 }
-                else
-                {
-                    manifest.ContainerSizeBytes = containerSpecs[1].SizeBytes;
-                    ReportProvisioningStage(4, 68, "Creating encrypted container set...", "Provisioning root, vault, object, and recovery containers.");
 
-                    foreach (var containerSpec in containerSpecs)
-                    {
-                        StatusMessage = $"Creating {Path.GetFileNameWithoutExtension(containerSpec.Path)} container...";
-                        await _containerService.CreateContainerAsync(
-                            containerSpec.Path,
-                            containerSpec.SizeBytes,
-                            passphrase,
-                            keyfilePath,
-                            manifest: containerSpec.EmbeddedManifest,
-                            progress: null,
-                            cancellationToken: CancellationToken.None);
-                    }
-                    Log.Information("Baseline three-container layout created");
-                }
+                StatusMessage = "Container layout created...";
+                Log.Information("Encrypted container layout created successfully");
 
                 if (!string.IsNullOrEmpty(bindingRecordPath))
                 {
@@ -1517,10 +1718,12 @@ namespace PhantomVault.UI.ViewModels
                             manifest.RequiresHardwareToken,
                             manifest.RequiresTotp
                         }, bootstrapOptions));
+                    cleanupFiles.Add(Path.Combine(bootstrapPendingDirectory, "obscura-vault-summary.json"));
 
                     File.WriteAllText(
                         Path.Combine(bootstrapPendingDirectory, "recovery-record-summary.json"),
                         System.Text.Json.JsonSerializer.Serialize(recoveryRecord, bootstrapOptions));
+                    cleanupFiles.Add(Path.Combine(bootstrapPendingDirectory, "recovery-record-summary.json"));
 
                     File.WriteAllLines(
                         Path.Combine(bootstrapPendingDirectory, "README.txt"),
@@ -1531,6 +1734,11 @@ namespace PhantomVault.UI.ViewModels
                             $"Recovery workspace: {recoveryVaultWorkspaceRelativePath}",
                             $"Recovery container: {recoveryContainerRelativePath}"
                         });
+                    cleanupFiles.Add(Path.Combine(bootstrapPendingDirectory, "README.txt"));
+                    cleanupDirectories.Add(Path.Combine(
+                        workingRoot,
+                        recoveryVaultWorkspaceRelativePath.Replace('/', Path.DirectorySeparatorChar),
+                        ".suite-bootstrap"));
                 }
 
                 await _usbArtifactProtectionService.WriteEncryptedJsonAsync(
@@ -1557,6 +1765,115 @@ namespace PhantomVault.UI.ViewModels
                     passphrase,
                     keyfilePath,
                     "storage-tier-provisioning");
+
+                if (EnablePhantomKey)
+                {
+                    ReportProvisioningStage(5, 78, "Sealing Phantom Key bridge workspace...", "Writing isolated bridge policy, continuity, and consumer mapping records.");
+
+                    var bridgeManifest = new PhantomKeyBridgeManifestDocument
+                    {
+                        CreatedUtc = DateTimeOffset.UtcNow,
+                        BridgeModel = "isolated-phantomkey-bridge",
+                        OwnerApp = "PhantomObscura",
+                        Consumers = new[] { "PhantomObscura", "PhantomAttestor" },
+                        WorkspacePath = PhantomKeyBridgeWorkspaceRelativePath,
+                        Notes = phantomKeyBridgeNotes
+                    };
+
+                    File.WriteAllText(
+                        phantomKeyBridgeManifestPath,
+                        JsonSerializer.Serialize(
+                            bridgeManifest,
+                            new JsonSerializerOptions { WriteIndented = true }));
+
+                    if (!File.Exists(phantomKeyAuditLogPath))
+                    {
+                        File.WriteAllText(phantomKeyAuditLogPath, string.Empty);
+                    }
+
+                    var bindingDigest = string.IsNullOrWhiteSpace(bindingId)
+                        ? string.Empty
+                        : Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(bindingId)));
+
+                    await _usbArtifactProtectionService.WriteEncryptedJsonAsync(
+                        phantomKeyContinuityPath,
+                        new PhantomKeyContinuityDocument
+                        {
+                            CreatedUtc = DateTimeOffset.UtcNow,
+                            VaultName = manifest.VaultName,
+                            ProtectionTier = selectedTier.ToString(),
+                            EffectiveTransport = effectiveTransport.ToString(),
+                            BridgeWorkspacePath = PhantomKeyBridgeWorkspaceRelativePath,
+                            Consumers = new[] { "PhantomObscura", "PhantomAttestor" },
+                            BindingDigest = bindingDigest,
+                            RequiresPasskeyBridge = EnablePasskeys,
+                            Notes = "Continuity state is sanitized for bridge consumption. No raw secrets or credential payloads are persisted here."
+                        },
+                        manifest,
+                        passphrase,
+                        keyfilePath,
+                        "phantomkey-continuity");
+
+                    await _usbArtifactProtectionService.WriteEncryptedJsonAsync(
+                        phantomKeyPolicyPath,
+                        new PhantomKeyPolicyWorkspaceDocument
+                        {
+                            CreatedUtc = DateTimeOffset.UtcNow,
+                            OwnerApp = "PhantomObscura",
+                            StorageBoundary = selectedTier == VaultProtectionTier.BlackSecure
+                                ? "raw-device-sibling-workspace"
+                                : selectedTier == VaultProtectionTier.StealthSecure
+                                    ? "packed-transport-sibling-workspace"
+                                    : "filesystem-sibling-workspace",
+                            PrivateMaterialExportAllowed = false,
+                            RequiresBridgeMediation = true,
+                            AllowedConsumers = new[] { "PhantomObscura", "PhantomAttestor" },
+                            AllowedRecordClasses = new[] { "policy", "continuity", "consumer-map", "audit-log" },
+                            Notes = phantomKeyBridgeNotes
+                        },
+                        manifest,
+                        passphrase,
+                        keyfilePath,
+                        "phantomkey-policy");
+
+                    await _usbArtifactProtectionService.WriteEncryptedJsonAsync(
+                        phantomKeyConsumerMapPath,
+                        new PhantomKeyConsumerMapDocument
+                        {
+                            CreatedUtc = DateTimeOffset.UtcNow,
+                            OwnerApp = "PhantomObscura",
+                            WorkspacePath = PhantomKeyBridgeWorkspaceRelativePath,
+                            ObscuraBindingRecordPath = bindingRecordRelativePath,
+                            ObscuraProvisioningRecordPath = provisioningRecordRelativePath,
+                            RecoveryWorkspacePath = recoveryVaultWorkspaceRelativePath,
+                            ConsumerApps = new[] { "PhantomObscura", "PhantomAttestor" },
+                            Notes = "Consumer map exposes only relative paths and policy metadata. Secrets remain in their original containers."
+                        },
+                        manifest,
+                        passphrase,
+                        keyfilePath,
+                        "phantomkey-consumer-map");
+
+                    await _usbArtifactProtectionService.WriteEncryptedJsonAsync(
+                        phantomKeyBridgeReceiptPath,
+                        new PhantomKeyBridgeReceiptDocument
+                        {
+                            CreatedUtc = DateTimeOffset.UtcNow,
+                            WorkspacePath = PhantomKeyBridgeWorkspaceRelativePath,
+                            ManifestPath = PhantomKeyBridgeManifestRelativePath,
+                            ContinuityPath = PhantomKeyContinuityRelativePath,
+                            PolicyPath = PhantomKeyPolicyRelativePath,
+                            ConsumerMapPath = PhantomKeyConsumerMapRelativePath,
+                            AuditLogPath = PhantomKeyAuditLogRelativePath,
+                            StorageBoundary = bridgeManifest.BridgeModel,
+                            PrivateMaterialExportAllowed = false,
+                            Notes = phantomKeyBridgeNotes
+                        },
+                        manifest,
+                        passphrase,
+                        keyfilePath,
+                        "phantomkey-bridge-receipt");
+                }
 
                 await _usbArtifactProtectionService.WriteEncryptedJsonAsync(
                     decoyDatabasePath,
@@ -1615,6 +1932,26 @@ namespace PhantomVault.UI.ViewModels
                 // strips these protections first, then securely overwrites.
                 VaultFileProtection.HardenVaultFiles(vaultPath);
 
+                PhantomVault.UI.Services.SettingsService.Update(settings =>
+                {
+                    settings.DefaultVaultProtectionTier = selectedTier.ToString();
+                    settings.PendingPostCreateAuthOnboarding = needsOnboarding;
+                    settings.PendingSetupWindowsHello = EnableWindowsHello && !WindowsHelloOnboarding.IsBiometricEnrolled;
+                    settings.PendingSetupPasskey = EnablePasskeys && !PasskeyOnboarding.HasRegisteredPasskey;
+                    settings.PendingSetupTotp = EnableTotp && !TotpOnboarding.IsTotpEnabled;
+
+                    if (string.IsNullOrEmpty(SelectedUsbPath) &&
+                        !settings.KnownLocalVaultPaths.Contains(vaultPath, StringComparer.OrdinalIgnoreCase))
+                    {
+                        settings.KnownLocalVaultPaths.Add(vaultPath);
+                    }
+                });
+
+                if (string.IsNullOrEmpty(SelectedUsbPath))
+                {
+                    Log.Information("Registered local vault path: {VaultPath}", vaultPath);
+                }
+
                 ReportProvisioningStage(6, 100, "Vault created successfully!", "Protection metadata, transport records, and hardened vault paths are all in place.");
                 Log.Information("ExecuteVaultCreationAsync completed successfully");
             }
@@ -1622,17 +1959,20 @@ namespace PhantomVault.UI.ViewModels
             {
                 Log.Error(ex, "Vault creation failed");
                 StatusMessage = $"Error creating vault: {ex.Message}";
-                if (!string.IsNullOrEmpty(stagingRoot) && Directory.Exists(stagingRoot))
+                await CleanupFailedProvisioningAsync(
+                    cleanupFiles,
+                    cleanupDirectories,
+                    stagingRoot,
+                    vaultPath,
+                    volumePath,
+                    hostCompanionKeyfilePath,
+                    hostCompanionLocatorPath).ConfigureAwait(false);
+
+                if (!string.IsNullOrWhiteSpace(blackSecurePhysicalDevicePath))
                 {
-                    try
-                    {
-                        Directory.Delete(stagingRoot, true);
-                    }
-                    catch
-                    {
-                        // Best effort cleanup only.
-                    }
+                    await _blackSecureRawVolumeService.InvalidateVolumeHeaderAsync(blackSecurePhysicalDevicePath).ConfigureAwait(false);
                 }
+
                 throw; // Re-throw so the loading window can show the error
             }
             finally
@@ -1668,14 +2008,74 @@ namespace PhantomVault.UI.ViewModels
             };
         }
 
-        private static string ExtractDriveRoot(string usbPathDisplay)
+        private async Task<MemoryStream> BuildInitialVaultPayloadAsync(VaultManifest manifest, string? passphrase, string? keyfilePath)
         {
-            string driveRoot = usbPathDisplay.Length >= 2 ? usbPathDisplay.Substring(0, 3) : usbPathDisplay;
-            if (usbPathDisplay.Contains(" - "))
+            var database = new VaultDatabase
             {
-                driveRoot = usbPathDisplay.Split(" - ")[0].Trim();
-                if (!driveRoot.EndsWith("\\")) driveRoot += "\\";
+                Version = "2.0",
+                EncryptionType = "ZeroKnowledge-VaultFileZk",
+                Created = DateTime.UtcNow,
+                VaultName = manifest.VaultName,
+                Description = "Initial Phantom Obscura vault database",
+                Groups = new List<VaultGroup>
+                {
+                    new()
+                    {
+                        Id = Guid.NewGuid().ToString("N"),
+                        Name = "Logins",
+                        Icon = "key",
+                        Entries = new List<Credential>()
+                    }
+                }
+            };
+
+            byte[] vaultKey = new VaultDatabaseKeyService(_encryptionService)
+                .DeriveKey(manifest, passphrase, keyfilePath);
+            var zkVaultService = new PhantomVault.Core.Services.ZeroKnowledge.ZkVaultService();
+            try
+            {
+                if (!await zkVaultService.UnlockWithHybridKeyAsync(vaultKey).ConfigureAwait(false))
+                    throw new InvalidOperationException("Unable to initialize the vault database encryption key.");
+
+                byte[] databaseBytes = JsonSerializer.SerializeToUtf8Bytes(database, new JsonSerializerOptions { WriteIndented = true });
+                try
+                {
+                    await using var plaintextStream = new MemoryStream(databaseBytes, writable: false);
+                    var encryptedPayload = new MemoryStream();
+                    await zkVaultService.EncryptStreamToStreamAsync(plaintextStream, encryptedPayload).ConfigureAwait(false);
+                    encryptedPayload.Position = 0;
+                    return encryptedPayload;
+                }
+                finally
+                {
+                    CryptographicOperations.ZeroMemory(databaseBytes);
+                }
             }
+            finally
+            {
+                CryptographicOperations.ZeroMemory(vaultKey);
+                await zkVaultService.LockAndWipeKeysAsync().ConfigureAwait(false);
+                zkVaultService.Dispose();
+            }
+        }
+
+        private string ExtractDriveRoot(string? usbPathDisplay)
+        {
+            if (string.IsNullOrWhiteSpace(usbPathDisplay))
+                return string.Empty;
+
+            // Parse format: "ID: xxxxxxxx (C:) VolumeLabel [123 GB]"
+            var match = System.Text.RegularExpressions.Regex.Match(usbPathDisplay, @"\(([A-Za-z]:)\)");
+            if (match.Success)
+            {
+                var driveLetter = match.Groups[1].Value;
+                if (!driveLetter.EndsWith("\\")) driveLetter += "\\";
+                return driveLetter;
+            }
+
+            // Fallback for legacy format (should not occur with new detection logic)
+            string driveRoot = usbPathDisplay.Length >= 2 ? usbPathDisplay.Substring(0, 3) : usbPathDisplay;
+            if (!driveRoot.EndsWith("\\")) driveRoot += "\\";
             return driveRoot;
         }
 
@@ -1751,10 +2151,17 @@ namespace PhantomVault.UI.ViewModels
             byte[] plainBytes = await File.ReadAllBytesAsync(filePath);
             try
             {
+                // Mix passphrase bytes into the IKM so the wrapping key is bound to both
+                // the vault salt and the master password (if set).
+                byte[] saltIkm = string.IsNullOrEmpty(passphrase)
+                    ? salt
+                    : SHA256.HashData(
+                        salt.Concat(System.Text.Encoding.UTF8.GetBytes(passphrase)).ToArray());
+
                 // Derive an encryption key specifically for file wrapping
                 byte[] wrappingKey = HKDF.DeriveKey(
                     HashAlgorithmName.SHA256,
-                    salt,
+                    saltIkm,
                     32,
                     System.Text.Encoding.UTF8.GetBytes("PhantomVault.FileEncrypt.v1"),
                     System.Text.Encoding.UTF8.GetBytes(Path.GetFileName(filePath)));
@@ -1789,83 +2196,62 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Creates an encrypted empty vault file (for when no container is requested).
-        /// Uses AES-256-GCM so that even the empty vault file is encrypted on disk.
-        /// </summary>
-        private async Task CreateEncryptedEmptyVaultAsync(string containerPath, byte[] salt, string? passphrase)
+        private async Task<string> GenerateSecondaryKeyfileAsync(string primaryKeyfilePath, string locatorPath, string bindingId)
         {
-            // Create a small encrypted placeholder with vault metadata
-            byte[] metadata = System.Text.Encoding.UTF8.GetBytes(
-                $"{{\"type\":\"phantom-vault\",\"created\":\"{DateTimeOffset.UtcNow:O}\",\"empty\":true}}");
-
-            byte[] wrappingKey = HKDF.DeriveKey(
-                HashAlgorithmName.SHA256,
-                salt,
-                32,
-                System.Text.Encoding.UTF8.GetBytes("PhantomVault.EmptyVault.v1"),
-                System.Text.Encoding.UTF8.GetBytes("vault.pvault"));
-
-            try
+            if (!File.Exists(primaryKeyfilePath))
             {
-                byte[] nonce = new byte[12];
-                RandomNumberGenerator.Fill(nonce);
-                byte[] ciphertext = new byte[metadata.Length];
-                byte[] tag = new byte[16];
+                throw new FileNotFoundException("The primary generated keyfile is missing before host companion provisioning.", primaryKeyfilePath);
+            }
 
-                using (var aes = new AesGcm(wrappingKey, 16))
+            var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            if (string.IsNullOrWhiteSpace(localAppData))
+            {
+                throw new InvalidOperationException("Local application data storage is unavailable for the host companion keyfile.");
+            }
+
+            string hiddenFolder = Path.Combine(localAppData, "PhantomObscura", "HostKey");
+            Directory.CreateDirectory(hiddenFolder);
+            if (OperatingSystem.IsWindows())
+            {
+                var di = new DirectoryInfo(hiddenFolder);
+                di.Attributes |= FileAttributes.Hidden | FileAttributes.System;
+            }
+
+            string secondaryPath = Path.Combine(hiddenFolder, $"{bindingId}.companion.key");
+            File.Copy(primaryKeyfilePath, secondaryPath, overwrite: true);
+            if (OperatingSystem.IsWindows())
+            {
+                var fi = new FileInfo(secondaryPath);
+                fi.Attributes |= FileAttributes.Hidden | FileAttributes.ReadOnly;
+            }
+
+            string locatorDirectory = Path.GetDirectoryName(locatorPath)
+                ?? throw new InvalidOperationException("Companion locator path must include a parent directory.");
+            Directory.CreateDirectory(locatorDirectory);
+            if (OperatingSystem.IsWindows())
+            {
+                var di = new DirectoryInfo(locatorDirectory);
+                di.Attributes |= FileAttributes.Hidden | FileAttributes.System;
+            }
+
+            await File.WriteAllTextAsync(
+                locatorPath,
+                JsonSerializer.Serialize(new HostCompanionLocator
                 {
-                    aes.Encrypt(nonce, metadata, ciphertext, tag);
-                }
+                    HostCompanionKeyfilePath = secondaryPath
+                }));
 
-                using var fs = new FileStream(containerPath, FileMode.Create, FileAccess.Write, FileShare.None);
-                await fs.WriteAsync(nonce);
-                await fs.WriteAsync(tag);
-                await fs.WriteAsync(ciphertext);
-                await fs.FlushAsync();
-            }
-            finally
+            if (OperatingSystem.IsWindows())
             {
-                CryptographicOperations.ZeroMemory(wrappingKey);
-            }
-        }
-
-        private string GenerateSecureTotpSecret()
-        {
-            // Generate 20 bytes of random data for TOTP (160 bits, RFC 6238 compliant)
-            var secretBytes = new byte[20];
-            using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(secretBytes);
-            }
-            // Convert to Base32 for TOTP compatibility
-            return ToBase32(secretBytes);
-        }
-
-        private static string ToBase32(byte[] data)
-        {
-            const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-            var result = new System.Text.StringBuilder();
-            int buffer = 0;
-            int bitsLeft = 0;
-
-            foreach (byte b in data)
-            {
-                buffer = (buffer << 8) | b;
-                bitsLeft += 8;
-                while (bitsLeft >= 5)
-                {
-                    result.Append(alphabet[(buffer >> (bitsLeft - 5)) & 0x1F]);
-                    bitsLeft -= 5;
-                }
+                var fi = new FileInfo(locatorPath);
+                fi.Attributes |= FileAttributes.Hidden | FileAttributes.System;
             }
 
-            if (bitsLeft > 0)
-            {
-                result.Append(alphabet[(buffer << (5 - bitsLeft)) & 0x1F]);
-            }
-
-            return result.ToString();
+            ReportProvisioningStage(2, 40, "Provisioned host companion keyfile...",
+                "Host companion keyfile and USB locator were sealed successfully.");
+            Log.Information("Host companion keyfile provisioned at: {SecondaryKeyfilePath}", secondaryPath);
+            StatusMessage = "Host companion keyfile sealed successfully.";
+            return secondaryPath;
         }
 
         private async Task GenerateKeyfileAsync(string keyfilePath)
@@ -1887,6 +2273,118 @@ namespace PhantomVault.UI.ViewModels
                 _stagedGeneratedKeyfileBytes = null;
                 EntropyKeyfileSealed = false;
                 PrepareGeneratedKeyfileFlow();
+            }
+        }
+
+        private async Task CleanupFailedProvisioningAsync(
+            IEnumerable<string> cleanupFiles,
+            IEnumerable<string> cleanupDirectories,
+            string? stagingRoot,
+            string? vaultPath,
+            string? volumePath,
+            string? hostCompanionKeyfilePath,
+            string? hostCompanionLocatorPath)
+        {
+            var filePaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var path in cleanupFiles)
+            {
+                if (!string.IsNullOrWhiteSpace(path))
+                    filePaths.Add(path);
+            }
+
+            if (!string.IsNullOrWhiteSpace(volumePath))
+                filePaths.Add(volumePath);
+            if (!string.IsNullOrWhiteSpace(hostCompanionKeyfilePath))
+                filePaths.Add(hostCompanionKeyfilePath);
+            if (!string.IsNullOrWhiteSpace(hostCompanionLocatorPath))
+                filePaths.Add(hostCompanionLocatorPath);
+
+            foreach (var filePath in filePaths)
+            {
+                await TryDeleteProvisioningFileAsync(filePath).ConfigureAwait(false);
+            }
+
+            var directoryPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var path in cleanupDirectories)
+            {
+                if (!string.IsNullOrWhiteSpace(path))
+                    directoryPaths.Add(path);
+            }
+
+            if (!string.IsNullOrWhiteSpace(stagingRoot))
+                directoryPaths.Add(stagingRoot);
+            if (!string.IsNullOrWhiteSpace(vaultPath))
+                directoryPaths.Add(vaultPath);
+
+            foreach (var directoryPath in directoryPaths.OrderByDescending(path => path.Length))
+            {
+                TryDeleteProvisioningDirectory(directoryPath);
+            }
+        }
+
+        private static async Task TryDeleteProvisioningFileAsync(string filePath)
+        {
+            try
+            {
+                if (!File.Exists(filePath))
+                    return;
+
+                VaultFileProtection.StripFileProtection(filePath);
+                await SecureDeletionService.SecureDeleteFileAsync(filePath, SecureDeletionService.DeletionMethod.StandardSecure).ConfigureAwait(false);
+            }
+            catch
+            {
+                try
+                {
+                    if (File.Exists(filePath))
+                    {
+                        File.SetAttributes(filePath, FileAttributes.Normal);
+                        File.Delete(filePath);
+                    }
+                }
+                catch
+                {
+                    // Best-effort cleanup only.
+                }
+            }
+        }
+
+        private static void TryDeleteProvisioningDirectory(string directoryPath)
+        {
+            try
+            {
+                if (!Directory.Exists(directoryPath))
+                    return;
+
+                VaultFileProtection.StripDirectoryProtection(directoryPath);
+                foreach (var file in Directory.EnumerateFiles(directoryPath, "*", SearchOption.AllDirectories))
+                {
+                    try
+                    {
+                        File.SetAttributes(file, FileAttributes.Normal);
+                    }
+                    catch
+                    {
+                    }
+                }
+
+                foreach (var dir in Directory.EnumerateDirectories(directoryPath, "*", SearchOption.AllDirectories).OrderByDescending(path => path.Length))
+                {
+                    try
+                    {
+                        new DirectoryInfo(dir).Attributes = FileAttributes.Normal;
+                    }
+                    catch
+                    {
+                    }
+                }
+
+                new DirectoryInfo(directoryPath).Attributes = FileAttributes.Normal;
+                Directory.Delete(directoryPath, true);
+            }
+            catch
+            {
+                // Best-effort cleanup only.
             }
         }
 
@@ -1944,6 +2442,13 @@ namespace PhantomVault.UI.ViewModels
             OnPropertyChanged(nameof(PasswordSectionTitle));
             OnPropertyChanged(nameof(PasswordSectionDescription));
             OnPropertyChanged(nameof(PasswordToggleText));
+            OnPropertyChanged(nameof(PhantomKeyBridgeLocationDescription));
+        }
+
+        partial void OnEnablePhantomKeyChanged(bool value)
+        {
+            OnPropertyChanged(nameof(PhantomKeyBridgeLocationDescription));
+            OnPropertyChanged(nameof(PhantomKeyTrustBoundarySummary));
         }
 
         partial void OnRevealMasterPasswordChanged(bool value)
@@ -1977,9 +2482,8 @@ namespace PhantomVault.UI.ViewModels
             => SelectedSecurityLevel switch
             {
                 "Standard Secure" => VaultProtectionTier.StandardSecure,
-                "Black Secure" => VaultProtectionTier.BlackSecure,
-                "Phantom Secured" => VaultProtectionTier.BlackSecure,
                 "Ghost Secured" => VaultProtectionTier.StealthSecure,
+                "Phantom Secured" => VaultProtectionTier.BlackSecure,
                 _ => VaultProtectionTier.StealthSecure
             };
 
@@ -2087,7 +2591,30 @@ namespace PhantomVault.UI.ViewModels
             RevealConfirmPassword = !RevealConfirmPassword;
         }
 
+        [RelayCommand]
+        private void ToggleRevealUsbDeviceId()
+        {
+            RevealUsbDeviceId = !RevealUsbDeviceId;
+        }
+
         public event EventHandler<ProvisioningProgressEventArgs>? ProvisioningProgressChanged;
+
+        partial void OnVaultNameChanged(string value)
+        {
+            TotpOnboarding.VaultName = EffectiveVaultName;
+            OnPropertyChanged(nameof(EffectiveVaultName));
+        }
+
+        partial void OnUsbDeviceIdChanged(string? value)
+        {
+            OnPropertyChanged(nameof(DisplayUsbDeviceId));
+        }
+
+        partial void OnRevealUsbDeviceIdChanged(bool value)
+        {
+            OnPropertyChanged(nameof(DisplayUsbDeviceId));
+            OnPropertyChanged(nameof(UsbDeviceIdToggleText));
+        }
 
         public void RecordEntropyPointerSample(double x, double y, bool leftPressed, bool rightPressed)
         {
@@ -2108,6 +2635,17 @@ namespace PhantomVault.UI.ViewModels
 
             OnPropertyChanged(nameof(EntropyProgressPercent));
             OnPropertyChanged(nameof(CanSealEntropyKeyfile));
+        }
+
+        private static string MaskSensitiveIdentifier(string identifier)
+        {
+            if (string.IsNullOrWhiteSpace(identifier))
+                return "Unavailable";
+
+            if (identifier.Length <= 8)
+                return new string('•', identifier.Length);
+
+            return $"{new string('•', Math.Max(0, identifier.Length - 8))}{identifier[^8..]}";
         }
 
         [RelayCommand]
@@ -2216,6 +2754,7 @@ namespace PhantomVault.UI.ViewModels
         public string Description { get; set; } = string.Empty;
         public string[] Features { get; set; } = Array.Empty<string>();
         public string RecommendedFor { get; set; } = string.Empty;
+        public string SecurityHelpText { get; set; } = string.Empty;
         public string FriendlySummary { get; set; } = string.Empty;
         public int SecurityIncreasePercent { get; set; }
 
@@ -2402,5 +2941,71 @@ namespace PhantomVault.UI.ViewModels
         public string Password { get; init; } = string.Empty;
         public string Prompt { get; init; } = string.Empty;
         public DateTimeOffset CreatedUtc { get; init; }
+    }
+
+    internal sealed class HostCompanionLocator
+    {
+        public string HostCompanionKeyfilePath { get; init; } = string.Empty;
+    }
+
+    internal sealed class PhantomKeyBridgeManifestDocument
+    {
+        public DateTimeOffset CreatedUtc { get; init; }
+        public string BridgeModel { get; init; } = string.Empty;
+        public string OwnerApp { get; init; } = string.Empty;
+        public string[] Consumers { get; init; } = Array.Empty<string>();
+        public string WorkspacePath { get; init; } = string.Empty;
+        public string Notes { get; init; } = string.Empty;
+    }
+
+    internal sealed class PhantomKeyContinuityDocument
+    {
+        public DateTimeOffset CreatedUtc { get; init; }
+        public string VaultName { get; init; } = string.Empty;
+        public string ProtectionTier { get; init; } = string.Empty;
+        public string EffectiveTransport { get; init; } = string.Empty;
+        public string BridgeWorkspacePath { get; init; } = string.Empty;
+        public string[] Consumers { get; init; } = Array.Empty<string>();
+        public string BindingDigest { get; init; } = string.Empty;
+        public bool RequiresPasskeyBridge { get; init; }
+        public string Notes { get; init; } = string.Empty;
+    }
+
+    internal sealed class PhantomKeyPolicyWorkspaceDocument
+    {
+        public DateTimeOffset CreatedUtc { get; init; }
+        public string OwnerApp { get; init; } = string.Empty;
+        public string StorageBoundary { get; init; } = string.Empty;
+        public bool PrivateMaterialExportAllowed { get; init; }
+        public bool RequiresBridgeMediation { get; init; }
+        public string[] AllowedConsumers { get; init; } = Array.Empty<string>();
+        public string[] AllowedRecordClasses { get; init; } = Array.Empty<string>();
+        public string Notes { get; init; } = string.Empty;
+    }
+
+    internal sealed class PhantomKeyConsumerMapDocument
+    {
+        public DateTimeOffset CreatedUtc { get; init; }
+        public string OwnerApp { get; init; } = string.Empty;
+        public string WorkspacePath { get; init; } = string.Empty;
+        public string ObscuraBindingRecordPath { get; init; } = string.Empty;
+        public string ObscuraProvisioningRecordPath { get; init; } = string.Empty;
+        public string RecoveryWorkspacePath { get; init; } = string.Empty;
+        public string[] ConsumerApps { get; init; } = Array.Empty<string>();
+        public string Notes { get; init; } = string.Empty;
+    }
+
+    internal sealed class PhantomKeyBridgeReceiptDocument
+    {
+        public DateTimeOffset CreatedUtc { get; init; }
+        public string WorkspacePath { get; init; } = string.Empty;
+        public string ManifestPath { get; init; } = string.Empty;
+        public string ContinuityPath { get; init; } = string.Empty;
+        public string PolicyPath { get; init; } = string.Empty;
+        public string ConsumerMapPath { get; init; } = string.Empty;
+        public string AuditLogPath { get; init; } = string.Empty;
+        public string StorageBoundary { get; init; } = string.Empty;
+        public bool PrivateMaterialExportAllowed { get; init; }
+        public string Notes { get; init; } = string.Empty;
     }
 }

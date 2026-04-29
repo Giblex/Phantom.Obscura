@@ -1,0 +1,6 @@
+O:\Users\Giblex\Build Projects\Phantom Suite\Phantom.Obscura\src\Crypto\obj_codex\Debug\net9.0\GiblexVault.Security.ZK.csproj.AssemblyReference.cache
+O:\Users\Giblex\Build Projects\Phantom Suite\Phantom.Obscura\src\Crypto\obj_codex\Debug\net9.0\GiblexVault.Security.ZK.GeneratedMSBuildEditorConfig.editorconfig
+O:\Users\Giblex\Build Projects\Phantom Suite\Phantom.Obscura\src\Crypto\obj_codex\Debug\net9.0\GiblexVault.Security.ZK.AssemblyInfoInputs.cache
+O:\Users\Giblex\Build Projects\Phantom Suite\Phantom.Obscura\src\Crypto\obj_codex\Debug\net9.0\GiblexVault.Security.ZK.AssemblyInfo.cs
+O:\Users\Giblex\Build Projects\Phantom Suite\Phantom.Obscura\src\Crypto\obj_codex\Debug\net9.0\GiblexVault.Security.ZK.csproj.CoreCompileInputs.cache
+O:\Users\Giblex\Build Projects\Phantom Suite\Phantom.Obscura\src\Crypto\obj_codex\Debug\net9.0\GiblexVault.Security.ZK.sourcelink.json

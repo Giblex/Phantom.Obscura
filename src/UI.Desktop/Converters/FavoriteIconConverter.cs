@@ -14,8 +14,8 @@ namespace PhantomVault.UI.Converters
         {
             bool isFavorite = value is bool b && b;
             return isFavorite
-                ? "avares://PhantomVault.UI/Assets/SVG/favourites-active-icon.svg"
-                : "avares://PhantomVault.UI/Assets/SVG/favourites-icon.svg";
+                ? "avares://PhantomVault.UI/Assets/Visuals/App Icons/SVG/favourites-active-icon.svg"
+                : "avares://PhantomVault.UI/Assets/Visuals/App Icons/SVG/favourites-icon.svg";
         }
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

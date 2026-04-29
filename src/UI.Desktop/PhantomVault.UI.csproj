@@ -18,7 +18,7 @@
     <!-- CS1998: Async methods without await - Some methods are async for interface consistency -->
     <!-- CS8625: Nullable reference type warnings - Cleaned up in future refactor -->
     <!-- TODO: Add XML documentation comments for all public APIs -->
-    <NoWarn>$(NoWarn);1591;CS0618;CS1573;CS1574;CS1571;CS1998;CS8625</NoWarn>
+    <NoWarn>$(NoWarn);1591;CS0618;CS1573;CS1574;CS1571;CS1998;CS8625;CS0012</NoWarn>
   </PropertyGroup>
 
   <!-- Exclude legacy snapshots from the build so they don't register duplicate Avalonia resources -->

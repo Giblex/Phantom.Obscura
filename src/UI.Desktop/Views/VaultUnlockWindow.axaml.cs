@@ -1,12 +1,14 @@
 using Avalonia.Controls;
+using PhantomVault.UI.Services;
 using PhantomVault.UI.ViewModels;
 
 namespace PhantomVault.UI.Views
 {
-    public partial class VaultUnlockWindow : Window
+    public partial class VaultUnlockWindow : ThemeAwareWindow
     {
         public VaultUnlockWindow()
         {
+            ThemeScope.SetIsThemed(this, false);
             InitializeComponent();
         }
 
