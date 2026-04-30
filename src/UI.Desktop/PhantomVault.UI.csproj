@@ -6,6 +6,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Deterministic>true</Deterministic>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <GenerateTargetPlatformAttribute>false</GenerateTargetPlatformAttribute>
     <AvaloniaUseCompiledXaml>true</AvaloniaUseCompiledXaml>
     <UseWpf>false</UseWpf>
     <!-- Use Avalonia for cross‑platform desktop UI. -->

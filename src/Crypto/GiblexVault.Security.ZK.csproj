@@ -8,6 +8,8 @@
 		<Deterministic>true</Deterministic>
 		<ProduceReferenceAssembly>true</ProduceReferenceAssembly>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
 		<!-- CS1591: Missing XML comment for publicly visible type or member - Temporarily suppressed -->
 		<!-- TODO: Add XML documentation comments for all public APIs -->
 		<NoWarn>$(NoWarn);1591</NoWarn>
