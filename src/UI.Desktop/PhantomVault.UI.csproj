@@ -23,6 +23,7 @@
 
   <!-- Exclude legacy snapshots from the build so they don't register duplicate Avalonia resources -->
   <ItemGroup>
+    <Compile Remove="bin\**;obj\**;obj_*\**" />
     <Compile Remove="Legacy\**\*" />
     <AvaloniaXaml Remove="Legacy\**\*.axaml" />
     <AvaloniaResource Remove="Legacy\**\*" />
@@ -38,6 +39,7 @@
     <ProjectReference Include="..\Crypto\GiblexVault.Security.ZK.csproj" />
     <ProjectReference Include="..\Autofill\PhantomVault.Autofill.csproj" />
     <ProjectReference Include="..\..\..\Phantom.Shared\Giblex.AssetShield\Giblex.AssetShield.csproj" />
+    <ProjectReference Include="..\..\..\Phantom.Shared\Phantom.UI.Shared\Phantom.UI.Shared.csproj" />
     <!-- <ProjectReference Include="..\..\..\PhantomRecovery\PhantomRecovery.App\PhantomRecovery.App.csproj" /> -->
     <!-- <ProjectReference Include="..\..\..\PhantomRecovery\PhantomRecovery.Core\PhantomRecovery.Core.csproj" /> -->
     <PackageReference Include="Avalonia" Version="11.3.9" />

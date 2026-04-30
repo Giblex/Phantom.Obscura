@@ -33,14 +33,6 @@ namespace PhantomVault.UI.ViewModels
     public partial class SetupWizardViewModel : ObservableObject
     {
         private const int GeneratedKeyfileSizeBytes = 256 * 1024;
-        private const string PhantomKeyBridgeWorkspaceRelativePath = "vaults/phantomkey";
-        private const string PhantomKeyBridgeManifestRelativePath = "vaults/phantomkey/bridge.manifest.json";
-        private const string PhantomKeyContinuityRelativePath = "vaults/phantomkey/phantomkey.continuity.pmeta";
-        private const string PhantomKeyPolicyRelativePath = "vaults/phantomkey/phantomkey.policy.pmeta";
-        private const string PhantomKeyConsumerMapRelativePath = "vaults/phantomkey/phantomkey.consumer-map.pmeta";
-        private const string PhantomKeyAuditLogRelativePath = "vaults/phantomkey/phantomkey.audit.log";
-        private const string PhantomKeyBridgeReceiptRelativePath = "root/phantomkey.bridge.pmeta";
-
         private Window? _ownerWindow;
         private readonly DialogService _dialogService = new();
         private readonly EncryptionService _encryptionService;
@@ -362,10 +354,10 @@ namespace PhantomVault.UI.ViewModels
                 var selectedTier = GetSelectedProtectionTier();
                 return selectedTier switch
                 {
-                    VaultProtectionTier.BlackSecure => "Phantom Key stays in its own sibling bridge workspace at vaults/phantomkey inside the raw-device transport.",
-                    VaultProtectionTier.StealthSecure => "Phantom Key stays in its own sibling bridge workspace at vaults/phantomkey inside the concealed master transport.",
+                    VaultProtectionTier.BlackSecure => $"Phantom Key stays in its own sibling bridge workspace at {PhantomKeyBridgeContract.WorkspaceRelativePath} inside the raw-device transport.",
+                    VaultProtectionTier.StealthSecure => $"Phantom Key stays in its own sibling bridge workspace at {PhantomKeyBridgeContract.WorkspaceRelativePath} inside the concealed master transport.",
                     _ => string.IsNullOrWhiteSpace(SelectedUsbPath)
-                        ? "Phantom Key stays in its own encrypted bridge workspace at .phantom/vaults/phantomkey."
+                        ? $"Phantom Key stays in its own encrypted bridge workspace at .phantom/{PhantomKeyBridgeContract.WorkspaceRelativePath}."
                         : $"Phantom Key stays in its own encrypted bridge workspace at {Path.Combine(ExtractDriveRoot(SelectedUsbPath), ".phantom", "vaults", "phantomkey")}."
                 };
             }
@@ -1307,13 +1299,13 @@ namespace PhantomVault.UI.ViewModels
                 string provisioningRecordPath = Path.Combine(workingRoot, provisioningRecordRelativePath.Replace('/', Path.DirectorySeparatorChar));
                 string decoyDatabasePath = Path.Combine(workingRoot, decoyDatabaseRelativePath.Replace('/', Path.DirectorySeparatorChar));
                 string generatedPasswordRecordPath = Path.Combine(vaultPath, generatedPasswordRecordRelativePath.Replace('/', Path.DirectorySeparatorChar));
-                string phantomKeyBridgeRootPath = Path.Combine(workingRoot, PhantomKeyBridgeWorkspaceRelativePath.Replace('/', Path.DirectorySeparatorChar));
-                string phantomKeyBridgeManifestPath = Path.Combine(workingRoot, PhantomKeyBridgeManifestRelativePath.Replace('/', Path.DirectorySeparatorChar));
-                string phantomKeyContinuityPath = Path.Combine(workingRoot, PhantomKeyContinuityRelativePath.Replace('/', Path.DirectorySeparatorChar));
-                string phantomKeyPolicyPath = Path.Combine(workingRoot, PhantomKeyPolicyRelativePath.Replace('/', Path.DirectorySeparatorChar));
-                string phantomKeyConsumerMapPath = Path.Combine(workingRoot, PhantomKeyConsumerMapRelativePath.Replace('/', Path.DirectorySeparatorChar));
-                string phantomKeyAuditLogPath = Path.Combine(workingRoot, PhantomKeyAuditLogRelativePath.Replace('/', Path.DirectorySeparatorChar));
-                string phantomKeyBridgeReceiptPath = Path.Combine(workingRoot, PhantomKeyBridgeReceiptRelativePath.Replace('/', Path.DirectorySeparatorChar));
+                string phantomKeyBridgeRootPath = Path.Combine(workingRoot, PhantomKeyBridgeContract.WorkspaceRelativePath.Replace('/', Path.DirectorySeparatorChar));
+                string phantomKeyBridgeManifestPath = Path.Combine(workingRoot, PhantomKeyBridgeContract.BridgeManifestRelativePath.Replace('/', Path.DirectorySeparatorChar));
+                string phantomKeyContinuityPath = Path.Combine(workingRoot, PhantomKeyBridgeContract.ContinuityRelativePath.Replace('/', Path.DirectorySeparatorChar));
+                string phantomKeyPolicyPath = Path.Combine(workingRoot, PhantomKeyBridgeContract.PolicyRelativePath.Replace('/', Path.DirectorySeparatorChar));
+                string phantomKeyConsumerMapPath = Path.Combine(workingRoot, PhantomKeyBridgeContract.ConsumerMapRelativePath.Replace('/', Path.DirectorySeparatorChar));
+                string phantomKeyAuditLogPath = Path.Combine(workingRoot, PhantomKeyBridgeContract.AuditLogRelativePath.Replace('/', Path.DirectorySeparatorChar));
+                string phantomKeyBridgeReceiptPath = Path.Combine(workingRoot, PhantomKeyBridgeContract.BridgeReceiptRelativePath.Replace('/', Path.DirectorySeparatorChar));
 
                 // ─── Wipe remnants FIRST (before creating directories) ───
                 // Must happen before directory creation because the cleanup will
@@ -1575,6 +1567,14 @@ namespace PhantomVault.UI.ViewModels
                     UsbBindingGuid = bindingGuid,
                     Guuid = GuuidValue,
                     RequiresHardwareToken = EnablePhantomKey,
+                    PhantomKeyBridgeEnabled = EnablePhantomKey,
+                    PhantomKeyBridgeWorkspacePath = EnablePhantomKey ? PhantomKeyBridgeContract.WorkspaceRelativePath : null,
+                    PhantomKeyBridgeManifestPath = EnablePhantomKey ? PhantomKeyBridgeContract.BridgeManifestRelativePath : null,
+                    PhantomKeyBridgeContinuityPath = EnablePhantomKey ? PhantomKeyBridgeContract.ContinuityRelativePath : null,
+                    PhantomKeyBridgePolicyPath = EnablePhantomKey ? PhantomKeyBridgeContract.PolicyRelativePath : null,
+                    PhantomKeyBridgeConsumerMapPath = EnablePhantomKey ? PhantomKeyBridgeContract.ConsumerMapRelativePath : null,
+                    PhantomKeyBridgeAuditLogPath = EnablePhantomKey ? PhantomKeyBridgeContract.AuditLogRelativePath : null,
+                    PhantomKeyBridgeReceiptPath = EnablePhantomKey ? PhantomKeyBridgeContract.BridgeReceiptRelativePath : null,
                     RequiresTotp = EnableTotp,
                     ProtectionTier = selectedTier,
                     EffectiveStorageTransport = effectiveTransport,
@@ -1773,10 +1773,10 @@ namespace PhantomVault.UI.ViewModels
                     var bridgeManifest = new PhantomKeyBridgeManifestDocument
                     {
                         CreatedUtc = DateTimeOffset.UtcNow,
-                        BridgeModel = "isolated-phantomkey-bridge",
-                        OwnerApp = "PhantomObscura",
-                        Consumers = new[] { "PhantomObscura", "PhantomAttestor" },
-                        WorkspacePath = PhantomKeyBridgeWorkspaceRelativePath,
+                        BridgeModel = PhantomKeyBridgeContract.BridgeManifestModel,
+                        OwnerApp = PhantomKeyBridgeContract.ObscuraOwnerApp,
+                        Consumers = PhantomKeyBridgeContract.DefaultConsumers,
+                        WorkspacePath = PhantomKeyBridgeContract.WorkspaceRelativePath,
                         Notes = phantomKeyBridgeNotes
                     };
 
@@ -1803,8 +1803,8 @@ namespace PhantomVault.UI.ViewModels
                             VaultName = manifest.VaultName,
                             ProtectionTier = selectedTier.ToString(),
                             EffectiveTransport = effectiveTransport.ToString(),
-                            BridgeWorkspacePath = PhantomKeyBridgeWorkspaceRelativePath,
-                            Consumers = new[] { "PhantomObscura", "PhantomAttestor" },
+                            BridgeWorkspacePath = PhantomKeyBridgeContract.WorkspaceRelativePath,
+                            Consumers = PhantomKeyBridgeContract.DefaultConsumers,
                             BindingDigest = bindingDigest,
                             RequiresPasskeyBridge = EnablePasskeys,
                             Notes = "Continuity state is sanitized for bridge consumption. No raw secrets or credential payloads are persisted here."
@@ -1812,14 +1812,14 @@ namespace PhantomVault.UI.ViewModels
                         manifest,
                         passphrase,
                         keyfilePath,
-                        "phantomkey-continuity");
+                        PhantomKeyBridgeContract.ContinuityPurpose);
 
                     await _usbArtifactProtectionService.WriteEncryptedJsonAsync(
                         phantomKeyPolicyPath,
                         new PhantomKeyPolicyWorkspaceDocument
                         {
                             CreatedUtc = DateTimeOffset.UtcNow,
-                            OwnerApp = "PhantomObscura",
+                            OwnerApp = PhantomKeyBridgeContract.ObscuraOwnerApp,
                             StorageBoundary = selectedTier == VaultProtectionTier.BlackSecure
                                 ? "raw-device-sibling-workspace"
                                 : selectedTier == VaultProtectionTier.StealthSecure
@@ -1827,44 +1827,44 @@ namespace PhantomVault.UI.ViewModels
                                     : "filesystem-sibling-workspace",
                             PrivateMaterialExportAllowed = false,
                             RequiresBridgeMediation = true,
-                            AllowedConsumers = new[] { "PhantomObscura", "PhantomAttestor" },
-                            AllowedRecordClasses = new[] { "policy", "continuity", "consumer-map", "audit-log" },
+                            AllowedConsumers = PhantomKeyBridgeContract.DefaultConsumers,
+                            AllowedRecordClasses = PhantomKeyBridgeContract.DefaultRecordClasses,
                             Notes = phantomKeyBridgeNotes
                         },
                         manifest,
                         passphrase,
                         keyfilePath,
-                        "phantomkey-policy");
+                        PhantomKeyBridgeContract.PolicyPurpose);
 
                     await _usbArtifactProtectionService.WriteEncryptedJsonAsync(
                         phantomKeyConsumerMapPath,
                         new PhantomKeyConsumerMapDocument
                         {
                             CreatedUtc = DateTimeOffset.UtcNow,
-                            OwnerApp = "PhantomObscura",
-                            WorkspacePath = PhantomKeyBridgeWorkspaceRelativePath,
+                            OwnerApp = PhantomKeyBridgeContract.ObscuraOwnerApp,
+                            WorkspacePath = PhantomKeyBridgeContract.WorkspaceRelativePath,
                             ObscuraBindingRecordPath = bindingRecordRelativePath,
                             ObscuraProvisioningRecordPath = provisioningRecordRelativePath,
                             RecoveryWorkspacePath = recoveryVaultWorkspaceRelativePath,
-                            ConsumerApps = new[] { "PhantomObscura", "PhantomAttestor" },
+                            ConsumerApps = PhantomKeyBridgeContract.DefaultConsumers,
                             Notes = "Consumer map exposes only relative paths and policy metadata. Secrets remain in their original containers."
                         },
                         manifest,
                         passphrase,
                         keyfilePath,
-                        "phantomkey-consumer-map");
+                        PhantomKeyBridgeContract.ConsumerMapPurpose);
 
                     await _usbArtifactProtectionService.WriteEncryptedJsonAsync(
                         phantomKeyBridgeReceiptPath,
                         new PhantomKeyBridgeReceiptDocument
                         {
                             CreatedUtc = DateTimeOffset.UtcNow,
-                            WorkspacePath = PhantomKeyBridgeWorkspaceRelativePath,
-                            ManifestPath = PhantomKeyBridgeManifestRelativePath,
-                            ContinuityPath = PhantomKeyContinuityRelativePath,
-                            PolicyPath = PhantomKeyPolicyRelativePath,
-                            ConsumerMapPath = PhantomKeyConsumerMapRelativePath,
-                            AuditLogPath = PhantomKeyAuditLogRelativePath,
+                            WorkspacePath = PhantomKeyBridgeContract.WorkspaceRelativePath,
+                            ManifestPath = PhantomKeyBridgeContract.BridgeManifestRelativePath,
+                            ContinuityPath = PhantomKeyBridgeContract.ContinuityRelativePath,
+                            PolicyPath = PhantomKeyBridgeContract.PolicyRelativePath,
+                            ConsumerMapPath = PhantomKeyBridgeContract.ConsumerMapRelativePath,
+                            AuditLogPath = PhantomKeyBridgeContract.AuditLogRelativePath,
                             StorageBoundary = bridgeManifest.BridgeModel,
                             PrivateMaterialExportAllowed = false,
                             Notes = phantomKeyBridgeNotes
@@ -1872,7 +1872,7 @@ namespace PhantomVault.UI.ViewModels
                         manifest,
                         passphrase,
                         keyfilePath,
-                        "phantomkey-bridge-receipt");
+                        PhantomKeyBridgeContract.BridgeReceiptPurpose);
                 }
 
                 await _usbArtifactProtectionService.WriteEncryptedJsonAsync(
@@ -2948,64 +2948,4 @@ namespace PhantomVault.UI.ViewModels
         public string HostCompanionKeyfilePath { get; init; } = string.Empty;
     }
 
-    internal sealed class PhantomKeyBridgeManifestDocument
-    {
-        public DateTimeOffset CreatedUtc { get; init; }
-        public string BridgeModel { get; init; } = string.Empty;
-        public string OwnerApp { get; init; } = string.Empty;
-        public string[] Consumers { get; init; } = Array.Empty<string>();
-        public string WorkspacePath { get; init; } = string.Empty;
-        public string Notes { get; init; } = string.Empty;
-    }
-
-    internal sealed class PhantomKeyContinuityDocument
-    {
-        public DateTimeOffset CreatedUtc { get; init; }
-        public string VaultName { get; init; } = string.Empty;
-        public string ProtectionTier { get; init; } = string.Empty;
-        public string EffectiveTransport { get; init; } = string.Empty;
-        public string BridgeWorkspacePath { get; init; } = string.Empty;
-        public string[] Consumers { get; init; } = Array.Empty<string>();
-        public string BindingDigest { get; init; } = string.Empty;
-        public bool RequiresPasskeyBridge { get; init; }
-        public string Notes { get; init; } = string.Empty;
-    }
-
-    internal sealed class PhantomKeyPolicyWorkspaceDocument
-    {
-        public DateTimeOffset CreatedUtc { get; init; }
-        public string OwnerApp { get; init; } = string.Empty;
-        public string StorageBoundary { get; init; } = string.Empty;
-        public bool PrivateMaterialExportAllowed { get; init; }
-        public bool RequiresBridgeMediation { get; init; }
-        public string[] AllowedConsumers { get; init; } = Array.Empty<string>();
-        public string[] AllowedRecordClasses { get; init; } = Array.Empty<string>();
-        public string Notes { get; init; } = string.Empty;
-    }
-
-    internal sealed class PhantomKeyConsumerMapDocument
-    {
-        public DateTimeOffset CreatedUtc { get; init; }
-        public string OwnerApp { get; init; } = string.Empty;
-        public string WorkspacePath { get; init; } = string.Empty;
-        public string ObscuraBindingRecordPath { get; init; } = string.Empty;
-        public string ObscuraProvisioningRecordPath { get; init; } = string.Empty;
-        public string RecoveryWorkspacePath { get; init; } = string.Empty;
-        public string[] ConsumerApps { get; init; } = Array.Empty<string>();
-        public string Notes { get; init; } = string.Empty;
-    }
-
-    internal sealed class PhantomKeyBridgeReceiptDocument
-    {
-        public DateTimeOffset CreatedUtc { get; init; }
-        public string WorkspacePath { get; init; } = string.Empty;
-        public string ManifestPath { get; init; } = string.Empty;
-        public string ContinuityPath { get; init; } = string.Empty;
-        public string PolicyPath { get; init; } = string.Empty;
-        public string ConsumerMapPath { get; init; } = string.Empty;
-        public string AuditLogPath { get; init; } = string.Empty;
-        public string StorageBoundary { get; init; } = string.Empty;
-        public bool PrivateMaterialExportAllowed { get; init; }
-        public string Notes { get; init; } = string.Empty;
-    }
 }

@@ -22,6 +22,8 @@ namespace GiblexVault.Security.ZK.Container
     public sealed class GvContainerZk
     {
         private static readonly byte[] Magic = { 0x47, 0x56, 0x2D, 0x43, 0x5A, 0x4B, 0x01, 0x00 };
+        private static readonly byte[] TocFooterMagic = { 0x47, 0x56, 0x2D, 0x54, 0x4F, 0x43, 0x02, 0x00 };
+        private const int TocFooterSize = 16;
         private const int ChunkSize = 64 * 1024; // 64 KB streaming buffer
 
         private sealed record CHeader(string Type, string Version, CipherSuite Suite, KdfParams Kdf, string? Label, string? PolicyHash = null);
@@ -72,12 +74,14 @@ namespace GiblexVault.Security.ZK.Container
             }
 
             var cek = Hkdf.Sha256(masterKey, kdf.Salt, Encoding.UTF8.GetBytes("container::cek"));
-            await WriteTocAsync(fs, header, suite, cek, new Toc(new List<Entry>()));
+            await AppendTocAsync(fs, header, suite, cek, new Toc(new List<Entry>()));
             CryptographicOperations.ZeroMemory(cek);
         }
 
-        private static async Task WriteTocAsync(FileStream fs, byte[] header, CipherSuite suite, byte[] cek, Toc toc)
+        private static async Task AppendTocAsync(FileStream fs, byte[] header, CipherSuite suite, byte[] cek, Toc toc)
         {
+            fs.Position = fs.Length;
+            var tocStart = fs.Position;
             var ns = Aead.GetSuite(suite).NonceSize;
             var nonce = RandomNumberGenerator.GetBytes(ns);
             var plain = JsonSerializer.SerializeToUtf8Bytes(toc);
@@ -88,6 +92,7 @@ namespace GiblexVault.Security.ZK.Container
             BinaryPrimitives.WriteUInt32LittleEndian(l, (uint)ct.Length);
             await fs.WriteAsync(l);
             await fs.WriteAsync(ct);
+            await WriteTocFooterAsync(fs, tocStart);
             await fs.FlushAsync();
         }
 
@@ -144,9 +149,38 @@ namespace GiblexVault.Security.ZK.Container
 
             // Only derive key AFTER signature verification passes
             var cek = Hkdf.Sha256(masterKey, hdoc.Kdf.Salt, Encoding.UTF8.GetBytes("container::cek"));
-            var tocStart = fs.Position;
+            var initialTocStart = fs.Position;
+            var tocStart = ReadLatestTocStart(fs, initialTocStart);
 
             return (header, hdoc.Suite, cek, tocStart, fs);
+        }
+
+        private static long ReadLatestTocStart(FileStream fs, long fallbackTocStart)
+        {
+            if (fs.Length < TocFooterSize)
+                return fallbackTocStart;
+
+            var originalPosition = fs.Position;
+            try
+            {
+                fs.Position = fs.Length - TocFooterSize;
+                Span<byte> magic = stackalloc byte[TocFooterMagic.Length];
+                if (fs.Read(magic) != TocFooterMagic.Length || !magic.SequenceEqual(TocFooterMagic))
+                    return fallbackTocStart;
+
+                Span<byte> offsetBytes = stackalloc byte[8];
+                if (fs.Read(offsetBytes) != 8)
+                    return fallbackTocStart;
+
+                var tocStart = BinaryPrimitives.ReadInt64LittleEndian(offsetBytes);
+                if (tocStart < fallbackTocStart || tocStart >= fs.Length - TocFooterSize)
+                    throw new InvalidOperationException("Invalid TOC footer offset");
+                return tocStart;
+            }
+            finally
+            {
+                fs.Position = originalPosition;
+            }
         }
 
         private static Toc ReadToc(FileStream fs, byte[] header, CipherSuite suite, byte[] cek)
@@ -171,7 +205,8 @@ namespace GiblexVault.Security.ZK.Container
 
         private static void WriteToc(FileStream fs, long tocStart, byte[] header, CipherSuite suite, byte[] cek, Toc toc)
         {
-            fs.Position = tocStart;
+            fs.Position = fs.Length;
+            tocStart = fs.Position;
             var ns = Aead.GetSuite(suite).NonceSize;
             var nonce = RandomNumberGenerator.GetBytes(ns);
             var plain = JsonSerializer.SerializeToUtf8Bytes(toc);
@@ -182,8 +217,25 @@ namespace GiblexVault.Security.ZK.Container
             BinaryPrimitives.WriteUInt32LittleEndian(l, (uint)ct.Length);
             fs.Write(l);
             fs.Write(ct);
+            WriteTocFooter(fs, tocStart);
             fs.Flush();
             fs.Position = fs.Length;
+        }
+
+        private static async Task WriteTocFooterAsync(FileStream fs, long tocStart)
+        {
+            await fs.WriteAsync(TocFooterMagic);
+            byte[] offset = new byte[8];
+            BinaryPrimitives.WriteInt64LittleEndian(offset, tocStart);
+            await fs.WriteAsync(offset);
+        }
+
+        private static void WriteTocFooter(FileStream fs, long tocStart)
+        {
+            fs.Write(TocFooterMagic);
+            Span<byte> offset = stackalloc byte[8];
+            BinaryPrimitives.WriteInt64LittleEndian(offset, tocStart);
+            fs.Write(offset);
         }
 
         private static string HashName(string name, byte[] cek)
@@ -202,6 +254,7 @@ namespace GiblexVault.Security.ZK.Container
             var (header, suite, cek, tocStart, fs) = Open(path, masterKey, verifyingKey);
             using (fs)
             {
+                fs.Position = tocStart;
                 var toc = ReadToc(fs, header, suite, cek);
 
                 // Find the end of all existing data (may include entries after the old TOC)
@@ -214,7 +267,6 @@ namespace GiblexVault.Security.ZK.Container
 
                 var dek = RandomNumberGenerator.GetBytes(32);
                 var wrapped = KeyWrap.WrapAead(suite, cek, dek, header);
-                long offset = fs.Position;
 
                 // Write entry using streaming
                 var ns = Aead.GetSuite(suite).NonceSize;
@@ -267,10 +319,8 @@ namespace GiblexVault.Security.ZK.Container
                 var name = options.Profile == EncryptionProfile.Paranoid ? HashName(entryName, cek) : entryName;
                 toc.Entries.Add(new Entry(name, realLength, entryPosition, ct.Length + ns + 4, wrapped));
 
-                // Truncate to tocStart to remove old TOC, then write new TOC at tocStart
-                // This prevents the new TOC from overwriting entries when it grows
-                fs.SetLength(tocStart);
-                fs.Position = tocStart;
+                // Append the replacement TOC and footer. Older TOCs remain unreachable
+                // because Open reads the latest footer.
                 WriteToc(fs, tocStart, header, suite, cek, toc);
 
                 CryptographicOperations.ZeroMemory(dek);
@@ -283,6 +333,7 @@ namespace GiblexVault.Security.ZK.Container
             var (header, suite, cek, tocStart, fs) = Open(path, masterKey, verifyingKey);
             using (fs)
             {
+                fs.Position = tocStart;
                 var toc = ReadToc(fs, header, suite, cek);
                 var names = new List<string>(toc.Entries.Select(e => e.Name));
                 CryptographicOperations.ZeroMemory(cek);
@@ -295,6 +346,7 @@ namespace GiblexVault.Security.ZK.Container
             var (header, suite, cek, tocStart, fs) = Open(path, masterKey, verifyingKey);
             using (fs)
             {
+                fs.Position = tocStart;
                 var toc = ReadToc(fs, header, suite, cek);
                 var key = options.Profile == EncryptionProfile.Paranoid ? HashName(entryName, cek) : entryName;
                 var e = toc.Entries.FirstOrDefault(x => x.Name == key);

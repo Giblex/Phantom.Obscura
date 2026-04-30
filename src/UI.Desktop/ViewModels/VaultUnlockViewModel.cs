@@ -35,6 +35,7 @@ namespace PhantomVault.UI.ViewModels
         private readonly SecureTrashService _secureTrashService;
         private readonly EncryptionService _encryptionService;
         private readonly UsbArtifactProtectionService _usbArtifactProtectionService;
+        private readonly PhantomKeyBridgeValidator _phantomKeyBridgeValidator;
         private readonly IconManager _iconManager;
         private readonly UsbDetector _usbDetector;
         private readonly UnlockThrottleService _throttleService;
@@ -62,6 +63,7 @@ namespace PhantomVault.UI.ViewModels
             _secureTrashService = secureTrashService ?? throw new ArgumentNullException(nameof(secureTrashService));
             _encryptionService = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
             _usbArtifactProtectionService = new UsbArtifactProtectionService(_encryptionService);
+            _phantomKeyBridgeValidator = new PhantomKeyBridgeValidator(_usbArtifactProtectionService);
             _iconManager = iconManager ?? throw new ArgumentNullException(nameof(iconManager));
             _usbDetector = usbDetector ?? throw new ArgumentNullException(nameof(usbDetector));
             _throttleService = new UnlockThrottleService();
@@ -394,6 +396,7 @@ namespace PhantomVault.UI.ViewModels
                     ValidateUsbTopology(testManifest, resolvedBindingRecordPath);
                     ValidateUsbBinding(selectedPhysicalDrivePath ?? selectedDriveRoot!, resolvedBindingRecordPath, testManifest, password, keyfilePath);
                     ValidateRecoveryArtifacts(testManifest, password, keyfilePath);
+                    _phantomKeyBridgeValidator.Validate(testManifest, password, keyfilePath);
 
                     // Successful passphrase - continue to TOTP check
 
@@ -842,6 +845,7 @@ namespace PhantomVault.UI.ViewModels
             manifest.BindingRecordPath = ResolveExtractedPath(extractedRoot, manifest.BindingRecordPath);
             manifest.RecoveryRecordPath = ResolveExtractedPath(extractedRoot, manifest.RecoveryRecordPath);
             manifest.DecoyDatabasePath = ResolveExtractedPath(extractedRoot, manifest.DecoyDatabasePath);
+            PhantomKeyBridgeValidator.ResolveRuntimePaths(manifest, extractedRoot);
         }
 
         private static string? TryResolveLayoutRoot(string manifestPath, string rootPath, string vaultsPath)

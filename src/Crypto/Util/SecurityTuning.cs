@@ -9,9 +9,7 @@ namespace GiblexVault.Security.ZK.Util
 {
     public static class SecurityTuning
     {
-        public static KeyProtector.IKeyProtector KeyProtector { get; } = OperatingSystem.IsWindows()
-            ? new DpapiKeyProtector() as KeyProtector.IKeyProtector
-            : new FileKeyProtector(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "PhantomVault", "pepper.key"));
+        public static KeyProtector.IKeyProtector KeyProtector { get; } = KeyProtectorProvider.CreateDefault();
 
         public static EngineOptions Calibrate(EngineOptions target)
         {
