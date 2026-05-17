@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Phantom Obscura: navy backgrounds with steel-blue accents.
+         Mirrors desktop PhantomTheme.Dark.axaml so native Android chrome
+         (status bar, splash, system widgets) matches MAUI XAML once it loads. -->
+    <color name="colorPrimary">#6B8CAE</color>       <!-- steel blue accent -->
+    <color name="colorPrimaryDark">#1A2535</color>   <!-- header navy (status bar) -->
+    <color name="colorAccent">#6B8CAE</color>
+    <color name="phantomBackground">#1E2A38</color>  <!-- window/splash bg -->
+</resources>

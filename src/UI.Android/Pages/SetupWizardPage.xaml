@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PhantomVault.Android.Pages.SetupWizardPage"
+             Title="Create Vault"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{StaticResource Background}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="32,48,32,32" Spacing="20">
+
+            <!-- Logo / header -->
+            <VerticalStackLayout Spacing="6" HorizontalOptions="Center" Margin="0,0,0,16">
+                <Label Text="PHANTOM"
+                       FontFamily="OpenSansSemibold"
+                       FontSize="32"
+                       TextColor="{StaticResource Primary}"
+                       CharacterSpacing="6"
+                       HorizontalOptions="Center" />
+                <Label Text="OBSCURA"
+                       FontFamily="OpenSansSemibold"
+                       FontSize="18"
+                       TextColor="{StaticResource SecondaryText}"
+                       CharacterSpacing="8"
+                       HorizontalOptions="Center" />
+                <Label Text="Secure Local Vault"
+                       FontSize="13"
+                       TextColor="{StaticResource SecondaryText}"
+                       HorizontalOptions="Center"
+                       Margin="0,8,0,0" />
+            </VerticalStackLayout>
+
+            <!-- Status / error -->
+            <Frame IsVisible="{Binding StatusMessage, Converter={StaticResource NotNullOrEmptyBoolConverter}}"
+                   BackgroundColor="#3D1515" BorderColor="{StaticResource Danger}" CornerRadius="10" Padding="14">
+                <Label Text="{Binding StatusMessage}" TextColor="{StaticResource Danger}" FontSize="14" />
+            </Frame>
+
+            <!-- Vault name -->
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="14" Padding="16" BorderColor="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Vault Name" FontSize="12" TextColor="{StaticResource SecondaryText}" />
+                    <Entry Text="{Binding VaultName}"
+                           Placeholder="e.g. My Vault"
+                           PlaceholderColor="{StaticResource SecondaryText}"
+                           TextColor="{StaticResource PrimaryText}"
+                           BackgroundColor="Transparent"
+                           FontSize="16" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Master password -->
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="14" Padding="16" BorderColor="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Master Password" FontSize="12" TextColor="{StaticResource SecondaryText}" />
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <Entry Grid.Column="0"
+                               Text="{Binding Password}"
+                               IsPassword="{Binding PasswordVisible, Converter={StaticResource InverseBoolConverter}}"
+                               Placeholder="Enter a strong password"
+                               PlaceholderColor="{StaticResource SecondaryText}"
+                               TextColor="{StaticResource PrimaryText}"
+                               BackgroundColor="Transparent"
+                               FontSize="16" />
+                        <Button Grid.Column="1"
+                                Text="{Binding PasswordVisible, Converter={StaticResource BoolToEyeIconConverter}}"
+                                Command="{Binding TogglePasswordVisibilityCommand}"
+                                BackgroundColor="{StaticResource ButtonSecondary}"
+                                TextColor="{StaticResource PrimaryText}"
+                                FontSize="16" HeightRequest="40" WidthRequest="44" CornerRadius="8" Padding="0" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Confirm password -->
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="14" Padding="16" BorderColor="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Confirm Password" FontSize="12" TextColor="{StaticResource SecondaryText}" />
+                    <Entry Text="{Binding ConfirmPassword}"
+                           IsPassword="True"
+                           Placeholder="Re-enter your password"
+                           PlaceholderColor="{StaticResource SecondaryText}"
+                           TextColor="{StaticResource PrimaryText}"
+                           BackgroundColor="Transparent"
+                           FontSize="16" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Tip -->
+            <Label Text="⚠  This password cannot be recovered. Write it down and keep it safe."
+                   FontSize="13"
+                   TextColor="{StaticResource Warning}"
+                   HorizontalOptions="Center"
+                   HorizontalTextAlignment="Center"
+                   Margin="0,4" />
+
+            <!-- Create button -->
+            <Button Text="{Binding IsBusy, Converter={StaticResource BoolToTitleConverter}, ConverterParameter='Creating…|Create Vault'}"
+                    Command="{Binding CreateVaultCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="#0A0A0A"
+                    FontFamily="OpenSansSemibold"
+                    FontSize="16"
+                    HeightRequest="52"
+                    CornerRadius="14" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

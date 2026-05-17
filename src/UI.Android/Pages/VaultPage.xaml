@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PhantomVault.Android.ViewModels"
+             xmlns:models="clr-namespace:PhantomVault.Core.Models;assembly=PhantomVault.Core"
+             x:Class="PhantomVault.Android.Pages.VaultPage"
+             Title="Vault"
+             Shell.NavBarIsVisible="True"
+             BackgroundColor="{StaticResource Background}">
+
+    <Shell.TitleView>
+        <VerticalStackLayout VerticalOptions="Center">
+            <Label Text="PHANTOM OBSCURA"
+                   FontFamily="OpenSansSemibold"
+                   FontSize="16"
+                   TextColor="{StaticResource Primary}"
+                   CharacterSpacing="2" />
+        </VerticalStackLayout>
+    </Shell.TitleView>
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="★" Command="{Binding ToggleFavoritesFilterCommand}" />
+        <ToolbarItem Text="+" Command="{Binding AddCredentialCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <Grid RowDefinitions="Auto,Auto,*">
+
+        <!-- Search bar -->
+        <Frame Grid.Row="0" Margin="12,8,12,4" Padding="0"
+               BackgroundColor="{StaticResource Surface}"
+               BorderColor="{StaticResource InputBorder}"
+               CornerRadius="12">
+            <Grid ColumnDefinitions="*,Auto" Margin="4,0">
+                <Entry Grid.Column="0"
+                       Placeholder="Search credentials…"
+                       PlaceholderColor="{StaticResource SecondaryText}"
+                       Text="{Binding SearchQuery}"
+                       TextColor="{StaticResource PrimaryText}"
+                       BackgroundColor="Transparent"
+                       FontSize="15"
+                       ReturnType="Search"
+                       Margin="8,0" />
+                <Button Grid.Column="1"
+                        Text="✕"
+                        Command="{Binding ClearSearchCommand}"
+                        IsVisible="{Binding SearchQuery, Converter={StaticResource NotNullOrEmptyBoolConverter}}"
+                        BackgroundColor="Transparent"
+                        TextColor="{StaticResource SecondaryText}"
+                        FontSize="14"
+                        Padding="8,0" />
+            </Grid>
+        </Frame>
+
+        <!-- Type filter chips -->
+        <ScrollView Grid.Row="1" Orientation="Horizontal" Margin="8,0,8,4" HorizontalScrollBarVisibility="Never">
+            <HorizontalStackLayout Spacing="6" Padding="4,4">
+                <Border StrokeShape="RoundRectangle 16"
+                        BackgroundColor="{Binding ShowFavoritesOnly, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#6C3483|#1E1E1E'}"
+                        Stroke="{StaticResource InputBorder}" StrokeThickness="1" Padding="12,6">
+                    <Label Text="★ Favorites" FontSize="12"
+                           TextColor="{StaticResource PrimaryText}" />
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleFavoritesFilterCommand}" />
+                    </Border.GestureRecognizers>
+                </Border>
+
+                <Border StrokeShape="RoundRectangle 16"
+                        BackgroundColor="{Binding ActiveTypeFilter, Converter={StaticResource TypeFilterChipBgConverter}, ConverterParameter='0'}"
+                        Stroke="{StaticResource InputBorder}" StrokeThickness="1" Padding="12,6">
+                    <Label Text="🔑 Password" FontSize="12" TextColor="{StaticResource PrimaryText}" />
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding SetTypeFilterCommand}" CommandParameter="0" />
+                    </Border.GestureRecognizers>
+                </Border>
+
+                <Border StrokeShape="RoundRectangle 16"
+                        BackgroundColor="{Binding ActiveTypeFilter, Converter={StaticResource TypeFilterChipBgConverter}, ConverterParameter='7'}"
+                        Stroke="{StaticResource InputBorder}" StrokeThickness="1" Padding="12,6">
+                    <Label Text="🔢 TOTP" FontSize="12" TextColor="{StaticResource PrimaryText}" />
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding SetTypeFilterCommand}" CommandParameter="7" />
+                    </Border.GestureRecognizers>
+                </Border>
+
+                <Border StrokeShape="RoundRectangle 16"
+                        BackgroundColor="{Binding ActiveTypeFilter, Converter={StaticResource TypeFilterChipBgConverter}, ConverterParameter='5'}"
+                        Stroke="{StaticResource InputBorder}" StrokeThickness="1" Padding="12,6">
+                    <Label Text="💳 Card" FontSize="12" TextColor="{StaticResource PrimaryText}" />
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding SetTypeFilterCommand}" CommandParameter="5" />
+                    </Border.GestureRecognizers>
+                </Border>
+
+                <Border StrokeShape="RoundRectangle 16"
+                        BackgroundColor="{Binding ActiveTypeFilter, Converter={StaticResource TypeFilterChipBgConverter}, ConverterParameter='1'}"
+                        Stroke="{StaticResource InputBorder}" StrokeThickness="1" Padding="12,6">
+                    <Label Text="📶 WiFi" FontSize="12" TextColor="{StaticResource PrimaryText}" />
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding SetTypeFilterCommand}" CommandParameter="1" />
+                    </Border.GestureRecognizers>
+                </Border>
+
+                <Border StrokeShape="RoundRectangle 16"
+                        BackgroundColor="{Binding ActiveTypeFilter, Converter={StaticResource TypeFilterChipBgConverter}, ConverterParameter='3'}"
+                        Stroke="{StaticResource InputBorder}" StrokeThickness="1" Padding="12,6">
+                    <Label Text="🔐 API Key" FontSize="12" TextColor="{StaticResource PrimaryText}" />
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding SetTypeFilterCommand}" CommandParameter="3" />
+                    </Border.GestureRecognizers>
+                </Border>
+
+                <Border StrokeShape="RoundRectangle 16"
+                        BackgroundColor="{Binding ActiveTypeFilter, Converter={StaticResource TypeFilterChipBgConverter}, ConverterParameter='2'}"
+                        Stroke="{StaticResource InputBorder}" StrokeThickness="1" Padding="12,6">
+                    <Label Text="🪪 Identity" FontSize="12" TextColor="{StaticResource PrimaryText}" />
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding SetTypeFilterCommand}" CommandParameter="2" />
+                    </Border.GestureRecognizers>
+                </Border>
+
+                <Border StrokeShape="RoundRectangle 16"
+                        BackgroundColor="{Binding ActiveTypeFilter, Converter={StaticResource TypeFilterChipBgConverter}, ConverterParameter='6'}"
+                        Stroke="{StaticResource InputBorder}" StrokeThickness="1" Padding="12,6">
+                    <Label Text="🏦 Bank" FontSize="12" TextColor="{StaticResource PrimaryText}" />
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding SetTypeFilterCommand}" CommandParameter="6" />
+                    </Border.GestureRecognizers>
+                </Border>
+
+                <Border StrokeShape="RoundRectangle 16"
+                        BackgroundColor="{StaticResource Surface}"
+                        Stroke="{StaticResource InputBorder}" StrokeThickness="1" Padding="12,6">
+                    <Label Text="✕ Clear" FontSize="12" TextColor="{StaticResource SecondaryText}" />
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ClearFiltersCommand}" />
+                    </Border.GestureRecognizers>
+                </Border>
+            </HorizontalStackLayout>
+        </ScrollView>
+
+        <!-- Credential list -->
+        <CollectionView Grid.Row="2"
+                        ItemsSource="{Binding Credentials}"
+                        SelectionMode="Single"
+                        SelectedItem="{Binding SelectedCredential}"
+                        EmptyView="No credentials found">
+
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical" ItemSpacing="1" />
+            </CollectionView.ItemsLayout>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:Credential">
+                    <SwipeView>
+                        <SwipeView.RightItems>
+                            <SwipeItems>
+                                <SwipeItem Text="Delete"
+                                           BackgroundColor="#8B2222"
+                                           Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteCredentialCommand}"
+                                           CommandParameter="{Binding .}" />
+                            </SwipeItems>
+                        </SwipeView.RightItems>
+                        <SwipeView.LeftItems>
+                            <SwipeItems>
+                                <SwipeItem Text="★"
+                                           BackgroundColor="#6C3483"
+                                           Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ToggleFavoriteCommand}"
+                                           CommandParameter="{Binding .}" />
+                            </SwipeItems>
+                        </SwipeView.LeftItems>
+
+                        <Frame Margin="12,2" Padding="14,12"
+                               BackgroundColor="{StaticResource Surface}"
+                               BorderColor="{StaticResource CardBorder}"
+                               CornerRadius="10">
+                            <Grid ColumnDefinitions="48,*,Auto" ColumnSpacing="12">
+
+                                <Frame Grid.Column="0"
+                                       BackgroundColor="{StaticResource IconBackground}"
+                                       CornerRadius="10"
+                                       Padding="0"
+                                       WidthRequest="44" HeightRequest="44">
+                                    <Label Text="{Binding EntryType, Converter={StaticResource EntryTypeIconConverter}}"
+                                           FontSize="22"
+                                           HorizontalOptions="Center"
+                                           VerticalOptions="Center" />
+                                </Frame>
+
+                                <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                    <Label Text="{Binding Title}"
+                                           FontFamily="OpenSansSemibold"
+                                           FontSize="15"
+                                           TextColor="{StaticResource PrimaryText}"
+                                           LineBreakMode="TailTruncation" />
+                                    <Label Text="{Binding Username}"
+                                           FontSize="12"
+                                           TextColor="{StaticResource SecondaryText}"
+                                           LineBreakMode="TailTruncation" />
+                                    <Label Text="{Binding Group}"
+                                           FontSize="11"
+                                           TextColor="{StaticResource Primary}"
+                                           IsVisible="{Binding Group, Converter={StaticResource NotNullOrEmptyBoolConverter}}" />
+                                </VerticalStackLayout>
+
+                                <Label Grid.Column="2"
+                                       Text="★"
+                                       FontSize="18"
+                                       TextColor="{StaticResource Primary}"
+                                       IsVisible="{Binding IsFavorite}"
+                                       VerticalOptions="Center" />
+                            </Grid>
+                        </Frame>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+    </Grid>
+
+</ContentPage>
+

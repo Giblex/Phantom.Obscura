@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PhantomVault.Android.Pages.AccessibilitySettingsPage"
+             Title="Accessibility"
+             BackgroundColor="{StaticResource Background}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="10">
+
+            <Label Text="{Binding StatusMessage}" FontSize="13"
+                   TextColor="{StaticResource Primary}" HorizontalOptions="Center"
+                   IsVisible="{Binding StatusMessage, Converter={StaticResource NotNullOrEmptyBoolConverter}}" />
+
+            <!-- TEXT SIZE -->
+            <Label Text="TEXT SIZE" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0" />
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="16"
+                   BorderColor="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                        <Label Grid.Row="0" Grid.Column="0" Text="Base Font Size"
+                               FontFamily="OpenSansSemibold" FontSize="15"
+                               TextColor="{StaticResource PrimaryText}" />
+                        <Label Grid.Row="1" Grid.Column="0"
+                               Text="{Binding FontSize, StringFormat='{0}pt'}"
+                               FontSize="12" TextColor="{StaticResource SecondaryText}" />
+                        <Stepper Grid.Row="0" Grid.Column="1" Grid.RowSpan="2"
+                                 Minimum="12" Maximum="24" Increment="1"
+                                 Value="{Binding FontSize}" VerticalOptions="Center" />
+                    </Grid>
+                    <Frame BackgroundColor="#0D0D0D" CornerRadius="8" Padding="12">
+                        <Label Text="{Binding PreviewText}"
+                               FontSize="{Binding FontSize}"
+                               TextColor="{StaticResource PrimaryText}"
+                               HorizontalOptions="Center" />
+                    </Frame>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- DISPLAY -->
+            <Label Text="DISPLAY" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0" />
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="0"
+                   BorderColor="{StaticResource CardBorder}">
+                <VerticalStackLayout>
+                    <Grid ColumnDefinitions="*,Auto" Padding="16,14">
+                        <VerticalStackLayout Grid.Column="0">
+                            <Label Text="High Contrast Mode" FontFamily="OpenSansSemibold" FontSize="15"
+                                   TextColor="{StaticResource PrimaryText}" />
+                            <Label Text="Increases text and border contrast" FontSize="12"
+                                   TextColor="{StaticResource SecondaryText}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1" IsToggled="{Binding HighContrastEnabled}"
+                                OnColor="{StaticResource Primary}" VerticalOptions="Center" />
+                    </Grid>
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}" />
+                    <Grid ColumnDefinitions="*,Auto" Padding="16,14">
+                        <VerticalStackLayout Grid.Column="0">
+                            <Label Text="Reduce Motion" FontFamily="OpenSansSemibold" FontSize="15"
+                                   TextColor="{StaticResource PrimaryText}" />
+                            <Label Text="Minimise animations throughout the app" FontSize="12"
+                                   TextColor="{StaticResource SecondaryText}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1" IsToggled="{Binding ReduceMotionEnabled}"
+                                OnColor="{StaticResource Primary}" VerticalOptions="Center" />
+                    </Grid>
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}" />
+                    <Grid ColumnDefinitions="*,Auto" Padding="16,14">
+                        <VerticalStackLayout Grid.Column="0">
+                            <Label Text="Larger Touch Targets" FontFamily="OpenSansSemibold" FontSize="15"
+                                   TextColor="{StaticResource PrimaryText}" />
+                            <Label Text="Increases tap area for buttons" FontSize="12"
+                                   TextColor="{StaticResource SecondaryText}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1" IsToggled="{Binding LargeTouchTargetsEnabled}"
+                                OnColor="{StaticResource Primary}" VerticalOptions="Center" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <Button Text="Save Accessibility Settings" Command="{Binding SaveCommand}"
+                    BackgroundColor="{StaticResource Primary}" TextColor="#0A0A0A"
+                    FontFamily="OpenSansSemibold" CornerRadius="12" HeightRequest="50"
+                    Margin="0,8,0,0" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

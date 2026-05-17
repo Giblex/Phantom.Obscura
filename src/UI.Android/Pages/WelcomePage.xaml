@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PhantomVault.Android.ViewModels"
+             x:Class="PhantomVault.Android.Pages.WelcomePage"
+             x:DataType="vm:WelcomeViewModel"
+             BackgroundColor="{StaticResource Background}"
+             Shell.NavBarIsVisible="False">
+
+    <Grid RowDefinitions="*,Auto,*" Padding="32" RowSpacing="24">
+
+        <!-- Brand block -->
+        <VerticalStackLayout Grid.Row="0" VerticalOptions="End" HorizontalOptions="Center" Spacing="6">
+            <Label Text="PHANTOM"
+                   FontSize="42"
+                   FontAttributes="Bold"
+                   CharacterSpacing="12"
+                   HorizontalOptions="Center"
+                   TextColor="{StaticResource PrimaryText}" />
+            <Label Text="OBSCURA"
+                   FontSize="22"
+                   CharacterSpacing="10"
+                   HorizontalOptions="Center"
+                   TextColor="{StaticResource Primary}" />
+            <Label Text="USB-bound secure vault"
+                   FontSize="13"
+                   HorizontalOptions="Center"
+                   TextColor="{StaticResource MutedText}"
+                   Margin="0,8,0,0" />
+        </VerticalStackLayout>
+
+        <!-- Gate state card -->
+        <Border Grid.Row="1"
+                Stroke="{StaticResource CardBorder}"
+                StrokeThickness="1"
+                BackgroundColor="{StaticResource SurfaceElevated}"
+                Padding="24">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="12" />
+            </Border.StrokeShape>
+
+            <VerticalStackLayout Spacing="16">
+
+                <!-- Status dot — red when no drive, steel-blue when ready -->
+                <Ellipse WidthRequest="14"
+                         HeightRequest="14"
+                         Fill="{Binding HasDrive, Converter={StaticResource BoolToSuccessColorConverter}}"
+                         HorizontalOptions="Center" />
+
+                <Label Text="{Binding Headline}"
+                       FontSize="18"
+                       FontAttributes="Bold"
+                       TextColor="{StaticResource PrimaryText}"
+                       HorizontalTextAlignment="Center" />
+
+                <Label Text="{Binding Detail}"
+                       FontSize="13"
+                       TextColor="{StaticResource SecondaryText}"
+                       HorizontalTextAlignment="Center"
+                       LineBreakMode="WordWrap" />
+
+                <!-- Setup CTA: drive present, no vault -->
+                <Button Text="Set up new vault on this drive"
+                        Command="{Binding SetupNewVaultCommand}"
+                        IsVisible="{Binding CanShowSetup}"
+                        BackgroundColor="{StaticResource Primary}"
+                        TextColor="{StaticResource PrimaryText}"
+                        FontAttributes="Bold"
+                        HeightRequest="48"
+                        CornerRadius="8" />
+
+                <!-- Unlock CTA: drive + vault + device already bound -->
+                <Button Text="Unlock vault"
+                        Command="{Binding OpenUnlockCommand}"
+                        IsVisible="{Binding CanShowUnlock}"
+                        BackgroundColor="{StaticResource Primary}"
+                        TextColor="{StaticResource PrimaryText}"
+                        FontAttributes="Bold"
+                        HeightRequest="48"
+                        CornerRadius="8" />
+
+                <!-- Bind CTA: drive + vault, but this device isn't on the allowlist -->
+                <Button Text="Authorise this device"
+                        Command="{Binding BindThisDeviceCommand}"
+                        IsVisible="{Binding CanShowBind}"
+                        BackgroundColor="{StaticResource SecondaryAccent}"
+                        TextColor="{StaticResource PrimaryText}"
+                        FontAttributes="Bold"
+                        HeightRequest="48"
+                        CornerRadius="8" />
+
+                <Button Text="Rescan drives"
+                        Command="{Binding RescanCommand}"
+                        BackgroundColor="Transparent"
+                        TextColor="{StaticResource MutedText}"
+                        BorderColor="{StaticResource CardBorder}"
+                        BorderWidth="1"
+                        HeightRequest="40"
+                        CornerRadius="8" />
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- Footer hint -->
+        <Label Grid.Row="2"
+               Text="The vault stays on the USB drive. Phantom Obscura on this tablet only reads it while the drive is connected."
+               FontSize="11"
+               TextColor="{StaticResource DisabledText}"
+               HorizontalTextAlignment="Center"
+               VerticalOptions="End" />
+
+    </Grid>
+</ContentPage>

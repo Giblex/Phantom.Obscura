@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:pages="clr-namespace:PhantomVault.Android.Pages"
+       x:Class="PhantomVault.Android.AppShell"
+       FlyoutBehavior="Disabled"
+       Shell.NavBarIsVisible="True">
+
+    <Shell.Resources>
+        <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
+    </Shell.Resources>
+
+    <!-- Phantom navy shell chrome (matches desktop PhantomTheme.Dark) -->
+    <Shell.BackgroundColor>
+        <OnIdiom Phone="#1E2A38" Tablet="#1A2535" Default="#1E2A38" />
+    </Shell.BackgroundColor>
+    <Shell.ForegroundColor>#FFFFFF</Shell.ForegroundColor>
+    <Shell.TitleColor>#FFFFFF</Shell.TitleColor>
+    <Shell.TabBarBackgroundColor>#141C28</Shell.TabBarBackgroundColor>
+    <Shell.TabBarForegroundColor>#B9C7D6</Shell.TabBarForegroundColor>
+    <Shell.TabBarTitleColor>#6B8CAE</Shell.TabBarTitleColor>
+    <Shell.TabBarUnselectedColor>#5A6E84</Shell.TabBarUnselectedColor>
+
+    <!-- ═══ Welcome / USB gate (default landing screen) ═══════════════════ -->
+    <ShellContent x:Name="WelcomeContent"
+                  Route="welcome"
+                  ContentTemplate="{DataTemplate pages:WelcomePage}"
+                  Shell.NavBarIsVisible="False" />
+
+    <!-- ═══ Unlock (post-USB-gate, vault present) ═════════════════════════ -->
+    <ShellContent x:Name="UnlockContent"
+                  Route="unlock"
+                  ContentTemplate="{DataTemplate pages:UnlockPage}"
+                  Shell.NavBarIsVisible="False" />
+
+    <!-- ═══ Setup Wizard (first run — no vault yet) ══════════════════════ -->
+    <ShellContent x:Name="SetupContent"
+                  Route="setup"
+                  ContentTemplate="{DataTemplate pages:SetupWizardPage}"
+                  Shell.NavBarIsVisible="False" />
+
+    <!-- ═══ Main authenticated shell — phone: bottom TabBar ══════════════ -->
+    <TabBar x:Name="PhoneShell" Route="main">
+
+        <!-- Dashboard tab -->
+        <Tab Title="Dashboard" Route="dashboard">
+            <Tab.Icon>
+                <FontImageSource Glyph="🏠" FontFamily="Default" Size="20" Color="#888888" />
+            </Tab.Icon>
+            <ShellContent ContentTemplate="{DataTemplate pages:DashboardPage}" />
+        </Tab>
+
+        <!-- Vault tab -->
+        <Tab Title="Vault" Route="vault">
+            <Tab.Icon>
+                <FontImageSource Glyph="🔒" FontFamily="Default" Size="20" Color="#888888" />
+            </Tab.Icon>
+            <ShellContent ContentTemplate="{DataTemplate pages:VaultPage}" />
+        </Tab>
+
+        <!-- Settings tab (hub) -->
+        <Tab Title="Settings" Route="settings">
+            <Tab.Icon>
+                <FontImageSource Glyph="⚙" FontFamily="Default" Size="20" Color="#888888" />
+            </Tab.Icon>
+            <ShellContent ContentTemplate="{DataTemplate pages:SettingsPage}" />
+        </Tab>
+
+    </TabBar>
+
+</Shell>

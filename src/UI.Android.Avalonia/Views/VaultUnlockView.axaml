@@ -1,0 +1,86 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:PhantomVault.UI.ViewModels"
+             x:Class="PhantomVault.UI.Views.VaultUnlockView"
+             x:DataType="vm:VaultUnlockViewModel"
+             Background="{DynamicResource WindowBackgroundBrush}">
+
+  <!-- Android adapter for desktop Views/VaultUnlockWindow.axaml (verbatim layout, Window→UserControl) -->
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://PhantomVault.UI/Assets/Themes/PreVaultTheme.axaml"/>
+      </ResourceDictionary.MergedDictionaries>
+      <SolidColorBrush x:Key="UnlockAccentBrush" Color="#5D7DA7"/>
+      <SolidColorBrush x:Key="UnlockTrackBrush" Color="#13202D"/>
+      <SolidColorBrush x:Key="UnlockOrbBrush" Color="#173247"/>
+    </ResourceDictionary>
+  </UserControl.Resources>
+
+  <UserControl.Styles>
+    <Style Selector="TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,*,Auto" Margin="34,28">
+    <StackPanel Grid.Row="0" Spacing="10" Margin="0,0,0,28">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
+        <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
+               Width="32" Height="32" VerticalAlignment="Center"/>
+        <TextBlock Text="Unlocking Your Vault"
+                   FontSize="{StaticResource Type.H2.Size}"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource PrimaryTextBrush}"
+                   VerticalAlignment="Center"/>
+      </StackPanel>
+      <TextBlock Text="Please wait while we access your secure vault..."
+                 FontSize="{StaticResource Type.Body.Size}"
+                 Foreground="{DynamicResource MutedTextBrush}"
+                 HorizontalAlignment="Center"/>
+    </StackPanel>
+
+    <StackPanel Grid.Row="1" Spacing="22" VerticalAlignment="Center">
+      <Border Width="70" Height="70" CornerRadius="35"
+              Background="{DynamicResource UnlockOrbBrush}"
+              HorizontalAlignment="Center"
+              IsVisible="{Binding IsBusy}">
+        <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
+               Width="42" Height="42"
+               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+      </Border>
+
+      <TextBlock Text="{Binding Status}"
+                 FontSize="{StaticResource Type.H4.Size}"
+                 Foreground="{DynamicResource PrimaryTextBrush}"
+                 TextAlignment="Center"
+                 TextWrapping="Wrap"
+                 Margin="0,12,0,0"/>
+
+      <StackPanel Spacing="12" Margin="32,26,32,0" IsVisible="{Binding IsBusy}">
+        <Grid ColumnDefinitions="*,Auto">
+          <Border Grid.Column="0"
+                  Background="{DynamicResource UnlockTrackBrush}"
+                  CornerRadius="8" Padding="4">
+            <ProgressBar Value="{Binding ProgressPercent}"
+                         Maximum="100" Height="10" CornerRadius="6"
+                         Foreground="{DynamicResource UnlockAccentBrush}"
+                         Background="{DynamicResource UnlockTrackBrush}"/>
+          </Border>
+          <TextBlock Grid.Column="1"
+                     Text="{Binding ProgressPercent, StringFormat={}{0}%}"
+                     FontSize="{StaticResource Type.Small.Size}"
+                     Foreground="{DynamicResource SecondaryTextBrush}"
+                     VerticalAlignment="Center" Margin="10,0,0,0"/>
+        </Grid>
+      </StackPanel>
+    </StackPanel>
+
+    <TextBlock Grid.Row="2"
+               Text="Phantom Obscura • zero-knowledge vault access"
+               FontSize="{StaticResource Type.Tiny.Size}"
+               Foreground="{DynamicResource MutedTextBrush}"
+               HorizontalAlignment="Center"
+               Margin="0,30,0,0"/>
+  </Grid>
+</UserControl>

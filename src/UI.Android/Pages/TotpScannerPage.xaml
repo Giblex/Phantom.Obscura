@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PhantomVault.Android.Pages.TotpScannerPage"
+             Title="Add TOTP"
+             BackgroundColor="{StaticResource Background}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="14">
+
+            <!-- Instructions -->
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="16">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Add TOTP Authenticator"
+                           FontFamily="OpenSansSemibold" FontSize="17"
+                           TextColor="{StaticResource PrimaryText}" />
+                    <Label Text="Paste an otpauth:// URI from your authenticator app, or enter the Base32 secret key manually."
+                           FontSize="13" TextColor="{StaticResource SecondaryText}" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- URI paste -->
+            <Label Text="PASTE OTP URI" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,0,0,0" />
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="12">
+                <VerticalStackLayout Spacing="8">
+                    <Entry Placeholder="otpauth://totp/Issuer:account?secret=…"
+                           PlaceholderColor="{StaticResource SecondaryText}"
+                           Text="{Binding OtpAuthUri}"
+                           TextColor="{StaticResource PrimaryText}"
+                           FontSize="13"
+                           BackgroundColor="Transparent" />
+                    <Label Text="Filling this will auto-populate the fields below."
+                           FontSize="11" TextColor="{StaticResource SecondaryText}" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Manual entry -->
+            <Label Text="MANUAL ENTRY" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0" />
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="12">
+                <VerticalStackLayout Spacing="12">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Service / Issuer" FontSize="12" TextColor="{StaticResource SecondaryText}" />
+                        <Entry Placeholder="e.g. Google, GitHub, Microsoft"
+                               PlaceholderColor="{StaticResource SecondaryText}"
+                               Text="{Binding ManualIssuer}"
+                               TextColor="{StaticResource PrimaryText}"
+                               BackgroundColor="Transparent" />
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Account / Email" FontSize="12" TextColor="{StaticResource SecondaryText}" />
+                        <Entry Placeholder="user@example.com"
+                               PlaceholderColor="{StaticResource SecondaryText}"
+                               Text="{Binding ManualAccount}"
+                               TextColor="{StaticResource PrimaryText}"
+                               BackgroundColor="Transparent" />
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Base32 Secret Key *" FontSize="12" TextColor="{StaticResource SecondaryText}" />
+                        <Entry Placeholder="JBSWY3DPEHPK3PXP"
+                               PlaceholderColor="{StaticResource SecondaryText}"
+                               Text="{Binding ManualSecret}"
+                               TextColor="{StaticResource PrimaryText}"
+                               BackgroundColor="Transparent"
+                               IsSpellCheckEnabled="False"
+                               IsTextPredictionEnabled="False" />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Live preview -->
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="16"
+                   IsVisible="{Binding SecretValid}">
+                <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                    <Label Text="Preview Code" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                           HorizontalOptions="Center" />
+                    <Label Text="{Binding PreviewCode}"
+                           FontFamily="OpenSansSemibold" FontSize="36"
+                           TextColor="{StaticResource Primary}"
+                           CharacterSpacing="8" HorizontalOptions="Center" />
+                    <Label Text="✓ Valid secret" FontSize="12"
+                           TextColor="#27AE60" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Status -->
+            <Label Text="{Binding StatusMessage}"
+                   FontSize="13" TextColor="{StaticResource Primary}"
+                   HorizontalOptions="Center"
+                   IsVisible="{Binding StatusMessage, Converter={StaticResource NotNullBoolConverter}}" />
+
+            <Button Text="Add to Vault"
+                    Command="{Binding AddToVaultCommand}"
+                    Style="{StaticResource PrimaryButton}"
+                    IsEnabled="{Binding SecretValid}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

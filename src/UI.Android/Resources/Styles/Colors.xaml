@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?xaml-comp compile="true" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <!--
+        Phantom Obscura — mobile palette.
+        Mirrors the desktop PhantomTheme.Dark.axaml so the brand is consistent
+        across platforms: navy backgrounds with steel-blue + teal accents.
+    -->
+
+    <!-- Primary accent: steel blue (matches desktop AccentBrush #6B8CAE) -->
+    <Color x:Key="Primary">#6B8CAE</Color>
+    <Color x:Key="PrimaryDark">#4E6F90</Color>
+    <Color x:Key="PrimaryLight">#8FB5DF</Color>
+
+    <!-- Secondary accent: muted teal (desktop SecondaryAccentBrush) -->
+    <Color x:Key="SecondaryAccent">#6FA89F</Color>
+
+    <!-- Backgrounds (deep navy ladder from desktop) -->
+    <Color x:Key="Background">#1E2A38</Color>
+    <Color x:Key="Surface">#1A2434</Color>
+    <Color x:Key="SurfaceElevated">#263344</Color>
+    <Color x:Key="ContentBackground">#151D2A</Color>
+    <Color x:Key="HeaderBackground">#1A2535</Color>
+    <Color x:Key="FooterBackground">#141C28</Color>
+    <Color x:Key="CardBorder">#2A3A4E</Color>
+
+    <!-- Inputs -->
+    <Color x:Key="InputBackground">#1A2434</Color>
+    <Color x:Key="InputBorder">#2A3A4E</Color>
+
+    <!-- Text (matches desktop hierarchy) -->
+    <Color x:Key="PrimaryText">#FFFFFF</Color>
+    <Color x:Key="SecondaryText">#E0E6ED</Color>
+    <Color x:Key="MutedText">#B9C7D6</Color>
+    <Color x:Key="DisabledText">#909AA4</Color>
+
+    <!-- Icons / accents -->
+    <Color x:Key="IconBackground">#1C2C3A</Color>
+    <Color x:Key="Divider">#243444</Color>
+    <Color x:Key="ButtonSecondary">#1C2C3A</Color>
+
+    <!-- Semantic — kept distinct from brand accents -->
+    <Color x:Key="Success">#6FA89F</Color>
+    <Color x:Key="Warning">#D9A05B</Color>
+    <Color x:Key="Error">#C0392B</Color>
+    <Color x:Key="Danger">#C0392B</Color>
+    <Color x:Key="Info">#6B8CAE</Color>
+
+    <!-- Shell / tab bar -->
+    <Color x:Key="TabBarBackground">#141C28</Color>
+    <Color x:Key="TabBarInactive">#5A6E84</Color>
+
+</ResourceDictionary>

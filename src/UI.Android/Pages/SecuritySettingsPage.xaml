@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PhantomVault.Android.Pages.SecuritySettingsPage"
+             Title="Security Settings"
+             BackgroundColor="{StaticResource Background}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="12">
+
+            <Label Text="BIOMETRICS" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0" />
+
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="0">
+                <VerticalStackLayout>
+                    <!-- Biometric availability -->
+                    <Grid ColumnDefinitions="*,Auto" Padding="16,14">
+                        <VerticalStackLayout Grid.Column="0">
+                            <Label Text="Biometric Authentication"
+                                   FontFamily="OpenSansSemibold" FontSize="15"
+                                   TextColor="{StaticResource PrimaryText}" />
+                            <Label Text="{Binding BiometricAvailable, StringFormat='Available: {0}'}"
+                                   FontSize="12" TextColor="{StaticResource SecondaryText}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1" IsToggled="{Binding BiometricEnabled}"
+                                IsEnabled="{Binding BiometricAvailable}"
+                                OnColor="{StaticResource Primary}"
+                                VerticalOptions="Center" />
+                    </Grid>
+
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}" />
+
+                    <Button Text="Enroll Biometric"
+                            Command="{Binding EnrollBiometricCommand}"
+                            IsVisible="{Binding BiometricAvailable}"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource Primary}"
+                            FontFamily="OpenSansSemibold"
+                            HorizontalOptions="Start"
+                            Padding="16,14" />
+
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}"
+                             IsVisible="{Binding BiometricAvailable}" />
+
+                    <Button Text="Open System Biometric Settings"
+                            Command="{Binding OpenSystemBiometricSettingsCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource SecondaryText}"
+                            HorizontalOptions="Start"
+                            Padding="16,14" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Keystore section -->
+            <Label Text="HARDWARE SECURITY" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0" />
+
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="16">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Android Keystore"
+                           FontFamily="OpenSansSemibold" FontSize="15"
+                           TextColor="{StaticResource PrimaryText}" />
+                    <Label Text="Hardware-backed key storage protects your vault encryption keys."
+                           FontSize="12" TextColor="{StaticResource SecondaryText}" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- App-level security -->
+            <Label Text="APP SECURITY" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0" />
+
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="0">
+                <VerticalStackLayout>
+                    <Grid ColumnDefinitions="*,Auto" Padding="16,14">
+                        <VerticalStackLayout Grid.Column="0">
+                            <Label Text="Block Screen Capture"
+                                   FontFamily="OpenSansSemibold" FontSize="15"
+                                   TextColor="{StaticResource PrimaryText}" />
+                            <Label Text="Prevents screenshots and screen recording"
+                                   FontSize="12" TextColor="{StaticResource SecondaryText}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1" IsToggled="{Binding ScreenCaptureBlocked}"
+                                OnColor="{StaticResource Primary}"
+                                VerticalOptions="Center" />
+                    </Grid>
+
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}" />
+
+                    <Grid ColumnDefinitions="*,Auto" Padding="16,14">
+                        <VerticalStackLayout Grid.Column="0">
+                            <Label Text="Clipboard Protection"
+                                   FontFamily="OpenSansSemibold" FontSize="15"
+                                   TextColor="{StaticResource PrimaryText}" />
+                            <Label Text="Auto-clears clipboard after copying credentials"
+                                   FontSize="12" TextColor="{StaticResource SecondaryText}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1" IsToggled="{Binding ClipboardProtectionEnabled}"
+                                OnColor="{StaticResource Primary}"
+                                VerticalOptions="Center" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Status message -->
+            <Label Text="{Binding StatusMessage}"
+                   IsVisible="{Binding StatusMessage, Converter={StaticResource StringToBoolConverter}}"
+                   FontSize="13" TextColor="{StaticResource SecondaryText}"
+                   HorizontalOptions="Center"
+                   Margin="0,8" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}"
+                               Color="{StaticResource Primary}"
+                               HorizontalOptions="Center" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

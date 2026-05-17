@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PhantomVault.Android.ViewModels"
+             xmlns:models="clr-namespace:PhantomVault.Core.Models;assembly=PhantomVault.Core"
+             x:Class="PhantomVault.Android.Pages.DuplicateScanPage"
+             Title="Duplicate Passwords"
+             BackgroundColor="{StaticResource Background}">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Scan" Command="{Binding ScanCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="12">
+
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="16">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Duplicate Password Scanner"
+                           FontFamily="OpenSansSemibold" FontSize="16"
+                           TextColor="{StaticResource PrimaryText}" />
+                    <Label Text="Finds credentials that share the same password. Tap Scan to analyse your vault."
+                           FontSize="13" TextColor="{StaticResource SecondaryText}" />
+                    <Button Text="Scan Now"
+                            Command="{Binding ScanCommand}"
+                            Style="{StaticResource PrimaryButton}"
+                            Margin="0,8,0,0" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Summary after scan -->
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="16"
+                   IsVisible="{Binding Scanned}">
+                <Grid ColumnDefinitions="*,Auto">
+                    <VerticalStackLayout>
+                        <Label Text="{Binding StatusMessage}"
+                               FontSize="14" TextColor="{StaticResource PrimaryText}" />
+                        <Label Text="{Binding TotalDuplicateCredentials, StringFormat='{0} credentials affected'}"
+                               FontSize="12" TextColor="{StaticResource SecondaryText}"
+                               IsVisible="{Binding HasResults}" />
+                    </VerticalStackLayout>
+                    <Label Grid.Column="1"
+                           Text="{Binding HasResults, Converter={StaticResource BoolToTextConverter}, ConverterParameter='⚠|✓'}"
+                           FontSize="24" VerticalOptions="Center" />
+                </Grid>
+            </Frame>
+
+            <!-- Duplicate groups -->
+            <VerticalStackLayout IsVisible="{Binding HasResults}" Spacing="8">
+                <CollectionView ItemsSource="{Binding Duplicates}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="vm:DuplicateGroup">
+                            <Frame Margin="0,2" Padding="14,12"
+                                   BackgroundColor="{StaticResource Surface}"
+                                   BorderColor="#5A3A1A" CornerRadius="10">
+                                <VerticalStackLayout Spacing="8">
+                                    <Label Text="{Binding Summary}"
+                                           FontFamily="OpenSansSemibold" FontSize="14"
+                                           TextColor="#E8A020" />
+                                    <CollectionView ItemsSource="{Binding Credentials}"
+                                                    HeightRequest="{Binding Credentials.Count, Converter={StaticResource NotNullBoolConverter}}">
+                                        <CollectionView.ItemTemplate>
+                                            <DataTemplate x:DataType="models:Credential">
+                                                <Grid ColumnDefinitions="*,Auto" Padding="4,6">
+                                                    <VerticalStackLayout>
+                                                        <Label Text="{Binding Title}"
+                                                               FontFamily="OpenSansSemibold" FontSize="14"
+                                                               TextColor="{StaticResource PrimaryText}" />
+                                                        <Label Text="{Binding Username}"
+                                                               FontSize="12" TextColor="{StaticResource SecondaryText}" />
+                                                    </VerticalStackLayout>
+                                                    <Button Grid.Column="1" Text="View"
+                                                            BackgroundColor="{StaticResource ButtonSecondary}"
+                                                            TextColor="{StaticResource PrimaryText}"
+                                                            FontSize="12" HeightRequest="32" CornerRadius="8" Padding="10,0"
+                                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenCredentialCommand}"
+                                                            CommandParameter="{Binding .}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </CollectionView.ItemTemplate>
+                                    </CollectionView>
+                                </VerticalStackLayout>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

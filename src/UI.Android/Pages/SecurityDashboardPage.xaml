@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PhantomVault.Android.Pages.SecurityDashboardPage"
+             Title="Security Dashboard"
+             BackgroundColor="{StaticResource Background}">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Scan" Command="{Binding ScanCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="12">
+
+            <!-- Status -->
+            <Label Text="{Binding StatusMessage}" FontSize="13"
+                   TextColor="{StaticResource SecondaryText}" HorizontalOptions="Center"
+                   IsVisible="{Binding StatusMessage, Converter={StaticResource NotNullOrEmptyBoolConverter}}" />
+
+            <!-- OVERALL SCORE -->
+            <Frame BackgroundColor="#1A0E2E" CornerRadius="16" Padding="20"
+                   BorderColor="#3D1A6E">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16">
+                    <Label Grid.Column="0" Text="{Binding OverallScoreEmoji}"
+                           FontSize="48" VerticalOptions="Center" />
+                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="4">
+                        <Label Text="{Binding OverallScoreLabel}" FontFamily="OpenSansSemibold"
+                               FontSize="18" TextColor="{StaticResource PrimaryText}" />
+                        <Label Text="{Binding OverallScoreDetail}" FontSize="13"
+                               TextColor="{StaticResource SecondaryText}" />
+                        <Label Text="{Binding LastScanTime}" FontSize="11"
+                               TextColor="{StaticResource SecondaryText}" />
+                    </VerticalStackLayout>
+                </Grid>
+            </Frame>
+
+            <!-- METRICS -->
+            <Label Text="PASSWORD HEALTH" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,4,0,0" />
+
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                <Frame Grid.Column="0" BackgroundColor="{StaticResource Surface}" CornerRadius="12"
+                       Padding="12,10" BorderColor="{StaticResource Danger}">
+                    <VerticalStackLayout HorizontalOptions="Center" Spacing="2">
+                        <Label Text="{Binding WeakCount}" FontFamily="OpenSansSemibold" FontSize="22"
+                               TextColor="{StaticResource Danger}" HorizontalOptions="Center" />
+                        <Label Text="Weak" FontSize="10" TextColor="{StaticResource SecondaryText}" HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </Frame>
+                <Frame Grid.Column="1" BackgroundColor="{StaticResource Surface}" CornerRadius="12"
+                       Padding="12,10" BorderColor="{StaticResource Warning}">
+                    <VerticalStackLayout HorizontalOptions="Center" Spacing="2">
+                        <Label Text="{Binding ReusedCount}" FontFamily="OpenSansSemibold" FontSize="22"
+                               TextColor="{StaticResource Warning}" HorizontalOptions="Center" />
+                        <Label Text="Reused" FontSize="10" TextColor="{StaticResource SecondaryText}" HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </Frame>
+                <Frame Grid.Column="2" BackgroundColor="{StaticResource Surface}" CornerRadius="12"
+                       Padding="12,10" BorderColor="{StaticResource Info}">
+                    <VerticalStackLayout HorizontalOptions="Center" Spacing="2">
+                        <Label Text="{Binding OldCount}" FontFamily="OpenSansSemibold" FontSize="22"
+                               TextColor="{StaticResource Info}" HorizontalOptions="Center" />
+                        <Label Text="Old" FontSize="10" TextColor="{StaticResource SecondaryText}" HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </Frame>
+            </Grid>
+
+            <!-- TOTP COVERAGE -->
+            <Label Text="2FA COVERAGE" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,4,0,0" />
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="16"
+                   BorderColor="{StaticResource CardBorder}">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="TOTP Credentials" FontFamily="OpenSansSemibold" FontSize="15"
+                               TextColor="{StaticResource PrimaryText}" />
+                        <ProgressBar Progress="{Binding TotpCoverageRatio}" ProgressColor="#2ECC71"
+                                     BackgroundColor="#2A2A2A" HeightRequest="6" />
+                    </VerticalStackLayout>
+                    <Label Grid.Column="1"
+                           Text="{Binding TotpCoveragePercent, StringFormat='{0}%'}"
+                           FontFamily="OpenSansSemibold" FontSize="18"
+                           TextColor="#2ECC71" VerticalOptions="Center" />
+                </Grid>
+            </Frame>
+
+            <!-- TOOLS -->
+            <Label Text="SECURITY TOOLS" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,4,0,0" />
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="0"
+                   BorderColor="{StaticResource CardBorder}">
+                <VerticalStackLayout>
+                    <Button Text="🛡  Password Health Report" Command="{Binding OpenPasswordHealthCommand}"
+                            BackgroundColor="Transparent" TextColor="{StaticResource PrimaryText}"
+                            FontFamily="OpenSansSemibold" HorizontalOptions="Start" Padding="16,14" />
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}" />
+                    <Button Text="🔁  Duplicate Password Scanner" Command="{Binding OpenDuplicateScanCommand}"
+                            BackgroundColor="Transparent" TextColor="{StaticResource PrimaryText}"
+                            FontFamily="OpenSansSemibold" HorizontalOptions="Start" Padding="16,14" />
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}" />
+                    <Button Text="🔐  Security Settings" Command="{Binding OpenSecuritySettingsCommand}"
+                            BackgroundColor="Transparent" TextColor="{StaticResource PrimaryText}"
+                            FontFamily="OpenSansSemibold" HorizontalOptions="Start" Padding="16,14" />
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}" />
+                    <Button Text="🔑  TOTP Authenticator Settings" Command="{Binding OpenTotpSettingsCommand}"
+                            BackgroundColor="Transparent" TextColor="{StaticResource PrimaryText}"
+                            FontFamily="OpenSansSemibold" HorizontalOptions="Start" Padding="16,14" />
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

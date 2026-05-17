@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PhantomVault.UI.App"
+             RequestedThemeVariant="Dark">
+
+    <!--
+        This is the Android sibling of the desktop App.axaml. We deliberately
+        mirror its merged dictionaries / styles so the same Avalonia view tree
+        renders identically on tablet and desktop. The Windows-only entries
+        (native-messaging surfaces, decoy preview, etc.) are intentionally
+        omitted because they have no analogue on a touch device.
+    -->
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://PhantomVault.UI/Resources/Strings.en-US.axaml" />
+                <ResourceInclude Source="avares://Phantom.UI.Shared/Icons/VectorIcons.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <FontFamily x:Key="MonoFontFamily">Consolas</FontFamily>
+        </ResourceDictionary>
+    </Application.Resources>
+
+    <Application.Styles>
+        <FluentTheme />
+
+        <!-- Brand theme (default dark; ThemeManagerService will swap at runtime in later phases) -->
+        <StyleInclude Source="avares://PhantomVault.UI/Assets/Themes/PhantomTheme.Dark.axaml" />
+
+        <!--
+            LiquidGlass / Animations / GlobalStyles deliberately deferred to Phase 3.
+            They depend on custom controls (BorderEnergyTrace, ParticleField, etc.) that
+            need .cs file links + verification on Android's Skia/GPU stack first.
+        -->
+    </Application.Styles>
+
+</Application>

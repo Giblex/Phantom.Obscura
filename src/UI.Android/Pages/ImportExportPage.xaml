@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PhantomVault.Android.Pages.ImportExportPage"
+             Title="Import / Export"
+             BackgroundColor="{StaticResource Background}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="12">
+
+            <!-- Import section -->
+            <Label Text="IMPORT" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0" />
+
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Import Credentials"
+                           FontFamily="OpenSansSemibold" FontSize="16"
+                           TextColor="{StaticResource PrimaryText}" />
+                    <Label Text="Supported formats: Phantom Obscura CSV, Bitwarden JSON, KeePass CSV"
+                           FontSize="13" TextColor="{StaticResource SecondaryText}" />
+                    <Button Text="Choose File to Import"
+                            Command="{Binding PickAndImportCommand}"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"
+                            BackgroundColor="{StaticResource Primary}"
+                            TextColor="White"
+                            CornerRadius="10"
+                            FontFamily="OpenSansSemibold"
+                            HeightRequest="46" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Export section -->
+            <Label Text="EXPORT" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0" />
+
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Export Credentials"
+                           FontFamily="OpenSansSemibold" FontSize="16"
+                           TextColor="{StaticResource PrimaryText}" />
+                    <Label Text="Exports all credentials as an encrypted CSV file. You will be prompted to save it."
+                           FontSize="13" TextColor="{StaticResource SecondaryText}" />
+                    <Button Text="Export as CSV"
+                            Command="{Binding ExportAsCsvCommand}"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"
+                            BackgroundColor="{StaticResource Surface}"
+                            TextColor="{StaticResource PrimaryText}"
+                            BorderColor="{StaticResource Primary}"
+                            BorderWidth="1"
+                            CornerRadius="10"
+                            FontFamily="OpenSansSemibold"
+                            HeightRequest="46" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Result banner -->
+            <Frame IsVisible="{Binding HasResult}"
+                   BackgroundColor="{Binding ResultIsSuccess, Converter={StaticResource BoolToSuccessColorConverter}}"
+                   CornerRadius="10" Padding="14,10">
+                <Label Text="{Binding LastOperationResult}"
+                       FontSize="14" TextColor="White" />
+            </Frame>
+
+            <!-- Loading -->
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               Color="{StaticResource Primary}"
+                               HorizontalOptions="Center"
+                               Margin="0,8" />
+
+            <!-- Warning -->
+            <Frame BackgroundColor="#1A1A1A" CornerRadius="10" Padding="14">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="⚠ Security Warning" FontFamily="OpenSansSemibold"
+                           FontSize="13" TextColor="{StaticResource Warning}" />
+                    <Label Text="Exported files contain plaintext credentials. Store them securely and delete after use."
+                           FontSize="12" TextColor="{StaticResource SecondaryText}" />
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:PhantomVault.Core.Models;assembly=PhantomVault.Core"
+             x:Class="PhantomVault.Android.Pages.SharePage"
+             Title="Share Credential"
+             BackgroundColor="{StaticResource Background}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="10">
+
+            <!-- Status -->
+            <Label Text="{Binding StatusMessage}" FontSize="13"
+                   TextColor="{StaticResource Primary}" HorizontalOptions="Center"
+                   IsVisible="{Binding StatusMessage, Converter={StaticResource NotNullOrEmptyBoolConverter}}" />
+            <Label Text="{Binding ErrorMessage}" FontSize="13"
+                   TextColor="{StaticResource Danger}" HorizontalOptions="Center"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource NotNullOrEmptyBoolConverter}}" />
+
+            <!-- SELECT CREDENTIAL -->
+            <Label Text="SELECT CREDENTIAL" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0" />
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="8"
+                   BorderColor="{StaticResource CardBorder}">
+                <Picker Title="Choose a credential"
+                        ItemsSource="{Binding Credentials}"
+                        SelectedItem="{Binding SelectedCredential}"
+                        ItemDisplayBinding="{Binding Title}"
+                        TextColor="{StaticResource PrimaryText}"
+                        TitleColor="{StaticResource SecondaryText}"
+                        BackgroundColor="Transparent" />
+            </Frame>
+
+            <!-- RECIPIENT PUBLIC KEY -->
+            <Label Text="RECIPIENT PUBLIC KEY (RSA PEM)" FontSize="11"
+                   TextColor="{StaticResource SecondaryText}" CharacterSpacing="2" Margin="4,8,0,0" />
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="12"
+                   BorderColor="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Paste the recipient's RSA public key in PEM format:"
+                           FontSize="12" TextColor="{StaticResource SecondaryText}" />
+                    <Editor Placeholder="-----BEGIN PUBLIC KEY-----&#10;..."
+                            Text="{Binding RecipientPublicKeyPem}"
+                            TextColor="{StaticResource PrimaryText}"
+                            PlaceholderColor="{StaticResource SecondaryText}"
+                            BackgroundColor="Transparent"
+                            FontSize="12" HeightRequest="120"
+                            FontFamily="OpenSansRegular" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- GENERATE -->
+            <Button Text="Generate Share Package" Command="{Binding ShareCommand}"
+                    BackgroundColor="{StaticResource Primary}" TextColor="#0A0A0A"
+                    FontFamily="OpenSansSemibold" CornerRadius="12" HeightRequest="50"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" />
+
+            <!-- RESULT -->
+            <Label Text="SHARE PACKAGE" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0"
+                   IsVisible="{Binding SharePackageJson, Converter={StaticResource NotNullOrEmptyBoolConverter}}" />
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="12"
+                   BorderColor="{StaticResource CardBorder}"
+                   IsVisible="{Binding SharePackageJson, Converter={StaticResource NotNullOrEmptyBoolConverter}}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="{Binding SharePackageJson}" FontSize="11"
+                           TextColor="{StaticResource PrimaryText}" FontFamily="OpenSansRegular"
+                           LineBreakMode="CharacterWrap" />
+                    <Button Text="📋 Copy Package" Command="{Binding CopyPackageCommand}"
+                            BackgroundColor="{StaticResource Surface}" TextColor="{StaticResource PrimaryText}"
+                            BorderColor="{StaticResource InputBorder}" BorderWidth="1"
+                            CornerRadius="10" HeightRequest="44" />
+                    <Button Text="↑ Share via Android" Command="{Binding NativeShareCommand}"
+                            BackgroundColor="#1A2E4A" TextColor="#5DADE2"
+                            CornerRadius="10" HeightRequest="44"
+                            FontFamily="OpenSansSemibold" />
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

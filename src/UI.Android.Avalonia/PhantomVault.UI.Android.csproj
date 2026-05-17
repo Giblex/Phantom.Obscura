@@ -1,0 +1,110 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0-android</TargetFramework>
+    <OutputType>Exe</OutputType>
+
+    <!--
+      We deliberately reuse the desktop assembly identity so that all the
+      desktop AXAML files we link in below resolve their `avares://PhantomVault.UI/...`
+      resource URIs correctly. Two assemblies with the same simple name are fine
+      here because the desktop EXE and the Android APK are never loaded together.
+    -->
+    <AssemblyName>PhantomVault.UI</AssemblyName>
+    <RootNamespace>PhantomVault.UI</RootNamespace>
+
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AvaloniaUseCompiledXaml>true</AvaloniaUseCompiledXaml>
+
+    <ApplicationTitle>Phantom Obscura</ApplicationTitle>
+    <ApplicationId>com.giblex.phantom.obscura</ApplicationId>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+    <ApplicationVersion>1</ApplicationVersion>
+
+    <SupportedOSPlatformVersion>26.0</SupportedOSPlatformVersion>
+
+    <!-- Match desktop's permissive warning posture so linked code compiles. -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);1591;CS0618;CS1573;CS1574;CS1571;CS1998;CS8625;CS0012</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Avalonia core + Android backend -->
+    <PackageReference Include="Avalonia" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Android" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Skia" Version="11.3.9" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Markup.Xaml.Loader" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Svg.Skia" Version="11.0.0" />
+    <PackageReference Include="Avalonia.Xaml.Interactivity" Version="11.3.0.6" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+    <PackageReference Include="Isopoh.Cryptography.Argon2" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.8" />
+    <PackageReference Include="SkiaSharp" Version="3.119.1" />
+    <PackageReference Include="Serilog" Version="4.2.0" />
+    <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Core\PhantomVault.Core.csproj" />
+    <ProjectReference Include="..\Platform\PhantomVault.Platform.csproj" />
+    <ProjectReference Include="..\Crypto\GiblexVault.Security.ZK.csproj" />
+    <ProjectReference Include="..\..\..\Phantom.Shared\Phantom.UI.Shared\Phantom.UI.Shared.csproj" />
+  </ItemGroup>
+
+  <!--
+    Bring in the desktop's themes, global styles, and the proof-of-concept
+    DashboardView. We deliberately exclude Windows-only views (autofill,
+    decoy preview, native messaging surfaces) and the desktop App.axaml.cs
+    (which is heavily Window/Desktop-lifecycle coupled — Android.cs supplies
+    a touch-friendly equivalent).
+  -->
+  <ItemGroup>
+    <!--
+        Phase 1: link only the theme dictionaries (brushes/colors) and the
+        en-US string table. LiquidGlass / Animations / GlobalStyles need their
+        custom controls (BorderEnergyTrace, ParticleField, …) and a Skia
+        smoke-test on Android first — added in Phase 3.
+    -->
+    <AvaloniaXaml Include="..\UI.Desktop\Assets\Themes\PhantomTheme.Dark.axaml"
+                  Link="Assets\Themes\PhantomTheme.Dark.axaml" />
+    <AvaloniaXaml Include="..\UI.Desktop\Assets\Themes\PhantomTheme.Light.axaml"
+                  Link="Assets\Themes\PhantomTheme.Light.axaml" />
+    <AvaloniaXaml Include="..\UI.Desktop\Assets\Themes\PreVaultTheme.axaml"
+                  Link="Assets\Themes\PreVaultTheme.axaml" />
+    <AvaloniaXaml Include="..\UI.Desktop\Resources\Strings.en-US.axaml"
+                  Link="Resources\Strings.en-US.axaml" />
+
+    <!-- Models referenced by linked AXAML (DetectedVaultLaunchRequest is used in the
+         WelcomePage vault picker DataTemplate). -->
+    <Compile Include="..\UI.Desktop\Models\DetectedVaultLaunchRequest.cs"
+             Link="Models\DetectedVaultLaunchRequest.cs" />
+
+    <!--
+        Phase 1: no desktop views linked yet — Phase 3 turns wire them in batches
+        (Welcome, Unlock, Dashboard, Vault, CategoryManager, …). Each view link
+        pulls its dependency cluster: its .axaml + .axaml.cs + the ViewModel it
+        binds to + any helper controls. The SmokeTestView in this project is a
+        local Avalonia control that exercises the linked themes / brushes only.
+    -->
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+        Brand assets. Per-file <Link> only — recursive globs with LinkBase produce
+        bogus avares URIs (`../UI.Desktop/Assets/...`) that take precedence over
+        the canonical ones, breaking Image.Source bindings at runtime. We pin only
+        the assets each linked view actually consumes; later phases extend this
+        list as more views come on.
+    -->
+    <AvaloniaResource Include="..\UI.Desktop\Assets\Visuals\Giblex Icons\Icon Transparent background.png"
+                      Link="Assets\Visuals\Giblex Icons\Icon Transparent background.png" />
+    <AvaloniaResource Include="..\UI.Desktop\Assets\noise_128.png"
+                      Link="Assets\noise_128.png" />
+  </ItemGroup>
+
+</Project>

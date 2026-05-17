@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PhantomVault.Android.Pages.SettingsPage"
+             Title="Settings"
+             BackgroundColor="{StaticResource Background}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="10">
+
+            <!-- Security section -->
+
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="0">
+                <VerticalStackLayout>
+                    <!-- Auto-lock -->
+                    <Grid ColumnDefinitions="*,Auto" Padding="16,14" RowDefinitions="Auto,Auto">
+                        <Label Grid.Row="0" Grid.Column="0" Text="Auto-lock timeout"
+                               FontFamily="OpenSansSemibold" FontSize="15"
+                               TextColor="{StaticResource PrimaryText}" />
+                        <Label Grid.Row="1" Grid.Column="0"
+                               Text="{Binding AutoLockMinutes, StringFormat='{0} minutes'}"
+                               FontSize="12" TextColor="{StaticResource SecondaryText}" />
+                        <Stepper Grid.Row="0" Grid.Column="1" Grid.RowSpan="2"
+                                 Minimum="1" Maximum="60"
+                                 Increment="1"
+                                 Value="{Binding AutoLockMinutes}"
+                                 VerticalOptions="Center" />
+                    </Grid>
+
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}" />
+
+                    <!-- Biometric -->
+                    <Grid ColumnDefinitions="*,Auto" Padding="16,14">
+                        <VerticalStackLayout Grid.Column="0">
+                            <Label Text="Biometric unlock"
+                                   FontFamily="OpenSansSemibold" FontSize="15"
+                                   TextColor="{StaticResource PrimaryText}" />
+                            <Label Text="Use fingerprint or face to unlock"
+                                   FontSize="12" TextColor="{StaticResource SecondaryText}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1" IsToggled="{Binding BiometricEnabled}"
+                                OnColor="{StaticResource Primary}"
+                                VerticalOptions="Center" />
+                    </Grid>
+
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}" />
+
+                    <!-- Clipboard clear -->
+                    <Grid ColumnDefinitions="*,Auto" Padding="16,14">
+                        <VerticalStackLayout Grid.Column="0">
+                            <Label Text="Clear clipboard automatically"
+                                   FontFamily="OpenSansSemibold" FontSize="15"
+                                   TextColor="{StaticResource PrimaryText}" />
+                            <Label Text="{Binding ClipboardClearSeconds, StringFormat='Clears after {0}s'}"
+                                   FontSize="12" TextColor="{StaticResource SecondaryText}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1" IsToggled="{Binding ClipboardClearEnabled}"
+                                OnColor="{StaticResource Primary}"
+                                VerticalOptions="Center" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Tools section -->
+            <Label Text="TOOLS" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0" />
+
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="0">
+                <VerticalStackLayout>
+                    <Button Text="Password Generator"
+                            Command="{Binding OpenPasswordGeneratorCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource PrimaryText}"
+                            FontFamily="OpenSansSemibold"
+                            HorizontalOptions="Start"
+                            Padding="16,14" />
+
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}" />
+
+                    <Button Text="Password Health"
+                            Command="{Binding OpenPasswordHealthCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource PrimaryText}"
+                            FontFamily="OpenSansSemibold"
+                            HorizontalOptions="Start"
+                            Padding="16,14" />
+
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}" />
+
+                    <Button Text="Security Settings"
+                            Command="{Binding OpenSecuritySettingsCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource PrimaryText}"
+                            FontFamily="OpenSansSemibold"
+                            HorizontalOptions="Start"
+                            Padding="16,14" />
+
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}" />
+
+                    <Button Text="Recovery"
+                            Command="{Binding OpenRecoveryCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource PrimaryText}"
+                            FontFamily="OpenSansSemibold"
+                            HorizontalOptions="Start"
+                            Padding="16,14" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Vault section -->
+            <Label Text="VAULT" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0" />
+
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="0">
+                <VerticalStackLayout>
+                    <Button Text="Import / Export"
+                            Command="{Binding OpenImportExportCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource PrimaryText}"
+                            FontFamily="OpenSansSemibold"
+                            HorizontalOptions="Start"
+                            Padding="16,14" />
+
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}" />
+
+                    <Button Text="Categories"
+                            Command="{Binding OpenCategoriesCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource PrimaryText}"
+                            FontFamily="OpenSansSemibold"
+                            HorizontalOptions="Start"
+                            Padding="16,14" />
+
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}" />
+
+                    <Button Text="Duplicate Password Scanner"
+                            Command="{Binding OpenDuplicateScanCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource PrimaryText}"
+                            FontFamily="OpenSansSemibold"
+                            HorizontalOptions="Start"
+                            Padding="16,14" />
+
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}" />
+
+                    <Button Text="Add TOTP Authenticator"
+                            Command="{Binding OpenTotpScannerCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource PrimaryText}"
+                            FontFamily="OpenSansSemibold"
+                            HorizontalOptions="Start"
+                            Padding="16,14" />
+
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}" />
+
+                    <Button Text="Passkeys"
+                            Command="{Binding OpenPasskeyManagementCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource PrimaryText}"
+                            FontFamily="OpenSansSemibold"
+                            HorizontalOptions="Start"
+                            Padding="16,14" />
+
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}" />
+
+                    <Button Text="Trash"
+                            Command="{Binding OpenTrashCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource Danger}"
+                            FontFamily="OpenSansSemibold"
+                            HorizontalOptions="Start"
+                            Padding="16,14" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Autofill section -->
+            <Label Text="AUTOFILL" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0" />
+
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="0">
+                <Button Text="Configure Android Autofill"
+                        Command="{Binding OpenAutofillSettingsCommand}"
+                        BackgroundColor="Transparent"
+                        TextColor="{StaticResource PrimaryText}"
+                        FontFamily="OpenSansSemibold"
+                        HorizontalOptions="Start"
+                        Padding="16,14" />
+            </Frame>
+
+            <!-- About section -->
+            <Label Text="ABOUT" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0" />
+
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="16">
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="Phantom Obscura"
+                           FontFamily="OpenSansSemibold" FontSize="15"
+                           TextColor="{StaticResource PrimaryText}" />
+                    <Label Grid.Column="1" Text="{Binding AppVersion}"
+                           FontSize="14" TextColor="{StaticResource SecondaryText}" />
+                </Grid>
+            </Frame>
+
+            <Button Text="Clear Clipboard Now"
+                    Command="{Binding ClearClipboardNowCommand}"
+                    BackgroundColor="{StaticResource Surface}"
+                    TextColor="{StaticResource SecondaryText}"
+                    BorderColor="{StaticResource Divider}"
+                    BorderWidth="1"
+                    CornerRadius="12"
+                    FontSize="14"
+                    HeightRequest="46"
+                    Margin="0,8,0,16" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

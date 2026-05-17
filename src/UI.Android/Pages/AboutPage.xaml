@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PhantomVault.Android.Pages.AboutPage"
+             Title="About"
+             BackgroundColor="{StaticResource Background}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="10" HorizontalOptions="Fill">
+
+            <!-- App branding -->
+            <VerticalStackLayout Spacing="8" HorizontalOptions="Center" Margin="0,24,0,16">
+                <Label Text="🔐" FontSize="64" HorizontalOptions="Center" />
+                <Label Text="PHANTOM OBSCURA" FontFamily="OpenSansSemibold"
+                       FontSize="22" TextColor="{StaticResource Primary}"
+                       CharacterSpacing="3" HorizontalOptions="Center" />
+                <Label Text="Secure Vault for Android"
+                       FontSize="14" TextColor="{StaticResource SecondaryText}"
+                       HorizontalOptions="Center" />
+                <Label Text="{Binding AppVersion, StringFormat='Version {0}'}"
+                       FontSize="13" TextColor="{StaticResource SecondaryText}"
+                       HorizontalOptions="Center" />
+            </VerticalStackLayout>
+
+            <!-- BUILD INFO -->
+            <Label Text="BUILD INFO" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,0,0,0" />
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="16"
+                   BorderColor="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="8">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Platform" FontSize="14" TextColor="{StaticResource PrimaryText}" />
+                        <Label Grid.Column="1" Text="{Binding Platform}" FontSize="14"
+                               TextColor="{StaticResource SecondaryText}" />
+                    </Grid>
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text=".NET Version" FontSize="14" TextColor="{StaticResource PrimaryText}" />
+                        <Label Grid.Column="1" Text="{Binding DotNetVersion}" FontSize="14"
+                               TextColor="{StaticResource SecondaryText}" />
+                    </Grid>
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Encryption" FontSize="14" TextColor="{StaticResource PrimaryText}" />
+                        <Label Grid.Column="1" Text="AES-256-GCM" FontSize="14"
+                               TextColor="{StaticResource SecondaryText}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- FEATURES -->
+            <Label Text="FEATURES" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0" />
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="16"
+                   BorderColor="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="🔒  Zero-knowledge AES-256-GCM encryption" FontSize="14" TextColor="{StaticResource PrimaryText}" />
+                    <Label Text="🔑  TOTP authenticator support" FontSize="14" TextColor="{StaticResource PrimaryText}" />
+                    <Label Text="🪪  Passkey (FIDO2) management" FontSize="14" TextColor="{StaticResource PrimaryText}" />
+                    <Label Text="📲  Android Autofill integration" FontSize="14" TextColor="{StaticResource PrimaryText}" />
+                    <Label Text="💾  Encrypted backup snapshots" FontSize="14" TextColor="{StaticResource PrimaryText}" />
+                    <Label Text="🤝  Encrypted credential sharing" FontSize="14" TextColor="{StaticResource PrimaryText}" />
+                    <Label Text="🛡  Password health analysis" FontSize="14" TextColor="{StaticResource PrimaryText}" />
+                    <Label Text="☁  Import/export (JSON/CSV/KeePass)" FontSize="14" TextColor="{StaticResource PrimaryText}" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- LEGAL -->
+            <Label Text="LEGAL" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0" />
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="16"
+                   BorderColor="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Phantom Obscura is part of the Phantom Suite."
+                           FontSize="13" TextColor="{StaticResource SecondaryText}" />
+                    <Label Text="Your data is encrypted on-device. No data is sent to external servers."
+                           FontSize="13" TextColor="{StaticResource SecondaryText}" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <Button Text="View Licenses" Command="{Binding ViewLicensesCommand}"
+                    BackgroundColor="{StaticResource Surface}" TextColor="{StaticResource SecondaryText}"
+                    BorderColor="{StaticResource Divider}" BorderWidth="1"
+                    CornerRadius="12" HeightRequest="46" Margin="0,8,0,24" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
