@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools">
+<application
+android:allowBackup="false"
+android:icon="@mipmap/appicon"
+android:roundIcon="@mipmap/appicon_round"
+android:supportsRtl="true"
+android:label="Phantom Obscura"
+android:theme="@style/Maui.SplashTheme">
+
+<!-- Android Autofill Service declaration -->
+<service
+android:name=".PhantomAutofillService"
+android:label="Phantom Obscura Autofill"
+android:exported="true"
+android:permission="android.permission.BIND_AUTOFILL_SERVICE">
+<intent-filter>
+<action android:name="android.service.autofill.AutofillService" />
+</intent-filter>
+<meta-data
+android:name="android.autofill"
+android:resource="@xml/autofill_service" />
+</service>
+</application>
+
+<!-- Network -->
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+<!-- USB OTG / removable storage gate (Phantom Obscura mobile is USB-bound) -->
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+                 android:maxSdkVersion="29" />
+<uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+                 tools:ignore="ScopedStorage" />
+<uses-feature android:name="android.hardware.usb.host" android:required="false" />
+
+<!-- Biometric authentication -->
+<uses-permission android:name="android.permission.USE_BIOMETRIC" />
+<uses-permission android:name="android.permission.USE_FINGERPRINT" />
+
+<!-- NFC for hardware key binding -->
+<uses-permission android:name="android.permission.NFC" />
+<uses-feature android:name="android.hardware.nfc" android:required="false" />
+
+<!-- Camera for QR code scanning (vault import / TOTP setup) -->
+<uses-permission android:name="android.permission.CAMERA" />
+<uses-feature android:name="android.hardware.camera" android:required="false" />
+
+<!-- Clipboard -->
+<uses-permission android:name="android.permission.READ_CLIPBOARD" />
+
+<!-- Vibrate for biometric feedback -->
+<uses-permission android:name="android.permission.VIBRATE" />
+</manifest>

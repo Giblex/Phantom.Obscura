@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PhantomVault.Android.Pages.AutofillSettingsPage"
+             Title="Autofill Settings"
+             BackgroundColor="{StaticResource Background}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="12">
+
+            <!-- Status banner -->
+            <Frame BackgroundColor="{Binding IsPhantomSetAsAutofillService, Converter={StaticResource BoolToSuccessColorConverter}}"
+                   CornerRadius="12" Padding="16">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="{Binding IsPhantomSetAsAutofillService, StringFormat='Autofill Active: {0}'}"
+                           FontFamily="OpenSansSemibold" FontSize="15" TextColor="White" />
+                    <Label Text="{Binding CurrentAutofillService, StringFormat='Provider: {0}'}"
+                           FontSize="13" TextColor="White" Opacity="0.85" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Setup -->
+            <Label Text="SETUP" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0" />
+
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Set Phantom Obscura as your autofill provider"
+                           FontFamily="OpenSansSemibold" FontSize="15"
+                           TextColor="{StaticResource PrimaryText}" />
+                    <Label Text="Android requires you to select the autofill service in system settings. Tap below to open the autofill settings screen."
+                           FontSize="13" TextColor="{StaticResource SecondaryText}" />
+                    <Button Text="Open Android Autofill Settings"
+                            Command="{Binding OpenAutofillSystemSettingsCommand}"
+                            BackgroundColor="{StaticResource Primary}"
+                            TextColor="White"
+                            CornerRadius="10"
+                            FontFamily="OpenSansSemibold"
+                            HeightRequest="46" />
+                    <Button Text="Refresh Status"
+                            Command="{Binding RefreshStatusCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource SecondaryText}"
+                            HeightRequest="40" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Options -->
+            <Label Text="OPTIONS" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0" />
+
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="0">
+                <VerticalStackLayout>
+                    <Grid ColumnDefinitions="*,Auto" Padding="16,14">
+                        <VerticalStackLayout Grid.Column="0">
+                            <Label Text="Enable Autofill"
+                                   FontFamily="OpenSansSemibold" FontSize="15"
+                                   TextColor="{StaticResource PrimaryText}" />
+                            <Label Text="Fill credentials in apps and browsers"
+                                   FontSize="12" TextColor="{StaticResource SecondaryText}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1" IsToggled="{Binding AutofillEnabled}"
+                                OnColor="{StaticResource Primary}"
+                                VerticalOptions="Center" />
+                    </Grid>
+
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}" />
+
+                    <Grid ColumnDefinitions="*,Auto" Padding="16,14">
+                        <VerticalStackLayout Grid.Column="0">
+                            <Label Text="Inline Suggestions"
+                                   FontFamily="OpenSansSemibold" FontSize="15"
+                                   TextColor="{StaticResource PrimaryText}" />
+                            <Label Text="Show suggestions directly in the keyboard"
+                                   FontSize="12" TextColor="{StaticResource SecondaryText}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1" IsToggled="{Binding InlineAutofillEnabled}"
+                                OnColor="{StaticResource Primary}"
+                                VerticalOptions="Center" />
+                    </Grid>
+
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}" />
+
+                    <Grid ColumnDefinitions="*,Auto" Padding="16,14">
+                        <VerticalStackLayout Grid.Column="0">
+                            <Label Text="Offer to Save Credentials"
+                                   FontFamily="OpenSansSemibold" FontSize="15"
+                                   TextColor="{StaticResource PrimaryText}" />
+                            <Label Text="Prompt to save new logins detected in apps"
+                                   FontSize="12" TextColor="{StaticResource SecondaryText}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1" IsToggled="{Binding SavePromptEnabled}"
+                                OnColor="{StaticResource Primary}"
+                                VerticalOptions="Center" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}"
+                               Color="{StaticResource Primary}"
+                               HorizontalOptions="Center"
+                               Margin="0,8" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

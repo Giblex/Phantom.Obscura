@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PhantomVault.Android.Pages.TotpSettingsPage"
+             Title="TOTP Authenticator"
+             BackgroundColor="{StaticResource Background}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="10">
+
+            <!-- Status -->
+            <Label Text="{Binding StatusMessage}" FontSize="13" TextColor="{StaticResource Primary}"
+                   HorizontalOptions="Center"
+                   IsVisible="{Binding StatusMessage, Converter={StaticResource NotNullOrEmptyBoolConverter}}" />
+
+            <!-- INFO -->
+            <Label Text="VAULT 2FA" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0" />
+
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="16"
+                   BorderColor="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Add TOTP two-factor authentication to your vault unlock."
+                           FontSize="14" TextColor="{StaticResource SecondaryText}" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="TOTP Enabled" FontFamily="OpenSansSemibold" FontSize="15"
+                               TextColor="{StaticResource PrimaryText}" VerticalOptions="Center" />
+                        <Label Grid.Column="1"
+                               Text="{Binding IsTotpEnabled, Converter={StaticResource BoolToTextConverter}, ConverterParameter='✅ Yes|❌ No'}"
+                               FontSize="14" TextColor="{StaticResource SecondaryText}" VerticalOptions="Center" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- GENERATE -->
+            <Label Text="GENERATE SECRET" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0"
+                   IsVisible="{Binding HasTotpSecret, Converter={StaticResource InverseBoolConverter}}" />
+
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="16"
+                   BorderColor="{StaticResource CardBorder}"
+                   IsVisible="{Binding HasTotpSecret, Converter={StaticResource InverseBoolConverter}}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Generate a TOTP secret and scan it into your authenticator app (Google Authenticator, Authy, etc.)"
+                           FontSize="13" TextColor="{StaticResource SecondaryText}" />
+                    <Button Text="Generate TOTP Secret" Command="{Binding GenerateTotpSecretCommand}"
+                            BackgroundColor="{StaticResource Primary}" TextColor="#0A0A0A"
+                            FontFamily="OpenSansSemibold" CornerRadius="10" HeightRequest="46"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- SECRET DISPLAY -->
+            <Label Text="YOUR SECRET" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0"
+                   IsVisible="{Binding HasTotpSecret}" />
+
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="16"
+                   BorderColor="{StaticResource CardBorder}"
+                   IsVisible="{Binding HasTotpSecret}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Manual entry key:" FontSize="12" TextColor="{StaticResource SecondaryText}" />
+                    <Frame BackgroundColor="#0D0D0D" CornerRadius="8" Padding="14,10">
+                        <Label Text="{Binding TotpSecret}" FontFamily="OpenSansRegular" FontSize="15"
+                               TextColor="{StaticResource Primary}" LineBreakMode="CharacterWrap" />
+                    </Frame>
+                    <Button Text="📋 Copy Secret" Command="{Binding CopySecretCommand}"
+                            BackgroundColor="{StaticResource Surface}" TextColor="{StaticResource PrimaryText}"
+                            BorderColor="{StaticResource InputBorder}" BorderWidth="1"
+                            CornerRadius="10" HeightRequest="44" FontSize="14" />
+
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}" />
+
+                    <!-- Verify code -->
+                    <Label Text="Verify a code from your authenticator app:" FontSize="13"
+                           TextColor="{StaticResource SecondaryText}" />
+                    <Entry Placeholder="6-digit code" Text="{Binding TestCode}"
+                           TextColor="{StaticResource PrimaryText}"
+                           PlaceholderColor="{StaticResource SecondaryText}"
+                           BackgroundColor="Transparent" FontSize="18" Keyboard="Numeric"
+                           MaxLength="6" HorizontalTextAlignment="Center" />
+                    <Button Text="Verify Code" Command="{Binding VerifyTotpCodeCommand}"
+                            BackgroundColor="#1E4D2B" TextColor="White"
+                            FontFamily="OpenSansSemibold" CornerRadius="10" HeightRequest="44" />
+
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}" />
+
+                    <Button Text="Remove TOTP" Command="{Binding RemoveTotpSecretCommand}"
+                            BackgroundColor="#8B2222" TextColor="White"
+                            FontFamily="OpenSansSemibold" CornerRadius="10" HeightRequest="44" />
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

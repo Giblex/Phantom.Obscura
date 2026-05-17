@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PhantomVault.Android.ViewModels"
+             x:Class="PhantomVault.Android.Pages.UnlockPage"
+             Title="Unlock Vault"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{StaticResource Background}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="32" Spacing="24" VerticalOptions="Center">
+
+            <!-- Logo / Title -->
+            <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                <Label Text="⬛" FontSize="64" HorizontalOptions="Center" />
+                <Label Text="PHANTOM OBSCURA"
+                       FontFamily="OpenSansSemibold"
+                       FontSize="22"
+                       TextColor="{StaticResource Primary}"
+                       HorizontalOptions="Center"
+                       CharacterSpacing="4" />
+                <Label Text="High-assurance local vault"
+                       FontSize="13"
+                       TextColor="{StaticResource SecondaryText}"
+                       HorizontalOptions="Center" />
+            </VerticalStackLayout>
+
+            <!-- Error message -->
+            <Frame IsVisible="{Binding ErrorMessage, Converter={StaticResource NotNullBoolConverter}}"
+                   BackgroundColor="#3D1515" BorderColor="#8B2222" CornerRadius="8" Padding="12">
+                <Label Text="{Binding ErrorMessage}" TextColor="#FF6B6B" FontSize="14" />
+            </Frame>
+
+            <!-- Master password -->
+            <VerticalStackLayout Spacing="8">
+                <Label Text="Master Password"
+                       FontFamily="OpenSansSemibold"
+                       TextColor="{StaticResource PrimaryText}"
+                       FontSize="14" />
+                <Frame BorderColor="{StaticResource InputBorder}" CornerRadius="10"
+                       BackgroundColor="{StaticResource InputBackground}" Padding="0">
+                    <Entry x:Name="PasswordEntry"
+                           Placeholder="Enter master password"
+                           PlaceholderColor="{StaticResource SecondaryText}"
+                           IsPassword="True"
+                           Text="{Binding MasterPassword}"
+                           TextColor="{StaticResource PrimaryText}"
+                           BackgroundColor="Transparent"
+                           FontSize="16"
+                           ReturnType="Go"
+                           ReturnCommand="{Binding UnlockCommand}"
+                           Margin="12,8" />
+                </Frame>
+            </VerticalStackLayout>
+
+            <!-- Unlock button -->
+            <Button Text="{Binding IsBusy, Converter={StaticResource BusyTextConverter}, ConverterParameter='Unlocking…|Unlock'}"
+                    Command="{Binding UnlockCommand}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="Black"
+                    FontFamily="OpenSansSemibold"
+                    FontSize="16"
+                    HeightRequest="52"
+                    CornerRadius="12" />
+
+            <!-- Biometric button -->
+            <Button Text="🔐  Unlock with Biometric"
+                    Command="{Binding UnlockWithBiometricCommand}"
+                    IsVisible="{Binding BiometricAvailable}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"
+                    BackgroundColor="{StaticResource Surface}"
+                    TextColor="{StaticResource Primary}"
+                    BorderColor="{StaticResource Primary}"
+                    BorderWidth="1"
+                    FontSize="15"
+                    HeightRequest="48"
+                    CornerRadius="12" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

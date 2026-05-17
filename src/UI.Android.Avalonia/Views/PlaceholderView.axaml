@@ -1,0 +1,62 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PhantomVault.UI.Views.PlaceholderView"
+             Background="{DynamicResource WindowBackgroundBrush}">
+
+  <!--
+    Reusable placeholder for screens whose desktop AXAML is too large to port
+    verbatim in a single turn (DashboardView 1287 LOC, VaultWindow 2032 LOC,
+    AddEditCredentialWindow 845 LOC, etc.). Renders a brand-correct card
+    explaining what desktop view will land here.
+
+    Bound to PlaceholderViewModel which exposes:
+      Title, SourceViewName, Description, PortStatus.
+  -->
+
+  <ScrollViewer>
+    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="20" Margin="32,40">
+      <Border CornerRadius="20"
+              Padding="32,28"
+              MaxWidth="520"
+              Background="{DynamicResource CardBackgroundBrush}"
+              BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+              BorderThickness="1">
+        <StackPanel Spacing="18">
+          <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
+                 Width="64" Height="64" HorizontalAlignment="Center"/>
+          <TextBlock Text="{Binding Title}"
+                     FontSize="{StaticResource Type.H2.Size}"
+                     FontFamily="{DynamicResource TitleFontFamily}"
+                     Foreground="{DynamicResource PrimaryTextBrush}"
+                     HorizontalAlignment="Center"
+                     TextAlignment="Center"/>
+          <TextBlock Text="{Binding Description}"
+                     FontSize="{StaticResource Type.Body.Size}"
+                     Foreground="{DynamicResource SecondaryTextBrush}"
+                     TextWrapping="Wrap"
+                     HorizontalAlignment="Center"
+                     TextAlignment="Center"/>
+          <Border Background="{DynamicResource HeaderBackgroundBrush}"
+                  CornerRadius="10"
+                  Padding="14,10">
+            <StackPanel Spacing="6">
+              <TextBlock Text="Source desktop view"
+                         FontSize="{StaticResource Type.Tiny.Size}"
+                         Foreground="{DynamicResource MutedTextBrush}"/>
+              <TextBlock Text="{Binding SourceViewName}"
+                         FontSize="{StaticResource Type.Label.Size}"
+                         FontFamily="{StaticResource MonoFontFamily}"
+                         Foreground="{DynamicResource AccentBrush}"/>
+            </StackPanel>
+          </Border>
+          <TextBlock Text="{Binding PortStatus}"
+                     FontSize="{StaticResource Type.Small.Size}"
+                     Foreground="{DynamicResource MutedTextBrush}"
+                     TextWrapping="Wrap"
+                     HorizontalAlignment="Center"
+                     TextAlignment="Center"/>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

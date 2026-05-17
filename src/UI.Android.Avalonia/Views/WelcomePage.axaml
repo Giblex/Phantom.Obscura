@@ -1,0 +1,321 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PhantomVault.UI.ViewModels"
+             xmlns:models="using:PhantomVault.UI.Models"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="PhantomVault.UI.Views.WelcomePage"
+             x:DataType="vm:WelcomePageViewModel"
+             Background="{DynamicResource WindowBackgroundBrush}">
+
+  <!--
+    Android adaptation of Views/WelcomePage.axaml from UI.Desktop.
+    Content is a verbatim port of the desktop layout, with three deltas:
+      (1) Root is UserControl, not ThemeAwareWindow, so it can be hosted under
+          SingleViewApplicationLifetime on Android.
+      (2) Window-scoped pulse-ring/trace animations were removed — they live
+          in the desktop's .axaml.cs animation harness (809 LOC) which we'll
+          port piecemeal in a later phase.
+      (3) `Classes="liquid-glass*"` classes are commented-out until we link
+          Giblex.Controls.BorderEnergyTrace + LiquidGlass.axaml (Phase 4).
+    All bindings, brushes, and StaticResource type sizes match desktop exactly.
+  -->
+
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://PhantomVault.UI/Assets/Themes/PreVaultTheme.axaml"/>
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </UserControl.Resources>
+
+  <UserControl.Styles>
+    <Style Selector="Button.vault-choice">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderBrush" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="0"/>
+      <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,*,Auto"
+        Margin="0"
+        Background="{DynamicResource WindowBackgroundBrush}">
+
+    <!-- ── Header (taller, more prominent — verbatim from desktop) ────────── -->
+    <Border Grid.Row="0" Background="{DynamicResource HeaderBackgroundBrush}" Padding="14,12">
+      <StackPanel HorizontalAlignment="Center" Spacing="8">
+        <TextBlock Text="{Binding AppName}"
+                   FontSize="{StaticResource Type.H2.Size}"
+                   FontFamily="{DynamicResource TitleFontFamily}"
+                   FontWeight="Normal"
+                   Foreground="{DynamicResource HeaderTextBrush}"
+                   HorizontalAlignment="Center"/>
+        <TextBlock Text="{Binding WelcomeMessage}"
+                   FontSize="{StaticResource Type.Body.Size}"
+                   Foreground="{DynamicResource HeaderTextBrush}"
+                   HorizontalAlignment="Center"/>
+      </StackPanel>
+    </Border>
+
+    <!-- ── Main content (centred logo tile + status + vault picker) ──────── -->
+    <ScrollViewer x:Name="MainScrollViewer"
+                  Grid.Row="1"
+                  Background="{DynamicResource WindowBackgroundBrush}"
+                  Padding="20,20,20,28"
+                  VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled">
+      <StackPanel Spacing="18" HorizontalAlignment="Center" VerticalAlignment="Center" MinHeight="300" Margin="0,0,0,112">
+
+        <!-- Centred tile with logo (liquid-glass class deferred to Phase 4) -->
+        <Border CornerRadius="16"
+                ClipToBounds="True"
+                Background="{DynamicResource CardBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                MaxWidth="760" MinHeight="188" MaxHeight="260" Padding="20,18">
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="22">
+            <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
+                   Stretch="Uniform" MaxHeight="150"
+                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <TextBlock Text="Phantom Obscura"
+                       FontSize="40" FontFamily="{DynamicResource TitleFontFamily}" FontWeight="Normal"
+                       Foreground="#1A6B75"
+                       VerticalAlignment="Center"/>
+          </StackPanel>
+        </Border>
+
+        <TextBlock Text="{Binding AppVersion}"
+                   FontSize="{StaticResource Type.Tiny.Size}"
+                   Foreground="{DynamicResource MutedTextBrush}"
+                   HorizontalAlignment="Center"
+                   Margin="0,6,0,0"/>
+
+        <!-- Status + indeterminate progress card -->
+        <Border x:Name="DetectionStatusCard"
+                Background="{DynamicResource WindowBackgroundBrush}"
+                CornerRadius="20"
+                Padding="18,12"
+                HorizontalAlignment="Center"
+                IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                Margin="0,10,0,0"
+                BorderBrush="{DynamicResource ControlBackgroundBrush}"
+                BorderThickness="4">
+          <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+            <ProgressBar IsIndeterminate="True"
+                         Width="72"
+                         Height="4"
+                         Foreground="{DynamicResource AccentBrush}"
+                         IsVisible="{Binding IsDeviceDetectionActive}"/>
+            <TextBlock Text="{Binding StatusMessage}"
+                       FontSize="{StaticResource Type.Label.Size}"
+                       Foreground="{DynamicResource SecondaryTextBrush}"
+                       FontWeight="Normal"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"/>
+          </StackPanel>
+        </Border>
+
+        <ProgressBar IsIndeterminate="True"
+                     IsVisible="{Binding IsDeviceDetectionActive}"
+                     Height="4"
+                     Foreground="{DynamicResource AccentBrush}"
+                     Width="260"
+                     Margin="0,10,0,0"/>
+
+        <!-- Detected vault card (USB found, vaults listed) -->
+        <Border x:Name="DetectedVaultCard"
+                Background="{DynamicResource WindowBackgroundBrush}"
+                BorderBrush="{DynamicResource CardBackgroundBrush}"
+                BorderThickness="4"
+                CornerRadius="20"
+                Padding="18,16"
+                MaxWidth="760"
+                HorizontalAlignment="Stretch"
+                IsVisible="{Binding IsLandingVisible}">
+          <StackPanel Spacing="14">
+            <StackPanel Orientation="Horizontal" Spacing="14">
+              <!-- Static centre dot (pulse-ring animation deferred) -->
+              <Grid Width="120" Height="120">
+                <Border Width="22" Height="22" CornerRadius="11" Background="#FFFFFF"
+                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
+              </Grid>
+              <StackPanel Spacing="4" VerticalAlignment="Center">
+                <TextBlock Text="{Binding DeviceLinkHeadline}"
+                           FontSize="{StaticResource Type.H4.Size}"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <TextBlock Text="{Binding DeviceLinkDetail}"
+                           FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"
+                           MaxWidth="620"/>
+              </StackPanel>
+            </StackPanel>
+
+            <TextBlock Text="{Binding DetectedVaultPathDisplay}"
+                       FontSize="{StaticResource Type.Small.Size}"
+                       Foreground="{DynamicResource SecondaryTextBrush}"
+                       IsVisible="{Binding HasRecognizedVaults}"/>
+
+            <StackPanel x:Name="VaultListAnchor"
+                        Spacing="8"
+                        IsVisible="{Binding ShowVaultPicker}">
+              <TextBlock Text="Available vaults on this USB"
+                         FontSize="{StaticResource Type.Label.Size}"
+                         Foreground="{DynamicResource PrimaryTextBrush}"/>
+              <ItemsControl ItemsSource="{Binding DetectedVaults}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="models:DetectedVaultLaunchRequest">
+                    <Button Classes="vault-choice"
+                            Click="DetectedVaultChoice_Click"
+                            Tag="{Binding}"
+                            Margin="0,0,0,8">
+                      <Border Background="#121C2B"
+                              CornerRadius="14"
+                              Padding="16,10"
+                              Width="336"
+                              BorderThickness="1"
+                              BorderBrush="{DynamicResource ControlBorderBrush}">
+                        <StackPanel Spacing="2" HorizontalAlignment="Stretch">
+                          <TextBlock Text="{Binding DisplayName}"
+                                     Foreground="{DynamicResource PrimaryTextBrush}"
+                                     FontSize="{StaticResource Type.Body.Size}"/>
+                          <TextBlock Text="{Binding VaultPath}"
+                                     FontSize="{StaticResource Type.Tiny.Size}"
+                                     Foreground="{DynamicResource MutedTextBrush}"
+                                     TextWrapping="NoWrap"
+                                     TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                      </Border>
+                    </Button>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- Setup choice card (Default vs Advanced) — verbatim layout -->
+        <Border Background="{DynamicResource CardBackgroundBrush}"
+                CornerRadius="20"
+                Padding="24,22"
+                MaxWidth="760"
+                HorizontalAlignment="Stretch"
+                IsVisible="{Binding IsSetupChoiceVisible}"
+                BoxShadow="0 8 24 0 #30000000">
+          <StackPanel Spacing="18">
+            <StackPanel Spacing="6">
+              <TextBlock Text="Choose Your Setup Path"
+                         FontSize="{StaticResource Type.H3.Size}"
+                         Foreground="{DynamicResource PrimaryTextBrush}"/>
+              <TextBlock Text="Pick the simple path if you want Obscura to make the hard decisions for you, or open the advanced path if you want full control over every lock and latch."
+                         FontSize="{StaticResource Type.Small.Size}"
+                         Foreground="{DynamicResource MutedTextBrush}"
+                         TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+              <Border Grid.Column="0" Background="#162235" CornerRadius="18" Padding="18,16">
+                <StackPanel Spacing="12">
+                  <TextBlock Text="Default Setup"
+                             FontSize="{StaticResource Type.H4.Size}"
+                             Foreground="{DynamicResource PrimaryTextBrush}"/>
+                  <TextBlock Text="Best if you just want a vault without wrestling the knobs. You choose the vault name and your authentication, and Obscura handles the rest with hardened defaults."
+                             FontSize="{StaticResource Type.Small.Size}"
+                             Foreground="{DynamicResource MutedTextBrush}"
+                             TextWrapping="Wrap"/>
+                  <TextBlock Text="Includes Ghost Secured, PhantomKey, dual keyfiles, USB binding, 1 GB container, and remnant cleanup."
+                             FontSize="{StaticResource Type.Small.Size}"
+                             Foreground="{DynamicResource SecondaryTextBrush}"
+                             TextWrapping="Wrap"/>
+                  <Button Command="{Binding ShowDefaultSetupCommand}" Height="42" HorizontalAlignment="Left">
+                    <TextBlock Text="Use Default Setup"/>
+                  </Button>
+                </StackPanel>
+              </Border>
+
+              <Border Grid.Column="1" Background="#162235" CornerRadius="18" Padding="18,16">
+                <StackPanel Spacing="12">
+                  <TextBlock Text="Advanced Setup"
+                             FontSize="{StaticResource Type.H4.Size}"
+                             Foreground="{DynamicResource PrimaryTextBrush}"/>
+                  <TextBlock Text="Best if you want full control over the protection tier, storage layout, keyfile flow, remnant handling, and every other vault-building decision."
+                             FontSize="{StaticResource Type.Small.Size}"
+                             Foreground="{DynamicResource MutedTextBrush}"
+                             TextWrapping="Wrap"/>
+                  <TextBlock Text="You will walk through the full wizard and choose the exact security profile and provisioning path."
+                             FontSize="{StaticResource Type.Small.Size}"
+                             Foreground="{DynamicResource SecondaryTextBrush}"
+                             TextWrapping="Wrap"/>
+                  <Button Command="{Binding ShowAdvancedSetupCommand}" Height="42" HorizontalAlignment="Left">
+                    <TextBlock Text="Use Advanced Setup"/>
+                  </Button>
+                </StackPanel>
+              </Border>
+            </Grid>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- ── Action footer (Get Started, Open Vault, About, Import, ...) ────── -->
+    <Border x:Name="ActionFooterCard"
+            Grid.Row="2"
+            Background="{DynamicResource HeaderBackgroundBrush}"
+            Padding="12"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Bottom"
+            MaxWidth="760"
+            CornerRadius="16"
+            Margin="18,8,18,18"
+            BorderBrush="{DynamicResource FooterBorderBrush}"
+            BorderThickness="1"
+            ClipToBounds="True">
+      <WrapPanel Orientation="Horizontal" ItemWidth="160" HorizontalAlignment="Center">
+        <Button Command="{Binding GetStartedCommand}" CornerRadius="10" Height="40" Width="140"
+                FontSize="{StaticResource Type.Body.Size}" FontWeight="Normal"
+                FontFamily="{DynamicResource MainFontFamily}"
+                IsVisible="{Binding IsLandingVisible}">
+          <TextBlock Text="Get Started" Foreground="{DynamicResource ButtonTextBrush}"
+                     HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Button>
+
+        <Button Command="{Binding OpenExistingVaultCommand}" CornerRadius="10" Height="40" Width="140"
+                FontSize="{StaticResource Type.Body.Size}" FontFamily="{DynamicResource MainFontFamily}"
+                IsVisible="{Binding IsLandingVisible}" IsEnabled="{Binding HasSelectedVault}">
+          <TextBlock Text="{Binding OpenVaultButtonText}" Foreground="{DynamicResource ButtonTextBrush}"
+                     HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Button>
+
+        <Button Click="About_Click" CornerRadius="10" Height="40" Width="140"
+                FontFamily="{DynamicResource MainFontFamily}" FontSize="{StaticResource Type.Body.Size}"
+                ToolTip.Tip="About this app"
+                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                IsVisible="{Binding IsLandingVisible}">
+          <TextBlock Text="About" Foreground="{DynamicResource ButtonTextBrush}"
+                     HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Button>
+
+        <Button Click="Import_Click" CornerRadius="10" Height="40" Width="140"
+                FontFamily="{DynamicResource MainFontFamily}" FontSize="{StaticResource Type.Body.Size}"
+                ToolTip.Tip="Import data"
+                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                IsVisible="{Binding IsLandingVisible}">
+          <TextBlock Text="Import" Foreground="{DynamicResource ButtonTextBrush}"
+                     HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Button>
+
+        <Button Command="{Binding BackToWelcomeCommand}" CornerRadius="10" Height="40" Width="140"
+                FontFamily="{DynamicResource MainFontFamily}" FontSize="{StaticResource Type.Body.Size}"
+                IsVisible="{Binding IsSetupChoiceVisible}">
+          <TextBlock Text="Back" Foreground="{DynamicResource ButtonTextBrush}"
+                     HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Button>
+      </WrapPanel>
+    </Border>
+
+  </Grid>
+</UserControl>

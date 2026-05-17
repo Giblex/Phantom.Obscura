@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:PhantomVault.Core.Models;assembly=PhantomVault.Core"
+             x:Class="PhantomVault.Android.Pages.PasskeyManagementPage"
+             Title="Passkeys"
+             BackgroundColor="{StaticResource Background}">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="+" Command="{Binding AddPasskeyPlaceholderCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <Grid RowDefinitions="Auto,*">
+
+        <Frame Grid.Row="0" Margin="12,12,12,4" Padding="14,10"
+               BackgroundColor="{StaticResource Surface}" CornerRadius="10">
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Passkeys (FIDO2)"
+                       FontFamily="OpenSansSemibold" FontSize="15"
+                       TextColor="{StaticResource PrimaryText}" />
+                <Label Text="Passkeys are created on your device via your browser or app. Track them here. Tap + to add a placeholder."
+                       FontSize="12" TextColor="{StaticResource SecondaryText}" />
+            </VerticalStackLayout>
+        </Frame>
+
+        <CollectionView Grid.Row="1"
+                        ItemsSource="{Binding Passkeys}"
+                        EmptyView="No passkeys stored yet. Add a placeholder to track which sites you use passkeys on.">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:Credential">
+                    <SwipeView>
+                        <SwipeView.RightItems>
+                            <SwipeItems>
+                                <SwipeItem Text="Delete" BackgroundColor="#8B2222"
+                                           Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeletePasskeyCommand}"
+                                           CommandParameter="{Binding .}" />
+                            </SwipeItems>
+                        </SwipeView.RightItems>
+
+                        <Frame Margin="12,3" Padding="14,12"
+                               BackgroundColor="{StaticResource Surface}"
+                               BorderColor="{StaticResource CardBorder}"
+                               CornerRadius="10">
+                            <Grid ColumnDefinitions="48,*,Auto" ColumnSpacing="12">
+                                <Frame Grid.Column="0" BackgroundColor="{StaticResource IconBackground}"
+                                       CornerRadius="10" Padding="0" WidthRequest="44" HeightRequest="44">
+                                    <Label Text="🗝" FontSize="22"
+                                           HorizontalOptions="Center" VerticalOptions="Center" />
+                                </Frame>
+                                <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                    <Label Text="{Binding Title}"
+                                           FontFamily="OpenSansSemibold" FontSize="15"
+                                           TextColor="{StaticResource PrimaryText}" />
+                                    <Label Text="{Binding Url}" FontSize="12"
+                                           TextColor="{StaticResource SecondaryText}"
+                                           LineBreakMode="TailTruncation" />
+                                </VerticalStackLayout>
+                                <Label Grid.Column="2" Text="›"
+                                       FontSize="22" TextColor="{StaticResource SecondaryText}"
+                                       VerticalOptions="Center" />
+                            </Grid>
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.OpenPasskeyCommand}"
+                                    CommandParameter="{Binding .}" />
+                            </Frame.GestureRecognizers>
+                        </Frame>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+    </Grid>
+
+</ContentPage>

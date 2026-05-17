@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:PhantomVault.Core.Models;assembly=PhantomVault.Core"
+             x:Class="PhantomVault.Android.Pages.TrashPage"
+             Title="Trash"
+             BackgroundColor="{StaticResource Background}">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Empty" Command="{Binding PurgeAllCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <Grid RowDefinitions="Auto,*">
+
+        <Frame Grid.Row="0" Margin="12,12,12,4" Padding="14,10"
+               BackgroundColor="#1A0A0A" BorderColor="#5A1A1A" CornerRadius="10"
+               IsVisible="{Binding HasItems}">
+            <Label Text="Swipe left to restore  ·  Swipe right to delete permanently"
+                   FontSize="12" TextColor="{StaticResource SecondaryText}"
+                   HorizontalOptions="Center" />
+        </Frame>
+
+        <CollectionView Grid.Row="1"
+                        ItemsSource="{Binding TrashedItems}"
+                        EmptyView="Trash is empty">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:Credential">
+                    <SwipeView>
+                        <SwipeView.LeftItems>
+                            <SwipeItems Mode="Execute">
+                                <SwipeItem Text="Restore"
+                                           BackgroundColor="#1E4A1E"
+                                           Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RestoreCommand}"
+                                           CommandParameter="{Binding .}" />
+                            </SwipeItems>
+                        </SwipeView.LeftItems>
+                        <SwipeView.RightItems>
+                            <SwipeItems Mode="Execute">
+                                <SwipeItem Text="Delete"
+                                           BackgroundColor="#8B2222"
+                                           Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.PermanentDeleteCommand}"
+                                           CommandParameter="{Binding .}" />
+                            </SwipeItems>
+                        </SwipeView.RightItems>
+
+                        <Frame Margin="12,2" Padding="14,12"
+                               BackgroundColor="{StaticResource Surface}"
+                               BorderColor="#5A1A1A" CornerRadius="10">
+                            <Grid ColumnDefinitions="48,*" ColumnSpacing="12">
+                                <Frame Grid.Column="0" BackgroundColor="#2A0A0A"
+                                       CornerRadius="10" Padding="0" WidthRequest="44" HeightRequest="44">
+                                    <Label Text="{Binding EntryType, Converter={StaticResource EntryTypeIconConverter}}"
+                                           FontSize="22" HorizontalOptions="Center" VerticalOptions="Center" />
+                                </Frame>
+                                <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                    <Label Text="{Binding Title}"
+                                           FontFamily="OpenSansSemibold" FontSize="15"
+                                           TextColor="{StaticResource PrimaryText}" />
+                                    <Label Text="{Binding Username}"
+                                           FontSize="12" TextColor="{StaticResource SecondaryText}" />
+                                    <Label Text="Deleted" FontSize="11" TextColor="{StaticResource Danger}" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Frame>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+    </Grid>
+
+</ContentPage>

@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:PhantomVault.Android.ViewModels"
+             x:Class="PhantomVault.Android.Pages.DashboardPage"
+             Title="Dashboard"
+             BackgroundColor="{StaticResource Background}">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="🔒" Command="{Binding LockVaultCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="12">
+
+            <!-- Welcome banner -->
+            <Frame BackgroundColor="#1A0E2E" CornerRadius="16" Padding="20,18"
+                   BorderColor="#3D1A6E">
+                <Grid ColumnDefinitions="*,Auto">
+                    <VerticalStackLayout Grid.Column="0" Spacing="4">
+                        <Label Text="{Binding WelcomeMessage}" FontFamily="OpenSansSemibold"
+                               FontSize="18" TextColor="{StaticResource PrimaryText}" />
+                        <Label Text="{Binding VaultName}" FontSize="13"
+                               TextColor="{StaticResource Primary}" />
+                    </VerticalStackLayout>
+                    <Label Grid.Column="1" Text="🔐" FontSize="36" VerticalOptions="Center" />
+                </Grid>
+            </Frame>
+
+            <!-- Stats row -->
+            <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="8">
+                <Frame Grid.Column="0" BackgroundColor="{StaticResource Surface}" CornerRadius="12"
+                       Padding="12,10" BorderColor="{StaticResource CardBorder}">
+                    <VerticalStackLayout Spacing="2" HorizontalOptions="Center">
+                        <Label Text="{Binding TotalCredentials}" FontFamily="OpenSansSemibold"
+                               FontSize="22" TextColor="{StaticResource Primary}" HorizontalOptions="Center" />
+                        <Label Text="Items" FontSize="10" TextColor="{StaticResource SecondaryText}" HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </Frame>
+                <Frame Grid.Column="1" BackgroundColor="{StaticResource Surface}" CornerRadius="12"
+                       Padding="12,10" BorderColor="{StaticResource CardBorder}">
+                    <VerticalStackLayout Spacing="2" HorizontalOptions="Center">
+                        <Label Text="{Binding TotalCategories}" FontFamily="OpenSansSemibold"
+                               FontSize="22" TextColor="#5DADE2" HorizontalOptions="Center" />
+                        <Label Text="Categories" FontSize="10" TextColor="{StaticResource SecondaryText}" HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </Frame>
+                <Frame Grid.Column="2" BackgroundColor="{StaticResource Surface}" CornerRadius="12"
+                       Padding="12,10" BorderColor="{StaticResource CardBorder}">
+                    <VerticalStackLayout Spacing="2" HorizontalOptions="Center">
+                        <Label Text="{Binding TotpCount}" FontFamily="OpenSansSemibold"
+                               FontSize="22" TextColor="#2ECC71" HorizontalOptions="Center" />
+                        <Label Text="TOTP" FontSize="10" TextColor="{StaticResource SecondaryText}" HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </Frame>
+                <Frame Grid.Column="3" BackgroundColor="{StaticResource Surface}" CornerRadius="12"
+                       Padding="12,10" BorderColor="{StaticResource CardBorder}">
+                    <VerticalStackLayout Spacing="2" HorizontalOptions="Center">
+                        <Label Text="{Binding FavoriteCount}" FontFamily="OpenSansSemibold"
+                               FontSize="22" TextColor="#F1C40F" HorizontalOptions="Center" />
+                        <Label Text="Favorites" FontSize="10" TextColor="{StaticResource SecondaryText}" HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </Frame>
+            </Grid>
+
+            <!-- Quick actions -->
+            <Label Text="QUICK ACTIONS" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0" />
+
+            <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+                <Frame Grid.Row="0" Grid.Column="0" BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="0" BorderColor="{StaticResource CardBorder}">
+                    <Button Text="➕ Add" Command="{Binding AddCredentialCommand}"
+                            BackgroundColor="Transparent" TextColor="{StaticResource PrimaryText}"
+                            FontSize="13" HeightRequest="56" />
+                </Frame>
+                <Frame Grid.Row="0" Grid.Column="1" BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="0" BorderColor="{StaticResource CardBorder}">
+                    <Button Text="🛡 Health" Command="{Binding OpenHealthCommand}"
+                            BackgroundColor="Transparent" TextColor="{StaticResource PrimaryText}"
+                            FontSize="13" HeightRequest="56" />
+                </Frame>
+                <Frame Grid.Row="0" Grid.Column="2" BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="0" BorderColor="{StaticResource CardBorder}">
+                    <Button Text="🔑 Generate" Command="{Binding OpenGeneratorCommand}"
+                            BackgroundColor="Transparent" TextColor="{StaticResource PrimaryText}"
+                            FontSize="13" HeightRequest="56" />
+                </Frame>
+                <Frame Grid.Row="1" Grid.Column="0" BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="0" BorderColor="{StaticResource CardBorder}">
+                    <Button Text="📥 Import" Command="{Binding OpenImportCommand}"
+                            BackgroundColor="Transparent" TextColor="{StaticResource PrimaryText}"
+                            FontSize="13" HeightRequest="56" />
+                </Frame>
+                <Frame Grid.Row="1" Grid.Column="1" BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="0" BorderColor="{StaticResource CardBorder}">
+                    <Button Text="💾 Backup" Command="{Binding OpenBackupCommand}"
+                            BackgroundColor="Transparent" TextColor="{StaticResource PrimaryText}"
+                            FontSize="13" HeightRequest="56" />
+                </Frame>
+                <Frame Grid.Row="1" Grid.Column="2" BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="0" BorderColor="{StaticResource CardBorder}">
+                    <Button Text="🔐 Security" Command="{Binding OpenSecurityCommand}"
+                            BackgroundColor="Transparent" TextColor="{StaticResource PrimaryText}"
+                            FontSize="13" HeightRequest="56" />
+                </Frame>
+            </Grid>
+
+            <!-- Security status -->
+            <Label Text="SECURITY STATUS" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0" />
+
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="16"
+                   BorderColor="{StaticResource CardBorder}">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                    <Label Grid.Column="0" Text="{Binding SecurityScoreEmoji}" FontSize="28" VerticalOptions="Center" />
+                    <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                        <Label Text="{Binding SecurityStatusLabel}" FontFamily="OpenSansSemibold"
+                               FontSize="14" TextColor="{StaticResource PrimaryText}" />
+                        <Label Text="{Binding SecurityStatusDetail}" FontSize="12"
+                               TextColor="{StaticResource SecondaryText}" />
+                    </VerticalStackLayout>
+                    <Button Grid.Column="2" Text="›" Command="{Binding OpenSecurityCommand}"
+                            BackgroundColor="Transparent" TextColor="{StaticResource SecondaryText}"
+                            FontSize="20" Padding="0" VerticalOptions="Center" />
+                </Grid>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

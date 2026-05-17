@@ -1,0 +1,48 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:PhantomVault.UI.ViewModels"
+             x:Class="PhantomVault.UI.Views.AppShell"
+             x:DataType="vm:ShellViewModel"
+             Background="{DynamicResource WindowBackgroundBrush}">
+
+  <!--
+    Single-view shell: top bar with brand + back button, body switches via
+    ShellViewModel.CurrentView. Desktop equivalent is the multi-window flow
+    (WelcomePage → VaultUnlockWindow → VaultWindow); we collapse that into
+    nested UserControls because Avalonia.Android can only host one Control.
+  -->
+
+  <Grid RowDefinitions="Auto,*">
+    <!-- Top app bar -->
+    <Border Grid.Row="0"
+            Background="{DynamicResource HeaderBackgroundBrush}"
+            BorderBrush="{DynamicResource FooterBorderBrush}"
+            BorderThickness="0,0,0,1"
+            Padding="12,8">
+      <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+        <Button Grid.Column="0"
+                Command="{Binding GoBackCommand}"
+                IsVisible="{Binding CanGoBack}"
+                Padding="10,6"
+                Background="Transparent"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="6">
+          <TextBlock Text="‹ Back" Foreground="{DynamicResource HeaderTextBrush}"/>
+        </Button>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+          <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
+                 Width="24" Height="24" VerticalAlignment="Center"/>
+          <TextBlock Text="{Binding Title}"
+                     FontSize="{StaticResource Type.H4.Size}"
+                     FontFamily="{DynamicResource TitleFontFamily}"
+                     Foreground="{DynamicResource HeaderTextBrush}"
+                     VerticalAlignment="Center"/>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- Body slot -->
+    <ContentControl Grid.Row="1" Content="{Binding CurrentView}"/>
+  </Grid>
+</UserControl>

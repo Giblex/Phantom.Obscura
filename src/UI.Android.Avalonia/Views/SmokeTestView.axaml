@@ -1,0 +1,64 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PhantomVault.UI.Views.SmokeTestView">
+
+    <!--
+        Phase 1 smoke test. Proves three things:
+          1. Avalonia.Android renders on the AVD.
+          2. The linked desktop theme dictionary (PhantomTheme.Dark) resolved.
+          3. Brand assets bundled via avares:// URIs are reachable.
+
+        Subsequent turns replace this with the real desktop Welcome → Unlock → Dashboard
+        flow. Until then, this view shows the desktop's actual brand chrome at the
+        tablet form factor.
+    -->
+
+    <Grid Background="{DynamicResource WindowBackgroundBrush}" RowDefinitions="*,Auto,*">
+
+        <StackPanel Grid.Row="0"
+                    VerticalAlignment="Bottom"
+                    HorizontalAlignment="Center"
+                    Spacing="4">
+            <TextBlock Text="PHANTOM"
+                       FontSize="44"
+                       FontWeight="Bold"
+                       HorizontalAlignment="Center"
+                       Foreground="{DynamicResource PrimaryTextBrush}" />
+            <TextBlock Text="OBSCURA"
+                       FontSize="22"
+                       LetterSpacing="10"
+                       HorizontalAlignment="Center"
+                       Foreground="{DynamicResource AccentBrush}" />
+        </StackPanel>
+
+        <Border Grid.Row="1"
+                Background="{DynamicResource CardBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="12"
+                Padding="24"
+                Margin="32,24">
+            <StackPanel Spacing="12">
+                <TextBlock Text="Avalonia.Android scaffold online"
+                           FontSize="18"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"
+                           HorizontalAlignment="Center" />
+                <TextBlock Text="The desktop theme dictionary loaded on this tablet. Next turns wire the real Welcome → Unlock → Dashboard views."
+                           FontSize="13"
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource SecondaryTextBrush}"
+                           HorizontalAlignment="Center"
+                           TextAlignment="Center" />
+            </StackPanel>
+        </Border>
+
+        <TextBlock Grid.Row="2"
+                   VerticalAlignment="Bottom"
+                   HorizontalAlignment="Center"
+                   Margin="0,0,0,24"
+                   FontSize="11"
+                   Foreground="{DynamicResource MutedTextBrush}"
+                   Text="Phase 1 of desktop-to-Android port" />
+    </Grid>
+</UserControl>

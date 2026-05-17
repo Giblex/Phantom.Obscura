@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PhantomVault.Android.Pages.RecoveryPage"
+             Title="Recovery Codes"
+             BackgroundColor="{StaticResource Background}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="12">
+
+            <Label Text="RECOVERY" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0" />
+
+            <!-- Info card -->
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="16">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Recovery Codes"
+                           FontFamily="OpenSansSemibold" FontSize="16"
+                           TextColor="{StaticResource PrimaryText}" />
+                    <Label Text="Recovery codes let you access your vault if you lose all authentication factors. Each code can only be used once."
+                           FontSize="13" TextColor="{StaticResource SecondaryText}" />
+                    <Button Text="Generate New Recovery Codes"
+                            Command="{Binding GenerateCodesCommand}"
+                            BackgroundColor="{StaticResource Primary}"
+                            TextColor="White"
+                            CornerRadius="10"
+                            FontFamily="OpenSansSemibold"
+                            HeightRequest="46"
+                            Margin="0,4,0,0" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Generated codes -->
+            <Frame IsVisible="{Binding CodesGenerated}"
+                   BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Your Recovery Codes"
+                           FontFamily="OpenSansSemibold" FontSize="15"
+                           TextColor="{StaticResource PrimaryText}" />
+                    <Label Text="{Binding StatusMessage}"
+                           FontSize="12" TextColor="{StaticResource Warning}" />
+
+                    <!-- Code list -->
+                    <CollectionView ItemsSource="{Binding RecoveryCodes}" HeightRequest="220">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Frame BackgroundColor="#1A1A1A" CornerRadius="6" Padding="12,8" Margin="0,2">
+                                    <Label Text="{Binding .}"
+                                           FontFamily="Courier New, monospace"
+                                           FontSize="18"
+                                           CharacterSpacing="2"
+                                           TextColor="{StaticResource PrimaryText}"
+                                           HorizontalOptions="Center" />
+                                </Frame>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                    <!-- Actions -->
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <Button Grid.Column="0"
+                                Text="Copy All"
+                                Command="{Binding CopyAllCodesCommand}"
+                                BackgroundColor="{StaticResource Surface}"
+                                TextColor="{StaticResource PrimaryText}"
+                                BorderColor="{StaticResource Primary}"
+                                BorderWidth="1"
+                                CornerRadius="10"
+                                HeightRequest="44" />
+                        <Button Grid.Column="1"
+                                Text="Share"
+                                Command="{Binding ShareCodesCommand}"
+                                BackgroundColor="{StaticResource Primary}"
+                                TextColor="White"
+                                CornerRadius="10"
+                                HeightRequest="44" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Warning -->
+            <Frame BackgroundColor="#1A0000" CornerRadius="10" Padding="14">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="⚠ Important" FontFamily="OpenSansSemibold"
+                           FontSize="13" TextColor="{StaticResource Danger}" />
+                    <Label Text="Generating new codes invalidates all previous codes. Store them offline in a secure location."
+                           FontSize="12" TextColor="{StaticResource SecondaryText}" />
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PhantomVault.Android.Pages.ThemeSettingsPage"
+             Title="Theme"
+             BackgroundColor="{StaticResource Background}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="10">
+
+            <Label Text="{Binding StatusMessage}" FontSize="13"
+                   TextColor="{StaticResource Primary}" HorizontalOptions="Center"
+                   IsVisible="{Binding StatusMessage, Converter={StaticResource NotNullOrEmptyBoolConverter}}" />
+
+            <!-- APPEARANCE -->
+            <Label Text="APPEARANCE" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0" />
+
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="0"
+                   BorderColor="{StaticResource CardBorder}">
+                <VerticalStackLayout>
+                    <Grid ColumnDefinitions="*,Auto" Padding="16,14">
+                        <VerticalStackLayout Grid.Column="0">
+                            <Label Text="Dark Mode" FontFamily="OpenSansSemibold" FontSize="15"
+                                   TextColor="{StaticResource PrimaryText}" />
+                            <Label Text="Use dark background (recommended)" FontSize="12"
+                                   TextColor="{StaticResource SecondaryText}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1" IsToggled="{Binding DarkModeEnabled}"
+                                OnColor="{StaticResource Primary}" VerticalOptions="Center" />
+                    </Grid>
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}" />
+                    <Grid ColumnDefinitions="*,Auto" Padding="16,14">
+                        <VerticalStackLayout Grid.Column="0">
+                            <Label Text="Use System Theme" FontFamily="OpenSansSemibold" FontSize="15"
+                                   TextColor="{StaticResource PrimaryText}" />
+                            <Label Text="Follow Android system dark/light setting" FontSize="12"
+                                   TextColor="{StaticResource SecondaryText}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1" IsToggled="{Binding UseSystemTheme}"
+                                OnColor="{StaticResource Primary}" VerticalOptions="Center" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- ACCENT COLOR -->
+            <Label Text="ACCENT COLOUR" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0" />
+
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="16"
+                   BorderColor="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Choose an accent colour for the app:" FontSize="14"
+                           TextColor="{StaticResource SecondaryText}" />
+                    <HorizontalStackLayout Spacing="12" HorizontalOptions="Center">
+                        <!-- Purple (default) -->
+                        <Border StrokeShape="Ellipse" WidthRequest="44" HeightRequest="44"
+                                BackgroundColor="#6C3483" Stroke="#FFFFFF" StrokeThickness="2">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SetAccentCommand}" CommandParameter="purple" />
+                            </Border.GestureRecognizers>
+                        </Border>
+                        <!-- Blue -->
+                        <Border StrokeShape="Ellipse" WidthRequest="44" HeightRequest="44"
+                                BackgroundColor="#2E86C1" Stroke="#FFFFFF" StrokeThickness="0">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SetAccentCommand}" CommandParameter="blue" />
+                            </Border.GestureRecognizers>
+                        </Border>
+                        <!-- Green -->
+                        <Border StrokeShape="Ellipse" WidthRequest="44" HeightRequest="44"
+                                BackgroundColor="#1E8449" Stroke="#FFFFFF" StrokeThickness="0">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SetAccentCommand}" CommandParameter="green" />
+                            </Border.GestureRecognizers>
+                        </Border>
+                        <!-- Crimson -->
+                        <Border StrokeShape="Ellipse" WidthRequest="44" HeightRequest="44"
+                                BackgroundColor="#922B21" Stroke="#FFFFFF" StrokeThickness="0">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SetAccentCommand}" CommandParameter="red" />
+                            </Border.GestureRecognizers>
+                        </Border>
+                        <!-- Gold -->
+                        <Border StrokeShape="Ellipse" WidthRequest="44" HeightRequest="44"
+                                BackgroundColor="#B7950B" Stroke="#FFFFFF" StrokeThickness="0">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SetAccentCommand}" CommandParameter="gold" />
+                            </Border.GestureRecognizers>
+                        </Border>
+                    </HorizontalStackLayout>
+                    <Label Text="{Binding SelectedAccentName, StringFormat='Selected: {0}'}"
+                           FontSize="13" TextColor="{StaticResource SecondaryText}"
+                           HorizontalOptions="Center" />
+                    <Label Text="⚠ Theme changes apply on next app restart."
+                           FontSize="12" TextColor="{StaticResource Warning}"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <Button Text="Apply Theme" Command="{Binding ApplyThemeCommand}"
+                    BackgroundColor="{StaticResource Primary}" TextColor="#0A0A0A"
+                    FontFamily="OpenSansSemibold" CornerRadius="12" HeightRequest="50"
+                    Margin="0,8,0,0" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

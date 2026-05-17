@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PhantomVault.Android.Pages.VaultSettingsPage"
+             Title="Vault Settings"
+             BackgroundColor="{StaticResource Background}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="10">
+
+            <!-- Status -->
+            <Label Text="{Binding StatusMessage}" FontSize="13"
+                   TextColor="{StaticResource Primary}" HorizontalOptions="Center"
+                   IsVisible="{Binding StatusMessage, Converter={StaticResource NotNullOrEmptyBoolConverter}}" />
+            <Label Text="{Binding ErrorMessage}" FontSize="13"
+                   TextColor="{StaticResource Danger}" HorizontalOptions="Center"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource NotNullOrEmptyBoolConverter}}" />
+
+            <!-- VAULT INFO -->
+            <Label Text="VAULT INFO" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0" />
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="16" BorderColor="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Vault Name" FontFamily="OpenSansSemibold" FontSize="15"
+                               TextColor="{StaticResource PrimaryText}" VerticalOptions="Center" />
+                        <Label Grid.Column="1" Text="{Binding CurrentVaultName}" FontSize="14"
+                               TextColor="{StaticResource SecondaryText}" VerticalOptions="Center" />
+                    </Grid>
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Created" FontFamily="OpenSansSemibold" FontSize="15"
+                               TextColor="{StaticResource PrimaryText}" VerticalOptions="Center" />
+                        <Label Grid.Column="1" Text="{Binding VaultCreated}" FontSize="13"
+                               TextColor="{StaticResource SecondaryText}" VerticalOptions="Center" />
+                    </Grid>
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Credentials" FontFamily="OpenSansSemibold" FontSize="15"
+                               TextColor="{StaticResource PrimaryText}" VerticalOptions="Center" />
+                        <Label Grid.Column="1" Text="{Binding CredentialCount}" FontSize="14"
+                               TextColor="{StaticResource SecondaryText}" VerticalOptions="Center" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- RENAME VAULT -->
+            <Label Text="RENAME VAULT" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0" />
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="16" BorderColor="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="10">
+                    <Entry Placeholder="New vault name" Text="{Binding NewVaultName}"
+                           TextColor="{StaticResource PrimaryText}"
+                           PlaceholderColor="{StaticResource SecondaryText}"
+                           BackgroundColor="Transparent" FontSize="15" />
+                    <Button Text="Rename Vault" Command="{Binding RenameVaultCommand}"
+                            BackgroundColor="{StaticResource Primary}" TextColor="#0A0A0A"
+                            FontFamily="OpenSansSemibold" CornerRadius="10" HeightRequest="46"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- CHANGE PASSWORD -->
+            <Label Text="CHANGE MASTER PASSWORD" FontSize="11" TextColor="{StaticResource SecondaryText}"
+                   CharacterSpacing="2" Margin="4,8,0,0" />
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="16" BorderColor="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="10">
+                    <Entry Placeholder="Current password" IsPassword="True"
+                           Text="{Binding CurrentPassword}"
+                           TextColor="{StaticResource PrimaryText}"
+                           PlaceholderColor="{StaticResource SecondaryText}"
+                           BackgroundColor="Transparent" FontSize="15" />
+                    <BoxView HeightRequest="1" Color="{StaticResource Divider}" />
+                    <Entry Placeholder="New password" IsPassword="True"
+                           Text="{Binding NewPassword}"
+                           TextColor="{StaticResource PrimaryText}"
+                           PlaceholderColor="{StaticResource SecondaryText}"
+                           BackgroundColor="Transparent" FontSize="15" />
+                    <Entry Placeholder="Confirm new password" IsPassword="True"
+                           Text="{Binding ConfirmPassword}"
+                           TextColor="{StaticResource PrimaryText}"
+                           PlaceholderColor="{StaticResource SecondaryText}"
+                           BackgroundColor="Transparent" FontSize="15" />
+                    <Button Text="Change Password" Command="{Binding ChangePasswordCommand}"
+                            BackgroundColor="#8B2222" TextColor="White"
+                            FontFamily="OpenSansSemibold" CornerRadius="10" HeightRequest="46"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- DANGER ZONE -->
+            <Label Text="DANGER ZONE" FontSize="11" TextColor="{StaticResource Danger}"
+                   CharacterSpacing="2" Margin="4,8,0,0" />
+            <Frame BackgroundColor="{StaticResource Surface}" CornerRadius="12" Padding="16" BorderColor="{StaticResource Danger}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Delete all vault data" FontFamily="OpenSansSemibold" FontSize="15"
+                           TextColor="{StaticResource Danger}" />
+                    <Label Text="This permanently deletes the vault file. All credentials will be lost."
+                           FontSize="13" TextColor="{StaticResource SecondaryText}" />
+                    <Button Text="Delete Vault" Command="{Binding DeleteVaultCommand}"
+                            BackgroundColor="#8B2222" TextColor="White"
+                            FontFamily="OpenSansSemibold" CornerRadius="10" HeightRequest="46" />
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
