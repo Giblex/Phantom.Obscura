@@ -50,9 +50,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Core\PhantomVault.Core.csproj" />
-    <ProjectReference Include="..\Platform\PhantomVault.Platform.csproj" />
-    <ProjectReference Include="..\Crypto\GiblexVault.Security.ZK.csproj" />
+    <!--
+        Core / Platform / Crypto are temporarily NOT referenced. The user's main
+        branch has a duplicate class definition in PhantomVault.Core
+        (`BlackSecureRawVolumeService` in both `Services/` and `Services/Mobile/`)
+        that prevents Core from building. Until that's resolved, the Avalonia
+        Android port runs against the linked desktop AXAML + stub ViewModels only.
+        Reinstate these references once Core compiles cleanly:
+        <ProjectReference Include="..\Core\PhantomVault.Core.csproj" />
+        <ProjectReference Include="..\Platform\PhantomVault.Platform.csproj" />
+        <ProjectReference Include="..\Crypto\GiblexVault.Security.ZK.csproj" />
+    -->
     <ProjectReference Include="..\..\..\Phantom.Shared\Phantom.UI.Shared\Phantom.UI.Shared.csproj" />
   </ItemGroup>
 

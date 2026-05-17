@@ -1,0 +1,129 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:PhantomVault.UI.ViewModels"
+             x:Class="PhantomVault.UI.Views.SecurityDashboardView"
+             x:DataType="vm:SecurityDashboardViewModel"
+             Background="{DynamicResource WindowBackgroundBrush}">
+
+  <!-- Trimmed adaptation of Views/SecurityDashboardWindow.axaml — header,
+       password strength tester, and 6 stat tiles. Live-update wiring lands
+       once PasswordHealthService is hooked up on Android. -->
+
+  <ScrollViewer>
+    <StackPanel Spacing="0">
+      <!-- Header -->
+      <Border Background="{DynamicResource SurfaceBrush}"
+              BorderBrush="{DynamicResource DividerBrush}"
+              BorderThickness="0,0,0,1" Padding="20,16">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Grid.Column="0" Spacing="6" VerticalAlignment="Center">
+            <TextBlock Text="Security Dashboard"
+                       FontSize="22" FontWeight="Bold"
+                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+            <TextBlock FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}">
+              <Run Text="Overall Score: "/>
+              <Run Text="{Binding SecurityScore}"/>
+              <Run Text="/100  •  "/>
+              <Run Text="{Binding TotalCount}"/>
+              <Run Text=" passwords  •  Live updating"/>
+            </TextBlock>
+          </StackPanel>
+          <Button Grid.Column="1"
+                  Padding="12,18">
+            <TextBlock Text="🔄" FontSize="18"/>
+          </Button>
+        </Grid>
+      </Border>
+
+      <!-- Password strength tester -->
+      <Border Background="{DynamicResource SurfaceBrush}"
+              BorderBrush="{DynamicResource DividerBrush}"
+              BorderThickness="0,0,0,1" Padding="20,16">
+        <StackPanel Spacing="10">
+          <TextBlock Text="Test Password Strength"
+                     FontSize="14" FontWeight="SemiBold"
+                     Foreground="{DynamicResource PrimaryTextBrush}"/>
+          <TextBox Text="{Binding TestPassword}"
+                   Watermark="Type a password to test its strength..."
+                   Padding="12,10" FontSize="12"/>
+          <Grid ColumnDefinitions="Auto,*,Auto">
+            <TextBlock Grid.Column="0" Text="Strength:" FontSize="11"
+                       Foreground="{DynamicResource SecondaryTextBrush}"
+                       VerticalAlignment="Center"/>
+            <ProgressBar Grid.Column="1" Margin="8,0"
+                         Value="{Binding TestPasswordScore}" Maximum="100" Height="6"/>
+            <TextBlock Grid.Column="2"
+                       Text="{Binding TestPasswordScore}"
+                       FontSize="11"
+                       Foreground="{DynamicResource SecondaryTextBrush}"
+                       VerticalAlignment="Center"/>
+          </Grid>
+          <TextBlock Text="{Binding TestPasswordStrengthLabel}"
+                     FontSize="11" FontWeight="SemiBold"
+                     Foreground="{DynamicResource AccentBrush}"/>
+        </StackPanel>
+      </Border>
+
+      <!-- Quick stat tiles -->
+      <Border Padding="14,14">
+        <UniformGrid Rows="2" Columns="3">
+          <Border Margin="6" Padding="14,12" CornerRadius="10"
+                  Background="{DynamicResource CardBackgroundBrush}"
+                  BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
+            <StackPanel Spacing="4">
+              <TextBlock Text="{Binding TotalCount}" FontSize="22" FontWeight="Bold"
+                         Foreground="{DynamicResource PrimaryTextBrush}"/>
+              <TextBlock Text="Total" FontSize="11"
+                         Foreground="{DynamicResource SecondaryTextBrush}"/>
+            </StackPanel>
+          </Border>
+          <Border Margin="6" Padding="14,12" CornerRadius="10"
+                  Background="{DynamicResource CardBackgroundBrush}"
+                  BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
+            <StackPanel Spacing="4">
+              <TextBlock Text="{Binding WeakCount}" FontSize="22" FontWeight="Bold" Foreground="#FFA726"/>
+              <TextBlock Text="Weak" FontSize="11"
+                         Foreground="{DynamicResource SecondaryTextBrush}"/>
+            </StackPanel>
+          </Border>
+          <Border Margin="6" Padding="14,12" CornerRadius="10"
+                  Background="{DynamicResource CardBackgroundBrush}"
+                  BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
+            <StackPanel Spacing="4">
+              <TextBlock Text="{Binding ReusedCount}" FontSize="22" FontWeight="Bold" Foreground="#EF5350"/>
+              <TextBlock Text="Reused" FontSize="11"
+                         Foreground="{DynamicResource SecondaryTextBrush}"/>
+            </StackPanel>
+          </Border>
+          <Border Margin="6" Padding="14,12" CornerRadius="10"
+                  Background="{DynamicResource CardBackgroundBrush}"
+                  BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
+            <StackPanel Spacing="4">
+              <TextBlock Text="{Binding OldCount}" FontSize="22" FontWeight="Bold" Foreground="#FFA726"/>
+              <TextBlock Text="Aging" FontSize="11"
+                         Foreground="{DynamicResource SecondaryTextBrush}"/>
+            </StackPanel>
+          </Border>
+          <Border Margin="6" Padding="14,12" CornerRadius="10"
+                  Background="{DynamicResource CardBackgroundBrush}"
+                  BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
+            <StackPanel Spacing="4">
+              <TextBlock Text="{Binding BreachedCount}" FontSize="22" FontWeight="Bold" Foreground="#EF5350"/>
+              <TextBlock Text="Breached" FontSize="11"
+                         Foreground="{DynamicResource SecondaryTextBrush}"/>
+            </StackPanel>
+          </Border>
+          <Border Margin="6" Padding="14,12" CornerRadius="10"
+                  Background="{DynamicResource CardBackgroundBrush}"
+                  BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
+            <StackPanel Spacing="4">
+              <TextBlock Text="{Binding StrongCount}" FontSize="22" FontWeight="Bold" Foreground="#66BB6A"/>
+              <TextBlock Text="Strong" FontSize="11"
+                         Foreground="{DynamicResource SecondaryTextBrush}"/>
+            </StackPanel>
+          </Border>
+        </UniformGrid>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

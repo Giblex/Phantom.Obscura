@@ -1,0 +1,72 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PhantomVault.UI.ViewModels"
+             x:Class="PhantomVault.UI.Views.CategoryLandingView"
+             x:DataType="vm:CategoryLandingViewModel"
+             Background="{DynamicResource WindowBackgroundBrush}">
+
+  <!-- Direct port of desktop Views/CategoryLandingView.axaml (already a UserControl in desktop) -->
+  <Grid>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+      <StackPanel Margin="40,30,40,40" HorizontalAlignment="Center">
+
+        <TextBlock Text="Passwords"
+                   FontSize="{StaticResource Type.Banner.Size}"
+                   FontWeight="Bold"
+                   Foreground="{DynamicResource PrimaryTextBrush}"
+                   HorizontalAlignment="Center"
+                   Margin="0,0,0,30"/>
+
+        <ItemsControl ItemsSource="{Binding CategoryTiles}"
+                      Width="860"
+                      HorizontalAlignment="Center">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <UniformGrid Columns="2"/>
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:CategoryTileViewModel">
+              <Button Background="{DynamicResource CardBackgroundBrush}"
+                      BorderThickness="0"
+                      CornerRadius="12"
+                      Padding="0" Margin="10"
+                      Height="120" Width="400"
+                      HorizontalAlignment="Center"
+                      HorizontalContentAlignment="Stretch"
+                      Cursor="Hand">
+                <Grid Margin="20" ColumnDefinitions="Auto,*,Auto">
+                  <Border Grid.Column="0"
+                          Width="50" Height="50" CornerRadius="25"
+                          VerticalAlignment="Center"
+                          Background="{Binding Color}">
+                    <TextBlock Text="{Binding Icon}"
+                               FontSize="{StaticResource Type.H2.Size}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
+                  </Border>
+                  <TextBlock Grid.Column="1"
+                             Text="{Binding Name}"
+                             FontSize="{StaticResource Type.H3.Size}"
+                             FontWeight="SemiBold"
+                             Foreground="{DynamicResource PrimaryTextBrush}"
+                             VerticalAlignment="Center"
+                             Margin="16,0,0,0"/>
+                  <TextBlock Grid.Column="2"
+                             Text="{Binding Count}"
+                             FontSize="{StaticResource Type.XL.Size}"
+                             FontWeight="Light"
+                             Foreground="{DynamicResource PrimaryTextBrush}"
+                             Opacity="0.6"
+                             VerticalAlignment="Center"/>
+                </Grid>
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

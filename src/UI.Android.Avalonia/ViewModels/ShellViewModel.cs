@@ -59,35 +59,31 @@ public sealed partial class ShellViewModel : ObservableObject
         description:  "Type-aware credential editor: password, card, identity, API key, Wi-Fi, contact, bank, PIN, etc. — each with a tailored form.",
         portStatus:   "Phase 3e: each EditForm/*.axaml under Views/EditForms/ ports as its own DataTemplate."));
 
-    public void NavigateCategories() => Navigate("Categories", PlaceholderView.Create(
-        title:        "Categories",
-        sourceView:   "Views/CategoryLandingView.axaml + CategoryManagerView.axaml",
-        description:  "Manage credential categories — rename, reorder, icon assignment, bulk move.",
-        portStatus:   "Phase 3f. CategoryManagerWindow is a thin shell over CategoryManagerView; the view itself is portable."));
+    // Real ported views (Phase 3f/3g landed this turn) — replace earlier placeholders.
+    public void NavigateCategories() => Navigate("Categories", new CategoryLandingView
+    {
+        DataContext = new CategoryLandingViewModel()
+    });
 
-    public void NavigateIconDownloader() => Navigate("Icon Downloader", PlaceholderView.Create(
-        title:        "Website Icon Downloader",
-        sourceView:   "Views/IconDownloaderWindow.axaml (200 LOC)",
-        description:  "Fetches favicons for a credential's URL and lets you choose / crop / assign.",
-        portStatus:   "Phase 3f. Small, mostly self-contained — needs HttpClient permission already in manifest."));
+    public void NavigateIconDownloader() => Navigate("Icon Downloader", new IconDownloaderView
+    {
+        DataContext = new IconDownloaderViewModel()
+    });
 
-    public void NavigateSettings() => Navigate("Settings", PlaceholderView.Create(
-        title:        "Settings",
-        sourceView:   "Views/SettingsWindow.axaml (235 LOC)",
-        description:  "Top-level settings menu — navigates to Security, Theme, Auto-fill, Backup, and Advanced panels.",
-        portStatus:   "Phase 3g. The window itself is a menu; the sub-panels are separate views."));
+    public void NavigateSettings() => Navigate("Settings", new SettingsView
+    {
+        DataContext = new SettingsViewModel()
+    });
 
-    public void NavigateSecurityDashboard() => Navigate("Security Dashboard", PlaceholderView.Create(
-        title:        "Security Dashboard",
-        sourceView:   "Views/SecurityDashboardWindow.axaml (231 LOC)",
-        description:  "Vault health: weak passwords, reused passwords, breached credentials, 2FA coverage, and recommendations.",
-        portStatus:   "Phase 3g. Depends on PasswordHealthService which is already cross-platform."));
+    public void NavigateSecurityDashboard() => Navigate("Security Dashboard", new SecurityDashboardView
+    {
+        DataContext = new SecurityDashboardViewModel()
+    });
 
-    public void NavigateThemeSettings() => Navigate("Theme", PlaceholderView.Create(
-        title:        "Theme",
-        sourceView:   "Views/ThemeSettingsWindow.axaml (72 LOC)",
-        description:  "Switch between the 14 built-in themes (Dark, Light, ArcticFrost, Cyberpunk, Proton, MidnightNeon, …).",
-        portStatus:   "Phase 3g. Theme switching needs the ThemeManagerService to be wired on Android."));
+    public void NavigateThemeSettings() => Navigate("Theme", new ThemeSettingsView
+    {
+        DataContext = new ThemeSettingsViewModel()
+    });
 
     public void NavigateImportExport() => Navigate("Import / Export", PlaceholderView.Create(
         title:        "Import / Export",
