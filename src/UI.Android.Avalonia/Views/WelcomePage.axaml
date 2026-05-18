@@ -79,17 +79,21 @@
                 BorderThickness="1"
                 HorizontalAlignment="Stretch" VerticalAlignment="Center"
                 MaxWidth="760" MinHeight="188" MaxHeight="320" Padding="16,18">
-          <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center" ItemSpacing="16" LineSpacing="10">
+          <StackPanel Orientation="Vertical"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"
+                      Spacing="10">
             <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
-                   Stretch="Uniform" MaxHeight="120"
-                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                   Stretch="Uniform" MaxHeight="110"
+                   HorizontalAlignment="Center"/>
             <TextBlock Text="Phantom Obscura"
-                       FontSize="30" FontFamily="{DynamicResource TitleFontFamily}" FontWeight="Normal"
+                       FontSize="26"
+                       FontFamily="{DynamicResource TitleFontFamily}"
+                       FontWeight="Normal"
                        Foreground="#1A6B75"
-                       TextWrapping="Wrap"
                        TextAlignment="Center"
-                       VerticalAlignment="Center"/>
-          </WrapPanel>
+                       HorizontalAlignment="Center"/>
+          </StackPanel>
         </Border>
 
         <TextBlock Text="{Binding AppVersion}"
@@ -141,23 +145,24 @@
                 HorizontalAlignment="Stretch"
                 IsVisible="{Binding IsLandingVisible}">
           <StackPanel Spacing="14">
-            <StackPanel Orientation="Horizontal" Spacing="14">
-              <!-- Static centre dot (pulse-ring animation deferred) -->
-              <Grid Width="120" Height="120">
-                <Border Width="22" Height="22" CornerRadius="11" Background="#FFFFFF"
-                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
-              </Grid>
-              <StackPanel Spacing="4" VerticalAlignment="Center">
-                <TextBlock Text="{Binding DeviceLinkHeadline}"
-                           FontSize="{StaticResource Type.H4.Size}"
-                           Foreground="{DynamicResource PrimaryTextBrush}"/>
-                <TextBlock Text="{Binding DeviceLinkDetail}"
-                           FontSize="{StaticResource Type.Small.Size}"
-                           Foreground="{DynamicResource MutedTextBrush}"
-                           TextWrapping="Wrap"
-                           MaxWidth="620"/>
-              </StackPanel>
-            </StackPanel>
+            <!-- Phone-safe layout: vertical stack with the white indicator dot
+                 sitting above the headline / detail text instead of beside.
+                 The desktop version uses a 120dp Grid on the left which
+                 over-runs phone widths. -->
+            <Border Width="22" Height="22" CornerRadius="11" Background="#FFFFFF"
+                    HorizontalAlignment="Center"/>
+            <TextBlock Text="{Binding DeviceLinkHeadline}"
+                       FontSize="{StaticResource Type.H4.Size}"
+                       Foreground="{DynamicResource PrimaryTextBrush}"
+                       HorizontalAlignment="Center"
+                       TextAlignment="Center"
+                       TextWrapping="Wrap"/>
+            <TextBlock Text="{Binding DeviceLinkDetail}"
+                       FontSize="{StaticResource Type.Small.Size}"
+                       Foreground="{DynamicResource MutedTextBrush}"
+                       TextWrapping="Wrap"
+                       TextAlignment="Center"
+                       HorizontalAlignment="Center"/>
 
             <TextBlock Text="{Binding DetectedVaultPathDisplay}"
                        FontSize="{StaticResource Type.Small.Size}"
