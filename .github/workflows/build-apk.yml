@@ -16,15 +16,16 @@ jobs:
   build-apk:
     name: Build Android APK
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # setup-dotnet@v4 reads global.json and tries to install that exact SDK
-      # version. Our global.json pins 9.0.100 (old Nov-2024 build) whose workload
-      # packages may be gone from the feed. Wipe the version pin before setup so
-      # only the dotnet-version input drives what gets installed.
+      # setup-dotnet@v4 reads global.json and installs that exact SDK version.
+      # Wipe the pin so only dotnet-version drives what gets installed.
       - name: Remove global.json SDK version pin for CI
         run: echo '{}' > global.json
 
@@ -39,15 +40,38 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: Print SDK info
+      - name: Collect environment diagnostics
+        id: diag
+        continue-on-error: true
         run: |
-          dotnet --version
-          dotnet --list-sdks
+          {
+            echo "### Environment"
+            echo "dotnet version: $(dotnet --version 2>&1)"
+            echo "DOTNET_ROOT: $DOTNET_ROOT"
+            echo ""
+            echo "### Installed SDKs"
+            dotnet --list-sdks 2>&1
+            echo ""
+            echo "### Installed runtimes"
+            dotnet --list-runtimes 2>&1
+            echo ""
+            echo "### Android SDK"
+            echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+            ls "$ANDROID_SDK_ROOT" 2>&1 || echo "SDK root not found at $ANDROID_SDK_ROOT"
+            echo ""
+            echo "### Workloads"
+            dotnet workload list 2>&1
+          } | tee /tmp/diag.txt
 
       - name: Install MAUI Android workload
-        run: dotnet workload install maui-android
+        id: workload
+        continue-on-error: true
+        run: |
+          dotnet workload install maui-android 2>&1 | tee /tmp/workload.txt
+          exit ${PIPESTATUS[0]}
 
       - name: Accept Android SDK licenses
+        continue-on-error: true
         run: |
           SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
           yes | "$SDKMANAGER" --licenses 2>/dev/null || true
@@ -57,6 +81,24 @@ jobs:
             d56f5187479451eabf01fb78af6dfcb131a6481e \
             84831b9409646a918e30573bab4c9c91346d8abd \
             > "$ANDROID_SDK_ROOT/licenses/android-sdk-license"
+
+      - name: Post diagnostic comment on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          DIAG=$(cat /tmp/diag.txt 2>/dev/null || echo "no diag")
+          WORKLOAD=$(cat /tmp/workload.txt 2>/dev/null || echo "no workload output")
+          BODY=$(printf '**CI Diagnostic (run ${{ github.run_number }})**\n\n<details><summary>Environment</summary>\n\n```\n%s\n```\n</details>\n\n<details><summary>Workload install output</summary>\n\n```\n%s\n```\n</details>' "$DIAG" "$WORKLOAD")
+          curl -s -f -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/Giblex-Pty-Ltd/Phantom.Obscura/issues/5/comments" \
+            -d "{\"body\": $(echo "$BODY" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')}"
+
+      - name: Fail if workload install failed
+        if: steps.workload.outcome == 'failure'
+        run: exit 1
 
       - name: Restore NuGet packages
         run: dotnet restore src/UI.Android/PhantomVault.Android.csproj
@@ -75,7 +117,6 @@ jobs:
 
       - name: Collect APK
         run: |
-          echo "=== Artifacts ==="
           find ./artifacts -name "*.apk" | sort
           find src/UI.Android/bin -name "*.apk" 2>/dev/null | sort || true
 
