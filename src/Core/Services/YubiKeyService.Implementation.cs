@@ -1,6 +1,8 @@
 using System;
 using System.Linq;
 using Yubico.YubiKey;
+using Yubico.YubiKey.Fido2;
+using Yubico.YubiKey.Fido2.Commands;
 
 namespace PhantomVault.Core.Services
 {
@@ -8,8 +10,6 @@ namespace PhantomVault.Core.Services
     /// Production implementation of YubiKey integration using the official
     /// Yubico.YubiKey SDK. Supports FIDO2 authentication for vault unlocking.
     /// Requires YubiKey firmware 5.0 or later for full FIDO2 support.
-    /// NOTE: This is a simplified implementation. Full FIDO2 integration requires
-    /// additional work with the Yubico.YubiKey.Fido2 namespace.
     /// </summary>
     public sealed class YubiKeyServiceImpl
     {
@@ -58,15 +58,17 @@ namespace PhantomVault.Core.Services
         }
 
         /// <summary>
-        /// Performs FIDO2 authentication using the YubiKey. This method generates
-        /// a challenge, sends it to the YubiKey, and verifies the signed response.
-        /// The user must touch the YubiKey to complete the authentication.
-        /// NOTE: This is a stub. Full implementation requires Yubico.YubiKey.Fido2 APIs.
+        /// Performs FIDO2 authentication using the YubiKey. The user must touch
+        /// the YubiKey to complete the assertion. Returns concatenated
+        /// authenticator data and signature bytes for caller verification.
         /// </summary>
         /// <param name="relyingPartyId">The relying party identifier (e.g., "phantomvault.local").</param>
         /// <param name="credentialId">The credential ID from registration (stored in manifest).</param>
         /// <param name="challenge">A 32-byte random challenge for this authentication attempt.</param>
-        /// <returns>The signed authentication response, or null if authentication failed.</returns>
+        /// <returns>
+        /// Encoded response: [authDataLen(4 bytes, big-endian)] + authData + signature,
+        /// or null if no assertion was returned by the authenticator.
+        /// </returns>
         public byte[]? Authenticate(string relyingPartyId, byte[] credentialId, byte[] challenge)
         {
             if (string.IsNullOrEmpty(relyingPartyId))
@@ -76,23 +78,49 @@ namespace PhantomVault.Core.Services
             if (challenge == null || challenge.Length != 32)
                 throw new ArgumentException("Challenge must be exactly 32 bytes.", nameof(challenge));
 
-            // FIDO2 authentication not fully implemented yet
-            // For production use, implement using Yubico.YubiKey.Fido2 namespace
-            // See: https://docs.yubico.com/yesdk/users-manual/sdk-programming-guide/fido2.html
+            var device = YubiKeyDevice.FindAll()
+                .FirstOrDefault(d => d.HasFeature(YubiKeyFeature.Fido2Application))
+                ?? throw new InvalidOperationException("No YubiKey with FIDO2 support found.");
 
-            throw new FeatureNotImplementedException(
-                "YubiKey FIDO2 authentication is not yet implemented. " +
-                "Use keyfile + passphrase authentication instead. " +
-                "Full FIDO2 support will be added in a future release. " +
-                "Documentation: https://docs.yubico.com/yesdk/users-manual/",
-                "YubiKey.FIDO2");
+            using var session = new Fido2Session(device);
+            // Return true for touch prompts; decline PIN prompts (no PIN UI at this layer).
+            session.KeyCollector = data => data.Request == KeyEntryRequest.TouchRequest;
+
+            var rp = new RelyingParty(relyingPartyId);
+            var assertParams = new GetAssertionParameters(rp, new ReadOnlyMemory<byte>(challenge));
+
+            var cred = new CredentialId
+            {
+                Id = new ReadOnlyMemory<byte>(credentialId),
+                Type = "public-key"
+            };
+            assertParams.AllowCredential(cred);
+
+            var assertions = session.GetAssertions(assertParams);
+            if (assertions.Count == 0)
+                return null;
+
+            var assertion = assertions[0];
+            var authDataBytes = assertion.AuthenticatorData.EncodedAuthenticatorData.ToArray();
+            var sigBytes = assertion.Signature.ToArray();
+
+            // Encode as [authDataLen (4 bytes, big-endian)] + authData + signature
+            // so callers can split the two fields without extra framing.
+            var result = new byte[4 + authDataBytes.Length + sigBytes.Length];
+            result[0] = (byte)(authDataBytes.Length >> 24);
+            result[1] = (byte)(authDataBytes.Length >> 16);
+            result[2] = (byte)(authDataBytes.Length >> 8);
+            result[3] = (byte)(authDataBytes.Length);
+            Buffer.BlockCopy(authDataBytes, 0, result, 4, authDataBytes.Length);
+            Buffer.BlockCopy(sigBytes, 0, result, 4 + authDataBytes.Length, sigBytes.Length);
+            return result;
         }
 
         /// <summary>
         /// Registers a new FIDO2 credential on the YubiKey. This should be called
         /// during vault provisioning to bind the vault to this specific YubiKey.
+        /// The user must touch the YubiKey to complete registration.
         /// The returned credential ID must be stored in the vault manifest.
-        /// NOTE: This is a stub. Full implementation requires Yubico.YubiKey.Fido2 APIs.
         /// </summary>
         /// <param name="relyingPartyId">The relying party identifier.</param>
         /// <param name="userId">User identifier (can be the vault ID).</param>
@@ -110,16 +138,33 @@ namespace PhantomVault.Core.Services
             if (challenge == null || challenge.Length != 32)
                 throw new ArgumentException("Challenge must be exactly 32 bytes.", nameof(challenge));
 
-            // FIDO2 registration not fully implemented yet
-            // For production use, implement using Yubico.YubiKey.Fido2 namespace
-            // See: https://docs.yubico.com/yesdk/users-manual/sdk-programming-guide/fido2.html
+            var device = YubiKeyDevice.FindAll()
+                .FirstOrDefault(d => d.HasFeature(YubiKeyFeature.Fido2Application))
+                ?? throw new InvalidOperationException("No YubiKey with FIDO2 support found.");
 
-            throw new FeatureNotImplementedException(
-                "YubiKey FIDO2 registration is not yet implemented. " +
-                "Use keyfile + passphrase authentication instead. " +
-                "Full FIDO2 support will be added in a future release. " +
-                "Documentation: https://docs.yubico.com/yesdk/users-manual/",
-                "YubiKey.FIDO2");
+            using var session = new Fido2Session(device);
+            // Return true for touch prompts; decline PIN prompts (no PIN UI at this layer).
+            session.KeyCollector = data => data.Request == KeyEntryRequest.TouchRequest;
+
+            var rp = new RelyingParty(relyingPartyId);
+            var user = new UserEntity(new ReadOnlyMemory<byte>(userId))
+            {
+                Name = userName
+            };
+
+            var makeCredParams = new MakeCredentialParameters(rp, user);
+            makeCredParams.ClientDataHash = new ReadOnlyMemory<byte>(challenge);
+
+            var credData = session.MakeCredential(makeCredParams);
+            // YubiKey SDK contract: a successful MakeCredential always returns a
+            // populated AuthenticatorData with a non-empty CredentialId. The
+            // nullable analyser can't see that — defensive null check turns a
+            // crash into a clear error.
+            var authData = credData.AuthenticatorData
+                ?? throw new InvalidOperationException("YubiKey returned a credential with no AuthenticatorData.");
+            var credentialId = authData.CredentialId
+                ?? throw new InvalidOperationException("YubiKey credential had no CredentialId.");
+            return credentialId.Id.ToArray();
         }
 
         /// <summary>
@@ -168,19 +213,21 @@ namespace PhantomVault.Core.Services
 
         /// <summary>
         /// Resets the FIDO2 application on the YubiKey. WARNING: This will delete
-        /// all stored credentials! Only use this for testing or if the user has
-        /// lost access to their vault and needs to re-provision.
-        /// NOTE: This is a stub. Full implementation requires Yubico.YubiKey.Fido2 APIs.
+        /// all stored FIDO2 credentials and the FIDO2 PIN. Only use this when
+        /// re-provisioning. Must be performed within 5 seconds of inserting the
+        /// YubiKey; the user must touch the key to confirm.
         /// </summary>
         public void ResetFido2Application()
         {
-            // FIDO2 reset not fully implemented yet
-            // For production use, implement using Yubico.YubiKey.Fido2 namespace
+            var device = YubiKeyDevice.FindAll()
+                .FirstOrDefault(d => d.HasFeature(YubiKeyFeature.Fido2Application))
+                ?? throw new InvalidOperationException("No YubiKey with FIDO2 support found.");
 
-            throw new FeatureNotImplementedException(
-                "YubiKey FIDO2 reset is not yet implemented. " +
-                "Full FIDO2 support will be added in a future release.",
-                "YubiKey.FIDO2");
+            using var connection = device.Connect(YubiKeyApplication.Fido2);
+            var response = connection.SendCommand(new ResetCommand());
+            if (response.Status != ResponseStatus.Success)
+                throw new InvalidOperationException(
+                    $"FIDO2 reset failed with status {response.Status}: {response.StatusMessage}");
         }
     }
 }
