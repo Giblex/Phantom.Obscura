@@ -6,9 +6,11 @@ on:
   workflow_dispatch:
 
 env:
-  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
   DOTNET_NOLOGO: true
-  NUGET_XMLDOC_MODE: skip
+  DOTNET_MULTILEVEL_LOOKUP: 0
+  # Override global.json rollForward so any 9.0.x SDK installed by setup-dotnet is used
+  DOTNET_ROLL_FORWARD: LatestMajor
   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
   ANDROID_HOME: /usr/local/lib/android/sdk
 
@@ -31,65 +33,57 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
-          # global.json (9.0.100 + latestFeature) will accept whatever 9.0.x is installed
+
+      - name: Print environment info
+        run: |
+          echo "dotnet SDK: $(dotnet --version)"
+          echo "DOTNET_ROOT: $DOTNET_ROOT"
+          echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
+          ls "$ANDROID_SDK_ROOT/cmdline-tools/" 2>/dev/null || echo "cmdline-tools dir not found"
+          ls "$ANDROID_SDK_ROOT/platforms/" 2>/dev/null | head -5 || echo "platforms dir not found"
 
       - name: Install MAUI Android workload
-        run: |
-          # workload restore reads project requirements; fall back to explicit install
-          dotnet workload restore src/UI.Android/PhantomVault.Android.csproj || \
-          dotnet workload install maui-android
+        run: dotnet workload install maui-android --skip-sign-check
 
       - name: Accept Android SDK licenses
         run: |
           SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
-          [ -f "$SDKMANAGER" ] || SDKMANAGER="$ANDROID_SDK_ROOT/tools/bin/sdkmanager"
           yes | "$SDKMANAGER" --licenses 2>/dev/null || true
-          # Fallback: write license hashes directly
           mkdir -p "$ANDROID_SDK_ROOT/licenses"
           printf '%s\n' \
             24333f8a63b6825ea9c5514f83c2829b004d1fee \
             d56f5187479451eabf01fb78af6dfcb131a6481e \
             84831b9409646a918e30573bab4c9c91346d8abd \
             > "$ANDROID_SDK_ROOT/licenses/android-sdk-license"
-          printf '%s\n' 33b6937101c8be1e8f92cec4d2ab2890c1924fb1 \
-            > "$ANDROID_SDK_ROOT/licenses/android-sdk-preview-license"
-
-      - name: Install required Android SDK packages
-        run: |
-          SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
-          [ -f "$SDKMANAGER" ] || SDKMANAGER="$ANDROID_SDK_ROOT/tools/bin/sdkmanager"
-          "$SDKMANAGER" "platforms;android-34" "build-tools;34.0.0" "platform-tools" 2>/dev/null || true
 
       - name: Restore NuGet packages
         run: dotnet restore src/UI.Android/PhantomVault.Android.csproj
 
-      - name: Build APK (debug-signed, sideloadable)
+      - name: Publish APK (debug-signed, sideloadable)
         run: |
-          dotnet build src/UI.Android/PhantomVault.Android.csproj \
+          dotnet publish src/UI.Android/PhantomVault.Android.csproj \
             -f net9.0-android \
             -c Release \
-            -p:AndroidPackageFormat=apk \
             -p:AndroidKeyStore=false \
+            -p:AndroidPackageFormat=apk \
             -p:AndroidCreatePackagePerAbi=false \
             -p:EmbedAssembliesIntoApk=true \
             -p:AndroidUseSharedRuntime=false \
-            -p:AndroidEnableMultiDex=true \
-            -t:PackageForAndroid \
-            -v:normal
+            -o ./artifacts/apk
 
       - name: Collect APK
         run: |
-          mkdir -p artifacts
-          find . -name "*.apk" -not -path "*/obj/*" -exec cp {} artifacts/ \;
-          echo "=== APK files ==="
-          ls -lh artifacts/ || echo "No APKs found"
-          echo "=== Build output tree ==="
-          find src/UI.Android/bin -name "*.apk" 2>/dev/null || true
+          echo "=== Artifacts dir ==="
+          find ./artifacts -name "*.apk" | sort
+          echo "=== bin dir ==="
+          find src/UI.Android/bin -name "*.apk" 2>/dev/null | sort || true
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: phantom-obscura-apk
-          path: artifacts/*.apk
+          path: |
+            artifacts/apk/*.apk
+            artifacts/apk/**/*.apk
           retention-days: 30
           if-no-files-found: error
