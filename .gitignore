@@ -1,4 +1,8 @@
 
+# Build output
+bin/
+obj/
+
 # Android sideload artifacts produced by Avalonia.Android build
 PhantomObscura-*.apk
 phantom_emulator_screenshot.png
