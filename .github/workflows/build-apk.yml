@@ -9,7 +9,6 @@ env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   DOTNET_NOLOGO: true
   NUGET_XMLDOC_MODE: skip
-  # ubuntu-latest pre-installs Android SDK here
   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
   ANDROID_HOME: /usr/local/lib/android/sdk
 
@@ -32,35 +31,37 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
+          # global.json (9.0.100 + latestFeature) will accept whatever 9.0.x is installed
 
       - name: Install MAUI Android workload
-        run: dotnet workload install maui-android --skip-sign-check
+        run: |
+          # workload restore reads project requirements; fall back to explicit install
+          dotnet workload restore src/UI.Android/PhantomVault.Android.csproj || \
+          dotnet workload install maui-android
 
       - name: Accept Android SDK licenses
         run: |
-          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses 2>/dev/null || \
-          yes | "$ANDROID_SDK_ROOT/tools/bin/sdkmanager" --licenses 2>/dev/null || true
-          # Write license hashes directly as a fallback
+          SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          [ -f "$SDKMANAGER" ] || SDKMANAGER="$ANDROID_SDK_ROOT/tools/bin/sdkmanager"
+          yes | "$SDKMANAGER" --licenses 2>/dev/null || true
+          # Fallback: write license hashes directly
           mkdir -p "$ANDROID_SDK_ROOT/licenses"
           printf '%s\n' \
             24333f8a63b6825ea9c5514f83c2829b004d1fee \
             d56f5187479451eabf01fb78af6dfcb131a6481e \
             84831b9409646a918e30573bab4c9c91346d8abd \
             > "$ANDROID_SDK_ROOT/licenses/android-sdk-license"
-          printf '%s\n' \
-            33b6937101c8be1e8f92cec4d2ab2890c1924fb1 \
+          printf '%s\n' 33b6937101c8be1e8f92cec4d2ab2890c1924fb1 \
             > "$ANDROID_SDK_ROOT/licenses/android-sdk-preview-license"
 
       - name: Install required Android SDK packages
         run: |
           SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
-          if [ ! -f "$SDKMANAGER" ]; then
-            SDKMANAGER="$ANDROID_SDK_ROOT/tools/bin/sdkmanager"
-          fi
+          [ -f "$SDKMANAGER" ] || SDKMANAGER="$ANDROID_SDK_ROOT/tools/bin/sdkmanager"
           "$SDKMANAGER" "platforms;android-34" "build-tools;34.0.0" "platform-tools" 2>/dev/null || true
 
       - name: Restore NuGet packages
-        run: dotnet restore src/UI.Android/PhantomVault.Android.csproj -f net9.0-android
+        run: dotnet restore src/UI.Android/PhantomVault.Android.csproj
 
       - name: Build APK (debug-signed, sideloadable)
         run: |
@@ -73,20 +74,17 @@ jobs:
             -p:EmbedAssembliesIntoApk=true \
             -p:AndroidUseSharedRuntime=false \
             -p:AndroidEnableMultiDex=true \
-            -t:PackageForAndroid
-
-      - name: Find APK files
-        run: |
-          echo "=== Searching for APK files ==="
-          find . -name "*.apk" -not -path "*/obj/*" 2>/dev/null | sort
-          echo "=== Build output directories ==="
-          find src/UI.Android/bin -type d 2>/dev/null | head -20
+            -t:PackageForAndroid \
+            -v:normal
 
       - name: Collect APK
         run: |
           mkdir -p artifacts
           find . -name "*.apk" -not -path "*/obj/*" -exec cp {} artifacts/ \;
-          ls -lh artifacts/
+          echo "=== APK files ==="
+          ls -lh artifacts/ || echo "No APKs found"
+          echo "=== Build output tree ==="
+          find src/UI.Android/bin -name "*.apk" 2>/dev/null || true
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
