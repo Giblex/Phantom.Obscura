@@ -31,8 +31,8 @@
 <ItemGroup>
 <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.8" />
-<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.8" />
+<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
 </ItemGroup>
 
 <ItemGroup>

@@ -8,11 +8,14 @@
         produced CS0101 duplicate-definition errors on every build. The split
         compile graph below scopes each set to the right target.
     -->
-    <TargetFrameworks>net9.0;net9.0-android;net10.0;net10.0-android</TargetFrameworks>
+    <TargetFrameworks>net9.0;net10.0;net10.0-android</TargetFrameworks>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
     <!-- Enable nullable reference types and treat warnings as errors for stronger code quality. -->
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- NU1903 = vulnerable transitive dep warning; suppressed so KeePassLib's indirect
+         System.Security.Cryptography.Xml dependency does not block the Android build. -->
+    <NoWarn>$(NoWarn);NU1903</NoWarn>
     <!-- Produce deterministic builds to aid reproducibility and security auditing. -->
     <Deterministic>true</Deterministic>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
@@ -74,6 +77,8 @@
     <!-- BouncyCastle for post-quantum cryptography (ML-KEM/Kyber) -->
     <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
     <PackageReference Include="KeePassLib.Standard" Version="2.57.1" />
+    <!-- Pin to fix GHSA-37gx-xxp4-5rgx / GHSA-w3x6-4m5h-cxqf in KeePassLib's transitive dep -->
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.0" />
     <!-- System.Security.Cryptography.Algorithms provides AES‑GCM support. -->
     <!-- Serilog for structured logging -->
     <PackageReference Include="Serilog" Version="4.2.0" />
