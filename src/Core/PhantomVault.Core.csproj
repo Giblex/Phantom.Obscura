@@ -92,8 +92,6 @@
   <ItemGroup>
     <!-- Reference to zero-knowledge vault security library -->
     <ProjectReference Include="..\Crypto\GiblexVault.Security.ZK.csproj" />
-    <!-- Phantom.Sync: Shared cross-app sync library for encrypted TOTP/session/trust -->
-    <ProjectReference Include="..\..\..\Phantom.Shared\Phantom.Sync\Phantom.Sync.csproj" />
     <!-- Link shared policy engine files from /Policies into Core. PolicyEngine.cs
          is desktop-only (uses System.Management/WMI); the rest is portable. -->
     <Compile Include="..\..\Policies\ObscuraPolicy.cs" Link="Policies\ObscuraPolicy.cs" />
