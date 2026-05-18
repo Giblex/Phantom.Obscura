@@ -9,8 +9,6 @@ env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
   DOTNET_NOLOGO: true
   DOTNET_MULTILEVEL_LOOKUP: 0
-  # Override global.json rollForward so any 9.0.x SDK installed by setup-dotnet is used
-  DOTNET_ROLL_FORWARD: LatestMajor
   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
   ANDROID_HOME: /usr/local/lib/android/sdk
 
@@ -23,24 +21,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # setup-dotnet@v4 reads global.json and tries to install that exact SDK
+      # version. Our global.json pins 9.0.100 (old Nov-2024 build) whose workload
+      # packages may be gone from the feed. Wipe the version pin before setup so
+      # only the dotnet-version input drives what gets installed.
+      - name: Remove global.json SDK version pin for CI
+        run: echo '{}' > global.json
+
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup .NET 9
+      - name: Setup .NET 9 (latest patch)
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
 
-      - name: Print environment info
+      - name: Print SDK info
         run: |
-          echo "dotnet SDK: $(dotnet --version)"
-          echo "DOTNET_ROOT: $DOTNET_ROOT"
-          echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
-          ls "$ANDROID_SDK_ROOT/cmdline-tools/" 2>/dev/null || echo "cmdline-tools dir not found"
-          ls "$ANDROID_SDK_ROOT/platforms/" 2>/dev/null | head -5 || echo "platforms dir not found"
+          dotnet --version
+          dotnet --list-sdks
 
       - name: Install MAUI Android workload
         run: dotnet workload install maui-android --skip-sign-check
@@ -73,9 +75,8 @@ jobs:
 
       - name: Collect APK
         run: |
-          echo "=== Artifacts dir ==="
+          echo "=== Artifacts ==="
           find ./artifacts -name "*.apk" | sort
-          echo "=== bin dir ==="
           find src/UI.Android/bin -name "*.apk" 2>/dev/null | sort || true
 
       - name: Upload APK artifact
