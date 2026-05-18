@@ -1,0 +1,88 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:PhantomVault.UI.ViewModels"
+             x:Class="PhantomVault.UI.Views.ThemeSettingsView"
+             x:DataType="vm:ThemeSettingsViewModel"
+             Background="{DynamicResource WindowBackgroundBrush}">
+
+  <!-- Android adapter for desktop Views/ThemeSettingsWindow.axaml (Window→UserControl) -->
+  <Grid Margin="16" RowDefinitions="Auto,*,Auto">
+    <Border Grid.Row="0"
+            Background="{DynamicResource HeaderBackgroundBrush}"
+            Padding="12,10" CornerRadius="6" Margin="0,0,0,12">
+      <StackPanel Spacing="4">
+        <TextBlock Text="Theme Settings"
+                   FontSize="{StaticResource Type.H4.Size}"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+        <TextBlock Text="Customize the look and feel of your vault."
+                   FontSize="{StaticResource Type.Small.Size}"
+                   Foreground="{DynamicResource MutedTextBrush}"/>
+      </StackPanel>
+    </Border>
+
+    <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="12">
+      <StackPanel Grid.Column="0" Spacing="14">
+        <StackPanel Spacing="6">
+          <TextBlock Text="App Theme" FontWeight="SemiBold"
+                     Foreground="{DynamicResource PrimaryTextBrush}"/>
+          <TextBlock Text="Choose a color scheme for the main vault windows."
+                     FontSize="{StaticResource Type.Small.Size}"
+                     Foreground="{DynamicResource MutedTextBrush}"/>
+          <ComboBox ItemsSource="{Binding RuntimeThemeNames}"
+                    SelectedIndex="{Binding SelectedRuntimeThemeIndex, Mode=TwoWay}"
+                    Width="220" HorizontalAlignment="Left"/>
+        </StackPanel>
+
+        <StackPanel Spacing="6">
+          <TextBlock Text="Base Mode" FontWeight="SemiBold"
+                     Foreground="{DynamicResource PrimaryTextBrush}"/>
+          <CheckBox Content="Dark mode"
+                    IsChecked="{Binding IsDarkTheme, Mode=TwoWay}"
+                    Foreground="{DynamicResource PrimaryTextBrush}"/>
+        </StackPanel>
+      </StackPanel>
+
+      <Border Grid.Column="1"
+              Background="{DynamicResource ControlBackgroundBrush}"
+              BorderBrush="{DynamicResource ControlBorderBrush}"
+              BorderThickness="1" CornerRadius="6" Padding="10"
+              VerticalAlignment="Top">
+        <StackPanel Spacing="6">
+          <TextBlock Text="Preview"
+                     FontSize="{StaticResource Type.Small.Size}"
+                     Foreground="{DynamicResource MutedTextBrush}"/>
+          <Border Background="{DynamicResource ContentBackgroundBrush}"
+                  CornerRadius="4" Padding="8">
+            <StackPanel Spacing="6">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Border Background="{DynamicResource AccentBrush}" Width="16" Height="16" CornerRadius="3"/>
+                <TextBlock Text="Accent"
+                           Foreground="{DynamicResource PrimaryTextBrush}"
+                           FontSize="{StaticResource Type.Small.Size}"/>
+              </StackPanel>
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Border Background="{DynamicResource CardBackgroundBrush}" Width="16" Height="16" CornerRadius="3"
+                        BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1"/>
+                <TextBlock Text="Card"
+                           Foreground="{DynamicResource PrimaryTextBrush}"
+                           FontSize="{StaticResource Type.Small.Size}"/>
+              </StackPanel>
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Border Background="{DynamicResource WindowBackgroundBrush}" Width="16" Height="16" CornerRadius="3"
+                        BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1"/>
+                <TextBlock Text="Background"
+                           Foreground="{DynamicResource PrimaryTextBrush}"
+                           FontSize="{StaticResource Type.Small.Size}"/>
+              </StackPanel>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
+      <Button Content="Close" Click="Close_Click" Width="100"/>
+    </StackPanel>
+  </Grid>
+</UserControl>

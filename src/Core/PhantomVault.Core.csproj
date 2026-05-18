@@ -1,6 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <!--
+        Multi-targets so the Mobile/* class stubs (`*Mobile.cs`) can shadow the
+        desktop-only canonical implementations when consumed from an Android
+        head project. The Mobile files were authored as drop-in replacements
+        (same namespace, same public class names) but were never gated, which
+        produced CS0101 duplicate-definition errors on every build. The split
+        compile graph below scopes each set to the right target.
+    -->
+    <TargetFrameworks>net9.0;net9.0-android</TargetFrameworks>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">26.0</SupportedOSPlatformVersion>
     <!-- Enable nullable reference types and treat warnings as errors for stronger code quality. -->
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -32,6 +41,31 @@
       <AssemblyMetadata Include="BuildConfiguration" Value="$(Configuration)" />
     </ItemGroup>
   </Target>
+  <!--
+      ┌── Compile graph ─────────────────────────────────────────────────────
+      │  Desktop / net9.0 build: include canonical Services/{Name}.cs only.
+      │  Android  / net9.0-android build: include Services/Mobile/{Name}Mobile.cs
+      │    in place of the desktop ones. The four files affected are listed
+      │    explicitly so the substitution is auditable rather than a wide glob.
+      └─────────────────────────────────────────────────────────────────────-->
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+    <!-- Desktop-canonical classes shadowed by the Mobile stubs. -->
+    <Compile Remove="Services\BlackSecureRawVolumeService.cs" />
+    <Compile Remove="Services\PasskeyService.cs" />
+    <Compile Remove="Services\UsbBindingService.cs" />
+    <Compile Remove="Services\YubiKeyService.cs" />
+    <!-- Windows-only implementations excluded from the android build -->
+    <Compile Remove="Services\YubiKeyService.Implementation.cs" />       <!-- depends on Yubico.YubiKey native HID -->
+    <Compile Remove="Services\Security\VirtualMachineDetection.cs" />    <!-- uses System.Management (WMI) -->
+    <Compile Remove="Services\PolicyService.cs" />                       <!-- transitively depends on PolicyEngine which uses System.Management -->
+  </ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'android'">
+    <Compile Remove="Services\Mobile\BlackSecureRawVolumeServiceMobile.cs" />
+    <Compile Remove="Services\Mobile\PasskeyServiceMobile.cs" />
+    <Compile Remove="Services\Mobile\UsbBindingServiceMobile.cs" />
+    <Compile Remove="Services\Mobile\YubiKeyServiceMobile.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <!-- Argon2 implementation used for memory‑hard password derivation. Using
       Isopoh.Cryptography.Argon2 which supports modern .NET and is actively maintained -->
@@ -39,26 +73,32 @@
     <PackageReference Include="Isopoh.Cryptography.Argon2" Version="2.0.0" />
     <!-- BouncyCastle for post-quantum cryptography (ML-KEM/Kyber) -->
     <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
-  <!-- Windows Runtime helpers to bridge WinRT async operations from Windows Hello APIs into Tasks -->
-  <PackageReference Include="System.Runtime.WindowsRuntime" Version="4.7.0" />
-    <PackageReference Include="System.Management" Version="9.0.0" />
     <PackageReference Include="KeePassLib.Standard" Version="2.57.1" />
-    <!-- Yubico SDK for YubiKey integration -->
-    <PackageReference Include="Yubico.YubiKey" Version="1.12.0" />
     <!-- System.Security.Cryptography.Algorithms provides AES‑GCM support. -->
     <!-- Serilog for structured logging -->
     <PackageReference Include="Serilog" Version="4.2.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
   </ItemGroup>
+
+  <!-- Windows-only package refs (Windows Hello WinRT bridge, WMI, YubiKey USB HID).
+       These pull native libraries that don't exist on Android — restricted to the
+       net9.0 desktop target so the Android Core target builds clean. -->
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'android'">
+    <PackageReference Include="System.Runtime.WindowsRuntime" Version="4.7.0" />
+    <PackageReference Include="System.Management" Version="9.0.0" />
+    <PackageReference Include="Yubico.YubiKey" Version="1.12.0" />
+  </ItemGroup>
   <ItemGroup>
     <!-- Reference to zero-knowledge vault security library -->
     <ProjectReference Include="..\Crypto\GiblexVault.Security.ZK.csproj" />
     <!-- Phantom.Sync: Shared cross-app sync library for encrypted TOTP/session/trust -->
     <ProjectReference Include="..\..\..\Phantom.Shared\Phantom.Sync\Phantom.Sync.csproj" />
-    <!-- Link shared policy engine files from /Policies to ensure enforcement is compiled into Core -->
+    <!-- Link shared policy engine files from /Policies into Core. PolicyEngine.cs
+         is desktop-only (uses System.Management/WMI); the rest is portable. -->
     <Compile Include="..\..\Policies\ObscuraPolicy.cs" Link="Policies\ObscuraPolicy.cs" />
-    <Compile Include="..\..\Policies\PolicyEngine.cs" Link="Policies\PolicyEngine.cs" />
+    <Compile Include="..\..\Policies\PolicyEngine.cs" Link="Policies\PolicyEngine.cs"
+             Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'android'" />
     <Compile Include="..\..\Policies\PolicySynchronizer.cs" Link="Policies\PolicySynchronizer.cs" />
     <Compile Include="..\..\Policies\PolicyViolationException.cs" Link="Policies\PolicyViolationException.cs" />
     <Compile Include="..\..\Policies\UsbKeyFile.cs" Link="Policies\UsbKeyFile.cs" />

@@ -1,0 +1,167 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:PhantomVault.UI.ViewModels"
+             x:Class="PhantomVault.UI.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel"
+             Background="{DynamicResource WindowBackgroundBrush}">
+
+  <!-- Adapter of desktop Views/SettingsWindow.axaml — TabStripPlacement=Top on
+       mobile (Left would eat horizontal real estate). Tabs match desktop layout. -->
+
+  <TabControl Margin="10" TabStripPlacement="Top">
+
+    <!-- Theme -->
+    <TabItem Header="Theme">
+      <ScrollViewer>
+        <Border Padding="16">
+          <StackPanel Spacing="14">
+            <TextBlock Text="Theme Settings"
+                       FontSize="{StaticResource Type.H3.Size}"
+                       FontWeight="Bold"
+                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+            <Border BorderBrush="{DynamicResource ControlBorderBrush}"
+                    BorderThickness="1" CornerRadius="10" Padding="14">
+              <StackPanel Spacing="10">
+                <TextBlock Text="Open the dedicated theme picker to switch palette and base mode."
+                           FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
+                <Button Content="Open Theme Settings"
+                        Click="OpenThemeSettings_Click"
+                        Width="220" Height="38" HorizontalAlignment="Left"/>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </Border>
+      </ScrollViewer>
+    </TabItem>
+
+    <!-- Defence -->
+    <TabItem Header="Defence">
+      <ScrollViewer>
+        <Border Padding="16">
+          <StackPanel Spacing="14">
+            <TextBlock Text="Defence Automations"
+                       FontSize="{StaticResource Type.H3.Size}"
+                       FontWeight="Bold"
+                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+            <Border BorderBrush="{DynamicResource ControlBorderBrush}"
+                    BorderThickness="1" CornerRadius="10" Padding="14">
+              <StackPanel Spacing="10">
+                <CheckBox Content="Require Phantom Key / extra checks on new devices"
+                          IsChecked="{Binding IsNewDeviceProtectionEnabled, Mode=TwoWay}"
+                          Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <CheckBox Content="Open in Safe (read-only) mode if tampering suspected"
+                          IsChecked="{Binding IsIntegritySafeModeEnabled, Mode=TwoWay}"
+                          Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <CheckBox Content="Limit rapid copy-to-clipboard of secrets"
+                          IsChecked="{Binding IsClipboardGuardEnabled, Mode=TwoWay}"
+                          Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <CheckBox Content="Limit repeated vault exports in short time"
+                          IsChecked="{Binding IsExportGuardEnabled, Mode=TwoWay}"
+                          Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <CheckBox Content="Detect and respond to abnormal session behaviour"
+                          IsChecked="{Binding IsBehaviourDeviationProtectionEnabled, Mode=TwoWay}"
+                          Foreground="{DynamicResource PrimaryTextBrush}"/>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </Border>
+      </ScrollViewer>
+    </TabItem>
+
+    <!-- Authentication -->
+    <TabItem Header="Authentication">
+      <ScrollViewer>
+        <Border Padding="16">
+          <StackPanel Spacing="14">
+            <TextBlock Text="Authentication Methods"
+                       FontSize="{StaticResource Type.H3.Size}"
+                       FontWeight="Bold"
+                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+            <Border BorderBrush="{DynamicResource ControlBorderBrush}"
+                    BorderThickness="1" CornerRadius="10" Padding="14">
+              <StackPanel Spacing="8">
+                <TextBlock Text="Biometric (Fingerprint / Face)"
+                           FontSize="{StaticResource Type.H4.Size}"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <TextBlock Text="Configure the device biometric path for vault unlock."
+                           FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
+                <Button Content="Configure Biometric" Width="220" Height="38" HorizontalAlignment="Left"/>
+              </StackPanel>
+            </Border>
+
+            <Border BorderBrush="{DynamicResource ControlBorderBrush}"
+                    BorderThickness="1" CornerRadius="10" Padding="14">
+              <StackPanel Spacing="8">
+                <TextBlock Text="Passkey"
+                           FontSize="{StaticResource Type.H4.Size}"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <TextBlock Text="Manage device-bound passkeys for this vault."
+                           FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
+                <Button Content="Configure Passkey" Width="220" Height="38" HorizontalAlignment="Left"/>
+              </StackPanel>
+            </Border>
+
+            <Border BorderBrush="{DynamicResource ControlBorderBrush}"
+                    BorderThickness="1" CornerRadius="10" Padding="14">
+              <StackPanel Spacing="8">
+                <TextBlock Text="TOTP Authenticator"
+                           FontSize="{StaticResource Type.H4.Size}"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <TextBlock Text="Add 2FA using time-based one-time passwords."
+                           FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
+                <Button Content="Configure TOTP" Width="220" Height="38" HorizontalAlignment="Left"/>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </Border>
+      </ScrollViewer>
+    </TabItem>
+
+    <!-- Accessibility -->
+    <TabItem Header="Accessibility">
+      <ScrollViewer>
+        <Border Padding="16">
+          <StackPanel Spacing="14">
+            <TextBlock Text="Accessibility"
+                       FontSize="{StaticResource Type.H3.Size}"
+                       FontWeight="Bold"
+                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+            <Border BorderBrush="{DynamicResource AccentBrush}"
+                    BorderThickness="2" CornerRadius="14" Padding="18"
+                    Background="{DynamicResource CardBackgroundBrush}">
+              <StackPanel Spacing="12">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <TextBlock Text="♿"
+                             FontSize="{StaticResource Type.H2.Size}"
+                             VerticalAlignment="Center"/>
+                  <TextBlock Text="Customize Your Experience"
+                             FontSize="{StaticResource Type.H4.Size}"
+                             FontWeight="SemiBold"
+                             Foreground="{DynamicResource PrimaryTextBrush}"
+                             VerticalAlignment="Center"/>
+                </StackPanel>
+                <TextBlock Text="Customize language, themes, UI scaling, view preferences, keyboard shortcuts, and accessibility features."
+                           FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
+                <Button Content="Open Accessibility Settings" Width="260" Height="38" HorizontalAlignment="Left"/>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </Border>
+      </ScrollViewer>
+    </TabItem>
+  </TabControl>
+</UserControl>

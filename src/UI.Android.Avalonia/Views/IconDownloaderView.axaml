@@ -1,0 +1,79 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:PhantomVault.UI.ViewModels"
+             x:Class="PhantomVault.UI.Views.IconDownloaderView"
+             x:DataType="vm:IconDownloaderViewModel"
+             Background="{DynamicResource WindowBackgroundBrush}">
+
+  <!-- Adapter of Views/IconDownloaderWindow.axaml — URL input + Fetch +
+       result grid of candidate favicons to choose from. -->
+
+  <ScrollViewer>
+    <StackPanel Margin="20" Spacing="16">
+      <TextBlock Text="Website Icon Downloader"
+                 FontSize="{StaticResource Type.H3.Size}"
+                 FontWeight="Bold"
+                 Foreground="{DynamicResource PrimaryTextBrush}"/>
+      <TextBlock Text="Paste a website URL and Phantom will fetch its favicon and high-resolution icons."
+                 FontSize="{StaticResource Type.Small.Size}"
+                 Foreground="{DynamicResource MutedTextBrush}"
+                 TextWrapping="Wrap"/>
+
+      <Border BorderBrush="{DynamicResource ControlBorderBrush}"
+              BorderThickness="1" CornerRadius="10" Padding="14">
+        <StackPanel Spacing="10">
+          <TextBlock Text="Website URL"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource PrimaryTextBrush}"/>
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <TextBox Grid.Column="0"
+                     Text="{Binding Url}"
+                     Watermark="https://github.com"
+                     Padding="12,10"/>
+            <Button Grid.Column="1"
+                    Content="Fetch icons"
+                    Command="{Binding FetchCommand}"
+                    Padding="16,8"/>
+          </Grid>
+          <TextBlock Text="{Binding Status}"
+                     FontSize="{StaticResource Type.Small.Size}"
+                     Foreground="{DynamicResource MutedTextBrush}"
+                     IsVisible="{Binding Status, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+        </StackPanel>
+      </Border>
+
+      <Border BorderBrush="{DynamicResource ControlBorderBrush}"
+              BorderThickness="1" CornerRadius="10" Padding="14"
+              IsVisible="{Binding HasResults}">
+        <StackPanel Spacing="10">
+          <TextBlock Text="Candidate icons"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource PrimaryTextBrush}"/>
+          <ItemsControl ItemsSource="{Binding Candidates}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <UniformGrid Columns="4"/>
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:IconCandidateViewModel">
+                <Border Margin="6" Padding="10" CornerRadius="8"
+                        Background="{DynamicResource CardBackgroundBrush}"
+                        BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
+                  <StackPanel Spacing="6" HorizontalAlignment="Center">
+                    <Border Width="56" Height="56" CornerRadius="6"
+                            Background="{DynamicResource ControlBackgroundBrush}"/>
+                    <TextBlock Text="{Binding Label}"
+                               FontSize="{StaticResource Type.Tiny.Size}"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               HorizontalAlignment="Center"/>
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
