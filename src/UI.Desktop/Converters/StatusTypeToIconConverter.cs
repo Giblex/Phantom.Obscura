@@ -17,10 +17,10 @@ namespace PhantomVault.UI.Converters
             {
                 return statusType switch
                 {
-                    StatusType.Success => "avares://PhantomVault.UI/Assets/SVG/success-icon.svg",
-                    StatusType.Warning => "avares://PhantomVault.UI/Assets/SVG/warning-icon.svg",
-                    StatusType.Error => "avares://PhantomVault.UI/Assets/SVG/close-icon.svg",
-                    StatusType.Info => "avares://PhantomVault.UI/Assets/SVG/info-icon.svg",
+                    StatusType.Success => "avares://PhantomVault.UI/Assets/Visuals/App Icons/SVG/Info.svg",
+                    StatusType.Warning => "avares://PhantomVault.UI/Assets/Visuals/App Icons/SVG/Warning.svg",
+                    StatusType.Error => "avares://PhantomVault.UI/Assets/Visuals/App Icons/SVG/x.svg",
+                    StatusType.Info => "avares://PhantomVault.UI/Assets/Visuals/App Icons/SVG/Info.svg",
                     _ => null
                 };
             }

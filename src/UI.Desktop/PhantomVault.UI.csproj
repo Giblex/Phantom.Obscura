@@ -6,6 +6,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Deterministic>true</Deterministic>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <GenerateTargetPlatformAttribute>false</GenerateTargetPlatformAttribute>
     <AvaloniaUseCompiledXaml>true</AvaloniaUseCompiledXaml>
     <UseWpf>false</UseWpf>
     <!-- Use Avalonia for cross‑platform desktop UI. -->
@@ -18,11 +21,12 @@
     <!-- CS1998: Async methods without await - Some methods are async for interface consistency -->
     <!-- CS8625: Nullable reference type warnings - Cleaned up in future refactor -->
     <!-- TODO: Add XML documentation comments for all public APIs -->
-    <NoWarn>$(NoWarn);1591;CS0618;CS1573;CS1574;CS1571;CS1998;CS8625</NoWarn>
+    <NoWarn>$(NoWarn);1591;CS0618;CS1573;CS1574;CS1571;CS1998;CS8625;CS0012</NoWarn>
   </PropertyGroup>
 
   <!-- Exclude legacy snapshots from the build so they don't register duplicate Avalonia resources -->
   <ItemGroup>
+    <Compile Remove="bin\**;obj\**;obj_*\**" />
     <Compile Remove="Legacy\**\*" />
     <AvaloniaXaml Remove="Legacy\**\*.axaml" />
     <AvaloniaResource Remove="Legacy\**\*" />
@@ -38,6 +42,7 @@
     <ProjectReference Include="..\Crypto\GiblexVault.Security.ZK.csproj" />
     <ProjectReference Include="..\Autofill\PhantomVault.Autofill.csproj" />
     <ProjectReference Include="..\..\..\Phantom.Shared\Giblex.AssetShield\Giblex.AssetShield.csproj" />
+    <ProjectReference Include="..\..\..\Phantom.Shared\Phantom.UI.Shared\Phantom.UI.Shared.csproj" />
     <!-- <ProjectReference Include="..\..\..\PhantomRecovery\PhantomRecovery.App\PhantomRecovery.App.csproj" /> -->
     <!-- <ProjectReference Include="..\..\..\PhantomRecovery\PhantomRecovery.Core\PhantomRecovery.Core.csproj" /> -->
     <PackageReference Include="Avalonia" Version="11.3.9" />

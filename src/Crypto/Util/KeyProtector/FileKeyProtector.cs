@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Runtime.Versioning;
 using System.Security.Cryptography;
 
 namespace GiblexVault.Security.ZK.Util.KeyProtector
@@ -27,12 +28,31 @@ namespace GiblexVault.Security.ZK.Util.KeyProtector
             {
                 if (File.Exists(_keyPath)) return;
                 Directory.CreateDirectory(Path.GetDirectoryName(_keyPath) ?? ".");
-                using var rng = RandomNumberGenerator.Create();
                 var key = new byte[32];
-                rng.GetBytes(key);
-                File.WriteAllBytes(_keyPath, key);
-                // try to set restrictive permissions where possible (best-effort)
-                try { File.SetAttributes(_keyPath, FileAttributes.ReadOnly); } catch { }
+                RandomNumberGenerator.Fill(key);
+                try
+                {
+                    // Encrypt envelope key at rest using DPAPI on Windows
+                    byte[] protectedKey;
+                    if (OperatingSystem.IsWindows())
+                    {
+                        protectedKey = ProtectedData.Protect(key, null, DataProtectionScope.CurrentUser);
+                    }
+                    else
+                    {
+                        throw new PlatformNotSupportedException(
+                            "FileKeyProtector requires DPAPI protection on non-Windows platforms. " +
+                            "Use DpapiKeyProtector on Windows or implement OS-specific keyring integration (SecretService on Linux, Keychain on macOS).");
+                    }
+                    File.WriteAllBytes(_keyPath, protectedKey);
+                    CryptographicOperations.ZeroMemory(key);
+                    try { File.SetAttributes(_keyPath, FileAttributes.ReadOnly); } catch { }
+                }
+                catch
+                {
+                    CryptographicOperations.ZeroMemory(key);
+                    throw;
+                }
             }
         }
 
@@ -40,7 +60,14 @@ namespace GiblexVault.Security.ZK.Util.KeyProtector
         {
             lock (_sync)
             {
-                return File.ReadAllBytes(_keyPath);
+                var protectedKey = File.ReadAllBytes(_keyPath);
+                if (!OperatingSystem.IsWindows())
+                {
+                    throw new PlatformNotSupportedException(
+                        "FileKeyProtector requires DPAPI protection on Windows. " +
+                        "Non-Windows platforms should implement OS-specific keyring integration.");
+                }
+                return ProtectedData.Unprotect(protectedKey, null, DataProtectionScope.CurrentUser);
             }
         }
 

@@ -119,8 +119,6 @@ namespace PhantomVault.UI
             // Register Cross-App Sync Service for theme sync with PhantomAttestor
             services.AddSingleton<CrossAppSyncService>();
 
-            // NEW: UI Polish Services
-            services.AddSingleton<SvgIconService>(sp => new SvgIconService("ZluQ8qGZzB"));
             services.AddSingleton<HaveIBeenPwnedService>();
             services.AddSingleton(PhantomVault.UI.Desktop.Services.ToastNotificationManager.Instance);
 

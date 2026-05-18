@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -3072,12 +3073,27 @@ namespace PhantomVault.UI.ViewModels
                 // Serialize to JSON
                 var json = JsonSerializer.Serialize(database, new JsonSerializerOptions { WriteIndented = true });
 
-                // Encrypt directly from memory to avoid writing plaintext to disk
+                // Encrypt directly from memory to avoid writing plaintext to disk.
                 var bytes = System.Text.Encoding.UTF8.GetBytes(json);
                 try
                 {
-                    using var ms = new MemoryStream(bytes, writable: false);
-                    await _zkVaultService.EncryptStreamAsync(ms, _vaultFilePath!);
+                    await using var ms = new MemoryStream(bytes, writable: false);
+                    if (IsPhantomContainerFile(_vaultFilePath!))
+                    {
+                        await using var encryptedPayload = new MemoryStream();
+                        await _zkVaultService.EncryptStreamToStreamAsync(ms, encryptedPayload);
+                        encryptedPayload.Position = 0;
+                        await _vaultService.SaveVaultPayloadAsync(
+                            _vaultFilePath!,
+                            encryptedPayload,
+                            _vaultPassword,
+                            _vaultKeyfilePath).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await _zkVaultService.EncryptStreamAsync(ms, _vaultFilePath!);
+                    }
+
                     await PersistCredentialIndexAsync(false);
                     await FlushTransportArtifactsAsync();
 
@@ -4902,6 +4918,22 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
+                var manifest = _manifestService.ReadManifest(_manifestPath!, password, _reauthKeyfilePath);
+                byte[] vaultDatabaseKey = new VaultDatabaseKeyService(new EncryptionService())
+                    .DeriveKey(manifest, password, _reauthKeyfilePath);
+                try
+                {
+                    if (!await _zkVaultService.UnlockWithHybridKeyAsync(vaultDatabaseKey).ConfigureAwait(false))
+                    {
+                        LockscreenError = "Failed to rehydrate the vault database key.";
+                        return;
+                    }
+                }
+                finally
+                {
+                    System.Security.Cryptography.CryptographicOperations.ZeroMemory(vaultDatabaseKey);
+                }
+
                 string mountPath = await _vaultService.MountVaultAsync(_containerAbsPath, "Vault", password);
                 await LoadAsync(mountPath, password, _reauthKeyfilePath);
 
@@ -5067,13 +5099,31 @@ namespace PhantomVault.UI.ViewModels
                         return;
                     }
 
-                    // Open the encrypted vault.pvault file for reading
-                    using var stream = await _zkVaultService.OpenFileStreamForViewingAsync(_vaultFilePath, null, cancellationToken);
-                    using var reader = new StreamReader(stream);
-                    var json = await reader.ReadToEndAsync();
+                    Stream stream;
+                    if (IsPhantomContainerFile(_vaultFilePath))
+                    {
+                        await using var encryptedPayloadStream = await _vaultService.OpenVaultPayloadStreamAsync(
+                            _vaultFilePath,
+                            _vaultPassword,
+                            _vaultKeyfilePath,
+                            cancellationToken).ConfigureAwait(false);
+                        stream = await _zkVaultService.OpenEncryptedStreamForViewingAsync(encryptedPayloadStream, cancellationToken)
+                            .ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        stream = await _zkVaultService.OpenFileStreamForViewingAsync(_vaultFilePath, null, cancellationToken)
+                            .ConfigureAwait(false);
+                    }
 
-                    // Deserialize the vault database structure
-                    database = JsonSerializer.Deserialize<VaultDatabase>(json);
+                    await using (stream.ConfigureAwait(false))
+                    {
+                        using var reader = new StreamReader(stream);
+                        var json = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
+
+                        // Deserialize the vault database structure
+                        database = JsonSerializer.Deserialize<VaultDatabase>(json);
+                    }
 
                     if (database == null)
                     {
@@ -5319,6 +5369,27 @@ namespace PhantomVault.UI.ViewModels
             _requestedStorageTransport = manifest.RequestedStorageTransport;
             _transportLayoutRoot = TryResolveTransportLayoutRoot(manifestPath)
                 ?? TryResolveTransportLayoutRoot(manifest.RootContainerPath);
+        }
+
+        private static bool IsPhantomContainerFile(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+                return false;
+
+            Span<byte> magic = stackalloc byte[8];
+            try
+            {
+                using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                if (stream.Length < magic.Length)
+                    return false;
+
+                stream.ReadExactly(magic);
+                return Encoding.ASCII.GetString(magic) == "PHANTOM1";
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private static string? TryResolveTransportLayoutRoot(string? manifestPath)
@@ -5729,14 +5800,8 @@ namespace PhantomVault.UI.ViewModels
             {
                 var cred = credVM.GetCredential();
                 int credScore = CalculateCredentialSecurityScore(credVM, cred);
-                
-                // Get icon and category color
-                var iconBitmap = credVM.AutoDetectedIconBitmap;
-                var categoryColor = cred.IconColor;
-                if (string.IsNullOrEmpty(categoryColor))
-                    categoryColor = "#999999"; // Default gray
-                
-                var dashboardItem = new DashboardCredentialItem(cred, credVM.HasTotpSecret, credScore, iconBitmap, categoryColor);
+
+                var dashboardItem = CreateDashboardCredentialItem(credVM, cred, credScore);
                 FilteredCredentialsForDashboard.Add(dashboardItem);
             }
         }
@@ -5771,33 +5836,47 @@ namespace PhantomVault.UI.ViewModels
 
                 if (matches)
                 {
-                    // Get icon and category color
-                    var iconBitmap = credVM.AutoDetectedIconBitmap;
-                    var categoryColor = cred.IconColor;
-                    if (string.IsNullOrEmpty(categoryColor))
-                        categoryColor = "#999999"; // Default gray
-
-                    var dashboardItem = new DashboardCredentialItem(cred, credVM.HasTotpSecret, credScore, iconBitmap, categoryColor);
+                    var dashboardItem = CreateDashboardCredentialItem(credVM, cred, credScore);
                     FilteredCredentialsForDashboard.Add(dashboardItem);
                 }
             }
         }
 
+        private DashboardCredentialItem CreateDashboardCredentialItem(
+            CredentialViewModel credVM,
+            PhantomVault.Core.Models.Credential cred,
+            int credScore)
+        {
+            var iconBitmap = credVM.AutoDetectedIconBitmap;
+            string categoryColor = ResolveDashboardCategoryColor(cred);
+            return new DashboardCredentialItem(cred, credVM.HasTotpSecret, credScore, iconBitmap, categoryColor);
+        }
+
+        private string ResolveDashboardCategoryColor(PhantomVault.Core.Models.Credential cred)
+        {
+            string? categoryName = string.IsNullOrWhiteSpace(cred.Group) ? cred.Category : cred.Group;
+            if (!string.IsNullOrWhiteSpace(categoryName))
+            {
+                var categoryVm = _categories.FirstOrDefault(category =>
+                    string.Equals(category.Name, categoryName, StringComparison.OrdinalIgnoreCase));
+
+                if (!string.IsNullOrWhiteSpace(categoryVm?.TileColor))
+                {
+                    return categoryVm.TileColor;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(cred.IconColor))
+            {
+                return cred.IconColor;
+            }
+
+            return "#999999";
+        }
+
         private int CalculateCredentialSecurityScore(CredentialViewModel credVM, PhantomVault.Core.Models.Credential cred)
         {
-            int score = 100;
-
-            // Check password strength
-            if (string.IsNullOrEmpty(cred.Password))
-                score -= 50;
-            else if (cred.Password.Length < 8)
-                score -= 30;
-            else if (cred.Password.Length < 12)
-                score -= 15;
-
-            // Check for weak indicators
-            if (IsPasswordWeak(cred.Password))
-                score -= 20;
+            int score = PasswordStrengthEvaluator.Evaluate(cred.Password).Score;
 
             // Check if password is reused
             int reusedCount = _credentials.Count(c => c.GetCredential().Password == cred.Password && c.GetCredential().Id != cred.Id);
@@ -5816,39 +5895,29 @@ namespace PhantomVault.UI.ViewModels
 
             // Add bonus for 2FA
             if (credVM.HasTotpSecret)
-                score += 20;
+                score += 12;
 
             return Math.Clamp(score, 0, 100);
         }
 
         private bool IsPasswordWeak(string password)
         {
-            if (string.IsNullOrEmpty(password))
-                return true;
-
-            bool hasUpperCase = password.Any(char.IsUpper);
-            bool hasLowerCase = password.Any(char.IsLower);
-            bool hasDigit = password.Any(char.IsDigit);
-            bool hasSpecial = password.Any(ch => !char.IsLetterOrDigit(ch));
-
-            return !hasUpperCase || !hasLowerCase || !hasDigit || !hasSpecial;
+            return PasswordStrengthEvaluator.Evaluate(password).IsWeak;
         }
 
         private (int Severity, string Label, Avalonia.Media.IBrush Color) AnalyzePasswordStrength(string password)
         {
-            if (password.Length < 8)
-                return (3, "CRITICAL - Too Short", Avalonia.Media.Brushes.Red);
+            var assessment = PasswordStrengthEvaluator.Evaluate(password);
+            string label = assessment.Severity switch
+            {
+                3 => "CRITICAL - Predictable",
+                2 => "HIGH - Weak",
+                1 => "MEDIUM - Improve Entropy",
+                _ => "LOW"
+            };
 
-            if (password.Length < 12 && !password.Any(char.IsDigit) && !password.Any(ch => !char.IsLetterOrDigit(ch)))
-                return (2, "HIGH - Weak", new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.FromRgb(255, 152, 0)).ToImmutable());
-
-            if (password.Length < 12)
-                return (1, "MEDIUM - Average", new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.FromRgb(255, 193, 7)).ToImmutable());
-
-            if (!password.Any(char.IsUpper) || !password.Any(char.IsLower) || !password.Any(char.IsDigit))
-                return (1, "MEDIUM - Needs Variety", new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.FromRgb(255, 193, 7)).ToImmutable());
-
-            return (0, "LOW", new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.FromRgb(76, 175, 80)).ToImmutable());
+            var color = Avalonia.Media.Color.Parse(assessment.ColorHex);
+            return (assessment.Severity, label, new Avalonia.Media.SolidColorBrush(color).ToImmutable());
         }
 
         #region Password Strength Tester
@@ -5865,49 +5934,16 @@ namespace PhantomVault.UI.ViewModels
                 return;
             }
 
-            // Calculate score
-            int score = CalculatePasswordScore(_testPassword);
-            TestPasswordScore = score;
-
-            // Set label and color
-            (TestPasswordStrengthLabel, TestPasswordStrengthColor) = score switch
-            {
-                >= 80 => ("Very Strong", "#4CAF50"),      // Green
-                >= 60 => ("Strong", "#8BC34A"),            // Light Green
-                >= 40 => ("Good", "#FFC107"),              // Amber
-                >= 20 => ("Weak", "#FF9800"),              // Orange
-                _ => ("Very Weak", "#F44336")              // Red
-            };
-
-            // Generate suggestion
+            var assessment = PasswordStrengthEvaluator.Evaluate(_testPassword);
+            TestPasswordScore = assessment.Score;
+            TestPasswordStrengthLabel = assessment.Label;
+            TestPasswordStrengthColor = assessment.ColorHex;
             GenerateSuggestedPassword();
         }
 
         private int CalculatePasswordScore(string password)
         {
-            int score = 0;
-
-            // Length scoring
-            if (password.Length >= 16) score += 30;
-            else if (password.Length >= 12) score += 20;
-            else if (password.Length >= 8) score += 10;
-            else score += 5;
-
-            // Character variety
-            if (password.Any(char.IsUpper)) score += 15;
-            if (password.Any(char.IsLower)) score += 15;
-            if (password.Any(char.IsDigit)) score += 15;
-            if (password.Any(ch => !char.IsLetterOrDigit(ch))) score += 25;
-
-            // Bonus for good combo
-            bool hasUpper = password.Any(char.IsUpper);
-            bool hasLower = password.Any(char.IsLower);
-            bool hasDigit = password.Any(char.IsDigit);
-            bool hasSpecial = password.Any(ch => !char.IsLetterOrDigit(ch));
-            int charTypes = (hasUpper ? 1 : 0) + (hasLower ? 1 : 0) + (hasDigit ? 1 : 0) + (hasSpecial ? 1 : 0);
-            if (charTypes == 4) score += 10;
-
-            return Math.Clamp(score, 0, 100);
+            return PasswordStrengthEvaluator.Evaluate(password).Score;
         }
 
         private void GenerateSuggestedPassword()
@@ -5915,53 +5951,11 @@ namespace PhantomVault.UI.ViewModels
             if (string.IsNullOrEmpty(_testPassword))
                 return;
 
-            string suggested = _testPassword;
-            int originalLen = suggested.Length;
-
-            // Ensure it has uppercase
-            if (!suggested.Any(char.IsUpper))
-            {
-                int idx = new Random().Next(suggested.Length);
-                suggested = suggested.Remove(idx, 1).Insert(idx, suggested[idx].ToString().ToUpper());
-            }
-
-            // Ensure it has lowercase
-            if (!suggested.Any(char.IsLower))
-            {
-                int idx = new Random().Next(suggested.Length);
-                suggested = suggested.Remove(idx, 1).Insert(idx, suggested[idx].ToString().ToLower());
-            }
-
-            // Ensure it has a digit
-            if (!suggested.Any(char.IsDigit))
-            {
-                int idx = new Random().Next(Math.Max(1, suggested.Length - 4));
-                suggested = suggested.Insert(idx, Random.Shared.Next(10).ToString());
-            }
-
-            // Ensure it has special character
-            if (!suggested.Any(ch => !char.IsLetterOrDigit(ch)))
-            {
-                string specials = "!@#$%^&*";
-                int idx = new Random().Next(Math.Max(1, suggested.Length - 3));
-                suggested = suggested.Insert(idx, specials[Random.Shared.Next(specials.Length)].ToString());
-            }
-
-            // Extend length if too short
-            if (suggested.Length < 12)
-            {
-                string specials = "!@#$%^&*-_+=";
-                while (suggested.Length < 12)
-                {
-                    suggested += specials[Random.Shared.Next(specials.Length)];
-                }
-            }
-
+            string suggested = PasswordStrengthEvaluator.GenerateSuggestedPassword(_testPassword);
             SuggestedPassword = suggested;
-
-            // Calculate similarity
-            int similarity = CalculateSimilarity(_testPassword, suggested);
-            SimilarityPercentage = similarity;
+            SimilarityPercentage = string.IsNullOrEmpty(suggested)
+                ? 0
+                : CalculateSimilarity(_testPassword, suggested);
         }
 
         private int CalculateSimilarity(string original, string suggested)
@@ -6757,8 +6751,9 @@ public class DashboardCredentialItem
         get
         {
             var indicators = new ObservableCollection<StatusIndicator>();
+            var passwordAssessment = PasswordStrengthEvaluator.Evaluate(_credential.Password);
 
-            if (_credential.Password?.Length < 12)
+            if (passwordAssessment.IsWeak)
                 indicators.Add(new StatusIndicator { Label = "W", Tooltip = "Weak Password", Color = "#FF9800" });
 
             if (_credential.ExpiryUtc.HasValue && _credential.ExpiryUtc < DateTimeOffset.UtcNow)

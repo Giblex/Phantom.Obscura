@@ -191,6 +191,44 @@ namespace PhantomVault.Core.Models
             = false;
 
         /// <summary>
+        /// Indicates that Phantom Key is externalized through an isolated sibling
+        /// bridge workspace rather than embedded into the Obscura container set.
+        /// Runtime validation must fail closed when this is true and the bridge
+        /// contract cannot be verified.
+        /// </summary>
+        [JsonPropertyName("phantomKeyBridgeEnabled")]
+        public bool PhantomKeyBridgeEnabled { get; set; }
+            = false;
+
+        [JsonPropertyName("phantomKeyBridgeWorkspacePath")]
+        public string? PhantomKeyBridgeWorkspacePath { get; set; }
+            = null;
+
+        [JsonPropertyName("phantomKeyBridgeManifestPath")]
+        public string? PhantomKeyBridgeManifestPath { get; set; }
+            = null;
+
+        [JsonPropertyName("phantomKeyBridgeContinuityPath")]
+        public string? PhantomKeyBridgeContinuityPath { get; set; }
+            = null;
+
+        [JsonPropertyName("phantomKeyBridgePolicyPath")]
+        public string? PhantomKeyBridgePolicyPath { get; set; }
+            = null;
+
+        [JsonPropertyName("phantomKeyBridgeConsumerMapPath")]
+        public string? PhantomKeyBridgeConsumerMapPath { get; set; }
+            = null;
+
+        [JsonPropertyName("phantomKeyBridgeAuditLogPath")]
+        public string? PhantomKeyBridgeAuditLogPath { get; set; }
+            = null;
+
+        [JsonPropertyName("phantomKeyBridgeReceiptPath")]
+        public string? PhantomKeyBridgeReceiptPath { get; set; }
+            = null;
+
+        /// <summary>
         /// Unique identifier of the removable drive that the vault is bound to.
         /// When provisioning a new vault this value is computed from
         /// properties of the selected USB device (for example, the volume

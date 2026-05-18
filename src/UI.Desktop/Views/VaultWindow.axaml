@@ -143,31 +143,31 @@
         </Style>
 
         <Style Selector="ToggleButton.quick-filter:pointerover">
-            <Setter Property="Background" Value="#1400E5CC" />
-            <Setter Property="BorderBrush" Value="#2200E5CC" />
+            <Setter Property="Background" Value="{DynamicResource QuickFilterGlassHoverBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
 
         <Style Selector="ToggleButton.quick-filter:checked">
-            <Setter Property="Background" Value="#1800E5CC" />
-            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource QuickFilterGlassActiveBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassActiveBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
         </Style>
 
         <Style Selector="ToggleButton.quick-filter:checked:pointerover">
-            <Setter Property="Background" Value="#2200E5CC" />
-            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource QuickFilterGlassActiveHoverBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassActiveBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
 
         <Style Selector="ToggleButton.quick-filter:pressed">
-            <Setter Property="Background" Value="#1C00E5CC" />
+            <Setter Property="Background" Value="{DynamicResource FilterPressedGradient}" />
         </Style>
 
         <Style Selector="ToggleButton.quick-filter:checked:pressed">
-            <Setter Property="Background" Value="#2600E5CC" />
-            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource FilterPressedGradient}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassActiveBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
 
@@ -218,8 +218,8 @@
         </Style>
 
         <Style Selector="ToggleButton.category-filter:pointerover /template/ Border#BackBorder">
-            <Setter Property="Background" Value="#0F00E5CC" />
-            <Setter Property="BorderBrush" Value="#1A00E5CC" />
+            <Setter Property="Background" Value="{DynamicResource CategoryFilterHoverGradient}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CategoryFilterHoverBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
 
@@ -228,8 +228,8 @@
         </Style>
 
         <Style Selector="ToggleButton.category-filter:checked /template/ Border#BackBorder">
-            <Setter Property="Background" Value="#1400E5CC" />
-            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource QuickFilterGlassActiveBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CategoryFilterCheckedBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
 
@@ -242,7 +242,7 @@
         </Style>
 
         <Style Selector="ToggleButton.category-filter:pressed /template/ Border#BackBorder">
-            <Setter Property="Background" Value="#1200E5CC" />
+            <Setter Property="Background" Value="{DynamicResource CategoryFilterPressedGradient}" />
         </Style>
 
         <Style Selector="ToggleButton.category-filter:checked:pressed /template/ Border#ColorHighlight">
@@ -250,8 +250,8 @@
         </Style>
 
         <Style Selector="ToggleButton.category-filter:checked:pressed /template/ Border#BackBorder">
-            <Setter Property="Background" Value="#1800E5CC" />
-            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource CategoryFilterPressedGradient}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CategoryFilterCheckedBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
         </Style>
 

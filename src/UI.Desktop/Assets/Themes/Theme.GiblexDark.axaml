@@ -75,7 +75,7 @@
     <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#0A1420"/>
     <SolidColorBrush x:Key="ControlHoverBrush" Color="#0E1A28"/>
     <SolidColorBrush x:Key="ControlBorderBrush" Color="#273642"/>
-    <SolidColorBrush x:Key="ControlFocusBorderBrush" Color="#55C3CF"/>
+    <SolidColorBrush x:Key="ControlFocusBorderBrush" Color="#7BD6DF"/>
     <SolidColorBrush x:Key="InputBackgroundBrush" Color="#0C1620"/>
     <SolidColorBrush x:Key="InputForegroundBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="TextSelectionBrush" Color="#6055C3CF"/>
@@ -93,9 +93,9 @@
     <SolidColorBrush x:Key="TextBoxBackgroundHoverBrush" Color="#0E1A28"/>
     <SolidColorBrush x:Key="TextBoxBackgroundFocusedBrush" Color="#101E2B"/>
     <SolidColorBrush x:Key="TextBoxBackgroundDisabledBrush" Color="#071018"/>
-    <SolidColorBrush x:Key="TextBoxBorderBrush" Color="#55C3CF40"/>
-    <SolidColorBrush x:Key="TextBoxBorderHoverBrush" Color="#55C3CF"/>
-    <SolidColorBrush x:Key="TextBoxBorderFocusedBrush" Color="#55C3CF"/>
+    <SolidColorBrush x:Key="TextBoxBorderBrush" Color="#26E7EFF3"/>
+    <SolidColorBrush x:Key="TextBoxBorderHoverBrush" Color="#63D3DDE3"/>
+    <SolidColorBrush x:Key="TextBoxBorderFocusedBrush" Color="#84DDE7EC"/>
     <SolidColorBrush x:Key="TextBrush" Color="#FFFFFF"/>
 
     <!-- Dialog -->
@@ -223,10 +223,10 @@
 
     <BoxShadows x:Key="SlideOutPanelShadow">-20 0 40 -5 #70000000</BoxShadows>
     <BoxShadows x:Key="FlaggedPanelShadow">-16 0 32 -4 #68000000</BoxShadows>
-    <BoxShadows x:Key="DetailCardShadow">0 8 30 -2 #40071018</BoxShadows>
-    <BoxShadows x:Key="TileRestingShadow">0 2 10 0 #30071018</BoxShadows>
-    <BoxShadows x:Key="TileHoverShadow">0 8 24 -2 #40071018</BoxShadows>
-    <BoxShadows x:Key="TilePressedShadow">0 4 12 0 #30071018</BoxShadows>
+    <BoxShadows x:Key="DetailCardShadow">0 12 38 -6 #58071018</BoxShadows>
+    <BoxShadows x:Key="TileRestingShadow">0 16 34 -16 #76000000, 0 5 14 0 #34071018</BoxShadows>
+    <BoxShadows x:Key="TileHoverShadow">0 24 52 -20 #8A000000, 0 10 24 -2 #44071018</BoxShadows>
+    <BoxShadows x:Key="TilePressedShadow">0 10 20 -8 #62000000, 0 4 12 0 #30071018</BoxShadows>
 
     <!-- Liquid glass tokens (website teal) -->
     <Color x:Key="Glass.Tint.Light">#0C1620</Color>
@@ -236,10 +236,10 @@
     <Color x:Key="Glass.Sheen.Bright">#162435</Color>
     <Color x:Key="Glass.Sheen.Mid">#101E2B</Color>
     <Color x:Key="Glass.Sheen.Soft">#0C1620</Color>
-    <SolidColorBrush x:Key="Brush.Glass.Border" Color="#3055C3CF"/>
-    <SolidColorBrush x:Key="Brush.Glass.BorderHover" Color="#50178EA0"/>
+    <SolidColorBrush x:Key="Brush.Glass.Border" Color="#22FFFFFF"/>
+    <SolidColorBrush x:Key="Brush.Glass.BorderHover" Color="#34E5EEF2"/>
     <SolidColorBrush x:Key="Brush.Glass.BorderPressed" Color="#40071018"/>
-    <SolidColorBrush x:Key="Brush.Glass.BorderFocus" Color="#55C3CF"/>
+    <SolidColorBrush x:Key="Brush.Glass.BorderFocus" Color="#78DDE7EC"/>
     <SolidColorBrush x:Key="Brush.Glass.EdgeHighlight.Start" Color="#18ECF7FB"/>
     <SolidColorBrush x:Key="Brush.Glass.EdgeHighlight.Mid" Color="#10273642"/>
     <SolidColorBrush x:Key="Brush.Glass.EdgeHighlight.End" Color="#0055C3CF"/>
@@ -305,8 +305,8 @@
     <SolidColorBrush x:Key="LiquidGlassButtonForeground" Color="#FFFFFF"/>
 
     <!-- Tile hover/pressed -->
-    <SolidColorBrush x:Key="TileHoverBrush" Color="#0AECF7FB"/>
-    <SolidColorBrush x:Key="TilePressedBrush" Color="#12ECF7FB"/>
+    <SolidColorBrush x:Key="TileHoverBrush" Color="#12F4FAFC"/>
+    <SolidColorBrush x:Key="TilePressedBrush" Color="#18EAF4F7"/>
 
     <LinearGradientBrush x:Key="TileOverlayBrush" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#20FFFFFF" Offset="0"/>
@@ -343,7 +343,7 @@
     <SolidColorBrush x:Key="Brush.TextMuted" Color="#A8BCC8"/>
     <SolidColorBrush x:Key="Brush.TextOnDark" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="Brush.Navy900" Color="#071018"/>
-    <SolidColorBrush x:Key="Brush.FocusRing" Color="#55C3CF"/>
+    <SolidColorBrush x:Key="Brush.FocusRing" Color="#8FDDE7EC"/>
     <SolidColorBrush x:Key="Brush.DangerHover" Color="#DC2626"/>
 
     <!-- ═══ Dashboard sheet overlay ═══ -->

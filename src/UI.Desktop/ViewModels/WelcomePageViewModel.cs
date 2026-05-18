@@ -79,10 +79,7 @@ namespace PhantomVault.UI.ViewModels
             ShowAdvancedSetupCommand = ReactiveCommand.CreateFromTask(ShowAdvancedSetupAsync);
             ShowDefaultSetupCommand = ReactiveCommand.CreateFromTask(ShowDefaultSetupAsync);
             BackToWelcomeCommand = ReactiveCommand.Create(HideSetupChoice);
-            OpenExistingVaultCommand = ReactiveCommand.CreateFromTask(
-                OpenExistingVaultAsync,
-                this.WhenAnyValue(x => x.SelectedVault)
-                    .Select(selectedVault => selectedVault != null));
+            OpenExistingVaultCommand = ReactiveCommand.CreateFromTask(OpenExistingVaultAsync);
 
             _scanTimer = new DispatcherTimer
             {
@@ -173,6 +170,7 @@ namespace PhantomVault.UI.ViewModels
             : _detectedUsbDisplayName;
 
         public bool ShowVaultPicker => HasRecognizedVaults && DetectedVaults.Count > 0;
+        public bool HasSelectedVault => SelectedVault != null;
 
         public string OpenVaultButtonText => HasRecognizedVaults
             ? "Open selected vault"
@@ -201,6 +199,7 @@ namespace PhantomVault.UI.ViewModels
                 this.RaisePropertyChanged(nameof(DetectedVaultPathDisplay));
                 this.RaisePropertyChanged(nameof(UsbDisplayName));
                 this.RaisePropertyChanged(nameof(OpenVaultButtonText));
+                this.RaisePropertyChanged(nameof(HasSelectedVault));
             }
         }
 
@@ -240,14 +239,16 @@ namespace PhantomVault.UI.ViewModels
                 if (removableDrives.Count == 0)
                 {
                     var rawVaults = await DiscoverRawVaultsAsync().ConfigureAwait(false);
-                    if (rawVaults.Count == 0)
+                    var localVaults = DiscoverKnownLocalVaults();
+                    var allNoUsbVaults = rawVaults.Concat(localVaults).ToList();
+                    if (allNoUsbVaults.Count == 0)
                     {
                         ApplyNoUsbState();
                         return;
                     }
 
-                    await EnsureDetectionPresentationDelayAsync(BuildDetectionSignature(rawVaults), true).ConfigureAwait(false);
-                    ApplyRecognizedVaultState(rawVaults);
+                    await EnsureDetectionPresentationDelayAsync(BuildDetectionSignature(allNoUsbVaults), true).ConfigureAwait(false);
+                    ApplyRecognizedVaultState(allNoUsbVaults);
                     return;
                 }
 
@@ -432,6 +433,42 @@ namespace PhantomVault.UI.ViewModels
             IsDeviceDetectionActive = true;
             await Task.Delay(250);
             await Dispatcher.UIThread.InvokeAsync(() => NavigateToSecurityCheck?.Invoke(this, SelectedVault));
+        }
+
+        public void SelectDetectedVault(DetectedVaultLaunchRequest? launchRequest)
+        {
+            if (launchRequest == null)
+                return;
+
+            SelectedVault = launchRequest;
+            StatusMessage = $"Selected {launchRequest.DisplayName}";
+        }
+
+        private List<DetectedVaultLaunchRequest> DiscoverKnownLocalVaults()
+        {
+            var vaults = new List<DetectedVaultLaunchRequest>();
+            var settings = SettingsService.Load();
+
+            foreach (var vaultPath in settings.KnownLocalVaultPaths.ToList())
+            {
+                var rootPath = Path.Combine(vaultPath, "root");
+                if (!Directory.Exists(rootPath))
+                    continue;
+
+                foreach (var container in Directory.GetFiles(rootPath, "*.pvault", SearchOption.TopDirectoryOnly))
+                {
+                    vaults.Add(new DetectedVaultLaunchRequest
+                    {
+                        UsbPath = null,
+                        UsbDisplayName = "Local",
+                        VaultPath = container,
+                        DisplayName = BuildVaultDisplayName(container, "Local vault"),
+                        AutoOpenEligible = false
+                    });
+                }
+            }
+
+            return vaults;
         }
 
         private List<DetectedVaultLaunchRequest> DiscoverVaultsOnDrive(string driveRoot)

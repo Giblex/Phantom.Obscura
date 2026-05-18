@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Reactive;
 using System.Reactive.Linq;
 using PhantomVault.Core.Models;
+using PhantomVault.UI.Helpers;
 using ReactiveUI;
 
 namespace PhantomVault.UI.ViewModels
@@ -141,82 +142,30 @@ namespace PhantomVault.UI.ViewModels
 
         private void UpdatePasswordTestResults()
         {
-            TestPasswordScore = CalculatePasswordScore(CurrentPassword);
-            (TestPasswordStrengthLabel, TestPasswordStrengthColor) = GetStrengthLabel(TestPasswordScore);
-            SuggestedPassword = GenerateSuggestedPasswordInternal(CurrentPassword);
-            SimilarityPercentage = CalculateSimilarity(CurrentPassword, SuggestedPassword);
+            var assessment = PasswordStrengthEvaluator.Evaluate(CurrentPassword);
+            TestPasswordScore = assessment.Score;
+            TestPasswordStrengthLabel = assessment.Label;
+            TestPasswordStrengthColor = assessment.ColorHex;
+            SuggestedPassword = PasswordStrengthEvaluator.GenerateSuggestedPassword(CurrentPassword);
+            SimilarityPercentage = string.IsNullOrEmpty(SuggestedPassword)
+                ? 0
+                : CalculateSimilarity(CurrentPassword, SuggestedPassword);
         }
 
         private int CalculatePasswordScore(string password)
         {
-            if (string.IsNullOrEmpty(password))
-                return 0;
-
-            int score = 0;
-
-            // Length scoring
-            score += Math.Min(password.Length * 4, 40);
-
-            // Character variety scoring
-            bool hasLower = password.Any(c => char.IsLower(c));
-            bool hasUpper = password.Any(c => char.IsUpper(c));
-            bool hasDigit = password.Any(c => char.IsDigit(c));
-            bool hasSpecial = password.Any(c => !char.IsLetterOrDigit(c));
-
-            if (hasLower) score += 10;
-            if (hasUpper) score += 10;
-            if (hasDigit) score += 10;
-            if (hasSpecial) score += 20;
-
-            // Combination bonus
-            int varietyCount = (hasLower ? 1 : 0) + (hasUpper ? 1 : 0) + (hasDigit ? 1 : 0) + (hasSpecial ? 1 : 0);
-            if (varietyCount >= 4) score += 10;
-
-            return Math.Min(score, 100);
+            return PasswordStrengthEvaluator.Evaluate(password).Score;
         }
 
         private (string label, string color) GetStrengthLabel(int score)
         {
-            if (score < 20) return ("Very Weak", "#EF4444");
-            if (score < 40) return ("Weak", "#F97316");
-            if (score < 60) return ("Fair", "#EAB308");
-            if (score < 80) return ("Good", "#84CC16");
-            return ("Strong", "#22C55E");
+            var assessment = PasswordStrengthEvaluator.Evaluate(CurrentPassword);
+            return (assessment.Label, assessment.ColorHex);
         }
 
         private string GenerateSuggestedPasswordInternal(string original)
         {
-            if (string.IsNullOrEmpty(original))
-                return GenerateRandomPassword(16);
-
-            // Keep similarity high (75%+) by preserving structure
-            var result = new System.Text.StringBuilder(original);
-            var random = new Random();
-
-            // Replace or add special characters
-            int specialCount = CountCharacters(original, c => !char.IsLetterOrDigit(c));
-            if (specialCount == 0)
-            {
-                // Add 1-2 special characters
-                var specials = "!@#$%^&*+=";
-                int pos = random.Next(Math.Max(1, result.Length - 3), result.Length);
-                result.Insert(pos, specials[random.Next(specials.Length)]);
-            }
-
-            // Ensure mix of cases
-            if (!original.Any(char.IsUpper))
-            {
-                int pos = random.Next(result.Length);
-                result[pos] = char.ToUpper(result[pos]);
-            }
-
-            // Add digits if missing
-            if (!original.Any(char.IsDigit))
-            {
-                result.Append(random.Next(10));
-            }
-
-            return result.ToString().Substring(0, Math.Min(result.Length, 32));
+            return PasswordStrengthEvaluator.GenerateSuggestedPassword(original);
         }
 
         private int CountCharacters(string text, Func<char, bool> predicate)
@@ -242,21 +191,12 @@ namespace PhantomVault.UI.ViewModels
 
         private void GeneratePassword()
         {
-            CurrentPassword = GenerateRandomPassword(16);
+            CurrentPassword = GenerateRandomPassword(20);
         }
 
         private string GenerateRandomPassword(int length)
         {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*+=";
-            var random = new Random();
-            var password = new System.Text.StringBuilder();
-
-            for (int i = 0; i < length; i++)
-            {
-                password.Append(chars[random.Next(chars.Length)]);
-            }
-
-            return password.ToString();
+            return PasswordStrengthEvaluator.GenerateRandomPassword(length);
         }
 
         private void CopySuggestedPassword()

@@ -41,6 +41,8 @@ namespace PhantomVault.UI.ViewModels
         private readonly IDeviceFingerprintProvider? _deviceFingerprintProvider;
         private readonly IDefenceEngine? _defenceEngine;
         private readonly BlackSecureRawVolumeService _blackSecureRawVolumeService;
+        private readonly UsbArtifactProtectionService _usbArtifactProtectionService;
+        private readonly PhantomKeyBridgeValidator _phantomKeyBridgeValidator;
 
         private readonly ObservableCollection<string> _removableDrives = new();
         private string? _selectedDrive;
@@ -81,6 +83,8 @@ namespace PhantomVault.UI.ViewModels
             _defenceEngine = defenceEngine;
             _dialogService = new DialogService();
             _blackSecureRawVolumeService = new BlackSecureRawVolumeService();
+            _usbArtifactProtectionService = new UsbArtifactProtectionService(_encryptionService);
+            _phantomKeyBridgeValidator = new PhantomKeyBridgeValidator(_usbArtifactProtectionService);
 
             RefreshDriveSelections();
 
@@ -182,6 +186,15 @@ namespace PhantomVault.UI.ViewModels
                         ResolveRuntimePaths(manifest, extractedVolumeRoot, masterVolumePath);
                     }
 
+                    if (manifest.PhantomKeyBridgeEnabled && !string.IsNullOrWhiteSpace(rootDir))
+                    {
+                        var layoutRoot = Directory.GetParent(rootDir)?.FullName;
+                        if (!string.IsNullOrWhiteSpace(layoutRoot))
+                        {
+                            PhantomKeyBridgeValidator.ResolveRuntimePaths(manifest, layoutRoot);
+                        }
+                    }
+
                     // Enforce manifest policy (version, signature requirements)
                     try
                     {
@@ -225,6 +238,8 @@ namespace PhantomVault.UI.ViewModels
                         _intrusionService.RegisterFailedAttempt(manifest, manifestPath, password, null, selectedPhysicalDrivePath ?? selectedDriveRoot!);
                         return;
                     }
+
+                    _phantomKeyBridgeValidator.Validate(manifest, password, null);
 
                     // Verify TOTP if enabled
                     if (!string.IsNullOrEmpty(manifest.TotpSecret))
@@ -1097,6 +1112,7 @@ namespace PhantomVault.UI.ViewModels
             manifest.BindingRecordPath = ResolveExtractedPath(extractedRoot, manifest.BindingRecordPath);
             manifest.RecoveryRecordPath = ResolveExtractedPath(extractedRoot, manifest.RecoveryRecordPath);
             manifest.DecoyDatabasePath = ResolveExtractedPath(extractedRoot, manifest.DecoyDatabasePath);
+            PhantomKeyBridgeValidator.ResolveRuntimePaths(manifest, extractedRoot);
         }
 
         private static string? ResolveExtractedPath(string extractedRoot, string? relativePath)

@@ -238,12 +238,13 @@ namespace PhantomVault.Core.Tests
 
             WriteManifest(manifest, manifestPath, correctPassword);
 
-            // Act & Assert - Wrong password should fail to decrypt manifest
-            // AuthenticationTagMismatchException is a subtype of CryptographicException
-            Assert.ThrowsAny<System.Security.Cryptography.CryptographicException>(() =>
+            // Act & Assert - Minimal-header manifests fail closed and deliberately
+            // do not disclose whether the mismatch came from credentials or binding context.
+            var ex = Assert.Throws<System.Security.SecurityException>(() =>
             {
                 ReadManifest(manifestPath, wrongPassword);
             });
+            Assert.Contains("binding validation failed", ex.Message, StringComparison.OrdinalIgnoreCase);
         }
 
         [Fact]
