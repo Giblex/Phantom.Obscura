@@ -41,11 +41,10 @@ public sealed partial class ShellViewModel : ObservableObject
         DataContext = new VaultUnlockViewModel()
     });
 
-    public void NavigateDashboard() => Navigate("Vault Dashboard", PlaceholderView.Create(
-        title:        "Dashboard",
-        sourceView:   "Views/DashboardView.axaml (1287 LOC)",
-        description:  "Phantom Obscura's main hub — sidebar with categories, credential grid, quick actions, and account summary.",
-        portStatus:   "Verbatim port queued for Phase 3d. The desktop AXAML references custom controls (PhantomVault.UI.Desktop.Controls) which need linking before this view can render."));
+    public void NavigateDashboard() => Navigate("Vault Dashboard", new DashboardView
+    {
+        DataContext = new DashboardViewModel()
+    });
 
     public void NavigateVault() => Navigate("Vault", PlaceholderView.Create(
         title:        "Credential Vault",

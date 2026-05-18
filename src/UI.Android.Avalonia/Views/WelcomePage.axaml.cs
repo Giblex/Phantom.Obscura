@@ -26,7 +26,7 @@ public partial class WelcomePage : UserControl
             {
                 vm.RequestUnlock           += () => ShellViewModel.Current?.NavigateUnlock();
                 vm.RequestDashboard        += () => ShellViewModel.Current?.NavigateDashboard();
-                vm.RequestDefaultSetup     += () => ShellViewModel.Current?.NavigateAddEdit();   // Get-Started → AddEdit for demo
+                vm.RequestDefaultSetup     += () => ShellViewModel.Current?.NavigateDashboard();
                 vm.RequestAdvancedSetup    += () => ShellViewModel.Current?.NavigateSettings();
                 vm.RequestOpenExistingVault += () => ShellViewModel.Current?.NavigateUnlock();
             }

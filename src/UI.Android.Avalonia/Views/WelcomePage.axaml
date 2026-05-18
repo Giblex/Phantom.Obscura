@@ -69,22 +69,30 @@
                   HorizontalScrollBarVisibility="Disabled">
       <StackPanel Spacing="18" HorizontalAlignment="Center" VerticalAlignment="Center" MinHeight="300" Margin="0,0,0,112">
 
-        <!-- Centred tile with logo (liquid-glass class deferred to Phase 4) -->
+        <!-- Centred tile with logo. Phone-friendly: WrapPanel lets the wordmark
+             stack below the icon when horizontal space is tight (typical phone
+             portrait) and sit beside it on wider tablet form factors. -->
         <Border CornerRadius="16"
                 ClipToBounds="True"
                 Background="{DynamicResource CardBackgroundBrush}"
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
                 BorderThickness="1"
                 HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                MaxWidth="760" MinHeight="188" MaxHeight="260" Padding="20,18">
-          <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="22">
+                MaxWidth="760" MinHeight="188" MaxHeight="320" Padding="16,18">
+          <StackPanel Orientation="Vertical"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"
+                      Spacing="10">
             <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
-                   Stretch="Uniform" MaxHeight="150"
-                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                   Stretch="Uniform" MaxHeight="110"
+                   HorizontalAlignment="Center"/>
             <TextBlock Text="Phantom Obscura"
-                       FontSize="40" FontFamily="{DynamicResource TitleFontFamily}" FontWeight="Normal"
+                       FontSize="26"
+                       FontFamily="{DynamicResource TitleFontFamily}"
+                       FontWeight="Normal"
                        Foreground="#1A6B75"
-                       VerticalAlignment="Center"/>
+                       TextAlignment="Center"
+                       HorizontalAlignment="Center"/>
           </StackPanel>
         </Border>
 
@@ -137,23 +145,24 @@
                 HorizontalAlignment="Stretch"
                 IsVisible="{Binding IsLandingVisible}">
           <StackPanel Spacing="14">
-            <StackPanel Orientation="Horizontal" Spacing="14">
-              <!-- Static centre dot (pulse-ring animation deferred) -->
-              <Grid Width="120" Height="120">
-                <Border Width="22" Height="22" CornerRadius="11" Background="#FFFFFF"
-                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
-              </Grid>
-              <StackPanel Spacing="4" VerticalAlignment="Center">
-                <TextBlock Text="{Binding DeviceLinkHeadline}"
-                           FontSize="{StaticResource Type.H4.Size}"
-                           Foreground="{DynamicResource PrimaryTextBrush}"/>
-                <TextBlock Text="{Binding DeviceLinkDetail}"
-                           FontSize="{StaticResource Type.Small.Size}"
-                           Foreground="{DynamicResource MutedTextBrush}"
-                           TextWrapping="Wrap"
-                           MaxWidth="620"/>
-              </StackPanel>
-            </StackPanel>
+            <!-- Phone-safe layout: vertical stack with the white indicator dot
+                 sitting above the headline / detail text instead of beside.
+                 The desktop version uses a 120dp Grid on the left which
+                 over-runs phone widths. -->
+            <Border Width="22" Height="22" CornerRadius="11" Background="#FFFFFF"
+                    HorizontalAlignment="Center"/>
+            <TextBlock Text="{Binding DeviceLinkHeadline}"
+                       FontSize="{StaticResource Type.H4.Size}"
+                       Foreground="{DynamicResource PrimaryTextBrush}"
+                       HorizontalAlignment="Center"
+                       TextAlignment="Center"
+                       TextWrapping="Wrap"/>
+            <TextBlock Text="{Binding DeviceLinkDetail}"
+                       FontSize="{StaticResource Type.Small.Size}"
+                       Foreground="{DynamicResource MutedTextBrush}"
+                       TextWrapping="Wrap"
+                       TextAlignment="Center"
+                       HorizontalAlignment="Center"/>
 
             <TextBlock Text="{Binding DetectedVaultPathDisplay}"
                        FontSize="{StaticResource Type.Small.Size}"
@@ -198,84 +207,168 @@
           </StackPanel>
         </Border>
 
-        <!-- Setup choice card (Default vs Advanced) — verbatim layout -->
+        <!-- Setup choice card (Default vs Advanced).
+             Phone-friendly: two big tap targets + a "?" help icon in the top-right
+             corner of each tile. The icon opens a Flyout with the full description
+             (formerly inline paragraphs), so the choice surface stays at-a-glance. -->
         <Border Background="{DynamicResource CardBackgroundBrush}"
                 CornerRadius="20"
-                Padding="24,22"
+                Padding="20,18"
                 MaxWidth="760"
                 HorizontalAlignment="Stretch"
                 IsVisible="{Binding IsSetupChoiceVisible}"
                 BoxShadow="0 8 24 0 #30000000">
-          <StackPanel Spacing="18">
-            <StackPanel Spacing="6">
-              <TextBlock Text="Choose Your Setup Path"
-                         FontSize="{StaticResource Type.H3.Size}"
-                         Foreground="{DynamicResource PrimaryTextBrush}"/>
-              <TextBlock Text="Pick the simple path if you want Obscura to make the hard decisions for you, or open the advanced path if you want full control over every lock and latch."
-                         FontSize="{StaticResource Type.Small.Size}"
-                         Foreground="{DynamicResource MutedTextBrush}"
-                         TextWrapping="Wrap"/>
-            </StackPanel>
+          <StackPanel Spacing="14">
+            <TextBlock Text="Choose Your Setup Path"
+                       FontSize="{StaticResource Type.H3.Size}"
+                       Foreground="{DynamicResource PrimaryTextBrush}"
+                       TextWrapping="Wrap"/>
 
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
-              <Border Grid.Column="0" Background="#162235" CornerRadius="18" Padding="18,16">
-                <StackPanel Spacing="12">
-                  <TextBlock Text="Default Setup"
-                             FontSize="{StaticResource Type.H4.Size}"
-                             Foreground="{DynamicResource PrimaryTextBrush}"/>
-                  <TextBlock Text="Best if you just want a vault without wrestling the knobs. You choose the vault name and your authentication, and Obscura handles the rest with hardened defaults."
-                             FontSize="{StaticResource Type.Small.Size}"
-                             Foreground="{DynamicResource MutedTextBrush}"
-                             TextWrapping="Wrap"/>
-                  <TextBlock Text="Includes Ghost Secured, PhantomKey, dual keyfiles, USB binding, 1 GB container, and remnant cleanup."
-                             FontSize="{StaticResource Type.Small.Size}"
-                             Foreground="{DynamicResource SecondaryTextBrush}"
-                             TextWrapping="Wrap"/>
-                  <Button Command="{Binding ShowDefaultSetupCommand}" Height="42" HorizontalAlignment="Left">
-                    <TextBlock Text="Use Default Setup"/>
-                  </Button>
-                </StackPanel>
-              </Border>
+            <!-- Tile group: stacks vertically on phones, side-by-side once
+                 there's room. Each tile is a Grid so the help "?" can sit
+                 absolutely in the top-right corner regardless of phone width. -->
+            <WrapPanel ItemSpacing="12" LineSpacing="12">
+              <!-- Default Setup tile -->
+              <Grid Background="#162235"
+                    Width="320" MinHeight="120"
+                    HorizontalAlignment="Stretch">
+                <Border CornerRadius="18" Background="#162235"/>
+                <Button Command="{Binding ShowDefaultSetupCommand}"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        CornerRadius="18"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"
+                        Padding="20,16">
+                  <StackPanel Spacing="4" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="Default Setup"
+                               FontSize="{StaticResource Type.H4.Size}"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="Recommended"
+                               FontSize="{StaticResource Type.Small.Size}"
+                               Foreground="{DynamicResource AccentBrush}"
+                               HorizontalAlignment="Center"/>
+                  </StackPanel>
+                </Button>
+                <!-- Help "?" pinned top-right; opens a flyout with the full description -->
+                <Button HorizontalAlignment="Right" VerticalAlignment="Top"
+                        Margin="0,8,8,0"
+                        Width="28" Height="28"
+                        Padding="0"
+                        CornerRadius="14"
+                        Background="{DynamicResource ControlBackgroundBrush}"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"
+                        ToolTip.Tip="What's in Default Setup?">
+                  <TextBlock Text="?"
+                             FontSize="14" FontWeight="Bold"
+                             Foreground="{DynamicResource AccentBrush}"
+                             HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                  <Button.Flyout>
+                    <Flyout Placement="Bottom">
+                      <StackPanel MaxWidth="280" Spacing="8">
+                        <TextBlock Text="Default Setup"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <TextBlock Text="Best if you just want a vault without wrestling the knobs. You choose the vault name and your authentication, and Obscura handles the rest with hardened defaults."
+                                   FontSize="{StaticResource Type.Small.Size}"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   TextWrapping="Wrap"/>
+                        <TextBlock Text="Includes Ghost Secured, PhantomKey, dual keyfiles, USB binding, 1 GB container, and remnant cleanup."
+                                   FontSize="{StaticResource Type.Small.Size}"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   TextWrapping="Wrap"/>
+                      </StackPanel>
+                    </Flyout>
+                  </Button.Flyout>
+                </Button>
+              </Grid>
 
-              <Border Grid.Column="1" Background="#162235" CornerRadius="18" Padding="18,16">
-                <StackPanel Spacing="12">
-                  <TextBlock Text="Advanced Setup"
-                             FontSize="{StaticResource Type.H4.Size}"
-                             Foreground="{DynamicResource PrimaryTextBrush}"/>
-                  <TextBlock Text="Best if you want full control over the protection tier, storage layout, keyfile flow, remnant handling, and every other vault-building decision."
-                             FontSize="{StaticResource Type.Small.Size}"
-                             Foreground="{DynamicResource MutedTextBrush}"
-                             TextWrapping="Wrap"/>
-                  <TextBlock Text="You will walk through the full wizard and choose the exact security profile and provisioning path."
-                             FontSize="{StaticResource Type.Small.Size}"
-                             Foreground="{DynamicResource SecondaryTextBrush}"
-                             TextWrapping="Wrap"/>
-                  <Button Command="{Binding ShowAdvancedSetupCommand}" Height="42" HorizontalAlignment="Left">
-                    <TextBlock Text="Use Advanced Setup"/>
-                  </Button>
-                </StackPanel>
-              </Border>
-            </Grid>
+              <!-- Advanced Setup tile -->
+              <Grid Background="#162235"
+                    Width="320" MinHeight="120"
+                    HorizontalAlignment="Stretch">
+                <Border CornerRadius="18" Background="#162235"/>
+                <Button Command="{Binding ShowAdvancedSetupCommand}"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        CornerRadius="18"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"
+                        Padding="20,16">
+                  <StackPanel Spacing="4" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="Advanced Setup"
+                               FontSize="{StaticResource Type.H4.Size}"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="Power user"
+                               FontSize="{StaticResource Type.Small.Size}"
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               HorizontalAlignment="Center"/>
+                  </StackPanel>
+                </Button>
+                <Button HorizontalAlignment="Right" VerticalAlignment="Top"
+                        Margin="0,8,8,0"
+                        Width="28" Height="28"
+                        Padding="0"
+                        CornerRadius="14"
+                        Background="{DynamicResource ControlBackgroundBrush}"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"
+                        ToolTip.Tip="What's in Advanced Setup?">
+                  <TextBlock Text="?"
+                             FontSize="14" FontWeight="Bold"
+                             Foreground="{DynamicResource AccentBrush}"
+                             HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                  <Button.Flyout>
+                    <Flyout Placement="Bottom">
+                      <StackPanel MaxWidth="280" Spacing="8">
+                        <TextBlock Text="Advanced Setup"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <TextBlock Text="Best if you want full control over the protection tier, storage layout, keyfile flow, remnant handling, and every other vault-building decision."
+                                   FontSize="{StaticResource Type.Small.Size}"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   TextWrapping="Wrap"/>
+                        <TextBlock Text="You will walk through the full wizard and choose the exact security profile and provisioning path."
+                                   FontSize="{StaticResource Type.Small.Size}"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   TextWrapping="Wrap"/>
+                      </StackPanel>
+                    </Flyout>
+                  </Button.Flyout>
+                </Button>
+              </Grid>
+            </WrapPanel>
           </StackPanel>
         </Border>
       </StackPanel>
     </ScrollViewer>
 
-    <!-- ── Action footer (Get Started, Open Vault, About, Import, ...) ────── -->
+    <!-- ── Action footer (Get Started, Open Vault, About, Import, ...) ──────
+         Phone-friendly: ItemWidth lowered so two buttons fit per row on a
+         typical 360dp phone instead of clipping off the right edge. -->
     <Border x:Name="ActionFooterCard"
             Grid.Row="2"
             Background="{DynamicResource HeaderBackgroundBrush}"
-            Padding="12"
+            Padding="10"
             HorizontalAlignment="Center"
             VerticalAlignment="Bottom"
             MaxWidth="760"
             CornerRadius="16"
-            Margin="18,8,18,18"
+            Margin="14,8,14,16"
             BorderBrush="{DynamicResource FooterBorderBrush}"
             BorderThickness="1"
             ClipToBounds="True">
-      <WrapPanel Orientation="Horizontal" ItemWidth="160" HorizontalAlignment="Center">
-        <Button Command="{Binding GetStartedCommand}" CornerRadius="10" Height="40" Width="140"
+      <WrapPanel Orientation="Horizontal" ItemWidth="128" HorizontalAlignment="Center">
+        <Button Command="{Binding GetStartedCommand}" CornerRadius="10" Height="40" Width="116"
                 FontSize="{StaticResource Type.Body.Size}" FontWeight="Normal"
                 FontFamily="{DynamicResource MainFontFamily}"
                 IsVisible="{Binding IsLandingVisible}">
@@ -283,14 +376,14 @@
                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Button>
 
-        <Button Command="{Binding OpenExistingVaultCommand}" CornerRadius="10" Height="40" Width="140"
+        <Button Command="{Binding OpenExistingVaultCommand}" CornerRadius="10" Height="40" Width="116"
                 FontSize="{StaticResource Type.Body.Size}" FontFamily="{DynamicResource MainFontFamily}"
                 IsVisible="{Binding IsLandingVisible}" IsEnabled="{Binding HasSelectedVault}">
           <TextBlock Text="{Binding OpenVaultButtonText}" Foreground="{DynamicResource ButtonTextBrush}"
                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Button>
 
-        <Button Click="About_Click" CornerRadius="10" Height="40" Width="140"
+        <Button Click="About_Click" CornerRadius="10" Height="40" Width="116"
                 FontFamily="{DynamicResource MainFontFamily}" FontSize="{StaticResource Type.Body.Size}"
                 ToolTip.Tip="About this app"
                 HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
@@ -299,7 +392,7 @@
                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Button>
 
-        <Button Click="Import_Click" CornerRadius="10" Height="40" Width="140"
+        <Button Click="Import_Click" CornerRadius="10" Height="40" Width="116"
                 FontFamily="{DynamicResource MainFontFamily}" FontSize="{StaticResource Type.Body.Size}"
                 ToolTip.Tip="Import data"
                 HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
@@ -308,7 +401,7 @@
                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Button>
 
-        <Button Command="{Binding BackToWelcomeCommand}" CornerRadius="10" Height="40" Width="140"
+        <Button Command="{Binding BackToWelcomeCommand}" CornerRadius="10" Height="40" Width="116"
                 FontFamily="{DynamicResource MainFontFamily}" FontSize="{StaticResource Type.Body.Size}"
                 IsVisible="{Binding IsSetupChoiceVisible}">
           <TextBlock Text="Back" Foreground="{DynamicResource ButtonTextBrush}"

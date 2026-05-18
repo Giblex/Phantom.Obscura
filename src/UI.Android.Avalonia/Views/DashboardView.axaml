@@ -1,0 +1,261 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:PhantomVault.UI.ViewModels"
+             x:Class="PhantomVault.UI.Views.DashboardView"
+             x:DataType="vm:DashboardViewModel"
+             Background="{DynamicResource WindowBackgroundBrush}">
+
+  <!--
+    Android adapter of Views/DashboardView.axaml (desktop, 1287 LOC).
+    Mirrors the desktop section layout — Vault Status header, Categories
+    grid, Quick Actions grid — without the desktop's custom controls
+    (PhantomVault.UI.Desktop.Controls.*) or behaviors (PhantomVault.UI.Behaviors).
+    Those need separate porting (Phase 4) and would otherwise drag a wide
+    code-behind into this UserControl.
+  -->
+
+  <UserControl.Styles>
+    <Style Selector="Border.dashboard-section">
+      <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource SettingsPanelBorderBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="20"/>
+      <Setter Property="Padding" Value="18"/>
+    </Style>
+    <Style Selector="Button.dashboard-tile">
+      <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="16"/>
+      <Setter Property="Padding" Value="0"/>
+      <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+      <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+      <Setter Property="Margin" Value="6"/>
+    </Style>
+    <Style Selector="Button.dashboard-tile:pointerover">
+      <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer>
+    <StackPanel Spacing="16" Margin="20,18,20,28">
+
+      <!-- ─── Vault Status header ─────────────────────────────────────────── -->
+      <Border Classes="dashboard-section">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
+            <TextBlock Text="{Binding VaultName}"
+                       FontSize="{StaticResource Type.H3.Size}"
+                       FontWeight="Bold"
+                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+            <TextBlock Text="{Binding StatusSubtitle}"
+                       FontSize="{StaticResource Type.Small.Size}"
+                       Foreground="{DynamicResource MutedTextBrush}"/>
+          </StackPanel>
+          <Border Grid.Column="1"
+                  Background="{DynamicResource AccentBrush}"
+                  CornerRadius="999" Padding="12,6">
+            <TextBlock Text="{Binding UnlockedBadgeText}"
+                       FontSize="{StaticResource Type.Tiny.Size}"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+          </Border>
+        </Grid>
+      </Border>
+
+      <!-- ─── Stats row ───────────────────────────────────────────────────── -->
+      <UniformGrid Rows="1" Columns="3">
+        <Border Classes="dashboard-section" Margin="0,0,6,0">
+          <StackPanel Spacing="4" HorizontalAlignment="Center">
+            <TextBlock Text="{Binding TotalCount}"
+                       FontSize="24" FontWeight="Bold"
+                       Foreground="{DynamicResource PrimaryTextBrush}"
+                       HorizontalAlignment="Center"/>
+            <TextBlock Text="Total"
+                       FontSize="{StaticResource Type.Small.Size}"
+                       Foreground="{DynamicResource MutedTextBrush}"
+                       HorizontalAlignment="Center"/>
+          </StackPanel>
+        </Border>
+        <Border Classes="dashboard-section" Margin="6,0,6,0">
+          <StackPanel Spacing="4" HorizontalAlignment="Center">
+            <TextBlock Text="{Binding CategoriesCount}"
+                       FontSize="24" FontWeight="Bold"
+                       Foreground="{DynamicResource AccentBrush}"
+                       HorizontalAlignment="Center"/>
+            <TextBlock Text="Categories"
+                       FontSize="{StaticResource Type.Small.Size}"
+                       Foreground="{DynamicResource MutedTextBrush}"
+                       HorizontalAlignment="Center"/>
+          </StackPanel>
+        </Border>
+        <Border Classes="dashboard-section" Margin="6,0,0,0">
+          <StackPanel Spacing="4" HorizontalAlignment="Center">
+            <TextBlock Text="{Binding HealthScore}"
+                       FontSize="24" FontWeight="Bold"
+                       Foreground="#66BB6A"
+                       HorizontalAlignment="Center"/>
+            <TextBlock Text="Health"
+                       FontSize="{StaticResource Type.Small.Size}"
+                       Foreground="{DynamicResource MutedTextBrush}"
+                       HorizontalAlignment="Center"/>
+          </StackPanel>
+        </Border>
+      </UniformGrid>
+
+      <!-- ─── Categories tile grid (same idea as desktop CategoryTiles) ──── -->
+      <Border Classes="dashboard-section">
+        <StackPanel Spacing="12">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Grid.Column="0"
+                       Text="Categories"
+                       FontSize="{StaticResource Type.H4.Size}"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+            <Button Grid.Column="1"
+                    Click="OpenCategories_Click"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    Padding="6,4">
+              <TextBlock Text="View all ›"
+                         Foreground="{DynamicResource AccentBrush}"
+                         FontSize="{StaticResource Type.Small.Size}"/>
+            </Button>
+          </Grid>
+          <ItemsControl ItemsSource="{Binding Categories}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <UniformGrid Columns="3"/>
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:DashboardCategoryTile">
+                <Button Classes="dashboard-tile" Height="110">
+                  <StackPanel Spacing="6" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Border Width="40" Height="40" CornerRadius="20" Background="{Binding Color}">
+                      <TextBlock Text="{Binding Glyph}"
+                                 FontSize="20"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text="{Binding Name}"
+                               FontSize="{StaticResource Type.Small.Size}"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding Count, StringFormat={}{0} items}"
+                               FontSize="{StaticResource Type.Tiny.Size}"
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               HorizontalAlignment="Center"/>
+                  </StackPanel>
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+
+      <!-- ─── Quick Actions tile grid ─────────────────────────────────────── -->
+      <Border Classes="dashboard-section">
+        <StackPanel Spacing="12">
+          <TextBlock Text="Quick Actions"
+                     FontSize="{StaticResource Type.H4.Size}"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource PrimaryTextBrush}"/>
+          <UniformGrid Columns="3">
+            <Button Classes="dashboard-tile" Height="110" Click="AddCredential_Click">
+              <StackPanel Spacing="6" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="➕" FontSize="22" HorizontalAlignment="Center"/>
+                <TextBlock Text="Add Credential" FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource PrimaryTextBrush}"
+                           HorizontalAlignment="Center" TextAlignment="Center"/>
+              </StackPanel>
+            </Button>
+            <Button Classes="dashboard-tile" Height="110" Click="IconDownloader_Click">
+              <StackPanel Spacing="6" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="🌐" FontSize="22" HorizontalAlignment="Center"/>
+                <TextBlock Text="Fetch Icons" FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource PrimaryTextBrush}"
+                           HorizontalAlignment="Center" TextAlignment="Center"/>
+              </StackPanel>
+            </Button>
+            <Button Classes="dashboard-tile" Height="110" Click="Security_Click">
+              <StackPanel Spacing="6" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="🛡" FontSize="22" HorizontalAlignment="Center"/>
+                <TextBlock Text="Security" FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource PrimaryTextBrush}"
+                           HorizontalAlignment="Center" TextAlignment="Center"/>
+              </StackPanel>
+            </Button>
+            <Button Classes="dashboard-tile" Height="110" Click="Theme_Click">
+              <StackPanel Spacing="6" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="🎨" FontSize="22" HorizontalAlignment="Center"/>
+                <TextBlock Text="Theme" FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource PrimaryTextBrush}"
+                           HorizontalAlignment="Center" TextAlignment="Center"/>
+              </StackPanel>
+            </Button>
+            <Button Classes="dashboard-tile" Height="110" Click="Settings_Click">
+              <StackPanel Spacing="6" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="⚙" FontSize="22" HorizontalAlignment="Center"/>
+                <TextBlock Text="Settings" FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource PrimaryTextBrush}"
+                           HorizontalAlignment="Center" TextAlignment="Center"/>
+              </StackPanel>
+            </Button>
+            <Button Classes="dashboard-tile" Height="110" Click="Lock_Click">
+              <StackPanel Spacing="6" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="🔒" FontSize="22" HorizontalAlignment="Center"/>
+                <TextBlock Text="Lock Vault" FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource PrimaryTextBrush}"
+                           HorizontalAlignment="Center" TextAlignment="Center"/>
+              </StackPanel>
+            </Button>
+          </UniformGrid>
+        </StackPanel>
+      </Border>
+
+      <!-- ─── Recently used ──────────────────────────────────────────────── -->
+      <Border Classes="dashboard-section">
+        <StackPanel Spacing="10">
+          <TextBlock Text="Recently used"
+                     FontSize="{StaticResource Type.H4.Size}"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource PrimaryTextBrush}"/>
+          <ItemsControl ItemsSource="{Binding Recent}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:DashboardRecentItem">
+                <Border Background="{DynamicResource ControlBackgroundBrush}"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1" CornerRadius="10"
+                        Padding="14,10" Margin="0,0,0,8">
+                  <Grid ColumnDefinitions="Auto,*,Auto">
+                    <Border Grid.Column="0" Width="32" Height="32" CornerRadius="16"
+                            Background="{Binding TintColor}" Margin="0,0,12,0">
+                      <TextBlock Text="{Binding Glyph}" FontSize="16"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                      <TextBlock Text="{Binding Title}"
+                                 FontSize="{StaticResource Type.Body.Size}"
+                                 Foreground="{DynamicResource PrimaryTextBrush}"/>
+                      <TextBlock Text="{Binding Subtitle}"
+                                 FontSize="{StaticResource Type.Tiny.Size}"
+                                 Foreground="{DynamicResource MutedTextBrush}"/>
+                    </StackPanel>
+                    <TextBlock Grid.Column="2"
+                               Text="{Binding LastUsed}"
+                               FontSize="{StaticResource Type.Tiny.Size}"
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               VerticalAlignment="Center"/>
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
