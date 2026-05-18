@@ -20,7 +20,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Wipe version pin so setup-dotnet only uses dotnet-version input
+      # Wipe version pin so the installed SDK is used without version-lock errors
       - name: Clear global.json SDK pin
         run: echo '{}' > global.json
 
@@ -30,17 +30,22 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup .NET 10
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
+      # Install .NET 10 via Ubuntu apt — avoids setup-dotnet version-resolution
+      # failures that were consistently breaking the job in ~60 seconds.
+      - name: Install .NET 10 SDK via apt
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y dotnet-sdk-10.0
+          dotnet --version
+          dotnet --list-sdks
 
       - name: Install MAUI Android workload
         run: dotnet workload install maui-android
 
       - name: Accept Android SDK licenses
         run: |
-          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses 2>/dev/null || true
+          SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKMANAGER" --licenses 2>/dev/null || true
           mkdir -p "$ANDROID_SDK_ROOT/licenses"
           printf '%s\n' \
             24333f8a63b6825ea9c5514f83c2829b004d1fee \
@@ -83,3 +88,14 @@ jobs:
             artifacts/apk/**/*.apk
           retention-days: 30
           if-no-files-found: error
+
+      - name: Write step summary
+        if: always()
+        run: |
+          echo "## Build summary — run ${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          dotnet --list-sdks 2>&1 >> $GITHUB_STEP_SUMMARY || echo "dotnet not found" >> $GITHUB_STEP_SUMMARY
+          dotnet workload list 2>&1 >> $GITHUB_STEP_SUMMARY || true
+          echo '```' >> $GITHUB_STEP_SUMMARY
