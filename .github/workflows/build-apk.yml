@@ -45,7 +45,7 @@ jobs:
           dotnet --list-sdks
 
       - name: Install MAUI Android workload
-        run: dotnet workload install maui-android --skip-sign-check
+        run: dotnet workload install maui-android
 
       - name: Accept Android SDK licenses
         run: |
