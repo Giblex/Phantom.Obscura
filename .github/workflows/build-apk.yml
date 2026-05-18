@@ -8,7 +8,6 @@ on:
 env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
   DOTNET_NOLOGO: true
-  DOTNET_MULTILEVEL_LOOKUP: 0
   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
   ANDROID_HOME: /usr/local/lib/android/sdk
 
@@ -17,12 +16,34 @@ jobs:
     name: Build Android APK
     runs-on: ubuntu-latest
     permissions:
-      issues: write
       pull-requests: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      # Wipe global.json so no version pin interferes with the pre-installed SDK
+      - name: Clear global.json SDK pin
+        run: echo '{}' > global.json
+
+      - name: Collect environment info
+        id: env_info
+        if: always()
+        run: |
+          {
+            echo "=== uname ==="
+            uname -a
+            echo "=== dotnet sdks ==="
+            dotnet --list-sdks 2>&1 || echo "dotnet not found"
+            echo "=== dotnet version ==="
+            dotnet --version 2>&1 || echo "n/a"
+            echo "=== DOTNET_ROOT ==="
+            echo "${DOTNET_ROOT:-not set}"
+            echo "=== Android SDK ==="
+            ls /usr/local/lib/android/sdk 2>&1 || echo "not at /usr/local/lib/android/sdk"
+            echo "=== Java ==="
+            java -version 2>&1
+          } | tee /tmp/env_info.txt
 
       - name: Setup Java 17
         uses: actions/setup-java@v4
@@ -30,18 +51,11 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup .NET 10
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-
-      - name: Print SDK info
-        run: |
-          dotnet --version
-          dotnet --list-sdks
-
       - name: Install MAUI Android workload
-        run: dotnet workload install maui-android
+        id: workload
+        run: |
+          dotnet workload install maui-android 2>&1 | tee /tmp/workload.txt
+          exit ${PIPESTATUS[0]}
 
       - name: Accept Android SDK licenses
         run: |
@@ -71,7 +85,6 @@ jobs:
 
       - name: Collect APK
         run: |
-          echo "=== Artifacts ==="
           find ./artifacts -name "*.apk" | sort
           find src/UI.Android/bin -name "*.apk" 2>/dev/null | sort || true
 
@@ -84,3 +97,39 @@ jobs:
             artifacts/apk/**/*.apk
           retention-days: 30
           if-no-files-found: error
+
+      # Always post a diagnostic comment so env info is readable via PR comments
+      - name: Post diagnostic comment
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ENV_INFO=$(cat /tmp/env_info.txt 2>/dev/null || echo "env info not captured")
+          WORKLOAD_OUT=$(cat /tmp/workload.txt 2>/dev/null || echo "workload step did not run")
+          JOB_STATUS="${{ job.status }}"
+          BODY=$(python3 -c "
+          import json, sys
+          env = open('/tmp/env_info.txt').read() if __import__('os').path.exists('/tmp/env_info.txt') else 'not captured'
+          wl = open('/tmp/workload.txt').read() if __import__('os').path.exists('/tmp/workload.txt') else 'did not run'
+          body = f'''**CI run ${{ github.run_number }} — status: ${{ job.status }}**
+
+<details><summary>Environment</summary>
+
+\`\`\`
+{env}
+\`\`\`
+</details>
+
+<details><summary>Workload install</summary>
+
+\`\`\`
+{wl}
+\`\`\`
+</details>'''
+          print(json.dumps(body))
+          ")
+          curl -s -f -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/Giblex-Pty-Ltd/Phantom.Obscura/issues/5/comments" \
+            -d "{\"body\": $BODY}" || echo "Comment post failed"
