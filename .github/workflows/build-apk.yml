@@ -20,7 +20,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Wipe version pin so the installed SDK is used without version-lock errors
       - name: Clear global.json SDK pin
         run: echo '{}' > global.json
 
@@ -30,17 +29,12 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      # Install .NET 10 via Ubuntu apt — avoids setup-dotnet version-resolution
-      # failures that were consistently breaking the job in ~60 seconds.
       - name: Install .NET 10 SDK via apt
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y dotnet-sdk-10.0
           dotnet --version
           dotnet --list-sdks
-
-      - name: Install MAUI Android workload
-        run: dotnet workload install maui-android
 
       - name: Accept Android SDK licenses
         run: |
@@ -58,6 +52,9 @@ jobs:
           SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
           "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0" "platform-tools"
 
+      - name: Restore .NET workloads
+        run: dotnet workload restore src/UI.Android/PhantomVault.Android.csproj
+
       - name: Restore NuGet packages
         run: dotnet restore src/UI.Android/PhantomVault.Android.csproj
 
@@ -74,10 +71,7 @@ jobs:
             -o ./artifacts/apk
 
       - name: Collect APK
-        run: |
-          echo "=== APK files ==="
-          find ./artifacts -name "*.apk" | sort
-          find src/UI.Android/bin -name "*.apk" 2>/dev/null | sort || true
+        run: find ./artifacts -name "*.apk" | sort
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -88,14 +82,3 @@ jobs:
             artifacts/apk/**/*.apk
           retention-days: 30
           if-no-files-found: error
-
-      - name: Write step summary
-        if: always()
-        run: |
-          echo "## Build summary — run ${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          dotnet --list-sdks 2>&1 >> $GITHUB_STEP_SUMMARY || echo "dotnet not found" >> $GITHUB_STEP_SUMMARY
-          dotnet workload list 2>&1 >> $GITHUB_STEP_SUMMARY || true
-          echo '```' >> $GITHUB_STEP_SUMMARY
