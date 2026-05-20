@@ -38,7 +38,7 @@ The integrated recovery panel (`Views/RecoveryPanelStub.cs` → `RecoveryPanel`,
 ## Features
 
 ### Vault & Encryption
-- Argon2id master key derivation with DPAPI-protected pepper and optional keyfile
+- Argon2id master key derivation with DPAPI-protected pepper and a **mandatory USB keyfile** (the keyfile is required to unlock — passwords are optional)
 - AES-GCM authenticated encryption for all vault data
 - Custom `PhantomContainerService` container format (v4): static bootstrap header, Argon2id KDF material, encrypted private header with payload hash and HMAC, backwards-compatible with v2/v3
 - Zero-knowledge vault service (`ZkVaultService`) — master key verified against a stored HMAC verifier before access is granted; key material zeroed after lock via `CryptographicOperations.ZeroMemory`
@@ -46,7 +46,7 @@ The integrated recovery panel (`Views/RecoveryPanelStub.cs` → `RecoveryPanel`,
 - Layered and hybrid encryption pipelines
 
 ### Authentication
-- Password + optional keyfile + optional device binding (`DeviceBinding.DeviceSalt()`)
+- **Mandatory USB keyfile** + optional password + optional device binding (`DeviceBinding.DeviceSalt()`) — the keyfile is the required unlock factor; a password is an additional optional factor, never required
 - Windows Hello (biometric / PIN)
 - Passkeys (FIDO2 interface; platform-backed)
 - YubiKey hardware token — device enumeration, info, and OATH TOTP credential listing / code generation via Yubico.YubiKey 1.12.0 (desktop only)
