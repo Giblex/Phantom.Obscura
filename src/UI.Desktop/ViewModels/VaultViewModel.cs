@@ -1934,6 +1934,17 @@ namespace PhantomVault.UI.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _selectedSettingsContent, value);
         }
 
+        // Identifier of the currently active settings pane (e.g. "general",
+        // "security"). Drives the nav highlight in SettingsPanelOverlay via
+        // StringEqualsConverter and lets callers (command palette, deep links)
+        // re-enter a specific pane without inspecting SelectedSettingsContent.
+        private string _selectedSettingsTab = "general";
+        public string SelectedSettingsTab
+        {
+            get => _selectedSettingsTab;
+            private set => this.RaiseAndSetIfChanged(ref _selectedSettingsTab, value);
+        }
+
         // Commands
         public ReactiveCommand<string, Unit> OpenItemCommand { get; }
         public ReactiveCommand<Unit, Unit> LockCommand { get; }
@@ -5748,10 +5759,27 @@ namespace PhantomVault.UI.ViewModels
 
         private void OpenSettingsPanel()
         {
-            CloseAllOverlays(); // Close any other open overlays
-            ShowGeneralSettings(); // Default to General tab
-            IsSettingsPanelVisible = true;
+            // Entry point from the top-level "Settings" button. Always lands on
+            // General; tab switches inside the panel go through the individual
+            // Show*Settings handlers and reuse EnsureSettingsPanelOpen.
+            ShowGeneralSettings();
             StatusMessage = "Settings opened";
+        }
+
+        /// <summary>
+        /// Guarantees the settings overlay is visible and records the active
+        /// pane key. Safe to call when the panel is already open (no overlay
+        /// churn). When the panel is closed it first dismisses any other
+        /// overlay so the settings panel takes focus cleanly.
+        /// </summary>
+        private void EnsureSettingsPanelOpen(string tabKey)
+        {
+            if (!IsSettingsPanelVisible)
+            {
+                CloseAllOverlays();
+                IsSettingsPanelVisible = true;
+            }
+            SelectedSettingsTab = tabKey;
         }
 
         private void CloseSettingsPanel()
@@ -6218,11 +6246,13 @@ namespace PhantomVault.UI.ViewModels
 
         private void ShowGeneralSettings()
         {
+            EnsureSettingsPanelOpen("general");
             SelectedSettingsContent = new Views.Settings.GeneralSettingsView();
         }
 
         private void ShowSecuritySettings()
         {
+            EnsureSettingsPanelOpen("security");
             var view = new Views.Settings.SecuritySettingsView();
             view.DataContext = new SecuritySettingsViewModel(null, _manifestPath);
             SelectedSettingsContent = view;
@@ -6230,11 +6260,13 @@ namespace PhantomVault.UI.ViewModels
 
         private void ShowThemeSettings()
         {
+            EnsureSettingsPanelOpen("theme");
             SelectedSettingsContent = new Views.Settings.ThemeSettingsView();
         }
 
         private void ShowImportExportSettings()
         {
+            EnsureSettingsPanelOpen("importexport");
             SelectedSettingsContent = new Views.Settings.ImportExportSettingsView();
         }
 
@@ -6293,6 +6325,7 @@ namespace PhantomVault.UI.ViewModels
 
         private void ShowAutoFillSettings()
         {
+            EnsureSettingsPanelOpen("autofill");
             SelectedSettingsContent = new Views.Settings.AutoFillSettingsView();
         }
 
@@ -6303,6 +6336,7 @@ namespace PhantomVault.UI.ViewModels
 
         private void ShowSyncSettings()
         {
+            EnsureSettingsPanelOpen("sync");
             SelectedSettingsContent = new Views.Settings.SyncSettingsView
             {
                 DataContext = new ViewModels.Settings.SyncSettingsViewModel()
@@ -6343,6 +6377,7 @@ namespace PhantomVault.UI.ViewModels
 
         private void ShowBackupSettings()
         {
+            EnsureSettingsPanelOpen("backup");
             var view = new Views.Settings.BackupSettingsView();
             Func<(string manifestPath, string? passphrase, string? keyfilePath)?> resolver = () =>
             {
@@ -6363,16 +6398,19 @@ namespace PhantomVault.UI.ViewModels
 
         private void ShowAccessibilitySettings()
         {
+            EnsureSettingsPanelOpen("accessibility");
             SelectedSettingsContent = new Views.Settings.AccessibilitySettingsView();
         }
 
         private void ShowAdvancedSettings()
         {
+            EnsureSettingsPanelOpen("advanced");
             SelectedSettingsContent = new Views.Settings.AdvancedSettingsView();
         }
 
         private void ShowRubbishBinSettings()
         {
+            EnsureSettingsPanelOpen("rubbishbin");
             SelectedSettingsContent = new Views.Settings.RubbishBinSettingsView();
         }
 

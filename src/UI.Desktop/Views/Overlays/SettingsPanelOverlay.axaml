@@ -1,7 +1,27 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="using:PhantomVault.UI.Converters"
              x:Class="PhantomVault.UI.Views.Overlays.SettingsPanelOverlay">
-    
+
+    <UserControl.Resources>
+        <!-- Drives nav-tab.active toggling from VaultViewModel.SelectedSettingsTab. -->
+        <conv:StringEqualsConverter x:Key="SettingsTabEqualsConverter"/>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <!-- Active settings tab: accent foreground + semibold text. Layered on
+             top of liquid-glass; the left-edge accent bar is in the Button
+             content template itself so we don't have to fight the templated
+             parts. -->
+        <Style Selector="Button.settings-tab.active TextBlock.tab-label">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+        </Style>
+        <Style Selector="Button.settings-tab.active Border.tab-accent">
+            <Setter Property="IsVisible" Value="True"/>
+        </Style>
+    </UserControl.Styles>
+
     <Border Background="{DynamicResource OverlayBackgroundBrush}"
             IsVisible="{Binding IsSettingsPanelVisible}"
             IsHitTestVisible="{Binding IsSettingsPanelVisible}">
@@ -105,93 +125,224 @@
                             <ScrollViewer VerticalScrollBarVisibility="Visible"
                                           HorizontalScrollBarVisibility="Disabled"
                                           Padding="15,20">
-                            <StackPanel Spacing="8">
+                            <StackPanel Spacing="6">
                                 <Button Command="{Binding ShowGeneralSettingsCommand}"
-                                        Classes="liquid-glass"
+                                        Classes="liquid-glass settings-tab"
+                                        Classes.active="{Binding SelectedSettingsTab, Converter={StaticResource SettingsTabEqualsConverter}, ConverterParameter=general}"
                                         HorizontalAlignment="Stretch"
-                                        HorizontalContentAlignment="Left"
-                                        Height="40">
-                                    <TextBlock Text="General" VerticalAlignment="Center"/>
+                                        HorizontalContentAlignment="Stretch"
+                                        Height="40"
+                                        Padding="0">
+                                    <Grid ColumnDefinitions="3,*">
+                                        <Border Grid.Column="0" Classes="tab-accent"
+                                                Background="{DynamicResource AccentBrush}"
+                                                CornerRadius="2"
+                                                Margin="2,6"
+                                                IsVisible="False"/>
+                                        <TextBlock Grid.Column="1" Classes="tab-label"
+                                                   Text="General"
+                                                   VerticalAlignment="Center"
+                                                   Margin="12,0,0,0"/>
+                                    </Grid>
                                 </Button>
-                                
+
                                 <Button Command="{Binding ShowSecuritySettingsCommand}"
-                                        Classes="liquid-glass"
+                                        Classes="liquid-glass settings-tab"
+                                        Classes.active="{Binding SelectedSettingsTab, Converter={StaticResource SettingsTabEqualsConverter}, ConverterParameter=security}"
                                         HorizontalAlignment="Stretch"
-                                        HorizontalContentAlignment="Left"
-                                        Height="40">
-                                    <TextBlock Text="Security" VerticalAlignment="Center"/>
+                                        HorizontalContentAlignment="Stretch"
+                                        Height="40"
+                                        Padding="0">
+                                    <Grid ColumnDefinitions="3,*">
+                                        <Border Grid.Column="0" Classes="tab-accent"
+                                                Background="{DynamicResource AccentBrush}"
+                                                CornerRadius="2"
+                                                Margin="2,6"
+                                                IsVisible="False"/>
+                                        <TextBlock Grid.Column="1" Classes="tab-label"
+                                                   Text="Security"
+                                                   VerticalAlignment="Center"
+                                                   Margin="12,0,0,0"/>
+                                    </Grid>
                                 </Button>
-                                
+
                                 <Button Command="{Binding ShowThemeSettingsCommand}"
-                                        Classes="liquid-glass"
+                                        Classes="liquid-glass settings-tab"
+                                        Classes.active="{Binding SelectedSettingsTab, Converter={StaticResource SettingsTabEqualsConverter}, ConverterParameter=theme}"
                                         HorizontalAlignment="Stretch"
-                                        HorizontalContentAlignment="Left"
-                                        Height="40">
-                                    <TextBlock Text="Theme" VerticalAlignment="Center"/>
+                                        HorizontalContentAlignment="Stretch"
+                                        Height="40"
+                                        Padding="0">
+                                    <Grid ColumnDefinitions="3,*">
+                                        <Border Grid.Column="0" Classes="tab-accent"
+                                                Background="{DynamicResource AccentBrush}"
+                                                CornerRadius="2"
+                                                Margin="2,6"
+                                                IsVisible="False"/>
+                                        <TextBlock Grid.Column="1" Classes="tab-label"
+                                                   Text="Theme"
+                                                   VerticalAlignment="Center"
+                                                   Margin="12,0,0,0"/>
+                                    </Grid>
                                 </Button>
-                                
+
                                 <Button Command="{Binding ShowImportExportSettingsCommand}"
-                                        Classes="liquid-glass"
+                                        Classes="liquid-glass settings-tab"
+                                        Classes.active="{Binding SelectedSettingsTab, Converter={StaticResource SettingsTabEqualsConverter}, ConverterParameter=importexport}"
                                         HorizontalAlignment="Stretch"
-                                        HorizontalContentAlignment="Left"
-                                        Height="40">
-                                    <TextBlock Text="Import / Export" VerticalAlignment="Center"/>
+                                        HorizontalContentAlignment="Stretch"
+                                        Height="40"
+                                        Padding="0">
+                                    <Grid ColumnDefinitions="3,*">
+                                        <Border Grid.Column="0" Classes="tab-accent"
+                                                Background="{DynamicResource AccentBrush}"
+                                                CornerRadius="2"
+                                                Margin="2,6"
+                                                IsVisible="False"/>
+                                        <TextBlock Grid.Column="1" Classes="tab-label"
+                                                   Text="Import / Export"
+                                                   VerticalAlignment="Center"
+                                                   Margin="12,0,0,0"/>
+                                    </Grid>
                                 </Button>
-                                
+
                                 <Button Command="{Binding ShowAutoFillSettingsCommand}"
-                                        Classes="liquid-glass"
+                                        Classes="liquid-glass settings-tab"
+                                        Classes.active="{Binding SelectedSettingsTab, Converter={StaticResource SettingsTabEqualsConverter}, ConverterParameter=autofill}"
                                         HorizontalAlignment="Stretch"
-                                        HorizontalContentAlignment="Left"
-                                        Height="40">
-                                    <TextBlock Text="Auto-Fill" VerticalAlignment="Center"/>
+                                        HorizontalContentAlignment="Stretch"
+                                        Height="40"
+                                        Padding="0">
+                                    <Grid ColumnDefinitions="3,*">
+                                        <Border Grid.Column="0" Classes="tab-accent"
+                                                Background="{DynamicResource AccentBrush}"
+                                                CornerRadius="2"
+                                                Margin="2,6"
+                                                IsVisible="False"/>
+                                        <TextBlock Grid.Column="1" Classes="tab-label"
+                                                   Text="Auto-Fill"
+                                                   VerticalAlignment="Center"
+                                                   Margin="12,0,0,0"/>
+                                    </Grid>
                                 </Button>
-                                
+
                                 <Button Command="{Binding ShowBackupSettingsCommand}"
-                                        Classes="liquid-glass"
+                                        Classes="liquid-glass settings-tab"
+                                        Classes.active="{Binding SelectedSettingsTab, Converter={StaticResource SettingsTabEqualsConverter}, ConverterParameter=backup}"
                                         HorizontalAlignment="Stretch"
-                                        HorizontalContentAlignment="Left"
-                                        Height="40">
-                                    <TextBlock Text="Backup" VerticalAlignment="Center"/>
+                                        HorizontalContentAlignment="Stretch"
+                                        Height="40"
+                                        Padding="0">
+                                    <Grid ColumnDefinitions="3,*">
+                                        <Border Grid.Column="0" Classes="tab-accent"
+                                                Background="{DynamicResource AccentBrush}"
+                                                CornerRadius="2"
+                                                Margin="2,6"
+                                                IsVisible="False"/>
+                                        <TextBlock Grid.Column="1" Classes="tab-label"
+                                                   Text="Backup"
+                                                   VerticalAlignment="Center"
+                                                   Margin="12,0,0,0"/>
+                                    </Grid>
                                 </Button>
-                                
+
                                 <Button Command="{Binding ShowAccessibilitySettingsCommand}"
-                                        Classes="liquid-glass"
+                                        Classes="liquid-glass settings-tab"
+                                        Classes.active="{Binding SelectedSettingsTab, Converter={StaticResource SettingsTabEqualsConverter}, ConverterParameter=accessibility}"
                                         HorizontalAlignment="Stretch"
-                                        HorizontalContentAlignment="Left"
-                                        Height="40">
-                                    <TextBlock Text="Accessibility" VerticalAlignment="Center"/>
+                                        HorizontalContentAlignment="Stretch"
+                                        Height="40"
+                                        Padding="0">
+                                    <Grid ColumnDefinitions="3,*">
+                                        <Border Grid.Column="0" Classes="tab-accent"
+                                                Background="{DynamicResource AccentBrush}"
+                                                CornerRadius="2"
+                                                Margin="2,6"
+                                                IsVisible="False"/>
+                                        <TextBlock Grid.Column="1" Classes="tab-label"
+                                                   Text="Accessibility"
+                                                   VerticalAlignment="Center"
+                                                   Margin="12,0,0,0"/>
+                                    </Grid>
                                 </Button>
-                                
+
                                 <Button Command="{Binding ShowAdvancedSettingsCommand}"
-                                        Classes="liquid-glass"
+                                        Classes="liquid-glass settings-tab"
+                                        Classes.active="{Binding SelectedSettingsTab, Converter={StaticResource SettingsTabEqualsConverter}, ConverterParameter=advanced}"
                                         HorizontalAlignment="Stretch"
-                                        HorizontalContentAlignment="Left"
-                                        Height="40">
-                                    <TextBlock Text="Advanced" VerticalAlignment="Center"/>
+                                        HorizontalContentAlignment="Stretch"
+                                        Height="40"
+                                        Padding="0">
+                                    <Grid ColumnDefinitions="3,*">
+                                        <Border Grid.Column="0" Classes="tab-accent"
+                                                Background="{DynamicResource AccentBrush}"
+                                                CornerRadius="2"
+                                                Margin="2,6"
+                                                IsVisible="False"/>
+                                        <TextBlock Grid.Column="1" Classes="tab-label"
+                                                   Text="Advanced"
+                                                   VerticalAlignment="Center"
+                                                   Margin="12,0,0,0"/>
+                                    </Grid>
                                 </Button>
-                                
+
                                 <Button Command="{Binding ShowRubbishBinSettingsCommand}"
-                                        Classes="liquid-glass"
+                                        Classes="liquid-glass settings-tab"
+                                        Classes.active="{Binding SelectedSettingsTab, Converter={StaticResource SettingsTabEqualsConverter}, ConverterParameter=rubbishbin}"
                                         HorizontalAlignment="Stretch"
-                                        HorizontalContentAlignment="Left"
-                                        Height="40">
-                                    <TextBlock Text="Secured Rubbish Bin" VerticalAlignment="Center"/>
+                                        HorizontalContentAlignment="Stretch"
+                                        Height="40"
+                                        Padding="0">
+                                    <Grid ColumnDefinitions="3,*">
+                                        <Border Grid.Column="0" Classes="tab-accent"
+                                                Background="{DynamicResource AccentBrush}"
+                                                CornerRadius="2"
+                                                Margin="2,6"
+                                                IsVisible="False"/>
+                                        <TextBlock Grid.Column="1" Classes="tab-label"
+                                                   Text="Secured Rubbish Bin"
+                                                   VerticalAlignment="Center"
+                                                   Margin="12,0,0,0"/>
+                                    </Grid>
                                 </Button>
-                                
+
                                 <Button Command="{Binding OpenSecurityDashboardWindowCommand}"
-                                        Classes="liquid-glass"
+                                        Classes="liquid-glass settings-tab"
                                         HorizontalAlignment="Stretch"
-                                        HorizontalContentAlignment="Left"
-                                        Height="40">
-                                    <TextBlock Text="Password Health" VerticalAlignment="Center"/>
+                                        HorizontalContentAlignment="Stretch"
+                                        Height="40"
+                                        Padding="0">
+                                    <Grid ColumnDefinitions="3,*">
+                                        <Border Grid.Column="0" Classes="tab-accent"
+                                                Background="{DynamicResource AccentBrush}"
+                                                CornerRadius="2"
+                                                Margin="2,6"
+                                                IsVisible="False"/>
+                                        <TextBlock Grid.Column="1" Classes="tab-label"
+                                                   Text="Password Health"
+                                                   VerticalAlignment="Center"
+                                                   Margin="12,0,0,0"/>
+                                    </Grid>
                                 </Button>
 
                                 <Button Command="{Binding ShowSyncSettingsCommand}"
-                                        Classes="liquid-glass"
+                                        Classes="liquid-glass settings-tab"
+                                        Classes.active="{Binding SelectedSettingsTab, Converter={StaticResource SettingsTabEqualsConverter}, ConverterParameter=sync}"
                                         HorizontalAlignment="Stretch"
-                                        HorizontalContentAlignment="Left"
-                                        Height="40">
-                                    <TextBlock Text="Sync &amp; Integration" VerticalAlignment="Center"/>
+                                        HorizontalContentAlignment="Stretch"
+                                        Height="40"
+                                        Padding="0">
+                                    <Grid ColumnDefinitions="3,*">
+                                        <Border Grid.Column="0" Classes="tab-accent"
+                                                Background="{DynamicResource AccentBrush}"
+                                                CornerRadius="2"
+                                                Margin="2,6"
+                                                IsVisible="False"/>
+                                        <TextBlock Grid.Column="1" Classes="tab-label"
+                                                   Text="Sync &amp; Integration"
+                                                   VerticalAlignment="Center"
+                                                   Margin="12,0,0,0"/>
+                                    </Grid>
                                 </Button>
                             </StackPanel>
                             </ScrollViewer>
