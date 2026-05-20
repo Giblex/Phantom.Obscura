@@ -7,6 +7,14 @@
              mc:Ignorable="d" d:DesignWidth="220" d:DesignHeight="800"
              x:Class="PhantomVault.UI.Views.SidebarView">
 
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://PhantomVault.UI/Resources/Converters/ConverterResources.axaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
     <UserControl.Styles>
         <!-- Navigation buttons (Dashboard, Passwords) with data-driven active state -->
         <Style Selector="Button.nav-button">
@@ -38,25 +46,25 @@
             </Setter>
         </Style>
         <Style Selector="Button.nav-button:pointerover">
-            <Setter Property="Background" Value="#1400E5CC" />
-            <Setter Property="BorderBrush" Value="#2200E5CC" />
+            <Setter Property="Background" Value="{DynamicResource QuickFilterGlassHoverBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassBorderBrush}" />
         </Style>
         <Style Selector="Button.nav-button.active">
-            <Setter Property="Background" Value="#1800E5CC" />
-            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource QuickFilterGlassActiveBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassActiveBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
         </Style>
         <Style Selector="Button.nav-button.active:pointerover">
-            <Setter Property="Background" Value="#2200E5CC" />
-            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource QuickFilterGlassActiveHoverBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassActiveBorderBrush}" />
         </Style>
         <Style Selector="Button.nav-button:pressed">
-            <Setter Property="Background" Value="#1C00E5CC" />
+            <Setter Property="Background" Value="{DynamicResource FilterPressedGradient}" />
         </Style>
         <Style Selector="Button.nav-button.active:pressed">
-            <Setter Property="Background" Value="#2600E5CC" />
-            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="Background" Value="{DynamicResource FilterPressedGradient}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassActiveBorderBrush}" />
         </Style>
 
         <Style Selector="Button.collapsed-icon">
@@ -175,12 +183,6 @@
                                   ToolTip.Tip="Dashboard"
                                   IsVisible="{Binding IsDashboardEnabled}">
                         <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
-                            <Viewbox Width="16" Height="16">
-                                <Canvas Width="24" Height="24">
-                                    <Path Data="M3,3 L10,3 L10,10 L3,10 Z M14,3 L21,3 L21,10 L14,10 Z M14,14 L21,14 L21,21 L14,21 Z M3,14 L10,14 L10,21 L3,21 Z" 
-                                          Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" Fill="Transparent"/>
-                                </Canvas>
-                            </Viewbox>
                             <TextBlock Text="Dashboard" FontSize="{StaticResource Type.Label.Size}" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center" IsVisible="{Binding !IsSidebarCollapsed}"/>
                         </StackPanel>
                     </Button>
@@ -191,8 +193,6 @@
                                   HorizontalContentAlignment="Center"
                                   ToolTip.Tip="Passwords">
                         <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
-                            <controls:SvgIcon IconName="Assets/SVG/Current/Key.svg"
-                                              Width="20" Height="20" IconColor="{DynamicResource PrimaryTextBrush}" />
                             <TextBlock Text="Passwords" FontSize="{StaticResource Type.Label.Size}" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center" IsVisible="{Binding !IsSidebarCollapsed}"/>
                         </StackPanel>
                     </Button>
@@ -238,8 +238,13 @@
                             ToolTip.Tip="Passwords"
                             HorizontalAlignment="Center"
                             ClickMode="Press">
-                        <controls:SvgIcon IconName="Assets/SVG/Current/Key.svg"
-                                          Width="21" Height="21" IconColor="{DynamicResource PrimaryTextBrush}" />
+                        <Path Data="{StaticResource Icon.Key}"
+                              Width="21"
+                              Height="21"
+                              Stretch="Uniform"
+                              Stroke="{DynamicResource PrimaryTextBrush}"
+                              StrokeThickness="1.5"
+                              Fill="Transparent"/>
                     </Button>
 
                     <!-- Password Health Icon -->
@@ -248,8 +253,13 @@
                             ToolTip.Tip="Password Health"
                             HorizontalAlignment="Center"
                             ClickMode="Press">
-                        <controls:SvgIcon IconName="Assets/SVG/Current/Security.svg"
-                                          Width="21" Height="21" IconColor="{DynamicResource PrimaryTextBrush}" />
+                        <Path Data="{StaticResource Icon.Shield}"
+                              Width="21"
+                              Height="21"
+                              Stretch="Uniform"
+                              Stroke="{DynamicResource PrimaryTextBrush}"
+                              StrokeThickness="1.5"
+                              Fill="Transparent"/>
                     </Button>
 
                     <!-- Category Manager Icon -->
@@ -258,8 +268,13 @@
                             ToolTip.Tip="Category Manager"
                             HorizontalAlignment="Center"
                             ClickMode="Press">
-                        <controls:SvgIcon IconName="Assets/SVG/Current/tag.svg"
-                                          Width="21" Height="21" IconColor="{DynamicResource PrimaryTextBrush}" />
+                        <Path Data="{StaticResource Icon.Folder}"
+                              Width="21"
+                              Height="21"
+                              Stretch="Uniform"
+                              Stroke="{DynamicResource PrimaryTextBrush}"
+                              StrokeThickness="1.5"
+                              Fill="Transparent"/>
                     </Button>
 
                     <!-- Recovery Icon -->

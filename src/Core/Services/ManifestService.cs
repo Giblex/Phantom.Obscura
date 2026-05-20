@@ -610,6 +610,16 @@ namespace PhantomVault.Core.Services
             canonicalData.Append(manifest.ManifestSequence.ToString());
             canonicalData.Append('|');
             canonicalData.Append(manifest.PolicyHashBase64 ?? string.Empty);
+            canonicalData.Append('|');
+            canonicalData.Append(manifest.PhantomKeyBridgeEnabled ? "1" : "0");
+            canonicalData.Append('|');
+            canonicalData.Append(manifest.PhantomKeyBridgeWorkspacePath ?? string.Empty);
+            canonicalData.Append('|');
+            canonicalData.Append(manifest.PhantomKeyBridgeReceiptPath ?? string.Empty);
+            canonicalData.Append('|');
+            canonicalData.Append(manifest.PhantomKeyBridgePolicyPath ?? string.Empty);
+            canonicalData.Append('|');
+            canonicalData.Append(manifest.PhantomKeyBridgeContinuityPath ?? string.Empty);
 
             byte[] dataBytes = Encoding.UTF8.GetBytes(canonicalData.ToString());
             byte[] hmac = HMACSHA256.HashData(key, dataBytes);

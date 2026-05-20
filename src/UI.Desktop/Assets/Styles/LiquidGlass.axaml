@@ -396,7 +396,7 @@
 
 <!-- Tile focus state -->
 <Style Selector="Button.tile-button:focus-visible, Button.tile-button-grid:focus-visible">
-  <Setter Property="BorderBrush" Value="#8FB5DF"/>
+  <Setter Property="BorderBrush" Value="{DynamicResource Brush.FocusRing}"/>
   <Setter Property="BorderThickness" Value="2 0 0 0"/>
 </Style>
 

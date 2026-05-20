@@ -9,6 +9,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://PhantomVault.UI/Resources/Strings.en-US.axaml"/>
+                <ResourceInclude Source="avares://Phantom.UI.Shared/Icons/VectorIcons.axaml"/>
                 <!-- To enable Spanish, uncomment: -->
                 <!-- <ResourceInclude Source="avares://PhantomVault.UI/Resources/Strings.es-ES.axaml"/> -->
             </ResourceDictionary.MergedDictionaries>

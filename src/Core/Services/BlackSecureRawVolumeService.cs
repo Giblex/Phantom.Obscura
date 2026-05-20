@@ -180,6 +180,32 @@ namespace PhantomVault.Core.Services
             await output.FlushAsync(cancellationToken).ConfigureAwait(false);
         }
 
+        public async Task InvalidateVolumeHeaderAsync(string physicalDevicePath, CancellationToken cancellationToken = default)
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+            if (string.IsNullOrWhiteSpace(physicalDevicePath))
+                return;
+
+            try
+            {
+                await using var output = OpenRawDevice(physicalDevicePath, FileAccess.ReadWrite);
+                output.Position = 0;
+
+                byte[] zeroBuffer = new byte[64 * 1024];
+                for (int i = 0; i < 16; i++)
+                {
+                    await output.WriteAsync(zeroBuffer, cancellationToken).ConfigureAwait(false);
+                }
+
+                await output.FlushAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch
+            {
+                // Best-effort invalidation only.
+            }
+        }
+
         public async Task<string> ExtractVolumeAsync(string physicalDevicePath, string destinationRoot, CancellationToken cancellationToken = default)
         {
             if (!OperatingSystem.IsWindows())

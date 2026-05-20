@@ -13,11 +13,9 @@ namespace GiblexVault.Security.ZK.Util.KeyProtector
                 return new DpapiKeyProtector();
             }
 
-            var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            var dir = Path.Combine(appData ?? ".", "PhantomVault", "KeyProtector");
-            Directory.CreateDirectory(dir);
-            var keyPath = Path.Combine(dir, "envelope.key");
-            return new FileKeyProtector(keyPath);
+            throw new PlatformNotSupportedException(
+                "No production-safe key protector is available on this platform. " +
+                "Plain file-backed envelope keys are disabled.");
         }
     }
 }

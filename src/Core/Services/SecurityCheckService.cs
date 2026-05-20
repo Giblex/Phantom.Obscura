@@ -14,12 +14,12 @@ namespace PhantomVault.Core.Services
     /// </summary>
     public class SecurityCheckService
     {
-        private static readonly TimeSpan ManifestCheckDelay = TimeSpan.FromMilliseconds(1400);
-        private static readonly TimeSpan UsbHealthCheckDelay = TimeSpan.FromMilliseconds(1280);
-        private static readonly TimeSpan HardwareTokenCheckDelay = TimeSpan.FromMilliseconds(1120);
-        private static readonly TimeSpan BiometricCheckDelay = TimeSpan.FromMilliseconds(1100);
-        private static readonly TimeSpan AntiTamperCheckDelay = TimeSpan.FromMilliseconds(1360);
-        private static readonly TimeSpan CheckTransitionDelay = TimeSpan.FromMilliseconds(520);
+        private static readonly TimeSpan ManifestCheckDelay = TimeSpan.FromMilliseconds(2200);
+        private static readonly TimeSpan UsbHealthCheckDelay = TimeSpan.FromMilliseconds(2100);
+        private static readonly TimeSpan HardwareTokenCheckDelay = TimeSpan.FromMilliseconds(1900);
+        private static readonly TimeSpan BiometricCheckDelay = TimeSpan.FromMilliseconds(1900);
+        private static readonly TimeSpan AntiTamperCheckDelay = TimeSpan.FromMilliseconds(2200);
+        private static readonly TimeSpan CheckTransitionDelay = TimeSpan.FromMilliseconds(760);
 
         private readonly ManifestService _manifestService;
         private readonly YubiKeyService? _yubiKeyService;
@@ -79,6 +79,7 @@ namespace PhantomVault.Core.Services
         /// <returns>Security check results</returns>
         public async Task<SecurityCheckResult> RunSecurityChecksAsync(
             string usbPath,
+            string? preferredVaultPath = null,
             IProgress<SecurityCheckProgress>? progress = null)
         {
             var result = new SecurityCheckResult
@@ -88,11 +89,11 @@ namespace PhantomVault.Core.Services
 
             var checks = new List<(string Name, Func<Task<bool>> Check, int Weight)>
             {
-                ("Manifest Integrity", () => VerifyManifestIntegrityAsync(usbPath, result), 30),
+                ("Manifest Integrity", () => VerifyManifestIntegrityAsync(usbPath, preferredVaultPath, result), 30),
                 ("USB Health", () => CheckUsbHealthAsync(usbPath, result), 20),
                 ("Hardware Tokens", () => DetectHardwareTokensAsync(result), 15),
                 ("Biometric Availability", () => CheckBiometricAvailabilityAsync(result), 15),
-                ("Anti-Tamper Check", () => CheckForTamperingAsync(usbPath, result), 20)
+                ("Anti-Tamper Check", () => CheckForTamperingAsync(usbPath, preferredVaultPath, result), 20)
             };
 
             int totalWeight = checks.Sum(c => c.Weight);
@@ -159,7 +160,7 @@ namespace PhantomVault.Core.Services
         /// <summary>
         /// Verify manifest file integrity and signature.
         /// </summary>
-        private async Task<bool> VerifyManifestIntegrityAsync(string usbPath, SecurityCheckResult result)
+        private async Task<bool> VerifyManifestIntegrityAsync(string usbPath, string? preferredVaultPath, SecurityCheckResult result)
         {
             await Task.Delay(ManifestCheckDelay).ConfigureAwait(false);
 
@@ -173,8 +174,7 @@ namespace PhantomVault.Core.Services
             }
 
             // Discover vault: prefer .pvault containers (v3), fall back to legacy .manifest
-            string? manifestPath = null;
-            string? masterVolumePath = ResolveMasterVolumePath(usbPath);
+            ResolveVaultTargets(usbPath, preferredVaultPath, out var manifestPath, out var masterVolumePath);
             var vaultsPath = Path.Combine(usbPath, ".phantom", "vaults");
             var manifestsPath = Path.Combine(usbPath, ".phantom", "manifests");
 
@@ -217,7 +217,7 @@ namespace PhantomVault.Core.Services
             if (manifestPath == null)
             {
                 result.ManifestValid = false;
-                result.Errors.Add("No vault files found in .phantom folder");
+                result.Errors.Add("No vault files found in the selected vault path or USB layout");
                 return false;
             }
 
@@ -490,7 +490,7 @@ namespace PhantomVault.Core.Services
         /// <summary>
         /// Check for signs of tampering with vault files.
         /// </summary>
-        private async Task<bool> CheckForTamperingAsync(string usbPath, SecurityCheckResult result)
+        private async Task<bool> CheckForTamperingAsync(string usbPath, string? preferredVaultPath, SecurityCheckResult result)
         {
             await Task.Delay(AntiTamperCheckDelay).ConfigureAwait(false);
 
@@ -505,11 +505,39 @@ namespace PhantomVault.Core.Services
 
             try
             {
+                ResolveVaultTargets(usbPath, preferredVaultPath, out var manifestPath, out var masterVolumePath);
+
+                if (masterVolumePath != null)
+                {
+                    if (!File.Exists(masterVolumePath))
+                    {
+                        result.NoTampering = false;
+                        result.Errors.Add("The selected packed vault volume is missing.");
+                        return false;
+                    }
+
+                    result.NoTampering = true;
+                    return true;
+                }
+
+                if (manifestPath != null)
+                {
+                    if (!File.Exists(manifestPath))
+                    {
+                        result.NoTampering = false;
+                        result.Errors.Add("The selected vault manifest/container is missing.");
+                        return false;
+                    }
+
+                    result.NoTampering = true;
+                    return true;
+                }
+
                 // Check for required .phantom folder structure
                 var phantomPath = Path.Combine(usbPath, ".phantom");
                 var manifestsPath = Path.Combine(phantomPath, "manifests");
                 var vaultsPath = Path.Combine(phantomPath, "vaults");
-                var masterVolumePath = ResolveMasterVolumePath(usbPath);
+                masterVolumePath = ResolveMasterVolumePath(usbPath, null);
 
                 if (!Directory.Exists(phantomPath))
                 {
@@ -574,7 +602,7 @@ namespace PhantomVault.Core.Services
         /// <summary>
         /// Quick security check (fast version for returning users).
         /// </summary>
-        public async Task<bool> QuickSecurityCheckAsync(string usbPath)
+        public async Task<bool> QuickSecurityCheckAsync(string usbPath, string? preferredVaultPath = null)
         {
             if (IsRawSelection(usbPath))
             {
@@ -582,7 +610,8 @@ namespace PhantomVault.Core.Services
                 return ok;
             }
 
-            if (ResolveMasterVolumePath(usbPath) is not null)
+            ResolveVaultTargets(usbPath, preferredVaultPath, out var manifestPath, out var masterVolumePath);
+            if (masterVolumePath is not null || manifestPath is not null)
             {
                 await Task.Delay(100); // Minimal delay
                 return true;
@@ -613,15 +642,105 @@ namespace PhantomVault.Core.Services
             return true;
         }
 
-        private static string? ResolveMasterVolumePath(string usbPath)
+        private static string? ResolveMasterVolumePath(string usbPath, string? preferredVaultPath)
         {
-            var candidates = new[]
+            var candidates = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(preferredVaultPath))
             {
-                Path.Combine(usbPath, "system.bin"),
-                Path.Combine(usbPath, ".phantom", "obscura.vol")
-            };
+                if (preferredVaultPath.EndsWith("system.bin", StringComparison.OrdinalIgnoreCase) ||
+                    preferredVaultPath.EndsWith("obscura.vol", StringComparison.OrdinalIgnoreCase))
+                {
+                    candidates.Add(preferredVaultPath);
+                }
+                else
+                {
+                    candidates.Add(Path.Combine(preferredVaultPath, "system.bin"));
+                    candidates.Add(Path.Combine(preferredVaultPath, "obscura.vol"));
+                    candidates.Add(Path.Combine(preferredVaultPath, ".phantom", "obscura.vol"));
+                }
+            }
+
+            candidates.Add(Path.Combine(usbPath, "system.bin"));
+            candidates.Add(Path.Combine(usbPath, ".phantom", "obscura.vol"));
+
+            try
+            {
+                foreach (var directory in Directory.EnumerateDirectories(usbPath, "*", SearchOption.TopDirectoryOnly))
+                {
+                    candidates.Add(Path.Combine(directory, "system.bin"));
+                    candidates.Add(Path.Combine(directory, "obscura.vol"));
+                    candidates.Add(Path.Combine(directory, ".phantom", "obscura.vol"));
+                }
+            }
+            catch
+            {
+                // Best effort only.
+            }
 
             return candidates.FirstOrDefault(File.Exists);
+        }
+
+        private static void ResolveVaultTargets(string usbPath, string? preferredVaultPath, out string? manifestPath, out string? masterVolumePath)
+        {
+            manifestPath = ResolveManifestPath(usbPath, preferredVaultPath);
+            masterVolumePath = ResolveMasterVolumePath(usbPath, preferredVaultPath);
+        }
+
+        private static string? ResolveManifestPath(string usbPath, string? preferredVaultPath)
+        {
+            if (!string.IsNullOrWhiteSpace(preferredVaultPath))
+            {
+                if (preferredVaultPath.EndsWith(".pvault", StringComparison.OrdinalIgnoreCase) ||
+                    preferredVaultPath.EndsWith(".manifest", StringComparison.OrdinalIgnoreCase))
+                {
+                    return File.Exists(preferredVaultPath) ? preferredVaultPath : null;
+                }
+
+                foreach (var candidate in EnumerateManifestCandidates(preferredVaultPath))
+                {
+                    if (File.Exists(candidate))
+                        return candidate;
+                }
+            }
+
+            foreach (var candidate in EnumerateManifestCandidates(usbPath))
+            {
+                if (File.Exists(candidate))
+                    return candidate;
+            }
+
+            return null;
+        }
+
+        private static IEnumerable<string> EnumerateManifestCandidates(string rootPath)
+        {
+            yield return Path.Combine(rootPath, ".phantom", "root", "root.pvault");
+            yield return Path.Combine(rootPath, ".phantom", "vaults", "vault.pvault");
+            yield return Path.Combine(rootPath, ".phantom", "manifests", "vault.manifest");
+            yield return Path.Combine(rootPath, "root", "root.pvault");
+            yield return Path.Combine(rootPath, "vaults", "vault.pvault");
+            yield return Path.Combine(rootPath, "manifests", "vault.manifest");
+
+            foreach (var folder in new[] { Path.Combine(rootPath, ".phantom", "root"), Path.Combine(rootPath, ".phantom", "vaults"), Path.Combine(rootPath, ".phantom", "manifests"), Path.Combine(rootPath, "root"), Path.Combine(rootPath, "vaults"), Path.Combine(rootPath, "manifests") })
+            {
+                if (!Directory.Exists(folder))
+                    continue;
+
+                string pattern = folder.EndsWith("manifests", StringComparison.OrdinalIgnoreCase) ? "*.manifest" : "*.pvault";
+                string[] files;
+                try
+                {
+                    files = Directory.GetFiles(folder, pattern, SearchOption.TopDirectoryOnly);
+                }
+                catch
+                {
+                    continue;
+                }
+
+                foreach (var file in files.OrderBy(path => path, StringComparer.OrdinalIgnoreCase))
+                    yield return file;
+            }
         }
     }
 

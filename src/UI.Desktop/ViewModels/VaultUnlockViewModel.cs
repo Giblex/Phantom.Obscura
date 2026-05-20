@@ -9,8 +9,10 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using Avalonia.Layout;
 using ReactiveUI;
+using Serilog;
 using PhantomVault.Core.Models;
 using PhantomVault.Core.Services;
 using PhantomVault.Core.Services.ZeroKnowledge;
@@ -33,6 +35,7 @@ namespace PhantomVault.UI.ViewModels
         private readonly SecureTrashService _secureTrashService;
         private readonly EncryptionService _encryptionService;
         private readonly UsbArtifactProtectionService _usbArtifactProtectionService;
+        private readonly PhantomKeyBridgeValidator _phantomKeyBridgeValidator;
         private readonly IconManager _iconManager;
         private readonly UsbDetector _usbDetector;
         private readonly UnlockThrottleService _throttleService;
@@ -60,6 +63,7 @@ namespace PhantomVault.UI.ViewModels
             _secureTrashService = secureTrashService ?? throw new ArgumentNullException(nameof(secureTrashService));
             _encryptionService = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
             _usbArtifactProtectionService = new UsbArtifactProtectionService(_encryptionService);
+            _phantomKeyBridgeValidator = new PhantomKeyBridgeValidator(_usbArtifactProtectionService);
             _iconManager = iconManager ?? throw new ArgumentNullException(nameof(iconManager));
             _usbDetector = usbDetector ?? throw new ArgumentNullException(nameof(usbDetector));
             _throttleService = new UnlockThrottleService();
@@ -380,6 +384,10 @@ namespace PhantomVault.UI.ViewModels
                         else
                             ResolveExtractedRuntimePaths(testManifest, extractedVolumeRoot);
                     }
+                    else
+                    {
+                        ResolveDirectRuntimePaths(testManifest, manifestPath, rootPath, vaultsPath);
+                    }
 
                     var resolvedBindingRecordPath = string.IsNullOrWhiteSpace(testManifest.BindingRecordPath)
                         ? bindingRecordPath
@@ -388,6 +396,7 @@ namespace PhantomVault.UI.ViewModels
                     ValidateUsbTopology(testManifest, resolvedBindingRecordPath);
                     ValidateUsbBinding(selectedPhysicalDrivePath ?? selectedDriveRoot!, resolvedBindingRecordPath, testManifest, password, keyfilePath);
                     ValidateRecoveryArtifacts(testManifest, password, keyfilePath);
+                    _phantomKeyBridgeValidator.Validate(testManifest, password, keyfilePath);
 
                     // Successful passphrase - continue to TOTP check
 
@@ -430,13 +439,47 @@ namespace PhantomVault.UI.ViewModels
                 }
 
                 var vaultOptions = new Core.Options.VaultOptions();
-
                 var vaultService = new VaultService(vaultOptions, _encryptionService);
                 var idleLockService = new IdleLockService(TimeSpan.FromMinutes(15));
                 var zkVaultService = new Core.Services.ZeroKnowledge.ZkVaultService();
 
-                ProgressPercent = 85;
-                Status = "Opening vault...";
+                ProgressPercent = 82;
+                Status = "Unlocking zero-knowledge vault...";
+
+                var deviceBindingId = !string.IsNullOrWhiteSpace(testManifest!.DeviceId)
+                    ? testManifest.DeviceId
+                    : null;
+                byte[] vaultDatabaseKey = new VaultDatabaseKeyService(encryptionService)
+                    .DeriveKey(testManifest, password, keyfilePath);
+                bool zkUnlocked;
+                try
+                {
+                    zkUnlocked = await zkVaultService.UnlockWithHybridKeyAsync(vaultDatabaseKey).ConfigureAwait(false);
+                }
+                finally
+                {
+                    System.Security.Cryptography.CryptographicOperations.ZeroMemory(vaultDatabaseKey);
+                }
+
+                if (!zkUnlocked)
+                {
+                    throw new InvalidOperationException("Failed to unlock the zero-knowledge vault service with the validated manifest credentials.");
+                }
+
+                var runtimeVaultRoot = DetermineRuntimeVaultRoot(testManifest, manifestPath);
+                if (!Directory.Exists(runtimeVaultRoot))
+                {
+                    throw new DirectoryNotFoundException($"The resolved vault runtime path does not exist: {runtimeVaultRoot}");
+                }
+
+                var runtimeVaultDatabasePath = ResolveVaultDatabasePath(runtimeVaultRoot);
+                if (runtimeVaultDatabasePath == null)
+                {
+                    throw new FileNotFoundException("The vault database could not be located in the resolved runtime path.", runtimeVaultRoot);
+                }
+
+                ProgressPercent = 90;
+                Status = "Loading vault contents...";
 
                 // Create and show vault window - pass the validated password
                 var vaultViewModel = new VaultViewModel(
@@ -450,39 +493,52 @@ namespace PhantomVault.UI.ViewModels
                     _secureTrashService,
                     _iconManager);
 
-                // Set the manifest context with the user's password for manifest decryption
                 vaultViewModel.SetManifestContext(manifestPath, password, keyfilePath);
+                await vaultViewModel.LoadAsync(runtimeVaultRoot, password, keyfilePath).ConfigureAwait(false);
 
                 ProgressPercent = 95;
                 Status = "Preparing vault interface...";
 
-                var vaultWindow = new VaultWindow
-                {
-                    DataContext = vaultViewModel
-                };
-
-                vaultViewModel.SetOwnerWindow(vaultWindow);
-                if (!string.IsNullOrWhiteSpace(extractedVolumeRoot))
-                {
-                    var extractedRootForCleanup = extractedVolumeRoot;
-                    vaultWindow.Closed += (_, _) => DeleteExtractedVolumeRoot(extractedRootForCleanup);
-                    extractedVolumeRoot = null;
-                }
-
                 ProgressPercent = 100;
                 Status = "Vault unlocked!";
-                vaultWindow.Show();
 
-                // Transfer MainWindow immediately before any follow-up dialogs or cleanup.
-                // This prevents the app from shutting down if the transient unlock window
-                // closes while bootstrap/import dialogs are still being processed.
-                if (Avalonia.Application.Current?.ApplicationLifetime
-                    is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime dt)
-                    dt.MainWindow = vaultWindow;
+                Window? openedVaultWindow = null;
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    var vaultWindow = new VaultWindow
+                    {
+                        DataContext = vaultViewModel
+                    };
 
-                await RevealGeneratedPasswordBootstrapAsync(selectedDriveRoot, testManifest!, password, keyfilePath);
-                await ApplyPendingImportsAsync(vaultViewModel, vaultWindow);
-                await ShowAuthenticationOnboardingAsync(vaultWindow);
+                    vaultViewModel.SetOwnerWindow(vaultWindow);
+                    if (!string.IsNullOrWhiteSpace(extractedVolumeRoot))
+                    {
+                        var extractedRootForCleanup = extractedVolumeRoot;
+                        vaultWindow.Closed += (_, _) => DeleteExtractedVolumeRoot(extractedRootForCleanup);
+                        extractedVolumeRoot = null;
+                    }
+
+                    vaultWindow.Show();
+
+                    if (Avalonia.Application.Current?.ApplicationLifetime
+                        is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime dt)
+                    {
+                        dt.MainWindow = vaultWindow;
+                    }
+
+                    _ownerWindow?.Close();
+                    openedVaultWindow = vaultWindow;
+                });
+
+                if (openedVaultWindow == null)
+                    throw new InvalidOperationException("Vault window could not be created on the UI thread.");
+
+                await Dispatcher.UIThread.InvokeAsync(async () =>
+                {
+                    await RevealGeneratedPasswordBootstrapAsync(selectedDriveRoot, testManifest!, password, keyfilePath);
+                    await ApplyPendingImportsAsync(vaultViewModel, openedVaultWindow);
+                    await ShowAuthenticationOnboardingAsync(openedVaultWindow);
+                });
 
                 // ── Wire AutoFill orchestrator with the unlocked vault ────────────
                 try
@@ -508,7 +564,7 @@ namespace PhantomVault.UI.ViewModels
                 }
 
                 // When the vault window closes (logout / auto-lock) clear the AutoFill context
-                vaultWindow.Closed += (_, _) =>
+                openedVaultWindow.Closed += (_, _) =>
                 {
                     try
                     {
@@ -527,9 +583,6 @@ namespace PhantomVault.UI.ViewModels
 
                 // Zero out the password after use
                 password = null;
-
-                // Close unlock window
-                _ownerWindow?.Close();
             }
             catch (Exception ex)
             {
@@ -551,6 +604,8 @@ namespace PhantomVault.UI.ViewModels
 
         private void CloseAndReturnToWelcome()
         {
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
             // Transfer MainWindow to WelcomePage BEFORE closing the unlock window,
             // otherwise Avalonia's OnMainWindowClose shutdown kills the app.
             if (Avalonia.Application.Current?.ApplicationLifetime
@@ -568,6 +623,7 @@ namespace PhantomVault.UI.ViewModels
             }
 
             _ownerWindow?.Close();
+            });
         }
 
         private static void ValidateUsbTopology(VaultManifest manifest, string bindingRecordPath)
@@ -609,10 +665,58 @@ namespace PhantomVault.UI.ViewModels
             return candidates.FirstOrDefault(File.Exists);
         }
 
+        private static string DetermineRuntimeVaultRoot(VaultManifest manifest, string manifestPath)
+        {
+            if (!string.IsNullOrWhiteSpace(manifest.ContainerPath))
+            {
+                var containerDirectory = Path.GetDirectoryName(manifest.ContainerPath);
+                if (!string.IsNullOrWhiteSpace(containerDirectory))
+                {
+                    if (string.Equals(Path.GetFileName(containerDirectory), "vaults", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return Directory.GetParent(containerDirectory)?.FullName ?? containerDirectory;
+                    }
+
+                    return containerDirectory;
+                }
+            }
+
+            var manifestDirectory = Path.GetDirectoryName(manifestPath);
+            if (string.IsNullOrWhiteSpace(manifestDirectory))
+                throw new InvalidOperationException("Unable to determine the vault runtime root from the manifest path.");
+
+            if (string.Equals(Path.GetFileName(manifestDirectory), "root", StringComparison.OrdinalIgnoreCase))
+            {
+                return Directory.GetParent(manifestDirectory)?.FullName ?? manifestDirectory;
+            }
+
+            return manifestDirectory;
+        }
+
+        private static string? ResolveVaultDatabasePath(string runtimeVaultRoot)
+        {
+            var candidates = new[]
+            {
+                Path.Combine(runtimeVaultRoot, "vault.pvault"),
+                Path.Combine(runtimeVaultRoot, "vaults", "vault.pvault")
+            };
+
+            return candidates.FirstOrDefault(File.Exists);
+        }
+
         private static void ResolveRuntimePaths(VaultManifest manifest, string extractedRoot, string masterVolumePath)
         {
             manifest.MasterVolumePath = masterVolumePath;
             ResolveExtractedRuntimePaths(manifest, extractedRoot);
+        }
+
+        private static void ResolveDirectRuntimePaths(VaultManifest manifest, string manifestPath, string rootPath, string vaultsPath)
+        {
+            var layoutRoot = TryResolveLayoutRoot(manifestPath, rootPath, vaultsPath);
+            if (string.IsNullOrWhiteSpace(layoutRoot))
+                return;
+
+            ResolveExtractedRuntimePaths(manifest, layoutRoot);
         }
 
         private async Task RevealGeneratedPasswordBootstrapAsync(
@@ -736,7 +840,7 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[VaultUnlock] Authentication onboarding failed: {ex.Message}");
+                Serilog.Log.Warning(ex, "Post-create authentication onboarding failed");
             }
         }
 
@@ -749,6 +853,33 @@ namespace PhantomVault.UI.ViewModels
             manifest.BindingRecordPath = ResolveExtractedPath(extractedRoot, manifest.BindingRecordPath);
             manifest.RecoveryRecordPath = ResolveExtractedPath(extractedRoot, manifest.RecoveryRecordPath);
             manifest.DecoyDatabasePath = ResolveExtractedPath(extractedRoot, manifest.DecoyDatabasePath);
+            PhantomKeyBridgeValidator.ResolveRuntimePaths(manifest, extractedRoot);
+        }
+
+        private static string? TryResolveLayoutRoot(string manifestPath, string rootPath, string vaultsPath)
+        {
+            if (!string.IsNullOrWhiteSpace(rootPath))
+            {
+                var rootParent = Directory.GetParent(rootPath);
+                if (rootParent != null)
+                    return rootParent.FullName;
+            }
+
+            if (!string.IsNullOrWhiteSpace(vaultsPath))
+            {
+                var vaultsParent = Directory.GetParent(vaultsPath);
+                if (vaultsParent != null)
+                    return vaultsParent.FullName;
+            }
+
+            var manifestDirectory = Path.GetDirectoryName(manifestPath);
+            if (string.IsNullOrWhiteSpace(manifestDirectory))
+                return null;
+
+            return string.Equals(Path.GetFileName(manifestDirectory), "root", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(Path.GetFileName(manifestDirectory), "vaults", StringComparison.OrdinalIgnoreCase)
+                ? Directory.GetParent(manifestDirectory)?.FullName
+                : manifestDirectory;
         }
 
         private static string? ResolveExtractedPath(string extractedRoot, string? manifestPathValue)
@@ -823,6 +954,8 @@ namespace PhantomVault.UI.ViewModels
         /// </summary>
         private async Task<string?> PromptForPasswordAsync()
         {
+            return await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+            {
             var dialog = new Window
             {
                 Title = "Vault Passphrase Required",
@@ -905,6 +1038,7 @@ namespace PhantomVault.UI.ViewModels
             passwordBox.Text = string.Empty;
 
             return result;
+            });
         }
 
         /// <summary>
@@ -912,6 +1046,8 @@ namespace PhantomVault.UI.ViewModels
         /// </summary>
         private async Task<string?> PromptForTotpAsync()
         {
+            return await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+            {
             var dialog = new Window
             {
                 Title = "Two-Factor Authentication",
@@ -985,6 +1121,7 @@ namespace PhantomVault.UI.ViewModels
             }
 
             return result;
+            });
         }
 
         /// <summary>
@@ -1033,15 +1170,22 @@ namespace PhantomVault.UI.ViewModels
             if (!string.IsNullOrWhiteSpace(manifest.Guuid))
             {
                 var currentGuuid = DetectSystemGuuid();
-                if (string.IsNullOrWhiteSpace(currentGuuid))
-                    throw new InvalidOperationException("The bound hardware GUUID could not be detected on this system.");
+                if (!string.IsNullOrWhiteSpace(currentGuuid))
+                {
+                    if (!string.Equals(currentGuuid, manifest.Guuid, StringComparison.OrdinalIgnoreCase))
+                        throw new InvalidOperationException("This vault is bound to different hardware.");
 
-                if (!string.Equals(currentGuuid, manifest.Guuid, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException("This vault is bound to different hardware.");
-
-                string combined = $"{currentDeviceId}|GUUID:{currentGuuid}";
-                byte[] hash = SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(combined));
-                currentDeviceId = Convert.ToHexString(hash);
+                    string combined = $"{currentDeviceId}|GUUID:{currentGuuid}";
+                    byte[] hash = SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(combined));
+                    currentDeviceId = Convert.ToHexString(hash);
+                }
+                else
+                {
+                    // GUUID detection failed but vault was created with GUUID binding.
+                    // Fall back to device-only binding to allow recovery.
+                    // Log warning so user is aware binding was downgraded.
+                    Log.Warning("GUUID binding was set during vault creation but could not be detected on this system. Falling back to device-only binding for vault access.");
+                }
             }
 
             return currentDeviceId;

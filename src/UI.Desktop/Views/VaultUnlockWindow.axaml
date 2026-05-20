@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Window xmlns="https://github.com/avaloniaui"
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:PhantomVault.UI.ViewModels"
+        xmlns:views="clr-namespace:PhantomVault.UI.Views"
         x:Class="PhantomVault.UI.Views.VaultUnlockWindow"
         x:DataType="vm:VaultUnlockViewModel"
         Title="Unlocking Vault"
@@ -16,19 +17,22 @@
         AutomationProperties.HelpText="This window shows the progress of unlocking your secure vault"
         Classes="animated-window">
 
-    <Window.Resources>
+    <views:ThemeAwareWindow.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://PhantomVault.UI/Assets/Themes/PreVaultTheme.axaml"/>
             </ResourceDictionary.MergedDictionaries>
+            <SolidColorBrush x:Key="UnlockAccentBrush" Color="#5D7DA7"/>
+            <SolidColorBrush x:Key="UnlockTrackBrush" Color="#13202D"/>
+            <SolidColorBrush x:Key="UnlockOrbBrush" Color="#173247"/>
         </ResourceDictionary>
-    </Window.Resources>
+    </views:ThemeAwareWindow.Resources>
 
-    <Window.Styles>
+    <views:ThemeAwareWindow.Styles>
         <Style Selector="TextBlock">
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
         </Style>
-    </Window.Styles>
+    </views:ThemeAwareWindow.Styles>
 
     <Grid RowDefinitions="Auto,*,Auto" Margin="34,28">
         <!-- Header -->
@@ -57,7 +61,7 @@
             <Border Width="70" 
                     Height="70"
                     CornerRadius="35"
-                    Background="{DynamicResource AccentBrush}"
+                    Background="{DynamicResource UnlockOrbBrush}"
                     HorizontalAlignment="Center"
                     IsVisible="{Binding IsBusy}">
                 <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
@@ -81,15 +85,15 @@
                         AutomationProperties.Name="Unlock Progress">
                 <Grid ColumnDefinitions="*,Auto">
                     <Border Grid.Column="0"
-                            Background="#12212E"
+                            Background="{DynamicResource UnlockTrackBrush}"
                             CornerRadius="8"
                             Padding="4">
                         <ProgressBar Value="{Binding ProgressPercent}"
                                      Maximum="100"
                                      Height="10"
                                      CornerRadius="6"
-                                     Foreground="{DynamicResource AccentBrush}"
-                                     Background="#12212E"
+                                     Foreground="{DynamicResource UnlockAccentBrush}"
+                                     Background="{DynamicResource UnlockTrackBrush}"
                                      AutomationProperties.Name="Unlock progress bar"/>
                     </Border>
                     <TextBlock Grid.Column="1"
@@ -106,10 +110,10 @@
 
         <!-- Footer -->
         <TextBlock Grid.Row="2"
-                   Text="PhantomVault - Zero-Knowledge Security"
+                   Text="Phantom Obscura • zero-knowledge vault access"
                    FontSize="{StaticResource Type.Tiny.Size}"
                    Foreground="{DynamicResource MutedTextBrush}"
                    HorizontalAlignment="Center"
                    Margin="0,30,0,0"/>
     </Grid>
-</Window>
+</views:ThemeAwareWindow>

@@ -42,13 +42,17 @@
                         MaxWidth="700"
                         Margin="0,0,1,0">
                     <Grid ColumnDefinitions="Auto,*,Auto">
-                        <dcontrols:SvgIcon Grid.Column="0"
-                               IconName="Assets/SVG/Current/Search.svg"
-                               Width="20"
-                               Height="20"
-                               Margin="12,0,0,0"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center"/>
+                        <Path Grid.Column="0"
+                              Data="{StaticResource Icon.Search}"
+                              Width="20"
+                              Height="20"
+                              Margin="12,0,0,0"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center"
+                              Stretch="Uniform"
+                              Stroke="{DynamicResource MutedTextBrush}"
+                              StrokeThickness="1.5"
+                              Fill="Transparent"/>
                         <TextBox Grid.Column="1"
                                  Text="{Binding SearchText}"
                                  Watermark="Search credentials..."
@@ -74,7 +78,15 @@
                                 Margin="0,0,4,0"
                                 ToolTip.Tip="Clear search"
                                 IsVisible="{Binding HasSearchText}">
-                            <dcontrols:SvgIcon IconName="Assets/SVG/x.svg" Width="14" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <Path Data="{StaticResource Icon.X}"
+                                  Width="14"
+                                  Height="14"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  Stretch="Uniform"
+                                  Stroke="{DynamicResource HeaderSvgIconColor}"
+                                  StrokeThickness="1.5"
+                                  Fill="Transparent"/>
                         </Button>
                     </Grid>
                 </Border>
@@ -88,7 +100,23 @@
                         ToolTipText="Toggle list/grid view"
                         IsVisible="{Binding !IsShowingSecureTrash}">
                     <controls:LiquidGlassButton.ButtonContent>
-                        <dcontrols:SvgIcon IconName="{Binding GridViewIconPath}" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center" IconColor="{DynamicResource HeaderSvgIconColor}" />
+                        <Grid Width="22" Height="22">
+                            <Canvas Width="24" Height="24" IsVisible="{Binding !IsGridView}">
+                                <Path Data="M3,3 L10,3 L10,10 L3,10 Z M14,3 L21,3 L21,10 L14,10 Z M14,14 L21,14 L21,21 L14,21 Z M3,14 L10,14 L10,21 L3,21 Z"
+                                      Stretch="Uniform"
+                                      Stroke="{DynamicResource HeaderSvgIconColor}"
+                                      StrokeThickness="1.5"
+                                      Fill="Transparent"/>
+                            </Canvas>
+                            <Canvas Width="24" Height="24" IsVisible="{Binding IsGridView}">
+                                <Path Data="M4 6h16M4 12h16M4 18h16"
+                                      Stretch="Uniform"
+                                      Stroke="{DynamicResource HeaderSvgIconColor}"
+                                      StrokeThickness="1.7"
+                                      StrokeLineCap="Round"
+                                      Fill="Transparent"/>
+                            </Canvas>
+                        </Grid>
                     </controls:LiquidGlassButton.ButtonContent>
                 </controls:LiquidGlassButton>
             </Grid>
@@ -198,7 +226,13 @@
                                             HorizontalContentAlignment="Left"
                                             Padding="12,10">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
-                                            <dcontrols:SvgIcon IconName="Assets/SVG/Current/Key.svg" Width="22" Height="22"/>
+                                            <Path Data="{StaticResource Icon.Key}"
+                                                  Width="22"
+                                                  Height="22"
+                                                  Stretch="Uniform"
+                                                  Stroke="{DynamicResource PrimaryTextBrush}"
+                                                  StrokeThickness="1.5"
+                                                  Fill="Transparent"/>
                                             <TextBlock Text="Password Generator" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>
@@ -208,7 +242,13 @@
                                             HorizontalContentAlignment="Left"
                                             Padding="12,10">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
-                                            <dcontrols:SvgIcon IconName="Assets/SVG/Current/Security.svg" Width="22" Height="22"/>
+                                            <Path Data="{StaticResource Icon.Shield}"
+                                                  Width="22"
+                                                  Height="22"
+                                                  Stretch="Uniform"
+                                                  Stroke="{DynamicResource PrimaryTextBrush}"
+                                                  StrokeThickness="1.5"
+                                                  Fill="Transparent"/>
                                             <TextBlock Text="Security Dashboard" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>
@@ -218,7 +258,13 @@
                                             HorizontalContentAlignment="Left"
                                             Padding="12,10">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
-                                            <dcontrols:SvgIcon IconName="Assets/SVG/Current/lock.svg" Width="22" Height="22"/>
+                                            <Path Data="{StaticResource Icon.Lock}"
+                                                  Width="22"
+                                                  Height="22"
+                                                  Stretch="Uniform"
+                                                  Stroke="{DynamicResource PrimaryTextBrush}"
+                                                  StrokeThickness="1.5"
+                                                  Fill="Transparent"/>
                                             <TextBlock Text="Lock Vault" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>
@@ -226,7 +272,16 @@
                             </Border>
                         </Flyout>
                     </Button.Flyout>
-                    <dcontrols:SvgIcon IconName="Assets/SVG/Current/Drop menu.svg" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center" IconColor="{DynamicResource HeaderSvgIconColor}" />
+                    <Path Data="{StaticResource Icon.Menu}"
+                          Width="22"
+                          Height="22"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                          Stretch="Uniform"
+                          Stroke="{DynamicResource HeaderSvgIconColor}"
+                          StrokeThickness="1.7"
+                          StrokeLineCap="Round"
+                          Fill="Transparent"/>
                 </Button>
 
                 <!-- Settings Button (Separate) -->
@@ -241,7 +296,15 @@
                         HorizontalContentAlignment="Center"
                         VerticalContentAlignment="Center"
                         ToolTip.Tip="Vault settings">
-                    <dcontrols:SvgIcon IconName="Assets/SVG/Current/Settings.svg" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center" IconColor="{DynamicResource HeaderSvgIconColor}" />
+                    <Path Data="{StaticResource Icon.Settings}"
+                          Width="22"
+                          Height="22"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                          Stretch="Uniform"
+                          Stroke="{DynamicResource HeaderSvgIconColor}"
+                          StrokeThickness="1.5"
+                          Fill="Transparent"/>
                 </Button>
             </StackPanel>
         </Grid>

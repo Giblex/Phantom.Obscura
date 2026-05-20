@@ -1,8 +1,11 @@
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
+using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using PhantomVault.Core.Services;
 using PhantomVault.UI.Models;
@@ -15,6 +18,19 @@ namespace PhantomVault.UI.Views
     public partial class WelcomePage : ThemeAwareWindow
     {
         private WelcomePageViewModel? _currentViewModel;
+        private ScrollViewer? _mainScrollViewer;
+        private Control? _vaultListAnchor;
+        private Control? _detectedVaultCard;
+        private Control? _actionFooterCard;
+        private Control? _detectionStatusCard;
+        private Canvas? _detectionTraceCanvas;
+        private Border? _detectionTraceLine;
+        private Border? _traceTopEdge;
+        private Border? _traceLeftEdge;
+        private Border? _traceBottomEdge;
+        private Border? _traceRightEdge;
+        private bool _hasAutoScrolledToUsbActions;
+        private bool _hasAutoScrolledToVaultPicker;
 
         public WelcomePage()
         {
@@ -22,6 +38,17 @@ namespace PhantomVault.UI.Views
             ThemeScope.SetIsThemed(this, false);
 
             InitializeComponent();
+            _mainScrollViewer = this.FindControl<ScrollViewer>("MainScrollViewer");
+            _vaultListAnchor = this.FindControl<Control>("VaultListAnchor");
+            _detectedVaultCard = this.FindControl<Control>("DetectedVaultCard");
+            _actionFooterCard = this.FindControl<Control>("ActionFooterCard");
+            _detectionStatusCard = this.FindControl<Control>("DetectionStatusCard");
+            _detectionTraceCanvas = this.FindControl<Canvas>("DetectionTraceCanvas");
+            _detectionTraceLine = this.FindControl<Border>("DetectionTraceLine");
+            _traceTopEdge = this.FindControl<Border>("TraceTopEdge");
+            _traceLeftEdge = this.FindControl<Border>("TraceLeftEdge");
+            _traceBottomEdge = this.FindControl<Border>("TraceBottomEdge");
+            _traceRightEdge = this.FindControl<Border>("TraceRightEdge");
 
             // Set up navigation only when DataContext is assigned
             this.DataContextChanged += OnDataContextChanged;
@@ -36,6 +63,7 @@ namespace PhantomVault.UI.Views
                 _currentViewModel.NavigateToSetupWizard -= OnNavigateToSetupWizard;
                 _currentViewModel.NavigateToQuickSetup -= OnNavigateToQuickSetup;
                 _currentViewModel.DeveloperBypassRequested -= OnDeveloperBypass;
+                _currentViewModel.PropertyChanged -= OnViewModelPropertyChanged;
             }
 
             if (DataContext is WelcomePageViewModel viewModel)
@@ -49,11 +77,229 @@ namespace PhantomVault.UI.Views
                 viewModel.NavigateToSetupWizard += OnNavigateToSetupWizard;
                 viewModel.NavigateToQuickSetup += OnNavigateToQuickSetup;
                 viewModel.DeveloperBypassRequested += OnDeveloperBypass;
+                viewModel.PropertyChanged += OnViewModelPropertyChanged;
                 _currentViewModel = viewModel;
+                _hasAutoScrolledToUsbActions = false;
+                _hasAutoScrolledToVaultPicker = false;
             }
             else
             {
                 _currentViewModel = null;
+            }
+        }
+
+        private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (_currentViewModel == null)
+                return;
+
+            if (e.PropertyName == nameof(WelcomePageViewModel.HasUsbDevice))
+            {
+                if (_currentViewModel.HasUsbDevice && !_hasAutoScrolledToUsbActions)
+                {
+                    _hasAutoScrolledToUsbActions = true;
+                    _ = AnimateScrollToActionAreaAsync();
+                }
+                else if (!_currentViewModel.HasUsbDevice)
+                {
+                    _hasAutoScrolledToUsbActions = false;
+                    _hasAutoScrolledToVaultPicker = false;
+                }
+            }
+
+            if (e.PropertyName == nameof(WelcomePageViewModel.ShowVaultPicker))
+            {
+                if (_currentViewModel.ShowVaultPicker && !_hasAutoScrolledToVaultPicker)
+                {
+                    _hasAutoScrolledToVaultPicker = true;
+                    _ = AnimateScrollVaultPickerIntoViewAsync();
+                }
+                else if (!_currentViewModel.ShowVaultPicker)
+                {
+                    _hasAutoScrolledToVaultPicker = false;
+                }
+            }
+        }
+
+        private async Task AnimateScrollToActionAreaAsync()
+        {
+            try
+            {
+                if (_mainScrollViewer == null)
+                    return;
+
+                var startOffsetY = _mainScrollViewer.Offset.Y;
+                await Task.Delay(380);
+
+                var maxOffsetY = Math.Max(0, _mainScrollViewer.Extent.Height - _mainScrollViewer.Viewport.Height);
+                var footerLift = Math.Min(96, Math.Max(24, _mainScrollViewer.Viewport.Height * 0.16));
+                var targetOffsetY = Math.Max(0, maxOffsetY - footerLift);
+
+                if (_actionFooterCard != null)
+                {
+                    var footerPoint = _actionFooterCard.TranslatePoint(new Point(0, 0), this);
+                    if (footerPoint.HasValue && footerPoint.Value.Y < Bounds.Height - 120)
+                    {
+                        targetOffsetY = Math.Min(maxOffsetY, startOffsetY + 56);
+                    }
+                }
+
+                if (targetOffsetY <= startOffsetY + 12)
+                    return;
+
+                await AnimateScrollAsync(startOffsetY, targetOffsetY, 900);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Failed to auto-scroll welcome page to action area");
+            }
+        }
+
+        private async Task AnimateScrollVaultPickerIntoViewAsync()
+        {
+            try
+            {
+                if (_mainScrollViewer == null || _detectedVaultCard == null)
+                    return;
+
+                var startOffsetY = _mainScrollViewer.Offset.Y;
+                await Task.Delay(420);
+
+                var targetPoint = _detectedVaultCard.TranslatePoint(new Point(0, 0), _mainScrollViewer);
+                var desiredViewportY = targetPoint?.Y ?? (_mainScrollViewer.Viewport.Height * 0.58);
+                var targetOffsetY = Math.Max(0, startOffsetY + desiredViewportY - 190);
+                var maxOffsetY = Math.Max(0, _mainScrollViewer.Extent.Height - _mainScrollViewer.Viewport.Height);
+                targetOffsetY = Math.Min(maxOffsetY, targetOffsetY);
+
+                if (targetOffsetY <= startOffsetY + 12)
+                {
+                    await AnimateDetectionTraceAsync();
+                    return;
+                }
+
+                _ = AnimateDetectionTraceAsync();
+
+                await AnimateScrollAsync(startOffsetY, targetOffsetY, 2200);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Failed to auto-scroll detected vault list into view");
+            }
+        }
+
+        private async Task AnimateScrollAsync(double startOffsetY, double targetOffsetY, int durationMs)
+        {
+            if (_mainScrollViewer == null)
+                return;
+
+            const int frameDelayMs = 16;
+            var stopwatch = Stopwatch.StartNew();
+
+            while (stopwatch.ElapsedMilliseconds < durationMs)
+            {
+                var t = stopwatch.ElapsedMilliseconds / (double)durationMs;
+                var eased = t < 0.5
+                    ? 4d * t * t * t
+                    : 1d - Math.Pow(-2d * t + 2d, 3d) / 2d;
+                var currentOffsetY = startOffsetY + ((targetOffsetY - startOffsetY) * eased);
+                _mainScrollViewer.Offset = new Vector(_mainScrollViewer.Offset.X, currentOffsetY);
+                await Task.Delay(frameDelayMs);
+            }
+
+            _mainScrollViewer.Offset = new Vector(_mainScrollViewer.Offset.X, targetOffsetY);
+        }
+
+        private async Task AnimateDetectionTraceAsync()
+        {
+            try
+            {
+                if (_detectionTraceCanvas == null ||
+                    _detectionTraceLine == null ||
+                    _traceTopEdge == null ||
+                    _traceLeftEdge == null ||
+                    _traceBottomEdge == null ||
+                    _traceRightEdge == null)
+                {
+                    return;
+                }
+
+                _detectionTraceCanvas.IsVisible = true;
+                _detectionTraceLine.Height = 0;
+                _detectionTraceLine.Opacity = 0.95;
+                _traceTopEdge.Width = 0;
+                _traceLeftEdge.Height = 0;
+                _traceBottomEdge.Width = 0;
+                _traceRightEdge.Height = 0;
+                _traceTopEdge.Opacity = 0;
+                _traceLeftEdge.Opacity = 0;
+                _traceBottomEdge.Opacity = 0;
+                _traceRightEdge.Opacity = 0;
+
+                Canvas.SetLeft(_detectionTraceLine, 378);
+                Canvas.SetTop(_detectionTraceLine, 0);
+                Canvas.SetLeft(_traceTopEdge, 110);
+                Canvas.SetTop(_traceTopEdge, 92);
+                Canvas.SetLeft(_traceLeftEdge, 110);
+                Canvas.SetTop(_traceLeftEdge, 92);
+                Canvas.SetLeft(_traceBottomEdge, 110);
+                Canvas.SetTop(_traceBottomEdge, 127);
+                Canvas.SetLeft(_traceRightEdge, 647);
+                Canvas.SetTop(_traceRightEdge, 92);
+
+                await AnimateDimensionAsync(_detectionTraceLine, true, 0, 94, 1150);
+                await AnimateDimensionAsync(_traceTopEdge, false, 0, 540, 420, 1);
+                await AnimateDimensionAsync(_traceLeftEdge, true, 0, 38, 190, 1);
+                await AnimateDimensionAsync(_traceBottomEdge, false, 0, 540, 420, 1);
+                await AnimateDimensionAsync(_traceRightEdge, true, 0, 38, 190, 1);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Failed to animate vault detection trace");
+            }
+        }
+
+        private static async Task AnimateDimensionAsync(Border border, bool animateHeight, double from, double to, int durationMs, double opacity = 0.95)
+        {
+            const int frameDelayMs = 16;
+            var stopwatch = Stopwatch.StartNew();
+            border.Opacity = opacity;
+
+            while (stopwatch.ElapsedMilliseconds < durationMs)
+            {
+                var t = stopwatch.ElapsedMilliseconds / (double)durationMs;
+                var eased = 1d - Math.Pow(1d - t, 3d);
+                var current = from + ((to - from) * eased);
+
+                if (animateHeight)
+                {
+                    border.Height = current;
+                }
+                else
+                {
+                    border.Width = current;
+                }
+
+                await Task.Delay(frameDelayMs);
+            }
+
+            if (animateHeight)
+            {
+                border.Height = to;
+            }
+            else
+            {
+                border.Width = to;
+            }
+        }
+
+        private void DetectedVaultChoice_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            if (sender is not Button button || button.Tag is not DetectedVaultLaunchRequest launchRequest)
+                return;
+
+            if (DataContext is WelcomePageViewModel viewModel)
+            {
+                viewModel.SelectDetectedVault(launchRequest);
             }
         }
 
@@ -78,8 +324,10 @@ namespace PhantomVault.UI.Views
                             loadingWindow.Show();
                             setupWizard.Hide();
 
-                            loadingWindow.CreationCompleted += (lw, _) =>
+                            EventHandler? completedHandler = null;
+                            completedHandler = (lw, _) =>
                             {
+                                loadingWindow.CreationCompleted -= completedHandler;
                                 try
                                 {
                                     loadingWindow.Close();
@@ -105,6 +353,7 @@ namespace PhantomVault.UI.Views
                                     this.Show();
                                 }
                             };
+                            loadingWindow.CreationCompleted += completedHandler;
 
                             await loadingWindow.RunCreationAsync(wizardVm);
                         }
@@ -549,4 +798,3 @@ namespace PhantomVault.UI.Views
         }
     }
 }
-

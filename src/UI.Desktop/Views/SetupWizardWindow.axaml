@@ -485,6 +485,28 @@
                             </StackPanel>
                         </Border>
 
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                CornerRadius="{StaticResource Radius.Xl}"
+                                Padding="24,20"
+                                BoxShadow="0 4 16 0 #40000000">
+                            <StackPanel Spacing="14">
+                                <TextBlock Text="Vault Identity"
+                                           FontSize="{StaticResource Type.H4.Size}"
+                                           FontWeight="Normal"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+                                <TextBlock Text="Give this vault a name you will recognise later. Think of it like the label on a safe rather than the secret inside it."
+                                           TextWrapping="Wrap"
+                                           FontSize="{StaticResource Type.Small.Size}"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           LineHeight="20"/>
+
+                                <TextBox Text="{Binding VaultName}"
+                                         Watermark="Enter your vault name"
+                                         MaxLength="64"/>
+                            </StackPanel>
+                        </Border>
+
                         <!-- Terms Acceptance -->
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 CornerRadius="{StaticResource Radius.Xl}"
@@ -564,26 +586,60 @@
                                                          VerticalAlignment="Top"
                                                          Margin="0,4,16,0"/>
                                             <StackPanel Grid.Column="1" Spacing="8">
-                                                <StackPanel Orientation="Horizontal" Spacing="12">
-                                                    <TextBlock Text="{Binding Name}"
-                                                               FontSize="{StaticResource Type.H4.Size}"
-                                                               FontWeight="Normal"
-                                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                                    <Border IsVisible="{Binding Name, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                                            Background="#111B2A"
-                                                            CornerRadius="4"
-                                                            Padding="8,2"
-                                                            VerticalAlignment="Center">
-                                                        <TextBlock Text="{Binding RecommendedFor}"
-                                                                   FontSize="{StaticResource Type.Micro.Size}"
-                                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+                                                        <TextBlock Text="{Binding Name}"
+                                                                   FontSize="{StaticResource Type.H4.Size}"
+                                                                   FontWeight="Normal"
+                                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                        <Border IsVisible="{Binding Name, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                                                Background="#111B2A"
+                                                                CornerRadius="4"
+                                                                Padding="8,2"
+                                                                VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding RecommendedFor}"
+                                                                       FontSize="{StaticResource Type.Micro.Size}"
+                                                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                        </Border>
+                                                        <Border Background="#173042"
+                                                                CornerRadius="4"
+                                                                Padding="8,2"
+                                                                VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding SecurityIncreasePercent, StringFormat='Security boost: {0}%'}"
+                                                                       FontSize="{StaticResource Type.Micro.Size}"
+                                                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                        </Border>
+                                                    </StackPanel>
+                                                    <Border Grid.Column="1"
+                                                            Width="28"
+                                                            Height="28"
+                                                            CornerRadius="14"
+                                                            Background="#122334"
+                                                            HorizontalAlignment="Right"
+                                                            VerticalAlignment="Top"
+                                                            ToolTip.Tip="{Binding SecurityHelpText}">
+                                                        <TextBlock Text="?"
+                                                                   FontSize="{StaticResource Type.Body.Size}"
+                                                                   Foreground="{DynamicResource PrimaryTextBrush}"
+                                                                   HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center"/>
                                                     </Border>
-                                                </StackPanel>
+                                                </Grid>
                                                 
                                                 <TextBlock Text="{Binding Description}"
                                                            FontSize="{StaticResource Type.Body.Size}"
                                                            Foreground="{DynamicResource SecondaryTextBrush}"
                                                            TextWrapping="Wrap"/>
+
+                                                <Border Background="#122334"
+                                                        CornerRadius="10"
+                                                        Padding="12,10"
+                                                        Margin="0,2,0,0">
+                                                    <TextBlock Text="{Binding FriendlySummary}"
+                                                               FontSize="{StaticResource Type.Small.Size}"
+                                                               Foreground="{DynamicResource PrimaryTextBrush}"
+                                                               TextWrapping="Wrap"/>
+                                                </Border>
 
                                                 <ItemsControl ItemsSource="{Binding Features}" Margin="0,4,0,0">
                                                     <ItemsControl.ItemTemplate>
@@ -625,11 +681,11 @@
                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="PhantomKey Hardware Binding"
+                                        <TextBlock Text="PhantomKey Bridge Binding"
                                                    FontSize="{StaticResource Type.H4.Size}"
                                                    FontWeight="Normal"
                                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                        <TextBlock Text="Hardware-based vault authentication"
+                                        <TextBlock Text="Isolated Phantom Key workspace linked into Obscura"
                                                    FontSize="{StaticResource Type.Small.Size}"
                                                    TextWrapping="Wrap"
                                                    Foreground="{DynamicResource MutedTextBrush}"/>
@@ -658,10 +714,34 @@
                                            FontSize="{StaticResource Type.Body.Size}"
                                            Foreground="{DynamicResource SecondaryTextBrush}"
                                            LineHeight="22">
-                                    PhantomKey binds your vault to a physical hardware key, ensuring that
-                                    your vault can only be accessed when the registered device is connected.
-                                    This adds a critical layer of protection against unauthorized access.
+                                    Phantom Key remains in its own encrypted bridge workspace and exposes only
+                                    sealed policy, continuity, and consumer-mapping records to Obscura. The vault
+                                    gains hardware-backed assurance without embedding Phantom Key secrets into the
+                                    Obscura container set.
                                 </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                CornerRadius="{StaticResource Radius.Xl}"
+                                Padding="24,20"
+                                BoxShadow="0 4 16 0 #40000000"
+                                IsVisible="{Binding EnablePhantomKey}">
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="Bridge boundary"
+                                           FontSize="{StaticResource Type.H4.Size}"
+                                           FontWeight="Normal"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                <TextBlock Text="{Binding PhantomKeyBridgeLocationDescription}"
+                                           TextWrapping="Wrap"
+                                           FontSize="{StaticResource Type.Body.Size}"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"
+                                           LineHeight="22"/>
+                                <TextBlock Text="{Binding PhantomKeyTrustBoundarySummary}"
+                                           TextWrapping="Wrap"
+                                           FontSize="{StaticResource Type.Small.Size}"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           LineHeight="20"/>
                             </StackPanel>
                         </Border>
 
@@ -684,7 +764,7 @@
                                                        Foreground="White"
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
-                                        <TextBlock Text="Connect a USB security key or hardware token"
+                                        <TextBlock Text="Provision the isolated Phantom Key bridge workspace"
                                                    FontSize="{StaticResource Type.Body.Size}"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"
                                                    VerticalAlignment="Center"
@@ -697,7 +777,7 @@
                                                        Foreground="White"
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
-                                        <TextBlock Text="Register the device as your PhantomKey"
+                                        <TextBlock Text="Seal hardware context, policy, and consumer records without exporting secrets"
                                                    FontSize="{StaticResource Type.Body.Size}"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"
                                                    VerticalAlignment="Center"
@@ -710,7 +790,7 @@
                                                        Foreground="White"
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
-                                        <TextBlock Text="Your vault will require this key to unlock"
+                                        <TextBlock Text="Complete passkey and additional-factor setup before first unlock"
                                                    FontSize="{StaticResource Type.Body.Size}"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"
                                                    VerticalAlignment="Center"
@@ -732,8 +812,9 @@
                                            FontSize="{StaticResource Type.Small.Size}"
                                            Foreground="{DynamicResource MutedTextBrush}"
                                            LineHeight="20">
-                                    PhantomKey registration will be completed after vault creation.
-                                    You can configure your hardware key from Security Settings at any time.
+                                    Obscura will prepare the Phantom Key bridge during provisioning, then the
+                                    passkey, TOTP, and Windows Hello factors can be completed in the dedicated
+                                    authentication step before the vault goes live.
                                 </TextBlock>
                             </StackPanel>
                         </Border>
@@ -875,17 +956,28 @@
 
                                 <Border Background="{DynamicResource ControlBackgroundBrush}"
                                         CornerRadius="{StaticResource Radius.Sm}"
-                                        Padding="12,8"
+                                        Padding="12,10"
                                         IsVisible="{Binding UsbDeviceId, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <controls:SvgIcon Preset="Check" IconColor="White" IconSize="20"
-                                                          Width="20" Height="20" VerticalAlignment="Center"/>
-                                        <TextBlock FontSize="{StaticResource Type.Small.Size}"
-                                                   Foreground="White">
-                                            <Run Text="Device ID: "/>
-                                            <Run Text="{Binding UsbDeviceId}" FontFamily="{StaticResource MonoFontFamily}"/>
-                                        </TextBlock>
-                                    </StackPanel>
+                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <controls:SvgIcon Preset="Check" IconColor="White" IconSize="20"
+                                                              Width="20" Height="20" VerticalAlignment="Center"/>
+                                            <TextBlock FontSize="{StaticResource Type.Small.Size}"
+                                                       Foreground="White">
+                                                <Run Text="Device ID: "/>
+                                                <Run Text="{Binding DisplayUsbDeviceId}" FontFamily="{StaticResource MonoFontFamily}"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                        <Button Grid.Column="1"
+                                                Command="{Binding ToggleRevealUsbDeviceIdCommand}"
+                                                Classes="liquid-glass"
+                                                Height="32"
+                                                MinWidth="78"
+                                                Padding="14,0">
+                                            <TextBlock Text="{Binding UsbDeviceIdToggleText}"
+                                                       Foreground="{DynamicResource ButtonTextBrush}"/>
+                                        </Button>
+                                    </Grid>
                                 </Border>
                             </StackPanel>
                         </Border>
@@ -1870,6 +1962,11 @@
                                                        FontSize="{StaticResource Type.Body.Size}"
                                                        FontWeight="Normal"
                                                        Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                            <TextBlock Text="{Binding PhantomKeyBridgeLocationDescription}"
+                                                       FontSize="{StaticResource Type.Small.Size}"
+                                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                                       TextWrapping="Wrap"
+                                                       MaxWidth="520"/>
                                         </StackPanel>
                                     </Grid>
 
