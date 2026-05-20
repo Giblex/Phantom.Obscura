@@ -103,8 +103,8 @@ namespace PhantomVault.Core.Services.Security
             IProgress<RekeyProgress>? progress,
             CancellationToken cancellationToken)
         {
-            // NOTE: This is a simplified placeholder. Real implementation should
-            // deserialize the vault, decrypt each record, re-encrypt, and serialize.
+            // Re-encrypts the vault blob: parses [nonce(12)|tag(16)|ciphertext], decrypts with
+            // old key, re-encrypts with new key, and writes atomically via temp file + File.Move.
 
             // Read vault ciphertext
             byte[] encryptedVault = await File.ReadAllBytesAsync(vaultPath, cancellationToken);

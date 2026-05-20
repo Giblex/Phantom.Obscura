@@ -207,7 +207,7 @@ namespace PhantomVault.Core.Services
                     KdfMemoryKb = DefaultMemoryKb,
                     Salt = Convert.ToBase64String(salt),
                     PayloadSize = sizeBytes,
-                    PayloadHash = Convert.ToBase64String(new byte[32]), // placeholder — same length as real hash
+                    PayloadHash = Convert.ToBase64String(new byte[32]), // temporary zero value — backpatched with real SHA-256 hash after blocks are written
                 };
 
                 var bootstrapHeader = new V4PublicBootstrapHeader

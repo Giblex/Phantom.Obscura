@@ -168,45 +168,35 @@ namespace PhantomVault.Core.Services
         }
 
         /// <summary>
-        /// Generates a TOTP code if the YubiKey has OATH applet configured.
-        /// This is an alternative to FIDO2 for two-factor authentication.
+        /// Generates a TOTP code if the YubiKey has an OATH credential matching
+        /// <paramref name="accountName"/>. Delegates to the real OATH implementation
+        /// on <see cref="YubiKeyService"/>; returns null when no matching credential
+        /// or OATH-capable device is present.
         /// </summary>
         /// <param name="accountName">The OATH account name (e.g., "PhantomVault:vault1").</param>
-        /// <returns>A 6-digit TOTP code, or null if not available.</returns>
+        /// <returns>A TOTP code, or null if not available.</returns>
         public string? GenerateTotpCode(string accountName)
         {
             if (string.IsNullOrEmpty(accountName))
                 throw new ArgumentException("Account name cannot be empty.", nameof(accountName));
 
+            // Account labels are conventionally "issuer:account"; split once if present.
+            string issuer = string.Empty;
+            string account = accountName;
+            var colon = accountName.IndexOf(':');
+            if (colon > 0 && colon < accountName.Length - 1)
+            {
+                issuer = accountName.Substring(0, colon);
+                account = accountName.Substring(colon + 1);
+            }
+
             try
             {
-                var device = YubiKeyDevice.FindAll().FirstOrDefault();
-                if (device == null) return null;
-
-                if (!device.HasFeature(YubiKeyFeature.OathApplication))
-                    return null;
-
-                // OATH TOTP implementation using Yubico.YubiKey SDK
-                // Note: This requires the Yubico.YubiKey.Oath namespace
-                // For production use, you would need to:
-                // 1. Connect to the OATH application
-                // 2. Retrieve or add the credential
-                // 3. Calculate the TOTP code
-
-                // Simplified implementation for demonstration:
-                // In a full implementation, you would use:
-                // using var oathSession = new OathSession(device);
-                // var credential = oathSession.GetCredential(accountName);
-                // var code = oathSession.CalculateCode(credential);
-                // return code.Value;
-
-                // For now, return null to indicate OATH TOTP is available but needs configuration
-                // Users should use FIDO2 authentication as the primary method
-                return null; // Graceful fallback instead of throwing
+                return new YubiKeyService().GenerateOathTotpCode(issuer, account);
             }
-            catch (Exception)
+            catch
             {
-                // Return null on any error - TOTP is optional authentication method
+                // Mirror previous contract: OATH TOTP is an optional path; never throw upstream.
                 return null;
             }
         }

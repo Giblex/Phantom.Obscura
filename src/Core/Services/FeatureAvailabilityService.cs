@@ -32,35 +32,35 @@ namespace PhantomVault.Core.Services
 
             _featureStatus["YubiKey.FIDO2"] = new FeatureStatus
             {
-                IsAvailable = false, // Not fully implemented
-                IsFullyImplemented = false,
+                IsAvailable = true,
+                IsFullyImplemented = true,
                 Description = "FIDO2 authentication with YubiKey",
-                LimitationMessage = "YubiKey FIDO2 authentication requires additional implementation. " +
-                                  "Currently, you can use keyfile + passphrase authentication instead. " +
-                                  "Full FIDO2 support will be added in a future release.",
-                RequiredDependencies = new[] { "Yubico.YubiKey.Fido2 namespace implementation" },
+                RequiredDependencies = new[] { "Yubico.YubiKey NuGet package" },
                 DocumentationUrl = "https://docs.yubico.com/yesdk/users-manual/sdk-programming-guide/fido2.html"
             };
 
             _featureStatus["YubiKey.OATH"] = new FeatureStatus
             {
-                IsAvailable = false, // Returns null gracefully
-                IsFullyImplemented = false,
-                Description = "OATH TOTP code generation with YubiKey",
-                LimitationMessage = "YubiKey OATH TOTP is not currently configured. " +
-                                  "Use the built-in TOTP service for time-based one-time passwords.",
-                RequiredDependencies = new[] { "Yubico.YubiKey.Oath namespace implementation" }
+                IsAvailable = true,
+                IsFullyImplemented = true,
+                Description = "OATH TOTP code generation and provisioning with YubiKey",
+                LimitationMessage = null,
+                RequiredDependencies = new[] { "Yubico.YubiKey.Oath namespace (Yubico.YubiKey 1.12.0)" },
+                DocumentationUrl = "https://docs.yubico.com/yesdk/users-manual/sdk-programming-guide/oath.html"
             };
 
             // Biometric Authentication
+            var helloAvailable = CheckWindowsHelloAvailable();
             _featureStatus["Biometric.WindowsHello"] = new FeatureStatus
             {
-                IsAvailable = CheckWindowsHelloAvailable(),
-                IsFullyImplemented = false,
+                IsAvailable = helloAvailable,
+                IsFullyImplemented = helloAvailable,
                 Description = "Windows Hello biometric authentication",
-                LimitationMessage = "Windows Hello integration requires additional platform-specific implementation. " +
-                                  "Use keyfile + passphrase for secure authentication.",
-                RequiredDependencies = new[] { "Windows.Security.Credentials.UI APIs" }
+                LimitationMessage = helloAvailable
+                    ? null
+                    : "Windows Hello is not configured on this device. " +
+                      "Use keyfile + passphrase for secure authentication.",
+                RequiredDependencies = new[] { "Windows 10 1903+ with Windows Hello configured" }
             };
 
             _featureStatus["Biometric.TouchID"] = new FeatureStatus
@@ -85,13 +85,18 @@ namespace PhantomVault.Core.Services
             };
 
             // WebAuthn/FIDO2 (Platform Authenticators)
+            // On Windows, the platform authenticator path is served by WindowsPasskeyService
+            // (Windows Hello + Credential Manager). Other platforms have no platform
+            // authenticator wired yet; users should fall back to YubiKey FIDO2.
             _featureStatus["WebAuthn.Platform"] = new FeatureStatus
             {
-                IsAvailable = false,
-                IsFullyImplemented = false,
+                IsAvailable = helloAvailable,
+                IsFullyImplemented = helloAvailable,
                 Description = "Platform WebAuthn/FIDO2 authentication",
-                LimitationMessage = "WebAuthn platform authenticator support requires additional implementation. " +
-                                  "For hardware security keys, YubiKey support is planned for future releases.",
+                LimitationMessage = helloAvailable
+                    ? null
+                    : "Platform WebAuthn authenticator is only wired on Windows (via Windows Hello). " +
+                      "Use a YubiKey for FIDO2 authentication on other platforms.",
                 RequiredDependencies = new[] { "Platform-specific WebAuthn APIs" }
             };
 

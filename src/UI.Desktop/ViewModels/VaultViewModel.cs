@@ -5700,10 +5700,11 @@ namespace PhantomVault.UI.ViewModels
                     score += twoFactorBonus;
                 }
 
-                // Count breached passwords (placeholder - would call HaveIBeenPwned service)
-                // For now, check if we have the service
-                int breachedCount = 0; // TODO: Integrate with HaveIBeenPwnedService when available
-                BreachedPasswordCount = breachedCount;
+                // Breached-password count: keep last known value while a fresh
+                // k-anonymous HIBP check runs asynchronously. The HIBP service
+                // only transmits the first 5 chars of each SHA-1 hash, never
+                // the password itself, so this is safe to fire-and-forget.
+                int breachedCount = _breachedPasswordCount;
                 score -= (breachedCount * 10); // 10 points per breached password
 
                 // Clamp score to 0-100 range
@@ -5714,10 +5715,81 @@ namespace PhantomVault.UI.ViewModels
 
                 // Populate dashboard credentials list with scores
                 PopulateDashboardCredentials();
+
+                // Kick off a background HIBP refresh. The result will update
+                // BreachedPasswordCount and SecurityScore on the UI thread.
+                _ = RefreshBreachCountAsync();
             }
             finally
             {
                 IsRefreshingDashboard = false;
+            }
+        }
+
+        // Lazily-constructed singleton HIBP client; disposed with the VM.
+        private HaveIBeenPwnedService? _hibpService;
+        // Guards against overlapping background breach scans.
+        private int _breachCheckRunning;
+
+        /// <summary>
+        /// Runs a k-anonymous Have I Been Pwned check across all non-empty
+        /// passwords currently loaded in the vault and updates
+        /// <see cref="BreachedPasswordCount"/> + <see cref="SecurityScore"/>
+        /// when finished. Fails closed: on network error the previous count
+        /// is preserved.
+        /// </summary>
+        private async Task RefreshBreachCountAsync()
+        {
+            // Single-flight: skip if a scan is already in progress.
+            if (Interlocked.Exchange(ref _breachCheckRunning, 1) == 1)
+                return;
+
+            try
+            {
+                var passwords = _credentials
+                    .Select(c => c.GetCredential().Password)
+                    .Where(p => !string.IsNullOrEmpty(p))
+                    .Distinct(StringComparer.Ordinal)
+                    .ToList();
+
+                if (passwords.Count == 0)
+                {
+                    await Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        BreachedPasswordCount = 0;
+                        LastBreachCheckTime = DateTime.UtcNow;
+                    });
+                    return;
+                }
+
+                var hibp = _hibpService ??= new HaveIBeenPwnedService();
+                int breached = 0;
+                foreach (var pw in passwords)
+                {
+                    int hits = await hibp.CheckPasswordBreachAsync(pw).ConfigureAwait(false);
+                    if (hits > 0) breached++;
+                    // CheckPasswordBreachAsync returns -1 on transport failure;
+                    // treat as "unknown" (do not count) per fail-closed policy.
+                }
+
+                int finalBreached = breached;
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    int oldBreached = BreachedPasswordCount;
+                    BreachedPasswordCount = finalBreached;
+                    // Adjust security score for the delta (10 pts per breached pw).
+                    int delta = (oldBreached - finalBreached) * 10;
+                    SecurityScore = Math.Clamp(SecurityScore + delta, 0, 100);
+                    LastBreachCheckTime = DateTime.UtcNow;
+                });
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[VaultViewModel] HIBP background refresh failed: {ex.Message}");
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _breachCheckRunning, 0);
             }
         }
 

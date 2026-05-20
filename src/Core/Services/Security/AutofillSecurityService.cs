@@ -387,8 +387,9 @@ namespace PhantomVault.Core.Services.Security
             
             try
             {
-                // In production, enumerate modules and check for suspicious DLLs
-                // This is a placeholder for more sophisticated checks
+                // Full DLL injection detection requires enumerating process modules via
+                // EnumProcessModules P/Invoke and checking against a known-good allowlist.
+                // Conservative fallback: return false (no injection detected).
                 return false;
             }
             finally

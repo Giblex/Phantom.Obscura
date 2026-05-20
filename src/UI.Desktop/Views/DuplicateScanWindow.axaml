@@ -1,0 +1,271 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PhantomVault.UI.ViewModels"
+        x:Class="PhantomVault.UI.Views.DuplicateScanWindow"
+        x:DataType="vm:DuplicateScanViewModel"
+        Title="Duplicate Review"
+        Width="980" Height="720"
+        MinWidth="760" MinHeight="560"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource WindowBackgroundBrush}">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="20">
+        <Border Grid.Row="0"
+                Background="{DynamicResource CardBackgroundBrush}"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="12"
+                Padding="16"
+                Margin="0,0,0,12">
+            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Row="0" Grid.Column="0" Spacing="5">
+                    <TextBlock Text="Duplicate Scanner"
+                               FontSize="{StaticResource Type.H3.Size}"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <TextBlock Text="{Binding ScanDisposition}"
+                               FontSize="{StaticResource Type.Small.Size}"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <Border Grid.Row="0"
+                        Grid.Column="1"
+                        CornerRadius="999"
+                        Padding="12,6"
+                        Background="{DynamicResource WarningBackgroundBrush}"
+                        BorderBrush="{DynamicResource WarningBrush}"
+                        BorderThickness="1"
+                        VerticalAlignment="Top">
+                    <TextBlock Text="{Binding SelectedCount, StringFormat='{}{0} selected'}"
+                               Foreground="{DynamicResource WarningBrush}"
+                               FontWeight="SemiBold"/>
+                </Border>
+
+                <UniformGrid Grid.Row="1"
+                             Grid.ColumnSpan="2"
+                             Columns="4"
+                             Margin="0,14,0,10">
+                    <Border Background="{DynamicResource WindowBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,8,0">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="{Binding ScannedCredentialCount}" FontSize="24" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <TextBlock Text="Scanned" FontSize="{StaticResource Type.Tiny.Size}" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Background="{DynamicResource WindowBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="4,0">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="{Binding ActionableGroupCount}" FontSize="24" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <TextBlock Text="Actionable Groups" FontSize="{StaticResource Type.Tiny.Size}" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Background="{DynamicResource WindowBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="4,0">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="{Binding ActionableDuplicateCount}" FontSize="24" FontWeight="SemiBold" Foreground="{DynamicResource WarningBrush}"/>
+                            <TextBlock Text="Duplicate Items" FontSize="{StaticResource Type.Tiny.Size}" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Background="{DynamicResource WindowBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="8,0,0,0">
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="{Binding BlockedCandidateCount}" FontSize="24" FontWeight="SemiBold" Foreground="{DynamicResource ErrorBrush}"/>
+                            <TextBlock Text="Blocked" FontSize="{StaticResource Type.Tiny.Size}" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
+
+                <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Spacing="5">
+                    <TextBlock Text="{Binding Summary}"
+                               FontSize="{StaticResource Type.Small.Size}"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding ReviewStatus}"
+                               FontSize="{StaticResource Type.Small.Size}"
+                               Foreground="{DynamicResource WarningBrush}"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Spacing="12">
+                <ItemsControl ItemsSource="{Binding Groups}" IsVisible="{Binding HasDuplicates}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:DuplicateGroupItem">
+                            <Border Background="{DynamicResource CardBackgroundBrush}"
+                                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="14,12"
+                                    Margin="0,0,0,10">
+                                <StackPanel Spacing="10">
+                                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                                        <TextBlock Grid.Row="0" Grid.Column="0"
+                                                   Text="{Binding DisplayName}"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="1"
+                                                   Text="Blocked"
+                                                   IsVisible="{Binding IsBlocked}"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource ErrorBrush}"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                                   Text="{Binding KeyMetadata}"
+                                                   Foreground="{DynamicResource MutedTextBrush}"
+                                                   FontSize="{StaticResource Type.Tiny.Size}"
+                                                   TextWrapping="Wrap"/>
+                                    </Grid>
+
+                                    <Border IsVisible="{Binding IsBlocked}"
+                                            Background="{DynamicResource WarningBackgroundBrush}"
+                                            BorderBrush="{DynamicResource WarningBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="6"
+                                            Padding="10">
+                                        <TextBlock Text="{Binding BlockReason}"
+                                                   Foreground="{DynamicResource WarningBrush}"
+                                                   TextWrapping="Wrap"/>
+                                    </Border>
+
+                                    <ItemsControl ItemsSource="{Binding Entries}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:DuplicateEntryItem">
+                                                <Border BorderBrush="{DynamicResource ControlBorderBrush}"
+                                                        BorderThickness="1"
+                                                        CornerRadius="6"
+                                                        Padding="10"
+                                                        Margin="0,3">
+                                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                                        <CheckBox Grid.Column="0"
+                                                                  IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                                  VerticalAlignment="Center"
+                                                                  ToolTip.Tip="Select this vault item to send it to the secure bin"/>
+
+                                                        <StackPanel Grid.Column="1" Spacing="4">
+                                                            <TextBlock Text="{Binding Title}"
+                                                                       FontWeight="SemiBold"
+                                                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                            <TextBlock Text="{Binding MetadataSummary}"
+                                                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                                                       FontSize="{StaticResource Type.Tiny.Size}"
+                                                                       TextWrapping="Wrap"/>
+                                                            <TextBlock Text="{Binding Url}"
+                                                                       Foreground="{DynamicResource PrimaryTextBrush}"
+                                                                       FontSize="{StaticResource Type.Small.Size}"/>
+                                                            <TextBlock Text="{Binding Notes}"
+                                                                       Foreground="{DynamicResource MutedTextBrush}"
+                                                                       FontSize="{StaticResource Type.Tiny.Size}"
+                                                                       TextWrapping="NoWrap"
+                                                                       TextTrimming="CharacterEllipsis"/>
+                                                            <TextBlock Text="{Binding SelectionReason}"
+                                                                       Foreground="{DynamicResource WarningBrush}"
+                                                                       FontSize="{StaticResource Type.Tiny.Size}"/>
+                                                        </StackPanel>
+
+                                                        <StackPanel Grid.Column="2" Spacing="3" HorizontalAlignment="Right">
+                                                            <TextBlock Text="{Binding Username}"
+                                                                       Foreground="{DynamicResource PrimaryTextBrush}"
+                                                                       FontSize="{StaticResource Type.Small.Size}"
+                                                                       HorizontalAlignment="Right"/>
+                                                            <TextBlock Text="{Binding Category}"
+                                                                       Foreground="{DynamicResource SecondaryTextBrush}"
+                                                                       FontSize="{StaticResource Type.Tiny.Size}"
+                                                                       HorizontalAlignment="Right"/>
+                                                            <TextBlock Text="{Binding LastUpdatedDisplay}"
+                                                                       Foreground="{DynamicResource MutedTextBrush}"
+                                                                       FontSize="{StaticResource Type.Tiny.Size}"
+                                                                       HorizontalAlignment="Right"/>
+                                                            <TextBlock Text="{Binding InformationScoreDisplay, StringFormat='Info {0}'}"
+                                                                       Foreground="{DynamicResource MutedTextBrush}"
+                                                                       FontSize="{StaticResource Type.Tiny.Size}"
+                                                                       HorizontalAlignment="Right"/>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Border IsVisible="{Binding HasBlockedItems}"
+                        Background="{DynamicResource CardBackgroundBrush}"
+                        BorderBrush="{DynamicResource WarningBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="14">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Blocked Candidates"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <ItemsControl ItemsSource="{Binding BlockedItems}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:DuplicateIssueItem">
+                                    <Grid ColumnDefinitions="*,Auto" Margin="0,4">
+                                        <StackPanel Grid.Column="0" Spacing="2">
+                                            <TextBlock Text="{Binding Title}" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                            <TextBlock Text="{Binding Reason}" Foreground="{DynamicResource WarningBrush}" FontSize="{StaticResource Type.Tiny.Size}" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="{Binding Id}" Foreground="{DynamicResource MutedTextBrush}" FontSize="{StaticResource Type.Tiny.Size}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <Border IsVisible="{Binding !HasDuplicates}"
+                        Background="{DynamicResource CardBackgroundBrush}"
+                        CornerRadius="12"
+                        Padding="20"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                    <StackPanel Spacing="8" HorizontalAlignment="Center">
+                        <TextBlock Text="No actionable duplicates found"
+                                   FontSize="{StaticResource Type.H4.Size}"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"
+                                   HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto" Margin="0,16,0,0">
+            <TextBlock Grid.Column="0"
+                       Text="{Binding SelectedCount, StringFormat='{}{0} selected'}"
+                       VerticalAlignment="Center"
+                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+
+            <StackPanel Grid.Column="2"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Spacing="10">
+                <Button Content="Smart Select"
+                        Command="{Binding SmartSelectCommand}"
+                        Classes="liquid-glass"
+                        IsVisible="{Binding HasDuplicates}"
+                        ToolTip.Tip="Preselect older or less-detailed duplicates while keeping one item in each group"/>
+                <Button Content="Select All"
+                        Command="{Binding SelectAllCommand}"
+                        Classes="liquid-glass"
+                        IsVisible="{Binding HasDuplicates}"/>
+                <Button Content="Clear"
+                        Command="{Binding ClearSelectionCommand}"
+                        Classes="liquid-glass"
+                        IsVisible="{Binding HasDuplicates}"/>
+                <Button Content="Send Selected to Secure Bin"
+                        Command="{Binding DeleteSelectedCommand}"
+                        IsEnabled="{Binding CanDeleteSelected}"
+                        Classes="danger"
+                        IsVisible="{Binding HasDuplicates}"
+                        ToolTip.Tip="Move only the checked duplicates to the secure rubbish bin"/>
+                <Button Content="Close"
+                        Command="{Binding CancelCommand}"
+                        Classes="liquid-glass"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

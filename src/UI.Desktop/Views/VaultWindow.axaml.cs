@@ -142,11 +142,12 @@ namespace PhantomVault.UI.Views
             this.Opened += VaultWindow_Opened;
             SettingsService.SettingsChanged += OnSettingsChanged;
 
-            // Wire up RecoveryPanel close event
+            // Wire up RecoveryPanel events
             var recoveryPanel = this.FindControl<Views.RecoveryPanel>("RecoveryPanelControl");
             if (recoveryPanel != null)
             {
                 recoveryPanel.CloseRequested += RecoveryPanel_CloseRequested;
+                recoveryPanel.LaunchRequested += RecoveryPanel_LaunchRequested;
             }
 
             // Wire up SecurityDashboard for data binding
@@ -1400,6 +1401,16 @@ namespace PhantomVault.UI.Views
             {
                 // Directly close the recovery panel
                 vm.CloseRecoveryPanel();
+            }
+        }
+
+        private void RecoveryPanel_LaunchRequested(object? sender, EventArgs e)
+        {
+            if (DataContext is VaultViewModel vm)
+            {
+                // ReactiveCommand.Execute() is a no-op when CanExecute is false,
+                // so no explicit guard is needed here.
+                vm.OpenPhantomRecoveryCommand?.Execute().Subscribe();
             }
         }
 

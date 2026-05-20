@@ -56,6 +56,7 @@
     <Compile Remove="Services\YubiKeyService.cs" />
     <!-- Windows-only implementations excluded from the android build -->
     <Compile Remove="Services\YubiKeyService.Implementation.cs" />       <!-- depends on Yubico.YubiKey native HID -->
+    <Compile Remove="Services\YubiKeyService.Oath.cs" />                 <!-- depends on Yubico.YubiKey OATH module -->
     <Compile Remove="Services\Security\VirtualMachineDetection.cs" />    <!-- uses System.Management (WMI) -->
     <Compile Remove="Services\PolicyService.cs" />                       <!-- transitively depends on PolicyEngine which uses System.Management -->
   </ItemGroup>

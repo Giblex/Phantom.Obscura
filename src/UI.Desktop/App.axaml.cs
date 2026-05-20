@@ -143,17 +143,13 @@ namespace PhantomVault.UI
                 return new IconManager(iconsDir);
             });
 
-            // Autofill services removed - not implemented yet
-            // services.AddSingleton<PhantomVault.Core.Services.Autofill.ICredentialRepository, PhantomVault.Core.Services.Autofill.InMemoryCredentialRepository>();
-            // services.AddSingleton<PhantomVault.Core.Services.Autofill.INativeMessagingHost, PhantomVault.Core.Services.Autofill.NativeMessagingHostService>();
-
-            // #if ANDROID
-            //             // Android: Use Android Autofill Service (integrates with Android Autofill Framework)
-            //             services.AddSingleton<PhantomVault.Core.Services.Autofill.IAutofillProvider, PhantomVault.Core.Services.Autofill.AndroidAutofillService>();
-            // #else
-            //             // Windows/Desktop: Use Windows Autofill Service (integrates with browser extension)
-            //             services.AddSingleton<PhantomVault.Core.Services.Autofill.IAutofillProvider, PhantomVault.Core.Services.Autofill.WindowsAutofillService>();
-            // #endif
+            // Browser-extension / native-messaging autofill is provided via
+            // PhantomVault.UI.Desktop.Services.AutoFill (NativeHostPipeServer
+            // + AutoFillOrchestrator), registered below alongside the USB
+            // auto-inject services. The older PhantomVault.Core.Services.Autofill
+            // infrastructure (ICredentialRepository / INativeMessagingHost /
+            // platform IAutofillProvider) was retired in favour of that pipeline
+            // and the per-platform AutofillService implementations.
 
             // USB Auto-Inject Services
             // Note: VaultViewModel is registered as Transient, so we'll need to get it dynamically
@@ -192,6 +188,11 @@ namespace PhantomVault.UI
 
             // AutoFill orchestrator state machine
             services.AddSingleton<IAutoFillOrchestrator, AutoFillOrchestrator>();
+
+            // Named-pipe server bridging the desktop app to
+            // `PhantomVault.UI.exe --native-messaging` subprocesses spawned by
+            // browsers. Started after the service provider is built.
+            services.AddSingleton<INativeHostPipeServer, NativeHostPipeServer>();
 
             // System tray background service — owns TrayIcon and wires USB events
             services.AddSingleton<ITrayBackgroundService, TrayBackgroundService>();
@@ -302,6 +303,20 @@ namespace PhantomVault.UI
                     {
                         Debug.WriteLine($"[App] Failed to start AutoFill tray service: {ex.Message}");
                     }
+                }
+
+                // Start the native-host pipe server so browser-spawned
+                // `--native-messaging` subprocesses can query vault state and
+                // credentials. The server is harmless when no vault is unlocked
+                // (it answers `locked` to every query).
+                try
+                {
+                    var pipeServer = _serviceProvider.GetRequiredService<INativeHostPipeServer>();
+                    pipeServer.Start();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[App] Failed to start native-host pipe server: {ex.Message}");
                 }
 
                 // When AutoFill Mode is enabled, closing the main window hides it to tray

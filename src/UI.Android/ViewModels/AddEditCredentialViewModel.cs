@@ -70,7 +70,13 @@ namespace PhantomVault.Android.ViewModels
         {
             await RunSafeAsync(async () =>
             {
-                await Task.CompletedTask; // placeholder for async persistence hook
+                // Persistence is delegated to VaultViewModel via the CredentialSaved
+                // event raised below; the page's code-behind subscribes and invokes
+                // VaultViewModel.UpsertCredential(...) which performs the actual
+                // encryption + commit. Keep this method async to preserve the
+                // RelayCommand signature and allow future async hooks (e.g.
+                // server-side sync) without changing the call-site.
+                await Task.Yield();
                 Credential.LastUpdatedUtc = DateTimeOffset.UtcNow;
                 CredentialSaved?.Invoke(Credential);
             });

@@ -1,0 +1,45 @@
+{
+  "name": "PhantomVault Autofill",
+  "version": "1.0.0",
+  "manifest_version": 3,
+  "description": "Autofill passwords from PhantomVault directly in your browser.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "phantomvault@giblex.com",
+      "strict_min_version": "128.0"
+    }
+  },
+  "permissions": [
+    "nativeMessaging",
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "scripts": ["background.js"]
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "PhantomVault Autofill",
+    "default_icon": {
+      "16": "icons/icon-16.svg",
+      "48": "icons/icon-48.svg",
+      "128": "icons/icon-128.svg"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.svg",
+    "48": "icons/icon-48.svg",
+    "128": "icons/icon-128.svg"
+  }
+}

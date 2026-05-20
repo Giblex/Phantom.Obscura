@@ -221,10 +221,18 @@ namespace PhantomVault.UI.Services.AutoFill
                             break;
                         }
 
-                        // Prompt mode — show selection UI before filling (future: show AutoInjectPromptWindow)
+                        // Prompt mode — auto-fill requires explicit user confirmation.
+                        // The orchestrator does not own a confirmation UI; the user-facing
+                        // prompt is raised by UsbAutoInjectService.PromptRequired. To honor
+                        // the policy fail-closed we abort the silent fill here and let the
+                        // user trigger fill manually via the tray / context menu.
                         if (policy.Behavior == AutoInjectBehavior.Prompt)
                         {
-                            Log.Debug("[AutoFill] Prompt mode — auto-fill requires user confirmation (not yet implemented in this flow)");
+                            Log.Information(
+                                "[AutoFill] Prompt mode active for {CredentialId} — skipping silent fill; awaiting user confirmation",
+                                bestMatch.CredentialId);
+                            state = State.Done;
+                            break;
                         }
 
                         state = State.FillCredential;

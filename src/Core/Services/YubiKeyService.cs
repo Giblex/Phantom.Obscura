@@ -74,7 +74,7 @@ namespace PhantomVault.Core.Services
     /// - User must touch the YubiKey to complete authentication
     /// </para>
     /// </summary>
-    public sealed class YubiKeyService
+    public sealed partial class YubiKeyService
     {
         private const string DefaultRelyingPartyId = "phantomvault.local";
         private const string RelyingPartyName = "PhantomVault";

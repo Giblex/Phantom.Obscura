@@ -31,7 +31,7 @@ namespace PhantomVault.Core.Services
     /// NFC-based YubiKey interaction would be handled by a dedicated platform layer.
     /// This stub keeps Core compiling on Android while surfacing clear not-supported errors.
     /// </summary>
-    public sealed class YubiKeyService
+    public sealed partial class YubiKeyService
     {
         private const string NotSupportedMessage =
             "YubiKey USB HID is not available on Android. " +

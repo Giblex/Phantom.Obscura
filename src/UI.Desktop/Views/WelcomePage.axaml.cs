@@ -406,7 +406,14 @@ namespace PhantomVault.UI.Views
             var encryptionService = new EncryptionService();
             var containerService = new PhantomContainerService(encryptionService);
             var manifestService = new ManifestService(encryptionService, containerService);
-            var securityCheckService = new SecurityCheckService(manifestService);
+
+            // Pull the singleton raw-volume service from DI so raw USB selections (RAWUSB:*) can
+            // be validated via the BlackSecure header instead of failing the filesystem checks.
+            BlackSecureRawVolumeService? rawVolumeService = null;
+            if (Application.Current is App app && app.Services != null)
+                rawVolumeService = app.Services.GetService<BlackSecureRawVolumeService>();
+
+            var securityCheckService = new SecurityCheckService(manifestService, yubiKeyService: null, rawVolumeService: rawVolumeService);
 
             var securityCheckScreen = new SecurityCheckScreen(securityCheckService, request);
             if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime dt)
