@@ -79,7 +79,9 @@ jobs:
 
     # Execute all unit tests in the solution
     - name: Execute unit tests
-      run: dotnet test
+      run: |
+        dotnet test tests/PhantomVault.Core.Tests/PhantomVault.Core.Tests.csproj -p:TargetFrameworks=net9.0
+        dotnet test tests/PhantomVault.UI.Tests/PhantomVault.UI.Tests.csproj -p:TargetFrameworks=net9.0-windows10.0.19041.0
 
     # Restore the application to populate the obj folder with RuntimeIdentifiers
     - name: Restore the application
