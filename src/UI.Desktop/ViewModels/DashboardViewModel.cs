@@ -679,9 +679,16 @@ namespace PhantomVault.UI.ViewModels
         public string TimeAgo { get; set; } = string.Empty;
     }
 
+    /// <summary>
+    /// Bindable scope for the dashboard's <c>controls:SecurityDashboard</c>
+    /// surface. Live security metrics (score, breach counts, weak passwords,
+    /// 2FA coverage, etc.) are exposed directly on <see cref="DashboardViewModel"/>
+    /// and the parent <c>VaultViewModel</c>; this type exists so XAML can bind
+    /// a dedicated DataContext without coupling to those VMs. It is intentionally
+    /// empty — extend it only when the security panel needs state that is not
+    /// already published by the parent view-models.
+    /// </summary>
     public class SecurityDashboardViewModel
     {
-        // Placeholder for security dashboard data
-        // This should be populated from actual security analysis services
     }
 }

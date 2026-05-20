@@ -447,21 +447,21 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- CSV Import (Future) -->
+                        <!-- CSV / KeePass import — performed from the main app's Import panel post-provisioning -->
                         <Border Background="{DynamicResource ControlBackgroundBrush}"
                                 Padding="20"
                                 CornerRadius="{StaticResource Radius.Md}"
                                 BorderBrush="{DynamicResource ControlBorderBrush}"
                                 BorderThickness="1"
-                                Opacity="0.6">
+                                Opacity="0.85">
                             <StackPanel Spacing="10">
                                 <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
-            <TextBlock Text="Import from CSV"
+            <TextBlock Text="Import from CSV / KeePass"
                                                FontSize="{StaticResource Type.H4.Size}"
                                                FontWeight="SemiBold"
                                                Foreground="{DynamicResource PrimaryTextBrush}"
                                                VerticalAlignment="Center"/>
-            <TextBlock Text="(Coming Soon)"
+            <TextBlock Text="(After Setup)"
                                                FontSize="{StaticResource Type.Tiny.Size}"
                                                Foreground="{DynamicResource MutedTextBrush}"
                                                VerticalAlignment="Center"
@@ -470,7 +470,7 @@
             <TextBlock FontSize="{StaticResource Type.Small.Size}"
                                            Foreground="{DynamicResource MutedTextBrush}"
                                            TextWrapping="Wrap">
-                                    Import passwords from a CSV file exported from other password managers.
+                                    Finish provisioning, then open the Import / Export panel to bring in passwords from CSV, KeePass (.kdbx / XML), Bitwarden, 1Password, Proton Pass, KeeWeb or KeePassXC.
                                 </TextBlock>
                             </StackPanel>
                         </Border>

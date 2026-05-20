@@ -23,13 +23,52 @@ namespace PhantomVault.Core.Services
 
         private readonly ManifestService _manifestService;
         private readonly YubiKeyService? _yubiKeyService;
+        private readonly BlackSecureRawVolumeService? _rawVolumeService;
 
         public SecurityCheckService(
             ManifestService manifestService,
-            YubiKeyService? yubiKeyService = null)
+            YubiKeyService? yubiKeyService = null,
+            BlackSecureRawVolumeService? rawVolumeService = null)
         {
             _manifestService = manifestService ?? throw new ArgumentNullException(nameof(manifestService));
             _yubiKeyService = yubiKeyService;
+            _rawVolumeService = rawVolumeService;
+        }
+
+        // Mirror of BlackSecureRawVolumeService.RawSelectionPrefix — duplicated as a literal
+        // because that constant lives on a [SupportedOSPlatform("windows")] type and we want
+        // the prefix check to work on all platforms (it just returns false off-Windows).
+        private const string RawSelectionPrefix = "RAWUSB:";
+
+        private static bool IsRawSelection(string? usbPath)
+            => !string.IsNullOrWhiteSpace(usbPath)
+               && usbPath!.StartsWith(RawSelectionPrefix, StringComparison.OrdinalIgnoreCase);
+
+        private async Task<(bool Resolved, string? PhysicalPath, string? Error)> TryValidateRawVolumeAsync(string usbPath)
+        {
+            if (_rawVolumeService == null || !OperatingSystem.IsWindows())
+                return (false, null, "Raw-device vault selected but raw-volume service is unavailable on this platform.");
+
+            var physicalPath = _rawVolumeService.TryResolvePhysicalDevicePathFromSelection(usbPath);
+            if (string.IsNullOrWhiteSpace(physicalPath))
+                return (false, null, "Raw USB device could not be resolved. Reconnect the device and retry.");
+
+            try
+            {
+                var isValid = await _rawVolumeService.IsBlackSecureVolumeAsync(physicalPath).ConfigureAwait(false);
+                if (!isValid)
+                    return (false, physicalPath, "Raw USB device does not contain a valid Phantom Secured vault header.");
+
+                return (true, physicalPath, null);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return (false, physicalPath, "Raw USB device requires elevated permissions. Run Phantom Obscura as administrator.");
+            }
+            catch (Exception ex)
+            {
+                return (false, physicalPath, $"Raw USB device validation failed: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -124,6 +163,15 @@ namespace PhantomVault.Core.Services
         private async Task<bool> VerifyManifestIntegrityAsync(string usbPath, string? preferredVaultPath, SecurityCheckResult result)
         {
             await Task.Delay(ManifestCheckDelay).ConfigureAwait(false);
+
+            if (IsRawSelection(usbPath))
+            {
+                var (ok, _, error) = await TryValidateRawVolumeAsync(usbPath).ConfigureAwait(false);
+                result.ManifestValid = ok;
+                if (!ok && error != null)
+                    result.Errors.Add(error);
+                return ok;
+            }
 
             // Discover vault: prefer .pvault containers (v3), fall back to legacy .manifest
             ResolveVaultTargets(usbPath, preferredVaultPath, out var manifestPath, out var masterVolumePath);
@@ -224,6 +272,15 @@ namespace PhantomVault.Core.Services
         private async Task<bool> CheckUsbHealthAsync(string usbPath, SecurityCheckResult result)
         {
             await Task.Delay(UsbHealthCheckDelay).ConfigureAwait(false);
+
+            if (IsRawSelection(usbPath))
+            {
+                var (ok, _, error) = await TryValidateRawVolumeAsync(usbPath).ConfigureAwait(false);
+                result.UsbHealthy = ok;
+                if (!ok && error != null && !result.Errors.Contains(error))
+                    result.Errors.Add(error);
+                return ok;
+            }
 
             try
             {
@@ -437,6 +494,15 @@ namespace PhantomVault.Core.Services
         {
             await Task.Delay(AntiTamperCheckDelay).ConfigureAwait(false);
 
+            if (IsRawSelection(usbPath))
+            {
+                var (ok, _, error) = await TryValidateRawVolumeAsync(usbPath).ConfigureAwait(false);
+                result.NoTampering = ok;
+                if (!ok && error != null && !result.Errors.Contains(error))
+                    result.Errors.Add(error);
+                return ok;
+            }
+
             try
             {
                 ResolveVaultTargets(usbPath, preferredVaultPath, out var manifestPath, out var masterVolumePath);
@@ -538,6 +604,12 @@ namespace PhantomVault.Core.Services
         /// </summary>
         public async Task<bool> QuickSecurityCheckAsync(string usbPath, string? preferredVaultPath = null)
         {
+            if (IsRawSelection(usbPath))
+            {
+                var (ok, _, _) = await TryValidateRawVolumeAsync(usbPath).ConfigureAwait(false);
+                return ok;
+            }
+
             ResolveVaultTargets(usbPath, preferredVaultPath, out var manifestPath, out var masterVolumePath);
             if (masterVolumePath is not null || manifestPath is not null)
             {

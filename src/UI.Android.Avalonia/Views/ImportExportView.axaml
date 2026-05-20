@@ -1,0 +1,86 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PhantomVault.UI.ViewModels"
+             x:Class="PhantomVault.UI.Views.ImportExportView"
+             x:DataType="vm:ImportExportViewModel"
+             Background="{DynamicResource WindowBackgroundBrush}">
+
+  <ScrollViewer>
+    <StackPanel Margin="20,24,20,24" Spacing="18" MaxWidth="520" HorizontalAlignment="Center">
+
+      <TextBlock Text="Import / Export"
+                 FontSize="{StaticResource Type.H2.Size}"
+                 FontWeight="SemiBold"
+                 Foreground="{DynamicResource PrimaryTextBrush}"
+                 HorizontalAlignment="Center"/>
+
+      <TextBlock Text="Import credentials from KeePass, Bitwarden, or a CSV file, or save an encrypted vault backup."
+                 FontSize="{StaticResource Type.Body.Size}"
+                 Foreground="{DynamicResource SecondaryTextBrush}"
+                 TextWrapping="Wrap"
+                 HorizontalAlignment="Center"
+                 TextAlignment="Center"/>
+
+      <Border Background="{DynamicResource CardBackgroundBrush}"
+              CornerRadius="14"
+              Padding="18"
+              BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+              BorderThickness="1">
+        <StackPanel Spacing="12">
+          <TextBlock Text="Import"
+                     FontSize="{StaticResource Type.H3.Size}"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource PrimaryTextBrush}"/>
+          <TextBlock Text="Supported: .kdbx, .json (Bitwarden), .csv"
+                     FontSize="{StaticResource Type.Tiny.Size}"
+                     Foreground="{DynamicResource MutedTextBrush}"/>
+          <Button Content="Pick file to import"
+                  HorizontalAlignment="Stretch"
+                  HorizontalContentAlignment="Center"
+                  Padding="0,12"
+                  CornerRadius="10"
+                  Background="{DynamicResource AccentBrush}"
+                  Foreground="White"
+                  FontWeight="SemiBold"
+                  IsEnabled="{Binding !IsBusy}"
+                  Command="{Binding PickImportFileCommand}"/>
+        </StackPanel>
+      </Border>
+
+      <Border Background="{DynamicResource CardBackgroundBrush}"
+              CornerRadius="14"
+              Padding="18"
+              BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+              BorderThickness="1">
+        <StackPanel Spacing="12">
+          <TextBlock Text="Export"
+                     FontSize="{StaticResource Type.H3.Size}"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource PrimaryTextBrush}"/>
+          <TextBlock Text="Saves an encrypted .pvb backup of the unlocked vault."
+                     FontSize="{StaticResource Type.Tiny.Size}"
+                     Foreground="{DynamicResource MutedTextBrush}"/>
+          <Button Content="Choose export target"
+                  HorizontalAlignment="Stretch"
+                  HorizontalContentAlignment="Center"
+                  Padding="0,12"
+                  CornerRadius="10"
+                  Background="Transparent"
+                  BorderBrush="{DynamicResource AccentBrush}"
+                  BorderThickness="1"
+                  Foreground="{DynamicResource AccentBrush}"
+                  IsEnabled="{Binding !IsBusy}"
+                  Command="{Binding PickExportTargetCommand}"/>
+        </StackPanel>
+      </Border>
+
+      <TextBlock Text="{Binding Status}"
+                 FontSize="{StaticResource Type.Tiny.Size}"
+                 Foreground="{DynamicResource SecondaryTextBrush}"
+                 TextWrapping="Wrap"
+                 HorizontalAlignment="Center"
+                 TextAlignment="Center"/>
+
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

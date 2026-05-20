@@ -42,8 +42,19 @@ namespace PhantomVault.UI
             // encrypted assembly types are referenced. Giblex.AssetShield.dll
             // itself is exempt from encryption and loads normally.
             ShieldedAssemblyLoadContext.Install(Assembly.GetExecutingAssembly());
-
-            AppMain(args);
+            // ── Native messaging subprocess mode ───────────────────────────────────
+            // Browsers spawn `PhantomVault.UI.exe --native-messaging` as a child
+            // process to relay autofill requests over stdin/stdout. In that mode
+            // we MUST NOT initialize Avalonia, the policy service, or write
+            // anything to stdout — the pipe is reserved for length-prefixed JSON
+            // frames. Hand off to a dedicated entry point and exit when it returns.
+            if (args != null && Array.IndexOf(args, "--native-messaging") >= 0)
+            {
+                NativeMessagingMode.Run(args);
+                return;
+            }
+            // ───────────────────────────────────────────────────────────────────────
+            AppMain(args ?? Array.Empty<string>());
         }
 
         /// <summary>

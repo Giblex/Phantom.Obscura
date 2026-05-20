@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhantomVault</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 280px;
+      background: #0f0f1e;
+      color: #e0e0ff;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 13px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid #1e1e3a;
+    }
+
+    .logo { font-size: 22px; }
+
+    .app-name {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: #c0c0ff;
+    }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-bottom: 1px solid #1e1e3a;
+    }
+
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot.connected    { background: #4caf50; }
+    .dot.locked       { background: #ff9800; }
+    .dot.disconnected { background: #f44336; }
+
+    #status-text { color: #aaaacc; }
+
+    .actions {
+      padding: 10px 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    button {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #3a3a6a;
+      border-radius: 6px;
+      background: #1a1a3a;
+      color: #c0c0ff;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: inherit;
+      transition: background .15s;
+    }
+    button:hover { background: #2a2a5a; }
+    button:disabled { opacity: .4; cursor: not-allowed; }
+
+    .footer {
+      padding: 8px 16px;
+      color: #555577;
+      font-size: 11px;
+      text-align: center;
+      border-top: 1px solid #1e1e3a;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <span class="logo">🛡️</span>
+    <span class="app-name">PhantomVault</span>
+  </div>
+
+  <div class="status-bar">
+    <span class="dot disconnected" id="status-dot"></span>
+    <span id="status-text">Checking…</span>
+  </div>
+
+  <div class="actions">
+    <button id="btn-fill" disabled>Fill credentials on this page</button>
+  </div>
+
+  <div class="footer">PhantomVault Autofill v1.0</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

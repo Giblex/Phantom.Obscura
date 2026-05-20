@@ -11,15 +11,15 @@
 
   <!--
     Android adaptation of Views/WelcomePage.axaml from UI.Desktop.
-    Content is a verbatim port of the desktop layout, with three deltas:
-      (1) Root is UserControl, not ThemeAwareWindow, so it can be hosted under
-          SingleViewApplicationLifetime on Android.
-      (2) Window-scoped pulse-ring/trace animations were removed — they live
-          in the desktop's .axaml.cs animation harness (809 LOC) which we'll
-          port piecemeal in a later phase.
-      (3) `Classes="liquid-glass*"` classes are commented-out until we link
-          Giblex.Controls.BorderEnergyTrace + LiquidGlass.axaml (Phase 4).
-    All bindings, brushes, and StaticResource type sizes match desktop exactly.
+    Layout deltas vs desktop:
+      (1) Root is UserControl (Window doesn't host under SingleViewApplicationLifetime).
+      (2) Redundant page-level header dropped — the AppShell already shows the
+          "Phantom Obscura" title + brand icon in the top bar, so we lead with
+          the welcome message + logo tile instead of repeating the title.
+      (3) Logo + USB-gate cards stack vertically for phone widths; tablet form
+          factors get the same layout but with more breathing room.
+      (4) Pulse-ring + trace animations from desktop's 800-LOC code-behind are
+          deferred to a later phase.
   -->
 
   <UserControl.Resources>
@@ -38,47 +38,45 @@
       <Setter Property="Padding" Value="0"/>
       <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
     </Style>
+    <Style Selector="Button.action-pill">
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="Height" Value="40"/>
+      <Setter Property="Width" Value="116"/>
+      <Setter Property="FontSize" Value="{StaticResource Type.Body.Size}"/>
+      <Setter Property="FontFamily" Value="{DynamicResource MainFontFamily}"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+      <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
   </UserControl.Styles>
 
-  <Grid RowDefinitions="Auto,*,Auto"
-        Margin="0"
-        Background="{DynamicResource WindowBackgroundBrush}">
+  <!-- Two-row grid: scrolling body + sticky action footer. -->
+  <Grid RowDefinitions="*,Auto" Background="{DynamicResource WindowBackgroundBrush}">
 
-    <!-- ── Header (taller, more prominent — verbatim from desktop) ────────── -->
-    <Border Grid.Row="0" Background="{DynamicResource HeaderBackgroundBrush}" Padding="14,12">
-      <StackPanel HorizontalAlignment="Center" Spacing="8">
-        <TextBlock Text="{Binding AppName}"
-                   FontSize="{StaticResource Type.H2.Size}"
-                   FontFamily="{DynamicResource TitleFontFamily}"
-                   FontWeight="Normal"
-                   Foreground="{DynamicResource HeaderTextBrush}"
-                   HorizontalAlignment="Center"/>
-        <TextBlock Text="{Binding WelcomeMessage}"
-                   FontSize="{StaticResource Type.Body.Size}"
-                   Foreground="{DynamicResource HeaderTextBrush}"
-                   HorizontalAlignment="Center"/>
-      </StackPanel>
-    </Border>
-
-    <!-- ── Main content (centred logo tile + status + vault picker) ──────── -->
-    <ScrollViewer x:Name="MainScrollViewer"
-                  Grid.Row="1"
+    <!-- ─── Main content (logo + status + gate card) ───────────────────────── -->
+    <ScrollViewer Grid.Row="0"
                   Background="{DynamicResource WindowBackgroundBrush}"
-                  Padding="20,20,20,28"
+                  Padding="20,16,20,16"
                   VerticalScrollBarVisibility="Auto"
                   HorizontalScrollBarVisibility="Disabled">
-      <StackPanel Spacing="18" HorizontalAlignment="Center" VerticalAlignment="Center" MinHeight="300" Margin="0,0,0,112">
+      <StackPanel Spacing="16" HorizontalAlignment="Stretch" VerticalAlignment="Top">
 
-        <!-- Centred tile with logo. Phone-friendly: WrapPanel lets the wordmark
-             stack below the icon when horizontal space is tight (typical phone
-             portrait) and sit beside it on wider tablet form factors. -->
+        <!-- Welcome subtitle (single tagline, no duplicated app name). -->
+        <TextBlock Text="{Binding WelcomeMessage}"
+                   FontSize="{StaticResource Type.Body.Size}"
+                   Foreground="{DynamicResource HeaderMutedTextBrush}"
+                   HorizontalAlignment="Center"
+                   TextAlignment="Center"
+                   TextWrapping="Wrap"
+                   Margin="0,4,0,0"/>
+
+        <!-- Brand tile: icon stacked above wordmark — fits any phone width. -->
         <Border CornerRadius="16"
                 ClipToBounds="True"
                 Background="{DynamicResource CardBackgroundBrush}"
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
                 BorderThickness="1"
-                HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                MaxWidth="760" MinHeight="188" MaxHeight="320" Padding="16,18">
+                HorizontalAlignment="Stretch"
+                Padding="20,18">
           <StackPanel Orientation="Vertical"
                       HorizontalAlignment="Center"
                       VerticalAlignment="Center"
@@ -96,63 +94,48 @@
           </StackPanel>
         </Border>
 
+        <!-- Version, centred under the logo. -->
         <TextBlock Text="{Binding AppVersion}"
                    FontSize="{StaticResource Type.Tiny.Size}"
                    Foreground="{DynamicResource MutedTextBrush}"
-                   HorizontalAlignment="Center"
-                   Margin="0,6,0,0"/>
+                   HorizontalAlignment="Center"/>
 
-        <!-- Status + indeterminate progress card -->
-        <Border x:Name="DetectionStatusCard"
-                Background="{DynamicResource WindowBackgroundBrush}"
-                CornerRadius="20"
-                Padding="18,12"
+        <!-- Status pill: indeterminate progress + status copy. -->
+        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="999"
+                Padding="14,8"
                 HorizontalAlignment="Center"
-                IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                Margin="0,10,0,0"
-                BorderBrush="{DynamicResource ControlBackgroundBrush}"
-                BorderThickness="4">
-          <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+                IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+          <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
             <ProgressBar IsIndeterminate="True"
-                         Width="72"
-                         Height="4"
+                         Width="64" Height="4"
                          Foreground="{DynamicResource AccentBrush}"
                          IsVisible="{Binding IsDeviceDetectionActive}"/>
             <TextBlock Text="{Binding StatusMessage}"
                        FontSize="{StaticResource Type.Label.Size}"
                        Foreground="{DynamicResource SecondaryTextBrush}"
-                       FontWeight="Normal"
-                       HorizontalAlignment="Center"
                        VerticalAlignment="Center"/>
           </StackPanel>
         </Border>
 
-        <ProgressBar IsIndeterminate="True"
-                     IsVisible="{Binding IsDeviceDetectionActive}"
-                     Height="4"
-                     Foreground="{DynamicResource AccentBrush}"
-                     Width="260"
-                     Margin="0,10,0,0"/>
-
-        <!-- Detected vault card (USB found, vaults listed) -->
-        <Border x:Name="DetectedVaultCard"
-                Background="{DynamicResource WindowBackgroundBrush}"
-                BorderBrush="{DynamicResource CardBackgroundBrush}"
-                BorderThickness="4"
-                CornerRadius="20"
-                Padding="18,16"
-                MaxWidth="760"
+        <!-- USB gate / vault discovery card — vertically stacked content. -->
+        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
+                Padding="20,18"
                 HorizontalAlignment="Stretch"
                 IsVisible="{Binding IsLandingVisible}">
-          <StackPanel Spacing="14">
-            <!-- Phone-safe layout: vertical stack with the white indicator dot
-                 sitting above the headline / detail text instead of beside.
-                 The desktop version uses a 120dp Grid on the left which
-                 over-runs phone widths. -->
-            <Border Width="22" Height="22" CornerRadius="11" Background="#FFFFFF"
+          <StackPanel Spacing="12" HorizontalAlignment="Stretch">
+            <!-- Centred indicator dot. -->
+            <Border Width="22" Height="22" CornerRadius="11"
+                    Background="{DynamicResource AccentBrush}"
                     HorizontalAlignment="Center"/>
             <TextBlock Text="{Binding DeviceLinkHeadline}"
                        FontSize="{StaticResource Type.H4.Size}"
+                       FontWeight="SemiBold"
                        Foreground="{DynamicResource PrimaryTextBrush}"
                        HorizontalAlignment="Center"
                        TextAlignment="Center"
@@ -163,18 +146,21 @@
                        TextWrapping="Wrap"
                        TextAlignment="Center"
                        HorizontalAlignment="Center"/>
-
             <TextBlock Text="{Binding DetectedVaultPathDisplay}"
-                       FontSize="{StaticResource Type.Small.Size}"
+                       FontSize="{StaticResource Type.Tiny.Size}"
                        Foreground="{DynamicResource SecondaryTextBrush}"
+                       FontFamily="{StaticResource MonoFontFamily}"
+                       HorizontalAlignment="Center"
+                       TextAlignment="Center"
+                       TextTrimming="CharacterEllipsis"
                        IsVisible="{Binding HasRecognizedVaults}"/>
 
-            <StackPanel x:Name="VaultListAnchor"
-                        Spacing="8"
-                        IsVisible="{Binding ShowVaultPicker}">
+            <!-- Picker for the multi-vault case. -->
+            <StackPanel Spacing="6" IsVisible="{Binding ShowVaultPicker}" Margin="0,6,0,0">
               <TextBlock Text="Available vaults on this USB"
                          FontSize="{StaticResource Type.Label.Size}"
-                         Foreground="{DynamicResource PrimaryTextBrush}"/>
+                         Foreground="{DynamicResource PrimaryTextBrush}"
+                         HorizontalAlignment="Center"/>
               <ItemsControl ItemsSource="{Binding DetectedVaults}">
                 <ItemsControl.ItemTemplate>
                   <DataTemplate x:DataType="models:DetectedVaultLaunchRequest">
@@ -184,17 +170,17 @@
                             Margin="0,0,0,8">
                       <Border Background="#121C2B"
                               CornerRadius="14"
-                              Padding="16,10"
-                              Width="336"
+                              Padding="14,10"
                               BorderThickness="1"
                               BorderBrush="{DynamicResource ControlBorderBrush}">
-                        <StackPanel Spacing="2" HorizontalAlignment="Stretch">
+                        <StackPanel Spacing="2">
                           <TextBlock Text="{Binding DisplayName}"
                                      Foreground="{DynamicResource PrimaryTextBrush}"
                                      FontSize="{StaticResource Type.Body.Size}"/>
                           <TextBlock Text="{Binding VaultPath}"
                                      FontSize="{StaticResource Type.Tiny.Size}"
                                      Foreground="{DynamicResource MutedTextBrush}"
+                                     FontFamily="{StaticResource MonoFontFamily}"
                                      TextWrapping="NoWrap"
                                      TextTrimming="CharacterEllipsis"/>
                         </StackPanel>
@@ -207,42 +193,38 @@
           </StackPanel>
         </Border>
 
-        <!-- Setup choice card (Default vs Advanced).
-             Phone-friendly: two big tap targets + a "?" help icon in the top-right
-             corner of each tile. The icon opens a Flyout with the full description
-             (formerly inline paragraphs), so the choice surface stays at-a-glance. -->
+        <!-- ─── Setup choice (after Get Started tapped) ──────────────────── -->
         <Border Background="{DynamicResource CardBackgroundBrush}"
-                CornerRadius="20"
+                CornerRadius="16"
                 Padding="20,18"
-                MaxWidth="760"
                 HorizontalAlignment="Stretch"
-                IsVisible="{Binding IsSetupChoiceVisible}"
-                BoxShadow="0 8 24 0 #30000000">
+                IsVisible="{Binding IsSetupChoiceVisible}">
           <StackPanel Spacing="14">
             <TextBlock Text="Choose Your Setup Path"
                        FontSize="{StaticResource Type.H3.Size}"
+                       FontWeight="SemiBold"
                        Foreground="{DynamicResource PrimaryTextBrush}"
+                       HorizontalAlignment="Center"
+                       TextAlignment="Center"
                        TextWrapping="Wrap"/>
 
-            <!-- Tile group: stacks vertically on phones, side-by-side once
-                 there's room. Each tile is a Grid so the help "?" can sit
-                 absolutely in the top-right corner regardless of phone width. -->
-            <WrapPanel ItemSpacing="12" LineSpacing="12">
-              <!-- Default Setup tile -->
-              <Grid Background="#162235"
-                    Width="320" MinHeight="120"
-                    HorizontalAlignment="Stretch">
-                <Border CornerRadius="18" Background="#162235"/>
+            <!-- Two tap-target tiles stacked vertically on phone (WrapPanel
+                 places them side-by-side on tablet). Each has a "?" help button
+                 anchored to the top-right that opens a Flyout with the full
+                 description, so the tile itself stays at-a-glance. -->
+            <WrapPanel ItemSpacing="12" LineSpacing="12" HorizontalAlignment="Center">
+              <Grid Width="280" Height="120">
+                <Border CornerRadius="16" Background="#162235"/>
                 <Button Command="{Binding ShowDefaultSetupCommand}"
                         Background="Transparent"
                         BorderThickness="0"
-                        CornerRadius="18"
+                        CornerRadius="16"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
                         HorizontalContentAlignment="Center"
                         VerticalContentAlignment="Center"
-                        Padding="20,16">
-                  <StackPanel Spacing="4" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        Padding="0">
+                  <StackPanel Spacing="6" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <TextBlock Text="Default Setup"
                                FontSize="{StaticResource Type.H4.Size}"
                                FontWeight="SemiBold"
@@ -254,7 +236,7 @@
                                HorizontalAlignment="Center"/>
                   </StackPanel>
                 </Button>
-                <!-- Help "?" pinned top-right; opens a flyout with the full description -->
+                <!-- Help icon, top-right -->
                 <Button HorizontalAlignment="Right" VerticalAlignment="Top"
                         Margin="0,8,8,0"
                         Width="28" Height="28"
@@ -262,8 +244,7 @@
                         CornerRadius="14"
                         Background="{DynamicResource ControlBackgroundBrush}"
                         BorderBrush="{DynamicResource ControlBorderBrush}"
-                        BorderThickness="1"
-                        ToolTip.Tip="What's in Default Setup?">
+                        BorderThickness="1">
                   <TextBlock Text="?"
                              FontSize="14" FontWeight="Bold"
                              Foreground="{DynamicResource AccentBrush}"
@@ -271,8 +252,7 @@
                   <Button.Flyout>
                     <Flyout Placement="Bottom">
                       <StackPanel MaxWidth="280" Spacing="8">
-                        <TextBlock Text="Default Setup"
-                                   FontWeight="SemiBold"
+                        <TextBlock Text="Default Setup" FontWeight="SemiBold"
                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
                         <TextBlock Text="Best if you just want a vault without wrestling the knobs. You choose the vault name and your authentication, and Obscura handles the rest with hardened defaults."
                                    FontSize="{StaticResource Type.Small.Size}"
@@ -288,21 +268,18 @@
                 </Button>
               </Grid>
 
-              <!-- Advanced Setup tile -->
-              <Grid Background="#162235"
-                    Width="320" MinHeight="120"
-                    HorizontalAlignment="Stretch">
-                <Border CornerRadius="18" Background="#162235"/>
+              <Grid Width="280" Height="120">
+                <Border CornerRadius="16" Background="#162235"/>
                 <Button Command="{Binding ShowAdvancedSetupCommand}"
                         Background="Transparent"
                         BorderThickness="0"
-                        CornerRadius="18"
+                        CornerRadius="16"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
                         HorizontalContentAlignment="Center"
                         VerticalContentAlignment="Center"
-                        Padding="20,16">
-                  <StackPanel Spacing="4" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        Padding="0">
+                  <StackPanel Spacing="6" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <TextBlock Text="Advanced Setup"
                                FontSize="{StaticResource Type.H4.Size}"
                                FontWeight="SemiBold"
@@ -321,8 +298,7 @@
                         CornerRadius="14"
                         Background="{DynamicResource ControlBackgroundBrush}"
                         BorderBrush="{DynamicResource ControlBorderBrush}"
-                        BorderThickness="1"
-                        ToolTip.Tip="What's in Advanced Setup?">
+                        BorderThickness="1">
                   <TextBlock Text="?"
                              FontSize="14" FontWeight="Bold"
                              Foreground="{DynamicResource AccentBrush}"
@@ -330,8 +306,7 @@
                   <Button.Flyout>
                     <Flyout Placement="Bottom">
                       <StackPanel MaxWidth="280" Spacing="8">
-                        <TextBlock Text="Advanced Setup"
-                                   FontWeight="SemiBold"
+                        <TextBlock Text="Advanced Setup" FontWeight="SemiBold"
                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
                         <TextBlock Text="Best if you want full control over the protection tier, storage layout, keyfile flow, remnant handling, and every other vault-building decision."
                                    FontSize="{StaticResource Type.Small.Size}"
@@ -352,63 +327,44 @@
       </StackPanel>
     </ScrollViewer>
 
-    <!-- ── Action footer (Get Started, Open Vault, About, Import, ...) ──────
-         Phone-friendly: ItemWidth lowered so two buttons fit per row on a
-         typical 360dp phone instead of clipping off the right edge. -->
-    <Border x:Name="ActionFooterCard"
-            Grid.Row="2"
+    <!-- ─── Action footer (sticky bottom row) ────────────────────────────── -->
+    <Border Grid.Row="1"
             Background="{DynamicResource HeaderBackgroundBrush}"
-            Padding="10"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Bottom"
-            MaxWidth="760"
-            CornerRadius="16"
-            Margin="14,8,14,16"
             BorderBrush="{DynamicResource FooterBorderBrush}"
-            BorderThickness="1"
-            ClipToBounds="True">
-      <WrapPanel Orientation="Horizontal" ItemWidth="128" HorizontalAlignment="Center">
-        <Button Command="{Binding GetStartedCommand}" CornerRadius="10" Height="40" Width="116"
-                FontSize="{StaticResource Type.Body.Size}" FontWeight="Normal"
-                FontFamily="{DynamicResource MainFontFamily}"
+            BorderThickness="0,1,0,0"
+            Padding="14,12">
+      <WrapPanel Orientation="Horizontal" ItemSpacing="8" LineSpacing="8"
+                 HorizontalAlignment="Center">
+        <!-- Landing-state buttons -->
+        <Button Classes="action-pill"
+                Command="{Binding GetStartedCommand}"
                 IsVisible="{Binding IsLandingVisible}">
-          <TextBlock Text="Get Started" Foreground="{DynamicResource ButtonTextBrush}"
-                     HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          <TextBlock Text="Get Started" Foreground="{DynamicResource ButtonTextBrush}"/>
         </Button>
-
-        <Button Command="{Binding OpenExistingVaultCommand}" CornerRadius="10" Height="40" Width="116"
-                FontSize="{StaticResource Type.Body.Size}" FontFamily="{DynamicResource MainFontFamily}"
-                IsVisible="{Binding IsLandingVisible}" IsEnabled="{Binding HasSelectedVault}">
-          <TextBlock Text="{Binding OpenVaultButtonText}" Foreground="{DynamicResource ButtonTextBrush}"
-                     HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        <Button Classes="action-pill"
+                Command="{Binding OpenExistingVaultCommand}"
+                IsVisible="{Binding IsLandingVisible}"
+                IsEnabled="{Binding HasSelectedVault}">
+          <TextBlock Text="{Binding OpenVaultButtonText}" Foreground="{DynamicResource ButtonTextBrush}"/>
         </Button>
-
-        <Button Click="About_Click" CornerRadius="10" Height="40" Width="116"
-                FontFamily="{DynamicResource MainFontFamily}" FontSize="{StaticResource Type.Body.Size}"
-                ToolTip.Tip="About this app"
-                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+        <Button Classes="action-pill"
+                Click="About_Click"
                 IsVisible="{Binding IsLandingVisible}">
-          <TextBlock Text="About" Foreground="{DynamicResource ButtonTextBrush}"
-                     HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          <TextBlock Text="About" Foreground="{DynamicResource ButtonTextBrush}"/>
         </Button>
-
-        <Button Click="Import_Click" CornerRadius="10" Height="40" Width="116"
-                FontFamily="{DynamicResource MainFontFamily}" FontSize="{StaticResource Type.Body.Size}"
-                ToolTip.Tip="Import data"
-                HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+        <Button Classes="action-pill"
+                Click="Import_Click"
                 IsVisible="{Binding IsLandingVisible}">
-          <TextBlock Text="Import" Foreground="{DynamicResource ButtonTextBrush}"
-                     HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          <TextBlock Text="Import" Foreground="{DynamicResource ButtonTextBrush}"/>
         </Button>
 
-        <Button Command="{Binding BackToWelcomeCommand}" CornerRadius="10" Height="40" Width="116"
-                FontFamily="{DynamicResource MainFontFamily}" FontSize="{StaticResource Type.Body.Size}"
+        <!-- Setup-choice-state button -->
+        <Button Classes="action-pill"
+                Command="{Binding BackToWelcomeCommand}"
                 IsVisible="{Binding IsSetupChoiceVisible}">
-          <TextBlock Text="Back" Foreground="{DynamicResource ButtonTextBrush}"
-                     HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          <TextBlock Text="Back" Foreground="{DynamicResource ButtonTextBrush}"/>
         </Button>
       </WrapPanel>
     </Border>
-
   </Grid>
 </UserControl>

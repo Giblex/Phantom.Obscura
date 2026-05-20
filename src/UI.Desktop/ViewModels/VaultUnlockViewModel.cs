@@ -550,6 +550,12 @@ namespace PhantomVault.UI.ViewModels
                            ?.SetVaultContext(credProvider, testManifest!);
                         var vaultCtx = svc.GetService<PhantomVault.UI.Services.AutoFill.VaultAutofillContext>();
                         vaultCtx?.SetUnlocked(testManifest!);
+
+                        // Expose the unlocked vault to the named-pipe server so
+                        // `PhantomVault.UI.exe --native-messaging` subprocesses
+                        // (spawned by browsers) can answer credential queries.
+                        svc.GetService<PhantomVault.UI.Services.AutoFill.INativeHostPipeServer>()
+                           ?.SetCredentialProvider(credProvider, testManifest!);
                     }
                 }
                 catch (Exception wireEx)
@@ -567,6 +573,8 @@ namespace PhantomVault.UI.ViewModels
                         {
                             svcOnClose.GetService<PhantomVault.UI.Services.AutoFill.VaultAutofillContext>()
                                       ?.SetLocked();
+                            svcOnClose.GetService<PhantomVault.UI.Services.AutoFill.INativeHostPipeServer>()
+                                      ?.ClearCredentialProvider();
                         }
                     }
                     catch { /* best effort */ }

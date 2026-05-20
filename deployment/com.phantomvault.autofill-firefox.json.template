@@ -1,0 +1,10 @@
+{
+  "name": "com.phantomvault.autofill",
+  "description": "PhantomVault Autofill Native Messaging Host",
+  "path": "PHANTOM_EXE_PATH",
+  "args": ["--native-messaging"],
+  "type": "stdio",
+  "allowed_extensions": [
+    "phantomvault@giblex.com"
+  ]
+}
