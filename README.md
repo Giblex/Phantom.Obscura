@@ -201,8 +201,6 @@ Windows-only packages (`System.Runtime.WindowsRuntime`, `System.Management`, `Yu
 
 | Area | Detail |
 |---|---|
-| YubiKey FIDO2 | OATH TOTP listing and code generation are wired (`YubiKeyTotpService`). Full FIDO2 credential assertion against `Yubico.YubiKey.Fido2` is still pending |
-| Windows Hello / Passkeys | Backend has `#warning SECURITY` guards on DPAPI credential storage paths — migration to Credential Manager pending |
 | Platform passkeys (non-Windows) | macOS and Linux platform passkeys are surfaced as unsupported in `PasskeySettingsWindow`; only Windows Hello passkeys are wired |
 | USB binding / phone | Binding only occurs on the desktop. The mobile heads can read a binding token from an already-bound USB vault but cannot create or rebind on Android |
 | Android (Avalonia) | `UI.Android.Avalonia` ships Welcome, Unlock, Dashboard, CredentialList, AddEditCredential, CategoryLanding, SecurityDashboard, ImportExport, IconDownloader, Settings, ThemeSettings, and SmokeTest views; remaining desktop windows are tracked for future ports |
