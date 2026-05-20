@@ -79,7 +79,7 @@
     <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
     <PackageReference Include="KeePassLib.Standard" Version="2.57.1" />
     <!-- Pin to fix GHSA-37gx-xxp4-5rgx / GHSA-w3x6-4m5h-cxqf in KeePassLib's transitive dep -->
-    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.0" />
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.6" />
     <!-- System.Security.Cryptography.Algorithms provides AES‑GCM support. -->
     <!-- Serilog for structured logging -->
     <PackageReference Include="Serilog" Version="4.2.0" />
