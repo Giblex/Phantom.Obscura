@@ -335,6 +335,11 @@ namespace PhantomVault.UI.ViewModels
             ToggleSidebarCommand = ReactiveCommand.Create(ToggleSidebar);
             ToggleThemeCommand = ReactiveCommand.Create(ToggleTheme);
             ClearSelectedCredentialCommand = ReactiveCommand.Create(() => { SelectedCredential = null; });
+            // The actual palette window is opened by the View — the VM merely
+            // raises this command so the View (which owns Window creation per
+            // MVVM rules) can react. Action seeding happens in
+            // BuildCommandPaletteActions() below.
+            OpenCommandPaletteCommand = ReactiveCommand.Create(() => { });
             OpenSettingsPanelCommand = ReactiveCommand.Create(OpenSettingsPanel);
             CloseSettingsPanelCommand = ReactiveCommand.Create(CloseSettingsPanel);
             ToggleSecurityDashboardCommand = ReactiveCommand.Create(ToggleSecurityDashboard);
@@ -2012,6 +2017,7 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> ToggleSidebarCommand { get; }
         public ReactiveCommand<Unit, Unit> ToggleThemeCommand { get; }
         public ReactiveCommand<Unit, Unit> ClearSelectedCredentialCommand { get; }
+        public ReactiveCommand<Unit, Unit> OpenCommandPaletteCommand { get; }
         public ReactiveCommand<Unit, Unit> OpenSettingsPanelCommand { get; }
         public ReactiveCommand<Unit, Unit> CloseSettingsPanelCommand { get; }
         public ReactiveCommand<Unit, Unit> ToggleSecurityDashboardCommand { get; }
@@ -2045,6 +2051,147 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> ExportVaultCommand { get; }
         public ReactiveCommand<Unit, Unit> ExportVaultCsvCommand { get; }
         public ReactiveCommand<Unit, Unit> ExportKeePassCommand { get; }
+
+        /// <summary>
+        /// Snapshot of available command-palette actions, built fresh each
+        /// time the palette opens so they reflect current vault state
+        /// (selected credential, lock state, etc.). The View calls this when
+        /// it builds the palette window.
+        /// </summary>
+        public IReadOnlyList<CommandPaletteAction> BuildCommandPaletteActions()
+        {
+            // Helper: fire-and-forget a Unit ReactiveCommand. Palette closes
+            // before the action runs (see CommandPaletteWindow.OnClosed), so
+            // any dialog the command pops up will be parented correctly.
+            static void Run(ReactiveCommand<Unit, Unit> cmd) => cmd.Execute().Subscribe(_ => { }, _ => { });
+
+            var list = new List<CommandPaletteAction>
+            {
+                // ── Vault ───────────────────────────────────────────────
+                new("Lock vault now",            "Vault",    () => Run(LockCommand),
+                    subtitle: "Clear keys and require keyfile + password again",
+                    glyph: "🔒",
+                    searchKeywords: "lock,logout,sign out,exit"),
+
+                // ── Add ────────────────────────────────────────────────
+                new("New login",                 "Add",      () => Run(AddLoginCredentialCommand),
+                    glyph: "+", searchKeywords: "create,add,account,credential"),
+                new("New credit card",           "Add",      () => Run(AddCreditCardCommand),
+                    glyph: "💳", searchKeywords: "payment,visa,mastercard"),
+                new("New secure note",           "Add",      () => Run(AddSecureNoteCommand),
+                    glyph: "📝", searchKeywords: "note,text"),
+                new("New identity",              "Add",      () => Run(AddIdentityCommand),
+                    glyph: "🪪", searchKeywords: "id,passport,license"),
+                new("New API key",               "Add",      () => Run(AddApiKeyCommand),
+                    glyph: "🔑", searchKeywords: "token,secret"),
+                new("New Wi-Fi password",        "Add",      () => Run(AddWiFiPasswordCommand),
+                    glyph: "📶", searchKeywords: "wifi,wireless,network"),
+                new("New software license",      "Add",      () => Run(AddSoftwareLicenseCommand),
+                    glyph: "🪪", searchKeywords: "license,product key"),
+                new("New bank account",          "Add",      () => Run(AddBankAccountCommand),
+                    glyph: "🏦", searchKeywords: "bank,account,iban"),
+                new("New contact",               "Add",      () => Run(AddContactCommand),
+                    glyph: "👤", searchKeywords: "contact,address book"),
+
+                // ── Navigate ───────────────────────────────────────────
+                new("Show dashboard",            "Navigate", () => Run(ShowDashboardCommand),
+                    glyph: "🏠", searchKeywords: "home,overview"),
+                new("Show all credentials",      "Navigate", () => Run(ShowAllCommand),
+                    glyph: "📋", searchKeywords: "list,everything"),
+                new("Show passwords",            "Navigate", () => Run(ShowPasswordsCommand),
+                    glyph: "🔑", searchKeywords: "logins"),
+                new("Show favourites",           "Navigate", () => Run(ShowFavoritesCommand),
+                    glyph: "⭐", searchKeywords: "starred,pinned"),
+                new("Show passkeys",             "Navigate", () => Run(ShowPasskeysCommand),
+                    glyph: "🗝️", searchKeywords: "fido,webauthn"),
+                new("Show recently used",        "Navigate", () => Run(ShowRecentCommand),
+                    glyph: "🕒", searchKeywords: "history"),
+                new("Show expiring soon",        "Navigate", () => Run(ShowExpiringSoonCommand),
+                    glyph: "⏳", searchKeywords: "expiry,renewal"),
+                new("Show flagged passwords",    "Navigate", () => Run(ShowFlaggedPasswordsCommand),
+                    glyph: "🚩", searchKeywords: "weak,duplicate,breached"),
+
+                // ── Tools ───────────────────────────────────────────────
+                new("Open password health",      "Tools",    () => Run(OpenPasswordHealthPanelCommand),
+                    glyph: "🩺", searchKeywords: "audit,strength,scan,duplicates"),
+                new("Toggle security dashboard", "Tools",    () => Run(ToggleSecurityDashboardCommand),
+                    glyph: "🛡️", searchKeywords: "security,overview"),
+                new("Open security options",    "Tools",    () => Run(OpenSecurityOptionsCommand),
+                    glyph: "⚙️", searchKeywords: "security,options"),
+                new("Manage categories",         "Tools",    () => Run(ManageCategoriesCommand),
+                    glyph: "🗂️", searchKeywords: "tags,folders,labels"),
+                new("Toggle view mode",          "Tools",    () => Run(ToggleViewModeCommand),
+                    glyph: "🔁", searchKeywords: "grid,list,layout"),
+                new("Toggle sidebar",            "Tools",    () => Run(ToggleSidebarCommand),
+                    glyph: "↔️", searchKeywords: "panel,collapse"),
+
+                // ── Theme ───────────────────────────────────────────────
+                new("Toggle dark / light theme", "Theme",    () => Run(ToggleThemeCommand),
+                    glyph: "🌓", searchKeywords: "appearance,dark mode,light mode"),
+                new("Open theme settings",       "Theme",    () => Run(ShowThemeSettingsCommand),
+                    glyph: "🎨", searchKeywords: "colour,style"),
+
+                // ── Settings ───────────────────────────────────────────
+                new("Open settings",             "Settings", () => Run(OpenSettingsPanelCommand),
+                    glyph: "⚙️", searchKeywords: "preferences,options,config"),
+                new("Accessibility settings",    "Settings", () => Run(ShowAccessibilitySettingsCommand),
+                    glyph: "♿", searchKeywords: "a11y,motion,contrast"),
+                new("Auto-fill settings",        "Settings", () => Run(ShowAutoFillSettingsCommand),
+                    glyph: "✍️", searchKeywords: "autofill,browser,injection"),
+                new("Backup settings",           "Settings", () => Run(ShowBackupSettingsCommand),
+                    glyph: "💾", searchKeywords: "snapshot,export,restore"),
+                new("Advanced settings",         "Settings", () => Run(ShowAdvancedSettingsCommand),
+                    glyph: "🛠️", searchKeywords: "developer,advanced"),
+                new("Rubbish bin settings",      "Settings", () => Run(ShowRubbishBinSettingsCommand),
+                    glyph: "🗑️", searchKeywords: "trash,recycle"),
+
+                // ── Import / Export ────────────────────────────────────
+                new("Import from file…",         "Import",   () => Run(OpenImportWindowCommand),
+                    glyph: "📥", searchKeywords: "import,keepass,csv,1password,bitwarden"),
+                new("Export vault (encrypted)",  "Export",   () => Run(ExportVaultCommand),
+                    glyph: "📤", searchKeywords: "backup,export"),
+                new("Export vault to CSV",       "Export",   () => Run(ExportVaultCsvCommand),
+                    glyph: "📤", searchKeywords: "csv,spreadsheet"),
+                new("Export to KeePass",         "Export",   () => Run(ExportKeePassCommand),
+                    glyph: "📤", searchKeywords: "keepass,kdbx"),
+
+                // ── Recovery ───────────────────────────────────────────
+                new("Open Phantom Recovery",     "Recovery", () => Run(OpenPhantomRecoveryCommand),
+                    glyph: "🆘", searchKeywords: "recovery,phrase,backup"),
+                new("Open trash manager",        "Recovery", () => Run(OpenTrashManagerCommand),
+                    glyph: "🗑️", searchKeywords: "trash,undelete,restore"),
+            };
+
+            // Selection-aware actions — only meaningful with a credential selected
+            var sel = SelectedCredential;
+            if (sel is not null)
+            {
+                list.Insert(0, new CommandPaletteAction(
+                    title: $"Copy password — {sel.Title}",
+                    category: "Selection",
+                    execute: () => CopyPasswordCommand.Execute(sel).Subscribe(_ => { }, _ => { }),
+                    glyph: "📋",
+                    shortcut: "Ctrl+Shift+C",
+                    searchKeywords: "copy,password,clipboard"));
+                list.Insert(1, new CommandPaletteAction(
+                    title: $"Copy username — {sel.Title}",
+                    category: "Selection",
+                    execute: () => CopyUsernameCommand.Execute(sel).Subscribe(_ => { }, _ => { }),
+                    glyph: "📋",
+                    searchKeywords: "copy,username,clipboard"));
+                if (sel.HasTotpSecret)
+                {
+                    list.Insert(2, new CommandPaletteAction(
+                        title: $"Copy TOTP code — {sel.Title}",
+                        category: "Selection",
+                        execute: () => CopyTotpCodeCommand.Execute(sel).Subscribe(_ => { }, _ => { }),
+                        glyph: "🔢",
+                        searchKeywords: "totp,otp,2fa,code"));
+                }
+            }
+
+            return list;
+        }
 
         // Private methods
         private void InitializeCategories()

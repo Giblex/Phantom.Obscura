@@ -1,0 +1,164 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PhantomVault.UI.ViewModels"
+        xmlns:m="using:PhantomVault.UI.Models"
+        xmlns:views="using:PhantomVault.UI.Views"
+        x:Class="PhantomVault.UI.Views.CommandPaletteWindow"
+        x:DataType="vm:CommandPaletteViewModel"
+        x:CompileBindings="True"
+        Title="Command Palette"
+        Width="640"
+        Height="440"
+        WindowStartupLocation="CenterOwner"
+        SystemDecorations="BorderOnly"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="NoChrome"
+        ExtendClientAreaTitleBarHeightHint="-1"
+        TransparencyLevelHint="AcrylicBlur"
+        Background="Transparent"
+        CanResize="False"
+        ShowInTaskbar="False"
+        Topmost="False">
+
+  <Window.Styles>
+    <Style Selector="Border.palette-root">
+      <Setter Property="Background" Value="#F21A1F2A"/>
+      <Setter Property="BorderBrush" Value="#3FFFFFFF"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="12"/>
+      <Setter Property="BoxShadow" Value="0 12 40 0 #BB000000"/>
+    </Style>
+
+    <Style Selector="TextBox.palette-search">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderBrush" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Foreground" Value="#F5F5F7"/>
+      <Setter Property="CaretBrush" Value="#8AB4F8"/>
+      <Setter Property="FontSize" Value="18"/>
+      <Setter Property="Padding" Value="8,6"/>
+    </Style>
+
+    <Style Selector="ListBox.palette-list">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+    <Style Selector="ListBox.palette-list ListBoxItem">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Padding" Value="12,8"/>
+      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="Margin" Value="4,1"/>
+    </Style>
+    <Style Selector="ListBox.palette-list ListBoxItem:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#1AFFFFFF"/>
+      <Setter Property="CornerRadius" Value="6"/>
+    </Style>
+    <Style Selector="ListBox.palette-list ListBoxItem:selected /template/ ContentPresenter">
+      <Setter Property="Background" Value="#338AB4F8"/>
+      <Setter Property="CornerRadius" Value="6"/>
+    </Style>
+
+    <Style Selector="Border.palette-glyph">
+      <Setter Property="Background" Value="#1FFFFFFF"/>
+      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="Width" Value="28"/>
+      <Setter Property="Height" Value="28"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="Border.palette-category">
+      <Setter Property="Background" Value="#22FFFFFF"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="Padding" Value="8,2"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="TextBlock.palette-shortcut">
+      <Setter Property="Foreground" Value="#99FFFFFF"/>
+      <Setter Property="FontFamily" Value="Cascadia Mono,Consolas,monospace"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+  </Window.Styles>
+
+  <Border Classes="palette-root" Padding="0" Margin="6">
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+
+      <!-- Search box -->
+      <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Margin="14,12,14,10">
+        <TextBlock Grid.Column="0"
+                   Text="🔍"
+                   FontSize="18"
+                   Foreground="#99FFFFFF"
+                   VerticalAlignment="Center"
+                   Margin="2,0,10,0"/>
+        <TextBox Grid.Column="1"
+                 Name="SearchBox"
+                 Classes="palette-search"
+                 Watermark="Type a command…  (Esc to close)"
+                 Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+      </Grid>
+
+      <Border Grid.Row="1" Height="1" Background="#22FFFFFF" Margin="10,0"/>
+
+      <!-- Filtered actions -->
+      <ListBox Grid.Row="2"
+               Name="ActionList"
+               Classes="palette-list"
+               Margin="6,6,6,4"
+               ItemsSource="{Binding FilteredActions}"
+               SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}"
+               SelectedItem="{Binding SelectedAction, Mode=TwoWay}"
+               DoubleTapped="OnListDoubleTapped">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="m:CommandPaletteAction">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto" Margin="0">
+              <Border Grid.Column="0" Classes="palette-glyph" Margin="0,0,12,0">
+                <TextBlock Text="{Binding Glyph, FallbackValue=•}"
+                           FontSize="14"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           Foreground="#F5F5F7"/>
+              </Border>
+
+              <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                <TextBlock Text="{Binding Title}"
+                           Foreground="#F5F5F7"
+                           FontSize="14"
+                           FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding Subtitle}"
+                           Foreground="#99FFFFFF"
+                           FontSize="11"
+                           IsVisible="{Binding Subtitle, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                           TextTrimming="CharacterEllipsis"/>
+              </StackPanel>
+
+              <Border Grid.Column="2" Classes="palette-category" Margin="8,0,0,0">
+                <TextBlock Text="{Binding Category}"
+                           Foreground="#D0FFFFFF"
+                           FontSize="10"
+                           FontWeight="SemiBold"/>
+              </Border>
+
+              <TextBlock Grid.Column="3"
+                         Classes="palette-shortcut"
+                         Margin="10,0,4,0"
+                         Text="{Binding Shortcut}"
+                         IsVisible="{Binding Shortcut, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+            </Grid>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+
+      <!-- Footer hint -->
+      <Border Grid.Row="3" Background="#11FFFFFF" Padding="14,8" CornerRadius="0,0,12,12">
+        <StackPanel Orientation="Horizontal" Spacing="14">
+          <TextBlock Foreground="#99FFFFFF" FontSize="11" Text="↑ ↓  navigate"/>
+          <TextBlock Foreground="#99FFFFFF" FontSize="11" Text="⏎  run"/>
+          <TextBlock Foreground="#99FFFFFF" FontSize="11" Text="Esc  close"/>
+        </StackPanel>
+      </Border>
+
+    </Grid>
+  </Border>
+</Window>

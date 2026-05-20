@@ -22,7 +22,12 @@
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource WindowBackgroundBrush}"
         Classes="animated-window">
-    
+
+    <!-- Global window shortcuts. Ctrl+K opens the Command Palette. -->
+    <Window.KeyBindings>
+        <KeyBinding Gesture="Ctrl+K" Command="{Binding OpenCommandPaletteCommand}"/>
+    </Window.KeyBindings>
+
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>

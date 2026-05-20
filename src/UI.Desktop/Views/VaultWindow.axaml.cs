@@ -53,6 +53,10 @@ namespace PhantomVault.UI.Views
         private Border? _editPanelContainer;
         private VaultViewModel? _currentVaultViewModel;
         private AddEditCredentialViewModel? _currentEditViewModel;
+        // Subscription that drives the Ctrl+K command palette. Disposed when
+        // the VM is detached so we don't leak across vault unlock cycles.
+        private IDisposable? _commandPaletteSubscription;
+        private CommandPaletteWindow? _openPalette;
         private bool _autoLockInProgress;
         private bool _allowCloseAfterSecureTrashPrompt;
         private readonly DispatcherTimer _sessionPolicyTimer;
@@ -374,10 +378,15 @@ namespace PhantomVault.UI.Views
                 _currentVaultViewModel.PropertyChanged -= VaultViewModel_PropertyChanged;
             }
 
+            // Drop any subscription tied to the previous VM before swapping.
+            _commandPaletteSubscription?.Dispose();
+            _commandPaletteSubscription = null;
+
             if (DataContext is ViewModels.VaultViewModel vm)
             {
                 _currentVaultViewModel = vm;
                 _currentVaultViewModel.PropertyChanged += VaultViewModel_PropertyChanged;
+                _commandPaletteSubscription = vm.OpenCommandPaletteCommand.Subscribe(_ => ShowCommandPalette(vm));
                 HandleEditViewModelChanged(vm.EditViewModel);
                 StartSessionPolicyTracking(restartSession: true);
 
@@ -401,6 +410,44 @@ namespace PhantomVault.UI.Views
             {
                 _currentVaultViewModel = null;
                 HandleEditViewModelChanged(null);
+            }
+        }
+
+        /// <summary>
+        /// Opens the Ctrl+K command palette. Builds a fresh action snapshot
+        /// against the live VM each invocation so selection-sensitive actions
+        /// (copy password / copy TOTP for the currently-selected credential)
+        /// always target the right row.
+        /// </summary>
+        private void ShowCommandPalette(ViewModels.VaultViewModel vm)
+        {
+            // Re-opening: just refocus the existing window instead of stacking.
+            if (_openPalette is { IsVisible: true })
+            {
+                _openPalette.Activate();
+                return;
+            }
+
+            try
+            {
+                var actions = vm.BuildCommandPaletteActions();
+                var paletteVm = new ViewModels.CommandPaletteViewModel(actions);
+                var window = new CommandPaletteWindow(paletteVm);
+                window.Closed += (_, _) =>
+                {
+                    if (ReferenceEquals(_openPalette, window))
+                    {
+                        _openPalette = null;
+                    }
+                };
+                _openPalette = window;
+                window.ShowDialog(this);
+            }
+            catch (Exception ex)
+            {
+                // Palette must never take down the vault — log and swallow.
+                System.Diagnostics.Debug.WriteLine($"[VaultWindow] Command palette failed to open: {ex.Message}");
+                _openPalette = null;
             }
         }
 
