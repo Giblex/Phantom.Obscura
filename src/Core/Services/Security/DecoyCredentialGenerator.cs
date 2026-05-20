@@ -13,7 +13,15 @@ namespace PhantomVault.Core.Services.Security
     /// </summary>
     public sealed class DecoyCredentialGenerator
     {
-        private readonly RandomNumberGenerator _rng;
+        // NOTE: This generator produces intentionally-fake decoy data and MUST be
+        // seedable for reproducible decoy vaults (test/QA scenarios). System.Random
+        // is appropriate here: there is no secret, key, password, or token being
+        // produced from this RNG that an attacker could benefit from predicting.
+        // Do not "upgrade" this to RandomNumberGenerator without also removing the
+        // seedable constructor — and even then it adds no security value.
+#pragma warning disable CA5394 // Do not use insecure randomness (justified above)
+        private readonly Random _rng;
+#pragma warning restore CA5394
 
         // Common website patterns
         private static readonly string[] PopularSites = new[]

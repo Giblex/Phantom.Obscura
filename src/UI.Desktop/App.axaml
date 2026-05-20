@@ -39,14 +39,15 @@
         <!-- Global UI Styles (buttons, cards, typography) -->
         <StyleInclude Source="avares://PhantomVault.UI/Assets/Styles/GlobalStyles.axaml" />
 
-        <!-- Subtle focus fade to complement liquid glass transitions -->
-        <Style Selector="Control:focus">
-            <Setter Property="Transitions">
-                <Transitions>
-                    <DoubleTransition Property="Opacity" Duration="0:0:0.18" />
-                </Transitions>
-            </Setter>
-        </Style>
+        <!--
+            Note: a previous version added <Style Selector="Control:focus"> that
+            faded Opacity to 0.18 on focused controls, which actively dimmed
+            inputs while the user was typing. It was removed. Focus indication
+            is now provided per-control by FluentTheme + LiquidGlass styles,
+            which is where BorderBrush/Background live (Control itself does not
+            expose those properties, so a global Control:focus style cannot
+            animate them either).
+        -->
 
         <!-- Smooth scrolling for all ScrollViewers -->
         <Style Selector="ScrollViewer">

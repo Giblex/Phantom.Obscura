@@ -7,9 +7,11 @@
     <!-- ============================================= -->
 
     <Style Selector="Button.animated">
+        <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
         <Setter Property="Transitions">
             <Transitions>
                 <DoubleTransition Property="Opacity" Duration="0:0:0.15"/>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" Easing="CubicEaseOut"/>
             </Transitions>
         </Setter>
     </Style>
@@ -19,7 +21,8 @@
     </Style>
 
     <Style Selector="Button.animated:pressed">
-        <Setter Property="Opacity" Value="0.9"/>
+        <Setter Property="Opacity" Value="0.92"/>
+        <Setter Property="RenderTransform" Value="scale(0.97)"/>
     </Style>
 
     <!-- Accent Button with Press Effect -->
@@ -30,10 +33,11 @@
         <Setter Property="CornerRadius" Value="8"/>
         <Setter Property="Padding" Value="16,8"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
         <Setter Property="Transitions">
             <Transitions>
                 <BrushTransition Property="Background" Duration="0:0:0.2"/>
-                <ThicknessTransition Property="Margin" Duration="0:0:0.15" Easing="CubicEaseOut"/>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" Easing="CubicEaseOut"/>
             </Transitions>
         </Setter>
     </Style>
@@ -44,7 +48,7 @@
     </Style>
 
     <Style Selector="Button.accent-animated:pressed">
-        <Setter Property="Margin" Value="0,1,0,-1"/>
+        <Setter Property="RenderTransform" Value="scale(0.97)"/>
     </Style>
 
     <!-- Icon Button with Scale Effect -->
@@ -111,7 +115,125 @@
         </Setter>
     </Style>
 
-    <!-- Continue pattern for more items as needed... -->
+    <Style Selector="ListBoxItem.credential-item.delay-3.show">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Delay="0:0:0.15" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="ListBoxItem.credential-item.delay-4.show">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Delay="0:0:0.2" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="ListBoxItem.credential-item.delay-5.show">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Delay="0:0:0.25" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="ListBoxItem.credential-item.delay-6.show">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Delay="0:0:0.3" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="ListBoxItem.credential-item.delay-7.show">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Delay="0:0:0.35" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="ListBoxItem.credential-item.delay-8.show">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Delay="0:0:0.4" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="ListBoxItem.credential-item.delay-9.show">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Delay="0:0:0.45" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="ListBoxItem.credential-item.delay-10.show">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Delay="0:0:0.5" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="ListBoxItem.credential-item.delay-11.show">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Delay="0:0:0.55" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="ListBoxItem.credential-item.delay-12.show">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Delay="0:0:0.6" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="ListBoxItem.credential-item.delay-13.show">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Delay="0:0:0.65" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="ListBoxItem.credential-item.delay-14.show">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Delay="0:0:0.7" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="ListBoxItem.credential-item.delay-15.show">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Delay="0:0:0.75" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="ListBoxItem.credential-item.delay-16.show">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Delay="0:0:0.8" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="ListBoxItem.credential-item.delay-17.show">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Delay="0:0:0.85" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="ListBoxItem.credential-item.delay-18.show">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Delay="0:0:0.9" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="ListBoxItem.credential-item.delay-19.show">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.4" Delay="0:0:0.95" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
 
     <!-- ============================================= -->
     <!-- SEARCH RESULT TRANSITIONS -->
@@ -209,17 +331,25 @@
     <!-- SLIDE ANIMATIONS -->
     <!-- ============================================= -->
 
+    <!--
+        slide-left: enters from the right and slides left into place.
+        Uses TransformOperationsTransition string form which is the only
+        scale/translate transition reliable on Avalonia 11.x.
+    -->
     <Style Selector="Panel.slide-left">
         <Setter Property="Opacity" Value="0"/>
+        <Setter Property="RenderTransform" Value="translateX(24px)"/>
         <Setter Property="Transitions">
             <Transitions>
                 <DoubleTransition Property="Opacity" Duration="0:0:0.35" Easing="CubicEaseOut"/>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.35" Easing="CubicEaseOut"/>
             </Transitions>
         </Setter>
     </Style>
 
     <Style Selector="Panel.slide-left.show">
         <Setter Property="Opacity" Value="1"/>
+        <Setter Property="RenderTransform" Value="translateX(0)"/>
     </Style>
 
     <Style Selector="Panel.slide-up">

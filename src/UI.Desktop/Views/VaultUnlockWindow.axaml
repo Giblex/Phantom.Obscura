@@ -32,6 +32,47 @@
         <Style Selector="TextBlock">
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
         </Style>
+
+        <!--
+            Breathing pulse for the unlock orb. Runs while the orb is visible
+            (i.e. IsBusy=true) and stays purely on the GPU compositor — no
+            code-behind, no ViewModel touch. The animation is scoped to the
+            'unlock-orb' class so it can't leak to other Borders.
+        -->
+        <Style Selector="Border.unlock-orb">
+            <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
+            <Style.Animations>
+                <Animation Duration="0:0:1.8" IterationCount="INFINITE" Easing="SineEaseInOut">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="RenderTransform" Value="scale(1.0)"/>
+                        <Setter Property="Opacity" Value="0.92"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="50%">
+                        <Setter Property="RenderTransform" Value="scale(1.08)"/>
+                        <Setter Property="Opacity" Value="1.0"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="RenderTransform" Value="scale(1.0)"/>
+                        <Setter Property="Opacity" Value="0.92"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+
+        <!-- Slow rotating accent ring behind the orb. -->
+        <Style Selector="Ellipse.unlock-ring">
+            <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
+            <Style.Animations>
+                <Animation Duration="0:0:6" IterationCount="INFINITE" Easing="LinearEasing">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="RenderTransform" Value="rotate(0deg)"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="RenderTransform" Value="rotate(360deg)"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
     </views:ThemeAwareWindow.Styles>
 
     <Grid RowDefinitions="Auto,*,Auto" Margin="34,28">
@@ -58,17 +99,34 @@
                     VerticalAlignment="Center">
             
             <!-- Progress Indicator with Icon -->
-            <Border Width="70" 
-                    Height="70"
-                    CornerRadius="35"
-                    Background="{DynamicResource UnlockOrbBrush}"
-                    HorizontalAlignment="Center"
-                    IsVisible="{Binding IsBusy}">
-                <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
-                       Width="42" Height="42"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center"/>
-            </Border>
+            <Grid Width="92" Height="92" HorizontalAlignment="Center" IsVisible="{Binding IsBusy}">
+                <!-- Slow rotating accent ring -->
+                <Ellipse Classes="unlock-ring"
+                         Width="92" Height="92"
+                         StrokeThickness="2"
+                         StrokeDashArray="3,6">
+                    <Ellipse.Stroke>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                            <GradientStop Offset="0" Color="#5D7DA7"/>
+                            <GradientStop Offset="0.5" Color="#8FB5DF"/>
+                            <GradientStop Offset="1" Color="#173247"/>
+                        </LinearGradientBrush>
+                    </Ellipse.Stroke>
+                </Ellipse>
+                <!-- Breathing orb with brand icon -->
+                <Border Classes="unlock-orb"
+                        Width="70"
+                        Height="70"
+                        CornerRadius="35"
+                        Background="{DynamicResource UnlockOrbBrush}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                    <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
+                           Width="42" Height="42"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"/>
+                </Border>
+            </Grid>
 
             <!-- Status Message -->
             <TextBlock Text="{Binding Status}"
