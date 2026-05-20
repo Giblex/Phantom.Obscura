@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using PhantomVault.Core.Models;
 
 namespace PhantomVault.Core.Services.Security
@@ -12,7 +13,7 @@ namespace PhantomVault.Core.Services.Security
     /// </summary>
     public sealed class DecoyCredentialGenerator
     {
-        private readonly Random _rng;
+        private readonly RandomNumberGenerator _rng;
 
         // Common website patterns
         private static readonly string[] PopularSites = new[]
@@ -137,8 +138,8 @@ namespace PhantomVault.Core.Services.Security
 
         private Credential GenerateWiFiEntry()
         {
-            string prefix = WifiPrefixes[_rng.Next(WifiPrefixes.Length)];
-            string suffix = _rng.Next(1000, 9999).ToString();
+            string prefix = WifiPrefixes[NextInt(0, WifiPrefixes.Length)];
+            string suffix = NextInt(1000, 9999).ToString();
             string networkName = $"{prefix}-{suffix}";
 
             return new Credential
@@ -251,13 +252,13 @@ namespace PhantomVault.Core.Services.Security
         private string GenerateRealisticPassword()
         {
             // Generate passwords that appear complex (mix of patterns)
-            int pattern = _rng.Next(4);
+            int pattern = NextInt(0, 4);
 
             return pattern switch
             {
-                0 => $"{CapitalizeFirst(FirstNames[_rng.Next(FirstNames.Length)])}{_rng.Next(1000, 9999)}!",
-                1 => $"{CapitalizeFirst(LastNames[_rng.Next(LastNames.Length)])}{_rng.Next(10, 99)}@{_rng.Next(2015, 2025)}",
-                2 => $"Welcome{_rng.Next(100, 999)}!",
+                0 => $"{CapitalizeFirst(FirstNames[NextInt(0, FirstNames.Length)])}{NextInt(1000, 9999)}!",
+                1 => $"{CapitalizeFirst(LastNames[NextInt(0, LastNames.Length)])}{NextInt(10, 99)}@{NextInt(2015, 2025)}",
+                2 => $"Welcome{NextInt(100, 999)}!",
                 _ => GenerateRandomString(12, includeSpecial: true)
             };
         }
@@ -273,10 +274,10 @@ namespace PhantomVault.Core.Services.Security
             // Generate fake 16-digit card number (not valid Luhn, but looks real)
             var parts = new[]
             {
-                _rng.Next(4000, 5000).ToString(), // Visa-like prefix
-                _rng.Next(1000, 9999).ToString(),
-                _rng.Next(1000, 9999).ToString(),
-                _rng.Next(1000, 9999).ToString()
+                NextInt(4000, 5000).ToString(), // Visa-like prefix
+                NextInt(1000, 9999).ToString(),
+                NextInt(1000, 9999).ToString(),
+                NextInt(1000, 9999).ToString()
             };
             return string.Join(" ", parts);
         }
@@ -284,9 +285,14 @@ namespace PhantomVault.Core.Services.Security
         private string GenerateFakeApiKey()
         {
             // Generate realistic-looking API key format
-            string prefix = new[] { "sk", "pk", "api", "key" }[_rng.Next(4)];
+            string prefix = new[] { "sk", "pk", "api", "key" }[NextInt(0, 4)];
             string randomPart = GenerateRandomString(32, includeSpecial: false);
             return $"{prefix}_{randomPart}";
+        }
+
+        private int NextInt(int minInclusive, int maxExclusive)
+        {
+            return RandomNumberGenerator.GetInt32(minInclusive, maxExclusive);
         }
 
         private string GenerateRandomString(int length, bool includeSpecial)
@@ -296,13 +302,13 @@ namespace PhantomVault.Core.Services.Security
             string chars = includeSpecial ? alphanumeric + special : alphanumeric;
 
             return new string(Enumerable.Range(0, length)
-                .Select(_ => chars[_rng.Next(chars.Length)])
+                .Select(_ => chars[NextInt(0, chars.Length)])
                 .ToArray());
         }
 
         private string GenerateRealisticNotes()
         {
-            int hasNotes = _rng.Next(100);
+            int hasNotes = NextInt(0, 100);
             if (hasNotes < 70) return string.Empty; // 70% have no notes
 
             string[] notes = new[]
@@ -316,7 +322,7 @@ namespace PhantomVault.Core.Services.Security
                 "Created during promotion"
             };
 
-            return notes[_rng.Next(notes.Length)];
+            return notes[NextInt(0, notes.Length)];
         }
 
         private string PickRandomCategory()
