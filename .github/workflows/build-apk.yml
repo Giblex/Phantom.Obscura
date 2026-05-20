@@ -1,0 +1,84 @@
+name: Build Phantom Obscura APK
+
+on:
+  push:
+    branches: [ main, master, "claude/*" ]
+  workflow_dispatch:
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+  DOTNET_NOLOGO: true
+  ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+  ANDROID_HOME: /usr/local/lib/android/sdk
+
+jobs:
+  build-apk:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Clear global.json SDK pin
+        run: echo '{}' > global.json
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install .NET 10 SDK via apt
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y dotnet-sdk-10.0
+          dotnet --version
+          dotnet --list-sdks
+
+      - name: Accept Android SDK licenses
+        run: |
+          SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKMANAGER" --licenses 2>/dev/null || true
+          mkdir -p "$ANDROID_SDK_ROOT/licenses"
+          printf '%s\n' \
+            24333f8a63b6825ea9c5514f83c2829b004d1fee \
+            d56f5187479451eabf01fb78af6dfcb131a6481e \
+            84831b9409646a918e30573bab4c9c91346d8abd \
+            > "$ANDROID_SDK_ROOT/licenses/android-sdk-license"
+
+      - name: Install Android SDK API 36
+        run: |
+          SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+
+      - name: Restore .NET workloads
+        run: dotnet workload restore src/UI.Android/PhantomVault.Android.csproj
+
+      - name: Restore NuGet packages
+        run: dotnet restore src/UI.Android/PhantomVault.Android.csproj
+
+      - name: Publish APK (debug-signed, sideloadable)
+        run: |
+          dotnet publish src/UI.Android/PhantomVault.Android.csproj \
+            -f net10.0-android \
+            -c Release \
+            -p:AndroidKeyStore=false \
+            -p:AndroidPackageFormat=apk \
+            -p:AndroidCreatePackagePerAbi=false \
+            -p:EmbedAssembliesIntoApk=true \
+            -p:AndroidUseSharedRuntime=false \
+            -o ./artifacts/apk
+
+      - name: Collect APK
+        run: find ./artifacts -name "*.apk" | sort
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: phantom-obscura-apk
+          path: |
+            artifacts/apk/*.apk
+            artifacts/apk/**/*.apk
+          retention-days: 30
+          if-no-files-found: error
