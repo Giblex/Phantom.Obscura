@@ -58,7 +58,7 @@
         <Style Selector="Window.animated-window">
             <Setter Property="Opacity" Value="0"/>
         </Style>
-        <Style Selector="Window.animated-window[IsVisible=True]">
+        <Style Selector="Window.animated-window[IsVisible=True]:not(.reduce-motion)">
             <Style.Animations>
                 <Animation Duration="0:0:0.35" FillMode="Forward" Easing="0.16,1,0.3,1">
                     <KeyFrame Cue="0%">
@@ -69,6 +69,10 @@
                     </KeyFrame>
                 </Animation>
             </Style.Animations>
+        </Style>
+        <!-- Reduce-motion: snap to fully-opaque without animation. -->
+        <Style Selector="Window.animated-window.reduce-motion[IsVisible=True]">
+            <Setter Property="Opacity" Value="1"/>
         </Style>
 
         <!-- Shared overlay fade (apply class 'overlay-fade' to Border overlays) -->

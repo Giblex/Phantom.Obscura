@@ -38,8 +38,10 @@
             (i.e. IsBusy=true) and stays purely on the GPU compositor — no
             code-behind, no ViewModel touch. The animation is scoped to the
             'unlock-orb' class so it can't leak to other Borders.
+            The Window:not(.reduce-motion) ancestor guard makes the animation
+            skip entirely when AccessibilityService.ReduceMotion is on.
         -->
-        <Style Selector="Border.unlock-orb">
+        <Style Selector="Window:not(.reduce-motion) Border.unlock-orb">
             <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
             <Style.Animations>
                 <Animation Duration="0:0:1.8" IterationCount="INFINITE" Easing="SineEaseInOut">
@@ -59,8 +61,8 @@
             </Style.Animations>
         </Style>
 
-        <!-- Slow rotating accent ring behind the orb. -->
-        <Style Selector="Ellipse.unlock-ring">
+        <!-- Slow rotating accent ring behind the orb. Disabled under reduce-motion. -->
+        <Style Selector="Window:not(.reduce-motion) Ellipse.unlock-ring">
             <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
             <Style.Animations>
                 <Animation Duration="0:0:6" IterationCount="INFINITE" Easing="LinearEasing">
