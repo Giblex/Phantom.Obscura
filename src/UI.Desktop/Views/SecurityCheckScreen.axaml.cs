@@ -118,10 +118,15 @@ namespace PhantomVault.UI.Views
                     }
 
                     var vaultLockDurationService = services.GetRequiredService<VaultLockDurationService>();
+                    Serilog.Log.Information("[Nav] resolved VaultLockDurationService");
                     var secureTrashService = services.GetRequiredService<SecureTrashService>();
+                    Serilog.Log.Information("[Nav] resolved SecureTrashService");
                     var encryptionService = services.GetRequiredService<EncryptionService>();
+                    Serilog.Log.Information("[Nav] resolved EncryptionService");
                     var iconManager = services.GetRequiredService<IconManager>();
+                    Serilog.Log.Information("[Nav] resolved IconManager");
                     var usbDetector = services.GetRequiredService<UsbDetector>();
+                    Serilog.Log.Information("[Nav] resolved UsbDetector — constructing VaultUnlockViewModel");
 
                     // Create VaultUnlockViewModel 
                     var unlockViewModel = new ViewModels.VaultUnlockViewModel(
@@ -133,28 +138,32 @@ namespace PhantomVault.UI.Views
                         iconManager,
                         usbDetector,
                         launchRequest?.VaultPath);
+                    Serilog.Log.Information("[Nav] VaultUnlockViewModel constructed — creating VaultUnlockWindow");
 
                     // Show unlock window (it will auto-unlock if keyfile is present)
                     var unlockWindow = new VaultUnlockWindow(unlockViewModel);
+                    Serilog.Log.Information("[Nav] VaultUnlockWindow constructed — calling Show()");
                     unlockWindow.Show();
+                    Serilog.Log.Information("[Nav] Show() returned");
 
                     // Transfer MainWindow to unlock window so closing SecurityCheckScreen
                     // doesn't trigger app shutdown (Avalonia default: OnMainWindowClose)
                     if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime dt)
                         dt.MainWindow = unlockWindow;
+                    Serilog.Log.Information("[Nav] MainWindow transferred — closing SecurityCheckScreen");
 
                     // Close security check screen
                     this.Close();
+                    Serilog.Log.Information("[Nav] SecurityCheckScreen.Close() returned");
                 }
                 catch (Exception ex)
                 {
-                    // Show detailed error with stack trace to diagnose source quickly
+                    Serilog.Log.Error(ex, "[Nav] OnNavigateToVault threw");
                     var errorDialogService = new DialogService();
-                    // Use GetAwaiter().GetResult() instead of .Wait() to avoid potential deadlocks
-                    errorDialogService.ShowErrorAsync(
+                    await errorDialogService.ShowErrorAsync(
                         "Navigation Error",
                         $"Failed to open vault:\n\n{ex.Message}\n\n{ex.GetType().Name}\n{ex.StackTrace}",
-                        this).GetAwaiter().GetResult();
+                        this);
                 }
             });
         }

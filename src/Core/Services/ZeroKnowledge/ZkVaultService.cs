@@ -38,15 +38,23 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
         public ZkVaultService(EngineOptions? opts = null)
         {
             _opts = opts ?? new EngineOptions(EncryptionProfile.Advanced);
-            _pepperPath = Path.Combine(
+            var appDataDir = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "PhantomVault",
-                "pepper.dpapi"
+                "PhantomVault"
             );
-            _verifierPath = Path.Combine(
-                Path.GetDirectoryName(_pepperPath)!,
-                "master.verifier.json"
-            );
+            _pepperPath = Path.Combine(appDataDir, DerivePepperFileName());
+            _verifierPath = Path.Combine(appDataDir, "master.verifier.json");
+        }
+
+        /// <summary>
+        /// Derives a machine- and user-specific pepper file name so that the file
+        /// is not trivially locatable by name on a compromised filesystem.
+        /// </summary>
+        private static string DerivePepperFileName()
+        {
+            var key = $"{Environment.MachineName}|{Environment.UserName}|PhantomVault.Pepper";
+            var hash = System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(key));
+            return $"{Convert.ToHexString(hash[..8]).ToLowerInvariant()}.dpapi";
         }
 
         /// <summary>
@@ -56,6 +64,13 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
         public async Task<bool> UnlockMasterKeyAsync(string password, string? keyfilePath = null, string? deviceId = null)
         {
             await _lock.WaitAsync();
+
+            // Declare sensitive buffers outside try so finally can always zero them.
+            byte[]? pwdBytes = null;
+            byte[]? pepper = null;
+            byte[]? keyfileBytes = null;
+            byte[]? combined = null;
+
             try
             {
                 if (IsUnlocked)
@@ -64,20 +79,22 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                 }
 
                 // Load or create pepper
-                var (pepper, createdPepper) = await LoadOrCreatePepperAsync();
+                bool createdPepper;
+                (pepper, createdPepper) = await LoadOrCreatePepperAsync();
 
                 // Build combined secret: password + pepper + keyfile
-                byte[] pwdBytes = Encoding.UTF8.GetBytes(password);
-                byte[] keyfileBytes = !string.IsNullOrEmpty(keyfilePath)
+                pwdBytes = Encoding.UTF8.GetBytes(password);
+                keyfileBytes = !string.IsNullOrEmpty(keyfilePath)
                     ? await CompositeKeyfilePath.ReadCombinedBytesAsync(keyfilePath, required: true).ConfigureAwait(false)
-                    : Array.Empty<byte>();
+                    : null;
 
-                byte[] combined = new byte[pwdBytes.Length + pepper.Length + keyfileBytes.Length];
+                var kfLen = keyfileBytes?.Length ?? 0;
+                combined = new byte[pwdBytes.Length + pepper.Length + kfLen];
                 Buffer.BlockCopy(pwdBytes, 0, combined, 0, pwdBytes.Length);
                 Buffer.BlockCopy(pepper, 0, combined, pwdBytes.Length, pepper.Length);
-                if (keyfileBytes.Length > 0)
+                if (keyfileBytes != null && kfLen > 0)
                 {
-                    Buffer.BlockCopy(keyfileBytes, 0, combined, pwdBytes.Length + pepper.Length, keyfileBytes.Length);
+                    Buffer.BlockCopy(keyfileBytes, 0, combined, pwdBytes.Length + pepper.Length, kfLen);
                 }
 
                 // Apply device binding if provided
@@ -99,12 +116,6 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
 
                 _masterKey = Argon2Kdf.DeriveKey(combined, salt, kdfParams);
 
-                // Zero sensitive materials
-                CryptographicOperations.ZeroMemory(pwdBytes);
-                CryptographicOperations.ZeroMemory(pepper);
-                CryptographicOperations.ZeroMemory(keyfileBytes);
-                CryptographicOperations.ZeroMemory(combined);
-
                 if (!await ValidateOrInitializeMasterKeyVerifierAsync(_masterKey, createdPepper || createdSalt).ConfigureAwait(false))
                 {
                     CryptographicOperations.ZeroMemory(_masterKey);
@@ -125,6 +136,11 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
             }
             finally
             {
+                // Always zero sensitive key material regardless of success, failure, or exception.
+                if (pwdBytes != null) CryptographicOperations.ZeroMemory(pwdBytes);
+                if (pepper != null) CryptographicOperations.ZeroMemory(pepper);
+                if (keyfileBytes != null) CryptographicOperations.ZeroMemory(keyfileBytes);
+                if (combined != null) CryptographicOperations.ZeroMemory(combined);
                 _lock.Release();
             }
         }
@@ -517,39 +533,34 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
         }
 
         /// <summary>
-        /// Loads existing pepper or creates new one with DPAPI protection.
+        /// Loads existing pepper or creates new one with platform-appropriate protection.
+        /// On Windows: DPAPI (CurrentUser scope).
+        /// On macOS/Linux: AES-256-GCM with a 0600-restricted envelope key file.
         /// </summary>
         private async Task<(byte[] Pepper, bool Created)> LoadOrCreatePepperAsync()
         {
             var appDataDir = Path.GetDirectoryName(_pepperPath)!;
             Directory.CreateDirectory(appDataDir);
 
+            // Migrate from legacy fixed pepper name to the derived name on first run.
+            var legacyPepperPath = Path.Combine(appDataDir, "pepper.dpapi");
+            if (!File.Exists(_pepperPath) && File.Exists(legacyPepperPath))
+            {
+                try { File.Move(legacyPepperPath, _pepperPath); }
+                catch { /* Non-fatal: will fall through to load from legacy path */ }
+            }
+
             if (File.Exists(_pepperPath))
             {
                 try
                 {
                     var sealedPepper = await File.ReadAllBytesAsync(_pepperPath);
-                    if (!OperatingSystem.IsWindows())
-                    {
-                        // DPAPI-protected pepper only supported on Windows.
-                        throw new PlatformNotSupportedException("Pepper sealing is only supported on Windows. The application must be run on Windows or use a cross-platform sealing mechanism.");
-                    }
                     return (SecurityTuning.UnsealPepper(sealedPepper), false);
                 }
                 catch
                 {
-                    // Pepper unsealing failed (different user?), create new one
+                    // Pepper unsealing failed (different user / rotated key?), create new one.
                 }
-            }
-
-            // Create new pepper
-            if (!OperatingSystem.IsWindows())
-            {
-                // On non-Windows platforms, fall back to an unprotected pepper stored with restricted ACL.
-                // This is a last-resort fallback and should be replaced by a cross-platform key protection.
-                var fallback = RandomNumberGenerator.GetBytes(64);
-                await File.WriteAllBytesAsync(_pepperPath, fallback);
-                return (fallback, true);
             }
 
             var protectedPepper = SecurityTuning.CreatePepperProtected();

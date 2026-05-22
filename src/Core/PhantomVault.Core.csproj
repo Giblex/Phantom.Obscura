@@ -8,7 +8,7 @@
         produced CS0101 duplicate-definition errors on every build. The split
         compile graph below scopes each set to the right target.
     -->
-    <TargetFrameworks>net9.0;net10.0;net10.0-android</TargetFrameworks>
+    <TargetFrameworks>net10.0;net10.0-android</TargetFrameworks>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
     <!-- Enable nullable reference types and treat warnings as errors for stronger code quality. -->
     <Nullable>enable</Nullable>
@@ -46,8 +46,8 @@
   </Target>
   <!--
       ┌── Compile graph ─────────────────────────────────────────────────────
-      │  Desktop / net9.0 build: include canonical Services/{Name}.cs only.
-      │  Android  / net9.0-android build: include Services/Mobile/{Name}Mobile.cs
+      │  Desktop / net10.0 build: include canonical Services/{Name}.cs only.
+      │  Android  / net10.0-android build: include Services/Mobile/{Name}Mobile.cs
       │    in place of the desktop ones. The four files affected are listed
       │    explicitly so the substitution is auditable rather than a wide glob.
       └─────────────────────────────────────────────────────────────────────-->
@@ -89,10 +89,10 @@
 
   <!-- Windows-only package refs (Windows Hello WinRT bridge, WMI, YubiKey USB HID).
        These pull native libraries that don't exist on Android — restricted to the
-       net9.0 desktop target so the Android Core target builds clean. -->
+       net10.0 desktop target so the Android Core target builds clean. -->
   <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'android'">
     <PackageReference Include="System.Runtime.WindowsRuntime" Version="4.7.0" />
-    <PackageReference Include="System.Management" Version="9.0.0" />
+    <PackageReference Include="System.Management" Version="10.0.0" />
     <PackageReference Include="Yubico.YubiKey" Version="1.12.0" />
   </ItemGroup>
   <ItemGroup>

@@ -1144,12 +1144,14 @@ namespace PhantomVault.UI.ViewModels
         {
             AcceptedTerms = true;
             SelectedSecurityLevel = "Ghost Secured";
+            // Vault data always lives on the USB drive.
             SelectedStorageLocation = "USB";
             EnableUsbBinding = true;
             EnableGuuidBinding = true;
             EnablePhantomKey = false;
             EnableEncryptedContainer = false;
-            UsePassword = true;
+            UsePassword = false;
+            UseExistingKeyfile = false;
         }
 
         /// <summary>Detects available USB drives and applies sensible defaults for the quick-setup path.</summary>
@@ -1165,16 +1167,28 @@ namespace PhantomVault.UI.ViewModels
         public Task<bool> ValidateQuickSetupAsync()
         {
             if (string.IsNullOrWhiteSpace(VaultName))
+            {
+                StatusMessage = "Please enter a name for your vault.";
                 return Task.FromResult(false);
+            }
 
-            if (!UsePassword || string.IsNullOrWhiteSpace(MasterPassword))
+            if (UsePassword && string.IsNullOrWhiteSpace(MasterPassword))
+            {
+                StatusMessage = "Please enter a master password.";
                 return Task.FromResult(false);
+            }
 
-            if (MasterPassword != ConfirmPassword)
+            if (UsePassword && MasterPassword != ConfirmPassword)
+            {
+                StatusMessage = "Passwords do not match. Please re-enter your password.";
                 return Task.FromResult(false);
+            }
 
-            if (string.IsNullOrWhiteSpace(SelectedUsbPath))
+            if (SelectedStorageLocation == "USB" && string.IsNullOrWhiteSpace(SelectedUsbPath))
+            {
+                StatusMessage = "A USB drive is required. Please insert your USB drive and try again.";
                 return Task.FromResult(false);
+            }
 
             return Task.FromResult(true);
         }
@@ -1182,7 +1196,12 @@ namespace PhantomVault.UI.ViewModels
         /// <summary>Kicks off provisioning for the quick-setup flow, delegating to the existing creation pipeline.</summary>
         public async Task BeginProvisioningAsync()
         {
-            await ExecuteVaultCreationAsync();
+            // Fire the VaultReadyForCreation event so the UI layer can open the
+            // VaultCreationLoadingWindow, which in turn calls ExecuteVaultCreationAsync
+            // through its RunCreationAsync. Calling ExecuteVaultCreationAsync directly
+            // here skips the loading window and leaves the QuickSetupWindow stranded
+            // (causing the app to appear to close after Create Vault is clicked).
+            await CompleteSetupAsync();
         }
 
         /// <summary>Raised when vault creation completes so the UI can transition to the loading window flow.</summary>
@@ -1279,9 +1298,14 @@ namespace PhantomVault.UI.ViewModels
                 }
                 else
                 {
+                    // Use %AppData%\PhantomVault\vault as the local vault root.
+                    // Documents (%MyDocuments%) is commonly redirected to OneDrive on Windows 11
+                    // which blocks creation of dot-folders like ".phantom" and causes a
+                    // FileNotFoundException at provisioning time.
                     vaultPath = Path.Combine(
-                        Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                        ".phantom");
+                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                        "PhantomVault",
+                        "vault");
                     if (usePackedMasterVolume)
                     {
                         volumePath = Path.Combine(vaultPath, "obscura.vol");
@@ -1314,6 +1338,22 @@ namespace PhantomVault.UI.ViewModels
                 {
                     ReportProvisioningStage(1, 14, "Securely wiping remnant files...", "Removing prior protected artifacts before provisioning the new vault.");
                     Log.Information("Wiping {Count} remnant file(s)", DetectedRemnants.Count);
+
+                    // Lift any OS-level write-protection left by the prior provisioning
+                    // before we attempt to delete files.
+                    if (!string.IsNullOrEmpty(driveRoot))
+                    {
+                        try
+                        {
+                            var wpLifter = new UsbWriteProtectionService();
+                            bool lifted = wpLifter.EnableWriteAccess(driveRoot);
+                            Log.Information("Write-protect lifted before remnant wipe: {Lifted}", lifted);
+                        }
+                        catch (Exception wpEx)
+                        {
+                            Log.Warning(wpEx, "Could not lift write-protection on {DriveRoot} before remnant wipe — will attempt anyway", driveRoot);
+                        }
+                    }
 
                     // Collect parent .phantom directories so we can remove protections and clean up
                     var phantomDirsToClean = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -1385,6 +1425,36 @@ namespace PhantomVault.UI.ViewModels
 
                 // ─── Create vault directories (after remnant wipe so they aren't deleted) ───
                 ReportProvisioningStage(1, 22, "Creating canonical vault structure...", "Preparing staged root, vault, object, and recovery paths.");
+
+                // If the vault path already exists from a failed prior run, reset all file
+                // attributes to Normal so we can overwrite/delete locked files freely.
+                if (Directory.Exists(vaultPath))
+                {
+                    try
+                    {
+                        foreach (var f in Directory.EnumerateFiles(vaultPath, "*", SearchOption.AllDirectories))
+                        {
+                            var fi2 = new FileInfo(f);
+                            if (fi2.Attributes != FileAttributes.Normal)
+                                fi2.Attributes = FileAttributes.Normal;
+                        }
+                        foreach (var d in Directory.EnumerateDirectories(vaultPath, "*", SearchOption.AllDirectories))
+                        {
+                            var di2 = new DirectoryInfo(d);
+                            if (di2.Attributes != FileAttributes.Normal)
+                                di2.Attributes = FileAttributes.Normal;
+                        }
+                        var vaultDirInfo2 = new DirectoryInfo(vaultPath);
+                        if (vaultDirInfo2.Attributes != FileAttributes.Normal)
+                            vaultDirInfo2.Attributes = FileAttributes.Normal;
+                        Log.Information("Reset attributes on existing vault path: {VaultPath}", vaultPath);
+                    }
+                    catch (Exception attrEx)
+                    {
+                        Log.Warning(attrEx, "Could not reset attributes on existing vault path — continuing anyway");
+                    }
+                }
+
                 Directory.CreateDirectory(vaultPath);
                 Directory.CreateDirectory(Path.GetDirectoryName(rootContainerPath)!);
                 Directory.CreateDirectory(Path.GetDirectoryName(objectContainerPath)!);
@@ -1469,6 +1539,44 @@ namespace PhantomVault.UI.ViewModels
 
                 if (SelectedStorageLocation == "USB" && !string.IsNullOrEmpty(driveRoot) && EnableUsbBinding)
                 {
+                    // Pre-flight: verify the selected drive is actually writable before attempting binding.
+                    // If access is denied, attempt to lift any write-protection left by a prior provisioning.
+                    if (!string.IsNullOrEmpty(driveRoot))
+                    {
+                        string probeFile = Path.Combine(driveRoot, $".phantom_probe_{Guid.NewGuid():N}");
+                        try
+                        {
+                            File.WriteAllText(probeFile, "probe");
+                            File.Delete(probeFile);
+                        }
+                        catch (UnauthorizedAccessException)
+                        {
+                            // Drive may be write-protected from a prior Phantom provisioning.
+                            // Attempt to lift it before giving up.
+                            Log.Warning("USB drive {DriveRoot} appears write-protected — attempting to lift protection before binding", driveRoot);
+                            try
+                            {
+                                var wpLifter = new UsbWriteProtectionService();
+                                wpLifter.EnableWriteAccess(driveRoot);
+                                File.WriteAllText(probeFile, "probe");
+                                File.Delete(probeFile);
+                                Log.Information("Write-protect lifted on {DriveRoot} — proceeding with binding", driveRoot);
+                            }
+                            catch
+                            {
+                                throw new InvalidOperationException(
+                                    $"The selected USB drive ({driveRoot.TrimEnd('\\')}) is write-protected and the protection could not be removed automatically. " +
+                                    "Remove write protection manually and try again, or choose a different drive.");
+                            }
+                        }
+                        catch (IOException ioEx)
+                        {
+                            throw new InvalidOperationException(
+                                $"The selected USB drive ({driveRoot.TrimEnd('\\')}) could not be written to: {ioEx.Message} " +
+                                "Ensure the drive is connected and not full.");
+                        }
+                    }
+
                     try
                     {
                         bindingId = Guid.NewGuid().ToString("N");
@@ -1499,10 +1607,47 @@ namespace PhantomVault.UI.ViewModels
                         {
                             GuuidValue = DetectSystemGuuid();
                         }
+
+                        // ── Seed OS-suppression sentinels on the freshly-bound drive ──
+                        // Writes .metadata_never_index, .nomedia, .Trashes (file), and
+                        // .fseventsd/no_log at the root so OS indexers skip the volume.
+                        // RO is NOT set here — the manifest and vault container still
+                        // need to be written further down. The GPT ReadOnly bit (and
+                        // optional Layer B partition re-tag) is applied later by the
+                        // VaultUnlock close handler so RW stays available throughout
+                        // provisioning. Settings-gated.
+                        if (!string.IsNullOrEmpty(driveRoot))
+                        {
+                            try
+                            {
+                                var setupUsbSettings = PhantomVault.UI.Services.SettingsService.Load();
+                                if (setupUsbSettings.UsbWriteProtectionEnabled)
+                                {
+                                    var wpService = new UsbWriteProtectionService();
+                                    var seedState = new PhantomVault.Core.Models.UsbWriteProtectionState
+                                    {
+                                        ReadOnly = false,
+                                        Hidden = false,
+                                        CompatibilityMode = setupUsbSettings.UsbCompatibilityMode,
+                                    };
+                                    wpService.EnsureSentinelFiles(driveRoot, seedState);
+                                    Log.Information("[Setup] USB OS-indexer sentinels seeded on {Drive} ({N} files)",
+                                        driveRoot, seedState.ExpectedSentinelFiles.Count);
+                                }
+                            }
+                            catch (Exception wpEx)
+                            {
+                                Log.Warning(wpEx, "[Setup] failed to seed OS-indexer sentinels on {Drive}; continuing.", driveRoot);
+                            }
+                        }
                     }
                     catch (Exception ex)
                     {
-                        throw new InvalidOperationException("Provisioning aborted because the selected USB device could not be bound securely.", ex);
+                        Log.Error(ex, "[Setup] USB binding failed for drive {DriveRoot}", driveRoot);
+                        string bindMsg = ex.InnerException is UnauthorizedAccessException || ex is UnauthorizedAccessException
+                            ? $"The USB drive ({driveRoot?.TrimEnd('\\')}) is write-protected. Remove write protection and try again."
+                            : $"Provisioning aborted because the selected USB device could not be bound securely. {ex.Message}";
+                        throw new InvalidOperationException(bindMsg, ex);
                     }
                 }
 
@@ -1940,14 +2085,15 @@ namespace PhantomVault.UI.ViewModels
                     settings.PendingSetupPasskey = EnablePasskeys && !PasskeyOnboarding.HasRegisteredPasskey;
                     settings.PendingSetupTotp = EnableTotp && !TotpOnboarding.IsTotpEnabled;
 
-                    if (string.IsNullOrEmpty(SelectedUsbPath) &&
+                    var treatAsLocal = SelectedStorageLocation != "USB" || string.IsNullOrEmpty(SelectedUsbPath);
+                    if (treatAsLocal &&
                         !settings.KnownLocalVaultPaths.Contains(vaultPath, StringComparer.OrdinalIgnoreCase))
                     {
                         settings.KnownLocalVaultPaths.Add(vaultPath);
                     }
                 });
 
-                if (string.IsNullOrEmpty(SelectedUsbPath))
+                if (SelectedStorageLocation != "USB" || string.IsNullOrEmpty(SelectedUsbPath))
                 {
                     Log.Information("Registered local vault path: {VaultPath}", vaultPath);
                 }
@@ -2256,9 +2402,15 @@ namespace PhantomVault.UI.ViewModels
 
         private async Task GenerateKeyfileAsync(string keyfilePath)
         {
+            // If no entropy-staged bytes exist (e.g. quick setup skipped the ritual),
+            // fall back to a CSPRNG-generated key. This is cryptographically sound —
+            // the mouse-entropy ritual only adds extra mixing on top of CSPRNG for the
+            // full wizard UX; the underlying security is identical.
             if (_stagedGeneratedKeyfileBytes == null || _stagedGeneratedKeyfileBytes.Length == 0)
             {
-                throw new InvalidOperationException("No staged entropy-blended keyfile material is available.");
+                _stagedGeneratedKeyfileBytes = new byte[GeneratedKeyfileSizeBytes > 0 ? GeneratedKeyfileSizeBytes : 64];
+                System.Security.Cryptography.RandomNumberGenerator.Fill(_stagedGeneratedKeyfileBytes);
+                Log.Information("GenerateKeyfileAsync: no staged entropy bytes — auto-generated {Bytes} bytes via CSPRNG", _stagedGeneratedKeyfileBytes.Length);
             }
 
             try

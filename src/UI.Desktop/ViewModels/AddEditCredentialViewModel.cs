@@ -1215,12 +1215,30 @@ namespace PhantomVault.UI.ViewModels
             credential.LastUpdatedUtc = DateTimeOffset.UtcNow;
 
             _onSave?.Invoke(credential);
+
+            // Release the password string reference so GC can collect it sooner.
+            // Note: .NET strings cannot be zeroed from managed code; minimising the
+            // lifetime of the reference is the best mitigation available with MVVM binding.
+            ClearSensitiveFields();
+
             _ownerWindow?.Close(true);
         }
 
         private void Cancel()
         {
+            ClearSensitiveFields();
             _ownerWindow?.Close(false);
+        }
+
+        /// <summary>
+        /// Releases references to sensitive in-memory string fields.
+        /// Called after save or cancel to minimise the window during which
+        /// the password string lingers in the GC heap.
+        /// </summary>
+        private void ClearSensitiveFields()
+        {
+            _password = string.Empty;
+            _totpSecretInput = string.Empty;
         }
 
         private void TogglePasswordVisibility()

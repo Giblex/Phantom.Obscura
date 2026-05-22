@@ -343,6 +343,48 @@ namespace PhantomVault.UI.Services
         /// </summary>
         public int AutoFillTotpPollTimeoutMs { get; set; } = 8000;
 
+        // ===== USB OS-Junk Write Protection =====
+
+        /// <summary>
+        /// When true, Phantom Obscura sets the GPT ReadOnly attribute on the
+        /// bound USB partition outside of active unlock sessions. Prevents
+        /// foreign OSes (Android, macOS, Windows) from injecting indexing
+        /// folders (LOST.DIR, .Spotlight-V100, System Volume Information,
+        /// etc.) after the drive has been formatted/bound by Phantom Obscura.
+        /// The bit is cleared on unlock and re-set on close.
+        /// </summary>
+        public bool UsbWriteProtectionEnabled { get; set; } = true;
+
+        /// <summary>
+        /// When true, Phantom Obscura automatically scrubs OS-injected indexing
+        /// junk from the drive root on every unlock. Whitelist-driven; never
+        /// touches user data.
+        /// </summary>
+        public bool UsbAutoScrubEnabled { get; set; } = true;
+
+        /// <summary>
+        /// Number of days scrubbed entries are retained in the on-drive
+        /// <c>.phantom_quarantine/</c> folder before being hard-deleted.
+        /// Set to 0 to disable quarantine and hard-delete immediately.
+        /// </summary>
+        public int UsbScrubQuarantineDays { get; set; } = 7;
+
+        /// <summary>
+        /// When true, the first time the scrubber finds OS junk on a drive it
+        /// surfaces a confirmation prompt before removing anything. (Plumbing
+        /// reserved for a future UI; currently the scrubber runs unattended.)
+        /// </summary>
+        public bool UsbScrubPromptOnFirstFind { get; set; } = true;
+
+        /// <summary>
+        /// When true, Phantom Obscura keeps the standard "Basic Data" GPT
+        /// partition type so the drive remains browsable on non-PO machines.
+        /// When false, the partition is re-tagged with
+        /// <c>UsbWriteProtectionService.PhantomObscuraPartitionTypeGuid</c>
+        /// — stops macOS/Android from auto-mounting the drive entirely.
+        /// </summary>
+        public bool UsbCompatibilityMode { get; set; } = true;
+
         // ===== Cross-App Sync Settings =====
 
         /// <summary>

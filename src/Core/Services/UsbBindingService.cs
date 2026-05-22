@@ -671,6 +671,90 @@ namespace PhantomVault.Core.Services
             return ComputeHighAssuranceDeviceId(driveRoot, vaultSalt);
         }
 
+        /// <summary>
+        /// Re-encrypts the hidden device ID file using a new vault salt, preserving the
+        /// stored device ID value. Call this when the hidden file exists but was written
+        /// with a different (older) vault's salt — e.g. after a vault re-setup on the same USB.
+        /// Returns the rotated combined device ID on success, or null if rotation fails.
+        /// </summary>
+        public string? RotateHiddenDeviceId(string driveRoot, byte[] newVaultSalt, string knownDeviceId)
+        {
+            if (string.IsNullOrEmpty(driveRoot)) return null;
+            if (newVaultSalt == null || newVaultSalt.Length == 0) return null;
+            if (string.IsNullOrEmpty(knownDeviceId)) return null;
+
+            try
+            {
+                string hiddenFilePath = Path.Combine(driveRoot, HiddenIdFileName);
+                long timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+                byte[] hmacKey = DeriveHmacKeyFromVaultSalt(newVaultSalt);
+                byte[] dataToSign = Encoding.UTF8.GetBytes($"{knownDeviceId}|{timestamp}");
+                byte[] signature;
+                using (var hmac = new HMACSHA256(hmacKey))
+                    signature = hmac.ComputeHash(dataToSign);
+                CryptographicOperations.ZeroMemory(hmacKey);
+
+                var idData = new DeviceIdData
+                {
+                    DeviceId = knownDeviceId,
+                    Timestamp = timestamp,
+                    Signature = Convert.ToHexString(signature)
+                };
+
+                string innerJson = JsonSerializer.Serialize(idData, JsonOptions);
+                byte[] encKey = DeriveEncryptionKeyFromVaultSalt(newVaultSalt);
+                try
+                {
+                    byte[] plainBytes = Encoding.UTF8.GetBytes(innerJson);
+                    byte[] nonce = new byte[12];
+                    RandomNumberGenerator.Fill(nonce);
+                    byte[] ciphertext = new byte[plainBytes.Length];
+                    byte[] tag = new byte[16];
+
+                    using (var aes = new AesGcm(encKey, 16))
+                        aes.Encrypt(nonce, plainBytes, ciphertext, tag);
+
+                    var envelope = new EncryptedDeviceIdEnvelope
+                    {
+                        Version = 2,
+                        Nonce = Convert.ToBase64String(nonce),
+                        Tag = Convert.ToBase64String(tag),
+                        Ciphertext = Convert.ToBase64String(ciphertext)
+                    };
+
+                    // Strip read-only attribute if set (write-protected USB)
+                    if (File.Exists(hiddenFilePath) && OperatingSystem.IsWindows())
+                    {
+                        var attrs = File.GetAttributes(hiddenFilePath);
+                        if ((attrs & FileAttributes.ReadOnly) != 0)
+                            File.SetAttributes(hiddenFilePath, attrs & ~FileAttributes.ReadOnly);
+                    }
+
+                    File.WriteAllText(hiddenFilePath, JsonSerializer.Serialize(envelope, JsonOptions), Encoding.UTF8);
+                    CryptographicOperations.ZeroMemory(plainBytes);
+                }
+                finally
+                {
+                    CryptographicOperations.ZeroMemory(encKey);
+                }
+
+                if (OperatingSystem.IsWindows())
+                    File.SetAttributes(hiddenFilePath, FileAttributes.Hidden | FileAttributes.System);
+
+                // Return the new combined high-assurance device ID
+                string volumeId = ComputeDeviceId(driveRoot);
+                byte[] combined = Encoding.UTF8.GetBytes($"{volumeId}|{knownDeviceId}");
+                byte[] hash = SHA256.HashData(combined);
+                return Convert.ToHexString(hash);
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Error(ex, "[UsbBinding] RotateHiddenDeviceId threw {ExType} on path {Path}", ex.GetType().Name, Path.Combine(driveRoot, HiddenIdFileName));
+                return null;
+            }
+        }
+
         private sealed class DeviceIdData
         {
             public string DeviceId { get; set; } = string.Empty;

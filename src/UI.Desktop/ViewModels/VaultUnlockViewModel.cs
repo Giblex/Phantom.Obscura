@@ -168,6 +168,7 @@ namespace PhantomVault.UI.ViewModels
             IsBusy = true;
             string? extractedVolumeRoot = null;
 
+            Log.Information("[VaultUnlock] UnlockVaultAsync ENTER usbPath={Usb} preferred={Preferred}", _usbPath, _preferredVaultPath ?? "<null>");
             try
             {
                 ProgressPercent = 5;
@@ -284,6 +285,8 @@ namespace PhantomVault.UI.ViewModels
                 var keyfilePath = string.IsNullOrWhiteSpace(selectedDriveRoot) ? null : FindKeyfileOnDrive(selectedDriveRoot);
                 string? password = null;
 
+                Log.Information("[VaultUnlock] manifestPath={Manifest} keyfilePath={Keyfile}", manifestPath, keyfilePath ?? "<null>");
+
                 // Create services for vault window
                 var encryptionService = new EncryptionService();
                 var containerService = new PhantomContainerService(encryptionService);
@@ -298,17 +301,22 @@ namespace PhantomVault.UI.ViewModels
                     try
                     {
                         // Try to read manifest with keyfile only (empty password)
-                        var keyfileTestManifest = manifestService.ReadManifest(manifestPath, string.Empty, keyfilePath);
+                        var keyfileTestManifest = await Task.Run(() => manifestService.ReadManifest(manifestPath, string.Empty, keyfilePath));
                         if (keyfileTestManifest != null)
                         {
                             // Keyfile-only authentication successful!
                             password = string.Empty;
+                            Log.Information("[VaultUnlock] keyfile-only auth SUCCEEDED");
                             Status = "Authenticated with keyfile";
                         }
+                        else
+                        {
+                            Log.Warning("[VaultUnlock] keyfile-only auth returned null manifest");
+                        }
                     }
-                    catch
+                    catch (Exception kfEx)
                     {
-                        // Keyfile-only failed, will fall back to password prompt
+                        Log.Warning("[VaultUnlock] keyfile-only auth threw {ExType}: {ExMsg}", kfEx.GetType().Name, kfEx.Message);
                     }
                 }
 
@@ -321,21 +329,27 @@ namespace PhantomVault.UI.ViewModels
                     try
                     {
                         // Try empty password — vault may not be password-protected
-                        var noPassManifest = manifestService.ReadManifest(manifestPath, string.Empty, null);
+                        var noPassManifest = await Task.Run(() => manifestService.ReadManifest(manifestPath, string.Empty, null));
                         if (noPassManifest != null)
                         {
                             password = string.Empty;
+                            Log.Information("[VaultUnlock] no-password auth SUCCEEDED");
+                        }
+                        else
+                        {
+                            Log.Warning("[VaultUnlock] no-password auth returned null manifest");
                         }
                     }
-                    catch
+                    catch (Exception npEx)
                     {
-                        // Empty password failed — vault requires authentication
+                        Log.Warning("[VaultUnlock] no-password auth threw {ExType}: {ExMsg}", npEx.GetType().Name, npEx.Message);
                     }
                 }
 
                 // If still no password, prompt for one
                 if (password == null)
                 {
+                    Log.Information("[VaultUnlock] both probes failed — prompting for password");
                     ProgressPercent = 25;
                     Status = "Authentication required...";
                     password = await PromptForPasswordAsync();
@@ -358,10 +372,12 @@ namespace PhantomVault.UI.ViewModels
 
                 // CRITICAL: Validate passphrase by attempting to decrypt the manifest
                 VaultManifest? testManifest = null;
+                (string? RootContainerPath, string? ContainerPath, string? ObjectContainerPath) preResolvePaths = default;
+                Log.Information("[VaultUnlock] final ReadManifest password='{Pass}' keyfile={Keyfile}", password == null ? "<null>" : (password.Length == 0 ? "<empty>" : "<set>"), keyfilePath ?? "<null>");
 
                 try
                 {
-                    testManifest = manifestService.ReadManifest(manifestPath, password, keyfilePath);
+                    testManifest = await Task.Run(() => manifestService.ReadManifest(manifestPath, password, keyfilePath));
                     if (testManifest == null)
                     {
                         // Register failed attempt for throttling
@@ -376,6 +392,15 @@ namespace PhantomVault.UI.ViewModels
                         CloseAndReturnToWelcome();
                         return;
                     }
+
+                    // Snapshot path fields before runtime resolution — DeriveKey must use the
+                    // original stored (relative) paths that were in effect when the vault was
+                    // created; resolving them to absolute temp paths would produce a different
+                    // BuildBindingSalt HKDF salt and break ZK key-unwrap.
+                    preResolvePaths = (
+                        RootContainerPath: testManifest.RootContainerPath,
+                        ContainerPath: testManifest.ContainerPath,
+                        ObjectContainerPath: testManifest.ObjectContainerPath);
 
                     if (!string.IsNullOrWhiteSpace(extractedVolumeRoot))
                     {
@@ -394,9 +419,12 @@ namespace PhantomVault.UI.ViewModels
                         : testManifest.BindingRecordPath;
 
                     ValidateUsbTopology(testManifest, resolvedBindingRecordPath);
-                    ValidateUsbBinding(selectedPhysicalDrivePath ?? selectedDriveRoot!, resolvedBindingRecordPath, testManifest, password, keyfilePath);
-                    ValidateRecoveryArtifacts(testManifest, password, keyfilePath);
-                    _phantomKeyBridgeValidator.Validate(testManifest, password, keyfilePath);
+                    await Task.Run(() =>
+                    {
+                        ValidateUsbBinding(selectedPhysicalDrivePath ?? selectedDriveRoot!, resolvedBindingRecordPath, testManifest, password, keyfilePath);
+                        ValidateRecoveryArtifacts(testManifest, password, keyfilePath);
+                        _phantomKeyBridgeValidator.Validate(testManifest, password, keyfilePath);
+                    });
 
                     // Successful passphrase - continue to TOTP check
 
@@ -425,6 +453,7 @@ namespace PhantomVault.UI.ViewModels
                 }
                 catch (Exception decryptEx)
                 {
+                    Log.Error(decryptEx, "[VaultUnlock] decryption/validation step threw {ExType}", decryptEx.GetType().FullName);
                     // Register failed attempt for throttling
                     _throttleService.RegisterFailedAttempt(manifestPath);
                     var failedCount = _throttleService.GetFailedAttemptCount(manifestPath);
@@ -449,8 +478,39 @@ namespace PhantomVault.UI.ViewModels
                 var deviceBindingId = !string.IsNullOrWhiteSpace(testManifest!.DeviceId)
                     ? testManifest.DeviceId
                     : null;
-                byte[] vaultDatabaseKey = new VaultDatabaseKeyService(encryptionService)
-                    .DeriveKey(testManifest, password, keyfilePath);
+                byte[] vaultDatabaseKey = await Task.Run(() =>
+                {
+                    // Temporarily restore pre-resolution paths so DeriveKey produces the same
+                    // BuildBindingSalt that was used when the vault was first created.
+                    var resolvedRoot = testManifest!.RootContainerPath;
+                    var resolvedContainer = testManifest.ContainerPath;
+                    var resolvedObject = testManifest.ObjectContainerPath;
+                    testManifest.RootContainerPath = preResolvePaths.RootContainerPath;
+                    testManifest.ContainerPath = preResolvePaths.ContainerPath;
+                    testManifest.ObjectContainerPath = preResolvePaths.ObjectContainerPath;
+                    Log.Information("[VaultUnlock][ZKDiag] DeriveKey inputs — VaultName={VaultName} | BindingId={BindingId} | BindingGuid={BindingGuid} | DeviceId={DeviceId} | Guuid={Guuid} | Root={Root} | Container={Container} | Object={Object} | Salt={Salt} | HasPass={HasPass} | HasKey={HasKey}",
+                        testManifest.VaultName,
+                        testManifest.UsbBindingId,
+                        testManifest.UsbBindingGuid,
+                        testManifest.DeviceId,
+                        testManifest.Guuid,
+                        testManifest.RootContainerPath,
+                        testManifest.ContainerPath,
+                        testManifest.ObjectContainerPath,
+                        testManifest.SaltBase64,
+                        !string.IsNullOrEmpty(password),
+                        !string.IsNullOrEmpty(keyfilePath));
+                    try
+                    {
+                        return new VaultDatabaseKeyService(encryptionService).DeriveKey(testManifest, password, keyfilePath);
+                    }
+                    finally
+                    {
+                        testManifest.RootContainerPath = resolvedRoot;
+                        testManifest.ContainerPath = resolvedContainer;
+                        testManifest.ObjectContainerPath = resolvedObject;
+                    }
+                });
                 bool zkUnlocked;
                 try
                 {
@@ -494,7 +554,55 @@ namespace PhantomVault.UI.ViewModels
                     _iconManager);
 
                 vaultViewModel.SetManifestContext(manifestPath, password, keyfilePath);
-                await vaultViewModel.LoadAsync(runtimeVaultRoot, password, keyfilePath).ConfigureAwait(false);
+
+                // ── USB OS-junk write-protection: open RW window + scrub ─────────
+                // Binding has been validated above; if user has the feature enabled,
+                // scrub root-level junk (LOST.DIR, .Spotlight-V100, System Volume
+                // Information, etc.) and clear the GPT ReadOnly bit for the duration
+                // of the unlock session. Scrub events are persisted to the manifest's
+                // ScrubHistory so the audit log survives across sessions.
+                // Failures are non-fatal — the unlock continues regardless.
+                try
+                {
+                    if (!string.IsNullOrWhiteSpace(selectedDriveRoot) && testManifest != null)
+                    {
+                        var usbSettings = PhantomVault.UI.Services.SettingsService.Load();
+
+                        if (usbSettings.UsbAutoScrubEnabled)
+                        {
+                            var scrubber = new UsbJunkScrubber();
+                            if (scrubber.HasJunk(selectedDriveRoot))
+                            {
+                                var removed = scrubber.Scrub(
+                                    selectedDriveRoot,
+                                    quarantineDays: usbSettings.UsbScrubQuarantineDays,
+                                    dryRun: false,
+                                    manifest: testManifest);
+                                if (removed.Count > 0)
+                                {
+                                    Log.Information("[VaultUnlock] scrubbed {Count} OS-junk entries from {Drive}",
+                                        removed.Count, selectedDriveRoot);
+                                }
+                            }
+                        }
+
+                        if (usbSettings.UsbWriteProtectionEnabled)
+                        {
+                            var wpService = new UsbWriteProtectionService();
+                            if (wpService.IsSupported)
+                            {
+                                wpService.EnableWriteAccess(selectedDriveRoot);
+                            }
+                        }
+                    }
+                }
+                catch (Exception wpEx)
+                {
+                    Log.Warning(wpEx, "[VaultUnlock] write-protection / scrub failed; continuing.");
+                }
+                // ─────────────────────────────────────────────────────────────────
+
+                await vaultViewModel.LoadAsync(runtimeVaultRoot, password ?? string.Empty, keyfilePath).ConfigureAwait(false);
 
                 ProgressPercent = 95;
                 Status = "Preparing vault interface...";
@@ -563,7 +671,11 @@ namespace PhantomVault.UI.ViewModels
                     System.Diagnostics.Debug.WriteLine($"[VaultUnlock] AutoFill wire failed: {wireEx.Message}");
                 }
 
-                // When the vault window closes (logout / auto-lock) clear the AutoFill context
+                // When the vault window closes (logout / auto-lock) clear the
+                // AutoFill context AND re-assert USB write-protection so the drive
+                // cannot accept OS-injected indexing folders while not in use.
+                var driveRootForClose = selectedDriveRoot;
+                var manifestForClose = testManifest;
                 openedVaultWindow.Closed += (_, _) =>
                 {
                     try
@@ -578,6 +690,40 @@ namespace PhantomVault.UI.ViewModels
                         }
                     }
                     catch { /* best effort */ }
+
+                    try
+                    {
+                        if (!string.IsNullOrWhiteSpace(driveRootForClose))
+                        {
+                            var usbCloseSettings = PhantomVault.UI.Services.SettingsService.Load();
+                            if (usbCloseSettings.UsbWriteProtectionEnabled)
+                            {
+                                var wpService = new UsbWriteProtectionService();
+                                var prior = manifestForClose?.UsbWriteProtection;
+                                var state = new UsbWriteProtectionState
+                                {
+                                    ReadOnly = true,
+                                    Hidden = false,
+                                    CompatibilityMode = usbCloseSettings.UsbCompatibilityMode,
+                                    // Layer B: when CompatibilityMode is OFF we re-tag the
+                                    // partition with PO's custom GPT type so foreign OSes
+                                    // stop auto-mounting it as user data.
+                                    PartitionTypeGuid = usbCloseSettings.UsbCompatibilityMode
+                                        ? prior?.PartitionTypeGuid
+                                        : UsbWriteProtectionService.PhantomObscuraPartitionTypeGuid,
+                                };
+                                wpService.ApplyProtection(driveRootForClose, state);
+                                if (manifestForClose != null)
+                                {
+                                    manifestForClose.UsbWriteProtection = state;
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception wpEx)
+                    {
+                        Log.Warning(wpEx, "[VaultUnlock] post-close ApplyProtection failed.");
+                    }
                 };
                 // ─────────────────────────────────────────────────────────────────
 
@@ -945,7 +1091,10 @@ namespace PhantomVault.UI.ViewModels
                 keyfilePath,
                 "recovery-record");
 
-            if (!string.Equals(recoveryRecord.RecoveryContainerPath, manifest.RecoveryContainerPath, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(
+                    Path.GetFileName(recoveryRecord.RecoveryContainerPath),
+                    Path.GetFileName(manifest.RecoveryContainerPath),
+                    StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("The recovery record does not match the vault manifest.");
         }
 
@@ -1160,7 +1309,28 @@ namespace PhantomVault.UI.ViewModels
 
             if (useHighAssuranceBinding && salt is { Length: > 0 })
             {
-                currentDeviceId = usbBindingService.ComputeHighAssuranceDeviceId(usbPath, salt);
+                try
+                {
+                    currentDeviceId = usbBindingService.ComputeHighAssuranceDeviceId(usbPath, salt);
+                }
+                catch (System.Security.Cryptography.CryptographicException cryptEx)
+                {
+                    // Hidden device ID file was encrypted with a different vault's salt
+                    // (e.g. USB was previously used with an older vault). Rotate the file
+                    // so it matches the current vault, preserving the volume-based device ID.
+                    Log.Warning(cryptEx, "[VaultUnlock] High-assurance device ID salt mismatch — rotating hidden file to current vault salt.");
+                    string standardId = usbBindingService.ComputeDeviceId(usbPath);
+                    string? rotatedId = usbBindingService.RotateHiddenDeviceId(usbPath, salt, standardId);
+                    if (rotatedId != null)
+                    {
+                        Log.Information("[VaultUnlock] Hidden device ID rotated successfully — using standard device ID for this unlock.");
+                    }
+                    else
+                    {
+                        Log.Warning("[VaultUnlock] Hidden device ID rotation failed — falling back to standard device binding.");
+                    }
+                    currentDeviceId = standardId;
+                }
             }
             else
             {

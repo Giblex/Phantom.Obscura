@@ -190,6 +190,7 @@ namespace GiblexVault.Security.ZK
                             throw new InvalidOperationException("Truncated length");
 
                         var clen = (int)BinaryPrimitives.ReadUInt32LittleEndian(l);
+                        if (clen == 0) break; // zero-length chunk = PHANTOM1 container padding sentinel
                         var ct = new byte[clen];
                         if (await inputStream.ReadAsync(ct, 0, clen).ConfigureAwait(false) != clen)
                             throw new InvalidOperationException("Truncated chunk");

@@ -48,13 +48,12 @@
                 <ResourceInclude Source="avares://PhantomVault.UI/Resources/Templates/DataTemplates/CategoryDataTemplates.axaml" />
             </ResourceDictionary.MergedDictionaries>
             
-            <!-- Tile overlay: use a very faint white sheen so tiles keep a subtle glass
-                 highlight but nothing that produces a dark cast between items. If you
-                 prefer fully flat, change to Color="Transparent". -->
-            <!-- Temporarily make the tile overlay fully transparent for visual isolation tests.
-                 If this removes the dark seam between tiles, we can reintroduce a much lighter
-                 sheen or adjust layering. -->
-            <SolidColorBrush x:Key="TileOverlayBrush" Color="#00FFFFFF" />
+            <!-- Tile overlay: subtle white sheen gives tiles the glass highlight while
+                 avoiding a heavy dark cast between items. -->
+            <LinearGradientBrush x:Key="TileOverlayBrush" StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#22FFFFFF" Offset="0"/>
+                <GradientStop Color="#00FFFFFF" Offset="1"/>
+            </LinearGradientBrush>
 
             <!-- Vector copy icon (two stacked rectangles representing clipboard/copy) -->
             <DrawingImage x:Key="CopyIcon">
@@ -533,6 +532,7 @@
                                         CommandParameter="{Binding SelectedCredential}"
                                         Classes="liquid-glass"
                                         Width="36" Height="36" MinWidth="0"
+                                        AutomationProperties.Name="Edit credential"
                                         ToolTip.Tip="Edit">
                                     <dcontrols:SvgIcon IconName="Assets/SVG/edit.svg" Width="16" Height="16"
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -542,6 +542,7 @@
                                         CommandParameter="{Binding SelectedCredential}"
                                         Classes="liquid-glass"
                                         Width="36" Height="36" MinWidth="0"
+                                        AutomationProperties.Name="Toggle favourite"
                                         ToolTip.Tip="Toggle favorite">
                                     <dcontrols:SvgIcon IconName="Assets/SVG/Favourites.svg" Width="16" Height="16"
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -1106,6 +1107,7 @@
                                             Padding="0"
                                             VerticalAlignment="Top"
                                             Margin="0,0,15,0"
+                                            AutomationProperties.Name="Close edit panel"
                                             ToolTip.Tip="Close">
                                         <dcontrols:SvgIcon IconName="Assets/SVG/x.svg" Width="14" Height="14" HorizontalAlignment="Center" VerticalAlignment="Center"
                                                            IconColor="{DynamicResource PrimaryTextBrush}" />
@@ -1198,6 +1200,7 @@
                                                     MinHeight="30"
                                                     CornerRadius="6"
                                                     Padding="0"
+                                                    AutomationProperties.Name="Generate strong password"
                                                     ToolTip.Tip="Generate strong password">
                                                 <dcontrols:SvgIcon IconName="Assets/SVG/Current/Generate dice.svg" Width="15" Height="15" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             </Button>
@@ -1210,6 +1213,7 @@
                                                     MinHeight="30"
                                                     CornerRadius="6"
                                                     Padding="0"
+                                                    AutomationProperties.Name="Open password generator settings"
                                                     ToolTip.Tip="Open password generator settings">
                                                 <dcontrols:SvgIcon IconName="Assets/SVG/Current/Settings gear.svg" Width="15" Height="15" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             </Button>
@@ -1245,6 +1249,7 @@
                                                         MinHeight="30"
                                                         CornerRadius="6"
                                                         Padding="0"
+                                                        AutomationProperties.Name="Show or hide password"
                                                         ToolTip.Tip="Show/Hide password">
                                                     <dcontrols:SvgIcon IconName="{Binding PasswordVisibilitySvgIcon}" Width="15" Height="15" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                                 </Button>
@@ -1371,6 +1376,7 @@
                                                         Width="30" Height="30"
                                                         CornerRadius="8"
                                                         Padding="0"
+                                                        AutomationProperties.Name="TOTP settings"
                                                         ToolTip.Tip="TOTP Settings">
                                                     <dcontrols:SvgIcon IconName="Assets/SVG/Current/Settings.svg"
                                                                        Width="13" Height="13"
@@ -1384,6 +1390,7 @@
                                                         Width="30" Height="30"
                                                         CornerRadius="8"
                                                         Padding="0"
+                                                        AutomationProperties.Name="Remove TOTP"
                                                         ToolTip.Tip="Remove TOTP">
                                                     <dcontrols:SvgIcon IconName="Assets/SVG/Current/Delete.svg"
                                                                        Width="13" Height="13"
@@ -1598,6 +1605,7 @@
                                                         CornerRadius="6"
                                                         Padding="0"
                                                         VerticalAlignment="Center"
+                                                        AutomationProperties.Name="Open icon picker"
                                                         ToolTip.Tip="Open icon picker">
                                                     <dcontrols:SvgIcon IconName="Assets/SVG/Current/Colour pallet.svg" Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                                 </Button>

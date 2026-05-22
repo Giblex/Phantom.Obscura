@@ -521,6 +521,7 @@ namespace PhantomVault.UI.ViewModels
 
         private void OnContinue()
         {
+            Serilog.Log.Information("[SecurityCheck] OnContinue clicked — invoking NavigateToVault");
             StatusMessage = "Opening vault...";
 
             // Invoke navigation event - the SecurityCheckScreen will handle opening the vault

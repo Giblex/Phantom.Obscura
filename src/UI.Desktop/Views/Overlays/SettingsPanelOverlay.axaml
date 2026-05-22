@@ -116,13 +116,15 @@
                     </Border>
 
                     <!-- Tabbed Content -->
-                    <Grid Grid.Row="1" ColumnDefinitions="220,*">
+                    <Grid Grid.Row="1" ColumnDefinitions="220,*" VerticalAlignment="Stretch">
                         <!-- Tab Navigation -->
                         <Border Grid.Column="0"
+                                VerticalAlignment="Stretch"
+                                ClipToBounds="True"
                                 Background="{DynamicResource CategoryPanelBackgroundBrush}"
                                 BorderBrush="{DynamicResource ControlBorderBrush}"
                                 BorderThickness="0,0,1,0">
-                            <ScrollViewer VerticalScrollBarVisibility="Visible"
+                            <ScrollViewer VerticalScrollBarVisibility="Auto"
                                           HorizontalScrollBarVisibility="Disabled"
                                           Padding="15,20">
                             <StackPanel Spacing="6">

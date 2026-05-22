@@ -21,6 +21,7 @@ using System;
 using System.IO;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using GiblexVault.Security.ZK.Models;
 using Giblex.Controls;
 
@@ -289,6 +290,35 @@ namespace PhantomVault.UI
                 };
                 desktop.MainWindow = welcomePage;
 
+                // Register platform clipboard clearer so Core security services can clear the
+                // clipboard (e.g., on defence trigger or idle lock) without depending on Avalonia.
+                var sysSecController = _serviceProvider.GetRequiredService<ISystemSecurityController>();
+                sysSecController.RegisterClipboardClearer(async () =>
+                {
+                    var window = (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+                    if (window != null)
+                    {
+                        var clipboard = Avalonia.Controls.TopLevel.GetTopLevel(window)?.Clipboard;
+                        if (clipboard != null)
+                            await clipboard.ClearAsync();
+                    }
+                });
+
+                // Wire IdleLockService so an idle vault is automatically locked and wiped.
+                var idleLockService = _serviceProvider.GetRequiredService<IdleLockService>();
+                idleLockService.IdleElapsed += () =>
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await zkVaultService.LockAndWipeKeysAsync().ConfigureAwait(false);
+                            await sysSecController.ClearClipboardAsync().ConfigureAwait(false);
+                        }
+                        catch { /* Best-effort idle lock */ }
+                    });
+                };
+
                 // ── AutoFill Mode: tray startup & close-to-tray ────────────────────
                 if (persistedSettings.AutoFillModeEnabled)
                 {
@@ -367,6 +397,17 @@ namespace PhantomVault.UI
 #if DEBUG
                 Console.WriteLine("[App] Application exiting - cleaning up spawned processes");
 #endif
+
+                // Clear clipboard to prevent password leakage after the app closes.
+                try
+                {
+                    var sysController = _serviceProvider?.GetService<ISystemSecurityController>();
+                    sysController?.ClearClipboardAsync().Wait(TimeSpan.FromSeconds(2));
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[App] Error clearing clipboard on exit: {ex.Message}");
+                }
 
                 // Only terminate processes that were spawned by this application
                 // This prevents killing processes used by other apps or the user

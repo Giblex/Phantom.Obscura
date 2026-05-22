@@ -41,10 +41,14 @@ public sealed class LiquidGlassScrollChrome
     private const double RestingBorderOpacity = 0.46;
     private const double HoverBorderOpacity = 0.72;
     private const double PressedBorderOpacity = 0.82;
-    private const double PointerInfluenceRadius = 220.0;
-    private const double MaxTrajectoryFraction = 0.16;
-    private const double MidpointBounceFactor = 0.9;
-    private static readonly DispatcherTimer RunnerTimer = new() { Interval = TimeSpan.FromMilliseconds(16) };
+    // Tuned for a calmer, less twitchy liquid-glass trace:
+    //   - smaller influence radius → border only reacts when pointer is nearby
+    //   - smaller trajectory fraction → smaller travel distance per pointer motion
+    //   - reduced midpoint bounce → softer settle when the pointer stops
+    private const double PointerInfluenceRadius = 140.0;
+    private const double MaxTrajectoryFraction = 0.08;
+    private const double MidpointBounceFactor = 0.55;
+    private static readonly DispatcherTimer RunnerTimer = new() { Interval = TimeSpan.FromMilliseconds(33) };
     private static readonly Dictionary<Button, BorderRunnerState> RunnerStates = new();
     private static readonly Dictionary<TopLevel, PointerMotionSample> PointerMotionSamples = new();
     private static bool _registered;
@@ -56,7 +60,7 @@ public sealed class LiquidGlassScrollChrome
         public double TargetProgress;
         public double Opacity;
         public double TargetOpacity;
-        public double FollowResponse = 0.08;
+        public double FollowResponse = 0.035;
         public double Direction = 1.0;
         public bool IsHovering;
     }
@@ -376,8 +380,10 @@ public sealed class LiquidGlassScrollChrome
         var progress = GetProgressFromPointer(button, pointer);
         var delta = GetShortestProgressDelta(state.Progress, progress, button);
         var perimeter = GetPerimeter(button);
-        var speedFactor = Math.Clamp(pointerSpeed / 3200.0, 0.0, 1.0);
-        var followStrength = 0.06 + (influence * 0.08) + (speedFactor * 0.08);
+        // Damped follow strength — keeps the trace from snapping to fast pointer
+        // motion. Lower coefficients = smoother, slower-moving border highlight.
+        var speedFactor = Math.Clamp(pointerSpeed / 4800.0, 0.0, 1.0);
+        var followStrength = 0.025 + (influence * 0.035) + (speedFactor * 0.025);
         var maxTrajectory = perimeter * MaxTrajectoryFraction;
         var anchorDelta = GetShortestDeltaOnPerimeter(state.AnchorProgress, progress, perimeter);
         if (Math.Abs(delta) > 0.001)

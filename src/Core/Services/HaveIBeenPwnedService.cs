@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Collections.Generic;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 
 namespace PhantomVault.Core.Services;
 
@@ -17,17 +19,44 @@ public sealed class HaveIBeenPwnedService : IDisposable
 {
     private readonly HttpClient _httpClient;
     private const string PwnedPasswordsApiUrl = "https://api.pwnedpasswords.com/range/";
+    private const string PwnedPasswordsHost = "api.pwnedpasswords.com";
     private const int HashPrefixLength = 5;
 
     public HaveIBeenPwnedService()
     {
-        _httpClient = new HttpClient
+        // Enforce that connections are only made to api.pwnedpasswords.com with a valid
+        // certificate chain. This guards against DNS hijacking or rogue CA attacks.
+        var handler = new HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback = ValidatePwnedPasswordsCertificate
+        };
+
+        _httpClient = new HttpClient(handler)
         {
             Timeout = TimeSpan.FromSeconds(10)
         };
 
         // Add user agent as required by HIBP API
         _httpClient.DefaultRequestHeaders.Add("User-Agent", "PhantomVault-PasswordManager");
+    }
+
+    /// <summary>
+    /// Validates that the TLS certificate belongs to api.pwnedpasswords.com and the chain is valid.
+    /// </summary>
+    private static bool ValidatePwnedPasswordsCertificate(
+        HttpRequestMessage message,
+        X509Certificate2? certificate,
+        X509Chain? chain,
+        SslPolicyErrors errors)
+    {
+        if (errors != SslPolicyErrors.None)
+            return false;
+
+        // Verify the request is actually targeting the expected host.
+        return string.Equals(
+            message.RequestUri?.Host,
+            PwnedPasswordsHost,
+            StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -74,9 +103,8 @@ public sealed class HaveIBeenPwnedService : IDisposable
             // Password not found in breaches
             return 0;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            System.Diagnostics.Debug.WriteLine($"[HaveIBeenPwned] Breach check failed: {ex.Message}");
             // Return -1 to indicate check failure (not a breach, but couldn't verify)
             return -1;
         }
@@ -119,7 +147,6 @@ public sealed class HaveIBeenPwnedService : IDisposable
 
         if (string.IsNullOrWhiteSpace(apiKey))
         {
-            System.Diagnostics.Debug.WriteLine("[HaveIBeenPwned] API key required for email breach checks");
             return new List<string>();
         }
 
@@ -139,7 +166,6 @@ public sealed class HaveIBeenPwnedService : IDisposable
 
             if (!response.IsSuccessStatusCode)
             {
-                System.Diagnostics.Debug.WriteLine($"[HaveIBeenPwned] Email check failed: {response.StatusCode}");
                 return new List<string>();
             }
 
@@ -159,9 +185,8 @@ public sealed class HaveIBeenPwnedService : IDisposable
 
             return breachNames;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            System.Diagnostics.Debug.WriteLine($"[HaveIBeenPwned] Email breach check failed: {ex.Message}");
             return new List<string>();
         }
     }

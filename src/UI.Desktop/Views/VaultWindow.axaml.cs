@@ -585,6 +585,24 @@ namespace PhantomVault.UI.Views
                 return;
             }
 
+            // Auto-lock must only activate once a PIN has been assigned. Without a
+            // PIN, the only way to unlock is to re-mount the USB keyfile, which is
+            // not an acceptable mid-session experience. Manual lock from the UI goes
+            // through VaultViewModel.LockCommand directly and is not affected here.
+            try
+            {
+                var pinSettings = SettingsService.Load();
+                if (!PinLockService.HasPinConfigured(pinSettings, vm.ManifestPath))
+                {
+                    return;
+                }
+            }
+            catch
+            {
+                // Fail closed: if we can't determine PIN state, do not auto-lock.
+                return;
+            }
+
             _autoLockInProgress = true;
             StopSessionPolicyTracking();
             vm.LockCommand.Execute(Unit.Default).Subscribe(

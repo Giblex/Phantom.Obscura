@@ -265,6 +265,18 @@ namespace PhantomVault.UI.ViewModels
 
                 if (discoveredVaults.Count == 0)
                 {
+                    // No vault on the USB itself — but the user may still have local
+                    // vaults registered in settings (e.g. %AppData%\PhantomVault\vault).
+                    // Surface those so "Access your vault" can open them even while an
+                    // empty/unrelated USB drive is plugged in.
+                    var localFallback = DiscoverKnownLocalVaults();
+                    if (localFallback.Count > 0)
+                    {
+                        await EnsureDetectionPresentationDelayAsync(BuildDetectionSignature(localFallback), true).ConfigureAwait(false);
+                        ApplyRecognizedVaultState(localFallback);
+                        return;
+                    }
+
                     await EnsureDetectionPresentationDelayAsync($"unrecognized:{removableDrives[0]}", true).ConfigureAwait(false);
                     ApplyUnrecognizedUsbState(removableDrives[0]);
                     return;
@@ -451,6 +463,26 @@ namespace PhantomVault.UI.ViewModels
 
             foreach (var vaultPath in settings.KnownLocalVaultPaths.ToList())
             {
+                if (!Directory.Exists(vaultPath))
+                    continue;
+
+                // Packed-volume transport (e.g. StealthSecure tier) emits a single
+                // obscura.vol concealed container instead of separate .pvault files.
+                var packedVolume = Path.Combine(vaultPath, "obscura.vol");
+                if (File.Exists(packedVolume))
+                {
+                    vaults.Add(new DetectedVaultLaunchRequest
+                    {
+                        UsbPath = null,
+                        UsbDisplayName = "Local",
+                        VaultPath = packedVolume,
+                        DisplayName = BuildVaultDisplayName(packedVolume, "Local vault"),
+                        AutoOpenEligible = false
+                    });
+                    continue;
+                }
+
+                // Direct canonical container layout — look for root/*.pvault.
                 var rootPath = Path.Combine(vaultPath, "root");
                 if (!Directory.Exists(rootPath))
                     continue;

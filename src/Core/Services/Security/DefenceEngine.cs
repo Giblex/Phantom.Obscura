@@ -93,8 +93,12 @@ namespace PhantomVault.Core.Services.Security
                         "Executing defence rule {RuleId} for threat {ThreatType} ({ThreatLevel})",
                         rule.Id, threat.Type, threat.Level);
 
-                    // Fire and forget async execution
-                    _ = ExecuteActionsAsync(rule.Actions, threat);
+                    // Fire-and-forget async execution with top-level error logging.
+                    _ = ExecuteActionsAsync(rule.Actions, threat).ContinueWith(
+                        t => _logger?.LogError(t.Exception?.GetBaseException(),
+                            "Unhandled error executing defence actions for rule {RuleId} / threat {ThreatType}",
+                            rule.Id, threat.Type),
+                        System.Threading.Tasks.TaskContinuationOptions.OnlyOnFaulted);
 
                     // Update last fired timestamp
                     _ruleLastFired[rule.Id] = DateTimeOffset.UtcNow;
@@ -223,8 +227,7 @@ namespace PhantomVault.Core.Services.Security
                         _ => TimeSpan.FromSeconds(2)
                     };
                     _logger?.LogInformation("Adding authentication delay: {Delay}", delay);
-                    // Fire and forget - don't block threat processing
-                    _ = _authController.AddAuthenticationDelayAsync(delay);
+                    await _authController.AddAuthenticationDelayAsync(delay).ConfigureAwait(false);
                     break;
 
                 case DefenceActionType.TempLockout:
@@ -236,7 +239,7 @@ namespace PhantomVault.Core.Services.Security
                         _ => TimeSpan.FromMinutes(1)
                     };
                     _logger?.LogWarning("Enforcing temporary lockout: {Duration}", lockoutDuration);
-                    _ = _authController.EnforceTempLockoutAsync(lockoutDuration);
+                    await _authController.EnforceTempLockoutAsync(lockoutDuration).ConfigureAwait(false);
                     break;
 
                 case DefenceActionType.RequirePhantomKey:

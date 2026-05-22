@@ -80,7 +80,7 @@
               <RotateTransform Angle="{Binding $parent[Button].(local:LiquidGlassScrollChrome.ScrollSheenAngle)}">
                 <RotateTransform.Transitions>
                   <Transitions>
-                    <DoubleTransition Property="Angle" Duration="0:0:0.28" Easing="CubicEaseOut"/>
+                    <DoubleTransition Property="Angle" Duration="0:0:0.55" Easing="CubicEaseOut"/>
                   </Transitions>
                 </RotateTransform.Transitions>
               </RotateTransform>
@@ -88,8 +88,8 @@
                                   Y="{Binding $parent[Button].(local:LiquidGlassScrollChrome.ScrollSheenY)}">
                 <TranslateTransform.Transitions>
                   <Transitions>
-                    <DoubleTransition Property="X" Duration="0:0:0.28" Easing="CubicEaseOut"/>
-                    <DoubleTransition Property="Y" Duration="0:0:0.28" Easing="CubicEaseOut"/>
+                    <DoubleTransition Property="X" Duration="0:0:0.55" Easing="CubicEaseOut"/>
+                    <DoubleTransition Property="Y" Duration="0:0:0.55" Easing="CubicEaseOut"/>
                   </Transitions>
                 </TranslateTransform.Transitions>
               </TranslateTransform>

@@ -423,7 +423,7 @@ namespace PhantomVault.UI.Views
                             {
                                 loadingWindow.Close();
                                 quickWindow.Close();
-                                if (!string.IsNullOrWhiteSpace(quickVm.SelectedUsbPath))
+                                if (quickVm.SelectedStorageLocation == "USB" && !string.IsNullOrWhiteSpace(quickVm.SelectedUsbPath))
                                 {
                                     OnNavigateToSecurityCheck(this, new DetectedVaultLaunchRequest
                                     {
@@ -516,11 +516,10 @@ namespace PhantomVault.UI.Views
                     {
                         settings.VaultUnlockPreference = result;
 
-                        // Also apply the preference to related settings
                         switch (result)
                         {
                             case "Pin":
-                                settings.EnablePinLock = true;
+                                // Don't set EnablePinLock until PIN is actually created
                                 settings.DefaultUsePasskey = false;
                                 break;
                             case "WindowsHello":
@@ -534,6 +533,21 @@ namespace PhantomVault.UI.Views
                         }
 
                         SettingsService.Save(settings);
+
+                        // For "Pin" preference, immediately walk the user through PIN setup.
+                        // EnablePinLock is only set to true after a PIN hash is actually created.
+                        if (result == "Pin")
+                        {
+                            var pinDialog = new PhantomVault.UI.Views.Dialogs.PinSetupDialog();
+                            await pinDialog.ShowDialog(vaultWindow);
+                            if (pinDialog.DataContext is PhantomVault.UI.ViewModels.Dialogs.PinSetupDialogViewModel pinVm
+                                && pinVm.Success)
+                            {
+                                var pinSettings = SettingsService.Load();
+                                pinSettings.EnablePinLock = true;
+                                SettingsService.Save(pinSettings);
+                            }
+                        }
                     }
                 }
             }
@@ -546,15 +560,36 @@ namespace PhantomVault.UI.Views
 
         private static string NormalizeDriveRoot(string usbPathDisplay)
         {
-            var driveRoot = usbPathDisplay.Length >= 2 ? usbPathDisplay.Substring(0, 3) : usbPathDisplay;
-            if (usbPathDisplay.Contains(" - ", StringComparison.Ordinal))
+            if (string.IsNullOrWhiteSpace(usbPathDisplay))
+                return string.Empty;
+
+            // Display format from SetupWizardViewModel.DetectUsbDrivesAsync:
+            //   "ID: xxxxxxxx (D:) VolumeLabel [32 GB]"
+            // Pull the drive letter from "(D:)".
+            var match = System.Text.RegularExpressions.Regex.Match(
+                usbPathDisplay, @"\(([A-Za-z]:)\)");
+            if (match.Success)
             {
-                driveRoot = usbPathDisplay.Split(" - ")[0].Trim();
-                if (!driveRoot.EndsWith("\\", StringComparison.Ordinal))
-                    driveRoot += "\\";
+                var driveLetter = match.Groups[1].Value;
+                if (!driveLetter.EndsWith("\\", StringComparison.Ordinal))
+                    driveLetter += "\\";
+                return driveLetter;
             }
 
-            return driveRoot;
+            // Legacy " - " separated format: "D:\ - 32 GB"
+            if (usbPathDisplay.Contains(" - ", StringComparison.Ordinal))
+            {
+                var legacyRoot = usbPathDisplay.Split(" - ")[0].Trim();
+                if (!legacyRoot.EndsWith("\\", StringComparison.Ordinal))
+                    legacyRoot += "\\";
+                return legacyRoot;
+            }
+
+            // Fallback: assume the first three characters are the drive root ("D:\").
+            var fallback = usbPathDisplay.Length >= 2 ? usbPathDisplay.Substring(0, 3) : usbPathDisplay;
+            if (!fallback.EndsWith("\\", StringComparison.Ordinal))
+                fallback += "\\";
+            return fallback;
         }
 
         private void OnNavigateToUsbSetup(object? sender, EventArgs e)

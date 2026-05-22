@@ -646,6 +646,28 @@ namespace PhantomVault.Core.Models
         /// </summary>
         [JsonPropertyName("securityCapabilities")]
         public SecurityCapabilitiesManifest? SecurityCapabilities { get; set; } = null;
+
+        // ============================================================================
+        // USB OS-JUNK WRITE-PROTECTION (v4.1+)
+        // ============================================================================
+
+        /// <summary>
+        /// Desired write-protection posture for the bound USB drive. When set,
+        /// Phantom Obscura asserts these attributes at the end of every unlock
+        /// session so foreign OSes cannot silently inject indexing folders
+        /// outside Phantom Obscura's write window. Null on legacy manifests.
+        /// </summary>
+        [JsonPropertyName("usbWriteProtection")]
+        public UsbWriteProtectionState? UsbWriteProtection { get; set; } = null;
+
+        /// <summary>
+        /// Append-only audit log of OS-junk scrub operations performed on this
+        /// drive. Each entry records what was removed and whether it was
+        /// quarantined or hard-deleted. Capped at 200 entries (oldest trimmed).
+        /// </summary>
+        [JsonPropertyName("scrubHistory")]
+        public System.Collections.Generic.List<ScrubEvent> ScrubHistory { get; set; }
+            = new System.Collections.Generic.List<ScrubEvent>();
     }
 
     /// <summary>

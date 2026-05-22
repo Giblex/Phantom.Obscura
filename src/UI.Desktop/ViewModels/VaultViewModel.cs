@@ -139,6 +139,14 @@ namespace PhantomVault.UI.ViewModels
         // Context needed to re-mount on hard lock (non-sensitive)
         private string? _usbRootPath;
         private string? _manifestPath;
+
+        /// <summary>
+        /// Read-only view of the current vault manifest path. Allows view-level
+        /// services (e.g. auto-lock gating) to resolve PIN configuration without
+        /// reaching into private state.
+        /// </summary>
+        public string? ManifestPath => _manifestPath;
+
         private string? _containerAbsPath;
         private string? _reauthKeyfilePath;
         private string? _masterVolumePath;
@@ -268,6 +276,9 @@ namespace PhantomVault.UI.ViewModels
 
             // Subscribe to USB removal to lock/zero immediately
             _usbDetector.RemovableDriveRemoved += OnUsbRemoved;
+
+            // Subscribe to idle timer so inactivity actually locks the vault
+            _idleLockService.IdleElapsed += OnIdleLockElapsed;
 
             // Initialize commands
             AddCredentialCommand = ReactiveCommand.CreateFromTask(AddCredentialAsync);
@@ -430,8 +441,10 @@ namespace PhantomVault.UI.ViewModels
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(_ => ApplyFilters());
 
-            // Load sample credentials
-            LoadSampleCredentials();
+            // Vault starts empty by default; entries are loaded from disk via the vault service.
+            // (Previously LoadSampleCredentials() seeded placeholder demo entries — removed
+            // so a freshly-created vault is genuinely empty.)
+            // LoadSampleCredentials();
 
             // Initialize CategoryLandingViewModel
             CategoryLandingViewModel = new CategoryLandingViewModel(vaultService);
@@ -3322,6 +3335,7 @@ namespace PhantomVault.UI.ViewModels
         {
             try
             {
+                _idleLockService.Reset();
                 // Check clipboard guard
                 if (_clipboardGuard != null && !_clipboardGuard.CanCopy())
                 {
@@ -3427,7 +3441,7 @@ namespace PhantomVault.UI.ViewModels
         {
             try
             {
-                // Check clipboard guard
+                _idleLockService.Reset();
                 if (_clipboardGuard != null && !_clipboardGuard.CanCopy())
                 {
                     await _dialogService.ShowWarningAsync(
@@ -4674,6 +4688,14 @@ namespace PhantomVault.UI.ViewModels
             });
         }
 
+        private void OnIdleLockElapsed()
+        {
+            Dispatcher.UIThread.Post(async () =>
+            {
+                await LockInAppAsync(LockReason.AutoLock);
+            });
+        }
+
         private void ClearVaultUiState()
         {
             _items.Clear();
@@ -5327,6 +5349,10 @@ namespace PhantomVault.UI.ViewModels
                 RegisterAutoLockSession();
                 _vaultLockDurationService.UnlockVault();
 
+                // Start idle-lock timer. Fires IdleElapsed after 15 minutes of inactivity,
+                // which is handled in App to lock and wipe the vault.
+                _idleLockService.Reset();
+
                 // Analyze passwords and update Security Dashboard
                 UpdateWeakCredentials();
 
@@ -5350,6 +5376,7 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
+                Serilog.Log.Error(ex, "[VaultLoad] LoadAsync threw {ExType} — mountPath={MountPath}", ex.GetType().Name, mountPath);
                 await _dialogService.ShowErrorAsync(
                     "Load Failed",
                     $"Failed to load vault database: {ex.Message}",

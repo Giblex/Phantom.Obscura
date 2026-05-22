@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-  <TargetFramework>net9.0-windows10.0.19041.0</TargetFramework>
+  <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -21,7 +21,9 @@
     <!-- CS1998: Async methods without await - Some methods are async for interface consistency -->
     <!-- CS8625: Nullable reference type warnings - Cleaned up in future refactor -->
     <!-- TODO: Add XML documentation comments for all public APIs -->
-    <NoWarn>$(NoWarn);1591;CS0618;CS1573;CS1574;CS1571;CS1998;CS8625;CS0012</NoWarn>
+    <!-- NU1903: vulnerable transitive dep (Tmds.DBus.Protocol via Avalonia.Linux) — suppressed until Avalonia ships a fix -->
+    <!-- NU1510: System.Text.Json inbox in .NET 10 — any residual explicit ref is harmless -->
+    <NoWarn>$(NoWarn);1591;CS0618;CS1573;CS1574;CS1571;CS1998;CS8625;CS0012;NU1903;NU1510</NoWarn>
   </PropertyGroup>
 
   <!-- Exclude legacy snapshots from the build so they don't register duplicate Avalonia resources -->
@@ -90,7 +92,7 @@
     <!-- Include extracted XAML resources for modular UI architecture -->
     <!-- Note: .axaml files are auto-included by the Avalonia SDK as AvaloniaResource.
          Explicit includes would cause duplicate key errors at startup. -->
-    <PackageReference Include="System.Text.Json" Version="9.0.0" />
+    <!-- System.Text.Json is inbox in .NET 10; no explicit reference needed -->
     <PackageReference Include="ZXing.Net" Version="0.16.9" />
     <PackageReference Include="ZXing.Net.Bindings.SkiaSharp" Version="0.16.14" />
   </ItemGroup>
