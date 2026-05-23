@@ -23,6 +23,28 @@ namespace PhantomVault.UI.ViewModels.Settings
         private bool _requireUnlockToShow = false;
         private int _selectedFailedAttempts = 2; // 10 attempts
 
+        // Issue #25: shared draft tracker so the overlay-bottom Save/Discard
+        // buttons drive Advanced-tab persistence. _baselineSnapshot captures
+        // the on-disk state at the moment of first-stage so Discard can roll
+        // every field back without overwriting any intermediate commits.
+        private readonly PhantomVault.UI.Services.SettingsDraftTracker _draft;
+        private AdvancedBaseline _baselineSnapshot;
+        private bool _suppressStage; // set during LoadSettings so initial property writes don't stage
+
+        private readonly struct AdvancedBaseline
+        {
+            public bool EnableDebugLogging { get; init; }
+            public bool EnablePrivacyMode { get; init; }
+            public bool RedactLogs { get; init; }
+            public bool BlockRemoteDebugging { get; init; }
+            public int SessionTimeout { get; init; }
+            public bool AutoLockOnMinimize { get; init; }
+            public bool AutoLockOnScreenLock { get; init; }
+            public bool ClearClipboardOnLock { get; init; }
+            public bool RequireUnlockToShow { get; init; }
+            public int SelectedFailedAttempts { get; init; }
+        }
+
         public bool EnableDebugLogging
         {
             get => _enableDebugLogging;
@@ -213,9 +235,19 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
         }
 
-        public AdvancedSettingsViewModel()
+        public AdvancedSettingsViewModel() : this(null) { }
+
+        public AdvancedSettingsViewModel(PhantomVault.UI.Services.SettingsDraftTracker? draftTracker)
         {
+            // Issue #25: resolve the singleton tracker from DI so this VM stages
+            // into the same instance the overlay's Save button drives.
+            _draft = draftTracker
+                ?? ((Avalonia.Application.Current as App)?.Services?.GetService(typeof(PhantomVault.UI.Services.SettingsDraftTracker)) as PhantomVault.UI.Services.SettingsDraftTracker)
+                ?? new PhantomVault.UI.Services.SettingsDraftTracker();
+            _suppressStage = true;
             LoadSettings();
+            _baselineSnapshot = SnapshotCurrent();
+            _suppressStage = false;
             ViewLogsCommand = ReactiveCommand.Create(ViewLogs);
             ExportDiagnosticReportCommand = ReactiveCommand.CreateFromTask(ExportDiagnosticReport);
             OpenLogFolderCommand = ReactiveCommand.Create(OpenLogFolder);
@@ -256,29 +288,112 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
         }
 
+        // Issue #25: every setter routes through here. Instead of writing to
+        // disk on every keystroke / toggle, stage one batched "Advanced.All"
+        // entry in the shared tracker. Re-staging replaces the prior pair so
+        // a flurry of changes still results in a single commit/discard.
         private void SaveSettings()
         {
-            try
+            if (_suppressStage) return;
+
+            // If the user toggled everything back to the originally-loaded
+            // baseline, drop the staged work entirely.
+            if (CurrentMatchesBaseline())
             {
-                SettingsService.Update(settings =>
+                _draft.ClearKey("Advanced.All");
+                return;
+            }
+
+            // Capture the snapshot of fields we want to commit.
+            var staged = SnapshotCurrent();
+            var baseline = _baselineSnapshot;
+
+            _draft.Stage(
+                key: "Advanced.All",
+                commit: () =>
                 {
-                    settings.EnableDebugLogging = EnableDebugLogging;
-                    settings.PrivacyModeEnabled = EnablePrivacyMode;
-                    settings.RedactDiagnosticLogs = RedactLogs;
-                    settings.BlockRemoteDebugging = BlockRemoteDebugging;
-                    settings.SessionTimeoutMinutes = SessionTimeout;
-                    settings.AutoLockOnMinimize = AutoLockOnMinimize;
-                    settings.AutoLockOnScreenLock = AutoLockOnScreenLock;
-                    settings.ClearClipboardOnLock = ClearClipboardOnLock;
-                    settings.RequireUnlockToShow = RequireUnlockToShow;
-                    settings.MaxFailedUnlockAttempts = SettingsService.GetMaxFailedUnlockAttemptsFromSelection(SelectedFailedAttempts);
+                    try
+                    {
+                        SettingsService.Update(settings =>
+                        {
+                            settings.EnableDebugLogging = staged.EnableDebugLogging;
+                            settings.PrivacyModeEnabled = staged.EnablePrivacyMode;
+                            settings.RedactDiagnosticLogs = staged.RedactLogs;
+                            settings.BlockRemoteDebugging = staged.BlockRemoteDebugging;
+                            settings.SessionTimeoutMinutes = staged.SessionTimeout;
+                            settings.AutoLockOnMinimize = staged.AutoLockOnMinimize;
+                            settings.AutoLockOnScreenLock = staged.AutoLockOnScreenLock;
+                            settings.ClearClipboardOnLock = staged.ClearClipboardOnLock;
+                            settings.RequireUnlockToShow = staged.RequireUnlockToShow;
+                            settings.MaxFailedUnlockAttempts = SettingsService.GetMaxFailedUnlockAttemptsFromSelection(staged.SelectedFailedAttempts);
+                        });
+                        PrivacyShield.DebugLoggingEnabled = staged.EnableDebugLogging;
+                        // Update the baseline so further edits stage against the
+                        // newly-persisted state.
+                        _baselineSnapshot = staged;
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Warning(ex, "Failed to persist advanced settings");
+                    }
+                },
+                discard: () =>
+                {
+                    // Roll every property back to the baseline that existed at
+                    // first-stage; raise property changes so the UI updates.
+                    _suppressStage = true;
+                    try
+                    {
+                        EnableDebugLogging = baseline.EnableDebugLogging;
+                        EnablePrivacyMode = baseline.EnablePrivacyMode;
+                        RedactLogs = baseline.RedactLogs;
+                        BlockRemoteDebugging = baseline.BlockRemoteDebugging;
+                        SessionTimeout = baseline.SessionTimeout;
+                        AutoLockOnMinimize = baseline.AutoLockOnMinimize;
+                        AutoLockOnScreenLock = baseline.AutoLockOnScreenLock;
+                        ClearClipboardOnLock = baseline.ClearClipboardOnLock;
+                        RequireUnlockToShow = baseline.RequireUnlockToShow;
+                        SelectedFailedAttempts = baseline.SelectedFailedAttempts;
+                    }
+                    finally
+                    {
+                        _suppressStage = false;
+                    }
+                    // Restore the live PrivacyShield flag too if it had been
+                    // toggled mid-session via the EnablePrivacyMode / RedactLogs
+                    // setters (those mutate static state).
+                    PrivacyShield.PrivacyModeEnabled = baseline.EnablePrivacyMode;
+                    PrivacyShield.RedactDiagnostics = baseline.RedactLogs;
                 });
-                PrivacyShield.DebugLoggingEnabled = EnableDebugLogging;
-            }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, "Failed to persist advanced settings");
-            }
+        }
+
+        private AdvancedBaseline SnapshotCurrent() => new AdvancedBaseline
+        {
+            EnableDebugLogging = EnableDebugLogging,
+            EnablePrivacyMode = EnablePrivacyMode,
+            RedactLogs = RedactLogs,
+            BlockRemoteDebugging = BlockRemoteDebugging,
+            SessionTimeout = SessionTimeout,
+            AutoLockOnMinimize = AutoLockOnMinimize,
+            AutoLockOnScreenLock = AutoLockOnScreenLock,
+            ClearClipboardOnLock = ClearClipboardOnLock,
+            RequireUnlockToShow = RequireUnlockToShow,
+            SelectedFailedAttempts = SelectedFailedAttempts,
+        };
+
+        private bool CurrentMatchesBaseline()
+        {
+            var b = _baselineSnapshot;
+            return EnableDebugLogging == b.EnableDebugLogging
+                && EnablePrivacyMode == b.EnablePrivacyMode
+                && RedactLogs == b.RedactLogs
+                && BlockRemoteDebugging == b.BlockRemoteDebugging
+                && SessionTimeout == b.SessionTimeout
+                && AutoLockOnMinimize == b.AutoLockOnMinimize
+                && AutoLockOnScreenLock == b.AutoLockOnScreenLock
+                && ClearClipboardOnLock == b.ClearClipboardOnLock
+                && RequireUnlockToShow == b.RequireUnlockToShow
+                && SelectedFailedAttempts == b.SelectedFailedAttempts;
         }
 
         private async Task ExportDiagnosticReport()
