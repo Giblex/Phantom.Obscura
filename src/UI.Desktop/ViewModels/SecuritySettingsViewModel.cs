@@ -46,6 +46,30 @@ namespace PhantomVault.UI.ViewModels
         private bool _logDecoyActivation = true;
         private bool _isDecoyCurrentlyActive;
 
+        // Issue #28: shared draft tracker so the overlay-bottom Save/Discard
+        // buttons drive Security persistence too. Baseline snapshot captures
+        // on-disk state at ctor for Discard rollback. _suppressStage guards
+        // initial-load + discard-path property writes from triggering staging.
+        private readonly SettingsDraftTracker _draft;
+        private SecurityBaseline _baseline;
+        private bool _suppressStage;
+
+        private readonly struct SecurityBaseline
+        {
+            public bool EnablePinLock { get; init; }
+            public bool UsePinLockForAutoLock { get; init; }
+            public bool RequireHardwareToken { get; init; }
+            public bool RequireKeyfile { get; init; }
+            public int IdleTimeoutMinutes { get; init; }
+            public bool AutoCopyTotpWithPassword { get; init; }
+            public int ClipboardClearTimeIndex { get; init; }
+            public bool EnableScreenshotProtection { get; init; }
+            public bool AutoActivateDecoyOnTamper { get; init; }
+            public int DecoyCredentialCount { get; init; }
+            public bool DecoyReadOnlyMode { get; init; }
+            public bool LogDecoyActivation { get; init; }
+        }
+
         public SecuritySettingsViewModel(
             IDefenceSettingsService? defenceSettingsService = null,
             string? manifestPath = null,
@@ -59,6 +83,11 @@ namespace PhantomVault.UI.ViewModels
             _decoyVaultService = decoyVaultService;
             _tamperDetectionService = tamperDetectionService;
             _securityOptions = securityOptions ?? new SecurityOptions();
+            // Issue #28: resolve singleton tracker (with fallback for non-DI
+            // construction paths so tests/manual instantiation keep working).
+            _draft = ((Avalonia.Application.Current as App)?.Services?.GetService(typeof(SettingsDraftTracker)) as SettingsDraftTracker)
+                ?? new SettingsDraftTracker();
+            _suppressStage = true;
 
             var settings = SettingsService.LoadSecuritySnapshot();
             _enablePinLock = settings.EnablePinLock;
@@ -76,6 +105,10 @@ namespace PhantomVault.UI.ViewModels
             _decoyReadOnlyMode = settings.DecoyReadOnlyMode;
             _logDecoyActivation = settings.DecoyLogActivations;
             _isDecoyCurrentlyActive = _tamperDetectionService?.IsDecoyActive ?? false;
+
+            // Snapshot the just-loaded values as the baseline for Discard.
+            _baseline = SnapshotCurrent();
+            _suppressStage = false;
 
             SaveCommand = ReactiveCommand.CreateFromTask(SaveSettingsAsync,
                 this.WhenAnyValue(vm => vm.IsBusy).Select(b => !b));
@@ -125,23 +158,13 @@ namespace PhantomVault.UI.ViewModels
                 // Simulate save operation
                 await Task.Delay(300);
 
-                // Persist simple settings used by the UI.
-                PersistSettings(settings =>
-                {
-                    settings.EnablePinLock = EnablePinLock;
-                    settings.UsePinLockForAutoLock = UsePinLockForAutoLock;
-                    settings.RequireHardwareToken = RequireHardwareToken;
-                    settings.RequireKeyfile = RequireKeyfile;
-                    settings.IdleTimeoutMinutes = IdleTimeoutMinutes;
-                    settings.ClipboardClearTime = ClipboardClearTimeIndex;
-                    settings.AutoCopyTotpWithPassword = AutoCopyTotpWithPassword;
-                    settings.EnableScreenshotProtection = EnableScreenshotProtection;
-                    settings.EnableDecoyVault = EnableDecoyVault;
-                    settings.DecoyCredentialCount = DecoyCredentialCount;
-                    settings.DecoyReadOnlyMode = DecoyReadOnlyMode;
-                    settings.DecoyLogActivations = DecoyLogActivations;
-                });
-                
+                // Issue #28: clicking the tab's local Save commits the staged
+                // 'Security.All' entry (and anything else staged across the
+                // overlay — same semantics as the overlay-bottom Save). If
+                // nothing is staged (settings already match baseline) this is
+                // a no-op rather than a duplicate write.
+                _draft.CommitAll();
+
                 LastSaved = DateTimeOffset.UtcNow;
                 SaveButtonText = "✓ Saved";
 
@@ -170,7 +193,7 @@ namespace PhantomVault.UI.ViewModels
             {
                 if (this.RaiseAndSetIfChanged(ref _requireHardwareToken, value))
                 {
-                    PersistSettings(settings => settings.RequireHardwareToken = value);
+                    StageAll();
                 }
             }
         }
@@ -182,7 +205,7 @@ namespace PhantomVault.UI.ViewModels
             {
                 if (this.RaiseAndSetIfChanged(ref _requireKeyfile, value))
                 {
-                    PersistSettings(settings => settings.RequireKeyfile = value);
+                    StageAll();
                 }
             }
         }
@@ -195,7 +218,7 @@ namespace PhantomVault.UI.ViewModels
                 if (_idleTimeoutMinutes != value)
                 {
                     this.RaiseAndSetIfChanged(ref _idleTimeoutMinutes, value);
-                    PersistSettings(settings => settings.IdleTimeoutMinutes = value);
+                    StageAll();
                 }
             }
         }
@@ -225,16 +248,14 @@ namespace PhantomVault.UI.ViewModels
             set
             {
                 this.RaiseAndSetIfChanged(ref _enablePinLock, value);
-                // Persist immediately so lockscreen behavior is consistent.
-                SettingsService.Update(settings =>
+                // Issue #28: if PIN-lock is being disabled, cascade-clear the
+                // related toggle in-memory so the user sees the dependent
+                // switch flip immediately. Persistence waits for Save.
+                if (!value && _usePinLockForAutoLock)
                 {
-                    settings.EnablePinLock = value;
-                    if (!value)
-                    {
-                        settings.UsePinLockForAutoLock = false;
-                        this.RaiseAndSetIfChanged(ref _usePinLockForAutoLock, false);
-                    }
-                });
+                    this.RaiseAndSetIfChanged(ref _usePinLockForAutoLock, false);
+                }
+                StageAll();
             }
         }
 
@@ -244,7 +265,7 @@ namespace PhantomVault.UI.ViewModels
             set
             {
                 this.RaiseAndSetIfChanged(ref _usePinLockForAutoLock, value);
-                SettingsService.Update(settings => settings.UsePinLockForAutoLock = value);
+                StageAll();
             }
         }
 
@@ -254,7 +275,7 @@ namespace PhantomVault.UI.ViewModels
             set
             {
                 this.RaiseAndSetIfChanged(ref _autoCopyTotpWithPassword, value);
-                SettingsService.Update(settings => settings.AutoCopyTotpWithPassword = value);
+                StageAll();
             }
         }
 
@@ -268,7 +289,7 @@ namespace PhantomVault.UI.ViewModels
                 {
                     this.RaiseAndSetIfChanged(ref _clipboardClearTimeIndex, sanitized);
                     this.RaisePropertyChanged(nameof(ClearClipboardAfterCopy));
-                    PersistSettings(settings => settings.ClipboardClearTime = sanitized);
+                    StageAll();
                 }
             }
         }
@@ -299,7 +320,7 @@ namespace PhantomVault.UI.ViewModels
             {
                 if (this.RaiseAndSetIfChanged(ref _enableScreenshotProtection, value))
                 {
-                    PersistSettings(settings => settings.EnableScreenshotProtection = value);
+                    StageAll();
                 }
             }
         }
@@ -558,18 +579,108 @@ namespace PhantomVault.UI.ViewModels
             _securityOptions.AutoActivateDecoyOnTamper = AutoActivateDecoyOnTamper;
             _securityOptions.DecoyCredentialCount = DecoyCredentialCount;
             _securityOptions.LogDecoyActivation = LogDecoyActivation;
-            PersistSettings(settings =>
-            {
-                settings.EnableDecoyVault = EnableDecoyVault;
-                settings.DecoyCredentialCount = DecoyCredentialCount;
-                settings.DecoyReadOnlyMode = DecoyReadOnlyMode;
-                settings.DecoyLogActivations = DecoyLogActivations;
-            });
+            // Issue #28: route through the shared tracker so the overlay Save
+            // button handles persistence. Live SecurityOptions update above
+            // still fires so any in-process consumers see the new value.
+            StageAll();
         }
 
         private static void PersistSettings(Action<UserSettings> update)
         {
             SettingsService.Update(update);
+        }
+
+        // Issue #28: snapshot current property values for baseline + commit
+        // payload.
+        private SecurityBaseline SnapshotCurrent() => new SecurityBaseline
+        {
+            EnablePinLock = EnablePinLock,
+            UsePinLockForAutoLock = UsePinLockForAutoLock,
+            RequireHardwareToken = RequireHardwareToken,
+            RequireKeyfile = RequireKeyfile,
+            IdleTimeoutMinutes = IdleTimeoutMinutes,
+            AutoCopyTotpWithPassword = AutoCopyTotpWithPassword,
+            ClipboardClearTimeIndex = ClipboardClearTimeIndex,
+            EnableScreenshotProtection = EnableScreenshotProtection,
+            AutoActivateDecoyOnTamper = AutoActivateDecoyOnTamper,
+            DecoyCredentialCount = DecoyCredentialCount,
+            DecoyReadOnlyMode = DecoyReadOnlyMode,
+            LogDecoyActivation = LogDecoyActivation,
+        };
+
+        private bool MatchesBaseline()
+        {
+            var b = _baseline;
+            return EnablePinLock == b.EnablePinLock
+                && UsePinLockForAutoLock == b.UsePinLockForAutoLock
+                && RequireHardwareToken == b.RequireHardwareToken
+                && RequireKeyfile == b.RequireKeyfile
+                && IdleTimeoutMinutes == b.IdleTimeoutMinutes
+                && AutoCopyTotpWithPassword == b.AutoCopyTotpWithPassword
+                && ClipboardClearTimeIndex == b.ClipboardClearTimeIndex
+                && EnableScreenshotProtection == b.EnableScreenshotProtection
+                && AutoActivateDecoyOnTamper == b.AutoActivateDecoyOnTamper
+                && DecoyCredentialCount == b.DecoyCredentialCount
+                && DecoyReadOnlyMode == b.DecoyReadOnlyMode
+                && LogDecoyActivation == b.LogDecoyActivation;
+        }
+
+        // Issue #28: re-staging the same key replaces the prior pair so a
+        // burst of property changes still results in a single commit/discard.
+        private void StageAll()
+        {
+            if (_suppressStage) return;
+            if (MatchesBaseline())
+            {
+                _draft.ClearKey("Security.All");
+                return;
+            }
+            var staged = SnapshotCurrent();
+            var baseline = _baseline;
+            _draft.Stage(
+                key: "Security.All",
+                commit: () =>
+                {
+                    SettingsService.Update(s =>
+                    {
+                        s.EnablePinLock = staged.EnablePinLock;
+                        s.UsePinLockForAutoLock = staged.UsePinLockForAutoLock;
+                        s.RequireHardwareToken = staged.RequireHardwareToken;
+                        s.RequireKeyfile = staged.RequireKeyfile;
+                        s.IdleTimeoutMinutes = staged.IdleTimeoutMinutes;
+                        s.AutoCopyTotpWithPassword = staged.AutoCopyTotpWithPassword;
+                        s.ClipboardClearTime = staged.ClipboardClearTimeIndex;
+                        s.EnableScreenshotProtection = staged.EnableScreenshotProtection;
+                        s.EnableDecoyVault = staged.AutoActivateDecoyOnTamper;
+                        s.DecoyCredentialCount = staged.DecoyCredentialCount;
+                        s.DecoyReadOnlyMode = staged.DecoyReadOnlyMode;
+                        s.DecoyLogActivations = staged.LogDecoyActivation;
+                    });
+                    _baseline = staged;
+                },
+                discard: () =>
+                {
+                    _suppressStage = true;
+                    try
+                    {
+                        EnablePinLock = baseline.EnablePinLock;
+                        UsePinLockForAutoLock = baseline.UsePinLockForAutoLock;
+                        RequireHardwareToken = baseline.RequireHardwareToken;
+                        RequireKeyfile = baseline.RequireKeyfile;
+                        IdleTimeoutMinutes = baseline.IdleTimeoutMinutes;
+                        AutoCopyTotpWithPassword = baseline.AutoCopyTotpWithPassword;
+                        ClipboardClearTimeIndex = baseline.ClipboardClearTimeIndex;
+                        EnableScreenshotProtection = baseline.EnableScreenshotProtection;
+                        AutoActivateDecoyOnTamper = baseline.AutoActivateDecoyOnTamper;
+                        DecoyCredentialCount = baseline.DecoyCredentialCount;
+                        DecoyReadOnlyMode = baseline.DecoyReadOnlyMode;
+                        LogDecoyActivation = baseline.LogDecoyActivation;
+                    }
+                    finally
+                    {
+                        _suppressStage = false;
+                    }
+                });
         }
 
         private async Task PreviewDecoyVaultAsync()
