@@ -13,9 +13,12 @@
              top of liquid-glass; the left-edge accent bar is in the Button
              content template itself so we don't have to fight the templated
              parts. -->
+        <!-- Selected settings tab uses primary (white) text — keeping the accent
+             colour for the left-edge bar only avoids the 'blue text on dark panel'
+             low-contrast issue (#7). -->
         <Style Selector="Button.settings-tab.active TextBlock.tab-label">
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
         </Style>
         <Style Selector="Button.settings-tab.active Border.tab-accent">
             <Setter Property="IsVisible" Value="True"/>

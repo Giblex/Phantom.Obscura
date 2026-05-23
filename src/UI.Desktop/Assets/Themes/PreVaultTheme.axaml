@@ -5,10 +5,13 @@
          Merged into each window's Resources so these screens never change with app theme.
          Colors sourced from Theme.GiblexDark.axaml (exact match of giblex.com.au dark mode). -->
 
-    <!-- Surface tokens -->
-    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#071018"/>
-    <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#09202A"/>
-    <SolidColorBrush x:Key="FooterBackgroundBrush" Color="#071018"/>
+    <!-- Surface tokens — navy palette to match in-app dark theme header (#5).
+         The previous values had a perceptible teal/green tint which read as
+         'green' on welcome / setup wizard. We use a low-saturation navy here
+         so the chrome reads as navy on both the splash and the website. -->
+    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#0B1422"/>
+    <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#0F1A2E"/>
+    <SolidColorBrush x:Key="FooterBackgroundBrush" Color="#0B1422"/>
     <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#0C1620"/>
     <SolidColorBrush x:Key="CardBackgroundBrush" Color="#152838"/>
     <SolidColorBrush x:Key="SurfaceBrush" Color="#152838"/>

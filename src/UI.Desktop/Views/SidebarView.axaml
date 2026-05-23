@@ -174,15 +174,18 @@
                     </Button>
                 </StackPanel>
 
-                <!-- Dashboard and Passwords Buttons -->
-                <StackPanel Spacing="6" Margin="0,0,0,12" IsVisible="{Binding !IsSidebarCollapsed}">
+                <!-- Dashboard and Passwords Buttons.
+                     Outer Margin="6,0" matches the 6px outer margin used by the
+                     ENTRY TYPES / CATEGORIES dropdown items so the 'Dashboard' and
+                     'Passwords' labels left-align with the dropdown content (#9). -->
+                <StackPanel Spacing="6" Margin="6,0,6,12" IsVisible="{Binding !IsSidebarCollapsed}">
                     <Button Command="{Binding ShowDashboardCommand}"
                                   Classes="nav-button"
                                   Classes.active="{Binding IsShowingDashboard}"
-                                  HorizontalContentAlignment="Center"
+                                  HorizontalContentAlignment="Left"
                                   ToolTip.Tip="Dashboard"
                                   IsVisible="{Binding IsDashboardEnabled}">
-                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Left" Margin="18,0,0,0">
                             <TextBlock Text="Dashboard" FontSize="{StaticResource Type.Label.Size}" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center" IsVisible="{Binding !IsSidebarCollapsed}"/>
                         </StackPanel>
                     </Button>
@@ -190,9 +193,9 @@
                     <Button Command="{Binding ShowPasswordsCommand}"
                                   Classes="nav-button"
                                   Classes.active="{Binding IsShowingPasswords}"
-                                  HorizontalContentAlignment="Center"
+                                  HorizontalContentAlignment="Left"
                                   ToolTip.Tip="Passwords">
-                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Left" Margin="18,0,0,0">
                             <TextBlock Text="Passwords" FontSize="{StaticResource Type.Label.Size}" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center" IsVisible="{Binding !IsSidebarCollapsed}"/>
                         </StackPanel>
                     </Button>
@@ -423,7 +426,7 @@
                                 </Border>
                                 <!-- Blue-glass sheen (matches liquid glass button palette, replaces heavy white) -->
                                 <Border CornerRadius="8"
-                                        Opacity="0.55">
+                                        Opacity="0.30">
                                     <Border.Background>
                                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
                                             <GradientStop Color="#00A0C8E8" Offset="0"/>
@@ -480,7 +483,7 @@
                                   Height="12"
                                   Stretch="Uniform"
                                   VerticalAlignment="Center"
-                                  Margin="4,0">
+                                  Margin="8,0">
                                 <Path.RenderTransform>
                                     <RotateTransform Angle="0"/>
                                 </Path.RenderTransform>
@@ -510,7 +513,7 @@
                                 CornerRadius="0"
                                 Background="{DynamicResource ContentBackgroundBrush}"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
-                                Margin="6,1">
+                                Margin="6,2">
                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
                                 <Path Data="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" StrokeLineCap="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text="All Types" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
@@ -526,7 +529,7 @@
                                 CornerRadius="0"
                                 Background="{DynamicResource ContentBackgroundBrush}"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
-                                Margin="6,1">
+                                Margin="6,2">
                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
                                 <Path Data="M19 11h-1.5V7c0-2.76-2.24-5-5-5s-5 2.24-5 5v4H6c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h13c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2zm-9-4c0-1.66 1.34-3 3-3s3 1.34 3 3v4h-6V7z" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text="Passwords" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
@@ -542,7 +545,7 @@
                                 CornerRadius="0"
                                 Background="{DynamicResource ContentBackgroundBrush}"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
-                                Margin="6,1">
+                                Margin="6,2">
                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
                                 <Path Data="M3 6h18v12H3z M3 10h18" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" StrokeLineCap="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text="Credit Cards" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
@@ -558,7 +561,7 @@
                                 CornerRadius="0"
                                 Background="{DynamicResource ContentBackgroundBrush}"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
-                                Margin="6,1">
+                                Margin="6,2">
                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
                                 <Path Data="M3 5h18v14H3z" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" StrokeLineCap="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text="Bank Accounts" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
@@ -574,7 +577,7 @@
                                 CornerRadius="0"
                                 Background="{DynamicResource ContentBackgroundBrush}"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
-                                Margin="6,1">
+                                Margin="6,2">
                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
                                 <Path Data="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" StrokeLineCap="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text="Identity Documents" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
@@ -590,7 +593,7 @@
                                 CornerRadius="0"
                                 Background="{DynamicResource ContentBackgroundBrush}"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
-                                Margin="6,1">
+                                Margin="6,2">
                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
                                 <Path Data="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" StrokeLineCap="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text="API Keys" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
@@ -606,7 +609,7 @@
                                 CornerRadius="0"
                                 Background="{DynamicResource ContentBackgroundBrush}"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
-                                Margin="6,1">
+                                Margin="6,2">
                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
                                 <Path Data="M1 11.5a11.43 11.43 0 0 1 22 0 M5 13a7 7 0 0 1 14 0 M12 20h.01 M9 17a3 3 0 0 1 6 0" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" StrokeLineCap="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text="WiFi Networks" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
@@ -622,7 +625,7 @@
                                 CornerRadius="0"
                                 Background="{DynamicResource ContentBackgroundBrush}"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
-                                Margin="6,1">
+                                Margin="6,2">
                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
                                 <Path Data="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" StrokeLineCap="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text="Contacts" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
@@ -638,7 +641,7 @@
                                 CornerRadius="0"
                                 Background="{DynamicResource ContentBackgroundBrush}"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
-                                Margin="6,1">
+                                Margin="6,2">
                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
                                 <Path Data="M7 2h10v4H7z M5 6h14v16H5z M9 10h2 M13 10h2 M9 14h2 M13 14h2 M9 18h6" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" StrokeLineCap="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text="PIN Codes" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
@@ -647,15 +650,21 @@
                     </ItemsControl>
                 </StackPanel>
                 
-                <!-- Categories Dropdown (Collapsible) -->
+                <!-- Categories Dropdown (Collapsible).
+                     The CATEGORIES toggle and the gear (Manage Categories) sit on
+                     the same row so the gear is 'right next to the drop menu' (#12).
+                     The full-width 'Category Settings' button below the list has
+                     been removed in favour of this compact gear-only affordance. -->
                 <StackPanel Spacing="4" Margin="0,0,0,12" IsVisible="{Binding !IsSidebarCollapsed}">
-                    <ToggleButton x:Name="CategoryDropdownToggle"
+                    <Grid ColumnDefinitions="*,Auto" Margin="6,0">
+                        <ToggleButton x:Name="CategoryDropdownToggle"
+                                  Grid.Column="0"
                                   Classes="category-filter"
                                   HorizontalAlignment="Stretch"
                                   HorizontalContentAlignment="Left"
                                   Height="36"
                                   CornerRadius="0"
-                                  Margin="6,0">
+                                  Margin="0">
                         <Grid ColumnDefinitions="Auto,*,Auto">
                             <Path Grid.Column="0" Data="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center" Margin="6,0,8,0"/>
                             <TextBlock Grid.Column="1"
@@ -674,7 +683,7 @@
                                   Height="12"
                                   Stretch="Uniform"
                                   VerticalAlignment="Center"
-                                  Margin="4,0,8,0">
+                                  Margin="8,0">
                                 <Path.RenderTransform>
                                     <RotateTransform Angle="0"/>
                                 </Path.RenderTransform>
@@ -693,6 +702,23 @@
                             </Path>
                         </Grid>
                     </ToggleButton>
+
+                        <!-- Gear-only Category Settings affordance, sits on the same
+                             row as the CATEGORIES toggle (#12). -->
+                        <Button Grid.Column="1"
+                                Command="{Binding ManageCategoriesCommand}"
+                                Classes="liquid-glass collapsed-icon"
+                                Width="36" Height="36"
+                                MinWidth="36" MinHeight="36"
+                                Margin="4,0,0,0"
+                                CornerRadius="8"
+                                ToolTip.Tip="Manage Categories">
+                            <Path Data="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96a7.04 7.04 0 0 0-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87a.48.48 0 0 0 .12.61l2.03 1.58c-.04.31-.06.63-.06.94 0 .31.02.63.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.37 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"
+                                  Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.2" Fill="Transparent"
+                                  Width="14" Height="14" Stretch="Uniform"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Button>
+                    </Grid>
 
                     <Grid IsVisible="{Binding IsChecked, ElementName=CategoryDropdownToggle}">
                         <Border x:Name="CategoryHighlightSource" Background="Transparent">
@@ -734,7 +760,7 @@
                                         Opacity="0"/>
                                 <!-- Blue-glass sheen -->
                                 <Border CornerRadius="8"
-                                        Opacity="0.55">
+                                        Opacity="0.30">
                                     <Border.Background>
                                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
                                             <GradientStop Color="#00A0C8E8" Offset="0"/>
@@ -751,25 +777,9 @@
                         </Border>
                     </Grid>
 
-                    <!-- Category Settings Button -->
-                    <ToggleButton Command="{Binding ManageCategoriesCommand}"
-                                  Classes="category-filter"
-                                  HorizontalAlignment="Stretch"
-                                  HorizontalContentAlignment="Left"
-                                  Height="38"
-                                  CornerRadius="0"
-                                  Margin="0,4,0,0"
-                                  ToolTip.Tip="Manage Categories">
-                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="16,0,0,0">
-                            <Path Data="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96a7.04 7.04 0 0 0-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87a.48.48 0 0 0 .12.61l2.03 1.58c-.04.31-.06.63-.06.94 0 .31.02.63.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.37 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"
-                                  Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.2" Fill="Transparent"
-                                  Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
-                            <TextBlock Text="Category Settings"
-                                       VerticalAlignment="Center"
-                                       Foreground="{DynamicResource PrimaryTextBrush}"
-                                       FontSize="{StaticResource Type.Label.Size}"/>
-                        </StackPanel>
-                    </ToggleButton>
+                    <!-- Category Settings is now the gear icon next to the CATEGORIES
+                         dropdown header (#12); the previous full-width button has
+                         been removed. -->
                 </StackPanel>
                 
                 <!-- Flagged Passwords and Recovery Section -->
