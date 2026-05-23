@@ -109,6 +109,11 @@ namespace PhantomVault.UI
             services.AddSingleton<TotpService>();
             services.AddSingleton<VaultService>();
             services.AddSingleton<VaultLockDurationService>();
+            // Issue #21: shared draft-tracker for settings overlay. Lets any
+            // property setter stage a commit/discard pair while still emitting
+            // its UI change immediately, so the bottom-of-overlay Save / Cancel
+            // buttons have a single source of truth.
+            services.AddSingleton<PhantomVault.UI.Services.SettingsDraftTracker>();
             services.AddSingleton<SecureTrashService>();
             services.AddSingleton<IdleLockService>(provider => new IdleLockService(TimeSpan.FromMinutes(5)));
             services.AddSingleton<YubiKeyService>();

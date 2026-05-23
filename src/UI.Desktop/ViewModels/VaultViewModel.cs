@@ -44,6 +44,7 @@ namespace PhantomVault.UI.ViewModels
         private readonly IZkVaultService _zkVaultService;
         private readonly DialogService _dialogService;
         private readonly VaultLockDurationService _vaultLockDurationService;
+        private readonly PhantomVault.UI.Services.SettingsDraftTracker _settingsDraftTracker;
         private readonly IUsbDetector _usbDetector;
         private readonly SecureTrashService _secureTrashService;
         private readonly IconManager _iconManager;
@@ -228,7 +229,8 @@ namespace PhantomVault.UI.ViewModels
             IntegratedRecoveryService? integratedRecoveryService = null,
             IntegratedAttestorService? integratedAttestorService = null,
             RecoveryVaultPathResolver? recoveryVaultPathResolver = null,
-            RecoverySuiteBootstrapService? recoverySuiteBootstrapService = null)
+            RecoverySuiteBootstrapService? recoverySuiteBootstrapService = null,
+            PhantomVault.UI.Services.SettingsDraftTracker? settingsDraftTracker = null)
         {
             _vaultService = vaultService ?? throw new ArgumentNullException(nameof(vaultService));
             _manifestService = manifestService ?? throw new ArgumentNullException(nameof(manifestService));
@@ -236,6 +238,11 @@ namespace PhantomVault.UI.ViewModels
             _zkVaultService = zkVaultService ?? throw new ArgumentNullException(nameof(zkVaultService));
             _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
             _vaultLockDurationService = vaultLockDurationService ?? throw new ArgumentNullException(nameof(vaultLockDurationService));
+            _settingsDraftTracker = settingsDraftTracker ?? new PhantomVault.UI.Services.SettingsDraftTracker();
+            // Re-emit the tracker's HasUnsavedChanges as a VM property so XAML
+            // can bind to it for the Save button enabled state.
+            _settingsDraftTracker.WhenAnyValue(t => t.HasUnsavedChanges)
+                .Subscribe(v => this.RaisePropertyChanged(nameof(HasUnsavedSettings)));
             _usbDetector = usbDetector ?? throw new ArgumentNullException(nameof(usbDetector));
             _secureTrashService = secureTrashService ?? throw new ArgumentNullException(nameof(secureTrashService));
             _iconManager = iconManager ?? throw new ArgumentNullException(nameof(iconManager));
@@ -352,7 +359,11 @@ namespace PhantomVault.UI.ViewModels
             // BuildCommandPaletteActions() below.
             OpenCommandPaletteCommand = ReactiveCommand.Create(() => { });
             OpenSettingsPanelCommand = ReactiveCommand.Create(OpenSettingsPanel);
-            CloseSettingsPanelCommand = ReactiveCommand.Create(CloseSettingsPanel);
+            // Issue #21: route close through the async intercept so unsaved
+            // changes trigger the Save-or-Cancel prompt.
+            CloseSettingsPanelCommand = ReactiveCommand.CreateFromTask(CloseSettingsPanelAsync);
+            SaveSettingsCommand = ReactiveCommand.Create(SaveStagedSettings);
+            DiscardSettingsCommand = ReactiveCommand.Create(DiscardStagedSettings);
             ToggleSecurityDashboardCommand = ReactiveCommand.Create(ToggleSecurityDashboard);
             OpenSecurityDashboardWindowCommand = ReactiveCommand.Create(() => 
             {
@@ -1196,14 +1207,38 @@ namespace PhantomVault.UI.ViewModels
             {
                 if (this.RaiseAndSetIfChanged(ref _isDashboardEnabled, value))
                 {
-                    // Persist
-                    try
+                    // Issue #21: stage the change in the draft tracker instead
+                    // of saving immediately. UI side-effects (navigation away
+                    // from a disabled Dashboard) still fire so the toggle feels
+                    // live, but persistence waits until the user clicks Save.
+                    // Discard rewinds both this property and the persisted
+                    // value back to whatever was on disk at the time of stage.
+                    var previousPersisted = SafeLoadDashboardEnabled();
+                    if (value == previousPersisted)
                     {
-                        var s = SettingsService.Load();
-                        s.DashboardEnabled = value;
-                        SettingsService.Save(s);
+                        // User toggled back to the saved state — drop staged work.
+                        _settingsDraftTracker.ClearKey("General.DashboardEnabled");
                     }
-                    catch { /* best-effort */ }
+                    else
+                    {
+                        _settingsDraftTracker.Stage(
+                            key: "General.DashboardEnabled",
+                            commit: () =>
+                            {
+                                try
+                                {
+                                    var s = SettingsService.Load();
+                                    s.DashboardEnabled = value;
+                                    SettingsService.Save(s);
+                                }
+                                catch { /* best-effort */ }
+                            },
+                            discard: () =>
+                            {
+                                // Revert the UI-side value to the persisted one.
+                                this.RaiseAndSetIfChanged(ref _isDashboardEnabled, previousPersisted, nameof(IsDashboardEnabled));
+                            });
+                    }
 
                     if (!value && IsShowingDashboard)
                     {
@@ -1212,6 +1247,12 @@ namespace PhantomVault.UI.ViewModels
                     }
                 }
             }
+        }
+
+        private static bool SafeLoadDashboardEnabled()
+        {
+            try { return SettingsService.Load().DashboardEnabled; }
+            catch { return true; }
         }
 
         public bool IsSidebarCollapsed
@@ -1531,15 +1572,40 @@ namespace PhantomVault.UI.ViewModels
             }
             set
             {
+                // Issue #21: stage the change instead of persisting on every
+                // ComboBox selection. UI updates (icon swap, status message)
+                // stay immediate; the SettingsService write waits for Save.
                 var preferGrid = value == 1;
-                var settings = SettingsService.Load();
-                settings.PreferGridView = preferGrid;
-                SettingsService.Save(settings);
+                var previousPersisted = SettingsService.Load().PreferGridView;
 
                 IsGridView = preferGrid;
                 GridViewIconPath = preferGrid ? "Assets/SVG/Current/List.svg" : "Assets/SVG/Current/Grid.svg";
                 StatusMessage = preferGrid ? "Default view set to grid" : "Default view set to list";
                 this.RaisePropertyChanged();
+
+                if (preferGrid == previousPersisted)
+                {
+                    _settingsDraftTracker.ClearKey("General.PreferGridView");
+                }
+                else
+                {
+                    _settingsDraftTracker.Stage(
+                        key: "General.PreferGridView",
+                        commit: () =>
+                        {
+                            var s = SettingsService.Load();
+                            s.PreferGridView = preferGrid;
+                            SettingsService.Save(s);
+                        },
+                        discard: () =>
+                        {
+                            // Roll the UI-visible view back; trigger property change so
+                            // bound ComboBox/SelectedIndex updates.
+                            IsGridView = previousPersisted;
+                            GridViewIconPath = previousPersisted ? "Assets/SVG/Current/List.svg" : "Assets/SVG/Current/Grid.svg";
+                            this.RaisePropertyChanged(nameof(SelectedDefaultView));
+                        });
+                }
             }
         }
 
@@ -2044,6 +2110,10 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> OpenCommandPaletteCommand { get; }
         public ReactiveCommand<Unit, Unit> OpenSettingsPanelCommand { get; }
         public ReactiveCommand<Unit, Unit> CloseSettingsPanelCommand { get; }
+        // Issue #21: drives the overlay-bottom Save / Discard row.
+        public ReactiveCommand<Unit, Unit> SaveSettingsCommand { get; }
+        public ReactiveCommand<Unit, Unit> DiscardSettingsCommand { get; }
+        public bool HasUnsavedSettings => _settingsDraftTracker.HasUnsavedChanges;
         public ReactiveCommand<Unit, Unit> ToggleSecurityDashboardCommand { get; }
         public ReactiveCommand<Unit, Unit> OpenSecurityDashboardWindowCommand { get; }
         public ReactiveCommand<PhantomVault.Core.Models.Credential, Unit> OpenEditPasswordCommand { get; }
@@ -5858,11 +5928,45 @@ namespace PhantomVault.UI.ViewModels
             SelectedSettingsTab = tabKey;
         }
 
-        private void CloseSettingsPanel()
+        // Issue #21: prompt the user when there are staged but unsaved settings
+        // changes before the overlay closes. Returns to caller via the
+        // CloseSettingsPanelCommand wrapper.
+        private async Task CloseSettingsPanelAsync()
         {
+            if (_settingsDraftTracker.HasUnsavedChanges)
+            {
+                // The existing two-button confirmation dialog maps to
+                // "Save & Close" (true) / "Cancel" (false). False means stay
+                // on the settings panel so the user can review.
+                bool save = await _dialogService.ShowConfirmationAsync(
+                    "Some settings have changed",
+                    "Save the staged changes before closing? Click Cancel to stay and review.",
+                    confirmText: "Save & Close",
+                    cancelText: "Cancel",
+                    owner: _ownerWindow);
+                if (!save) return; // user wants to keep editing
+                _settingsDraftTracker.CommitAll();
+                StatusMessage = "Settings saved";
+            }
+
             IsSettingsPanelVisible = false;
             SelectedSettingsContent = null;
-            StatusMessage = "Settings closed";
+            if (!_settingsDraftTracker.HasUnsavedChanges)
+                StatusMessage = "Settings closed";
+        }
+
+        private void SaveStagedSettings()
+        {
+            if (!_settingsDraftTracker.HasUnsavedChanges) return;
+            int n = _settingsDraftTracker.CommitAll();
+            StatusMessage = n == 1 ? "Setting saved" : $"Saved {n} settings";
+        }
+
+        private void DiscardStagedSettings()
+        {
+            if (!_settingsDraftTracker.HasUnsavedChanges) return;
+            int n = _settingsDraftTracker.DiscardAll();
+            StatusMessage = n == 1 ? "Setting discarded" : $"Discarded {n} pending settings";
         }
 
         private void ToggleSecurityDashboard()
@@ -5871,7 +5975,7 @@ namespace PhantomVault.UI.ViewModels
 
             if (IsSecurityDashboardVisible)
             {
-                CloseSettingsPanel();
+                _ = CloseSettingsPanelAsync();
                 // Refresh all dashboard metrics when opened
                 UpdateWeakCredentials();
                 RefreshSecurityDashboardMetrics();
