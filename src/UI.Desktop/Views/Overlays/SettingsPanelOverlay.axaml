@@ -121,6 +121,12 @@
                     <!-- Tabbed Content -->
                     <Grid Grid.Row="1" ColumnDefinitions="220,*" VerticalAlignment="Stretch">
                         <!-- Tab Navigation -->
+                        <!-- Issue #3: left sidebar ScrollViewer wasn't scrolling
+                             because Padding was on the ScrollViewer itself (which in
+                             Avalonia interacts oddly with viewport sizing) and the
+                             StackPanel was unconstrained. Move padding onto the inner
+                             StackPanel and pin ScrollViewer to Stretch so it always
+                             gets a bounded viewport from the * row above. -->
                         <Border Grid.Column="0"
                                 VerticalAlignment="Stretch"
                                 ClipToBounds="True"
@@ -129,8 +135,9 @@
                                 BorderThickness="0,0,1,0">
                             <ScrollViewer VerticalScrollBarVisibility="Auto"
                                           HorizontalScrollBarVisibility="Disabled"
-                                          Padding="15,20">
-                            <StackPanel Spacing="6">
+                                          VerticalAlignment="Stretch"
+                                          MinHeight="0">
+                            <StackPanel Spacing="6" Margin="15,20">
                                 <Button Command="{Binding ShowGeneralSettingsCommand}"
                                         Classes="liquid-glass settings-tab"
                                         Classes.active="{Binding SelectedSettingsTab, Converter={StaticResource SettingsTabEqualsConverter}, ConverterParameter=general}"
@@ -354,13 +361,21 @@
                         </Border>
 
                         <!-- Tab Content Area -->
+                        <!-- Issue #2: bottom of tab content got cut off because the
+                             ScrollViewer's bottom padding wasn't enough to clear the
+                             window edge and the content had no inner bottom margin
+                             to compensate. Pin to Stretch + add a generous bottom
+                             margin on the ContentControl so even tall tabs scroll
+                             past the final input. -->
                         <ScrollViewer Grid.Column="1"
                                      VerticalScrollBarVisibility="Auto"
                                      HorizontalScrollBarVisibility="Disabled"
+                                     VerticalAlignment="Stretch"
+                                     MinHeight="0"
                                      Padding="30,20,20,30">
                             <ContentControl Content="{Binding SelectedSettingsContent}"
                                           HorizontalAlignment="Stretch"
-                                          Margin="0,0,20,0"/>
+                                          Margin="0,0,20,40"/>
                         </ScrollViewer>
                     </Grid>
                 </Grid>

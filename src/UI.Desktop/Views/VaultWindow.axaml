@@ -420,6 +420,14 @@
                    ZIndex="100"
                    IsHitTestVisible="{Binding IsShowingDashboard}"
                    ClipToBounds="True">
+                <!-- Issue #14: solid theme-aware base behind the acrylic+overlay glass
+                     layers. Without this, when ExperimentalAcrylicBorder fails to
+                     render (no DWM composition / hardware accel off / RDP), only the
+                     semi-transparent gradient remained and the dashboard read grey
+                     against whatever the vault content panel was painting. -->
+                <Border IsHitTestVisible="False"
+                        CornerRadius="0,0,24,24"
+                        Background="{DynamicResource WindowBackgroundBrush}"/>
                 <!-- Layer 0: Frosted glass blur behind dashboard (theme-aware) -->
                 <ExperimentalAcrylicBorder IsHitTestVisible="False" CornerRadius="0,0,24,24">
                     <ExperimentalAcrylicBorder.Material>

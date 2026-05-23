@@ -4690,6 +4690,28 @@ namespace PhantomVault.UI.ViewModels
 
         private void OnIdleLockElapsed()
         {
+            // Issue #1: auto-lock must not activate before a PIN is configured for this
+            // vault. If the user has never set a PIN, idle expiry is a no-op — there is
+            // nothing to fall back to except the full passphrase, which is a bad UX
+            // when the user hasn't opted into PIN-protected sessions yet.
+            try
+            {
+                var settings = SettingsService.Load();
+                bool pinConfigured = settings != null
+                    && settings.EnablePinLock
+                    && PinLockService.HasPinConfigured(settings, _manifestPath);
+                if (!pinConfigured)
+                {
+                    return;
+                }
+            }
+            catch
+            {
+                // If settings can't be loaded for any reason, fail closed by skipping
+                // auto-lock rather than locking a user who has never set a PIN.
+                return;
+            }
+
             Dispatcher.UIThread.Post(async () =>
             {
                 await LockInAppAsync(LockReason.AutoLock);

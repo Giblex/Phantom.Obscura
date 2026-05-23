@@ -457,7 +457,11 @@
                 </StackPanel>
                 
                 <!-- Entry Types Dropdown Filter -->
-                <StackPanel Spacing="4" Margin="0,0,0,12" IsVisible="{Binding !IsSidebarCollapsed}">
+                <!-- Issue #13: right-side scrollbar (6px) was eating into the visual
+                     right margin of dropdown buttons, making them sit asymmetrically.
+                     Add a 6px right margin to the group so the dropdown chrome reads
+                     with equal whitespace on each side regardless of scrollbar state. -->
+                <StackPanel Spacing="4" Margin="0,0,6,12" IsVisible="{Binding !IsSidebarCollapsed}">
                     <ToggleButton x:Name="EntryTypeDropdownToggle"
                                   Classes="category-filter"
                                   HorizontalAlignment="Stretch"
@@ -510,7 +514,9 @@
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
                                 Height="36"
-                                CornerRadius="0"
+                                CornerRadius="10"
+                                BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
+                                BorderThickness="1"
                                 Background="{DynamicResource ContentBackgroundBrush}"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
@@ -526,7 +532,9 @@
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
                                 Height="36"
-                                CornerRadius="0"
+                                CornerRadius="10"
+                                BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
+                                BorderThickness="1"
                                 Background="{DynamicResource ContentBackgroundBrush}"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
@@ -542,7 +550,9 @@
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
                                 Height="36"
-                                CornerRadius="0"
+                                CornerRadius="10"
+                                BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
+                                BorderThickness="1"
                                 Background="{DynamicResource ContentBackgroundBrush}"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
@@ -558,7 +568,9 @@
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
                                 Height="36"
-                                CornerRadius="0"
+                                CornerRadius="10"
+                                BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
+                                BorderThickness="1"
                                 Background="{DynamicResource ContentBackgroundBrush}"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
@@ -574,7 +586,9 @@
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
                                 Height="36"
-                                CornerRadius="0"
+                                CornerRadius="10"
+                                BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
+                                BorderThickness="1"
                                 Background="{DynamicResource ContentBackgroundBrush}"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
@@ -590,7 +604,9 @@
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
                                 Height="36"
-                                CornerRadius="0"
+                                CornerRadius="10"
+                                BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
+                                BorderThickness="1"
                                 Background="{DynamicResource ContentBackgroundBrush}"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
@@ -606,7 +622,9 @@
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
                                 Height="36"
-                                CornerRadius="0"
+                                CornerRadius="10"
+                                BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
+                                BorderThickness="1"
                                 Background="{DynamicResource ContentBackgroundBrush}"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
@@ -622,7 +640,9 @@
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
                                 Height="36"
-                                CornerRadius="0"
+                                CornerRadius="10"
+                                BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
+                                BorderThickness="1"
                                 Background="{DynamicResource ContentBackgroundBrush}"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
@@ -638,7 +658,9 @@
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
                                 Height="36"
-                                CornerRadius="0"
+                                CornerRadius="10"
+                                BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
+                                BorderThickness="1"
                                 Background="{DynamicResource ContentBackgroundBrush}"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
@@ -655,7 +677,8 @@
                      the same row so the gear is 'right next to the drop menu' (#12).
                      The full-width 'Category Settings' button below the list has
                      been removed in favour of this compact gear-only affordance. -->
-                <StackPanel Spacing="4" Margin="0,0,0,12" IsVisible="{Binding !IsSidebarCollapsed}">
+                <!-- Issue #13: matching 6px right margin to compensate for scrollbar. -->
+                <StackPanel Spacing="4" Margin="0,0,6,12" IsVisible="{Binding !IsSidebarCollapsed}">
                     <Grid ColumnDefinitions="*,Auto" Margin="6,0">
                         <ToggleButton x:Name="CategoryDropdownToggle"
                                   Grid.Column="0"
@@ -784,6 +807,8 @@
                 
                 <!-- Flagged Passwords and Recovery Section -->
                 <StackPanel Spacing="{StaticResource Space6}" IsVisible="{Binding !IsSidebarCollapsed}">
+                    <!-- Issue #11: bump CornerRadius from 4 → 12 for softer corners
+                         matching the rest of the liquid-glass affordances. -->
                     <Button Command="{Binding OpenSecurityDashboardWindowCommand}"
                             Classes="liquid-glass"
                             Background="{DynamicResource ContentBackgroundBrush}"
@@ -792,7 +817,7 @@
                             HorizontalContentAlignment="Left"
                             Height="32"
                             FontSize="{StaticResource Type.Tiny.Size}"
-                            CornerRadius="4"
+                            CornerRadius="12"
                             Margin="12,6,12,6">
                         <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space6}">
                             <TextBlock Text="Flagged Passwords" VerticalAlignment="Center"/>
@@ -830,7 +855,7 @@
                             ToolTip.Tip="{Binding ExternalRecoveryStatus}"
                             Height="32"
                             FontSize="{StaticResource Type.Tiny.Size}"
-                            CornerRadius="4"
+                            CornerRadius="12"
                             Margin="12,0,12,12">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <controls:SvgIcon IconName="Assets/SVG/Current/Recovery.svg"

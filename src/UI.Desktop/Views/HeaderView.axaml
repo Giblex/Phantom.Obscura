@@ -100,22 +100,34 @@
                         ToolTipText="Toggle list/grid view"
                         IsVisible="{Binding !IsShowingSecureTrash}">
                     <controls:LiquidGlassButton.ButtonContent>
+                        <!-- Issue #9: Canvas children don't honour Stretch and pin to
+                             top-left, so the view-toggle icons rendered off-centre
+                             in the 22×22 button content. Use Viewbox to scale the
+                             paths uniformly inside a centred host grid. -->
                         <Grid Width="22" Height="22">
-                            <Canvas Width="24" Height="24" IsVisible="{Binding !IsGridView}">
-                                <Path Data="M3,3 L10,3 L10,10 L3,10 Z M14,3 L21,3 L21,10 L14,10 Z M14,14 L21,14 L21,21 L14,21 Z M3,14 L10,14 L10,21 L3,21 Z"
-                                      Stretch="Uniform"
-                                      Stroke="{DynamicResource HeaderSvgIconColor}"
-                                      StrokeThickness="1.5"
-                                      Fill="Transparent"/>
-                            </Canvas>
-                            <Canvas Width="24" Height="24" IsVisible="{Binding IsGridView}">
-                                <Path Data="M4 6h16M4 12h16M4 18h16"
-                                      Stretch="Uniform"
-                                      Stroke="{DynamicResource HeaderSvgIconColor}"
-                                      StrokeThickness="1.7"
-                                      StrokeLineCap="Round"
-                                      Fill="Transparent"/>
-                            </Canvas>
+                            <Viewbox Width="22" Height="22"
+                                     HorizontalAlignment="Center"
+                                     VerticalAlignment="Center"
+                                     IsVisible="{Binding !IsGridView}">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="M3,3 L10,3 L10,10 L3,10 Z M14,3 L21,3 L21,10 L14,10 Z M14,14 L21,14 L21,21 L14,21 Z M3,14 L10,14 L10,21 L3,21 Z"
+                                          Stroke="{DynamicResource HeaderSvgIconColor}"
+                                          StrokeThickness="1.5"
+                                          Fill="Transparent"/>
+                                </Canvas>
+                            </Viewbox>
+                            <Viewbox Width="22" Height="22"
+                                     HorizontalAlignment="Center"
+                                     VerticalAlignment="Center"
+                                     IsVisible="{Binding IsGridView}">
+                                <Canvas Width="24" Height="24">
+                                    <Path Data="M4 6h16M4 12h16M4 18h16"
+                                          Stroke="{DynamicResource HeaderSvgIconColor}"
+                                          StrokeThickness="1.7"
+                                          StrokeLineCap="Round"
+                                          Fill="Transparent"/>
+                                </Canvas>
+                            </Viewbox>
                         </Grid>
                     </controls:LiquidGlassButton.ButtonContent>
                 </controls:LiquidGlassButton>

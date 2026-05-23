@@ -135,12 +135,16 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
                     <Panel>
-                        <!-- Base body -->
+                        <!-- Issue #10: category list items were nearly invisible at
+                             rest because BaseBorder was fully transparent. Give them
+                             a faint glass background so they read as 'present' tiles
+                             even before hover/checked, while still letting the
+                             sidebar background show through. -->
                         <Border Name="BaseBorder"
                                 CornerRadius="{TemplateBinding CornerRadius}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                BorderBrush="Transparent"
-                                Background="Transparent"
+                                BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
+                                Background="{DynamicResource QuickFilterGlassActiveBrush}"
                                 ClipToBounds="True"/>
                         
                         <!-- Content -->
