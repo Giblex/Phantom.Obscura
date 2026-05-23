@@ -42,6 +42,24 @@ namespace PhantomVault.UI.ViewModels.Settings
         private readonly SecureTrashService _secureTrashService;
         private readonly Window? _owner;
 
+        // Issue #29: shared draft tracker — PersistSettings now stages a single
+        // 'RubbishBin.All' entry; commits/discards drive disk + live config.
+        private readonly SettingsDraftTracker _draft;
+        private RubbishBinBaseline _baseline;
+        private bool _suppressStage;
+
+        private readonly struct RubbishBinBaseline
+        {
+            public int SelectedErasureMethod { get; init; }
+            public bool EnableRecovery { get; init; }
+            public int SelectedRetentionPeriod { get; init; }
+            public bool EnableDuplicateDetection { get; init; }
+            public bool AutoDeleteDuplicates { get; init; }
+            public int SelectedScanFrequency { get; init; }
+            public bool AutoEmptyOnClose { get; init; }
+            public bool PromptBeforeDeletion { get; init; }
+        }
+
         public int SelectedErasureMethod
         {
             get => _selectedErasureMethod;
@@ -211,13 +229,18 @@ namespace PhantomVault.UI.ViewModels.Settings
             _secureTrashService = secureTrashService ?? ((Application.Current as App)?.Services?.GetService(typeof(SecureTrashService)) as SecureTrashService)!;
             _owner = owner;
             _trashItemsProvider = trashItemsProvider ?? (() => Array.Empty<string>());
+            _draft = ((Application.Current as App)?.Services?.GetService(typeof(SettingsDraftTracker)) as SettingsDraftTracker)
+                ?? new SettingsDraftTracker();
 
             ScanForDuplicatesCommand = ReactiveCommand.CreateFromTask(ScanForDuplicates);
             ViewDeletedItemsCommand = ReactiveCommand.CreateFromTask(ViewDeletedItemsAsync);
             EmptyBinCommand = ReactiveCommand.CreateFromTask(EmptyBin);
             RestoreShadowSnapshotCommand = ReactiveCommand.CreateFromTask(RestoreShadowSnapshotAsync);
 
+            _suppressStage = true;
             LoadSettings();
+            _baseline = SnapshotCurrent();
+            _suppressStage = false;
             UpdateMethodDescription();
             ApplySecureTrashConfiguration();
             UpdateStatusMessages();
@@ -252,20 +275,82 @@ namespace PhantomVault.UI.ViewModels.Settings
 
         private void PersistSettings()
         {
-            SettingsService.Update(settings =>
+            // Issue #29: stage instead of writing immediately. Setters still
+            // call this on every change; re-staging replaces the prior pair
+            // under the 'RubbishBin.All' key so a burst of toggles still
+            // results in a single commit/discard pair.
+            if (_suppressStage) return;
+            if (MatchesBaseline())
             {
-                settings.SecureTrashCreateSnapshotBeforePurge = EnableRecovery;
-                settings.SecureTrashRetentionDays = MapRetentionIndexToDays(SelectedRetentionPeriod);
-                settings.SecureTrashDuplicateDetectionEnabled = EnableDuplicateDetection;
-                settings.SecureTrashAutoDeleteDuplicates = AutoDeleteDuplicates;
-                settings.SecureTrashDuplicateScanFrequency = SelectedScanFrequency;
-                settings.SecureTrashAutoEmptyOnClose = AutoEmptyOnClose;
-                settings.SecureTrashPromptBeforeDeletion = PromptBeforeDeletion;
-                settings.SecureTrashErasureMethod = SelectedErasureMethod;
-                settings.SecureTrashEnabled = EnableRecovery;
-                settings.SecureTrashAutoPurge = true;
-                settings.SecureTrashWipePasses = MapErasureMethodToWipePasses(SelectedErasureMethod);
-            });
+                _draft.ClearKey("RubbishBin.All");
+                return;
+            }
+            var staged = SnapshotCurrent();
+            var baseline = _baseline;
+            _draft.Stage(
+                key: "RubbishBin.All",
+                commit: () =>
+                {
+                    SettingsService.Update(settings =>
+                    {
+                        settings.SecureTrashCreateSnapshotBeforePurge = staged.EnableRecovery;
+                        settings.SecureTrashRetentionDays = MapRetentionIndexToDays(staged.SelectedRetentionPeriod);
+                        settings.SecureTrashDuplicateDetectionEnabled = staged.EnableDuplicateDetection;
+                        settings.SecureTrashAutoDeleteDuplicates = staged.AutoDeleteDuplicates;
+                        settings.SecureTrashDuplicateScanFrequency = staged.SelectedScanFrequency;
+                        settings.SecureTrashAutoEmptyOnClose = staged.AutoEmptyOnClose;
+                        settings.SecureTrashPromptBeforeDeletion = staged.PromptBeforeDeletion;
+                        settings.SecureTrashErasureMethod = staged.SelectedErasureMethod;
+                        settings.SecureTrashEnabled = staged.EnableRecovery;
+                        settings.SecureTrashAutoPurge = true;
+                        settings.SecureTrashWipePasses = MapErasureMethodToWipePasses(staged.SelectedErasureMethod);
+                    });
+                    _baseline = staged;
+                },
+                discard: () =>
+                {
+                    _suppressStage = true;
+                    try
+                    {
+                        SelectedErasureMethod = baseline.SelectedErasureMethod;
+                        EnableRecovery = baseline.EnableRecovery;
+                        SelectedRetentionPeriod = baseline.SelectedRetentionPeriod;
+                        EnableDuplicateDetection = baseline.EnableDuplicateDetection;
+                        AutoDeleteDuplicates = baseline.AutoDeleteDuplicates;
+                        SelectedScanFrequency = baseline.SelectedScanFrequency;
+                        AutoEmptyOnClose = baseline.AutoEmptyOnClose;
+                        PromptBeforeDeletion = baseline.PromptBeforeDeletion;
+                    }
+                    finally
+                    {
+                        _suppressStage = false;
+                    }
+                });
+        }
+
+        private RubbishBinBaseline SnapshotCurrent() => new RubbishBinBaseline
+        {
+            SelectedErasureMethod = SelectedErasureMethod,
+            EnableRecovery = EnableRecovery,
+            SelectedRetentionPeriod = SelectedRetentionPeriod,
+            EnableDuplicateDetection = EnableDuplicateDetection,
+            AutoDeleteDuplicates = AutoDeleteDuplicates,
+            SelectedScanFrequency = SelectedScanFrequency,
+            AutoEmptyOnClose = AutoEmptyOnClose,
+            PromptBeforeDeletion = PromptBeforeDeletion,
+        };
+
+        private bool MatchesBaseline()
+        {
+            var b = _baseline;
+            return SelectedErasureMethod == b.SelectedErasureMethod
+                && EnableRecovery == b.EnableRecovery
+                && SelectedRetentionPeriod == b.SelectedRetentionPeriod
+                && EnableDuplicateDetection == b.EnableDuplicateDetection
+                && AutoDeleteDuplicates == b.AutoDeleteDuplicates
+                && SelectedScanFrequency == b.SelectedScanFrequency
+                && AutoEmptyOnClose == b.AutoEmptyOnClose
+                && PromptBeforeDeletion == b.PromptBeforeDeletion;
         }
 
         private void ApplySecureTrashConfiguration()
