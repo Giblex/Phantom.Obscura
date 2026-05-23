@@ -51,6 +51,8 @@
     <SolidColorBrush x:Key="PrimaryTextBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="ControlForegroundBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="HeaderTextBrush" Color="#FFFFFF"/>
+    <!-- Issue #6: Phantom Obscura logo text white in Giblex Glass Navy header -->
+    <SolidColorBrush x:Key="LogoTitleBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="HeaderMutedTextBrush" Color="#9EAFC4"/>
     <SolidColorBrush x:Key="FooterTextBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="FooterMutedTextBrush" Color="#9EAFC4"/>
@@ -72,7 +74,8 @@
     <SolidColorBrush x:Key="ControlHoverBrush" Color="#182638"/>
     <SolidColorBrush x:Key="InputBackgroundBrush" Color="#162235"/>
     <SolidColorBrush x:Key="InputForegroundBrush" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="TextSelectionBrush" Color="#60004258"/>
+    <!-- Issue #7: blue text highlight in settings should be white -->
+    <SolidColorBrush x:Key="TextSelectionBrush" Color="#60FFFFFF"/>
     <SolidColorBrush x:Key="TextCaretBrush" Color="#4FC8FF"/>
     <SolidColorBrush x:Key="OverlayBackgroundBrush">#800A0F18</SolidColorBrush>
     <SolidColorBrush x:Key="ReadOnlyFieldBackgroundBrush" Color="#111B2A"/>
@@ -150,12 +153,13 @@
     <!-- Card separator line (transparent unless high contrast) -->
     <SolidColorBrush x:Key="CardSeparatorBrush" Color="#00000000"/>
     
+    <!-- Issue #8: reduce sidebar hover/active opacity, lean on liquid-glass borders -->
     <SolidColorBrush x:Key="QuickFilterGlassBrush">#00FFFFFF</SolidColorBrush>
-    <SolidColorBrush x:Key="QuickFilterGlassHoverBrush">#20FFFFFF</SolidColorBrush>
-    <SolidColorBrush x:Key="QuickFilterGlassActiveBrush">#40FFFFFF</SolidColorBrush>
-    <SolidColorBrush x:Key="QuickFilterGlassActiveHoverBrush">#50FFFFFF</SolidColorBrush>
-    <SolidColorBrush x:Key="QuickFilterGlassBorderBrush">#30FFFFFF</SolidColorBrush>
-    <SolidColorBrush x:Key="QuickFilterGlassActiveBorderBrush">#45FFFFFF</SolidColorBrush>
+    <SolidColorBrush x:Key="QuickFilterGlassHoverBrush">#14FFFFFF</SolidColorBrush>
+    <SolidColorBrush x:Key="QuickFilterGlassActiveBrush">#24FFFFFF</SolidColorBrush>
+    <SolidColorBrush x:Key="QuickFilterGlassActiveHoverBrush">#30FFFFFF</SolidColorBrush>
+    <SolidColorBrush x:Key="QuickFilterGlassBorderBrush">#30CFE8FF</SolidColorBrush>
+    <SolidColorBrush x:Key="QuickFilterGlassActiveBorderBrush">#50CFE8FF</SolidColorBrush>
     
     <!-- Filter hover/pressed gradient brushes (white-alpha for dark theme) -->
     <LinearGradientBrush x:Key="FilterHoverGradient" StartPoint="0%,0%" EndPoint="0%,100%">
