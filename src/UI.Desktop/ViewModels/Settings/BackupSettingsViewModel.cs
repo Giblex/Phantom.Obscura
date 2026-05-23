@@ -40,6 +40,21 @@ namespace PhantomVault.UI.ViewModels.Settings
         private int _selectedRetention = 2;
         private bool _isInitializing;
 
+        // Issue: shared draft tracker so the overlay-bottom Save button drives
+        // Backup persistence too. Baseline captured at LoadPersistedSettings
+        // for Discard rollback.
+        private readonly SettingsDraftTracker _draft = ((Application.Current as App)?.Services?.GetService(typeof(SettingsDraftTracker)) as SettingsDraftTracker) ?? new SettingsDraftTracker();
+        private BackupBaseline _baseline;
+
+        private readonly struct BackupBaseline
+        {
+            public string BackupLocation { get; init; }
+            public bool EnableAutomatedBackups { get; init; }
+            public int SelectedFrequency { get; init; }
+            public bool EncryptBackups { get; init; }
+            public int SelectedRetention { get; init; }
+        }
+
         public bool SupportsScheduledBackups => true;
         public bool SupportsSnapshotManager => true;
 
@@ -701,6 +716,10 @@ namespace PhantomVault.UI.ViewModels.Settings
                 _selectedFrequency = Math.Clamp(settings.BackupFrequencyMode, 0, 3);
                 _encryptBackups = settings.BackupUseEncryption;
                 _selectedRetention = Math.Clamp(settings.BackupRetentionCount, 0, 4);
+
+                // Capture baseline AFTER load so Discard can roll back to disk
+                // values (not whatever the field defaults happened to be).
+                _baseline = SnapshotCurrent();
             }
             finally
             {
@@ -708,18 +727,72 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
         }
 
+        // Issue: route the existing PersistBackupSettings helper through the
+        // shared tracker. All 5 call sites already funnel here, so a single
+        // edit migrates the whole tab. Re-staging replaces the prior pair so
+        // a burst of changes still produces a single commit/discard.
         private void PersistBackupSettings()
         {
-            SettingsService.Update(settings =>
-            {
-                settings.BackupAutomationEnabled = EnableAutomatedBackups;
-                settings.BackupFrequencyMode = SelectedFrequency;
-                settings.BackupLocation = BackupLocation;
-                settings.BackupUseEncryption = EncryptBackups;
-                settings.BackupRetentionCount = SelectedRetention;
-            });
-
             this.RaisePropertyChanged(nameof(ScheduledBackupStatus));
+
+            if (_isInitializing) return;
+            if (MatchesBaseline())
+            {
+                _draft.ClearKey("Backup.All");
+                return;
+            }
+            var staged = SnapshotCurrent();
+            var baseline = _baseline;
+            _draft.Stage(
+                key: "Backup.All",
+                commit: () =>
+                {
+                    SettingsService.Update(settings =>
+                    {
+                        settings.BackupAutomationEnabled = staged.EnableAutomatedBackups;
+                        settings.BackupFrequencyMode = staged.SelectedFrequency;
+                        settings.BackupLocation = staged.BackupLocation;
+                        settings.BackupUseEncryption = staged.EncryptBackups;
+                        settings.BackupRetentionCount = staged.SelectedRetention;
+                    });
+                    _baseline = staged;
+                },
+                discard: () =>
+                {
+                    _isInitializing = true;
+                    try
+                    {
+                        BackupLocation = baseline.BackupLocation;
+                        EnableAutomatedBackups = baseline.EnableAutomatedBackups;
+                        SelectedFrequency = baseline.SelectedFrequency;
+                        EncryptBackups = baseline.EncryptBackups;
+                        SelectedRetention = baseline.SelectedRetention;
+                    }
+                    finally
+                    {
+                        _isInitializing = false;
+                    }
+                    this.RaisePropertyChanged(nameof(ScheduledBackupStatus));
+                });
+        }
+
+        private BackupBaseline SnapshotCurrent() => new BackupBaseline
+        {
+            BackupLocation = BackupLocation,
+            EnableAutomatedBackups = EnableAutomatedBackups,
+            SelectedFrequency = SelectedFrequency,
+            EncryptBackups = EncryptBackups,
+            SelectedRetention = SelectedRetention,
+        };
+
+        private bool MatchesBaseline()
+        {
+            var b = _baseline;
+            return string.Equals(BackupLocation ?? string.Empty, b.BackupLocation ?? string.Empty, StringComparison.Ordinal)
+                && EnableAutomatedBackups == b.EnableAutomatedBackups
+                && SelectedFrequency == b.SelectedFrequency
+                && EncryptBackups == b.EncryptBackups
+                && SelectedRetention == b.SelectedRetention;
         }
 
         private async Task PersistManifestBackupSettingsAsync()
