@@ -185,7 +185,7 @@
                                   HorizontalContentAlignment="Left"
                                   ToolTip.Tip="Dashboard"
                                   IsVisible="{Binding IsDashboardEnabled}">
-                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Left" Margin="18,0,0,0">
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Left" Margin="6,0,0,0">
                             <TextBlock Text="Dashboard" FontSize="{StaticResource Type.Label.Size}" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center" IsVisible="{Binding !IsSidebarCollapsed}"/>
                         </StackPanel>
                     </Button>
@@ -195,7 +195,7 @@
                                   Classes.active="{Binding IsShowingPasswords}"
                                   HorizontalContentAlignment="Left"
                                   ToolTip.Tip="Passwords">
-                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Left" Margin="18,0,0,0">
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Left" Margin="6,0,0,0">
                             <TextBlock Text="Passwords" FontSize="{StaticResource Type.Label.Size}" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center" IsVisible="{Binding !IsSidebarCollapsed}"/>
                         </StackPanel>
                     </Button>
@@ -334,7 +334,7 @@
                             <ToggleButton Command="{Binding ShowAllCommand}"
                                           IsChecked="{Binding IsShowingAll, Mode=OneWay}"
                                           Classes="quick-filter">
-                                <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
+                                <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
                                     <TextBlock Text="All Items" FontSize="{StaticResource Type.Label.Size}" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
                                     <TextBlock Text="{Binding TotalCount}"
                                                FontSize="{StaticResource Type.Small.Size}"
@@ -347,7 +347,7 @@
                             <ToggleButton Command="{Binding ShowFavoritesCommand}"
                                           IsChecked="{Binding IsShowingFavorites, Mode=OneWay}"
                                           Classes="quick-filter">
-                                <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
+                                <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
                                     <TextBlock Text="Favorites" FontSize="{StaticResource Type.Label.Size}" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
                                     <TextBlock Text="{Binding FavoritesCount}"
                                                FontSize="{StaticResource Type.Small.Size}"
@@ -400,16 +400,20 @@
                                     </TranslateTransform.Transitions>
                                 </TranslateTransform>
                             </Border.RenderTransform>
+                            <!-- Issue #20: persistent highlight was reading too
+                                 white. Drop the white reflection + gel layers
+                                 way down and let the cyan glass border carry
+                                 the look. -->
                             <Grid IsHitTestVisible="False" ClipToBounds="True" Margin="0">
-                                <!-- Glass border ring matching liquid glass button border style -->
-                                <Border CornerRadius="8"
+                                <!-- Glass border ring — dominant feature -->
+                                <Border CornerRadius="12"
                                         BorderThickness="1"
-                                        BorderBrush="{DynamicResource Brush.Glass.Border}"
-                                        Background="Transparent"/>
-                                <!-- Subtle background reflection -->
-                                <Border CornerRadius="8"
+                                        BorderBrush="{DynamicResource QuickFilterGlassActiveBorderBrush}"
+                                        Background="{DynamicResource QuickFilterGlassActiveBrush}"/>
+                                <!-- Subtle background reflection (halved) -->
+                                <Border CornerRadius="12"
                                         Margin="0"
-                                        Opacity="0.10">
+                                        Opacity="0.05">
                                     <Border.Background>
                                         <VisualBrush Visual="{Binding ElementName=QuickFilterButtonsPanel}"
                                                      Stretch="UniformToFill"
@@ -418,15 +422,15 @@
                                     </Border.Background>
                                     <Border.OpacityMask>
                                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                            <GradientStop Color="#30FFFFFF" Offset="0"/>
-                                            <GradientStop Color="#08FFFFFF" Offset="0.5"/>
-                                            <GradientStop Color="#30FFFFFF" Offset="1"/>
+                                            <GradientStop Color="#20FFFFFF" Offset="0"/>
+                                            <GradientStop Color="#04FFFFFF" Offset="0.5"/>
+                                            <GradientStop Color="#20FFFFFF" Offset="1"/>
                                         </LinearGradientBrush>
                                     </Border.OpacityMask>
                                 </Border>
-                                <!-- Blue-glass sheen (matches liquid glass button palette, replaces heavy white) -->
-                                <Border CornerRadius="8"
-                                        Opacity="0.30">
+                                <!-- Cyan glass sheen (kept but lower) -->
+                                <Border CornerRadius="12"
+                                        Opacity="0.18">
                                     <Border.Background>
                                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
                                             <GradientStop Color="#00A0C8E8" Offset="0"/>
@@ -439,18 +443,21 @@
                                         </LinearGradientBrush>
                                     </Border.Background>
                                 </Border>
+                                <!-- Top + bottom gel rings: opacity halved so
+                                     they read as a faint specular not a white
+                                     glow. -->
                                 <Border Background="{DynamicResource QuickFilterGelTopHighlightBrush}"
                                         CornerRadius="13"
                                         Margin="6,2,6,0"
                                         Height="18"
                                         VerticalAlignment="Top"
-                                        Opacity="0.20"/>
+                                        Opacity="0.10"/>
                                 <Border Background="{DynamicResource QuickFilterGelBottomGlowBrush}"
                                         CornerRadius="14"
                                         Margin="8,0,8,4"
                                         Height="16"
                                         VerticalAlignment="Bottom"
-                                        Opacity="0.25"/>
+                                        Opacity="0.12"/>
                             </Grid>
                         </Border>
                     </Grid>
@@ -520,7 +527,7 @@
                                 Background="{DynamicResource ContentBackgroundBrush}"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
-                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
                                 <Path Data="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" StrokeLineCap="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text="All Types" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
                             </StackPanel>
@@ -538,7 +545,7 @@
                                 Background="{DynamicResource ContentBackgroundBrush}"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
-                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
                                 <Path Data="M19 11h-1.5V7c0-2.76-2.24-5-5-5s-5 2.24-5 5v4H6c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h13c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2zm-9-4c0-1.66 1.34-3 3-3s3 1.34 3 3v4h-6V7z" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text="Passwords" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
                             </StackPanel>
@@ -556,7 +563,7 @@
                                 Background="{DynamicResource ContentBackgroundBrush}"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
-                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
                                 <Path Data="M3 6h18v12H3z M3 10h18" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" StrokeLineCap="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text="Credit Cards" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
                             </StackPanel>
@@ -574,7 +581,7 @@
                                 Background="{DynamicResource ContentBackgroundBrush}"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
-                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
                                 <Path Data="M3 5h18v14H3z" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" StrokeLineCap="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text="Bank Accounts" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
                             </StackPanel>
@@ -592,7 +599,7 @@
                                 Background="{DynamicResource ContentBackgroundBrush}"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
-                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
                                 <Path Data="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" StrokeLineCap="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text="Identity Documents" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
                             </StackPanel>
@@ -610,7 +617,7 @@
                                 Background="{DynamicResource ContentBackgroundBrush}"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
-                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
                                 <Path Data="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" StrokeLineCap="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text="API Keys" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
                             </StackPanel>
@@ -628,7 +635,7 @@
                                 Background="{DynamicResource ContentBackgroundBrush}"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
-                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
                                 <Path Data="M1 11.5a11.43 11.43 0 0 1 22 0 M5 13a7 7 0 0 1 14 0 M12 20h.01 M9 17a3 3 0 0 1 6 0" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" StrokeLineCap="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text="WiFi Networks" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
                             </StackPanel>
@@ -646,7 +653,7 @@
                                 Background="{DynamicResource ContentBackgroundBrush}"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
-                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
                                 <Path Data="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" StrokeLineCap="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text="Contacts" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
                             </StackPanel>
@@ -664,7 +671,7 @@
                                 Background="{DynamicResource ContentBackgroundBrush}"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
-                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="18,0,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
                                 <Path Data="M7 2h10v4H7z M5 6h14v16H5z M9 10h2 M13 10h2 M9 14h2 M13 14h2 M9 18h6" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" StrokeLineCap="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text="PIN Codes" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
                             </StackPanel>

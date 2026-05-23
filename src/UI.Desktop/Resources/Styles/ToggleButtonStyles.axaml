@@ -129,23 +129,30 @@
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="Height" Value="38" />
         <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="CornerRadius" Value="8" />
+        <!-- Issue #17: 8 → 12 across base + hover/checked overrides so dropdown
+             toggle and list-item corners read visibly rounded. -->
+        <Setter Property="CornerRadius" Value="12" />
         <Setter Property="Margin" Value="0" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
                     <Panel>
-                        <!-- Issue #10: category list items were nearly invisible at
-                             rest because BaseBorder was fully transparent. Give them
-                             a faint glass background so they read as 'present' tiles
-                             even before hover/checked, while still letting the
-                             sidebar background show through. -->
+                        <!-- Issue #10/#18: category list items were nearly invisible
+                             at rest. Use a stronger rest background gradient so they
+                             read as solid 'present' tiles while keeping the glass
+                             border feel from QuickFilterGlassBorderBrush. -->
                         <Border Name="BaseBorder"
                                 CornerRadius="{TemplateBinding CornerRadius}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
                                 BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
-                                Background="{DynamicResource QuickFilterGlassActiveBrush}"
-                                ClipToBounds="True"/>
+                                ClipToBounds="True">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                    <GradientStop Color="#1AFFFFFF" Offset="0"/>
+                                    <GradientStop Color="#10FFFFFF" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
                         
                         <!-- Content -->
                         <ContentPresenter Name="PART_ContentPresenter"
@@ -161,35 +168,38 @@
         </Setter>
     </Style>
 
+    <!-- Issue #18: category-filter hover/checked were near-black overlays which
+         read flat and too dim. Switch to white-alpha + cyan glass border so
+         the categories tone up slightly and have liquid-glass border feel. -->
     <Style Selector="ToggleButton.category-filter:pointerover /template/ Border#BaseBorder">
-        <Setter Property="CornerRadius" Value="8"/>
-        <Setter Property="BorderBrush" Value="#20000000"/>
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassBorderBrush}"/>
         <Setter Property="Background">
             <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                <GradientStop Color="#18000000" Offset="0"/>
-                <GradientStop Color="#10000000" Offset="1"/>
+                <GradientStop Color="#20FFFFFF" Offset="0"/>
+                <GradientStop Color="#14FFFFFF" Offset="1"/>
             </LinearGradientBrush>
         </Setter>
     </Style>
 
     <Style Selector="ToggleButton.category-filter:checked /template/ Border#BaseBorder">
-        <Setter Property="CornerRadius" Value="8"/>
-        <Setter Property="BorderBrush" Value="#25000000"/>
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassActiveBorderBrush}"/>
         <Setter Property="Background">
             <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                <GradientStop Color="#20000000" Offset="0"/>
-                <GradientStop Color="#14000000" Offset="1"/>
+                <GradientStop Color="#2CFFFFFF" Offset="0"/>
+                <GradientStop Color="#1CFFFFFF" Offset="1"/>
             </LinearGradientBrush>
         </Setter>
     </Style>
 
     <Style Selector="ToggleButton.category-filter:checked:pointerover /template/ Border#BaseBorder">
-        <Setter Property="CornerRadius" Value="8"/>
-        <Setter Property="BorderBrush" Value="#30000000"/>
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassActiveBorderBrush}"/>
         <Setter Property="Background">
             <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                <GradientStop Color="#28000000" Offset="0"/>
-                <GradientStop Color="#1C000000" Offset="1"/>
+                <GradientStop Color="#38FFFFFF" Offset="0"/>
+                <GradientStop Color="#24FFFFFF" Offset="1"/>
             </LinearGradientBrush>
         </Setter>
     </Style>
