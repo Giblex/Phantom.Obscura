@@ -4814,6 +4814,12 @@ namespace PhantomVault.UI.ViewModels
                     settings.EnablePinLock = true;
                     SettingsService.Save(settings);
 
+                    // Issue #1: now that a PIN is configured, arm the auto-lock
+                    // timer and reset it so the freshly-armed countdown starts
+                    // from now rather than from whenever the vault was unlocked.
+                    _vaultLockDurationService.AutoLockEnabled = true;
+                    _vaultLockDurationService.ResetTimer();
+
                     // Refresh lockscreen computed properties
                     this.RaisePropertyChanged(nameof(PinUnlockAvailable));
                     this.RaisePropertyChanged(nameof(ShowPassphraseFallbackSection));
@@ -5369,6 +5375,27 @@ namespace PhantomVault.UI.ViewModels
                 StatusMessage = $"Loaded {_credentials.Count} credentials";
 
                 RegisterAutoLockSession();
+
+                // Issue #1: arm auto-lock only when a PIN has been configured.
+                // Without a PIN the only fallback is the full passphrase, which
+                // is a poor surprise for a user who hasn't opted in to a PIN
+                // session. Recomputed here on every vault open so it picks up
+                // PIN setup that happened in a previous session.
+                try
+                {
+                    var lockSettings = SettingsService.Load();
+                    bool pinConfigured = lockSettings != null
+                        && lockSettings.EnablePinLock
+                        && PinLockService.HasPinConfigured(lockSettings, _manifestPath);
+                    _vaultLockDurationService.AutoLockEnabled = pinConfigured;
+                }
+                catch
+                {
+                    // Fail closed: if we can't read settings, disable auto-lock
+                    // rather than surprise-locking the user.
+                    _vaultLockDurationService.AutoLockEnabled = false;
+                }
+
                 _vaultLockDurationService.UnlockVault();
 
                 // Start idle-lock timer. Fires IdleElapsed after 15 minutes of inactivity,

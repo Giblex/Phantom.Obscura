@@ -17,6 +17,13 @@ namespace PhantomVault.Core.Services
         private LockDuration _currentDuration = LockDuration.FiveMinutes;
         private DateTime _lastActivityTime;
         private bool _isLocked = true;
+        // Issue #1: master gate for auto-lock. UI sets this to false when the
+        // user hasn't configured a PIN — without a PIN, idle expiry shouldn't
+        // surprise-lock the vault since the only fallback is the full passphrase.
+        // Default true preserves the existing behaviour for callers that don't
+        // care (other entry points like USB removal / security threat still
+        // call LockVaultAsync directly, bypassing this gate, which is correct).
+        private bool _autoLockEnabled = true;
         private readonly object _lockObject = new object();
         private readonly SemaphoreSlim _lockSemaphore = new SemaphoreSlim(1, 1);
         private readonly VaultService _vaultService;
@@ -39,6 +46,34 @@ namespace PhantomVault.Core.Services
         public LockDuration CurrentDuration
         {
             get { lock (_lockObject) return _currentDuration; }
+        }
+
+        /// <summary>
+        /// Master gate for the idle auto-lock timer. When false, the timer is
+        /// not started by UnlockVault/SetLockDuration and OnTimerElapsed is a
+        /// no-op. Set false until a PIN has been configured so users who
+        /// haven't opted into PIN sessions aren't surprise-locked out.
+        ///
+        /// Manual locks and security-driven locks (USB removal, threats) call
+        /// LockVaultAsync directly and bypass this gate intentionally.
+        /// </summary>
+        public bool AutoLockEnabled
+        {
+            get { lock (_lockObject) return _autoLockEnabled; }
+            set
+            {
+                lock (_lockObject)
+                {
+                    if (_autoLockEnabled == value) return;
+                    _autoLockEnabled = value;
+                    if (!value)
+                    {
+                        // Tear down any running timer so an in-flight idle
+                        // countdown doesn't fire after auto-lock is disabled.
+                        StopTimer();
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -89,6 +124,11 @@ namespace PhantomVault.Core.Services
                 if (duration == LockDuration.Never)
                     return; // No auto-lock
 
+                // Issue #1: respect the master auto-lock gate even for Immediate.
+                // If the user has no PIN, never engage auto-lock here.
+                if (!_autoLockEnabled)
+                    return;
+
                 if (duration == LockDuration.Immediate)
                 {
                     // Lock immediately
@@ -115,6 +155,11 @@ namespace PhantomVault.Core.Services
 
                 _isLocked = false;
                 _lastActivityTime = DateTime.UtcNow;
+
+                // Issue #1: master auto-lock gate — skip timer setup entirely
+                // when the user hasn't configured a PIN.
+                if (!_autoLockEnabled)
+                    return;
 
                 // Start timer if duration is not Never or Immediate
                 if (_currentDuration != LockDuration.Never && _currentDuration != LockDuration.Immediate)
@@ -279,6 +324,10 @@ namespace PhantomVault.Core.Services
                 if (_isLocked || _currentDuration == LockDuration.Never)
                     return;
 
+                // Issue #1: don't arm the idle timer if auto-lock is gated off.
+                if (!_autoLockEnabled)
+                    return;
+
                 _lastActivityTime = DateTime.UtcNow;
 
                 // Restart timer
@@ -333,6 +382,12 @@ namespace PhantomVault.Core.Services
 
         private void OnTimerElapsed(object? state)
         {
+            // Issue #1: defensive gate — if auto-lock was disabled while a
+            // timer was already armed, swallow the elapsed fire.
+            lock (_lockObject)
+            {
+                if (!_autoLockEnabled) return;
+            }
             LockVault();
         }
 
