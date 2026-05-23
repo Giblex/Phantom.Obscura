@@ -481,7 +481,7 @@ namespace PhantomVault.UI.ViewModels
 
                     if (CheckResult.OverallPassed)
                     {
-                        StatusMessage = "Security checks passed! Click Continue to open your vault.";
+                        StatusMessage = "Security checks passed — opening vault...";
                     }
                     else
                     {
@@ -491,7 +491,23 @@ namespace PhantomVault.UI.ViewModels
                     NotifyCheckVisuals();
                 });
 
-                // No auto-popup dialogs - user reviews results and clicks Continue/Retry manually
+                // Auto-continue when everything passed. Brief pause so the user
+                // sees the "All checks complete!" green-tick frame before the
+                // window navigates away; if any check failed we stay on this
+                // screen and let the user review/retry.
+                if (CheckResult.OverallPassed)
+                {
+                    await Task.Delay(450).ConfigureAwait(false);
+                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        // Re-check in case the user managed to cancel during the
+                        // pause — don't navigate if state has shifted.
+                        if (ChecksComplete && ChecksSuccessful)
+                        {
+                            OnContinue();
+                        }
+                    });
+                }
             }
             catch (Exception ex)
             {
