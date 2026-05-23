@@ -25,6 +25,11 @@ namespace PhantomVault.UI.ViewModels.Settings
         private int _selectedRuntimeThemeIndex = 0;
         private readonly ThemeManagerService _themeManager;
         private readonly IRuntimeThemeService? _runtimeThemeService;
+        // Issue #24: stage persistence into shared draft tracker so the overlay
+        // Save / Discard buttons can drive theme settings too. Live preview
+        // still fires immediately on every property change so the user sees
+        // the new theme; only the SettingsService write defers to Save.
+        private readonly PhantomVault.UI.Services.SettingsDraftTracker _draft;
         private readonly double[] _scales = { 0.8, 0.9, 1.0, 1.1, 1.25, 1.5 };
 
         // Custom theme editor fields
@@ -80,21 +85,49 @@ namespace PhantomVault.UI.ViewModels.Settings
 
         private void ApplyTheme()
         {
+            // Live preview always fires so the user sees the change immediately.
             var theme = EnableHighContrast
                 ? AppTheme.HighContrast
                 : IsDarkTheme ? AppTheme.Dark : AppTheme.Light;
             _themeManager.SetTheme(theme);
 
-            try
+            // Issue #24: stage persistence in the draft tracker. Capture the
+            // currently-persisted value so Discard can both rewind the field
+            // and re-apply the old theme live.
+            bool stagedValue = IsDarkTheme;
+            bool previousPersisted;
+            try { previousPersisted = SettingsService.Load().IsDarkTheme; }
+            catch { previousPersisted = stagedValue; }
+
+            if (stagedValue == previousPersisted)
             {
-                var settings = SettingsService.Load();
-                settings.IsDarkTheme = IsDarkTheme;
-                SettingsService.Save(settings);
+                _draft.ClearKey("Theme.IsDarkTheme");
+                return;
             }
-            catch
-            {
-                // best-effort persistence
-            }
+
+            _draft.Stage(
+                key: "Theme.IsDarkTheme",
+                commit: () =>
+                {
+                    try
+                    {
+                        var s = SettingsService.Load();
+                        s.IsDarkTheme = stagedValue;
+                        SettingsService.Save(s);
+                    }
+                    catch { /* best-effort */ }
+                },
+                discard: () =>
+                {
+                    // Roll the toggle back AND the live theme — avoid recursion
+                    // by setting the backing field directly + raising the prop.
+                    _isDarkTheme = previousPersisted;
+                    this.RaisePropertyChanged(nameof(IsDarkTheme));
+                    var revertTheme = EnableHighContrast
+                        ? AppTheme.HighContrast
+                        : previousPersisted ? AppTheme.Dark : AppTheme.Light;
+                    _themeManager.SetTheme(revertTheme);
+                });
         }
 
         public int SelectedThemeSkin
@@ -288,10 +321,15 @@ namespace PhantomVault.UI.ViewModels.Settings
             return h;
         }
 
-        public ThemeSettingsViewModel(ThemeManagerService? themeManager = null, IRuntimeThemeService? runtimeThemeService = null)
+        public ThemeSettingsViewModel(ThemeManagerService? themeManager = null, IRuntimeThemeService? runtimeThemeService = null, PhantomVault.UI.Services.SettingsDraftTracker? draftTracker = null)
         {
             _themeManager = themeManager ?? ((Application.Current as App)?.Services?.GetService(typeof(ThemeManagerService)) as ThemeManagerService) ?? new ThemeManagerService();
             _runtimeThemeService = runtimeThemeService ?? ((Application.Current as App)?.Services?.GetService(typeof(IRuntimeThemeService)) as IRuntimeThemeService);
+            // Issue #24: resolve the singleton tracker from DI so multiple tab
+            // VMs stage into the same instance the overlay's Save button drives.
+            _draft = draftTracker
+                ?? ((Application.Current as App)?.Services?.GetService(typeof(PhantomVault.UI.Services.SettingsDraftTracker)) as PhantomVault.UI.Services.SettingsDraftTracker)
+                ?? new PhantomVault.UI.Services.SettingsDraftTracker();
             ToggleThemeCommand = ReactiveCommand.Create(ToggleTheme);
             CreateCustomThemeCommand = ReactiveCommand.Create(OpenCustomEditor);
             DeleteCustomThemeCommand = ReactiveCommand.Create(DeleteSelectedCustomTheme);
@@ -383,38 +421,57 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
         }
 
-        private void ApplyAnimationSettings()
+        private void ApplyAnimationSettings() => StageEffects();
+
+        private void ApplyTransparencySettings() => StageEffects();
+
+        private void StageEffects()
         {
+            // Live preview always fires — user sees animations/transparency
+            // toggle immediately.
             _themeManager.SetEffects(ReduceAnimations, ReduceTransparency);
 
+            // Issue #24: stage both effect toggles under one key (re-staging
+            // the same key replaces the prior pair, so flipping the two
+            // switches back-and-forth doesn't accumulate work).
+            bool stagedAnim = ReduceAnimations;
+            bool stagedTrans = ReduceTransparency;
+            bool prevAnim, prevTrans;
             try
             {
-                var settings = SettingsService.Load();
-                settings.ReduceAnimations = ReduceAnimations;
-                settings.ReduceTransparency = ReduceTransparency;
-                SettingsService.Save(settings);
+                var s = SettingsService.Load();
+                prevAnim = s.ReduceAnimations;
+                prevTrans = s.ReduceTransparency;
             }
-            catch
-            {
-                // best-effort persistence
-            }
-        }
+            catch { prevAnim = stagedAnim; prevTrans = stagedTrans; }
 
-        private void ApplyTransparencySettings()
-        {
-            _themeManager.SetEffects(ReduceAnimations, ReduceTransparency);
+            if (stagedAnim == prevAnim && stagedTrans == prevTrans)
+            {
+                _draft.ClearKey("Theme.Effects");
+                return;
+            }
 
-            try
-            {
-                var settings = SettingsService.Load();
-                settings.ReduceAnimations = ReduceAnimations;
-                settings.ReduceTransparency = ReduceTransparency;
-                SettingsService.Save(settings);
-            }
-            catch
-            {
-                // best-effort persistence
-            }
+            _draft.Stage(
+                key: "Theme.Effects",
+                commit: () =>
+                {
+                    try
+                    {
+                        var s = SettingsService.Load();
+                        s.ReduceAnimations = stagedAnim;
+                        s.ReduceTransparency = stagedTrans;
+                        SettingsService.Save(s);
+                    }
+                    catch { /* best-effort */ }
+                },
+                discard: () =>
+                {
+                    _reduceAnimations = prevAnim;
+                    _reduceTransparency = prevTrans;
+                    this.RaisePropertyChanged(nameof(ReduceAnimations));
+                    this.RaisePropertyChanged(nameof(ReduceTransparency));
+                    _themeManager.SetEffects(prevAnim, prevTrans);
+                });
         }
 
         private void ApplyRuntimeTheme()
@@ -425,17 +482,56 @@ namespace PhantomVault.UI.ViewModels.Settings
             if (SelectedRuntimeThemeIndex >= 0 && SelectedRuntimeThemeIndex < themes.Count)
             {
                 var selectedTheme = themes[SelectedRuntimeThemeIndex];
+                // Live preview — apply theme immediately so the user can see it.
                 _runtimeThemeService.Apply(selectedTheme.Id);
 
-                try
+                // Issue #24: stage the persisted theme id. Discard re-applies
+                // the previously-persisted theme so the live preview also
+                // unwinds (otherwise the user would visually 'see' the
+                // discarded theme stick around).
+                string stagedId = selectedTheme.Id;
+                string? previousPersistedId;
+                int previousIndex = SelectedRuntimeThemeIndex;
+                try { previousPersistedId = SettingsService.Load().SelectedThemeId; }
+                catch { previousPersistedId = stagedId; }
+
+                // Find the previous theme's index in case we need to roll the
+                // ComboBox back too.
+                int previousIdx = 0;
+                if (!string.IsNullOrEmpty(previousPersistedId))
                 {
-                    var settings = SettingsService.Load();
-                    settings.SelectedThemeId = selectedTheme.Id;
-                    SettingsService.Save(settings);
+                    for (int i = 0; i < themes.Count; i++)
+                    {
+                        if (themes[i].Id == previousPersistedId) { previousIdx = i; break; }
+                    }
                 }
-                catch
+
+                if (stagedId == previousPersistedId)
                 {
-                    // best-effort persistence
+                    _draft.ClearKey("Theme.RuntimeTheme");
+                }
+                else
+                {
+                    _draft.Stage(
+                        key: "Theme.RuntimeTheme",
+                        commit: () =>
+                        {
+                            try
+                            {
+                                var s = SettingsService.Load();
+                                s.SelectedThemeId = stagedId;
+                                SettingsService.Save(s);
+                            }
+                            catch { /* best-effort */ }
+                        },
+                        discard: () =>
+                        {
+                            if (!string.IsNullOrEmpty(previousPersistedId))
+                                _runtimeThemeService.Apply(previousPersistedId);
+                            _selectedRuntimeThemeIndex = previousIdx;
+                            this.RaisePropertyChanged(nameof(SelectedRuntimeThemeIndex));
+                            this.RaisePropertyChanged(nameof(IsCustomThemeSelected));
+                        });
                 }
             }
 
