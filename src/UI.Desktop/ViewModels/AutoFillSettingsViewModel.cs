@@ -15,6 +15,12 @@ namespace PhantomVault.UI.ViewModels
     public sealed class AutoFillSettingsViewModel : ReactiveObject
     {
         private readonly ITrayBackgroundService? _trayService;
+        // Issue #25/AutoFill: shared draft tracker so the overlay-bottom Save
+        // button can drive AutoFill persistence too. AutoFill's own SaveCommand
+        // continues to work (it just commits the staged 'AutoFill.All' entry).
+        private readonly SettingsDraftTracker _draft;
+        private AutoFillBaseline _baseline;
+        private bool _suppressStage;
 
         private bool _enableAutoFill;
         private string _domainWhitelist = string.Empty;
@@ -27,18 +33,40 @@ namespace PhantomVault.UI.ViewModels
         private bool _autoFillAutoInputTotp = true;
         private bool _autoFillShowNewEntryOnNoMatch = true;
 
-        public AutoFillSettingsViewModel() : this(null) { }
+        private readonly struct AutoFillBaseline
+        {
+            public bool EnableAutoFill { get; init; }
+            public string DomainWhitelist { get; init; }
+            public bool InjectUsername { get; init; }
+            public bool InjectPassword { get; init; }
+            public bool AutoFillModeEnabled { get; init; }
+            public bool AutoFillAutoInputTotp { get; init; }
+            public bool AutoFillShowNewEntryOnNoMatch { get; init; }
+        }
 
-        public AutoFillSettingsViewModel(ITrayBackgroundService? trayService)
+        public AutoFillSettingsViewModel() : this(null, null) { }
+        public AutoFillSettingsViewModel(ITrayBackgroundService? trayService) : this(trayService, null) { }
+
+        public AutoFillSettingsViewModel(ITrayBackgroundService? trayService, SettingsDraftTracker? draftTracker)
         {
             _trayService = trayService;
+            _draft = draftTracker
+                ?? ((Avalonia.Application.Current as App)?.Services?.GetService(typeof(SettingsDraftTracker)) as SettingsDraftTracker)
+                ?? new SettingsDraftTracker();
 
-            // Load saved preferences
+            _suppressStage = true;
             LoadPreferences();
+            _baseline = SnapshotCurrent();
+            _suppressStage = false;
 
+            // Local SaveCommand kept for backward compat — commits immediately
+            // (and the shared tracker entry was already calling the same
+            // SavePreferences path, so HasUnsavedChanges drops to false).
             SaveCommand = ReactiveCommand.Create(() =>
             {
                 SavePreferences();
+                _baseline = SnapshotCurrent();
+                _draft.ClearKey("AutoFill.All");
                 LastSaved = DateTimeOffset.UtcNow;
             }, this.WhenAnyValue(vm => vm.IsBusy).Select(b => !b));
 
@@ -87,7 +115,7 @@ namespace PhantomVault.UI.ViewModels
         public bool EnableAutoFill
         {
             get => _enableAutoFill;
-            set => this.RaiseAndSetIfChanged(ref _enableAutoFill, value);
+            set { this.RaiseAndSetIfChanged(ref _enableAutoFill, value); StageAll(); }
         }
 
         /// <summary>
@@ -98,7 +126,7 @@ namespace PhantomVault.UI.ViewModels
         public string DomainWhitelist
         {
             get => _domainWhitelist;
-            set => this.RaiseAndSetIfChanged(ref _domainWhitelist, value);
+            set { this.RaiseAndSetIfChanged(ref _domainWhitelist, value); StageAll(); }
         }
 
         /// <summary>
@@ -121,7 +149,7 @@ namespace PhantomVault.UI.ViewModels
         public bool InjectUsername
         {
             get => _injectUsername;
-            set => this.RaiseAndSetIfChanged(ref _injectUsername, value);
+            set { this.RaiseAndSetIfChanged(ref _injectUsername, value); StageAll(); }
         }
 
         /// <summary>
@@ -133,7 +161,7 @@ namespace PhantomVault.UI.ViewModels
         public bool InjectPassword
         {
             get => _injectPassword;
-            set => this.RaiseAndSetIfChanged(ref _injectPassword, value);
+            set { this.RaiseAndSetIfChanged(ref _injectPassword, value); StageAll(); }
         }
 
         // ===== AutoFill Mode (USB-triggered) =====
@@ -145,7 +173,7 @@ namespace PhantomVault.UI.ViewModels
         public bool AutoFillModeEnabled
         {
             get => _autoFillModeEnabled;
-            set => this.RaiseAndSetIfChanged(ref _autoFillModeEnabled, value);
+            set { this.RaiseAndSetIfChanged(ref _autoFillModeEnabled, value); StageAll(); }
         }
 
         /// <summary>
@@ -154,7 +182,7 @@ namespace PhantomVault.UI.ViewModels
         public bool AutoFillAutoInputTotp
         {
             get => _autoFillAutoInputTotp;
-            set => this.RaiseAndSetIfChanged(ref _autoFillAutoInputTotp, value);
+            set { this.RaiseAndSetIfChanged(ref _autoFillAutoInputTotp, value); StageAll(); }
         }
 
         /// <summary>
@@ -165,9 +193,81 @@ namespace PhantomVault.UI.ViewModels
         public bool AutoFillShowNewEntryOnNoMatch
         {
             get => _autoFillShowNewEntryOnNoMatch;
-            set => this.RaiseAndSetIfChanged(ref _autoFillShowNewEntryOnNoMatch, value);
+            set { this.RaiseAndSetIfChanged(ref _autoFillShowNewEntryOnNoMatch, value); StageAll(); }
         }
 
         public ReactiveCommand<Unit, Unit> SaveCommand { get; }
+
+        private AutoFillBaseline SnapshotCurrent() => new AutoFillBaseline
+        {
+            EnableAutoFill = EnableAutoFill,
+            DomainWhitelist = DomainWhitelist,
+            InjectUsername = InjectUsername,
+            InjectPassword = InjectPassword,
+            AutoFillModeEnabled = AutoFillModeEnabled,
+            AutoFillAutoInputTotp = AutoFillAutoInputTotp,
+            AutoFillShowNewEntryOnNoMatch = AutoFillShowNewEntryOnNoMatch,
+        };
+
+        private bool MatchesBaseline()
+        {
+            var b = _baseline;
+            return EnableAutoFill == b.EnableAutoFill
+                && string.Equals(DomainWhitelist ?? string.Empty, b.DomainWhitelist ?? string.Empty, StringComparison.Ordinal)
+                && InjectUsername == b.InjectUsername
+                && InjectPassword == b.InjectPassword
+                && AutoFillModeEnabled == b.AutoFillModeEnabled
+                && AutoFillAutoInputTotp == b.AutoFillAutoInputTotp
+                && AutoFillShowNewEntryOnNoMatch == b.AutoFillShowNewEntryOnNoMatch;
+        }
+
+        // Issue #27: setters route through here so the overlay-bottom Save/
+        // Discard buttons drive AutoFill persistence too. Re-staging replaces
+        // the prior pair so flipping multiple toggles still results in a
+        // single commit/discard.
+        private void StageAll()
+        {
+            if (_suppressStage) return;
+            if (MatchesBaseline())
+            {
+                _draft.ClearKey("AutoFill.All");
+                return;
+            }
+            var staged = SnapshotCurrent();
+            var baseline = _baseline;
+            _draft.Stage(
+                key: "AutoFill.All",
+                commit: () =>
+                {
+                    var s = SettingsService.Load();
+                    s.EnableAutoFill = staged.EnableAutoFill;
+                    s.AutoFillDomainWhitelist = staged.DomainWhitelist;
+                    s.AutoFillInjectUsername = staged.InjectUsername;
+                    s.AutoFillInjectPassword = staged.InjectPassword;
+                    s.AutoFillModeEnabled = staged.AutoFillModeEnabled;
+                    s.AutoFillAutoInputTotp = staged.AutoFillAutoInputTotp;
+                    s.AutoFillShowNewEntryOnNoMatch = staged.AutoFillShowNewEntryOnNoMatch;
+                    SettingsService.Save(s);
+                    _baseline = staged;
+                },
+                discard: () =>
+                {
+                    _suppressStage = true;
+                    try
+                    {
+                        EnableAutoFill = baseline.EnableAutoFill;
+                        DomainWhitelist = baseline.DomainWhitelist;
+                        InjectUsername = baseline.InjectUsername;
+                        InjectPassword = baseline.InjectPassword;
+                        AutoFillModeEnabled = baseline.AutoFillModeEnabled;
+                        AutoFillAutoInputTotp = baseline.AutoFillAutoInputTotp;
+                        AutoFillShowNewEntryOnNoMatch = baseline.AutoFillShowNewEntryOnNoMatch;
+                    }
+                    finally
+                    {
+                        _suppressStage = false;
+                    }
+                });
+        }
     }
 }
