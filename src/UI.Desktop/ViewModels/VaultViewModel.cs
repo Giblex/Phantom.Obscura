@@ -2127,7 +2127,17 @@ namespace PhantomVault.UI.ViewModels
         // Issue #21: drives the overlay-bottom Save / Discard row.
         public ReactiveCommand<Unit, Unit> SaveSettingsCommand { get; }
         public ReactiveCommand<Unit, Unit> DiscardSettingsCommand { get; }
+        // Issue #21/#38: kept for back-compat callers but bindings now go to
+        // SettingsDraftTracker.HasUnsavedChanges directly via the property
+        // path below, so the binding listens to the tracker's own
+        // INotifyPropertyChanged instead of going through a proxy getter +
+        // manual RaisePropertyChanged that could miss subsequent cycles.
         public bool HasUnsavedSettings => _settingsDraftTracker.HasUnsavedChanges;
+        // Public path for XAML to bind directly: "SettingsDraftTracker.HasUnsavedChanges".
+        // Re-emitting through a getter dropped the second-and-later cycles
+        // when the manual WhenAnyValue subscription order interacted poorly
+        // with Avalonia's binding evaluator. Direct binding is bulletproof.
+        public PhantomVault.UI.Services.SettingsDraftTracker SettingsDraftTracker => _settingsDraftTracker;
         public ReactiveCommand<Unit, Unit> ToggleSecurityDashboardCommand { get; }
         public ReactiveCommand<Unit, Unit> OpenSecurityDashboardWindowCommand { get; }
         public ReactiveCommand<PhantomVault.Core.Models.Credential, Unit> OpenEditPasswordCommand { get; }

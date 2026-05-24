@@ -407,18 +407,18 @@
                                              Width="8" Height="8"
                                              VerticalAlignment="Center"
                                              Fill="{DynamicResource WarningBrush}"
-                                             IsVisible="{Binding HasUnsavedSettings}"/>
+                                             IsVisible="{Binding SettingsDraftTracker.HasUnsavedChanges}"/>
                                     <TextBlock Grid.Column="1"
                                                VerticalAlignment="Center"
                                                FontSize="{StaticResource Type.Small.Size}"
                                                Foreground="{DynamicResource PrimaryTextBrush}"
                                                Text="You have unsaved changes"
-                                               IsVisible="{Binding HasUnsavedSettings}"/>
+                                               IsVisible="{Binding SettingsDraftTracker.HasUnsavedChanges}"/>
                                     <Button Grid.Column="2"
                                             Content="Discard"
                                             Classes="liquid-glass"
                                             Command="{Binding DiscardSettingsCommand}"
-                                            IsEnabled="{Binding HasUnsavedSettings}"
+                                            IsEnabled="{Binding SettingsDraftTracker.HasUnsavedChanges}"
                                             Padding="14,6"/>
                                     <!-- Save is the primary action: accent-tinted
                                          background so it visually leads the eye.
@@ -429,7 +429,7 @@
                                             Content="Save"
                                             Classes="liquid-glass settings-save-primary"
                                             Command="{Binding SaveSettingsCommand}"
-                                            IsEnabled="{Binding HasUnsavedSettings}"
+                                            IsEnabled="{Binding SettingsDraftTracker.HasUnsavedChanges}"
                                             Padding="22,6"
                                             FontWeight="SemiBold"/>
                                 </Grid>
