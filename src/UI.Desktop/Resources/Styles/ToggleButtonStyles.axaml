@@ -11,7 +11,9 @@
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="Height" Value="44" />
         <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="CornerRadius" Value="8" />
+        <!-- Issue #37: 8 → 12 so quick-filter sidebar buttons are visibly
+             rounded matching the liquid-glass aesthetic. -->
+        <Setter Property="CornerRadius" Value="12" />
         <Setter Property="Margin" Value="0" />
         <Setter Property="Template">
             <Setter.Value>
@@ -82,41 +84,28 @@
         </Setter>
     </Style>
 
+    <!-- Issue #37: quick-filter hover/checked were hardcoded white-alpha
+         gradients which read as flat white wash, not liquid glass. Use the
+         theme-tokenised QuickFilterGlass* brushes so the hover/active state
+         picks up the cyan-tinted glass look from the theme, with reduced
+         opacity for a glassier feel. -->
     <Style Selector="ToggleButton.quick-filter:pointerover /template/ Border#BaseBorder">
-        <Setter Property="CornerRadius" Value="8"/>
-        <Setter Property="BorderBrush" Value="#60FFFFFF"/>
-        <Setter Property="Background">
-            <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                <GradientStop Color="#40FFFFFF" Offset="0"/>
-                <GradientStop Color="#28FFFFFF" Offset="0.55"/>
-                <GradientStop Color="#20FFFFFF" Offset="1"/>
-            </LinearGradientBrush>
-        </Setter>
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassBorderBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource QuickFilterGlassHoverBrush}"/>
     </Style>
 
     <Style Selector="ToggleButton.quick-filter:checked /template/ Border#BaseBorder">
-        <Setter Property="CornerRadius" Value="8"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-        <Setter Property="BorderThickness" Value="1.5"/>
-        <Setter Property="Background">
-            <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                <GradientStop Color="#40004258" Offset="0"/>
-                <GradientStop Color="#30004258" Offset="0.55"/>
-                <GradientStop Color="#25004258" Offset="1"/>
-            </LinearGradientBrush>
-        </Setter>
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassActiveBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Background" Value="{DynamicResource QuickFilterGlassActiveBrush}"/>
     </Style>
 
     <Style Selector="ToggleButton.quick-filter:checked:pointerover /template/ Border#BaseBorder">
-        <Setter Property="CornerRadius" Value="8"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-        <Setter Property="Background">
-            <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                <GradientStop Color="#40004258" Offset="0"/>
-                <GradientStop Color="#2C004258" Offset="0.55"/>
-                <GradientStop Color="#24004258" Offset="1"/>
-            </LinearGradientBrush>
-        </Setter>
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassActiveBorderBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource QuickFilterGlassActiveHoverBrush}"/>
     </Style>
 
     <!-- Category filter toggle buttons - liquid glass effect, slightly shorter -->
@@ -137,10 +126,10 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
                     <Panel>
-                        <!-- Issue #10/#18: category list items were nearly invisible
-                             at rest. Use a stronger rest background gradient so they
-                             read as solid 'present' tiles while keeping the glass
-                             border feel from QuickFilterGlassBorderBrush. -->
+                        <!-- Issue #35: category list items were still too dull.
+                             Bump the rest-state white-alpha higher (1A→30 / 10→20)
+                             AND mix in a faint cyan tint via the gradient so the
+                             items read as present even at rest. -->
                         <Border Name="BaseBorder"
                                 CornerRadius="{TemplateBinding CornerRadius}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
@@ -148,8 +137,8 @@
                                 ClipToBounds="True">
                             <Border.Background>
                                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                                    <GradientStop Color="#1AFFFFFF" Offset="0"/>
-                                    <GradientStop Color="#10FFFFFF" Offset="1"/>
+                                    <GradientStop Color="#30CFE8FF" Offset="0"/>
+                                    <GradientStop Color="#20A0C8E8" Offset="1"/>
                                 </LinearGradientBrush>
                             </Border.Background>
                         </Border>

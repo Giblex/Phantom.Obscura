@@ -238,7 +238,18 @@ namespace PhantomVault.UI.ViewModels
             _zkVaultService = zkVaultService ?? throw new ArgumentNullException(nameof(zkVaultService));
             _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
             _vaultLockDurationService = vaultLockDurationService ?? throw new ArgumentNullException(nameof(vaultLockDurationService));
-            _settingsDraftTracker = settingsDraftTracker ?? new PhantomVault.UI.Services.SettingsDraftTracker();
+            // Issue #32: critical fix — when the ctor param is null (typical
+            // path because VaultUnlockViewModel constructs VaultViewModel
+            // directly without going through DI for this dep), resolve the
+            // singleton tracker from the App service provider. Falling back
+            // to `new SettingsDraftTracker()` here would create a fresh
+            // instance that's not the one the migrated tab VMs stage into —
+            // so HasUnsavedSettings would NEVER fire and the Save button
+            // would never activate. Only fall back to a brand-new instance
+            // if DI itself isn't available (tests, headless harnesses).
+            _settingsDraftTracker = settingsDraftTracker
+                ?? ((Avalonia.Application.Current as App)?.Services?.GetService(typeof(PhantomVault.UI.Services.SettingsDraftTracker)) as PhantomVault.UI.Services.SettingsDraftTracker)
+                ?? new PhantomVault.UI.Services.SettingsDraftTracker();
             // Re-emit the tracker's HasUnsavedChanges as a VM property so XAML
             // can bind to it for the Save button enabled state.
             _settingsDraftTracker.WhenAnyValue(t => t.HasUnsavedChanges)

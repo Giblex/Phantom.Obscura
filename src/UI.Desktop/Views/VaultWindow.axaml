@@ -415,19 +415,22 @@
                 </Border>
             </Panel>
 
-            <!-- Dashboard Sheet — slides down from under header, overlays vault -->
+            <!-- Dashboard Sheet — slides down from under header, overlays vault.
+                 Issue #34: prior fix added WindowBackgroundBrush but that's a
+                 gradient — its midtone read grey when stacked under the
+                 acrylic/overlay glass. Switch to ContentBackgroundBrush
+                 (solid dark navy #162235 in GiblexGlassNavy) so the base
+                 surface unambiguously reads navy regardless of how the
+                 acrylic layer renders. Also paint Background directly on the
+                 Panel as a belt-and-braces (no transparency at the root). -->
             <Panel x:Name="DashboardSheet" Grid.Column="1" Grid.ColumnSpan="2"
                    ZIndex="100"
                    IsHitTestVisible="{Binding IsShowingDashboard}"
+                   Background="{DynamicResource ContentBackgroundBrush}"
                    ClipToBounds="True">
-                <!-- Issue #14: solid theme-aware base behind the acrylic+overlay glass
-                     layers. Without this, when ExperimentalAcrylicBorder fails to
-                     render (no DWM composition / hardware accel off / RDP), only the
-                     semi-transparent gradient remained and the dashboard read grey
-                     against whatever the vault content panel was painting. -->
                 <Border IsHitTestVisible="False"
                         CornerRadius="0,0,24,24"
-                        Background="{DynamicResource WindowBackgroundBrush}"/>
+                        Background="{DynamicResource ContentBackgroundBrush}"/>
                 <!-- Layer 0: Frosted glass blur behind dashboard (theme-aware) -->
                 <ExperimentalAcrylicBorder IsHitTestVisible="False" CornerRadius="0,0,24,24">
                     <ExperimentalAcrylicBorder.Material>
