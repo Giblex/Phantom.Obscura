@@ -3,22 +3,23 @@
     
     <!-- Category Item Template (Sidebar) -->
     <DataTemplate x:Key="CategoryItemTemplate">
-        <!-- Issue #12: category list gets liquid-glass border + rounded corners
-             matching the entry-type list items. -->
+        <!-- Sidebar refinement: list items are borderless; only the parent
+             CATEGORIES drop-menu toggle keeps a border. Corners + left text
+             inset match the ENTRY TYPES list items for full consistency. -->
         <ToggleButton Command="{Binding $parent[Window].DataContext.SelectCategoryCommand}"
                       CommandParameter="{Binding Name}"
-                      Classes="secondary category-filter"
+                      Classes="sidebar-filter-item-toggle category-filter"
                       HorizontalAlignment="Stretch"
                       HorizontalContentAlignment="Left"
-                      Height="38"
-                      CornerRadius="12"
-                      BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
-                      BorderThickness="1"
+                      Height="36"
+                      CornerRadius="14"
+                      BorderBrush="Transparent"
+                      BorderThickness="0"
                       IsChecked="{Binding IsActive, Mode=TwoWay}"
                       Tag="{Binding TileColor}"
                       AutomationProperties.Name="{Binding Name, StringFormat='Category: {0} ({1} items)'}"
                       Margin="6,2">
-            <StackPanel Orientation="Horizontal" Spacing="8" Margin="14,0,0,0">
+            <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
                 <!-- Category color bar (slightly inset) -->
                 <Border Width="8" Height="22" CornerRadius="4" VerticalAlignment="Center">
                     <Border.Background>

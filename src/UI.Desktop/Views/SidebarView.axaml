@@ -208,17 +208,52 @@
             <Setter Property="Effect" Value="{DynamicResource LiquidGlassButtonEffectHover}"/>
         </Style>
 
+        <!-- Sidebar refinement: items inside the ENTRY TYPES / CATEGORIES
+             dropdowns are borderless. Only the parent drop-menu toggles keep
+             a border. Hover/checked still reads via background tint + subtle
+             liquid-glass effect so the affordance is consistent. -->
         <Style Selector="Button.sidebar-filter-item">
             <Setter Property="Background" Value="#14203242"/>
-            <Setter Property="BorderBrush" Value="#38CFE8FF"/>
-            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="Padding" Value="12,0"/>
             <Setter Property="Effect" Value="{DynamicResource LiquidGlassButtonEffect}"/>
         </Style>
         <Style Selector="Button.sidebar-filter-item:pointerover">
             <Setter Property="Background" Value="#20304558"/>
-            <Setter Property="BorderBrush" Value="#68CFE8FF"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
             <Setter Property="Effect" Value="{DynamicResource LiquidGlassButtonEffectHover}"/>
+        </Style>
+
+        <!-- Toggle variant used by CategoryItemTemplate so category list items
+             match entry-type list items: same background, no border, same
+             hover/checked feel. Sits OUTSIDE the category-filter glass
+             treatment by overriding background + opacity-bearing pieces are
+             not in scope here (template comes from the shared
+             category-filter ControlTemplate, but borders are nuked). -->
+        <Style Selector="ToggleButton.sidebar-filter-item-toggle">
+            <Setter Property="Background" Value="#14203242"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,0"/>
+        </Style>
+        <Style Selector="ToggleButton.sidebar-filter-item-toggle:pointerover">
+            <Setter Property="Background" Value="#20304558"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+        </Style>
+        <Style Selector="ToggleButton.sidebar-filter-item-toggle:checked">
+            <Setter Property="Background" Value="#26304558"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+        </Style>
+        <!-- Kill the heavy AnimatedBorder ring on the category list items so
+             they really do appear borderless even though they reuse the
+             ToggleButton.category-filter template. -->
+        <Style Selector="ToggleButton.sidebar-filter-item-toggle /template/ Border#AnimatedBorder">
+            <Setter Property="Opacity" Value="0"/>
+        </Style>
+        <Style Selector="ToggleButton.sidebar-filter-item-toggle /template/ Border#FilterBase">
+            <Setter Property="BorderThickness" Value="0"/>
         </Style>
 
         <Style Selector="Button.collapsed-icon">
@@ -676,8 +711,8 @@
                                 HorizontalContentAlignment="Left"
                                 Height="36"
                                 CornerRadius="14"
-                                BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
-                                BorderThickness="1"
+                                BorderBrush="Transparent"
+                                BorderThickness="0"
                                 Background="#14203242"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
@@ -694,8 +729,8 @@
                                 HorizontalContentAlignment="Left"
                                 Height="36"
                                 CornerRadius="14"
-                                BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
-                                BorderThickness="1"
+                                BorderBrush="Transparent"
+                                BorderThickness="0"
                                 Background="#14203242"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
@@ -712,8 +747,8 @@
                                 HorizontalContentAlignment="Left"
                                 Height="36"
                                 CornerRadius="14"
-                                BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
-                                BorderThickness="1"
+                                BorderBrush="Transparent"
+                                BorderThickness="0"
                                 Background="#14203242"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
@@ -730,8 +765,8 @@
                                 HorizontalContentAlignment="Left"
                                 Height="36"
                                 CornerRadius="14"
-                                BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
-                                BorderThickness="1"
+                                BorderBrush="Transparent"
+                                BorderThickness="0"
                                 Background="#14203242"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
@@ -748,8 +783,8 @@
                                 HorizontalContentAlignment="Left"
                                 Height="36"
                                 CornerRadius="14"
-                                BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
-                                BorderThickness="1"
+                                BorderBrush="Transparent"
+                                BorderThickness="0"
                                 Background="#14203242"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
@@ -766,8 +801,8 @@
                                 HorizontalContentAlignment="Left"
                                 Height="36"
                                 CornerRadius="14"
-                                BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
-                                BorderThickness="1"
+                                BorderBrush="Transparent"
+                                BorderThickness="0"
                                 Background="#14203242"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
@@ -784,8 +819,8 @@
                                 HorizontalContentAlignment="Left"
                                 Height="36"
                                 CornerRadius="14"
-                                BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
-                                BorderThickness="1"
+                                BorderBrush="Transparent"
+                                BorderThickness="0"
                                 Background="#14203242"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
@@ -802,8 +837,8 @@
                                 HorizontalContentAlignment="Left"
                                 Height="36"
                                 CornerRadius="14"
-                                BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
-                                BorderThickness="1"
+                                BorderBrush="Transparent"
+                                BorderThickness="0"
                                 Background="#14203242"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
@@ -820,8 +855,8 @@
                                 HorizontalContentAlignment="Left"
                                 Height="36"
                                 CornerRadius="14"
-                                BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
-                                BorderThickness="1"
+                                BorderBrush="Transparent"
+                                BorderThickness="0"
                                 Background="#14203242"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
