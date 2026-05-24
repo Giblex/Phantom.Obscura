@@ -150,8 +150,8 @@
                     <Button.Flyout>
                         <Flyout Placement="BottomEdgeAlignedRight">
                             <Border Background="{DynamicResource ContentBackgroundBrush}" 
-                                    CornerRadius="{StaticResource Radius.Lg}" 
-                                    Padding="8" 
+                                    CornerRadius="22" 
+                                    Padding="10" 
                                     MinWidth="240">
                                 <StackPanel Spacing="4">
                                     <!-- Add Credential Section -->

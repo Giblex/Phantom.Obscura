@@ -426,25 +426,43 @@
             <Panel x:Name="DashboardSheet" Grid.Column="1" Grid.ColumnSpan="2"
                    ZIndex="100"
                    IsHitTestVisible="{Binding IsShowingDashboard}"
-                   Background="{DynamicResource ContentBackgroundBrush}"
-                   ClipToBounds="True">
+                    Background="#07111E2D"
+                    ClipToBounds="True">
                 <Border IsHitTestVisible="False"
-                        CornerRadius="0,0,24,24"
-                        Background="{DynamicResource ContentBackgroundBrush}"/>
+                        CornerRadius="0,0,24,24">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                            <GradientStop Color="#F20B1526" Offset="0"/>
+                            <GradientStop Color="#E90F2036" Offset="0.48"/>
+                            <GradientStop Color="#E20A1A2D" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                </Border>
                 <!-- Layer 0: Frosted glass blur behind dashboard (theme-aware) -->
                 <ExperimentalAcrylicBorder IsHitTestVisible="False" CornerRadius="0,0,24,24">
                     <ExperimentalAcrylicBorder.Material>
                         <ExperimentalAcrylicMaterial
                             BackgroundSource="Digger"
                             TintColor="{DynamicResource DashboardSheetAcrylicTint}"
-                            TintOpacity="0.08"
-                            MaterialOpacity="0.18"
+                            TintOpacity="0.24"
+                            MaterialOpacity="0.34"
                             FallbackColor="{DynamicResource DashboardSheetAcrylicFallback}"/>
                     </ExperimentalAcrylicBorder.Material>
                 </ExperimentalAcrylicBorder>
                 <!-- Layer 1: Theme-aware transparent glass overlay — content behind shows through -->
                 <Border IsHitTestVisible="False" CornerRadius="0,0,24,24"
                         Background="{DynamicResource DashboardSheetOverlayBrush}"/>
+                <Border IsHitTestVisible="False" CornerRadius="0,0,24,24"
+                        BorderThickness="0,0,0,1"
+                        BorderBrush="#70CFE8FF">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                            <GradientStop Color="#1A00E5CC" Offset="0"/>
+                            <GradientStop Color="#0E7DEBFF" Offset="0.38"/>
+                            <GradientStop Color="#0800A8FF" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                </Border>
                 <!-- Layer 2: Liquid glass bottom-edge highlight -->
                 <Border IsHitTestVisible="False" CornerRadius="0,0,24,24">
                     <Border.Background>

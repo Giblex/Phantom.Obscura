@@ -112,6 +112,115 @@
             <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassActiveBorderBrush}" />
         </Style>
 
+        <Style Selector="ToggleButton.category-filter">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+            <Setter Property="BorderBrush" Value="#36CFE8FF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Panel>
+                            <Border x:Name="FilterShadow"
+                                    CornerRadius="{TemplateBinding CornerRadius}"
+                                    IsHitTestVisible="False"
+                                    Opacity="0.55"
+                                    Effect="{DynamicResource LiquidGlassButtonEffect}"/>
+                            <Border x:Name="FilterBase"
+                                    Background="#10162232"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="{TemplateBinding CornerRadius}"/>
+                            <Border x:Name="CategoryTint"
+                                    CornerRadius="{TemplateBinding CornerRadius}"
+                                    Opacity="0.26"
+                                    Background="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource HexToBrushConverter}}"/>
+                            <Border x:Name="CyanGlass"
+                                    CornerRadius="{TemplateBinding CornerRadius}"
+                                    Opacity="0.20">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                        <GradientStop Color="#1A00E5CC" Offset="0"/>
+                                        <GradientStop Color="#1200A8FF" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                            </Border>
+                            <Border x:Name="AnimatedBorder"
+                                    CornerRadius="{TemplateBinding CornerRadius}"
+                                    BorderThickness="1"
+                                    Opacity="0.50"
+                                    IsHitTestVisible="False">
+                                <Border.BorderBrush>
+                                    <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                                        <GradientStop Color="#10CFE8FF" Offset="0"/>
+                                        <GradientStop Color="#90CFE8FF" Offset="0.5"/>
+                                        <GradientStop Color="#10CFE8FF" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.BorderBrush>
+                            </Border>
+                            <Border x:Name="TopSheen"
+                                    Height="14"
+                                    VerticalAlignment="Top"
+                                    Margin="5,2,5,0"
+                                    CornerRadius="12"
+                                    Opacity="0.12"
+                                    Background="#70FFFFFF"
+                                    IsHitTestVisible="False"/>
+                            <ContentPresenter Content="{TemplateBinding Content}"
+                                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Panel>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style Selector="ToggleButton.category-filter:pointerover /template/ Border#FilterShadow">
+            <Setter Property="Opacity" Value="0.82"/>
+            <Setter Property="Effect" Value="{DynamicResource LiquidGlassButtonEffectHover}"/>
+        </Style>
+        <Style Selector="ToggleButton.category-filter:pointerover /template/ Border#CategoryTint">
+            <Setter Property="Opacity" Value="0.42"/>
+        </Style>
+        <Style Selector="ToggleButton.category-filter:pointerover /template/ Border#CyanGlass">
+            <Setter Property="Opacity" Value="0.30"/>
+        </Style>
+        <Style Selector="ToggleButton.category-filter:pointerover /template/ Border#AnimatedBorder">
+            <Setter Property="Opacity" Value="0.82"/>
+        </Style>
+        <Style Selector="ToggleButton.category-filter:checked /template/ Border#CategoryTint">
+            <Setter Property="Opacity" Value="0.60"/>
+        </Style>
+        <Style Selector="ToggleButton.category-filter:checked /template/ Border#CyanGlass">
+            <Setter Property="Opacity" Value="0.26"/>
+        </Style>
+        <Style Selector="ToggleButton.category-filter:checked /template/ Border#AnimatedBorder">
+            <Setter Property="Opacity" Value="1"/>
+        </Style>
+        <Style Selector="ToggleButton.category-filter:checked /template/ Border#FilterShadow">
+            <Setter Property="Opacity" Value="0.90"/>
+            <Setter Property="Effect" Value="{DynamicResource LiquidGlassButtonEffectHover}"/>
+        </Style>
+
+        <Style Selector="Button.sidebar-filter-item">
+            <Setter Property="Background" Value="#14203242"/>
+            <Setter Property="BorderBrush" Value="#38CFE8FF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="Effect" Value="{DynamicResource LiquidGlassButtonEffect}"/>
+        </Style>
+        <Style Selector="Button.sidebar-filter-item:pointerover">
+            <Setter Property="Background" Value="#20304558"/>
+            <Setter Property="BorderBrush" Value="#68CFE8FF"/>
+            <Setter Property="Effect" Value="{DynamicResource LiquidGlassButtonEffectHover}"/>
+        </Style>
+
         <Style Selector="Button.collapsed-icon">
             <Setter Property="Width" Value="42"/>
             <Setter Property="Height" Value="42"/>
@@ -521,15 +630,15 @@
                                   Height="36"
                                   CornerRadius="14"
                                   Margin="6,0">
-                        <Grid ColumnDefinitions="Auto,*,Auto">
-                            <Path Grid.Column="0" Data="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center" Margin="6,0,8,0"/>
-                            <TextBlock Grid.Column="1"
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0"
                                        Text="ENTRY TYPES"
                                        FontSize="{StaticResource Type.Small.Size}"
                                        FontWeight="Bold"
                                        Foreground="{DynamicResource PrimaryTextBrush}"
-                                       VerticalAlignment="Center"/>
-                            <Path Grid.Column="2"
+                                       VerticalAlignment="Center"
+                                       Margin="6,0,0,0"/>
+                            <Path Grid.Column="1"
                                   Data="M6 9 L12 15 L18 9"
                                   Stroke="{DynamicResource PrimaryTextBrush}"
                                   StrokeThickness="2"
@@ -562,14 +671,14 @@
                     <ItemsControl Margin="0" IsVisible="{Binding IsChecked, ElementName=EntryTypeDropdownToggle}">
                         <Button Command="{Binding FilterByEntryTypeCommand}"
                                 CommandParameter="All"
-                                Classes="liquid-glass"
+                                Classes="liquid-glass sidebar-filter-item"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
                                 Height="36"
-                                CornerRadius="10"
+                                CornerRadius="14"
                                 BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
                                 BorderThickness="1"
-                                Background="{DynamicResource ContentBackgroundBrush}"
+                                Background="#14203242"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
@@ -580,14 +689,14 @@
 
                         <Button Command="{Binding FilterByEntryTypeCommand}"
                                 CommandParameter="Password"
-                                Classes="liquid-glass"
+                                Classes="liquid-glass sidebar-filter-item"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
                                 Height="36"
-                                CornerRadius="10"
+                                CornerRadius="14"
                                 BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
                                 BorderThickness="1"
-                                Background="{DynamicResource ContentBackgroundBrush}"
+                                Background="#14203242"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
@@ -598,14 +707,14 @@
 
                         <Button Command="{Binding FilterByEntryTypeCommand}"
                                 CommandParameter="CreditCard"
-                                Classes="liquid-glass"
+                                Classes="liquid-glass sidebar-filter-item"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
                                 Height="36"
-                                CornerRadius="10"
+                                CornerRadius="14"
                                 BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
                                 BorderThickness="1"
-                                Background="{DynamicResource ContentBackgroundBrush}"
+                                Background="#14203242"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
@@ -616,14 +725,14 @@
 
                         <Button Command="{Binding FilterByEntryTypeCommand}"
                                 CommandParameter="BankAccount"
-                                Classes="liquid-glass"
+                                Classes="liquid-glass sidebar-filter-item"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
                                 Height="36"
-                                CornerRadius="10"
+                                CornerRadius="14"
                                 BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
                                 BorderThickness="1"
-                                Background="{DynamicResource ContentBackgroundBrush}"
+                                Background="#14203242"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
@@ -634,14 +743,14 @@
 
                         <Button Command="{Binding FilterByEntryTypeCommand}"
                                 CommandParameter="Identity"
-                                Classes="liquid-glass"
+                                Classes="liquid-glass sidebar-filter-item"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
                                 Height="36"
-                                CornerRadius="10"
+                                CornerRadius="14"
                                 BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
                                 BorderThickness="1"
-                                Background="{DynamicResource ContentBackgroundBrush}"
+                                Background="#14203242"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
@@ -652,14 +761,14 @@
 
                         <Button Command="{Binding FilterByEntryTypeCommand}"
                                 CommandParameter="ApiKey"
-                                Classes="liquid-glass"
+                                Classes="liquid-glass sidebar-filter-item"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
                                 Height="36"
-                                CornerRadius="10"
+                                CornerRadius="14"
                                 BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
                                 BorderThickness="1"
-                                Background="{DynamicResource ContentBackgroundBrush}"
+                                Background="#14203242"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
@@ -670,14 +779,14 @@
 
                         <Button Command="{Binding FilterByEntryTypeCommand}"
                                 CommandParameter="WiFi"
-                                Classes="liquid-glass"
+                                Classes="liquid-glass sidebar-filter-item"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
                                 Height="36"
-                                CornerRadius="10"
+                                CornerRadius="14"
                                 BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
                                 BorderThickness="1"
-                                Background="{DynamicResource ContentBackgroundBrush}"
+                                Background="#14203242"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
@@ -688,14 +797,14 @@
 
                         <Button Command="{Binding FilterByEntryTypeCommand}"
                                 CommandParameter="Contact"
-                                Classes="liquid-glass"
+                                Classes="liquid-glass sidebar-filter-item"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
                                 Height="36"
-                                CornerRadius="10"
+                                CornerRadius="14"
                                 BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
                                 BorderThickness="1"
-                                Background="{DynamicResource ContentBackgroundBrush}"
+                                Background="#14203242"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
@@ -706,14 +815,14 @@
 
                         <Button Command="{Binding FilterByEntryTypeCommand}"
                                 CommandParameter="PinCode"
-                                Classes="liquid-glass"
+                                Classes="liquid-glass sidebar-filter-item"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
                                 Height="36"
-                                CornerRadius="10"
+                                CornerRadius="14"
                                 BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
                                 BorderThickness="1"
-                                Background="{DynamicResource ContentBackgroundBrush}"
+                                Background="#14203242"
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
@@ -740,15 +849,15 @@
                                   Height="36"
                                   CornerRadius="14"
                                   Margin="0">
-                        <Grid ColumnDefinitions="Auto,*,Auto">
-                            <Path Grid.Column="0" Data="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center" Margin="6,0,8,0"/>
-                            <TextBlock Grid.Column="1"
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0"
                                        Text="CATEGORIES"
                                        FontSize="{StaticResource Type.Small.Size}"
                                        FontWeight="Bold"
                                        Foreground="{DynamicResource PrimaryTextBrush}"
-                                       VerticalAlignment="Center"/>
-                            <Path Grid.Column="2"
+                                       VerticalAlignment="Center"
+                                       Margin="6,0,0,0"/>
+                            <Path Grid.Column="1"
                                   Data="M6 9 L12 15 L18 9"
                                   Stroke="{DynamicResource PrimaryTextBrush}"
                                   StrokeThickness="2"
@@ -810,7 +919,8 @@
                                 Margin="{Binding CategoryHighlightMargin}"
                                 Opacity="{Binding CategoryHighlightOpacity}"
                                 RenderTransformOrigin="0.5,0.5"
-                                IsHitTestVisible="False">
+                                IsHitTestVisible="False"
+                                IsVisible="False">
                             <Border.Transitions>
                                 <Transitions>
                                     <ThicknessTransition Property="Margin" Duration="0:0:0.18" Easing="CubicEaseOut"/>

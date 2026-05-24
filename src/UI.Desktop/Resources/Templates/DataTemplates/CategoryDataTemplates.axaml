@@ -12,16 +12,15 @@
                       HorizontalContentAlignment="Left"
                       Height="38"
                       CornerRadius="12"
-                      Background="{DynamicResource QuickFilterGlassHoverBrush}"
                       BorderBrush="{DynamicResource QuickFilterGlassBorderBrush}"
                       BorderThickness="1"
                       IsChecked="{Binding IsActive, Mode=TwoWay}"
                       Tag="{Binding TileColor}"
                       AutomationProperties.Name="{Binding Name, StringFormat='Category: {0} ({1} items)'}"
                       Margin="6,2">
-            <StackPanel Orientation="Horizontal" Spacing="8" Margin="16,0,0,0">
+            <StackPanel Orientation="Horizontal" Spacing="8" Margin="14,0,0,0">
                 <!-- Category color bar (slightly inset) -->
-                <Border Width="6" Height="20" CornerRadius="3" VerticalAlignment="Center">
+                <Border Width="8" Height="22" CornerRadius="4" VerticalAlignment="Center">
                     <Border.Background>
                         <Binding Path="TileColor" Converter="{StaticResource HexToBrushConverter}"/>
                     </Border.Background>
