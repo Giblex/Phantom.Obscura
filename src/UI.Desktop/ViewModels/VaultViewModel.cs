@@ -387,17 +387,20 @@ namespace PhantomVault.UI.ViewModels
             FilterMediumCommand = ReactiveCommand.Create(() => { ShowAllFilter = false; ShowMediumFilter = !ShowMediumFilter; });
             FilterGoodCommand = ReactiveCommand.Create(() => { ShowAllFilter = false; ShowGoodFilter = !ShowGoodFilter; });
             
-            ShowGeneralSettingsCommand = ReactiveCommand.Create(ShowGeneralSettings);
-            ShowSecuritySettingsCommand = ReactiveCommand.Create(ShowSecuritySettings);
-            ShowThemeSettingsCommand = ReactiveCommand.Create(ShowThemeSettings);
-            ShowImportExportSettingsCommand = ReactiveCommand.Create(ShowImportExportSettings);
-            ShowAutoFillSettingsCommand = ReactiveCommand.Create(ShowAutoFillSettings);
-            ShowBackupSettingsCommand = ReactiveCommand.Create(ShowBackupSettings);
-            ShowAccessibilitySettingsCommand = ReactiveCommand.Create(ShowAccessibilitySettings);
-            ShowAdvancedSettingsCommand = ReactiveCommand.Create(ShowAdvancedSettings);
-            ShowRubbishBinSettingsCommand = ReactiveCommand.Create(ShowRubbishBinSettings);
+            // Issue #31: route every tab-switch through the unsaved-changes
+            // intercept. Pre-existing changes on any tab prompt Save & Switch
+            // / Cancel before the tab content swaps.
+            ShowGeneralSettingsCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowGeneralSettings));
+            ShowSecuritySettingsCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowSecuritySettings));
+            ShowThemeSettingsCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowThemeSettings));
+            ShowImportExportSettingsCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowImportExportSettings));
+            ShowAutoFillSettingsCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowAutoFillSettings));
+            ShowBackupSettingsCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowBackupSettings));
+            ShowAccessibilitySettingsCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowAccessibilitySettings));
+            ShowAdvancedSettingsCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowAdvancedSettings));
+            ShowRubbishBinSettingsCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowRubbishBinSettings));
             ShowPasswordHealthCommand = ReactiveCommand.Create(ShowPasswordHealth);
-            ShowSyncSettingsCommand = ReactiveCommand.Create(ShowSyncSettings);
+            ShowSyncSettingsCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowSyncSettings));
             OpenIconManagerCommand = ReactiveCommand.Create(OpenIconManager);
             CloseIconManagerCommand = ReactiveCommand.Create(CloseIconManager);
             RotateNowCommand = ReactiveCommand.CreateFromTask(RotateNowAsync);
@@ -5960,6 +5963,28 @@ namespace PhantomVault.UI.ViewModels
             if (!_settingsDraftTracker.HasUnsavedChanges) return;
             int n = _settingsDraftTracker.CommitAll();
             StatusMessage = n == 1 ? "Setting saved" : $"Saved {n} settings";
+        }
+
+        // Issue #31: tab-switch unsaved-changes intercept. If the user has
+        // staged changes on the currently-active tab (or anywhere — the
+        // tracker is overlay-wide), prompt before swapping tab content.
+        // Returns true if the switch should proceed, false to stay on the
+        // current tab.
+        private async Task SwitchTabIfAllowedAsync(Action switchAction)
+        {
+            if (_settingsDraftTracker.HasUnsavedChanges)
+            {
+                bool save = await _dialogService.ShowConfirmationAsync(
+                    "Some settings have changed",
+                    "Save the staged changes before switching tabs? Click Cancel to stay and review.",
+                    confirmText: "Save & Switch",
+                    cancelText: "Cancel",
+                    owner: _ownerWindow);
+                if (!save) return; // stay on current tab
+                _settingsDraftTracker.CommitAll();
+                StatusMessage = "Settings saved";
+            }
+            switchAction();
         }
 
         private void DiscardStagedSettings()
