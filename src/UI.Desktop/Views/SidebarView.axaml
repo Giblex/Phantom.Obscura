@@ -208,10 +208,31 @@
             <Setter Property="Effect" Value="{DynamicResource LiquidGlassButtonEffectHover}"/>
         </Style>
 
+        <!-- Sidebar refinement: the ENTRY TYPES / CATEGORIES *header* toggles
+             (the two dropdown chevrons that open the filter lists) are
+             borderless to match the borderless filter items below them.
+             Targeted via the .filter-header modifier so per-category-item
+             toggles (which also use .category-filter) keep their border. -->
+        <Style Selector="ToggleButton.category-filter.filter-header">
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="ToggleButton.category-filter.filter-header /template/ Border#FilterBase">
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="ToggleButton.category-filter.filter-header /template/ Border#AnimatedBorder">
+            <Setter Property="Opacity" Value="0"/>
+        </Style>
+        <Style Selector="ToggleButton.category-filter.filter-header:pointerover /template/ Border#AnimatedBorder">
+            <Setter Property="Opacity" Value="0"/>
+        </Style>
+        <Style Selector="ToggleButton.category-filter.filter-header:checked /template/ Border#AnimatedBorder">
+            <Setter Property="Opacity" Value="0"/>
+        </Style>
+
         <!-- Sidebar refinement: items inside the ENTRY TYPES / CATEGORIES
-             dropdowns are borderless. Only the parent drop-menu toggles keep
-             a border. Hover/checked still reads via background tint + subtle
-             liquid-glass effect so the affordance is consistent. -->
+             dropdowns are borderless. Hover/checked still reads via background
+             tint + subtle liquid-glass effect so the affordance is consistent. -->
         <Style Selector="Button.sidebar-filter-item">
             <Setter Property="Background" Value="#14203242"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
@@ -523,7 +544,7 @@
                             <ToggleButton Command="{Binding ShowAllCommand}"
                                           IsChecked="{Binding IsShowingAll, Mode=OneWay}"
                                           Classes="quick-filter">
-                                <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
+                                <StackPanel Orientation="Horizontal" Spacing="8" Margin="16,0,0,0">
                                     <TextBlock Text="All Items" FontSize="{StaticResource Type.Label.Size}" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
                                     <TextBlock Text="{Binding TotalCount}"
                                                FontSize="{StaticResource Type.Small.Size}"
@@ -536,7 +557,7 @@
                             <ToggleButton Command="{Binding ShowFavoritesCommand}"
                                           IsChecked="{Binding IsShowingFavorites, Mode=OneWay}"
                                           Classes="quick-filter">
-                                <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
+                                <StackPanel Orientation="Horizontal" Spacing="8" Margin="16,0,0,0">
                                     <TextBlock Text="Favorites" FontSize="{StaticResource Type.Label.Size}" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
                                     <TextBlock Text="{Binding FavoritesCount}"
                                                FontSize="{StaticResource Type.Small.Size}"
@@ -659,7 +680,7 @@
                      with equal whitespace on each side regardless of scrollbar state. -->
                 <StackPanel Spacing="4" Margin="0,0,6,12" IsVisible="{Binding !IsSidebarCollapsed}">
                     <ToggleButton x:Name="EntryTypeDropdownToggle"
-                                  Classes="category-filter"
+                                  Classes="category-filter filter-header"
                                   HorizontalAlignment="Stretch"
                                   HorizontalContentAlignment="Left"
                                   Height="36"
@@ -878,7 +899,7 @@
                     <Grid ColumnDefinitions="*,Auto" Margin="6,0">
                         <ToggleButton x:Name="CategoryDropdownToggle"
                                   Grid.Column="0"
-                                  Classes="category-filter"
+                                  Classes="category-filter filter-header"
                                   HorizontalAlignment="Stretch"
                                   HorizontalContentAlignment="Left"
                                   Height="36"
