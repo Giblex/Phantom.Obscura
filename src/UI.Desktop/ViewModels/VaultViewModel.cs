@@ -373,6 +373,10 @@ namespace PhantomVault.UI.ViewModels
             // Issue #21: route close through the async intercept so unsaved
             // changes trigger the Save-or-Cancel prompt.
             CloseSettingsPanelCommand = ReactiveCommand.CreateFromTask(CloseSettingsPanelAsync);
+            // Keep these commands always invokable; SaveStagedSettings and
+            // DiscardStagedSettings fail closed when there is no dirty draft.
+            // The visual dirty state is bound separately so the button cannot
+            // get stranded disabled after a save/re-edit cycle.
             SaveSettingsCommand = ReactiveCommand.Create(SaveStagedSettings);
             DiscardSettingsCommand = ReactiveCommand.Create(DiscardStagedSettings);
             ToggleSecurityDashboardCommand = ReactiveCommand.Create(ToggleSecurityDashboard);

@@ -358,6 +358,14 @@
         <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
     </Style>
 
+    <Style Selector="FlyoutPresenter">
+        <Setter Property="Background" Value="{DynamicResource FlyoutPresenterBackground}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.BorderSoft}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Lg}"/>
+        <Setter Property="Padding" Value="0"/>
+    </Style>
+
     <!-- ComboBox Watermark/Placeholder styling -->
     <Style Selector="ComboBox /template/ TextBlock.watermark">
         <Setter Property="Foreground" Value="{DynamicResource InputPlaceholderBrush}"/>

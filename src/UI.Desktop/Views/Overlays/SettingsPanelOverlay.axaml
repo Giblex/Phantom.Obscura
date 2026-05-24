@@ -27,7 +27,7 @@
              = true) the button takes an accent-tinted background so it reads as
              the primary action. When disabled it falls back to the standard
              liquid-glass look so it doesn't look 'ready' while inert. -->
-        <Style Selector="Button.settings-save-primary:not(:disabled) /template/ ContentPresenter">
+        <Style Selector="Button.settings-save-primary.dirty /template/ ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
             <Setter Property="TextBlock.Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
         </Style>
@@ -407,18 +407,17 @@
                                              Width="8" Height="8"
                                              VerticalAlignment="Center"
                                              Fill="{DynamicResource WarningBrush}"
-                                             IsVisible="{Binding SettingsDraftTracker.HasUnsavedChanges}"/>
+                                             IsVisible="{Binding HasUnsavedSettings}"/>
                                     <TextBlock Grid.Column="1"
                                                VerticalAlignment="Center"
                                                FontSize="{StaticResource Type.Small.Size}"
                                                Foreground="{DynamicResource PrimaryTextBrush}"
                                                Text="You have unsaved changes"
-                                               IsVisible="{Binding SettingsDraftTracker.HasUnsavedChanges}"/>
+                                               IsVisible="{Binding HasUnsavedSettings}"/>
                                     <Button Grid.Column="2"
                                             Content="Discard"
                                             Classes="liquid-glass"
                                             Command="{Binding DiscardSettingsCommand}"
-                                            IsEnabled="{Binding SettingsDraftTracker.HasUnsavedChanges}"
                                             Padding="14,6"/>
                                     <!-- Save is the primary action: accent-tinted
                                          background so it visually leads the eye.
@@ -428,8 +427,8 @@
                                     <Button Grid.Column="3"
                                             Content="Save"
                                             Classes="liquid-glass settings-save-primary"
+                                            Classes.dirty="{Binding HasUnsavedSettings}"
                                             Command="{Binding SaveSettingsCommand}"
-                                            IsEnabled="{Binding SettingsDraftTracker.HasUnsavedChanges}"
                                             Padding="22,6"
                                             FontWeight="SemiBold"/>
                                 </Grid>
