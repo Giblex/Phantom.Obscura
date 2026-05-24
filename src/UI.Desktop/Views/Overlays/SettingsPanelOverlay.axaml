@@ -23,6 +23,14 @@
         <Style Selector="Button.settings-tab.active Border.tab-accent">
             <Setter Property="IsVisible" Value="True"/>
         </Style>
+        <!-- Issue: Save button visual priority. When enabled (HasUnsavedSettings
+             = true) the button takes an accent-tinted background so it reads as
+             the primary action. When disabled it falls back to the standard
+             liquid-glass look so it doesn't look 'ready' while inert. -->
+        <Style Selector="Button.settings-save-primary:not(:disabled) /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="TextBlock.Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+        </Style>
     </UserControl.Styles>
 
     <Border Background="{DynamicResource OverlayBackgroundBrush}"
@@ -385,32 +393,44 @@
                                  visible at the bottom of the tab content area.
                                  Buttons are disabled until at least one staged
                                  change exists (driven by HasUnsavedSettings).
-                                 An inline 'pending changes' hint sits to the
-                                 left of the buttons so the state is legible. -->
+                                 Save is the primary action — accent fill +
+                                 stronger weight; Discard is secondary glass.
+                                 An amber dot + 'You have unsaved changes' hint
+                                 sits to the left so dirty state is legible. -->
                             <Border Grid.Row="1"
                                     Background="{DynamicResource HeaderBackgroundBrush}"
                                     BorderBrush="{DynamicResource ControlBorderBrush}"
                                     BorderThickness="0,1,0,0"
                                     Padding="22,12,22,14">
-                                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
-                                    <TextBlock Grid.Column="0"
+                                <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="10">
+                                    <Ellipse Grid.Column="0"
+                                             Width="8" Height="8"
+                                             VerticalAlignment="Center"
+                                             Fill="{DynamicResource WarningBrush}"
+                                             IsVisible="{Binding HasUnsavedSettings}"/>
+                                    <TextBlock Grid.Column="1"
                                                VerticalAlignment="Center"
                                                FontSize="{StaticResource Type.Small.Size}"
-                                               Foreground="{DynamicResource MutedTextBrush}"
-                                               Text="You have unsaved changes."
+                                               Foreground="{DynamicResource PrimaryTextBrush}"
+                                               Text="You have unsaved changes"
                                                IsVisible="{Binding HasUnsavedSettings}"/>
-                                    <Button Grid.Column="1"
+                                    <Button Grid.Column="2"
                                             Content="Discard"
                                             Classes="liquid-glass"
                                             Command="{Binding DiscardSettingsCommand}"
                                             IsEnabled="{Binding HasUnsavedSettings}"
                                             Padding="14,6"/>
-                                    <Button Grid.Column="2"
+                                    <!-- Save is the primary action: accent-tinted
+                                         background so it visually leads the eye.
+                                         Falls back to plain liquid-glass when no
+                                         changes are staged so the button doesn't
+                                         look 'live' while inert. -->
+                                    <Button Grid.Column="3"
                                             Content="Save"
-                                            Classes="liquid-glass"
+                                            Classes="liquid-glass settings-save-primary"
                                             Command="{Binding SaveSettingsCommand}"
                                             IsEnabled="{Binding HasUnsavedSettings}"
-                                            Padding="18,6"
+                                            Padding="22,6"
                                             FontWeight="SemiBold"/>
                                 </Grid>
                             </Border>
