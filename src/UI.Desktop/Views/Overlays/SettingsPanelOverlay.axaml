@@ -389,6 +389,36 @@
                                               Margin="0,0,20,40"/>
                             </ScrollViewer>
 
+                            <Border Grid.Row="0"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Bottom"
+                                    Margin="0,0,44,24"
+                                    Padding="14,10"
+                                    CornerRadius="{DynamicResource Radius.Lg}"
+                                    BorderBrush="{DynamicResource QuickFilterGlassActiveBorderBrush}"
+                                    BorderThickness="1"
+                                    Background="{DynamicResource QuickFilterGlassActiveBrush}"
+                                    IsVisible="{Binding IsSettingsSaveNotificationVisible}"
+                                    BoxShadow="{DynamicResource SlideOutPanelShadow}">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Border Width="18" Height="18"
+                                            CornerRadius="9"
+                                            Background="{DynamicResource SuccessBrush}">
+                                        <TextBlock Text="✓"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   FontSize="{StaticResource Type.Micro.Size}"
+                                                   FontWeight="Bold"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                    </Border>
+                                    <TextBlock Text="{Binding SettingsSaveNotification}"
+                                               VerticalAlignment="Center"
+                                               FontSize="{StaticResource Type.Small.Size}"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                </StackPanel>
+                            </Border>
+
                             <!-- Issue #21: sticky Save / Discard row. Always
                                  visible at the bottom of the tab content area.
                                  Buttons are disabled until at least one staged

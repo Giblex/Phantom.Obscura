@@ -50,6 +50,7 @@ namespace PhantomVault.UI.ViewModels
         private readonly IconManager _iconManager;
         private readonly IClipboardGuard? _clipboardGuard;
         private CancellationTokenSource? _clipboardClearCts;
+        private CancellationTokenSource? _settingsSaveNotificationCts;
         private readonly RekeyService? _rekeyService;
         private readonly SecurityCoordinator? _securityCoordinator;
         private readonly IUsbAutoInjectService? _autoInjectService;
@@ -92,6 +93,7 @@ namespace PhantomVault.UI.ViewModels
         private string _searchText = string.Empty;
         private string _currentViewTitle = "All Items";
         private string _statusMessage = "Ready";
+        private string _settingsSaveNotification = "Settings saved";
         private string _lastSyncTime = DateTime.Now.ToString("HH:mm");
         private int _sortOption = 0;
         private bool _isShowingAll = false;  // Start with dashboard, not All Items
@@ -102,6 +104,7 @@ namespace PhantomVault.UI.ViewModels
         private bool _isShowingExpiringSoon = false;
         private bool _isShowingDashboard = false;  // Dashboard closed by default — user pulls it down
         private bool _isDashboardEnabled = true;   // User setting: dashboard on/off
+        private bool _isSettingsSaveNotificationVisible;
         private bool _isInitializing = true;  // Prevent navigation during initialization
         private bool _privacyModeEnabled;
         private bool _isPasswordHealthPanelVisible;
@@ -1138,6 +1141,18 @@ namespace PhantomVault.UI.ViewModels
         {
             get => _statusMessage;
             set => this.RaiseAndSetIfChanged(ref _statusMessage, value);
+        }
+
+        public string SettingsSaveNotification
+        {
+            get => _settingsSaveNotification;
+            private set => this.RaiseAndSetIfChanged(ref _settingsSaveNotification, value);
+        }
+
+        public bool IsSettingsSaveNotificationVisible
+        {
+            get => _isSettingsSaveNotificationVisible;
+            private set => this.RaiseAndSetIfChanged(ref _isSettingsSaveNotificationVisible, value);
         }
 
         public string LastSyncTime
@@ -5973,8 +5988,8 @@ namespace PhantomVault.UI.ViewModels
                     cancelText: "Cancel",
                     owner: _ownerWindow);
                 if (!save) return; // user wants to keep editing
-                _settingsDraftTracker.CommitAll();
-                StatusMessage = "Settings saved";
+                int saved = _settingsDraftTracker.CommitAll();
+                AnnounceSettingsSaved(saved);
             }
 
             IsSettingsPanelVisible = false;
@@ -5988,6 +6003,7 @@ namespace PhantomVault.UI.ViewModels
             if (!_settingsDraftTracker.HasUnsavedChanges) return;
             int n = _settingsDraftTracker.CommitAll();
             StatusMessage = n == 1 ? "Setting saved" : $"Saved {n} settings";
+            AnnounceSettingsSaved(n);
         }
 
         // Issue #31: tab-switch unsaved-changes intercept. If the user has
@@ -6006,8 +6022,8 @@ namespace PhantomVault.UI.ViewModels
                     cancelText: "Cancel",
                     owner: _ownerWindow);
                 if (!save) return; // stay on current tab
-                _settingsDraftTracker.CommitAll();
-                StatusMessage = "Settings saved";
+                int saved = _settingsDraftTracker.CommitAll();
+                AnnounceSettingsSaved(saved);
             }
             switchAction();
         }
@@ -6017,6 +6033,38 @@ namespace PhantomVault.UI.ViewModels
             if (!_settingsDraftTracker.HasUnsavedChanges) return;
             int n = _settingsDraftTracker.DiscardAll();
             StatusMessage = n == 1 ? "Setting discarded" : $"Discarded {n} pending settings";
+        }
+
+        private void AnnounceSettingsSaved(int savedCount)
+        {
+            SettingsSaveNotification = savedCount == 1
+                ? "Setting saved"
+                : $"Saved {savedCount} settings";
+            StatusMessage = SettingsSaveNotification;
+
+            _settingsSaveNotificationCts?.Cancel();
+            _settingsSaveNotificationCts?.Dispose();
+            _settingsSaveNotificationCts = new CancellationTokenSource();
+            var token = _settingsSaveNotificationCts.Token;
+
+            IsSettingsSaveNotificationVisible = true;
+            _ = HideSettingsSaveNotificationAsync(token);
+        }
+
+        private async Task HideSettingsSaveNotificationAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(1800), cancellationToken);
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    IsSettingsSaveNotificationVisible = false;
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // A newer save superseded this notification.
+            }
         }
 
         private void ToggleSecurityDashboard()

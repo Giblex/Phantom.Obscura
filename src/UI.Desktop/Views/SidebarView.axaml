@@ -32,32 +32,77 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="{TemplateBinding CornerRadius}">
+                        <Panel>
+                            <Border x:Name="NavBase"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="{TemplateBinding CornerRadius}"/>
+                            <Border x:Name="NavGlass"
+                                    Opacity="0"
+                                    BorderBrush="#50CFE8FF"
+                                    BorderThickness="1"
+                                    CornerRadius="{TemplateBinding CornerRadius}">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                        <GradientStop Color="#2600E5CC" Offset="0"/>
+                                        <GradientStop Color="#1A7DEBFF" Offset="0.55"/>
+                                        <GradientStop Color="#1000A8FF" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                            </Border>
+                            <Border x:Name="NavSheen"
+                                    Opacity="0"
+                                    CornerRadius="{TemplateBinding CornerRadius}"
+                                    IsHitTestVisible="False">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                                        <GradientStop Color="#00CFE8FF" Offset="0"/>
+                                        <GradientStop Color="#36CFE8FF" Offset="0.5"/>
+                                        <GradientStop Color="#00CFE8FF" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                            </Border>
                             <ContentPresenter Content="{TemplateBinding Content}"
                                               ContentTemplate="{TemplateBinding ContentTemplate}"
                                               HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                               VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
-                        </Border>
+                        </Panel>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
         <Style Selector="Button.nav-button:pointerover">
-            <Setter Property="Background" Value="{DynamicResource QuickFilterGlassHoverBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassBorderBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="#30CFE8FF" />
+        </Style>
+        <Style Selector="Button.nav-button:pointerover /template/ Border#NavGlass">
+            <Setter Property="Opacity" Value="0.18"/>
+        </Style>
+        <Style Selector="Button.nav-button:pointerover /template/ Border#NavSheen">
+            <Setter Property="Opacity" Value="0.16"/>
         </Style>
         <Style Selector="Button.nav-button.active">
-            <Setter Property="Background" Value="{DynamicResource QuickFilterGlassActiveBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassActiveBorderBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="#50CFE8FF" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
         </Style>
+        <Style Selector="Button.nav-button.active /template/ Border#NavGlass">
+            <Setter Property="Opacity" Value="0.30"/>
+        </Style>
+        <Style Selector="Button.nav-button.active /template/ Border#NavSheen">
+            <Setter Property="Opacity" Value="0.22"/>
+        </Style>
         <Style Selector="Button.nav-button.active:pointerover">
-            <Setter Property="Background" Value="{DynamicResource QuickFilterGlassActiveHoverBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassActiveBorderBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="#68CFE8FF" />
+        </Style>
+        <Style Selector="Button.nav-button.active:pointerover /template/ Border#NavGlass">
+            <Setter Property="Opacity" Value="0.38"/>
+        </Style>
+        <Style Selector="Button.nav-button.active:pointerover /template/ Border#NavSheen">
+            <Setter Property="Opacity" Value="0.28"/>
         </Style>
         <Style Selector="Button.nav-button:pressed">
             <Setter Property="Background" Value="{DynamicResource FilterPressedGradient}" />
