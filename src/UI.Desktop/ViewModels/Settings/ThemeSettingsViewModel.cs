@@ -22,6 +22,7 @@ namespace PhantomVault.UI.ViewModels.Settings
         private int _selectedDisplayScale = 2; // 100%
         private bool _reduceAnimations = false;
         private bool _reduceTransparency = false;
+        private bool _showCategoryColorBarOnly = false;
         private int _selectedRuntimeThemeIndex = 0;
         private readonly ThemeManagerService _themeManager;
         private readonly IRuntimeThemeService? _runtimeThemeService;
@@ -267,6 +268,20 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
         }
 
+        /// <summary>
+        /// When true, the sidebar category rows render only their slim left
+        /// colour bar instead of the full row colour tint.
+        /// </summary>
+        public bool ShowCategoryColorBarOnly
+        {
+            get => _showCategoryColorBarOnly;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _showCategoryColorBarOnly, value);
+                ApplyShowCategoryColorBarOnly();
+            }
+        }
+
         public ICommand ToggleThemeCommand { get; }
 
         // ── Custom theme editor properties ─────────────────────
@@ -351,6 +366,7 @@ namespace PhantomVault.UI.ViewModels.Settings
             _enableHighContrast = settings.EnableHighContrast;
             _reduceAnimations = settings.ReduceAnimations;
             _reduceTransparency = settings.ReduceTransparency;
+            _showCategoryColorBarOnly = settings.ShowCategoryColorBarOnly;
 
             // Initialize runtime theme selection
             if (_runtimeThemeService != null && !string.IsNullOrEmpty(settings.SelectedThemeId))
@@ -472,6 +488,24 @@ namespace PhantomVault.UI.ViewModels.Settings
                     this.RaisePropertyChanged(nameof(ReduceTransparency));
                     _themeManager.SetEffects(prevAnim, prevTrans);
                 });
+        }
+
+        private void ApplyShowCategoryColorBarOnly()
+        {
+            // Live preview — push to app-wide resource for any DynamicResource
+            // bindings and so the sidebar view model can react.
+            _themeManager.SetShowCategoryColorBarOnly(_showCategoryColorBarOnly);
+
+            try
+            {
+                var settings = SettingsService.Load();
+                settings.ShowCategoryColorBarOnly = _showCategoryColorBarOnly;
+                SettingsService.Save(settings);
+            }
+            catch
+            {
+                // best-effort persistence
+            }
         }
 
         private void ApplyRuntimeTheme()

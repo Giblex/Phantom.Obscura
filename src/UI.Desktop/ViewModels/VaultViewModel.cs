@@ -127,6 +127,10 @@ namespace PhantomVault.UI.ViewModels
         private bool _isSidebarCollapsed = true;
         private bool _isSidebarAutoCollapsed = false;
 
+        // T1: when true, sidebar category rows hide the full-row colour wash
+        // and show only the small left colour bar (CategoryDataTemplates).
+        private bool _showCategoryColorBarOnly;
+
         // In-app lockscreen state
         private bool _isLockscreenVisible;
         private bool _isSoftLocked;
@@ -432,6 +436,12 @@ namespace PhantomVault.UI.ViewModels
 
             PrivacyModeEnabled = PrivacyShield.PrivacyModeEnabled;
             PrivacyShield.PrivacyModeChanged += OnPrivacyModeChanged;
+
+            // T1: sidebar category colour-bar-only mode. Initialise from
+            // persisted settings and live-update when Settings → Themes
+            // toggles the option (Save raises SettingsChanged).
+            try { _showCategoryColorBarOnly = SettingsService.Load().ShowCategoryColorBarOnly; } catch { _showCategoryColorBarOnly = false; }
+            SettingsService.SettingsChanged += OnUserSettingsChanged;
 
             if (_secureTrashService.AutoPurgeEnabled)
             {
@@ -1304,6 +1314,30 @@ namespace PhantomVault.UI.ViewModels
         {
             get => _isSidebarAutoCollapsed;
             set => this.RaiseAndSetIfChanged(ref _isSidebarAutoCollapsed, value);
+        }
+
+        /// <summary>
+        /// T1: when true, sidebar category rows render with the small left
+        /// colour bar only (no full-row category tint wash). Bound from
+        /// CategoryItemTemplate via the parent Window's DataContext.
+        /// </summary>
+        public bool ShowCategoryColorBarOnly
+        {
+            get => _showCategoryColorBarOnly;
+            private set => this.RaiseAndSetIfChanged(ref _showCategoryColorBarOnly, value);
+        }
+
+        private void OnUserSettingsChanged(object? sender, UserSettingsChangedEventArgs e)
+        {
+            try
+            {
+                // Marshal to UI thread; ReactiveUI property change must raise on UI thread for bindings.
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    ShowCategoryColorBarOnly = e.Settings.ShowCategoryColorBarOnly;
+                });
+            }
+            catch { /* non-fatal */ }
         }
 
         public Core.Models.EntryType? CurrentEntryType

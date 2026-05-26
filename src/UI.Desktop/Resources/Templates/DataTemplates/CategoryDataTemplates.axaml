@@ -9,6 +9,7 @@
         <ToggleButton Command="{Binding $parent[Window].DataContext.SelectCategoryCommand}"
                       CommandParameter="{Binding Name}"
                       Classes="sidebar-filter-item-toggle category-filter"
+                      Classes.bar-only="{Binding $parent[Window].DataContext.ShowCategoryColorBarOnly}"
                       HorizontalAlignment="Stretch"
                       HorizontalContentAlignment="Left"
                       Height="36"

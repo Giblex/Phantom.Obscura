@@ -215,37 +215,26 @@
                 </Border.Background>
             </Border>
         </Border>
-        <!-- Liquid glass border highlight overlay for entire dashboard content -->
+        <!-- Outer border owned by VaultWindow DashboardSheet (cyan top+sides + rainbow bottom).
+             Removed local border to avoid doubling. -->
+        <!-- Bottom sheen — darker navy fade with minimal cyan tint -->
         <Border IsHitTestVisible="False"
-                BorderThickness="1.5,0,1.5,1.5"
-                CornerRadius="0,0,24,24"
-                Margin="8,0,8,0">
-            <Border.BorderBrush>
-                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                    <GradientStop Color="#38CFE8FF" Offset="0"/>
-                    <GradientStop Color="#22FFFFFF" Offset="0.4"/>
-                    <GradientStop Color="#10FFFFFF" Offset="1"/>
-                </LinearGradientBrush>
-            </Border.BorderBrush>
-        </Border>
-        <!-- Bottom sheen — subtle white → cyan gradient -->
-        <Border IsHitTestVisible="False"
-                Height="110"
+                Height="60"
                 VerticalAlignment="Bottom"
-                CornerRadius="0,0,24,24"
+                CornerRadius="24"
                 ClipToBounds="True"
                 Opacity="1.0">
             <Border.Background>
                 <LinearGradientBrush StartPoint="50%,100%" EndPoint="50%,0%">
-                    <GradientStop Color="#16FFFFFF" Offset="0"/>
-                    <GradientStop Color="#0ACFE8FF" Offset="0.35"/>
+                    <GradientStop Color="#60050912" Offset="0"/>
+                    <GradientStop Color="#3008101C" Offset="0.45"/>
                     <GradientStop Color="#00000000" Offset="1"/>
                 </LinearGradientBrush>
             </Border.Background>
         </Border>
         <!-- Radial reflection — subtle cyan bottom-left -->
         <Border IsHitTestVisible="False"
-                CornerRadius="0,0,24,24"
+                CornerRadius="24"
                 ClipToBounds="True"
                 Opacity="0.7">
             <Border.Background>
@@ -257,7 +246,7 @@
         </Border>
         <!-- Top absorption — dark fade at top -->
         <Border IsHitTestVisible="False"
-                CornerRadius="0,0,24,24"
+                CornerRadius="24"
                 ClipToBounds="True"
                 Opacity="0.8">
             <Border.Background>
@@ -284,8 +273,16 @@
                 </LinearGradientBrush>
             </Border.Background>
         </Border>
-        <ScrollViewer x:Name="SheetScroller" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,0,0,44">
-        <StackPanel Spacing="{StaticResource Space.Xl}" Margin="24,4,24,24">
+        <ScrollViewer x:Name="SheetScroller" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <ScrollViewer.OpacityMask>
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                    <GradientStop Offset="0.0" Color="#FFFFFFFF"/>
+                    <GradientStop Offset="0.88" Color="#FFFFFFFF"/>
+                    <GradientStop Offset="0.96" Color="#40FFFFFF"/>
+                    <GradientStop Offset="1.0" Color="#00FFFFFF"/>
+                </LinearGradientBrush>
+            </ScrollViewer.OpacityMask>
+        <StackPanel Spacing="{StaticResource Space.Xl}" Margin="24,4,24,96">
 
             <TextBlock Text="Dashboard"
                        Classes="fade-in"

@@ -254,6 +254,7 @@ namespace PhantomVault.UI
                 // Apply other theme settings
                 themeManager.SetSkin(persistedSettings.ThemeSkin);
                 themeManager.SetEffects(persistedSettings.ReduceAnimations, persistedSettings.ReduceTransparency);
+                themeManager.SetShowCategoryColorBarOnly(persistedSettings.ShowCategoryColorBarOnly);
             }
             catch
             {

@@ -259,6 +259,17 @@
             <Setter Property="BorderThickness" Value="1" />
         </Style>
 
+        <!-- Dashboard backdrop blur: when the dashboard sheet is showing,
+             blur the underlying credential list / sidebar so the sheet sits
+             on top of a true blurred background (real backdrop-blur). -->
+        <Style Selector=":is(Control).dashboard-blur">
+            <!-- NOTE: code-behind (DashboardView.axaml.cs) animates the BlurEffect.Radius
+                 from 0 -> target in sync with the sheet slide. This style remains as a
+                 fallback only; the class toggle is no longer bound, so it won't trigger. -->
+            <Setter Property="Effect">
+                <BlurEffect Radius="14"/>
+            </Setter>
+        </Style>
 
     </Window.Styles>
     
@@ -380,7 +391,9 @@
                 </views:SidebarView.Transitions>
             </views:SidebarView>
 
-            <!-- Middle: Credentials List (Column 1 only) — always visible behind dashboard -->
+            <!-- Middle: Credentials List (Column 1 only) — always visible behind dashboard.
+                 Blurred when the dashboard sheet is showing (true backdrop blur). -->
+            <!-- Effect is set + animated from DashboardView code-behind (slide-synced backdrop blur). -->
             <views:CredentialListView x:Name="CredentialList" Grid.Column="1"
                                      DataContext="{Binding}" />
             
@@ -426,55 +439,47 @@
             <Panel x:Name="DashboardSheet" Grid.Column="1" Grid.ColumnSpan="2"
                    ZIndex="100"
                    IsHitTestVisible="{Binding IsShowingDashboard}"
-                    Background="#07111E2D"
+                    Background="Transparent"
+                    Margin="16,0,16,16"
                     ClipToBounds="True">
-                <Border IsHitTestVisible="False"
-                        CornerRadius="0,0,24,24">
+                <!-- Liquid-glass backdrop. Avalonia's ExperimentalAcrylic
+                     always lays down a white luminance plate on this backend,
+                     so true backdrop-blur isn't usable. Stack two translucent
+                     dark layers (gradient + flat wash) to fake depth without
+                     going white. -->
+                <!-- Heavy dark wash + softened blur (sheet now floats with rounded corners on all sides) -->
+                <Border IsHitTestVisible="False" CornerRadius="24">
                     <Border.Background>
-                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                            <GradientStop Color="#F20B1526" Offset="0"/>
-                            <GradientStop Color="#E90F2036" Offset="0.48"/>
-                            <GradientStop Color="#E20A1A2D" Offset="1"/>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                            <GradientStop Color="#B0050912" Offset="0"/>
+                            <GradientStop Color="#C003070F" Offset="1"/>
                         </LinearGradientBrush>
                     </Border.Background>
+                    <Border.Effect>
+                        <BlurEffect Radius="26"/>
+                    </Border.Effect>
                 </Border>
-                <!-- Layer 0: Frosted glass blur behind dashboard (theme-aware) -->
-                <ExperimentalAcrylicBorder IsHitTestVisible="False" CornerRadius="0,0,24,24">
-                    <ExperimentalAcrylicBorder.Material>
-                        <ExperimentalAcrylicMaterial
-                            BackgroundSource="Digger"
-                            TintColor="{DynamicResource DashboardSheetAcrylicTint}"
-                            TintOpacity="0.24"
-                            MaterialOpacity="0.34"
-                            FallbackColor="{DynamicResource DashboardSheetAcrylicFallback}"/>
-                    </ExperimentalAcrylicBorder.Material>
-                </ExperimentalAcrylicBorder>
-                <!-- Layer 1: Theme-aware transparent glass overlay — content behind shows through -->
-                <Border IsHitTestVisible="False" CornerRadius="0,0,24,24"
-                        Background="{DynamicResource DashboardSheetOverlayBrush}"/>
-                <Border IsHitTestVisible="False" CornerRadius="0,0,24,24"
-                        BorderThickness="0,0,0,1"
-                        BorderBrush="#70CFE8FF">
-                    <Border.Background>
-                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                            <GradientStop Color="#1A00E5CC" Offset="0"/>
-                            <GradientStop Color="#0E7DEBFF" Offset="0.38"/>
-                            <GradientStop Color="#0800A8FF" Offset="1"/>
-                        </LinearGradientBrush>
-                    </Border.Background>
-                </Border>
-                <!-- Layer 2: Liquid glass bottom-edge highlight -->
-                <Border IsHitTestVisible="False" CornerRadius="0,0,24,24">
-                    <Border.Background>
-                        <LinearGradientBrush StartPoint="0%,100%" EndPoint="0%,0%">
-                            <GradientStop Color="#14FFFFFF" Offset="0"/>
-                            <GradientStop Color="#08CFE8FF" Offset="0.12"/>
-                            <GradientStop Color="#00000000" Offset="0.35"/>
-                        </LinearGradientBrush>
-                    </Border.Background>
-                </Border>
-                <!-- Layer 3: Dashboard content -->
+                <!-- Second flat dark wash to deepen depth -->
+                <Border IsHitTestVisible="False" CornerRadius="24"
+                        Background="#4002060D"/>
+                <!-- Layer 1: Dashboard content -->
                 <views:DashboardView DataContext="{Binding DashboardViewModel}"/>
+                <!-- Layer 2: Liquid-glass border — luminous edge on top of everything.
+                     Cyan covers top+sides; rainbow owns the bottom edge so they
+                     don't stack into a double line. -->
+                <Border IsHitTestVisible="False" CornerRadius="24"
+                        BorderThickness="1,1,1,0"
+                        BorderBrush="#66CFE8FF"/>
+                <Border IsHitTestVisible="False" CornerRadius="24"
+                        BorderThickness="0,0,0,1">
+                    <Border.BorderBrush>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                            <GradientStop Color="#0000E5CC" Offset="0"/>
+                            <GradientStop Color="#A07DEBFF" Offset="0.5"/>
+                            <GradientStop Color="#0000A8FF" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.BorderBrush>
+                </Border>
             </Panel>
             
         <!-- Resizable GridSplitter between credential list and detail panel -->

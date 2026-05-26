@@ -106,6 +106,67 @@ namespace PhantomVault.UI.ViewModels
             return null;
         }
 
+        /// <summary>
+        /// Builds an ordered list of candidate keyfile composite paths to try when
+        /// the primary locator-resolved keyfile fails.
+        ///
+        /// Strategy (strongest → weakest):
+        ///   1. usb + locator-specified host companion (current default)
+        ///   2. usb + every other *.companion.key in %LOCALAPPDATA%\PhantomObscura\HostKey
+        ///   3. usb alone (vault sealed without a companion)
+        ///
+        /// The vault uses a mandatory USB keyfile with no password; the only variable
+        /// is which host companion (if any) was paired with the USB key at setup.
+        /// Locator files can become stale across reprovisioning, so we exhaustively
+        /// try every host companion the user has on this machine before failing.
+        /// Order matters because CompositeKeyfilePath concatenates bytes in order.
+        /// </summary>
+        private static System.Collections.Generic.IReadOnlyList<string> BuildKeyfileCandidates(string drivePath, string usbKeyfilePath)
+        {
+            var seen = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var candidates = new System.Collections.Generic.List<string>();
+
+            void Add(string? value)
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    return;
+                if (seen.Add(value))
+                    candidates.Add(value);
+            }
+
+            var locatorCompanion = TryResolveHostCompanionKeyfilePath(drivePath);
+            if (!string.IsNullOrWhiteSpace(locatorCompanion))
+            {
+                Add(PhantomVault.Core.Utils.CompositeKeyfilePath.Compose(usbKeyfilePath, locatorCompanion));
+            }
+
+            // Enumerate every host companion the user has — the locator may be stale.
+            try
+            {
+                var hostKeyDir = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "PhantomObscura",
+                    "HostKey");
+                if (Directory.Exists(hostKeyDir))
+                {
+                    var companionFiles = Directory.GetFiles(hostKeyDir, "*.companion.key", SearchOption.TopDirectoryOnly);
+                    foreach (var companion in companionFiles)
+                    {
+                        Add(PhantomVault.Core.Utils.CompositeKeyfilePath.Compose(usbKeyfilePath, companion));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "[VaultUnlock] BuildKeyfileCandidates: failed to enumerate host companions");
+            }
+
+            // Final fallback — vault may have been sealed without a companion at all.
+            Add(usbKeyfilePath);
+
+            return candidates;
+        }
+
         private static string? TryResolveHostCompanionKeyfilePath(string drivePath)
         {
             try
@@ -294,29 +355,42 @@ namespace PhantomVault.UI.ViewModels
 
                 if (!string.IsNullOrEmpty(keyfilePath))
                 {
-                    // Try keyfile-only authentication first (no password prompt)
+                    // Try keyfile-only authentication first (no password prompt).
+                    // The vault uses a MANDATORY USB keyfile with NO password. The only
+                    // unknown is which host companion (if any) was paired at setup, so
+                    // we exhaustively try every candidate the locator + machine knows
+                    // about before giving up.
                     ProgressPercent = 25;
                     Status = "Authenticating with keyfile...";
 
-                    try
+                    var usbKeyfilePath = PhantomVault.Core.Utils.CompositeKeyfilePath.GetPrimaryPath(keyfilePath) ?? keyfilePath;
+                    var candidates = BuildKeyfileCandidates(selectedDriveRoot!, usbKeyfilePath);
+                    Log.Information("[VaultUnlock] trying {Count} keyfile candidate(s) for keyfile-only auth", candidates.Count);
+
+                    for (int i = 0; i < candidates.Count; i++)
                     {
-                        // Try to read manifest with keyfile only (empty password)
-                        var keyfileTestManifest = await Task.Run(() => manifestService.ReadManifest(manifestPath, string.Empty, keyfilePath));
-                        if (keyfileTestManifest != null)
+                        var candidate = candidates[i];
+                        try
                         {
-                            // Keyfile-only authentication successful!
-                            password = string.Empty;
-                            Log.Information("[VaultUnlock] keyfile-only auth SUCCEEDED");
-                            Status = "Authenticated with keyfile";
+                            var keyfileTestManifest = await Task.Run(() => manifestService.ReadManifest(manifestPath, string.Empty, candidate));
+                            if (keyfileTestManifest != null)
+                            {
+                                keyfilePath = candidate;
+                                password = string.Empty;
+                                Log.Information("[VaultUnlock] keyfile-only auth SUCCEEDED on candidate {Index}/{Count}", i + 1, candidates.Count);
+                                Status = "Authenticated with keyfile";
+                                break;
+                            }
                         }
-                        else
+                        catch (Exception kfEx)
                         {
-                            Log.Warning("[VaultUnlock] keyfile-only auth returned null manifest");
+                            Log.Debug("[VaultUnlock] candidate {Index}/{Count} rejected ({ExType})", i + 1, candidates.Count, kfEx.GetType().Name);
                         }
                     }
-                    catch (Exception kfEx)
+
+                    if (password == null)
                     {
-                        Log.Warning("[VaultUnlock] keyfile-only auth threw {ExType}: {ExMsg}", kfEx.GetType().Name, kfEx.Message);
+                        Log.Warning("[VaultUnlock] all {Count} keyfile candidates rejected", candidates.Count);
                     }
                 }
 
@@ -346,22 +420,36 @@ namespace PhantomVault.UI.ViewModels
                     }
                 }
 
-                // If still no password, prompt for one
+                // Hard rule: USB keyfile is MANDATORY; password is OPTIONAL and this vault
+                // has none. If every keyfile candidate failed, the correct USB key is not
+                // present — refuse to unlock. Do NOT prompt for a password.
                 if (password == null)
                 {
-                    Log.Information("[VaultUnlock] both probes failed — prompting for password");
-                    ProgressPercent = 25;
-                    Status = "Authentication required...";
-                    password = await PromptForPasswordAsync();
-                    if (string.IsNullOrEmpty(password))
+                    if (string.IsNullOrEmpty(keyfilePath))
                     {
+                        Log.Warning("[VaultUnlock] no keyfile found on drive — mandatory keyfile missing");
                         await _dialogService.ShowErrorAsync(
-                            "Authentication Required",
-                            "A passphrase is required to unlock the vault.",
+                            "USB Keyfile Required",
+                            "No keyfile was found on the attached USB drive.\n\n" +
+                            "• Make sure the correct USB drive is connected.\n" +
+                            "• Confirm the keyfile (.key) is present in the .phantom folder on the drive.\n\n" +
+                            "Phantom Obscura requires a valid USB keyfile to unlock.",
                             _ownerWindow);
-                        CloseAndReturnToWelcome();
-                        return;
                     }
+                    else
+                    {
+                        Log.Warning("[VaultUnlock] keyfile present but no candidate combination unlocked the vault");
+                        await _dialogService.ShowErrorAsync(
+                            "Unable to Unlock Vault",
+                            "The keyfile on this USB drive does not match this vault.\n\n" +
+                            "• Confirm the correct USB drive is inserted.\n" +
+                            "• If the vault was created on another machine, copy the matching " +
+                            "host companion key into %LOCALAPPDATA%\\PhantomObscura\\HostKey.\n\n" +
+                            "Phantom Obscura will not unlock without the matching keyfile material.",
+                            _ownerWindow);
+                    }
+                    CloseAndReturnToWelcome();
+                    return;
                 }
 
                 ProgressPercent = 40;

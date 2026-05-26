@@ -1017,8 +1017,16 @@ namespace PhantomVault.UI.Views
         {
             if (DataContext is not VaultViewModel vaultVm) return;
 
-            // Open settings panel overlay instead of window
-            vaultVm.OpenSettingsPanelCommand.Execute(Unit.Default).Subscribe();
+            // Toggle: if the settings overlay is already open, clicking the
+            // header settings button collapses it; otherwise open it.
+            if (vaultVm.IsSettingsPanelVisible)
+            {
+                vaultVm.CloseSettingsPanelCommand.Execute(Unit.Default).Subscribe();
+            }
+            else
+            {
+                vaultVm.OpenSettingsPanelCommand.Execute(Unit.Default).Subscribe();
+            }
         }
 
         private void OnCategoryManagerOverlayBackgroundPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)

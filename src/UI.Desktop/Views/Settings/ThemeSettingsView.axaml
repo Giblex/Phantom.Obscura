@@ -211,6 +211,10 @@
                 <CheckBox Content="Reduce transparency effects" 
                           IsChecked="{Binding ReduceTransparency}"
                           ToolTip.Tip="Use solid colors instead of transparency"/>
+
+                <CheckBox Content="Category rows show only the colour bar"
+                          IsChecked="{Binding ShowCategoryColorBarOnly}"
+                          ToolTip.Tip="Hide the full row tint and keep only the slim category colour bar on the left."/>
             </StackPanel>
         </Border>
     </StackPanel>

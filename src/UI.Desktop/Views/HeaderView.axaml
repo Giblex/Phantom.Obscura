@@ -6,7 +6,21 @@
              xmlns:dcontrols="clr-namespace:PhantomVault.UI.Desktop.Controls"
              mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="70"
              x:Class="PhantomVault.UI.Views.HeaderView">
-    
+
+    <UserControl.Styles>
+        <!-- Scoped flyout presenter for the Add Entry / Actions dropdown:
+             strip the default border (was reading yellow on some themes) and
+             flatten the top edge so the dropdown molds to the button below. -->
+        <Style Selector="FlyoutPresenter.actions-menu">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="CornerRadius" Value="0,0,22,22"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0"/>
+        </Style>
+    </UserControl.Styles>
+
     <Border Classes="header-surface"
             Background="{DynamicResource HeaderBackgroundBrush}" 
             Padding="{StaticResource DialogPadding}"
@@ -148,10 +162,13 @@
                         CornerRadius="{StaticResource Radius.Lg}"
                         ToolTip.Tip="Actions menu">
                     <Button.Flyout>
-                        <Flyout Placement="BottomEdgeAlignedRight">
-                            <Border Background="{DynamicResource ContentBackgroundBrush}" 
-                                    CornerRadius="22" 
-                                    Padding="10" 
+                        <Flyout Placement="BottomEdgeAlignedRight"
+                                FlyoutPresenterClasses="actions-menu"
+                                HorizontalOffset="0"
+                                VerticalOffset="-1">
+                            <Border Background="{DynamicResource ContentBackgroundBrush}"
+                                    CornerRadius="0,0,22,22"
+                                    Padding="10"
                                     MinWidth="240">
                                 <StackPanel Spacing="4">
                                     <!-- Add Credential Section -->

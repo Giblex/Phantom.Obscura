@@ -12,6 +12,8 @@ namespace PhantomVault.UI.Views
     public partial class DashboardView : UserControl
     {
         private TranslateTransform? _sheetTranslate;
+        private BlurEffect? _backdropBlur;
+        private const double BackdropBlurTarget = 14.0;
         private bool _isDragging;
         private double _dragStartY;
         private double _dragStartTranslateY;
@@ -45,6 +47,18 @@ namespace PhantomVault.UI.Views
                     sheetPanel.RenderTransform = _sheetTranslate;
                     // Start off-screen above (behind header)
                     _sheetTranslate.Y = -1200;
+                }
+            }
+
+            // Attach a BlurEffect to the underlying CredentialList so we can animate
+            // its Radius in sync with the sheet slide (true backdrop blur).
+            if (_backdropBlur == null)
+            {
+                var credList = FindCredentialList();
+                if (credList != null)
+                {
+                    _backdropBlur = new BlurEffect { Radius = 0 };
+                    credList.Effect = _backdropBlur;
                 }
             }
 
@@ -89,6 +103,7 @@ namespace PhantomVault.UI.Views
                 _sheetTranslate.Y = -h;
                 _isAnimating = false;
                 Dispatcher.UIThread.Post(() => AnimateSheetTo(0, 420), DispatcherPriority.Loaded);
+                Dispatcher.UIThread.Post(() => AnimateBackdropBlurTo(BackdropBlurTarget, 420), DispatcherPriority.Loaded);
             }
             else
             {
@@ -99,6 +114,7 @@ namespace PhantomVault.UI.Views
                     var h = Bounds.Height > 0 ? Bounds.Height : 1200;
                     Dispatcher.UIThread.Post(() => AnimateSheetTo(-h, 350), DispatcherPriority.Loaded);
                 }
+                Dispatcher.UIThread.Post(() => AnimateBackdropBlurTo(0, 320), DispatcherPriority.Loaded);
             }
         }
 
@@ -122,6 +138,25 @@ namespace PhantomVault.UI.Views
                 if (current is Panel panel && panel.Name == "DashboardSheet")
                     return panel;
                 current = current.GetVisualParent();
+            }
+            return null;
+        }
+
+        private Control? FindCredentialList()
+        {
+            // Walk to window root, then descend to the named CredentialList control.
+            Visual? root = (Visual?)this.GetVisualRoot();
+            if (root == null) return null;
+            return FindByName(root, "CredentialList") as Control;
+        }
+
+        private static Visual? FindByName(Visual root, string name)
+        {
+            if (root is Control rc && rc.Name == name) return rc;
+            foreach (var child in root.GetVisualChildren())
+            {
+                var hit = FindByName(child, name);
+                if (hit != null) return hit;
             }
             return null;
         }
@@ -249,6 +284,38 @@ namespace PhantomVault.UI.Views
 
             _isAnimating = false;
             onComplete?.Invoke();
+        }
+
+        /// <summary>
+        /// Animates the underlying CredentialList's BlurEffect.Radius from its current
+        /// value to <paramref name="targetRadius"/>, in sync with the sheet slide.
+        /// </summary>
+        private async void AnimateBackdropBlurTo(double targetRadius, double durationMs)
+        {
+            if (_backdropBlur == null) return;
+
+            var startRadius = _backdropBlur.Radius;
+            var distance = targetRadius - startRadius;
+            if (Math.Abs(distance) < 0.1)
+            {
+                _backdropBlur.Radius = targetRadius;
+                return;
+            }
+
+            var startTime = DateTime.UtcNow;
+            while (true)
+            {
+                var elapsed = (DateTime.UtcNow - startTime).TotalMilliseconds;
+                if (elapsed >= durationMs)
+                {
+                    _backdropBlur.Radius = targetRadius;
+                    break;
+                }
+                var t = elapsed / durationMs;
+                var eased = SpringEase(t);
+                _backdropBlur.Radius = startRadius + distance * eased;
+                await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render);
+            }
         }
     }
 }

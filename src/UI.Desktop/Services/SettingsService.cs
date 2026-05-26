@@ -34,6 +34,12 @@ namespace PhantomVault.UI.Services
         public bool ReduceAnimations { get; set; } = false;
         public bool ReduceTransparency { get; set; } = false;
         /// <summary>
+        /// When true, sidebar category rows show only the small left colour bar
+        /// (no full-row category tint wash). When false (default), the category
+        /// colour also tints the row background.
+        /// </summary>
+        public bool ShowCategoryColorBarOnly { get; set; } = false;
+        /// <summary>
         /// Selected runtime theme ID (e.g., "ClassicDark", "GiblexGlassNavy").
         /// </summary>
         public string SelectedThemeId { get; set; } = "ClassicDark";

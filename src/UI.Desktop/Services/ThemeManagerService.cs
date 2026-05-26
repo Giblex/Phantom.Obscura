@@ -138,6 +138,17 @@ namespace PhantomVault.UI.Services
         }
 
         /// <summary>
+        /// Propagate the "show only colour bar on categories" preference into
+        /// the app-wide resource dictionary so XAML can DynamicResource-bind to
+        /// it. The sidebar consumes this via VaultViewModel.ShowCategoryColorBarOnly.
+        /// </summary>
+        public void SetShowCategoryColorBarOnly(bool value)
+        {
+            if (Application.Current == null) return;
+            Application.Current.Resources["ShowCategoryColorBarOnly"] = value;
+        }
+
+        /// <summary>
         /// Apply the specified theme to the application
         /// </summary>
         private void ApplyTheme(AppTheme theme)

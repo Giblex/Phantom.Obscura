@@ -497,7 +497,7 @@ namespace PhantomVault.UI.ViewModels
                 // screen and let the user review/retry.
                 if (CheckResult.OverallPassed)
                 {
-                    await Task.Delay(450).ConfigureAwait(false);
+                    await Task.Delay(150).ConfigureAwait(false);
                     await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                     {
                         // Re-check in case the user managed to cancel during the

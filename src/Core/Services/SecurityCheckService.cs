@@ -14,14 +14,14 @@ namespace PhantomVault.Core.Services
     /// </summary>
     public class SecurityCheckService
     {
-        // Halved twice from original (2200/2100/1900/1900/2200/760ms). Total
-        // pre-vault security check time is now ~3.4s vs original ~13.4s.
-        private static readonly TimeSpan ManifestCheckDelay = TimeSpan.FromMilliseconds(550);
-        private static readonly TimeSpan UsbHealthCheckDelay = TimeSpan.FromMilliseconds(525);
-        private static readonly TimeSpan HardwareTokenCheckDelay = TimeSpan.FromMilliseconds(475);
-        private static readonly TimeSpan BiometricCheckDelay = TimeSpan.FromMilliseconds(475);
-        private static readonly TimeSpan AntiTamperCheckDelay = TimeSpan.FromMilliseconds(550);
-        private static readonly TimeSpan CheckTransitionDelay = TimeSpan.FromMilliseconds(190);
+        // Tightened again — UI feedback only; real work is near-instant.
+        // Total pre-vault security check time ~1.0s (was ~3.4s, originally ~13.4s).
+        private static readonly TimeSpan ManifestCheckDelay = TimeSpan.FromMilliseconds(160);
+        private static readonly TimeSpan UsbHealthCheckDelay = TimeSpan.FromMilliseconds(150);
+        private static readonly TimeSpan HardwareTokenCheckDelay = TimeSpan.FromMilliseconds(140);
+        private static readonly TimeSpan BiometricCheckDelay = TimeSpan.FromMilliseconds(140);
+        private static readonly TimeSpan AntiTamperCheckDelay = TimeSpan.FromMilliseconds(160);
+        private static readonly TimeSpan CheckTransitionDelay = TimeSpan.FromMilliseconds(55);
 
         private readonly ManifestService _manifestService;
         private readonly YubiKeyService? _yubiKeyService;

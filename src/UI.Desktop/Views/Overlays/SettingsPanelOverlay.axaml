@@ -36,23 +36,8 @@
     <Border Background="{DynamicResource OverlayBackgroundBrush}"
             IsVisible="{Binding IsSettingsPanelVisible}"
             IsHitTestVisible="{Binding IsSettingsPanelVisible}">
-        <Border.Styles>
-            <Style Selector="Border">
-                <Setter Property="Opacity" Value="0"/>
-            </Style>
-            <Style Selector="Border[IsVisible=True]">
-                <Style.Animations>
-                    <Animation Duration="0:0:0.25" FillMode="Forward" Easing="SineEaseOut">
-                        <KeyFrame Cue="0%">
-                            <Setter Property="Opacity" Value="0"/>
-                        </KeyFrame>
-                        <KeyFrame Cue="100%">
-                            <Setter Property="Opacity" Value="1"/>
-                        </KeyFrame>
-                    </Animation>
-                </Style.Animations>
-            </Style>
-        </Border.Styles>
+        <!-- No fade animation on the overlay backdrop; slide-in is handled by
+             the inner SettingsSlideHost panel for a panel-only motion feel. -->
 
         <Grid ClipToBounds="True">
             <!-- Transparent area to close panel -->
@@ -90,7 +75,9 @@
                 </Border.Styles>
                 <Border.Transitions>
                     <Transitions>
-                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.7" Easing="CubicEaseOut"/>
+                        <!-- Slower, smoother slide-in. QuinticEaseOut gives a long
+                             gentle settle without the abrupt finish of CubicEaseOut. -->
+                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.6" Easing="QuinticEaseOut"/>
                     </Transitions>
                 </Border.Transitions>
 
