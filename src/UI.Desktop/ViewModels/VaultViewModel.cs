@@ -426,6 +426,7 @@ namespace PhantomVault.UI.ViewModels
             OpenIconManagerCommand = ReactiveCommand.Create(OpenIconManager);
             CloseIconManagerCommand = ReactiveCommand.Create(CloseIconManager);
             RotateNowCommand = ReactiveCommand.CreateFromTask(RotateNowAsync);
+            ChangeMasterPasswordCommand = ReactiveCommand.CreateFromTask(ChangeMasterPasswordAsync);
             DismissRotationBannerCommand = ReactiveCommand.Create(DismissRotationBanner);
 
             // Initialize Import/Export commands
@@ -2215,6 +2216,7 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> OpenIconManagerCommand { get; }
         public ReactiveCommand<Unit, Unit> CloseIconManagerCommand { get; }
         public ReactiveCommand<Unit, Unit> RotateNowCommand { get; }
+        public ReactiveCommand<Unit, Unit> ChangeMasterPasswordCommand { get; }
         public ReactiveCommand<Unit, Unit> DismissRotationBannerCommand { get; }
 
         // Import/Export commands
@@ -6879,6 +6881,121 @@ namespace PhantomVault.UI.ViewModels
         private void DismissRotationBanner()
         {
             IsRotationBannerDismissed = true;
+        }
+
+        /// <summary>
+        /// Change the vault's (optional) master password. The keyfile is
+        /// mandatory and is rotated by the rekey service; the new password may
+        /// be empty (keyfile-only protection). Verifies the current password
+        /// when one is set, performs the rekey, then updates the cached
+        /// credentials so subsequent vault operations use the new secret.
+        /// </summary>
+        private async Task ChangeMasterPasswordAsync()
+        {
+            if (_rekeyService == null)
+            {
+                await _dialogService.ShowErrorAsync(
+                    "Service Unavailable",
+                    "The key rotation service is not available.",
+                    _ownerWindow);
+                return;
+            }
+
+            if (!TryGetManifestContext(out var manifestPath, out var passphrase, out var keyfilePath))
+            {
+                await _dialogService.ShowErrorAsync(
+                    "Manifest Not Found",
+                    "Cannot find the vault manifest. Ensure the vault is unlocked and mounted.",
+                    _ownerWindow);
+                return;
+            }
+
+            // Keyfile is mandatory in this vault model.
+            if (string.IsNullOrEmpty(keyfilePath))
+            {
+                await _dialogService.ShowErrorAsync(
+                    "Keyfile Required",
+                    "This vault has no keyfile on record, which is required to change the master password.",
+                    _ownerWindow);
+                return;
+            }
+
+            bool hasCurrentPassword = !string.IsNullOrEmpty(passphrase);
+
+            var dialog = new Views.ChangeMasterPasswordDialog(hasCurrentPassword);
+            if (_ownerWindow != null)
+                await dialog.ShowDialog(_ownerWindow);
+            else
+                dialog.Show();
+
+            if (!dialog.Confirmed)
+                return;
+
+            // Verify the current password (only when one is set).
+            if (hasCurrentPassword &&
+                !string.Equals(dialog.CurrentPassword, passphrase, StringComparison.Ordinal))
+            {
+                await _dialogService.ShowErrorAsync(
+                    "Incorrect Password",
+                    "The current password you entered is incorrect. No changes were made.",
+                    _ownerWindow);
+                return;
+            }
+
+            var newPassword = dialog.NewPassword; // may be empty (keyfile-only)
+
+            IsBusy = true;
+            StatusMessage = "Changing master password...";
+            try
+            {
+                bool success = _rekeyService.RekeyVault(
+                    manifestPath,
+                    passphrase ?? string.Empty,
+                    newPassword,
+                    keyfilePath,
+                    keyfilePath);
+
+                if (!success)
+                {
+                    await _dialogService.ShowErrorAsync(
+                        "Change Failed",
+                        "Failed to change the master password. Your existing password remains in place.",
+                        _ownerWindow);
+                    StatusMessage = "Master password change failed";
+                    return;
+                }
+
+                // Update cached credentials so subsequent operations (saving
+                // entries, re-auth) use the new secret + rotated keyfile.
+                _vaultPassword = string.IsNullOrEmpty(newPassword) ? null : newPassword;
+                var rotatedKeyfile = Path.Combine(
+                    Path.GetDirectoryName(keyfilePath) ?? string.Empty, "vault.key.new");
+                if (File.Exists(rotatedKeyfile))
+                {
+                    _vaultKeyfilePath = rotatedKeyfile;
+                    _reauthKeyfilePath = rotatedKeyfile;
+                }
+
+                StatusMessage = "Master password changed";
+                await _dialogService.ShowSuccessAsync(
+                    "Password Changed",
+                    string.IsNullOrEmpty(newPassword)
+                        ? "Your master password was removed. The vault is now protected by its keyfile alone."
+                        : "Your master password has been changed. Use the new password next time you unlock.",
+                    _ownerWindow);
+            }
+            catch (Exception ex)
+            {
+                await _dialogService.ShowErrorAsync(
+                    "Change Failed",
+                    $"Failed to change the master password: {ex.Message}",
+                    _ownerWindow);
+                StatusMessage = $"Master password change failed: {ex.Message}";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         #region Security Methods

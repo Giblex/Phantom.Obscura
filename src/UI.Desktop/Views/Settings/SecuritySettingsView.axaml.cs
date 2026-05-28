@@ -73,28 +73,6 @@ namespace PhantomVault.UI.Views.Settings
             });
         }
 
-        private async void ChangeMasterPassword_Click(object? sender, RoutedEventArgs e)
-        {
-            await HandleEventAsync(async () =>
-            {
-                var parentWindow = this.FindAncestorOfType<Window>();
-                var dialogService = new PhantomVault.UI.Services.DialogService();
-                // The current RekeyService rotates the keyfile but does NOT
-                // change the passphrase to a new value, so there is no safe
-                // backend to change the master password yet. Be honest rather
-                // than silently leaving the password unchanged.
-                await dialogService.ShowInfoAsync(
-                    "Change Master Password",
-                    "Master password change isn't available yet.\n\n" +
-                    "The vault's key-rotation service currently rotates the keyfile " +
-                    "but does not re-derive the vault key from a new passphrase, so " +
-                    "changing the master password here would not actually take effect.\n\n" +
-                    "This is tracked as a backend feature. For now, your existing " +
-                    "master password remains in place.",
-                    parentWindow);
-            });
-        }
-
         private async void OpenBackupCodes_Click(object? sender, RoutedEventArgs e)
         {
             await HandleEventAsync(async () =>

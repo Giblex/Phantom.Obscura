@@ -232,8 +232,8 @@
                         Width="200"
                         HorizontalAlignment="Left"
                         Classes="liquid-glass"
-                        Click="ChangeMasterPassword_Click"
-                        ToolTip.Tip="Update your vault's master password"/>
+                        Command="{Binding $parent[Window].DataContext.ChangeMasterPasswordCommand}"
+                        ToolTip.Tip="Update your vault's master password (keyfile is rotated; password is optional)"/>
             </StackPanel>
         </Border>
 
