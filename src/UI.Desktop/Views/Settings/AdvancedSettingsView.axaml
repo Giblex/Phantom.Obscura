@@ -13,7 +13,7 @@
                 Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
-                CornerRadius="{StaticResource Radius.Lg}" 
+                CornerRadius="16" 
                 Padding="20">
             <StackPanel Spacing="15">
                 <TextBlock Text="Developer Tools" 
@@ -55,7 +55,7 @@
                 Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource Brush.Accent}"
                 BorderThickness="2" 
-                CornerRadius="{StaticResource Radius.Lg}" 
+                CornerRadius="16" 
                 Padding="20">
             <StackPanel Spacing="15">
                 <StackPanel Spacing="4">
@@ -140,7 +140,7 @@
                 Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
-                CornerRadius="{StaticResource Radius.Lg}" 
+                CornerRadius="16" 
                 Padding="20">
             <StackPanel Spacing="15">
                 <TextBlock Text="Privacy &amp; Security" 
@@ -180,7 +180,7 @@
                 Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
-                CornerRadius="{StaticResource Radius.Lg}" 
+                CornerRadius="16" 
                 Padding="20">
             <StackPanel Spacing="15">
                 <TextBlock Text="Advanced Security Options" 
@@ -228,7 +228,7 @@
                 Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
-                CornerRadius="{StaticResource Radius.Lg}" 
+                CornerRadius="16" 
                 Padding="20">
             <StackPanel Spacing="15">
                 <TextBlock Text="Data Management" 
@@ -257,7 +257,7 @@
         <Border Classes="fade-in stagger-7"
                 BorderBrush="#FFE25A5A"
                 BorderThickness="2"
-                CornerRadius="{StaticResource Radius.Lg}"
+                CornerRadius="16"
                 BoxShadow="0 8 28 -8 #80000000"
                 Padding="20">
             <!-- Danger Zone tile: distinct red gradient so the destructive

@@ -11,7 +11,7 @@
                 Background="{DynamicResource SettingsPanelBackgroundBrush}"
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
-                CornerRadius="{StaticResource Radius.Lg}" 
+                CornerRadius="16" 
                 Padding="20">
             <StackPanel Spacing="15">
                 <TextBlock Text="Vault Preferences" 
@@ -58,7 +58,7 @@
                 Background="{DynamicResource SettingsPanelBackgroundBrush}"
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
-                CornerRadius="{StaticResource Radius.Lg}" 
+                CornerRadius="16" 
                 Padding="20">
             <StackPanel Spacing="15">
                 <TextBlock Text="Icon Management" 

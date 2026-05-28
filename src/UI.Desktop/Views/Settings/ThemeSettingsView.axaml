@@ -14,7 +14,7 @@
                 Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
-                CornerRadius="{StaticResource Radius.Lg}" 
+                CornerRadius="16" 
                 Padding="20">
             <StackPanel Spacing="15">
                 <TextBlock Text="App Theme" 
@@ -131,7 +131,7 @@
                 Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
-                CornerRadius="{StaticResource Radius.Lg}" 
+                CornerRadius="16" 
                 Padding="20">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="20">
                 <StackPanel Grid.Column="0" Spacing="15">
@@ -202,7 +202,7 @@
                         Background="{DynamicResource SettingsPanelBackgroundBrush}"
                         BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
                         BorderThickness="1"
-                        CornerRadius="{StaticResource Radius.Lg}"
+                        CornerRadius="16"
                         Padding="20"
                         Width="320"
                         VerticalAlignment="Top">
@@ -240,7 +240,7 @@
                 Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
-                CornerRadius="{StaticResource Radius.Lg}" 
+                CornerRadius="16" 
                 Padding="20">
             <StackPanel Spacing="15">
                 <TextBlock Text="Motion &amp; Effects" 

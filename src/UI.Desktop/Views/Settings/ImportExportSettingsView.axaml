@@ -12,7 +12,7 @@
                 Background="{DynamicResource SettingsPanelBackgroundBrush}"
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
                 BorderThickness="1"
-                CornerRadius="{StaticResource Radius.Lg}"
+                CornerRadius="16"
                 MaxWidth="640"
                 HorizontalAlignment="Stretch"
                 Padding="20">
@@ -49,7 +49,7 @@
                 Background="{DynamicResource SettingsPanelBackgroundBrush}"
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
                 BorderThickness="1"
-                CornerRadius="{StaticResource Radius.Lg}"
+                CornerRadius="16"
                 MaxWidth="640"
                 HorizontalAlignment="Stretch"
                 Padding="20">

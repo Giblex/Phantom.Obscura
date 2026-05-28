@@ -13,7 +13,7 @@
                 Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
-                CornerRadius="{StaticResource Radius.Lg}" 
+                CornerRadius="16" 
                 Padding="20">
             <StackPanel Spacing="15">
                 <TextBlock Text="Language &amp; Region" 
@@ -24,9 +24,9 @@
                 <StackPanel Spacing="8">
                     <TextBlock Text="Display language:" 
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
-                    <ComboBox Width="250" 
+                    <ComboBox Width="250"
                               HorizontalAlignment="Left"
-                              SelectedIndex="0">
+                              SelectedIndex="{Binding SelectedLanguage, Mode=TwoWay}">
                         <ComboBoxItem Content="English (United States)"/>
                         <ComboBoxItem Content="Español (Spanish)"/>
                         <ComboBoxItem Content="Français (French)"/>
@@ -49,7 +49,7 @@
                 Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
-                CornerRadius="{StaticResource Radius.Lg}" 
+                CornerRadius="16" 
                 Padding="20">
             <StackPanel Spacing="15">
                 <TextBlock Text="View Preferences" 
@@ -98,7 +98,7 @@
                 Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
-                CornerRadius="{StaticResource Radius.Lg}" 
+                CornerRadius="16" 
                 Padding="20">
             <StackPanel Spacing="15">
                 <TextBlock Text="Keyboard &amp; Navigation" 

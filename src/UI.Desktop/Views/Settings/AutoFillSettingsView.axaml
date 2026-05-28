@@ -11,7 +11,7 @@
                 Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
-                CornerRadius="{StaticResource Radius.Lg}" 
+                CornerRadius="16" 
                 Padding="20">
             <StackPanel Spacing="15">
                 <TextBlock Text="Browser Integration" 
@@ -19,15 +19,16 @@
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
                 
-                <CheckBox Content="Enable browser auto-fill" 
-                          IsChecked="True"
+                <CheckBox Content="Enable browser auto-fill"
+                          IsChecked="{Binding EnableAutoFill, Mode=TwoWay}"
                           ToolTip.Tip="Allow PhantomVault to auto-fill credentials in browsers"/>
-                
-                <CheckBox Content="Auto-submit after filling" 
+
+                <CheckBox Content="Auto-submit after filling"
+                          IsChecked="{Binding AutoSubmit, Mode=TwoWay}"
                           ToolTip.Tip="Automatically submit forms after filling credentials"/>
-                
-                <CheckBox Content="Show auto-fill icon in password fields" 
-                          IsChecked="True"
+
+                <CheckBox Content="Show auto-fill icon in password fields"
+                          IsChecked="{Binding ShowIcon, Mode=TwoWay}"
                           ToolTip.Tip="Display PhantomVault icon next to password fields"/>
             </StackPanel>
         </Border>
@@ -36,7 +37,7 @@
                 Background="{DynamicResource SettingsPanelBackgroundBrush}" 
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
                 BorderThickness="1" 
-                CornerRadius="{StaticResource Radius.Lg}" 
+                CornerRadius="16" 
                 Padding="20">
             <StackPanel Spacing="15">
                 <TextBlock Text="Mobile Integration" 
@@ -49,10 +50,11 @@
                            Foreground="{DynamicResource MutedTextBrush}"
                            TextWrapping="Wrap"/>
                 
-                <Button Content="Configure Mobile Auto-Fill" 
-                        Width="240" 
+                <Button Content="Configure Mobile Auto-Fill"
+                        Width="240"
                         HorizontalAlignment="Left"
                         Classes="liquid-glass"
+                        Click="ConfigureMobileAutoFill_Click"
                         ToolTip.Tip="Set up auto-fill for mobile devices"/>
             </StackPanel>
         </Border>
@@ -61,7 +63,7 @@
                 Background="{DynamicResource SettingsPanelBackgroundBrush}"
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
                 BorderThickness="1"
-                CornerRadius="{StaticResource Radius.Lg}"
+                CornerRadius="16"
                 Padding="20">
             <StackPanel Spacing="15">
                 <TextBlock Text="Desktop Applications"
@@ -70,6 +72,7 @@
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
 
                 <CheckBox Content="Enable auto-fill for desktop apps"
+                          IsChecked="{Binding DesktopApps, Mode=TwoWay}"
                           ToolTip.Tip="Allow PhantomVault to auto-fill credentials in desktop applications"/>
 
                 <Button Content="Manage App Permissions"
@@ -86,7 +89,7 @@
                 Background="{DynamicResource SettingsPanelBackgroundBrush}"
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
                 BorderThickness="1"
-                CornerRadius="{StaticResource Radius.Lg}"
+                CornerRadius="16"
                 Padding="20">
             <StackPanel Spacing="15">
                 <StackPanel Spacing="4">

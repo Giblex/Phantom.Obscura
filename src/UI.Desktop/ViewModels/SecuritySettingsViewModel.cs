@@ -332,8 +332,39 @@ namespace PhantomVault.UI.ViewModels
                     SettingsService.Update(s => s.EnableScreenshotProtection = value);
                     _baseline = _baseline with { EnableScreenshotProtection = value };
                     StageAll();
+                    // Belt-and-suspenders: apply directly to every open window
+                    // now, rather than relying solely on the static
+                    // SettingsChanged event reaching VaultWindow.
+                    ApplyScreenshotProtectionToWindows(value);
                 }
             }
+        }
+
+        /// <summary>
+        /// Apply the WDA_EXCLUDEFROMCAPTURE affinity to every open top-level
+        /// window immediately so the screenshot-protection toggle takes effect
+        /// without waiting for (or depending on) the SettingsChanged event.
+        /// </summary>
+        private static void ApplyScreenshotProtectionToWindows(bool enable)
+        {
+            try
+            {
+                if (!WindowProtectionService.IsSupported()) return;
+                if (Avalonia.Application.Current?.ApplicationLifetime
+                        is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+                {
+                    foreach (var window in desktop.Windows.ToList())
+                    {
+                        var handle = window.TryGetPlatformHandle()?.Handle ?? IntPtr.Zero;
+                        if (handle == IntPtr.Zero) continue;
+                        if (enable)
+                            WindowProtectionService.EnableScreenshotProtection(handle);
+                        else
+                            WindowProtectionService.DisableScreenshotProtection(handle);
+                    }
+                }
+            }
+            catch { /* best-effort live apply */ }
         }
 
         private async Task SetOrChangePinAsync()

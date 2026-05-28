@@ -45,6 +45,17 @@ namespace PhantomVault.UI.Services
         public string AppFontFamily { get; set; } = "Segoe UI";
         public double AppFontSize { get; set; } = 14.0;
         public string AccentColorHex { get; set; } = "#2B4A7A"; // dull blue
+        // Accessibility: selected UI language index (maps to the language list
+        // in AccessibilitySettingsView). 0 = English (United States).
+        public int LanguageIndex { get; set; } = 0;
+        // Accessibility tab preferences.
+        public bool ShowEntryIcons { get; set; } = true;
+        public bool ShowCategoryColors { get; set; } = true;
+        public int AccessibilityFontSize { get; set; } = 1;   // 0=Small,1=Medium,2=Large,3=XL
+        public int AccessibilityFontFamily { get; set; } = 0; // index into the family list
+        public bool EnableKeyboardShortcuts { get; set; } = true;
+        public bool FocusSearchOnOpen { get; set; } = true;
+        public bool EnableScreenReader { get; set; } = false;
         public bool IsDarkTheme { get; set; } = true;
         public int ThemeSkin { get; set; } = 0;
         public bool EnableHighContrast { get; set; } = false;
@@ -333,6 +344,21 @@ namespace PhantomVault.UI.Services
         /// Comma-separated whitelist of domains for autofill (empty = all domains).
         /// </summary>
         public string AutoFillDomainWhitelist { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Automatically submit the login form after auto-filling credentials.
+        /// </summary>
+        public bool AutoFillAutoSubmit { get; set; } = false;
+
+        /// <summary>
+        /// Show the PhantomVault auto-fill icon inside detected password fields.
+        /// </summary>
+        public bool AutoFillShowIcon { get; set; } = true;
+
+        /// <summary>
+        /// Allow auto-fill into native desktop applications (not just browsers).
+        /// </summary>
+        public bool AutoFillDesktopApps { get; set; } = false;
 
         // ===== AutoFill Mode (USB-Triggered) =====
 

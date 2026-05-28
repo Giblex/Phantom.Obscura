@@ -6034,9 +6034,10 @@ namespace PhantomVault.UI.ViewModels
 
         private void SaveStagedSettings()
         {
-            if (!_settingsDraftTracker.HasUnsavedChanges) return;
-            int n = _settingsDraftTracker.CommitAll();
-            StatusMessage = n == 1 ? "Setting saved" : $"Saved {n} settings";
+            // Always give the user feedback when they click Save — even if
+            // nothing was staged (some toggles auto-persist), the animated
+            // "Saved" toast should still confirm the action.
+            int n = _settingsDraftTracker.HasUnsavedChanges ? _settingsDraftTracker.CommitAll() : 0;
             AnnounceSettingsSaved(n);
         }
 
@@ -6071,9 +6072,11 @@ namespace PhantomVault.UI.ViewModels
 
         private void AnnounceSettingsSaved(int savedCount)
         {
-            SettingsSaveNotification = savedCount == 1
-                ? "Setting saved"
-                : $"Saved {savedCount} settings";
+            SettingsSaveNotification = savedCount <= 0
+                ? "Saved"
+                : savedCount == 1
+                    ? "Setting saved"
+                    : $"Saved {savedCount} settings";
             StatusMessage = SettingsSaveNotification;
 
             _settingsSaveNotificationCts?.Cancel();

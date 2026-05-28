@@ -26,6 +26,9 @@ namespace PhantomVault.UI.ViewModels
         private string _domainWhitelist = string.Empty;
         private bool _injectUsername = true;
         private bool _injectPassword = true;
+        private bool _autoSubmit;
+        private bool _showIcon = true;
+        private bool _desktopApps;
         private bool _isBusy;
 
         // AutoFill Mode (USB-triggered)
@@ -39,6 +42,9 @@ namespace PhantomVault.UI.ViewModels
             public string DomainWhitelist { get; init; }
             public bool InjectUsername { get; init; }
             public bool InjectPassword { get; init; }
+            public bool AutoSubmit { get; init; }
+            public bool ShowIcon { get; init; }
+            public bool DesktopApps { get; init; }
             public bool AutoFillModeEnabled { get; init; }
             public bool AutoFillAutoInputTotp { get; init; }
             public bool AutoFillShowNewEntryOnNoMatch { get; init; }
@@ -89,6 +95,9 @@ namespace PhantomVault.UI.ViewModels
             _domainWhitelist = settings.AutoFillDomainWhitelist;
             _injectUsername = settings.AutoFillInjectUsername;
             _injectPassword = settings.AutoFillInjectPassword;
+            _autoSubmit = settings.AutoFillAutoSubmit;
+            _showIcon = settings.AutoFillShowIcon;
+            _desktopApps = settings.AutoFillDesktopApps;
             _autoFillModeEnabled = settings.AutoFillModeEnabled;
             _autoFillAutoInputTotp = settings.AutoFillAutoInputTotp;
             _autoFillShowNewEntryOnNoMatch = settings.AutoFillShowNewEntryOnNoMatch;
@@ -101,6 +110,9 @@ namespace PhantomVault.UI.ViewModels
             settings.AutoFillDomainWhitelist = DomainWhitelist;
             settings.AutoFillInjectUsername = InjectUsername;
             settings.AutoFillInjectPassword = InjectPassword;
+            settings.AutoFillAutoSubmit = AutoSubmit;
+            settings.AutoFillShowIcon = ShowIcon;
+            settings.AutoFillDesktopApps = DesktopApps;
             settings.AutoFillModeEnabled = AutoFillModeEnabled;
             settings.AutoFillAutoInputTotp = AutoFillAutoInputTotp;
             settings.AutoFillShowNewEntryOnNoMatch = AutoFillShowNewEntryOnNoMatch;
@@ -164,6 +176,33 @@ namespace PhantomVault.UI.ViewModels
             set { this.RaiseAndSetIfChanged(ref _injectPassword, value); StageAll(); }
         }
 
+        /// <summary>
+        /// Automatically submit the login form after credentials are filled.
+        /// </summary>
+        public bool AutoSubmit
+        {
+            get => _autoSubmit;
+            set { this.RaiseAndSetIfChanged(ref _autoSubmit, value); StageAll(); }
+        }
+
+        /// <summary>
+        /// Show the PhantomVault icon inside detected password fields.
+        /// </summary>
+        public bool ShowIcon
+        {
+            get => _showIcon;
+            set { this.RaiseAndSetIfChanged(ref _showIcon, value); StageAll(); }
+        }
+
+        /// <summary>
+        /// Allow auto-fill into native desktop applications (not just browsers).
+        /// </summary>
+        public bool DesktopApps
+        {
+            get => _desktopApps;
+            set { this.RaiseAndSetIfChanged(ref _desktopApps, value); StageAll(); }
+        }
+
         // ===== AutoFill Mode (USB-triggered) =====
 
         /// <summary>
@@ -204,6 +243,9 @@ namespace PhantomVault.UI.ViewModels
             DomainWhitelist = DomainWhitelist,
             InjectUsername = InjectUsername,
             InjectPassword = InjectPassword,
+            AutoSubmit = AutoSubmit,
+            ShowIcon = ShowIcon,
+            DesktopApps = DesktopApps,
             AutoFillModeEnabled = AutoFillModeEnabled,
             AutoFillAutoInputTotp = AutoFillAutoInputTotp,
             AutoFillShowNewEntryOnNoMatch = AutoFillShowNewEntryOnNoMatch,
@@ -216,6 +258,9 @@ namespace PhantomVault.UI.ViewModels
                 && string.Equals(DomainWhitelist ?? string.Empty, b.DomainWhitelist ?? string.Empty, StringComparison.Ordinal)
                 && InjectUsername == b.InjectUsername
                 && InjectPassword == b.InjectPassword
+                && AutoSubmit == b.AutoSubmit
+                && ShowIcon == b.ShowIcon
+                && DesktopApps == b.DesktopApps
                 && AutoFillModeEnabled == b.AutoFillModeEnabled
                 && AutoFillAutoInputTotp == b.AutoFillAutoInputTotp
                 && AutoFillShowNewEntryOnNoMatch == b.AutoFillShowNewEntryOnNoMatch;
@@ -244,6 +289,9 @@ namespace PhantomVault.UI.ViewModels
                     s.AutoFillDomainWhitelist = staged.DomainWhitelist;
                     s.AutoFillInjectUsername = staged.InjectUsername;
                     s.AutoFillInjectPassword = staged.InjectPassword;
+                    s.AutoFillAutoSubmit = staged.AutoSubmit;
+                    s.AutoFillShowIcon = staged.ShowIcon;
+                    s.AutoFillDesktopApps = staged.DesktopApps;
                     s.AutoFillModeEnabled = staged.AutoFillModeEnabled;
                     s.AutoFillAutoInputTotp = staged.AutoFillAutoInputTotp;
                     s.AutoFillShowNewEntryOnNoMatch = staged.AutoFillShowNewEntryOnNoMatch;
@@ -259,6 +307,9 @@ namespace PhantomVault.UI.ViewModels
                         DomainWhitelist = baseline.DomainWhitelist;
                         InjectUsername = baseline.InjectUsername;
                         InjectPassword = baseline.InjectPassword;
+                        AutoSubmit = baseline.AutoSubmit;
+                        ShowIcon = baseline.ShowIcon;
+                        DesktopApps = baseline.DesktopApps;
                         AutoFillModeEnabled = baseline.AutoFillModeEnabled;
                         AutoFillAutoInputTotp = baseline.AutoFillAutoInputTotp;
                         AutoFillShowNewEntryOnNoMatch = baseline.AutoFillShowNewEntryOnNoMatch;
