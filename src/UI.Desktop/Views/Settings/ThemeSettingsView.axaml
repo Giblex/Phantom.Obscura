@@ -32,9 +32,13 @@
                 
                 <!-- Custom Theme Controls -->
                 <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,5,0,0">
-                    <Button Content="Create Custom Theme" 
+                    <Button Content="Create Custom Theme"
                             Command="{Binding CreateCustomThemeCommand}"
-                            Classes="accent"
+                            Background="#2B4A7A"
+                            Foreground="#FFFFFFFF"
+                            BorderBrush="{DynamicResource Brush.Glass.Border}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource Radius.Md}"
                             Padding="12,6"/>
                     <Button Content="Delete Custom Theme" 
                             Command="{Binding DeleteCustomThemeCommand}"
@@ -139,9 +143,9 @@
 
 
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Display scale:" 
+                            <TextBlock Text="Display scale:"
                                        Foreground="{DynamicResource PrimaryTextBrush}"/>
-                            <ComboBox Width="150" 
+                            <ComboBox Width="150"
                                       HorizontalAlignment="Left"
                                       SelectedIndex="{Binding SelectedDisplayScale}">
                                 <ComboBoxItem Content="80%"/>
@@ -152,16 +156,56 @@
                                 <ComboBoxItem Content="150%"/>
                             </ComboBox>
                         </StackPanel>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Font:"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <ComboBox Width="220"
+                                      HorizontalAlignment="Left"
+                                      ItemsSource="{Binding FontFamilyOptions}"
+                                      SelectedItem="{Binding AppFontFamily, Mode=TwoWay}"/>
+                        </StackPanel>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Font size:"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <ComboBox Width="220"
+                                      HorizontalAlignment="Left"
+                                      ItemsSource="{Binding FontSizeOptions}"
+                                      SelectedIndex="{Binding SelectedFontSizeIndex, Mode=TwoWay}"/>
+                        </StackPanel>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Accent colour:"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <ComboBox Width="220"
+                                      HorizontalAlignment="Left"
+                                      ItemsSource="{Binding AccentColorOptions}"
+                                      SelectedItem="{Binding AccentColorHex, Mode=TwoWay}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Spacing="10">
+                                            <Border Width="20" Height="20" CornerRadius="4"
+                                                    Background="{Binding}"
+                                                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                                                    BorderThickness="1"/>
+                                            <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
                 </StackPanel>
-                
+
                 <!-- Theme Preview -->
-                <Border Grid.Column="1" 
-                        Background="{DynamicResource SettingsPanelBackgroundBrush}" 
-                        BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
-                        BorderThickness="1" 
-                        CornerRadius="{StaticResource Radius.Lg}" 
+                <Border Grid.Column="1"
+                        Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                        BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{StaticResource Radius.Lg}"
                         Padding="20"
-                        Width="200">
+                        Width="320"
+                        VerticalAlignment="Top">
                     <StackPanel Spacing="12">
                         <TextBlock Text="Preview" 
                                    FontSize="{StaticResource Type.Small.Size}" 

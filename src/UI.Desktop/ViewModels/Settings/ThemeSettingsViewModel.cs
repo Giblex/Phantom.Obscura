@@ -20,6 +20,9 @@ namespace PhantomVault.UI.ViewModels.Settings
         private int _selectedThemeSkin = 0;
         private bool _enableHighContrast = false;
         private int _selectedDisplayScale = 2; // 100%
+        private string _appFontFamily = "Segoe UI";
+        private int _selectedFontSizeIndex = 1; // 14 (default)
+        private string _accentColorHex = "#2B4A7A";
         private bool _reduceAnimations = false;
         private bool _reduceTransparency = false;
         private bool _showCategoryColorBarOnly = false;
@@ -248,6 +251,61 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
         }
 
+        /// <summary>Available app font families for the Appearance picker.</summary>
+        public IReadOnlyList<string> FontFamilyOptions { get; } = new[]
+        {
+            "Segoe UI", "Arial", "Calibri", "Verdana", "Tahoma",
+            "Consolas", "Cascadia Code", "Georgia", "Times New Roman"
+        };
+
+        /// <summary>Font-size presets shown in the Appearance picker.</summary>
+        public IReadOnlyList<string> FontSizeOptions { get; } = new[]
+        {
+            "Small (12)", "Default (14)", "Medium (16)", "Large (18)", "Extra Large (20)"
+        };
+
+        private static readonly double[] FontSizes = { 12.0, 14.0, 16.0, 18.0, 20.0 };
+
+        /// <summary>Accent colour presets — dull blue is the app default.</summary>
+        public IReadOnlyList<string> AccentColorOptions { get; } = new[]
+        {
+            "#2B4A7A", "#004258", "#3A5E94", "#5A7AB0", "#6366F1", "#2E7D6B", "#8A5CB8"
+        };
+
+        public string AppFontFamily
+        {
+            get => _appFontFamily;
+            set
+            {
+                var old = _appFontFamily;
+                this.RaiseAndSetIfChanged(ref _appFontFamily, value);
+                if (old != _appFontFamily)
+                    ApplyAppFont();
+            }
+        }
+
+        public int SelectedFontSizeIndex
+        {
+            get => _selectedFontSizeIndex;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _selectedFontSizeIndex, value);
+                ApplyAppFontSize();
+            }
+        }
+
+        public string AccentColorHex
+        {
+            get => _accentColorHex;
+            set
+            {
+                var old = _accentColorHex;
+                this.RaiseAndSetIfChanged(ref _accentColorHex, value);
+                if (old != _accentColorHex)
+                    ApplyAccentColor();
+            }
+        }
+
         public bool ReduceAnimations
         {
             get => _reduceAnimations;
@@ -368,6 +426,14 @@ namespace PhantomVault.UI.ViewModels.Settings
             _reduceTransparency = settings.ReduceTransparency;
             _showCategoryColorBarOnly = settings.ShowCategoryColorBarOnly;
 
+            // Appearance: font family / size / accent.
+            if (!string.IsNullOrWhiteSpace(settings.AppFontFamily))
+                _appFontFamily = settings.AppFontFamily;
+            var sizeIdx = Array.IndexOf(FontSizes, settings.AppFontSize);
+            if (sizeIdx >= 0) _selectedFontSizeIndex = sizeIdx;
+            if (!string.IsNullOrWhiteSpace(settings.AccentColorHex))
+                _accentColorHex = settings.AccentColorHex;
+
             // Initialize runtime theme selection
             if (_runtimeThemeService != null && !string.IsNullOrEmpty(settings.SelectedThemeId))
             {
@@ -435,6 +501,43 @@ namespace PhantomVault.UI.ViewModels.Settings
             {
                 // best-effort persistence
             }
+        }
+
+        private void ApplyAppFont()
+        {
+            _themeManager.SetAppFont(_appFontFamily);
+            try
+            {
+                var s = SettingsService.Load();
+                s.AppFontFamily = _appFontFamily;
+                SettingsService.Save(s);
+            }
+            catch { /* best-effort */ }
+        }
+
+        private void ApplyAppFontSize()
+        {
+            var size = FontSizes[Math.Clamp(_selectedFontSizeIndex, 0, FontSizes.Length - 1)];
+            _themeManager.SetAppFontSize(size);
+            try
+            {
+                var s = SettingsService.Load();
+                s.AppFontSize = size;
+                SettingsService.Save(s);
+            }
+            catch { /* best-effort */ }
+        }
+
+        private void ApplyAccentColor()
+        {
+            _themeManager.SetAccentColor(_accentColorHex);
+            try
+            {
+                var s = SettingsService.Load();
+                s.AccentColorHex = _accentColorHex;
+                SettingsService.Save(s);
+            }
+            catch { /* best-effort */ }
         }
 
         private void ApplyAnimationSettings() => StageEffects();

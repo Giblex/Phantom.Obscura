@@ -255,6 +255,11 @@ namespace PhantomVault.UI
                 themeManager.SetSkin(persistedSettings.ThemeSkin);
                 themeManager.SetEffects(persistedSettings.ReduceAnimations, persistedSettings.ReduceTransparency);
                 themeManager.SetShowCategoryColorBarOnly(persistedSettings.ShowCategoryColorBarOnly);
+
+                // Apply persisted appearance (font family / size / accent colour).
+                themeManager.SetAppFont(persistedSettings.AppFontFamily);
+                themeManager.SetAppFontSize(persistedSettings.AppFontSize);
+                themeManager.SetAccentColor(persistedSettings.AccentColorHex);
             }
             catch
             {

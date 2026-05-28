@@ -1,10 +1,21 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using Serilog;
 
 namespace PhantomVault.UI.Services
 {
+    /// <summary>
+    /// A single desktop-app auto-fill permission entry: the process/app name
+    /// and whether PhantomVault is allowed to auto-fill into it.
+    /// </summary>
+    public sealed class AutoFillAppPermission
+    {
+        public string AppName { get; set; } = string.Empty;
+        public bool Allowed { get; set; } = true;
+    }
+
     public sealed class UserSettings
     {
         public bool PrivacyModeEnabled { get; set; }
@@ -28,6 +39,12 @@ namespace PhantomVault.UI.Services
         public int BackupRetentionCount { get; set; } = 2;
         public DateTimeOffset? LastAutomatedBackupUtc { get; set; }
         public double RenderScale { get; set; } = 1.0;
+        // Auto-fill desktop app permissions: which processes may receive auto-fill.
+        public List<AutoFillAppPermission> AutoFillAppPermissions { get; set; } = new();
+        // Appearance: app-wide font family, base font size, and accent colour.
+        public string AppFontFamily { get; set; } = "Segoe UI";
+        public double AppFontSize { get; set; } = 14.0;
+        public string AccentColorHex { get; set; } = "#2B4A7A"; // dull blue
         public bool IsDarkTheme { get; set; } = true;
         public int ThemeSkin { get; set; } = 0;
         public bool EnableHighContrast { get; set; } = false;

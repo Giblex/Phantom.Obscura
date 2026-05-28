@@ -114,6 +114,62 @@
             <Setter Property="RenderTransform" Value="scale(0.985)"/>
         </Style>
 
+        <!-- Dull-blue variant: ALWAYS flat solid navy, identical in every state. No border, no sheen, no scale, no shadow. Template overridden to bypass all theme chrome. -->
+        <Style Selector="Button.dashboard-card.dull-blue">
+            <Setter Property="Background" Value="#26385C"/>
+            <Setter Property="BorderBrush" Value="#26385C"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Effect" Value="{x:Null}"/>
+            <Setter Property="Transitions" Value="{x:Null}"/>
+            <Setter Property="RenderTransform" Value="none"/>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="#26385C"
+                            BorderBrush="#26385C"
+                            BorderThickness="0"
+                            CornerRadius="20"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter Content="{TemplateBinding Content}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="Button.dashboard-card.dull-blue:pointerover">
+            <Setter Property="Background" Value="#26385C"/>
+            <Setter Property="BorderBrush" Value="#26385C"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Effect" Value="{x:Null}"/>
+            <Setter Property="RenderTransform" Value="none"/>
+        </Style>
+        <Style Selector="Button.dashboard-card.dull-blue:pressed">
+            <Setter Property="Background" Value="#26385C"/>
+            <Setter Property="BorderBrush" Value="#26385C"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Effect" Value="{x:Null}"/>
+            <Setter Property="RenderTransform" Value="none"/>
+        </Style>
+
+        <!-- Override Avalonia's default Button template hover/pressed overlays (these are what paint the white border + transparent fill) -->
+        <Style Selector="Button.dashboard-card.dull-blue /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#26385C"/>
+            <Setter Property="BorderBrush" Value="#26385C"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="20"/>
+        </Style>
+        <Style Selector="Button.dashboard-card.dull-blue:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#26385C"/>
+            <Setter Property="BorderBrush" Value="#26385C"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="Button.dashboard-card.dull-blue:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#26385C"/>
+            <Setter Property="BorderBrush" Value="#26385C"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+
         <!-- Phantom Liquid Glass Navigation Tiles — theme-aware -->
         <Style Selector="Button.dashboard-nav">
             <Setter Property="Background" Value="{DynamicResource DashboardNavBg}"/>
@@ -859,22 +915,10 @@
                         </Button>
 
                         <Button Command="{Binding OpenPasswordsCommand}"
-                                Classes="dashboard-card"
+                                Classes="dashboard-card dull-blue"
                                 IsVisible="{Binding ShowQuickPasswords}"
                                 ToolTip.Tip="View all passwords">
                             <Grid RowDefinitions="Auto,Auto">
-                                <Border Grid.RowSpan="2" CornerRadius="18" IsHitTestVisible="False"
-                                        BorderThickness="0,0.5,0,0" Opacity="0.4">
-                                    <Border.BorderBrush>
-                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
-                                            <GradientStop Color="#00000000" Offset="0"/>
-                                            <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.15"/>
-                                            <GradientStop Color="{DynamicResource TileReflectHighlightColor}" Offset="0.5"/>
-                                            <GradientStop Color="{DynamicResource TileReflectMidColor}" Offset="0.85"/>
-                                            <GradientStop Color="#00000000" Offset="1"/>
-                                        </LinearGradientBrush>
-                                    </Border.BorderBrush>
-                                </Border>
                                 <controls:SvgIcon Grid.Row="0" Preset="{x:Static services:IconPreset.Key}" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}" HorizontalAlignment="Center"/>
                                 <TextBlock Grid.Row="1" Text="Passwords" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" TextAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0"/>
                             </Grid>
@@ -1027,7 +1071,8 @@
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                     <UniformGrid Columns="3" ColumnSpacing="10" RowSpacing="10">
                         <Button Command="{Binding OpenPasswordsCommand}"
-                                Classes="dashboard-nav">
+                                Classes="dashboard-card dull-blue"
+                                Padding="12,10">
                             <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
                                 <controls:SvgIcon IconName="Assets/SVG/Current/Key.svg" Width="20" Height="20" IconColor="{DynamicResource AccentBrush}"/>
                                 <TextBlock Text="Passwords" Foreground="{DynamicResource PrimaryTextBrush}" FontSize="{StaticResource Type.H5.Size}" FontWeight="SemiBold" VerticalAlignment="Center"/>

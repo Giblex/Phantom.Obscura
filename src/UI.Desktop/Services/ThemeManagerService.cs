@@ -138,6 +138,61 @@ namespace PhantomVault.UI.Services
         }
 
         /// <summary>
+        /// Apply an app-wide font family. FontFamily inherits down the visual
+        /// tree, so setting it on each open window propagates to all controls
+        /// that don't override it explicitly.
+        /// </summary>
+        public void SetAppFont(string family)
+        {
+            if (Application.Current == null || string.IsNullOrWhiteSpace(family)) return;
+            try
+            {
+                var ff = new FontFamily(family);
+                Application.Current.Resources["AppFontFamily"] = ff;
+                if (Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                {
+                    foreach (var window in desktop.Windows.ToList())
+                        window.FontFamily = ff;
+                }
+            }
+            catch (Exception ex) { Log($"SetAppFont failed: {ex.Message}"); }
+        }
+
+        /// <summary>
+        /// Apply an app-wide base font size. Inherits down the visual tree like
+        /// FontFamily.
+        /// </summary>
+        public void SetAppFontSize(double size)
+        {
+            if (Application.Current == null) return;
+            size = Math.Clamp(size, 10.0, 22.0);
+            Application.Current.Resources["AppFontSize"] = size;
+            if (Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                foreach (var window in desktop.Windows.ToList())
+                    window.FontSize = size;
+            }
+        }
+
+        /// <summary>
+        /// Override the accent colour app-wide. XAML binds the accent via
+        /// DynamicResource, so replacing the app-level resource propagates.
+        /// </summary>
+        public void SetAccentColor(string hex)
+        {
+            if (Application.Current == null || string.IsNullOrWhiteSpace(hex)) return;
+            try
+            {
+                var color = Color.Parse(hex);
+                var brush = new SolidColorBrush(color);
+                Application.Current.Resources["AccentColor"] = color;
+                Application.Current.Resources["AccentBrush"] = brush;
+                Application.Current.Resources["Brush.Accent"] = brush;
+            }
+            catch (Exception ex) { Log($"SetAccentColor failed: {ex.Message}"); }
+        }
+
+        /// <summary>
         /// Propagate the "show only colour bar on categories" preference into
         /// the app-wide resource dictionary so XAML can DynamicResource-bind to
         /// it. The sidebar consumes this via VaultViewModel.ShowCategoryColorBarOnly.

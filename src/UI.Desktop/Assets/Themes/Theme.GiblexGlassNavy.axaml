@@ -210,7 +210,9 @@
     <DropShadowEffect x:Key="FrontPageTileBaseShadow" Color="#1A2332" Opacity="0.25" BlurRadius="16"/>
     <DropShadowEffect x:Key="FooterGroundedShadow" Color="#1A2332" Opacity="0.2" BlurRadius="8"/>
     
-    <BoxShadows x:Key="SlideOutPanelShadow">-20 0 40 -5 #70000000</BoxShadows>
+    <!-- Deeper shadow on the settings slide-out so the panel reads as
+         floating well above the underlying content (#4). -->
+    <BoxShadows x:Key="SlideOutPanelShadow">-24 0 80 -8 #C0000000</BoxShadows>
     <BoxShadows x:Key="FlaggedPanelShadow">-16 0 32 -4 #68000000</BoxShadows>
     
     <LinearGradientBrush x:Key="TileOverlayBrush" StartPoint="0,0" EndPoint="1,1">

@@ -14,7 +14,7 @@
                 BorderThickness="1" 
                 CornerRadius="{StaticResource Radius.Lg}" 
                 Padding="20"
-                MaxWidth="750"
+                MaxWidth="640"
                 HorizontalAlignment="Stretch">
             <StackPanel Spacing="15">
                 <TextBlock Text="Authentication" 
@@ -85,7 +85,7 @@
                 BorderThickness="1" 
                 CornerRadius="{DynamicResource Radius.Lg}" 
                 Padding="20"
-                MaxWidth="750"
+                MaxWidth="640"
                 HorizontalAlignment="Stretch">
             <StackPanel Spacing="15">
                 <TextBlock Text="Clipboard Security" 
@@ -124,7 +124,7 @@
                 BorderThickness="1" 
                 CornerRadius="{DynamicResource Radius.Lg}" 
                 Padding="20"
-                MaxWidth="750"
+                MaxWidth="640"
                 HorizontalAlignment="Stretch">
             <StackPanel Spacing="15">
                 <TextBlock Text="Screenshot Protection" 
@@ -150,7 +150,7 @@
                 BorderThickness="1"
                 CornerRadius="{DynamicResource Radius.Lg}"
                 Padding="20"
-                MaxWidth="750"
+                MaxWidth="640"
                 HorizontalAlignment="Stretch">
             <StackPanel Spacing="15">
                 <TextBlock Text="Decoy Vault Protection"
@@ -199,7 +199,7 @@
                         Padding="12"
                         Margin="0,5,0,0">
                     <StackPanel Spacing="6">
-                        <TextBlock Text="ℹ️  How Decoy Vault Works"
+                        <TextBlock Text="How Decoy Vault Works"
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
                         <TextBlock TextWrapping="Wrap"
@@ -220,7 +220,7 @@
                 BorderThickness="1"
                 CornerRadius="{DynamicResource Radius.Lg}"
                 Padding="20"
-                MaxWidth="750"
+                MaxWidth="640"
                 HorizontalAlignment="Stretch">
             <StackPanel Spacing="15">
                 <TextBlock Text="Master Password"
@@ -243,7 +243,7 @@
                 BorderThickness="1" 
                 CornerRadius="{DynamicResource Radius.Lg}" 
                 Padding="20"
-                MaxWidth="750"
+                MaxWidth="640"
                 HorizontalAlignment="Stretch">
             <StackPanel Spacing="15">
                 <TextBlock Text="Multi-Factor Authentication" 
@@ -266,7 +266,9 @@
                             Height="50"
                             ToolTip.Tip="Set up time-based one-time password (Google Authenticator, Authy, etc.)">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="•" FontSize="{StaticResource Type.Icon.Size}" VerticalAlignment="Center"/>
+                            <Path Data="{StaticResource Icon.QrCode}" Width="22" Height="22" Stretch="Uniform"
+                                  Stroke="#FFFFFFFF" StrokeThickness="1.5" StrokeLineCap="Round" StrokeJoin="Round" Fill="Transparent"
+                                  VerticalAlignment="Center"/>
                             <TextBlock Text="TOTP Setup" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
@@ -280,7 +282,9 @@
                             Height="50"
                             ToolTip.Tip="Configure the Windows Hello-backed device authenticator for this vault">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="🔑" FontSize="{StaticResource Type.Icon.Size}" VerticalAlignment="Center"/>
+                            <Path Data="{StaticResource Icon.Key}" Width="22" Height="22" Stretch="Uniform"
+                                  Stroke="#FFFFFFFF" StrokeThickness="1.5" StrokeLineCap="Round" StrokeJoin="Round" Fill="Transparent"
+                                  VerticalAlignment="Center"/>
                             <TextBlock Text="Device Authenticator" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
@@ -294,7 +298,9 @@
                             Height="50"
                             ToolTip.Tip="Review Windows Hello availability for face, fingerprint, or PIN-backed unlock">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="👁️" FontSize="{StaticResource Type.Icon.Size}" VerticalAlignment="Center"/>
+                            <Path Data="{StaticResource Icon.Eye}" Width="22" Height="22" Stretch="Uniform"
+                                  Stroke="#FFFFFFFF" StrokeThickness="1.5" StrokeLineCap="Round" StrokeJoin="Round" Fill="Transparent"
+                                  VerticalAlignment="Center"/>
                             <TextBlock Text="Windows Hello" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
@@ -308,7 +314,9 @@
                             Height="50"
                             ToolTip.Tip="Generate emergency backup codes for account recovery">
                         <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="📋" FontSize="{StaticResource Type.Icon.Size}" VerticalAlignment="Center"/>
+                            <Path Data="{StaticResource Icon.Clipboard}" Width="22" Height="22" Stretch="Uniform"
+                                  Stroke="#FFFFFFFF" StrokeThickness="1.5" StrokeLineCap="Round" StrokeJoin="Round" Fill="Transparent"
+                                  VerticalAlignment="Center"/>
                             <TextBlock Text="Backup Codes" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>

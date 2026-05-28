@@ -149,24 +149,27 @@ namespace PhantomVault.UI.ViewModels
 
         private Bitmap? GetIconForFormat(string format)
         {
-            // Map known format names to icon files located under Assets/Icons/Logos/import
+            // Map format names to the embedded provider logos that ship as
+            // AvaloniaResource under "Entry Logos/Import logos". These are
+            // loaded via avares:// (the previous file-system path under
+            // Assets/Icons/Logos/import never existed, so all icons were blank).
             var fileName = format switch
             {
-                "1Password CSV" => "1Password.png",
-                "Bitwarden JSON" => "bitwarden.png",
-                "Bitwarden CSV" => "bitwarden.png",
-                "Proton Pass JSON" => "Proton Pass.png",
-                "KeePass XML" => "keepassxc.png",
-                "KeePass KDBX" => "keepassxc.png",
-                "LastPass CSV" => "img_LastPass_icon-svg.png",
+                "1Password CSV" => "Password.png",
+                "Bitwarden JSON" => "Bitwarden.png",
+                "Bitwarden CSV" => "Bitwarden.png",
+                "Proton Pass JSON" => "ProtonPass.png",
+                "KeePass XML" => "Keepassxc.png",
+                "KeePass KDBX" => "Keepassxc.png",
+                "LastPass CSV" => "Lastpass.png",
                 "Chrome CSV" => "Chrome.png",
                 "Edge CSV" => "Edge.png",
                 "Firefox CSV" => "Firefox.png",
-                "JSON" => "json.png",
-                "CSV" => "cvs.png",
-                _ => "json.png",
+                "JSON" => "Json.png",
+                "CSV" => "Cvs.png",
+                _ => "Json.png",
             };
-            // Use cache to avoid reopening files repeatedly
+
             if (_iconCache.TryGetValue(fileName, out var cached))
             {
                 return cached;
@@ -175,42 +178,20 @@ namespace PhantomVault.UI.ViewModels
             Bitmap? loaded = null;
             try
             {
-                var basePath = AppContext.BaseDirectory ?? string.Empty;
-                // Try import folder first
-                var filePath = System.IO.Path.Combine(basePath, "Assets", "Icons", "Logos", "import", fileName);
-                Console.WriteLine($"[ImportViewModel] Attempting to load icon for '{format}' from '{filePath}'");
-
-                if (!System.IO.File.Exists(filePath))
+                const string baseUri = "avares://PhantomVault.UI/Assets/Visuals/Entry Logos/Entry Logos/Import logos/";
+                var uri = new Uri(baseUri + fileName);
+                if (!AssetLoader.Exists(uri))
                 {
-                    // Try the more general PNG logos folder
-                    var alt = System.IO.Path.Combine(basePath, "Assets", "Icons", "Logos", "PNG", fileName);
-                    Console.WriteLine($"[ImportViewModel] Primary icon not found; trying '{alt}'");
-                    if (System.IO.File.Exists(alt))
-                    {
-                        filePath = alt;
-                    }
+                    uri = new Uri(baseUri + "Json.png");
                 }
-
-                if (System.IO.File.Exists(filePath))
+                if (AssetLoader.Exists(uri))
                 {
-                    using var fs = System.IO.File.OpenRead(filePath);
-                    loaded = new Bitmap(fs);
-                    Console.WriteLine($"[ImportViewModel] Loaded icon for '{format}' ({fileName}).");
+                    using var stream = AssetLoader.Open(uri);
+                    loaded = new Bitmap(stream);
                 }
                 else
                 {
-                    // Fallback to generic json.png placeholder bundled with import assets
-                    var fallback = System.IO.Path.Combine(basePath, "Assets", "Icons", "Logos", "import", "json.png");
-                    if (System.IO.File.Exists(fallback))
-                    {
-                        using var fs = System.IO.File.OpenRead(fallback);
-                        loaded = new Bitmap(fs);
-                        Console.WriteLine($"[ImportViewModel] Icon not found for '{format}', using placeholder 'json.png'.");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"[ImportViewModel] Icon and placeholder not found for '{format}'.");
-                    }
+                    Console.WriteLine($"[ImportViewModel] Embedded icon not found for '{format}' ({fileName}).");
                 }
             }
             catch (Exception ex)

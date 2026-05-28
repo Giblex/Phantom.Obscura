@@ -166,10 +166,41 @@
                                 FlyoutPresenterClasses="actions-menu"
                                 HorizontalOffset="0"
                                 VerticalOffset="-1">
+                            <!-- Drop menu molds to the button above: no top border
+                                 edge (VerticalOffset -1 overlaps the button so the
+                                 two read as one continuous surface), flat top
+                                 corners, deep layered outer shadow for lift, and a
+                                 liquid-glass cyan rim on the three open edges. -->
                             <Border Background="{DynamicResource ContentBackgroundBrush}"
                                     CornerRadius="0,0,22,22"
                                     Padding="10"
-                                    MinWidth="240">
+                                    MinWidth="240"
+                                    BorderThickness="1,0,1,1"
+                                    BoxShadow="0 26 80 -10 #C8000000, 0 8 24 -6 #80000000">
+                                <Border.BorderBrush>
+                                    <!-- Liquid-glass cyan rim consistent with the rest
+                                         of the app (matches sidebar NavGlass border). -->
+                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                        <GradientStop Color="#90CFE8FF" Offset="0"/>
+                                        <GradientStop Color="#4000A8FF" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.BorderBrush>
+                                <Grid>
+                                    <!-- Top sheen: glass tone bleeding down from the
+                                         button seam so the dropdown reads as an
+                                         extension of the button rather than a
+                                         detached card. -->
+                                    <Border VerticalAlignment="Top"
+                                            Height="40"
+                                            CornerRadius="0,0,0,0"
+                                            IsHitTestVisible="False">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                                <GradientStop Color="#2ACFE8FF" Offset="0"/>
+                                                <GradientStop Color="#00CFE8FF" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                    </Border>
                                 <StackPanel Spacing="4">
                                     <!-- Add Credential Section -->
                                     <TextBlock Text="Add Credential" 
@@ -298,6 +329,7 @@
                                         </StackPanel>
                                     </Button>
                                 </StackPanel>
+                                </Grid>
                             </Border>
                         </Flyout>
                     </Button.Flyout>

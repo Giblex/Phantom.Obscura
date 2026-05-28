@@ -13,6 +13,8 @@
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="{StaticResource Radius.Lg}"
+                MaxWidth="640"
+                HorizontalAlignment="Stretch"
                 Padding="20">
             <StackPanel Spacing="15">
                 <TextBlock Text="Import Credentials" 
@@ -29,11 +31,15 @@
                            TextWrapping="Wrap"/>
                 <Button Command="{Binding $parent[Window].DataContext.OpenImportWindowCommand}"
                         Classes="liquid-glass"
-                        HorizontalAlignment="Left"
-                        Width="180"
+                        HorizontalAlignment="Stretch"
                         Height="40"
                         Margin="0,8,0,0">
-                    <TextBlock Text="Import Credentials" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Path Data="{StaticResource Icon.Download}" Width="18" Height="18" Stretch="Uniform"
+                              Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" Fill="Transparent"
+                              VerticalAlignment="Center"/>
+                        <TextBlock Text="Import Credentials" VerticalAlignment="Center"/>
+                    </StackPanel>
                 </Button>
             </StackPanel>
         </Border>
@@ -44,6 +50,8 @@
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="{StaticResource Radius.Lg}"
+                MaxWidth="640"
+                HorizontalAlignment="Stretch"
                 Padding="20">
             <StackPanel Spacing="15">
                 <TextBlock Text="Export Credentials" 
@@ -60,21 +68,36 @@
                             Classes="liquid-glass"
                             HorizontalAlignment="Stretch"
                             Height="40">
-                        <TextBlock Text="Export JSON" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Path Data="{StaticResource Icon.Upload}" Width="18" Height="18" Stretch="Uniform"
+                                  Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" Fill="Transparent"
+                                  VerticalAlignment="Center"/>
+                            <TextBlock Text="Export JSON" VerticalAlignment="Center"/>
+                        </StackPanel>
                     </Button>
                     <Button Grid.Column="2"
                             Command="{Binding $parent[Window].DataContext.ExportVaultCsvCommand}"
                             Classes="liquid-glass"
                             HorizontalAlignment="Stretch"
                             Height="40">
-                        <TextBlock Text="Export CSV" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Path Data="{StaticResource Icon.Upload}" Width="18" Height="18" Stretch="Uniform"
+                                  Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" Fill="Transparent"
+                                  VerticalAlignment="Center"/>
+                            <TextBlock Text="Export CSV" VerticalAlignment="Center"/>
+                        </StackPanel>
                     </Button>
                     <Button Grid.Column="4"
                             Command="{Binding $parent[Window].DataContext.ExportKeePassCommand}"
                             Classes="liquid-glass"
                             HorizontalAlignment="Stretch"
                             Height="40">
-                        <TextBlock Text="Export KeePass XML" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Path Data="{StaticResource Icon.Upload}" Width="18" Height="18" Stretch="Uniform"
+                                  Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" Fill="Transparent"
+                                  VerticalAlignment="Center"/>
+                            <TextBlock Text="Export KeePass XML" VerticalAlignment="Center"/>
+                        </StackPanel>
                     </Button>
                 </Grid>
                 <TextBlock Text="⚠ Exported files contain unencrypted passwords. Store them securely!" 

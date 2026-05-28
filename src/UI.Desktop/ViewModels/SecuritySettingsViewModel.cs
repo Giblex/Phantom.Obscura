@@ -320,6 +320,17 @@ namespace PhantomVault.UI.ViewModels
             {
                 if (this.RaiseAndSetIfChanged(ref _enableScreenshotProtection, value))
                 {
+                    // Persist immediately — this is a live-effect security
+                    // toggle (the SettingsChanged event drives the window's
+                    // SetWindowDisplayAffinity call in VaultWindow), so the
+                    // user's expectation is that flipping the switch takes
+                    // effect now, not after clicking a Save button buried in
+                    // the overlay. We also rebase so the draft tracker
+                    // doesn't keep the value marked as "unsaved" and won't
+                    // re-stage it (which would clobber any other genuinely
+                    // staged fields on this tab).
+                    SettingsService.Update(s => s.EnableScreenshotProtection = value);
+                    _baseline = _baseline with { EnableScreenshotProtection = value };
                     StageAll();
                 }
             }

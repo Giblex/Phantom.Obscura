@@ -255,20 +255,29 @@
         </Border>
 
         <Border Classes="fade-in stagger-7"
-                BorderBrush="{DynamicResource DangerBrush}" 
-                BorderThickness="2" 
-                CornerRadius="{StaticResource Radius.Lg}" 
-                Padding="20"
-                Background="{DynamicResource DangerBackgroundBrush}">
+                BorderBrush="#FFE25A5A"
+                BorderThickness="2"
+                CornerRadius="{StaticResource Radius.Lg}"
+                BoxShadow="0 8 28 -8 #80000000"
+                Padding="20">
+            <!-- Danger Zone tile: distinct red gradient so the destructive
+                 section is unmistakable at a glance. Overrides the muted
+                 DangerBackgroundBrush which barely tinted the surface. -->
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                    <GradientStop Color="#C0901218" Offset="0"/>
+                    <GradientStop Color="#A06E0F14" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
             <StackPanel Spacing="15">
-                <TextBlock Text="⚠ Danger Zone" 
-                           FontSize="{StaticResource Type.Body.Size}" 
+                <TextBlock Text="⚠ Danger Zone"
+                           FontSize="{StaticResource Type.Body.Size}"
                            FontWeight="SemiBold"
-                           Foreground="{DynamicResource DangerBrush}"/>
-                
-                <TextBlock Text="These actions cannot be undone. Use with extreme caution." 
+                           Foreground="#FFFFFFFF"/>
+
+                <TextBlock Text="These actions cannot be undone. Use with extreme caution."
                            TextWrapping="Wrap"
-                           Foreground="{DynamicResource DangerBrush}"/>
+                           Foreground="#FFF2D6D6"/>
 
                 <Button Content="Clear All Vault Data" 
                         Width="180" 

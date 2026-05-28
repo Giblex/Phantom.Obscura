@@ -31,6 +31,57 @@
             <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
             <Setter Property="TextBlock.Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
         </Style>
+
+        <!-- Settings-scoped liquid-glass override.
+             Buttons read as transparent with only a left-side gradient sheen
+             that fades to nothing across the button, while keeping the cyan
+             glass rim border. No white halo Effect. -->
+        <Style Selector="Border#SettingsSlideHost Button.liquid-glass">
+            <Setter Property="Effect" Value="{x:Null}"/>
+        </Style>
+        <Style Selector="Border#SettingsSlideHost Button.liquid-glass /template/ Border#BaseBorder">
+            <Setter Property="Background">
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                    <GradientStop Color="#552B4A7A" Offset="0"/>
+                    <GradientStop Color="#1F2B4A7A" Offset="0.35"/>
+                    <GradientStop Color="#00000000" Offset="0.7"/>
+                </LinearGradientBrush>
+            </Setter>
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Glass.Border}"/>
+        </Style>
+        <Style Selector="Border#SettingsSlideHost Button.liquid-glass:pointerover /template/ Border#BaseBorder">
+            <Setter Property="Background">
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                    <GradientStop Color="#803A5E94" Offset="0"/>
+                    <GradientStop Color="#383A5E94" Offset="0.4"/>
+                    <GradientStop Color="#00000000" Offset="0.8"/>
+                </LinearGradientBrush>
+            </Setter>
+        </Style>
+        <Style Selector="Border#SettingsSlideHost Button.liquid-glass:pressed /template/ Border#BaseBorder">
+            <Setter Property="Background">
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                    <GradientStop Color="#A0213D66" Offset="0"/>
+                    <GradientStop Color="#48213D66" Offset="0.4"/>
+                    <GradientStop Color="#00000000" Offset="0.85"/>
+                </LinearGradientBrush>
+            </Setter>
+        </Style>
+        <Style Selector="Border#SettingsSlideHost Button.liquid-glass /template/ Border#Sheen">
+            <Setter Property="Opacity" Value="0.15"/>
+        </Style>
+        <Style Selector="Border#SettingsSlideHost Button.liquid-glass:pointerover /template/ Border#Sheen">
+            <Setter Property="Opacity" Value="0.25"/>
+        </Style>
+
+        <!-- Uniform settings tile width. Every section card in the settings
+             views carries Classes="fade-in stagger-N", so we scope on that
+             inside the slide host to force a consistent tile size regardless
+             of the content sitting inside. -->
+        <Style Selector="Border#SettingsSlideHost Border.fade-in">
+            <Setter Property="Width" Value="640"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+        </Style>
     </UserControl.Styles>
 
     <Border Background="{DynamicResource OverlayBackgroundBrush}"
@@ -51,7 +102,7 @@
                     Background="{DynamicResource WindowBackgroundBrush}"
                     BorderBrush="{DynamicResource ControlBorderBrush}"
                     BorderThickness="1,0,0,0"
-                    BoxShadow="{DynamicResource SlideOutPanelShadow}"
+                    BoxShadow="-32 0 110 -10 #D0000000, -12 0 36 -6 #90000000"
                     RenderTransformOrigin="1,0.5">
                 <Border.IsVisible>
                     <MultiBinding Converter="{x:Static BoolConverters.Or}">
@@ -76,8 +127,9 @@
                 <Border.Transitions>
                     <Transitions>
                         <!-- Slower, smoother slide-in. QuinticEaseOut gives a long
-                             gentle settle without the abrupt finish of CubicEaseOut. -->
-                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.6" Easing="QuinticEaseOut"/>
+                             gentle settle without the abrupt finish of CubicEaseOut.
+                             Duration 1.7s so the panel feels weighty and deliberate. -->
+                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:1.7" Easing="QuinticEaseOut"/>
                     </Transitions>
                 </Border.Transitions>
 

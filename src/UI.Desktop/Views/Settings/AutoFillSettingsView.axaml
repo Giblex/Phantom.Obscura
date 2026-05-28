@@ -76,6 +76,7 @@
                         Width="200"
                         HorizontalAlignment="Left"
                         Classes="liquid-glass"
+                        Click="OpenAppPermissions_Click"
                         ToolTip.Tip="Control which apps can use auto-fill"/>
             </StackPanel>
         </Border>
