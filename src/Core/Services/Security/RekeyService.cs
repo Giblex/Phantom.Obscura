@@ -48,7 +48,8 @@ namespace PhantomVault.Core.Services.Security
             string? currentPassphrase,
             string? usbSerial,
             IProgress<RekeyProgress>? progress = null,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            string? newPassphrase = null)
         {
             var result = new RekeyResult();
 
@@ -65,9 +66,17 @@ namespace PhantomVault.Core.Services.Security
                 byte[] oldSalt = Convert.FromBase64String(manifest.SaltBase64);
                 byte[] oldKey = _encryptionService.DeriveKey((currentPassphrase ?? string.Empty).AsSpan(), oldSalt);
 
+                // The new key (and the re-written manifest) must use the NEW
+                // passphrase when one is supplied; otherwise we keep the current
+                // passphrase (pure keyfile/salt rotation). Without this the
+                // "change master password" path silently kept the old password.
+                string effectiveNewPassphrase = string.IsNullOrEmpty(newPassphrase)
+                    ? (currentPassphrase ?? string.Empty)
+                    : newPassphrase;
+
                 byte[] newSalt = _encryptionService.GenerateSalt(32);
                 string keyfileContent = await File.ReadAllTextAsync(newKeyfilePath, cancellationToken);
-                string combinedSecret = (currentPassphrase ?? string.Empty) + keyfileContent;
+                string combinedSecret = effectiveNewPassphrase + keyfileContent;
                 byte[] newKey = _encryptionService.DeriveKey(combinedSecret.AsSpan(), newSalt);
 
                 progress?.Report(new RekeyProgress("Re-encrypting vault database...", 40));
@@ -79,7 +88,7 @@ namespace PhantomVault.Core.Services.Security
                 manifest.KeyRotationCount += 1;
                 manifest.KeyRotationPending = false;
 
-                _manifestService.WriteManifest(manifest, manifestPath, currentPassphrase, newKeyfilePath, usbSerial);
+                _manifestService.WriteManifest(manifest, manifestPath, effectiveNewPassphrase, newKeyfilePath, usbSerial);
 
                 progress?.Report(new RekeyProgress("Cleaning up...", 100));
 
@@ -159,7 +168,8 @@ namespace PhantomVault.Core.Services.Security
                 ? manifestPath
                 : Path.ChangeExtension(manifestPath, ".vault");
             var result = Task.Run(() =>
-                PerformRekeyAsync(vaultPath, manifestPath, currentKeyfilePath, currentPassphrase, usbSerial: null))
+                PerformRekeyAsync(vaultPath, manifestPath, currentKeyfilePath, currentPassphrase,
+                    usbSerial: null, progress: null, cancellationToken: default, newPassphrase: newPassphrase))
                 .GetAwaiter().GetResult();
 
             return result.Success;
