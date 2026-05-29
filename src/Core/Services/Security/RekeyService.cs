@@ -49,7 +49,8 @@ namespace PhantomVault.Core.Services.Security
             string? usbSerial,
             IProgress<RekeyProgress>? progress = null,
             CancellationToken cancellationToken = default,
-            string? newPassphrase = null)
+            string? newPassphrase = null,
+            string? providedNewKeyfilePath = null)
         {
             var result = new RekeyResult();
 
@@ -58,13 +59,29 @@ namespace PhantomVault.Core.Services.Security
                 progress?.Report(new RekeyProgress("Reading current manifest...", 0));
                 var manifest = _manifestService.ReadManifest(manifestPath, currentPassphrase, currentKeyfilePath, usbSerial);
 
-                progress?.Report(new RekeyProgress("Generating new keyfile...", 10));
                 string newKeyfilePath = Path.Combine(Path.GetDirectoryName(currentKeyfilePath)!, "vault.key.new");
-                await _keyfileGenerator.GenerateKeyfileAsync(newKeyfilePath, 4096);
+                if (!string.IsNullOrEmpty(providedNewKeyfilePath) && File.Exists(providedNewKeyfilePath))
+                {
+                    // Use a caller-supplied external keyfile instead of generating
+                    // one. Copy it into the vault directory as the new keyfile.
+                    progress?.Report(new RekeyProgress("Importing selected keyfile...", 10));
+                    File.Copy(providedNewKeyfilePath, newKeyfilePath, overwrite: true);
+                }
+                else
+                {
+                    progress?.Report(new RekeyProgress("Generating new keyfile...", 10));
+                    await _keyfileGenerator.GenerateKeyfileAsync(newKeyfilePath, 4096);
+                }
 
                 progress?.Report(new RekeyProgress("Deriving new encryption key...", 20));
                 byte[] oldSalt = Convert.FromBase64String(manifest.SaltBase64);
-                byte[] oldKey = _encryptionService.DeriveKey((currentPassphrase ?? string.Empty).AsSpan(), oldSalt);
+                // Old key derivation must mirror how the vault was originally
+                // encrypted: passphrase + current keyfile content. Deriving from
+                // passphrase alone would fail to decrypt vaults that were sealed
+                // with the standard layered (passphrase+keyfile) scheme.
+                string currentKeyfileContent = await File.ReadAllTextAsync(currentKeyfilePath, cancellationToken);
+                string oldCombinedSecret = (currentPassphrase ?? string.Empty) + currentKeyfileContent;
+                byte[] oldKey = _encryptionService.DeriveKey(oldCombinedSecret.AsSpan(), oldSalt);
 
                 // The new key (and the re-written manifest) must use the NEW
                 // passphrase when one is supplied; otherwise we keep the current
@@ -167,9 +184,18 @@ namespace PhantomVault.Core.Services.Security
             var vaultPath = manifestPath.EndsWith(".pvault", StringComparison.OrdinalIgnoreCase)
                 ? manifestPath
                 : Path.ChangeExtension(manifestPath, ".vault");
+            // Honor an explicitly-provided new keyfile (use existing) when it
+            // differs from the current keyfile; otherwise a new one is generated.
+            string? providedNewKeyfile =
+                !string.IsNullOrEmpty(newKeyfilePath) &&
+                !string.Equals(newKeyfilePath, currentKeyfilePath, StringComparison.OrdinalIgnoreCase)
+                    ? newKeyfilePath
+                    : null;
+
             var result = Task.Run(() =>
                 PerformRekeyAsync(vaultPath, manifestPath, currentKeyfilePath, currentPassphrase,
-                    usbSerial: null, progress: null, cancellationToken: default, newPassphrase: newPassphrase))
+                    usbSerial: null, progress: null, cancellationToken: default,
+                    newPassphrase: newPassphrase, providedNewKeyfilePath: providedNewKeyfile))
                 .GetAwaiter().GetResult();
 
             return result.Success;

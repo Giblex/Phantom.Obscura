@@ -158,11 +158,10 @@
             <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassActiveBorderBrush}" />
         </Style>
 
-        <!-- Sidebar nav button: idle = transparent (matches sidebar background),
-             active (currently-selected page) = flat dark navy #26385C. No
-             hover/pressed sheen. Full ControlTemplate override is required to
-             suppress Avalonia Fluent Button chrome. Background is bound via
-             TemplateBinding so the .active selector can swap it. -->
+        <!-- Sidebar nav button: idle = transparent (matches sidebar bg).
+             Active (currently-selected page) = subtle recessed depth: a
+             slightly darker fill plus a single faint top inset stroke. No
+             gradients, no rim-light — minimal cue only. -->
         <Style Selector="Button.flat-navy">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
@@ -186,79 +185,13 @@
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="0"
                                 CornerRadius="0"/>
-                        <!-- Pressed-in look: heavy dark stroke on top/left + soft
-                             dark gradient fade from the top edge inward to mimic
-                             a cast shadow inside the recessed well, plus a faint
-                             bottom/right rim-light. -->
-                        <!-- Vertical fill gradient: darker at top, lighter at bottom.
-                             Reinforces "light from above striking a recessed
-                             surface" — the base depth cue. -->
-                        <Border x:Name="NavyFillGradient"
+                        <!-- Subtle top inset: 1px translucent dark line. Only
+                             visible when .active is set. -->
+                        <Border x:Name="NavyTopInset"
                                 Opacity="0"
-                                IsHitTestVisible="False">
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                                    <GradientStop Color="#08101C" Offset="0"/>
-                                    <GradientStop Color="#0F1A2E" Offset="0.5"/>
-                                    <GradientStop Color="#152340" Offset="1"/>
-                                </LinearGradientBrush>
-                            </Border.Background>
-                        </Border>
-                        <!-- Top cast-shadow: tall, opaque at the top edge, fading
-                             ~24px down into the well. -->
-                        <Border x:Name="NavyShadowFade"
-                                Opacity="0"
-                                Height="24"
-                                VerticalAlignment="Top"
-                                IsHitTestVisible="False">
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                                    <GradientStop Color="#D0000000" Offset="0"/>
-                                    <GradientStop Color="#60000000" Offset="0.4"/>
-                                    <GradientStop Color="#00000000" Offset="1"/>
-                                </LinearGradientBrush>
-                            </Border.Background>
-                        </Border>
-                        <!-- Left cast-shadow: wider band fading inward. -->
-                        <Border x:Name="NavyShadowFadeLeft"
-                                Opacity="0"
-                                Width="18"
-                                HorizontalAlignment="Left"
-                                IsHitTestVisible="False">
-                            <Border.Background>
-                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
-                                    <GradientStop Color="#A0000000" Offset="0"/>
-                                    <GradientStop Color="#40000000" Offset="0.4"/>
-                                    <GradientStop Color="#00000000" Offset="1"/>
-                                </LinearGradientBrush>
-                            </Border.Background>
-                        </Border>
-                        <!-- Hard inset stroke: 3px top/left, near-black at the
-                             corner where the well is deepest. -->
-                        <Border x:Name="NavyInsetShadow"
-                                Opacity="0"
-                                BorderThickness="3,3,0,0"
-                                IsHitTestVisible="False">
-                            <Border.BorderBrush>
-                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                    <GradientStop Color="#FF000000" Offset="0"/>
-                                    <GradientStop Color="#60000000" Offset="1"/>
-                                </LinearGradientBrush>
-                            </Border.BorderBrush>
-                        </Border>
-                        <!-- Bottom/right rim-light: stronger so the recessed
-                             edge catches a clear specular highlight. -->
-                        <Border x:Name="NavyInsetHighlight"
-                                Opacity="0"
-                                BorderThickness="0,0,2,2"
-                                IsHitTestVisible="False">
-                            <Border.BorderBrush>
-                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                    <GradientStop Color="#00FFFFFF" Offset="0"/>
-                                    <GradientStop Color="#50FFFFFF" Offset="1"/>
-                                </LinearGradientBrush>
-                            </Border.BorderBrush>
-                        </Border>
+                                BorderThickness="0,1,0,0"
+                                BorderBrush="#40000000"
+                                IsHitTestVisible="False"/>
                         <ContentPresenter Content="{TemplateBinding Content}"
                                           ContentTemplate="{TemplateBinding ContentTemplate}"
                                           Padding="{TemplateBinding Padding}"
@@ -269,41 +202,27 @@
             </Setter>
         </Style>
         <Style Selector="Button.flat-navy:pointerover">
-            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Background" Value="#10000000"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
         </Style>
         <Style Selector="Button.flat-navy:pressed">
-            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Background" Value="#18000000"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
         </Style>
-        <!-- Active fill: darker than WindowBackgroundBrush (#1E2A38 in default
-             dark theme) so the selected row reads recessed, not lifted. -->
+        <!-- Active: gentle darker tint (~10% black) over sidebar bg for a
+             subtle recessed feel — no harsh navy block. -->
         <Style Selector="Button.flat-navy.active">
-            <Setter Property="Background" Value="#0F1A2E"/>
-            <Setter Property="BorderBrush" Value="#0F1A2E"/>
+            <Setter Property="Background" Value="#22000000"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
         </Style>
-        <Style Selector="Button.flat-navy.active /template/ Border#NavyFillGradient">
-            <Setter Property="Opacity" Value="1"/>
-        </Style>
-        <Style Selector="Button.flat-navy.active /template/ Border#NavyShadowFade">
-            <Setter Property="Opacity" Value="1"/>
-        </Style>
-        <Style Selector="Button.flat-navy.active /template/ Border#NavyShadowFadeLeft">
-            <Setter Property="Opacity" Value="1"/>
-        </Style>
-        <Style Selector="Button.flat-navy.active /template/ Border#NavyInsetShadow">
-            <Setter Property="Opacity" Value="1"/>
-        </Style>
-        <Style Selector="Button.flat-navy.active /template/ Border#NavyInsetHighlight">
+        <Style Selector="Button.flat-navy.active /template/ Border#NavyTopInset">
             <Setter Property="Opacity" Value="1"/>
         </Style>
         <Style Selector="Button.flat-navy.active:pointerover">
-            <Setter Property="Background" Value="#0F1A2E"/>
-            <Setter Property="BorderBrush" Value="#0F1A2E"/>
+            <Setter Property="Background" Value="#28000000"/>
         </Style>
         <Style Selector="Button.flat-navy.active:pressed">
-            <Setter Property="Background" Value="#0F1A2E"/>
-            <Setter Property="BorderBrush" Value="#0F1A2E"/>
+            <Setter Property="Background" Value="#2E000000"/>
         </Style>
 
         <Style Selector="ToggleButton.category-filter">

@@ -170,14 +170,14 @@
                 <GradientStop Color="#06CFE8FF" Offset="1"/>
             </LinearGradientBrush>
             <LinearGradientBrush x:Key="DashboardTileBg" StartPoint="0%,0%" EndPoint="100%,100%">
-                <GradientStop Color="#221D3148" Offset="0"/>
-                <GradientStop Color="#1A16263A" Offset="0.5"/>
-                <GradientStop Color="#1415212E" Offset="1"/>
+                <GradientStop Color="#6E243A5C" Offset="0"/>
+                <GradientStop Color="#5E1C2E4A" Offset="0.5"/>
+                <GradientStop Color="#4E162538" Offset="1"/>
             </LinearGradientBrush>
             <LinearGradientBrush x:Key="DashboardTileHoverBg" StartPoint="0%,0%" EndPoint="100%,100%">
-                <GradientStop Color="#2820364D" Offset="0"/>
-                <GradientStop Color="#1E1A2C3E" Offset="0.5"/>
-                <GradientStop Color="#16152232" Offset="1"/>
+                <GradientStop Color="#822E4870" Offset="0"/>
+                <GradientStop Color="#72223A5C" Offset="0.5"/>
+                <GradientStop Color="#621C3048" Offset="1"/>
             </LinearGradientBrush>
             <Color x:Key="DashboardTileBorderColor">#48FFFFFF</Color>
             <Color x:Key="DashboardTileHoverBorderColor">#55CFE8FF</Color>

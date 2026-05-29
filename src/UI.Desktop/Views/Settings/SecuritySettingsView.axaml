@@ -228,12 +228,83 @@
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
 
-                <Button Content="Change Master Password"
-                        Width="200"
+                <Button Content="Set / Change Master Password"
+                        Width="240"
                         HorizontalAlignment="Left"
                         Classes="liquid-glass"
                         Command="{Binding $parent[Window].DataContext.ChangeMasterPasswordCommand}"
-                        ToolTip.Tip="Update your vault's master password (keyfile is rotated; password is optional)"/>
+                        ToolTip.Tip="Set a master password if you don't have one yet, or change your existing one. Password is optional — keyfile is mandatory."/>
+            </StackPanel>
+        </Border>
+
+        <!-- Keyfile Management Section -->
+        <Border Classes="fade-in stagger-5"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
+                Padding="20"
+                MaxWidth="640"
+                HorizontalAlignment="Stretch">
+            <StackPanel Spacing="15">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Path Data="{StaticResource Icon.Key}" Width="20" Height="20" Stretch="Uniform"
+                          Stroke="#FFFFFFFF" StrokeThickness="1.5" StrokeLineCap="Round" StrokeJoin="Round"
+                          Fill="Transparent" VerticalAlignment="Center"/>
+                    <TextBlock Text="Keyfile"
+                               FontSize="{StaticResource Type.Body.Size}"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <TextBlock Text="Your keyfile is mandatory — it is required (together with your password, if set) to unlock the vault. Keep a backup somewhere safe and separate from the vault."
+                           FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
+
+                <!-- Current keyfile -->
+                <Border Background="{DynamicResource WindowBackgroundBrush}"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{StaticResource Radius.Md}"
+                        Padding="12,10">
+                    <StackPanel Spacing="3">
+                        <TextBlock Text="Current keyfile"
+                                   FontSize="{StaticResource Type.Tiny.Size}"
+                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                        <TextBlock Text="{Binding $parent[Window].DataContext.CurrentKeyfileDisplay}"
+                                   FontSize="{StaticResource Type.Small.Size}"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+
+                <WrapPanel Orientation="Horizontal">
+                    <Button Content="Backup Keyfile"
+                            Margin="0,0,10,10"
+                            Padding="14,8"
+                            Classes="liquid-glass"
+                            Command="{Binding $parent[Window].DataContext.BackupKeyfileCommand}"
+                            ToolTip.Tip="Save a copy of your current keyfile to a safe location"/>
+                    <Button Content="Regenerate Keyfile"
+                            Margin="0,0,10,10"
+                            Padding="14,8"
+                            Classes="liquid-glass"
+                            Command="{Binding $parent[Window].DataContext.RegenerateKeyfileCommand}"
+                            ToolTip.Tip="Generate a brand-new keyfile and re-encrypt the vault (password unchanged)"/>
+                    <Button Content="Change to Existing Keyfile…"
+                            Margin="0,0,10,10"
+                            Padding="14,8"
+                            Classes="liquid-glass"
+                            Command="{Binding $parent[Window].DataContext.ChangeKeyfileCommand}"
+                            ToolTip.Tip="Re-encrypt the vault using a keyfile you select"/>
+                </WrapPanel>
+
+                <TextBlock Text="⚠ Regenerating or changing the keyfile re-encrypts your vault. Make a backup of the new keyfile immediately afterwards."
+                           FontSize="{StaticResource Type.Tiny.Size}"
+                           Foreground="{DynamicResource WarningBrush}"
+                           TextWrapping="Wrap"/>
             </StackPanel>
         </Border>
 

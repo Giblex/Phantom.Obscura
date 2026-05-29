@@ -427,6 +427,9 @@ namespace PhantomVault.UI.ViewModels
             CloseIconManagerCommand = ReactiveCommand.Create(CloseIconManager);
             RotateNowCommand = ReactiveCommand.CreateFromTask(RotateNowAsync);
             ChangeMasterPasswordCommand = ReactiveCommand.CreateFromTask(ChangeMasterPasswordAsync);
+            RegenerateKeyfileCommand = ReactiveCommand.CreateFromTask(RegenerateKeyfileAsync);
+            ChangeKeyfileCommand = ReactiveCommand.CreateFromTask(ChangeKeyfileAsync);
+            BackupKeyfileCommand = ReactiveCommand.CreateFromTask(BackupKeyfileAsync);
             DismissRotationBannerCommand = ReactiveCommand.Create(DismissRotationBanner);
 
             // Initialize Import/Export commands
@@ -2217,6 +2220,9 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> CloseIconManagerCommand { get; }
         public ReactiveCommand<Unit, Unit> RotateNowCommand { get; }
         public ReactiveCommand<Unit, Unit> ChangeMasterPasswordCommand { get; }
+        public ReactiveCommand<Unit, Unit> RegenerateKeyfileCommand { get; }
+        public ReactiveCommand<Unit, Unit> ChangeKeyfileCommand { get; }
+        public ReactiveCommand<Unit, Unit> BackupKeyfileCommand { get; }
         public ReactiveCommand<Unit, Unit> DismissRotationBannerCommand { get; }
 
         // Import/Export commands
@@ -6881,6 +6887,187 @@ namespace PhantomVault.UI.ViewModels
         private void DismissRotationBanner()
         {
             IsRotationBannerDismissed = true;
+        }
+
+        /// <summary>Display string for the current keyfile (name + folder).</summary>
+        public string CurrentKeyfileDisplay
+        {
+            get
+            {
+                var kf = _vaultKeyfilePath;
+                if (string.IsNullOrEmpty(kf)) return "No keyfile on record";
+                try { return $"{Path.GetFileName(kf)}  —  {Path.GetDirectoryName(kf)}"; }
+                catch { return kf; }
+            }
+        }
+
+        /// <summary>
+        /// Regenerate (rotate) the vault keyfile, keeping the current password.
+        /// A brand-new entropy-blended keyfile is created and the vault is
+        /// re-encrypted under it.
+        /// </summary>
+        private async Task RegenerateKeyfileAsync()
+        {
+            if (!TryGetKeyfileContext(out var manifestPath, out var passphrase, out var keyfilePath))
+                return;
+
+            var confirm = await _dialogService.ShowConfirmationAsync(
+                "Regenerate Keyfile",
+                "This generates a brand-new keyfile and re-encrypts your vault under it. " +
+                "Your password is unchanged.\n\nBack up the new keyfile afterwards — without it " +
+                "(and your password, if set) the vault cannot be opened. Continue?",
+                _ownerWindow);
+            if (!confirm) return;
+
+            await RunKeyfileRekeyAsync(manifestPath, passphrase, keyfilePath,
+                providedNewKeyfile: keyfilePath, // same path → service generates a new one
+                successTitle: "Keyfile Regenerated",
+                successMessage: "A new keyfile was generated and your vault re-encrypted. " +
+                                "Use Backup Keyfile to save a copy somewhere safe.");
+        }
+
+        /// <summary>
+        /// Replace the vault keyfile with an existing keyfile chosen by the user
+        /// (keeps the current password).
+        /// </summary>
+        private async Task ChangeKeyfileAsync()
+        {
+            if (!TryGetKeyfileContext(out var manifestPath, out var passphrase, out var keyfilePath))
+                return;
+
+            if (_ownerWindow?.StorageProvider is not { } storage)
+            {
+                await _dialogService.ShowErrorAsync("Unavailable", "File picker is not available.", _ownerWindow);
+                return;
+            }
+
+            var files = await storage.OpenFilePickerAsync(new Avalonia.Platform.Storage.FilePickerOpenOptions
+            {
+                Title = "Select Keyfile",
+                AllowMultiple = false
+            });
+            var picked = files is { Count: > 0 } ? files[0] : null;
+            var newKeyfile = picked?.Path?.LocalPath;
+            if (string.IsNullOrEmpty(newKeyfile)) return;
+
+            var confirm = await _dialogService.ShowConfirmationAsync(
+                "Change Keyfile",
+                $"Re-encrypt your vault using the selected keyfile?\n\n{Path.GetFileName(newKeyfile)}\n\n" +
+                "Keep that keyfile safe — it will be required (with your password, if set) to open the vault.",
+                _ownerWindow);
+            if (!confirm) return;
+
+            await RunKeyfileRekeyAsync(manifestPath, passphrase, keyfilePath,
+                providedNewKeyfile: newKeyfile,
+                successTitle: "Keyfile Changed",
+                successMessage: "Your vault is now protected by the selected keyfile.");
+        }
+
+        /// <summary>Copy the current keyfile to a user-chosen location.</summary>
+        private async Task BackupKeyfileAsync()
+        {
+            if (string.IsNullOrEmpty(_vaultKeyfilePath) || !File.Exists(_vaultKeyfilePath))
+            {
+                await _dialogService.ShowErrorAsync("No Keyfile", "There is no keyfile to back up.", _ownerWindow);
+                return;
+            }
+
+            if (_ownerWindow?.StorageProvider is not { } storage)
+            {
+                await _dialogService.ShowErrorAsync("Unavailable", "File picker is not available.", _ownerWindow);
+                return;
+            }
+
+            var file = await storage.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
+            {
+                Title = "Backup Keyfile",
+                SuggestedFileName = "vault.key"
+            });
+            var dest = file?.Path?.LocalPath;
+            if (string.IsNullOrEmpty(dest)) return;
+
+            try
+            {
+                File.Copy(_vaultKeyfilePath!, dest, overwrite: true);
+                await _dialogService.ShowSuccessAsync(
+                    "Keyfile Backed Up",
+                    $"A copy of your keyfile was saved to:\n{dest}\n\nStore it somewhere safe and separate from your vault.",
+                    _ownerWindow);
+            }
+            catch (Exception ex)
+            {
+                await _dialogService.ShowErrorAsync("Backup Failed", $"Could not back up the keyfile: {ex.Message}", _ownerWindow);
+            }
+        }
+
+        /// <summary>
+        /// Shared keyfile-context guard: requires an unlocked vault with a
+        /// mandatory keyfile and a resolvable manifest.
+        /// </summary>
+        private bool TryGetKeyfileContext(out string manifestPath, out string? passphrase, out string? keyfilePath)
+        {
+            manifestPath = string.Empty; passphrase = null; keyfilePath = null;
+            if (_rekeyService == null)
+            {
+                _ = _dialogService.ShowErrorAsync("Service Unavailable", "The key rotation service is not available.", _ownerWindow);
+                return false;
+            }
+            if (!TryGetManifestContext(out manifestPath, out passphrase, out keyfilePath))
+            {
+                _ = _dialogService.ShowErrorAsync("Manifest Not Found", "Ensure the vault is unlocked and mounted.", _ownerWindow);
+                return false;
+            }
+            if (string.IsNullOrEmpty(keyfilePath))
+            {
+                _ = _dialogService.ShowErrorAsync("Keyfile Required", "This vault has no keyfile on record.", _ownerWindow);
+                return false;
+            }
+            return true;
+        }
+
+        private async Task RunKeyfileRekeyAsync(string manifestPath, string? passphrase, string? keyfilePath,
+            string? providedNewKeyfile, string successTitle, string successMessage)
+        {
+            IsBusy = true;
+            StatusMessage = "Updating keyfile...";
+            try
+            {
+                bool success = _rekeyService!.RekeyVault(
+                    manifestPath,
+                    passphrase ?? string.Empty,
+                    passphrase ?? string.Empty, // keep password
+                    keyfilePath,
+                    providedNewKeyfile);
+
+                if (!success)
+                {
+                    await _dialogService.ShowErrorAsync("Keyfile Update Failed",
+                        "Failed to update the keyfile. Your existing keyfile remains in place.", _ownerWindow);
+                    StatusMessage = "Keyfile update failed";
+                    return;
+                }
+
+                var rotatedKeyfile = Path.Combine(Path.GetDirectoryName(keyfilePath!) ?? string.Empty, "vault.key.new");
+                if (File.Exists(rotatedKeyfile))
+                {
+                    _vaultKeyfilePath = rotatedKeyfile;
+                    _reauthKeyfilePath = rotatedKeyfile;
+                    this.RaisePropertyChanged(nameof(CurrentKeyfileDisplay));
+                }
+
+                StatusMessage = successTitle;
+                await _dialogService.ShowSuccessAsync(successTitle, successMessage, _ownerWindow);
+            }
+            catch (Exception ex)
+            {
+                await _dialogService.ShowErrorAsync("Keyfile Update Failed",
+                    $"Failed to update the keyfile: {ex.Message}", _ownerWindow);
+                StatusMessage = $"Keyfile update failed: {ex.Message}";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         /// <summary>

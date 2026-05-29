@@ -19,6 +19,24 @@
             <Setter Property="Padding" Value="0"/>
             <Setter Property="Margin" Value="0"/>
         </Style>
+        <!-- Actions button morph: flatten bottom corners + accent rim while the
+             flyout is open so the button reads as physically merged with the
+             dropdown surface below it. Smooth transitions on the morphed props. -->
+        <Style Selector="Button#ActionsMenuButton">
+            <Setter Property="Transitions">
+                <Setter.Value>
+                    <Transitions>
+                        <CornerRadiusTransition Property="CornerRadius" Duration="0:0:0.22"/>
+                        <BrushTransition Property="BorderBrush" Duration="0:0:0.22"/>
+                    </Transitions>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style Selector="Button#ActionsMenuButton.menu-open">
+            <Setter Property="CornerRadius" Value="14,14,0,0"/>
+            <Setter Property="BorderBrush" Value="#90CFE8FF"/>
+            <Setter Property="BorderThickness" Value="1,1,1,0"/>
+        </Style>
     </UserControl.Styles>
 
     <Border Classes="header-surface"
@@ -148,7 +166,7 @@
             </Grid>
             
             <!-- Right: Action Buttons -->
-            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                 <!-- Actions Menu Button -->
                 <Button x:Name="ActionsMenuButton"
                         Classes="liquid-glass icon"
@@ -165,18 +183,29 @@
                         <Flyout Placement="BottomEdgeAlignedRight"
                                 FlyoutPresenterClasses="actions-menu"
                                 HorizontalOffset="0"
-                                VerticalOffset="-1">
-                            <!-- Drop menu molds to the button above: no top border
-                                 edge (VerticalOffset -1 overlaps the button so the
-                                 two read as one continuous surface), flat top
-                                 corners, deep layered outer shadow for lift, and a
-                                 liquid-glass cyan rim on the three open edges. -->
-                            <Border Background="{DynamicResource ContentBackgroundBrush}"
+                                VerticalOffset="4">
+                            <!-- Drop menu sits 4px below the button. The morphed
+                                 button (bottom corners flattened, accent rim on
+                                 the side+top) and the dropdown's flat top corners
+                                 share the same accent border so the gap reads as
+                                 a seam rather than a detached card. Inner Border
+                                 animates Opacity + TranslateY on open (slow). -->
+                            <Border x:Name="ActionsDropRoot"
+                                    Background="{DynamicResource ContentBackgroundBrush}"
                                     CornerRadius="0,0,22,22"
                                     Padding="10"
                                     MinWidth="240"
                                     BorderThickness="1,0,1,1"
+                                    Opacity="0"
+                                    RenderTransformOrigin="50%,0%"
+                                    RenderTransform="translateY(-14px)"
                                     BoxShadow="0 26 80 -10 #C8000000, 0 8 24 -6 #80000000">
+                                <Border.Transitions>
+                                    <Transitions>
+                                        <DoubleTransition Property="Opacity" Duration="0:0:0.32"/>
+                                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.32"/>
+                                    </Transitions>
+                                </Border.Transitions>
                                 <Border.BorderBrush>
                                     <!-- Liquid-glass cyan rim consistent with the rest
                                          of the app (matches sidebar NavGlass border). -->
