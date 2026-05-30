@@ -8,39 +8,154 @@
              x:Class="PhantomVault.UI.Views.HeaderView">
 
     <UserControl.Styles>
-        <!-- Scoped flyout presenter for the Add Entry / Actions dropdown:
-             strip the default border (was reading yellow on some themes) and
-             flatten the top edge so the dropdown molds to the button below. -->
+
         <Style Selector="FlyoutPresenter.actions-menu">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="CornerRadius" Value="0,0,22,22"/>
+            <Setter Property="CornerRadius" Value="0"/>
             <Setter Property="Padding" Value="0"/>
             <Setter Property="Margin" Value="0"/>
+            <Setter Property="MaxHeight" Value="900"/>
+            <Setter Property="MaxWidth" Value="500"/>
+            <Setter Property="ClipToBounds" Value="False"/>
         </Style>
-        <!-- Actions button morph: flatten bottom corners + accent rim while the
-             flyout is open so the button reads as physically merged with the
-             dropdown surface below it. Smooth transitions on the morphed props. -->
+
         <Style Selector="Button#ActionsMenuButton">
+            <Setter Property="CornerRadius" Value="{StaticResource Radius.Lg}"/>
             <Setter Property="Transitions">
-                <Setter.Value>
-                    <Transitions>
-                        <CornerRadiusTransition Property="CornerRadius" Duration="0:0:0.22"/>
-                        <BrushTransition Property="BorderBrush" Duration="0:0:0.22"/>
-                    </Transitions>
-                </Setter.Value>
+                <Transitions>
+                    <CornerRadiusTransition Property="CornerRadius" Duration="0:0:0.28">
+                        <CornerRadiusTransition.Easing>
+                            <CubicEaseOut/>
+                        </CornerRadiusTransition.Easing>
+                    </CornerRadiusTransition>
+                    <ThicknessTransition Property="BorderThickness" Duration="0:0:0.28">
+                        <ThicknessTransition.Easing>
+                            <CubicEaseOut/>
+                        </ThicknessTransition.Easing>
+                    </ThicknessTransition>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button#ActionsMenuButton /template/ Border#BaseBorder">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.18"/>
+                    <BrushTransition Property="Background" Duration="0:0:0.18"/>
+                    <CornerRadiusTransition Property="CornerRadius" Duration="0:0:0.28">
+                        <CornerRadiusTransition.Easing>
+                            <CubicEaseOut/>
+                        </CornerRadiusTransition.Easing>
+                    </CornerRadiusTransition>
+                    <ThicknessTransition Property="BorderThickness" Duration="0:0:0.28">
+                        <ThicknessTransition.Easing>
+                            <CubicEaseOut/>
+                        </ThicknessTransition.Easing>
+                    </ThicknessTransition>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button#ActionsMenuButton /template/ controls|BorderEnergyTrace">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <CornerRadiusTransition Property="CornerRadius" Duration="0:0:0.28">
+                        <CornerRadiusTransition.Easing>
+                            <CubicEaseOut/>
+                        </CornerRadiusTransition.Easing>
+                    </CornerRadiusTransition>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.22"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button#ActionsMenuButton.menu-open /template/ controls|BorderEnergyTrace">
+            <Setter Property="Opacity" Value="0"/>
+        </Style>
+        <Style Selector="Button#ActionsMenuButton /template/ Border">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <CornerRadiusTransition Property="CornerRadius" Duration="0:0:0.28">
+                        <CornerRadiusTransition.Easing>
+                            <CubicEaseOut/>
+                        </CornerRadiusTransition.Easing>
+                    </CornerRadiusTransition>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button#ActionsMenuButton /template/ Border#Sheen">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <CornerRadiusTransition Property="CornerRadius" Duration="0:0:0.28">
+                        <CornerRadiusTransition.Easing>
+                            <CubicEaseOut/>
+                        </CornerRadiusTransition.Easing>
+                    </CornerRadiusTransition>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.18"/>
+                    <ThicknessTransition Property="Margin" Duration="0:0:0.25" Easing="SineEaseInOut"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button#ActionsMenuButton /template/ Border#DisabledMask">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <CornerRadiusTransition Property="CornerRadius" Duration="0:0:0.28">
+                        <CornerRadiusTransition.Easing>
+                            <CubicEaseOut/>
+                        </CornerRadiusTransition.Easing>
+                    </CornerRadiusTransition>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button#ActionsMenuButton /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <CornerRadiusTransition Property="CornerRadius" Duration="0:0:0.28">
+                        <CornerRadiusTransition.Easing>
+                            <CubicEaseOut/>
+                        </CornerRadiusTransition.Easing>
+                    </CornerRadiusTransition>
+                </Transitions>
             </Setter>
         </Style>
         <Style Selector="Button#ActionsMenuButton.menu-open">
             <Setter Property="CornerRadius" Value="14,14,0,0"/>
-            <Setter Property="BorderBrush" Value="#90CFE8FF"/>
+            <Setter Property="BorderBrush" Value="#99D8E6F2"/>
+            <Setter Property="BorderThickness" Value="1,1,1,0"/>
+        </Style>
+        <Style Selector="Button#ActionsMenuButton.menu-open:pointerover">
+            <Setter Property="CornerRadius" Value="14,14,0,0"/>
+            <Setter Property="BorderThickness" Value="1,1,1,0"/>
+        </Style>
+        <Style Selector="Button#ActionsMenuButton.menu-open:pressed">
+            <Setter Property="CornerRadius" Value="14,14,0,0"/>
+            <Setter Property="BorderThickness" Value="1,1,1,0"/>
+        </Style>
+        <Style Selector="Button#ActionsMenuButton.menu-open /template/ Border#BaseBorder">
+            <Setter Property="CornerRadius" Value="14,14,0,0"/>
+        </Style>
+        <Style Selector="Button#ActionsMenuButton.menu-open:pointerover /template/ Border#BaseBorder">
+            <Setter Property="CornerRadius" Value="14,14,0,0"/>
+        </Style>
+        <Style Selector="Button#ActionsMenuButton.menu-open:pressed /template/ Border#BaseBorder">
+            <Setter Property="CornerRadius" Value="14,14,0,0"/>
+            <Setter Property="BorderThickness" Value="1,1,1,0"/>
+        </Style>
+        <Style Selector="Button#ActionsMenuButton.menu-open:focus-visible /template/ Border#BaseBorder">
+            <Setter Property="CornerRadius" Value="14,14,0,0"/>
+            <Setter Property="BorderThickness" Value="1,1,1,0"/>
+        </Style>
+        <Style Selector="Button#ActionsMenuButton.menu-open:focus-visible">
+            <Setter Property="CornerRadius" Value="14,14,0,0"/>
+            <Setter Property="BorderThickness" Value="1,1,1,0"/>
+        </Style>
+        <Style Selector="Button#ActionsMenuButton.menu-open:pointerover /template/ Border#BaseBorder">
+            <Setter Property="CornerRadius" Value="14,14,0,0"/>
             <Setter Property="BorderThickness" Value="1,1,1,0"/>
         </Style>
     </UserControl.Styles>
 
     <Border Classes="header-surface"
-            Background="{DynamicResource HeaderBackgroundBrush}" 
+            Background="{DynamicResource HeaderBackgroundBrush}"
             Padding="{StaticResource DialogPadding}"
             BorderBrush="{DynamicResource HeaderBorderBrush}"
             BorderThickness="0,0,0,1"
@@ -48,22 +163,20 @@
             ClipToBounds="True"
             Effect="{x:Null}">
         <Grid ColumnDefinitions="Auto,*,Auto">
-            
-            <!-- Left: Logo and Title -->
+
             <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="{StaticResource Space12}" VerticalAlignment="Center">
                 <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png" Width="48" Height="48" VerticalAlignment="Center"/>
                 <StackPanel Spacing="2">
-                    <TextBlock Text="PhantomObscura" 
-                               FontSize="{StaticResource Type.H4.Size}" 
+                    <TextBlock Text="PhantomObscura"
+                               FontSize="{StaticResource Type.H4.Size}"
                                FontWeight="Bold"
                                Foreground="{DynamicResource LogoTitleBrush}"/>
-                    <TextBlock Text="{Binding VaultName}" 
-                               FontSize="{StaticResource Type.Tiny.Size}" 
+                    <TextBlock Text="{Binding VaultName}"
+                               FontSize="{StaticResource Type.Tiny.Size}"
                                Classes="header-muted"/>
                 </StackPanel>
             </StackPanel>
-            
-            <!-- Center: Search Box and View Toggle -->
+
             <Grid Grid.Column="1" ColumnDefinitions="*,Auto" Margin="30,0" VerticalAlignment="Center">
                 <Border Grid.Column="0"
                         Background="{DynamicResource ControlBackgroundBrush}"
@@ -132,10 +245,7 @@
                         ToolTipText="Toggle list/grid view"
                         IsVisible="{Binding !IsShowingSecureTrash}">
                     <controls:LiquidGlassButton.ButtonContent>
-                        <!-- Issue #9: Canvas children don't honour Stretch and pin to
-                             top-left, so the view-toggle icons rendered off-centre
-                             in the 22×22 button content. Use Viewbox to scale the
-                             paths uniformly inside a centred host grid. -->
+
                         <Grid Width="22" Height="22">
                             <Viewbox Width="22" Height="22"
                                      HorizontalAlignment="Center"
@@ -164,10 +274,9 @@
                     </controls:LiquidGlassButton.ButtonContent>
                 </controls:LiquidGlassButton>
             </Grid>
-            
-            <!-- Right: Action Buttons -->
+
             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                <!-- Actions Menu Button -->
+
                 <Button x:Name="ActionsMenuButton"
                         Classes="liquid-glass icon"
                         Width="44"
@@ -177,63 +286,77 @@
                         Padding="0"
                         HorizontalContentAlignment="Center"
                         VerticalContentAlignment="Center"
-                        CornerRadius="{StaticResource Radius.Lg}"
                         ToolTip.Tip="Actions menu">
+
+                    <Button.Styles>
+
+                        <Style Selector="Button.menu-open /template/ Border#BaseBorder">
+                            <Setter Property="BorderThickness" Value="1,1,1,0"/>
+                            <Setter Property="CornerRadius" Value="14,14,0,0"/>
+                            <Setter Property="BorderBrush" Value="#99D8E6F2"/>
+                            <Setter Property="Background">
+                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                    <GradientStop Color="#EB0E1828" Offset="0"/>
+                                    <GradientStop Color="#F50E1828" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Setter>
+                        </Style>
+                    </Button.Styles>
                     <Button.Flyout>
                         <Flyout Placement="BottomEdgeAlignedRight"
                                 FlyoutPresenterClasses="actions-menu"
                                 HorizontalOffset="0"
-                                VerticalOffset="4">
-                            <!-- Drop menu sits 4px below the button. The morphed
-                                 button (bottom corners flattened, accent rim on
-                                 the side+top) and the dropdown's flat top corners
-                                 share the same accent border so the gap reads as
-                                 a seam rather than a detached card. Inner Border
-                                 animates Opacity + TranslateY on open (slow). -->
-                            <Border x:Name="ActionsDropRoot"
-                                    Background="{DynamicResource ContentBackgroundBrush}"
-                                    CornerRadius="0,0,22,22"
-                                    Padding="10"
-                                    MinWidth="240"
-                                    BorderThickness="1,0,1,1"
-                                    Opacity="0"
-                                    RenderTransformOrigin="50%,0%"
-                                    RenderTransform="translateY(-14px)"
-                                    BoxShadow="0 26 80 -10 #C8000000, 0 8 24 -6 #80000000">
-                                <Border.Transitions>
+                                VerticalOffset="-8">
+
+                            <Grid x:Name="ActionsDropRootWrapper"
+                                  Opacity="0"
+                                  RenderTransformOrigin="1,0"
+                                  RenderTransform="scaleY(0.001)">
+                                <Grid.Transitions>
                                     <Transitions>
-                                        <DoubleTransition Property="Opacity" Duration="0:0:0.32"/>
-                                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.32"/>
+                                        <DoubleTransition Property="Opacity" Duration="0:0:0.36">
+                                            <DoubleTransition.Easing>
+                                                <CubicEaseOut/>
+                                            </DoubleTransition.Easing>
+                                        </DoubleTransition>
+                                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.36">
+                                            <TransformOperationsTransition.Easing>
+                                                <CubicEaseOut/>
+                                            </TransformOperationsTransition.Easing>
+                                        </TransformOperationsTransition>
                                     </Transitions>
-                                </Border.Transitions>
-                                <Border.BorderBrush>
-                                    <!-- Liquid-glass cyan rim consistent with the rest
-                                         of the app (matches sidebar NavGlass border). -->
-                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                        <GradientStop Color="#90CFE8FF" Offset="0"/>
-                                        <GradientStop Color="#4000A8FF" Offset="1"/>
+                                </Grid.Transitions>
+                            <Border x:Name="ActionsDropRoot"
+                                    CornerRadius="22,0,22,22"
+                                    Padding="10,16,10,10"
+                                    MinWidth="240"
+                                    BorderThickness="1,1,1,1"
+                                    BorderBrush="#99D8E6F2"
+                                    ClipToBounds="True"
+                                    BoxShadow="0 26 80 -10 #C8000000, 0 8 24 -6 #80000000">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                        <GradientStop Color="#EB0E1828" Offset="0"/>
+                                        <GradientStop Color="#F50E1828" Offset="1"/>
                                     </LinearGradientBrush>
-                                </Border.BorderBrush>
+                                </Border.Background>
                                 <Grid>
-                                    <!-- Top sheen: glass tone bleeding down from the
-                                         button seam so the dropdown reads as an
-                                         extension of the button rather than a
-                                         detached card. -->
-                                    <Border VerticalAlignment="Top"
-                                            Height="40"
-                                            CornerRadius="0,0,0,0"
-                                            IsHitTestVisible="False">
-                                        <Border.Background>
-                                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                                                <GradientStop Color="#2ACFE8FF" Offset="0"/>
-                                                <GradientStop Color="#00CFE8FF" Offset="1"/>
-                                            </LinearGradientBrush>
-                                        </Border.Background>
-                                    </Border>
+
+                                    <controls:BorderEnergyTrace IsHitTestVisible="False"
+                                                                Progress="0.35"
+                                                                SecondaryProgress="0.85"
+                                                                Direction="1"
+                                                                TraceOpacity="0.6"
+                                                                CornerRadius="22,0,22,22"
+                                                                TraceThickness="0.78"
+                                                                TraceColor="#B7CCD5DC"
+                                                                CounterTraceColor="#182434"
+                                                                CounterTraceOpacity="0.42"
+                                                                Margin="-10,-20,-10,-10"/>
                                 <StackPanel Spacing="4">
-                                    <!-- Add Credential Section -->
-                                    <TextBlock Text="Add Credential" 
-                                               FontSize="{StaticResource Type.Body.Size}" 
+
+                                    <TextBlock Text="Add Credential"
+                                               FontSize="{StaticResource Type.Body.Size}"
                                                FontWeight="SemiBold"
                                                Foreground="{DynamicResource PrimaryTextBrush}"
                                                Margin="12,8,12,12"/>
@@ -300,12 +423,11 @@
                                             Padding="12,8">
                                         <TextBlock Text="→ PIN Code" FontSize="{StaticResource Type.Small.Size}"/>
                                     </Button>
-                                    
+
                                     <Separator Margin="0,8" Background="{DynamicResource ControlBorderBrush}"/>
-                                    
-                                    <!-- Actions Section -->
-                                    <TextBlock Text="ACTIONS" 
-                                               FontSize="{StaticResource Type.Tiny.Size}" 
+
+                                    <TextBlock Text="ACTIONS"
+                                               FontSize="{StaticResource Type.Tiny.Size}"
                                                FontWeight="SemiBold"
                                                Foreground="{DynamicResource MutedTextBrush}"
                                                Margin="8,4,8,4"/>
@@ -360,21 +482,39 @@
                                 </StackPanel>
                                 </Grid>
                             </Border>
+
+                            <Border VerticalAlignment="Top"
+                                    HorizontalAlignment="Right"
+                                    Width="46"
+                                    Height="10"
+                                    Margin="0,-8,-1,0"
+                                    IsHitTestVisible="False">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                        <GradientStop Color="#EB0E1828" Offset="0"/>
+                                        <GradientStop Color="#EB0E1828" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                            </Border>
+                            </Grid>
                         </Flyout>
                     </Button.Flyout>
-                    <Path Data="{StaticResource Icon.Menu}"
-                          Width="22"
-                          Height="22"
-                          HorizontalAlignment="Center"
-                          VerticalAlignment="Center"
-                          Stretch="Uniform"
-                          Stroke="{DynamicResource HeaderSvgIconColor}"
-                          StrokeThickness="1.7"
-                          StrokeLineCap="Round"
-                          Fill="Transparent"/>
+
+                    <Grid Width="22" Height="22">
+                        <Viewbox Width="22" Height="22"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center">
+                            <Canvas Width="24" Height="24">
+                                <Path Data="{StaticResource Icon.Menu}"
+                                      Stroke="{DynamicResource HeaderSvgIconColor}"
+                                      StrokeThickness="1.7"
+                                      StrokeLineCap="Round"
+                                      Fill="Transparent"/>
+                            </Canvas>
+                        </Viewbox>
+                    </Grid>
                 </Button>
 
-                <!-- Settings Button (Separate) -->
                 <Button x:Name="SettingsButton"
                         Classes="liquid-glass icon"
                         Width="44"
@@ -386,18 +526,22 @@
                         HorizontalContentAlignment="Center"
                         VerticalContentAlignment="Center"
                         ToolTip.Tip="Vault settings">
-                    <Path Data="{StaticResource Icon.Settings}"
-                          Width="22"
-                          Height="22"
-                          HorizontalAlignment="Center"
-                          VerticalAlignment="Center"
-                          Stretch="Uniform"
-                          Stroke="{DynamicResource HeaderSvgIconColor}"
-                          StrokeThickness="1.5"
-                          Fill="Transparent"/>
+                    <Grid Width="22" Height="22">
+                        <Viewbox Width="22" Height="22"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center">
+                            <Canvas Width="24" Height="24">
+                                <Path Data="{StaticResource Icon.Settings}"
+                                      Stroke="{DynamicResource HeaderSvgIconColor}"
+                                      StrokeThickness="1.5"
+                                      Fill="Transparent"/>
+                            </Canvas>
+                        </Viewbox>
+                    </Grid>
                 </Button>
             </StackPanel>
         </Grid>
     </Border>
-    
+
 </UserControl>
+
