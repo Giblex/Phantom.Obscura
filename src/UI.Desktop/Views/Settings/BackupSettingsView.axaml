@@ -4,33 +4,34 @@
              x:Class="PhantomVault.UI.Views.Settings.BackupSettingsView"
              x:DataType="vm:BackupSettingsViewModel">
     <StackPanel Spacing="20" Margin="0,0,30,60">
-        <TextBlock Text="Backup &amp; Restore" 
-                   FontSize="{StaticResource Type.H3.Size}" 
+        <TextBlock Text="Backup &amp; Restore"
+                   FontSize="{StaticResource Type.H3.Size}"
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource PrimaryTextBrush}"/>
-        
+
         <Border Classes="fade-in stagger-1"
-                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
-                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
-                BorderThickness="1" 
-                CornerRadius="16" 
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
                 Padding="20">
             <StackPanel Spacing="15">
-                <TextBlock Text="Scheduled Backups" 
-                           FontSize="{StaticResource Type.Body.Size}" 
+                <TextBlock Text="Scheduled Backups"
+                           FontSize="{StaticResource Type.Body.Size}"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
 
                 <StackPanel Spacing="8">
-                    <TextBlock Text="Backup location:" 
+                    <TextBlock Text="Backup location:"
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                     <Grid ColumnDefinitions="*,Auto">
-                        <TextBox Grid.Column="0" 
+                        <TextBox Grid.Column="0"
                                  Margin="0,0,10,0"
                                  Text="{Binding BackupLocation}"
                                  IsReadOnly="True"/>
-                        <Button Grid.Column="1" 
-                                Content="Browse..." 
+                        <Button Grid.Column="1"
+                                Content="Browse..."
+                                Classes="dull-blue"
                                 Command="{Binding BrowseBackupLocationCommand}"
                                 Width="100"/>
                     </Grid>
@@ -81,25 +82,25 @@
         </Border>
 
         <Border Classes="fade-in stagger-2"
-                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
-                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
-                BorderThickness="1" 
-                CornerRadius="16" 
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
                 Padding="20">
             <StackPanel Spacing="15">
-                <TextBlock Text="Manual Backup" 
-                           FontSize="{StaticResource Type.Body.Size}" 
+                <TextBlock Text="Manual Backup"
+                           FontSize="{StaticResource Type.Body.Size}"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
-                
+
                 <StackPanel Orientation="Horizontal" Spacing="10">
-                    <Button Content="Backup Now" 
+                    <Button Content="Backup Now"
                             Width="150"
                             Command="{Binding BackupNowCommand}"
                             IsEnabled="{Binding IsVaultContextAvailable}"
-                            Classes="primary"
+                            Classes="dull-blue"
                             ToolTip.Tip="Create an immediate backup"/>
-                    <Button Content="Restore from Backup" 
+                    <Button Content="Restore from Backup"
                             Width="150"
                             Command="{Binding RestoreFromBackupCommand}"
                             IsEnabled="{Binding IsVaultContextAvailable}"
@@ -107,7 +108,7 @@
                             ToolTip.Tip="Restore vault from a previous backup"/>
                 </StackPanel>
 
-                <TextBlock Text="{Binding LastBackupTime, StringFormat='Last backup: {0}'}" 
+                <TextBlock Text="{Binding LastBackupTime, StringFormat='Last backup: {0}'}"
                            FontStyle="Italic"
                            Foreground="{DynamicResource SecondaryTextBrush}"/>
 
@@ -119,24 +120,24 @@
         </Border>
 
         <Border Classes="fade-in stagger-3"
-                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
-                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
-                BorderThickness="1" 
-                CornerRadius="16" 
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
                 Padding="20">
             <StackPanel Spacing="15">
-                <TextBlock Text="Backup History" 
-                           FontSize="{StaticResource Type.Body.Size}" 
+                <TextBlock Text="Backup History"
+                           FontSize="{StaticResource Type.Body.Size}"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
-                
-                <ScrollViewer Height="150" 
+
+                <ScrollViewer Height="150"
                               HorizontalScrollBarVisibility="Disabled"
                               VerticalScrollBarVisibility="Auto">
                     <ItemsControl ItemsSource="{Binding BackupHistory}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding}" 
+                                <TextBlock Text="{Binding}"
                                            FontStyle="Italic"
                                            Foreground="{DynamicResource SecondaryTextBrush}"
                                            Margin="0,2"/>
@@ -150,8 +151,8 @@
                            FontSize="{StaticResource Type.Small.Size}"
                            Foreground="{DynamicResource SecondaryTextBrush}"/>
 
-                <Button Content="Open Backup Folder" 
-                        Width="180" 
+                <Button Content="Open Backup Folder"
+                        Width="180"
                         HorizontalAlignment="Left"
                         Command="{Binding OpenBackupFolderCommand}"
                         Classes="liquid-glass"/>
@@ -159,39 +160,38 @@
         </Border>
 
         <Border Classes="fade-in stagger-4"
-                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
-                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
-                BorderThickness="1" 
-                CornerRadius="16" 
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
                 Padding="20">
             <StackPanel Spacing="15">
-                <TextBlock Text="Vault Snapshots" 
-                           FontSize="{StaticResource Type.Body.Size}" 
+                <TextBlock Text="Vault Snapshots"
+                           FontSize="{StaticResource Type.Body.Size}"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
-                
-                <TextBlock Text="Manage encrypted backup snapshots, create new restore points, and roll back from existing backup files." 
+
+                <TextBlock Text="Manage encrypted backup snapshots, create new restore points, and roll back from existing backup files."
                            TextWrapping="Wrap"
                            Foreground="{DynamicResource SecondaryTextBrush}"/>
-                
-                <Button Content="Manage Snapshots" 
-                        Width="180" 
+
+                <Button Content="Manage Snapshots"
+                        Width="180"
                         HorizontalAlignment="Left"
                         Command="{Binding ManageSnapshotsCommand}"
                         Classes="liquid-glass"/>
             </StackPanel>
         </Border>
 
-        <!-- Recovery Vault Backup -->
         <Border Classes="fade-in stagger-5"
-                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
-                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
-                BorderThickness="1" 
-                CornerRadius="16" 
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
                 Padding="20">
             <StackPanel Spacing="15">
-                <TextBlock Text="Recovery Vault Backup" 
-                           FontSize="{StaticResource Type.Body.Size}" 
+                <TextBlock Text="Recovery Vault Backup"
+                           FontSize="{StaticResource Type.Body.Size}"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
 
@@ -204,15 +204,15 @@
                            TextWrapping="Wrap"
                            FontSize="{StaticResource Type.Small.Size}"
                            Foreground="{DynamicResource SecondaryTextBrush}"/>
-                
+
                 <StackPanel Orientation="Horizontal" Spacing="10">
-                    <Button Content="Backup Recovery Vault" 
+                    <Button Content="Backup Recovery Vault"
                             Width="180"
                             Command="{Binding BackupRecoveryVaultNowCommand}"
                             IsEnabled="{Binding IsRecoveryVaultAvailable}"
-                            Classes="primary"
+                            Classes="dull-blue"
                             ToolTip.Tip="Create immediate backup of recovery vault"/>
-                    <Button Content="Restore Recovery Vault" 
+                    <Button Content="Restore Recovery Vault"
                             Width="180"
                             Command="{Binding RestoreRecoveryVaultCommand}"
                             IsEnabled="{Binding IsRecoveryVaultAvailable}"

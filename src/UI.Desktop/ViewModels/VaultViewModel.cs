@@ -33,9 +33,7 @@ using PhantomVault.UI.Desktop.Controls;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// View model for the vault window with full credential management UI.
-    /// </summary>
+
     public sealed class VaultViewModel : ReactiveObject
     {
         private readonly VaultService _vaultService;
@@ -68,24 +66,23 @@ namespace PhantomVault.UI.ViewModels
         private string _securityStatus = "Secure";
         private bool _showSecurityAlert;
 
-        // TOTP Synchronization
         private PhantomVault.Core.Services.Sync.TotpSyncServiceObscura? _totpSyncService;
 
         private string _mountPath = string.Empty;
-        // Vault database tracking for hybrid encryption
-        private string? _vaultFilePath; // Path to vault.pvault file inside mounted container
-        private string? _vaultPassword; // Cached password for vault operations
-        private string? _vaultKeyfilePath; // Cached keyfile path for vault operations
+
+        private string? _vaultFilePath;
+        private string? _vaultPassword;
+        private string? _vaultKeyfilePath;
         private bool _isPersistingCredentialIndex;
         private ObservableCollection<string> _items = new();
         private ObservableCollection<CredentialViewModel> _credentials = new();
         private ObservableCollection<CredentialViewModel> _filteredCredentials = new();
-        private ObservableCollection<ListItemWrapper> _groupedListItems = new(); // Grouped list with category headers
-        private ObservableCollection<CredentialViewModel> _passkeys = new(); // Separate collection for passkeys
+        private ObservableCollection<ListItemWrapper> _groupedListItems = new();
+        private ObservableCollection<CredentialViewModel> _passkeys = new();
         private ObservableCollection<CredentialViewModel> _flaggedCredentials = new();
         private ObservableCollection<CategoryViewModel> _categories = new();
         private ObservableCollection<SecureTrashItemViewModel> _filteredTrashItems = new();
-        private CredentialViewModel? _selectedCredential; // Selected credential for detail view
+        private CredentialViewModel? _selectedCredential;
         private SecureTrashItemViewModel? _selectedTrashItem;
         private bool _isBusy;
         private string _status = string.Empty;
@@ -96,20 +93,20 @@ namespace PhantomVault.UI.ViewModels
         private string _settingsSaveNotification = "Settings saved";
         private string _lastSyncTime = DateTime.Now.ToString("HH:mm");
         private int _sortOption = 0;
-        private bool _isShowingAll = false;  // Start with dashboard, not All Items
+        private bool _isShowingAll = false;
         private bool _isShowingPasswords = false;
         private bool _isShowingFavorites = false;
         private bool _isShowingPasskeys = false;
         private bool _isShowingRecent = false;
         private bool _isShowingExpiringSoon = false;
-        private bool _isShowingDashboard = false;  // Dashboard closed by default — user pulls it down
-        private bool _isDashboardEnabled = true;   // User setting: dashboard on/off
+        private bool _isShowingDashboard = false;
+        private bool _isDashboardEnabled = true;
         private bool _isSettingsSaveNotificationVisible;
-        private bool _isInitializing = true;  // Prevent navigation during initialization
+        private bool _isInitializing = true;
         private bool _privacyModeEnabled;
         private bool _isPasswordHealthPanelVisible;
         private string _viewModeIcon = "☰";
-        private string _gridViewIconPath = "Assets/SVG/Current/Grid.svg"; // Start in list view, show grid icon to toggle TO grid
+        private string _gridViewIconPath = "Assets/SVG/Current/Grid.svg";
         private bool _isGridView = false;
         private bool _isDarkTheme = false;
         private string _totpSecretInput = string.Empty;
@@ -121,17 +118,13 @@ namespace PhantomVault.UI.ViewModels
             ? "Vault-backed recovery is available from this vault."
             : EmbeddedRecoveryStatus;
         private ViewModels.CategoryManagerViewModel? _categoryManagerViewModel;
-        private Core.Models.EntryType? _currentEntryType = null; // null = show all types
+        private Core.Models.EntryType? _currentEntryType = null;
 
-        // Sidebar collapse state
         private bool _isSidebarCollapsed = true;
         private bool _isSidebarAutoCollapsed = false;
 
-        // T1: when true, sidebar category rows hide the full-row colour wash
-        // and show only the small left colour bar (CategoryDataTemplates).
         private bool _showCategoryColorBarOnly;
 
-        // In-app lockscreen state
         private bool _isLockscreenVisible;
         private bool _isSoftLocked;
         private string _lockscreenTitle = "Vault Locked";
@@ -144,15 +137,9 @@ namespace PhantomVault.UI.ViewModels
         private bool _showPassphraseFallback;
         private bool _isDeveloperBypassMode;
 
-        // Context needed to re-mount on hard lock (non-sensitive)
         private string? _usbRootPath;
         private string? _manifestPath;
 
-        /// <summary>
-        /// Read-only view of the current vault manifest path. Allows view-level
-        /// services (e.g. auto-lock gating) to resolve PIN configuration without
-        /// reaching into private state.
-        /// </summary>
         public string? ManifestPath => _manifestPath;
 
         private string? _containerAbsPath;
@@ -178,11 +165,10 @@ namespace PhantomVault.UI.ViewModels
         private bool _isShowingSecureTrash;
         private string? _activeCategory;
         private string _activeCategoryDisplayName = string.Empty;
-        // Undo/Redo stacks to support multiple actions
+
         private readonly Stack<(string ActionType, object Payload)> _undoStack = new();
         private readonly Stack<(string ActionType, object Payload)> _redoStack = new();
 
-        // Sidebar quick filter highlight layout constants
         private const double QuickFilterButtonHeight = 44d;
         private const double QuickFilterSpacing = 6d;
         private const double QuickFilterHorizontalMargin = 0d;
@@ -245,20 +231,11 @@ namespace PhantomVault.UI.ViewModels
             _zkVaultService = zkVaultService ?? throw new ArgumentNullException(nameof(zkVaultService));
             _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
             _vaultLockDurationService = vaultLockDurationService ?? throw new ArgumentNullException(nameof(vaultLockDurationService));
-            // Issue #32: critical fix — when the ctor param is null (typical
-            // path because VaultUnlockViewModel constructs VaultViewModel
-            // directly without going through DI for this dep), resolve the
-            // singleton tracker from the App service provider. Falling back
-            // to `new SettingsDraftTracker()` here would create a fresh
-            // instance that's not the one the migrated tab VMs stage into —
-            // so HasUnsavedSettings would NEVER fire and the Save button
-            // would never activate. Only fall back to a brand-new instance
-            // if DI itself isn't available (tests, headless harnesses).
+
             _settingsDraftTracker = settingsDraftTracker
                 ?? ((Avalonia.Application.Current as App)?.Services?.GetService(typeof(PhantomVault.UI.Services.SettingsDraftTracker)) as PhantomVault.UI.Services.SettingsDraftTracker)
                 ?? new PhantomVault.UI.Services.SettingsDraftTracker();
-            // Re-emit the tracker's HasUnsavedChanges as a VM property so XAML
-            // can bind to it for the Save button enabled state.
+
             _settingsDraftTracker.WhenAnyValue(t => t.HasUnsavedChanges)
                 .Subscribe(v => this.RaisePropertyChanged(nameof(HasUnsavedSettings)));
             _usbDetector = usbDetector ?? throw new ArgumentNullException(nameof(usbDetector));
@@ -283,29 +260,23 @@ namespace PhantomVault.UI.ViewModels
             _blackSecureRawVolumeService = (Application.Current as App)?.Services?.GetService(typeof(BlackSecureRawVolumeService)) as BlackSecureRawVolumeService
                 ?? new BlackSecureRawVolumeService();
 
-            // Subscribe to security events
             if (_securityCoordinator != null)
             {
                 _securityCoordinator.ThreatLevelChanged += OnThreatLevelChanged;
                 _securityCoordinator.CriticalThreatDetected += OnCriticalThreatDetected;
             }
 
-            // Initialize USB auto-inject service
             if (_autoInjectService != null)
             {
                 InitializeAutoInject();
             }
 
-            // Initialize sample categories
             InitializeCategories();
 
-            // Subscribe to USB removal to lock/zero immediately
             _usbDetector.RemovableDriveRemoved += OnUsbRemoved;
 
-            // Subscribe to idle timer so inactivity actually locks the vault
             _idleLockService.IdleElapsed += OnIdleLockElapsed;
 
-            // Initialize commands
             AddCredentialCommand = ReactiveCommand.CreateFromTask(AddCredentialAsync);
             AddCredentialWithTypeCommand = ReactiveCommand.CreateFromTask<string>(AddCredentialWithTypeAsync);
             AddLoginCredentialCommand = ReactiveCommand.CreateFromTask(async () => await AddCredentialWithTypeAsync("Login"));
@@ -335,7 +306,7 @@ namespace PhantomVault.UI.ViewModels
             SaveTotpSecretCommand = ReactiveCommand.CreateFromTask(SaveTotpSecretAsync);
             RemoveTotpCommand = ReactiveCommand.CreateFromTask(RemoveTotpAsync);
             OpenUrlCommand = ReactiveCommand.CreateFromTask<CredentialViewModel>(OpenUrlAsync);
-            // TileClickCommand: when a tile (list or grid) is clicked, select the credential to show in detail view
+
             TileClickCommand = ReactiveCommand.Create<CredentialViewModel>(SelectCredential);
             ToggleFavoriteCommand = ReactiveCommand.Create<CredentialViewModel>(ToggleFavorite);
 
@@ -371,23 +342,16 @@ namespace PhantomVault.UI.ViewModels
             ToggleSidebarCommand = ReactiveCommand.Create(ToggleSidebar);
             ToggleThemeCommand = ReactiveCommand.Create(ToggleTheme);
             ClearSelectedCredentialCommand = ReactiveCommand.Create(() => { SelectedCredential = null; });
-            // The actual palette window is opened by the View — the VM merely
-            // raises this command so the View (which owns Window creation per
-            // MVVM rules) can react. Action seeding happens in
-            // BuildCommandPaletteActions() below.
+
             OpenCommandPaletteCommand = ReactiveCommand.Create(() => { });
             OpenSettingsPanelCommand = ReactiveCommand.Create(OpenSettingsPanel);
-            // Issue #21: route close through the async intercept so unsaved
-            // changes trigger the Save-or-Cancel prompt.
+
             CloseSettingsPanelCommand = ReactiveCommand.CreateFromTask(CloseSettingsPanelAsync);
-            // Keep these commands always invokable; SaveStagedSettings and
-            // DiscardStagedSettings fail closed when there is no dirty draft.
-            // The visual dirty state is bound separately so the button cannot
-            // get stranded disabled after a save/re-edit cycle.
+
             SaveSettingsCommand = ReactiveCommand.Create(SaveStagedSettings);
             DiscardSettingsCommand = ReactiveCommand.Create(DiscardStagedSettings);
             ToggleSecurityDashboardCommand = ReactiveCommand.Create(ToggleSecurityDashboard);
-            OpenSecurityDashboardWindowCommand = ReactiveCommand.Create(() => 
+            OpenSecurityDashboardWindowCommand = ReactiveCommand.Create(() =>
             {
                 StatusMessage = "🔍 BUTTON CLICKED - Command executed!";
                 System.Diagnostics.Debug.WriteLine(">>> OpenSecurityDashboardWindowCommand button clicked");
@@ -395,23 +359,19 @@ namespace PhantomVault.UI.ViewModels
             });
             OpenEditPasswordCommand = ReactiveCommand.Create<PhantomVault.Core.Models.Credential>(credential =>
             {
-                // Find the CredentialViewModel for this credential
+
                 var credVM = _credentials.FirstOrDefault(c => c.GetCredential().Id == credential.Id);
                 Views.EditPasswordWindow.ShowDialog(null, credential, credVM, this);
             });
             RefreshSecurityDashboard = ReactiveCommand.Create(() => RefreshSecurityDashboardMetrics());
             CopySuggestedPasswordCommand = ReactiveCommand.Create(CopySuggestedPassword);
-            
-            // Filter commands
+
             FilterShowAllCommand = ReactiveCommand.Create(() => { ShowAllFilter = true; ShowCriticalFilter = false; ShowLowFilter = false; ShowMediumFilter = false; ShowGoodFilter = false; });
             FilterCriticalCommand = ReactiveCommand.Create(() => { ShowAllFilter = false; ShowCriticalFilter = !ShowCriticalFilter; });
             FilterLowCommand = ReactiveCommand.Create(() => { ShowAllFilter = false; ShowLowFilter = !ShowLowFilter; });
             FilterMediumCommand = ReactiveCommand.Create(() => { ShowAllFilter = false; ShowMediumFilter = !ShowMediumFilter; });
             FilterGoodCommand = ReactiveCommand.Create(() => { ShowAllFilter = false; ShowGoodFilter = !ShowGoodFilter; });
-            
-            // Issue #31: route every tab-switch through the unsaved-changes
-            // intercept. Pre-existing changes on any tab prompt Save & Switch
-            // / Cancel before the tab content swaps.
+
             ShowGeneralSettingsCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowGeneralSettings));
             ShowSecuritySettingsCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowSecuritySettings));
             ShowThemeSettingsCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowThemeSettings));
@@ -432,7 +392,6 @@ namespace PhantomVault.UI.ViewModels
             BackupKeyfileCommand = ReactiveCommand.CreateFromTask(BackupKeyfileAsync);
             DismissRotationBannerCommand = ReactiveCommand.Create(DismissRotationBanner);
 
-            // Initialize Import/Export commands
             OpenImportWindowCommand = ReactiveCommand.CreateFromTask(OpenImportWindowAsync);
             ExportVaultCommand = ReactiveCommand.CreateFromTask(() => ExportVaultAsync("json"));
             ExportVaultCsvCommand = ReactiveCommand.CreateFromTask(() => ExportVaultAsync("csv"));
@@ -441,9 +400,6 @@ namespace PhantomVault.UI.ViewModels
             PrivacyModeEnabled = PrivacyShield.PrivacyModeEnabled;
             PrivacyShield.PrivacyModeChanged += OnPrivacyModeChanged;
 
-            // T1: sidebar category colour-bar-only mode. Initialise from
-            // persisted settings and live-update when Settings → Themes
-            // toggles the option (Save raises SettingsChanged).
             try { _showCategoryColorBarOnly = SettingsService.Load().ShowCategoryColorBarOnly; } catch { _showCategoryColorBarOnly = false; }
             SettingsService.SettingsChanged += OnUserSettingsChanged;
 
@@ -476,30 +432,20 @@ namespace PhantomVault.UI.ViewModels
             DismissLockscreenCommand = ReactiveCommand.Create(DismissLockscreen);
             SetupPinLockCommand = ReactiveCommand.CreateFromTask(SetupPinLockAsync);
 
-            // Subscribe to search text changes
             this.WhenAnyValue(x => x.SearchText)
                 .Throttle(TimeSpan.FromMilliseconds(300))
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(_ => ApplyFilters());
 
-            // Subscribe to sort option changes
             this.WhenAnyValue(x => x.SortOption)
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(_ => ApplyFilters());
 
-            // Vault starts empty by default; entries are loaded from disk via the vault service.
-            // (Previously LoadSampleCredentials() seeded placeholder demo entries — removed
-            // so a freshly-created vault is genuinely empty.)
-            // LoadSampleCredentials();
-
-            // Initialize CategoryLandingViewModel
             CategoryLandingViewModel = new CategoryLandingViewModel(vaultService);
 
-            // Subscribe to navigation messages from category landing page
             MessageBus.Current.Listen<NavigateToVaultWithFilterMessage>()
                 .Subscribe(msg => NavigateToVaultWithFilter(msg.FilterType));
 
-            // Load dashboard-enabled preference
             try
             {
                 var userSettings = SettingsService.Load();
@@ -507,9 +453,8 @@ namespace PhantomVault.UI.ViewModels
                 _isGridView = userSettings.PreferGridView;
                 _gridViewIconPath = _isGridView ? "Assets/SVG/Current/List.svg" : "Assets/SVG/Current/Grid.svg";
             }
-            catch { /* defaults to true */ }
+            catch {  }
 
-            // Set initial view based on dashboard preference
             if (_isDashboardEnabled)
             {
                 CurrentViewTitle = "Passwords";
@@ -519,22 +464,19 @@ namespace PhantomVault.UI.ViewModels
             }
             else
             {
-                // Skip dashboard — go straight to Passwords view
+
                 _isShowingDashboard = false;
                 _isShowingPasswords = true;
                 CurrentViewTitle = "Passwords";
                 IsSidebarCollapsed = false;
             }
 
-            // Populate dashboard quick access tiles from sample data so they
-            // are visible on the initial dashboard view (before any vault is loaded).
             if (IsShowingDashboard && _credentials.Count > 0)
             {
                 DashboardViewModel.LoadQuickAccessCredentials(_credentials, _categories);
                 DashboardViewModel.SetRecoveryAvailability(IsEmbeddedRecoveryAvailable, DashboardRecoveryStatus);
             }
 
-            // Initialization complete - allow navigation
             _isInitializing = false;
         }
 
@@ -542,11 +484,6 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> UndoCommand { get; }
         public ReactiveCommand<Unit, Unit> RedoCommand { get; }
 
-        /// <summary>
-        /// Update all credentials that are in <paramref name="fromCategory"/> to have Group = <paramref name="toCategory"/>.
-        /// Returns the number of credentials modified.
-        /// Changes are persisted to the vault database automatically.
-        /// </summary>
         public int MoveCredentialsToCategory(string fromCategory, string toCategory)
         {
             if (string.IsNullOrEmpty(fromCategory) || string.IsNullOrEmpty(toCategory)) return 0;
@@ -565,7 +502,6 @@ namespace PhantomVault.UI.ViewModels
             UpdateCategoryCounts();
             ApplyFilters();
 
-            // Persist changes to vault database
             if (changed > 0)
             {
                 _ = SaveVaultAsync();
@@ -574,10 +510,6 @@ namespace PhantomVault.UI.ViewModels
             return changed;
         }
 
-        /// <summary>
-        /// Permanently delete all credentials that belong to the given category.
-        /// Returns the number of credentials removed.
-        /// </summary>
         public int DeleteCredentialsInCategory(string category)
         {
             if (string.IsNullOrEmpty(category)) return 0;
@@ -591,11 +523,6 @@ namespace PhantomVault.UI.ViewModels
             return toRemove.Count;
         }
 
-        /// <summary>
-        /// Move credentials in the given category to the application's Trash category.
-        /// If a Trash category does not exist, create one named "Trash".
-        /// Returns number of credentials moved.
-        /// </summary>
         public int MoveCredentialsToTrash(string fromCategory)
         {
             if (string.IsNullOrEmpty(fromCategory)) return 0;
@@ -622,10 +549,6 @@ namespace PhantomVault.UI.ViewModels
             return moved;
         }
 
-        /// <summary>
-        /// Gets a list of credentials in the specified category with basic info (Title, Username).
-        /// Used for migration dialogs. Returns unique identifier based on Title+Username.
-        /// </summary>
         public List<(string Key, string Title, string Username)> GetCredentialsInCategory(string category)
         {
             if (string.IsNullOrEmpty(category)) return new List<(string, string, string)>();
@@ -641,11 +564,6 @@ namespace PhantomVault.UI.ViewModels
                 .ToList();
         }
 
-        /// <summary>
-        /// Moves specific credentials (by composite key) from source category to target category.
-        /// The keys are in format "Title|Username" to uniquely identify credentials.
-        /// Returns the number of credentials moved.
-        /// </summary>
         public int MoveCredentialsByKeys(List<string> credentialKeys, string toCategory)
         {
             if (credentialKeys == null || credentialKeys.Count == 0 || string.IsNullOrEmpty(toCategory))
@@ -674,7 +592,7 @@ namespace PhantomVault.UI.ViewModels
         {
             try
             {
-                // Prefer the stored manifest path from SetManifestContext
+
                 string? manifestPath = _manifestPath;
                 if (manifestPath == null && !string.IsNullOrEmpty(_mountPath))
                 {
@@ -687,14 +605,13 @@ namespace PhantomVault.UI.ViewModels
                     if (System.IO.File.Exists(candidate)) manifestPath = candidate;
                 }
                 if (manifestPath == null) return null;
-                // Use non-throwing TryReadManifest to avoid bubbling parse/decrypt exceptions
+
                 if (!_manifestService.TryReadManifest(manifestPath, null, null, out var manifest, out var manifestError))
                 {
-                    // If manifest cannot be read, treat as no-deleted-category configured
-                    // Optionally log manifestError to diagnostics in future
+
                     return null;
                 }
-                // Prefer a category explicitly named 'Deleted'
+
                 var deleted = manifest?.Categories?.FirstOrDefault(c => string.Equals(c.Name, "Deleted", StringComparison.OrdinalIgnoreCase));
                 return deleted?.Name;
             }
@@ -704,9 +621,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Restore a set of credentials to a target category (used by Trash Manager)
-        /// </summary>
         public int RestoreCredentialsToCategory(List<Credential> credentials, string targetCategory)
         {
             int restored = 0;
@@ -788,10 +702,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Replace the category list from manifest models and refresh counts/filters.
-        /// Called by Category Manager after saving changes.
-        /// </summary>
         public void UpdateCategoriesFromModels(System.Collections.Generic.List<PhantomVault.Core.Models.CategoryModel> models)
         {
             if (models == null || models.Count == 0) return;
@@ -802,7 +712,6 @@ namespace PhantomVault.UI.ViewModels
                 newList.Add(new CategoryViewModel { Name = m.Name, Icon = IconPathMigrator.Migrate(m.Icon), TileColor = m.TileColor });
             }
 
-            // Marshal changes onto the UI thread to avoid cross-thread collection/property updates.
             Dispatcher.UIThread.Post(() =>
             {
                 Categories = newList;
@@ -812,9 +721,6 @@ namespace PhantomVault.UI.ViewModels
             });
         }
 
-        /// <summary>
-        /// Updates the sidebar category tile colors using a mapping of name -> hex color (or null to clear).
-        /// </summary>
         public void UpdateCategoryColors(System.Collections.Generic.Dictionary<string, string?> colorMap)
         {
             if (colorMap == null || colorMap.Count == 0) return;
@@ -830,9 +736,6 @@ namespace PhantomVault.UI.ViewModels
             });
         }
 
-        /// <summary>
-        /// Returns a copy of the credential list that belong to the specified category.
-        /// </summary>
         public List<Credential> GetCredentialsForCategory(string category)
         {
             return _credentials
@@ -854,7 +757,7 @@ namespace PhantomVault.UI.ViewModels
             if (entry.ActionType == "MoveToTrash")
             {
                 var payload = ((string fromCategory, List<Credential> list))entry.Payload;
-                // Move items back from Trash to original category
+
                 var restored = 0;
                 foreach (var cred in payload.list)
                 {
@@ -874,7 +777,7 @@ namespace PhantomVault.UI.ViewModels
             }
             else if (entry.ActionType == "Restore")
             {
-                // revert a restore -> move items back to Trash
+
                 var payload = ((string target, List<Credential> list))entry.Payload;
                 var moved = 0;
                 foreach (var cred in payload.list)
@@ -895,7 +798,7 @@ namespace PhantomVault.UI.ViewModels
             }
             else if (entry.ActionType == "EmptyTrash")
             {
-                // not easily undoable without deeper backup; inform user
+
                 await _dialogService.ShowWarningAsync("Undo Not Available", "Emptying the trash cannot be undone.", _ownerWindow);
             }
             else if (entry.ActionType == "Delete")
@@ -926,7 +829,7 @@ namespace PhantomVault.UI.ViewModels
                     }
                 }
             }
-            // Push to redo stack so we can redo this undo
+
             if (pushToRedo)
             {
                 _redoStack.Push(entry);
@@ -942,11 +845,11 @@ namespace PhantomVault.UI.ViewModels
             }
 
             var entry = _redoStack.Pop();
-            // Re-execute the original action (which will push back to undo stack)
+
             if (entry.ActionType == "MoveToTrash")
             {
                 var payload = ((string fromCategory, List<Credential> list))entry.Payload;
-                // Re-move items from original category to Trash
+
                 var moved = 0;
                 foreach (var cred in payload.list)
                 {
@@ -966,7 +869,7 @@ namespace PhantomVault.UI.ViewModels
             }
             else if (entry.ActionType == "Restore")
             {
-                // Re-restore items from Trash to target
+
                 var payload = ((string target, List<Credential> list))entry.Payload;
                 var restored = 0;
                 foreach (var cred in payload.list)
@@ -1085,11 +988,10 @@ namespace PhantomVault.UI.ViewModels
         {
             get
             {
-                // If PIN is available, keep passphrase hidden until requested.
+
                 if (PinUnlockAvailable)
                     return _showPassphraseFallback && PasswordUnlockAvailable;
 
-                // Otherwise show passphrase normally.
                 return PasswordUnlockAvailable;
             }
         }
@@ -1130,7 +1032,6 @@ namespace PhantomVault.UI.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _status, value);
         }
 
-        // Properties
         public string VaultName
         {
             get => _vaultName;
@@ -1182,7 +1083,6 @@ namespace PhantomVault.UI.ViewModels
             {
                 this.RaiseAndSetIfChanged(ref _sortOption, value);
 
-                // Auto-switch to list view when Category sort is selected
                 if (value == 4 && IsGridView)
                 {
                     ViewModeIcon = "☰";
@@ -1243,10 +1143,6 @@ namespace PhantomVault.UI.ViewModels
             set => this.RaiseAndSetIfChanged(ref _isShowingDashboard, value);
         }
 
-        /// <summary>
-        /// User setting: when false the Dashboard view is disabled, the sidebar
-        /// Dashboard button is hidden, and the app starts on the Passwords view.
-        /// </summary>
         public bool IsDashboardEnabled
         {
             get => _isDashboardEnabled;
@@ -1254,16 +1150,11 @@ namespace PhantomVault.UI.ViewModels
             {
                 if (this.RaiseAndSetIfChanged(ref _isDashboardEnabled, value))
                 {
-                    // Issue #21: stage the change in the draft tracker instead
-                    // of saving immediately. UI side-effects (navigation away
-                    // from a disabled Dashboard) still fire so the toggle feels
-                    // live, but persistence waits until the user clicks Save.
-                    // Discard rewinds both this property and the persisted
-                    // value back to whatever was on disk at the time of stage.
+
                     var previousPersisted = SafeLoadDashboardEnabled();
                     if (value == previousPersisted)
                     {
-                        // User toggled back to the saved state — drop staged work.
+
                         _settingsDraftTracker.ClearKey("General.DashboardEnabled");
                     }
                     else
@@ -1278,18 +1169,18 @@ namespace PhantomVault.UI.ViewModels
                                     s.DashboardEnabled = value;
                                     SettingsService.Save(s);
                                 }
-                                catch { /* best-effort */ }
+                                catch {  }
                             },
                             discard: () =>
                             {
-                                // Revert the UI-side value to the persisted one.
+
                                 this.RaiseAndSetIfChanged(ref _isDashboardEnabled, previousPersisted, nameof(IsDashboardEnabled));
                             });
                     }
 
                     if (!value && IsShowingDashboard)
                     {
-                        // Dashboard just got disabled while we're on it — navigate away
+
                         ShowPasswords();
                     }
                 }
@@ -1320,11 +1211,6 @@ namespace PhantomVault.UI.ViewModels
             set => this.RaiseAndSetIfChanged(ref _isSidebarAutoCollapsed, value);
         }
 
-        /// <summary>
-        /// T1: when true, sidebar category rows render with the small left
-        /// colour bar only (no full-row category tint wash). Bound from
-        /// CategoryItemTemplate via the parent Window's DataContext.
-        /// </summary>
         public bool ShowCategoryColorBarOnly
         {
             get => _showCategoryColorBarOnly;
@@ -1335,13 +1221,13 @@ namespace PhantomVault.UI.ViewModels
         {
             try
             {
-                // Marshal to UI thread; ReactiveUI property change must raise on UI thread for bindings.
+
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
                     ShowCategoryColorBarOnly = e.Settings.ShowCategoryColorBarOnly;
                 });
             }
-            catch { /* non-fatal */ }
+            catch {  }
         }
 
         public Core.Models.EntryType? CurrentEntryType
@@ -1643,9 +1529,7 @@ namespace PhantomVault.UI.ViewModels
             }
             set
             {
-                // Issue #21: stage the change instead of persisting on every
-                // ComboBox selection. UI updates (icon swap, status message)
-                // stay immediate; the SettingsService write waits for Save.
+
                 var preferGrid = value == 1;
                 var previousPersisted = SettingsService.Load().PreferGridView;
 
@@ -1670,8 +1554,7 @@ namespace PhantomVault.UI.ViewModels
                         },
                         discard: () =>
                         {
-                            // Roll the UI-visible view back; trigger property change so
-                            // bound ComboBox/SelectedIndex updates.
+
                             IsGridView = previousPersisted;
                             GridViewIconPath = previousPersisted ? "Assets/SVG/Current/List.svg" : "Assets/SVG/Current/Grid.svg";
                             this.RaisePropertyChanged(nameof(SelectedDefaultView));
@@ -1707,18 +1590,12 @@ namespace PhantomVault.UI.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _filteredCredentials, value);
         }
 
-        /// <summary>
-        /// Gets the grouped list items with category headers when sorted by category.
-        /// </summary>
         public ObservableCollection<ListItemWrapper> GroupedListItems
         {
             get => _groupedListItems;
             private set => this.RaiseAndSetIfChanged(ref _groupedListItems, value);
         }
 
-        /// <summary>
-        /// Returns true when sorted by category (SortOption == 4).
-        /// </summary>
         public bool IsSortedByCategory => SortOption == 4;
 
         public ObservableCollection<SecureTrashItemViewModel> FilteredTrashItems
@@ -1849,7 +1726,6 @@ namespace PhantomVault.UI.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _filteredCredentialsForDashboard, value);
         }
 
-        // Filter states
         private bool _showAllFilter = true;
         public bool ShowAllFilter
         {
@@ -1905,7 +1781,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        // Security Dashboard metrics
         private int _securityScore = 0;
         public int SecurityScore
         {
@@ -1955,7 +1830,6 @@ namespace PhantomVault.UI.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _isRefreshingDashboard, value);
         }
 
-        // Password Strength Tester
         private string _testPassword = string.Empty;
         public string TestPassword
         {
@@ -2084,10 +1958,6 @@ namespace PhantomVault.UI.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _selectedSettingsContent, value);
         }
 
-        // Identifier of the currently active settings pane (e.g. "general",
-        // "security"). Drives the nav highlight in SettingsPanelOverlay via
-        // StringEqualsConverter and lets callers (command palette, deep links)
-        // re-enter a specific pane without inspecting SelectedSettingsContent.
         private string _selectedSettingsTab = "general";
         public string SelectedSettingsTab
         {
@@ -2095,7 +1965,6 @@ namespace PhantomVault.UI.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _selectedSettingsTab, value);
         }
 
-        // Commands
         public ReactiveCommand<string, Unit> OpenItemCommand { get; }
         public ReactiveCommand<Unit, Unit> LockCommand { get; }
         public ReactiveCommand<Unit, Unit> UnlockWithPasswordCommand { get; }
@@ -2147,7 +2016,7 @@ namespace PhantomVault.UI.ViewModels
             set => this.RaiseAndSetIfChanged(ref _totpSecretInput, value);
         }
         public ReactiveCommand<CredentialViewModel, Unit> OpenUrlCommand { get; }
-        // When a credential tile is clicked (both list and grid views), select it to show in detail view
+
         public ReactiveCommand<CredentialViewModel, Unit> TileClickCommand { get; }
         public ReactiveCommand<CredentialViewModel, Unit> ToggleFavoriteCommand { get; }
         public ReactiveCommand<Unit, Unit> ShowDashboardCommand { get; }
@@ -2181,19 +2050,12 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> OpenCommandPaletteCommand { get; }
         public ReactiveCommand<Unit, Unit> OpenSettingsPanelCommand { get; }
         public ReactiveCommand<Unit, Unit> CloseSettingsPanelCommand { get; }
-        // Issue #21: drives the overlay-bottom Save / Discard row.
+
         public ReactiveCommand<Unit, Unit> SaveSettingsCommand { get; }
         public ReactiveCommand<Unit, Unit> DiscardSettingsCommand { get; }
-        // Issue #21/#38: kept for back-compat callers but bindings now go to
-        // SettingsDraftTracker.HasUnsavedChanges directly via the property
-        // path below, so the binding listens to the tracker's own
-        // INotifyPropertyChanged instead of going through a proxy getter +
-        // manual RaisePropertyChanged that could miss subsequent cycles.
+
         public bool HasUnsavedSettings => _settingsDraftTracker.HasUnsavedChanges;
-        // Public path for XAML to bind directly: "SettingsDraftTracker.HasUnsavedChanges".
-        // Re-emitting through a getter dropped the second-and-later cycles
-        // when the manual WhenAnyValue subscription order interacted poorly
-        // with Avalonia's binding evaluator. Direct binding is bulletproof.
+
         public PhantomVault.UI.Services.SettingsDraftTracker SettingsDraftTracker => _settingsDraftTracker;
         public ReactiveCommand<Unit, Unit> ToggleSecurityDashboardCommand { get; }
         public ReactiveCommand<Unit, Unit> OpenSecurityDashboardWindowCommand { get; }
@@ -2225,34 +2087,24 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> BackupKeyfileCommand { get; }
         public ReactiveCommand<Unit, Unit> DismissRotationBannerCommand { get; }
 
-        // Import/Export commands
         public ReactiveCommand<Unit, Unit> OpenImportWindowCommand { get; }
         public ReactiveCommand<Unit, Unit> ExportVaultCommand { get; }
         public ReactiveCommand<Unit, Unit> ExportVaultCsvCommand { get; }
         public ReactiveCommand<Unit, Unit> ExportKeePassCommand { get; }
 
-        /// <summary>
-        /// Snapshot of available command-palette actions, built fresh each
-        /// time the palette opens so they reflect current vault state
-        /// (selected credential, lock state, etc.). The View calls this when
-        /// it builds the palette window.
-        /// </summary>
         public IReadOnlyList<CommandPaletteAction> BuildCommandPaletteActions()
         {
-            // Helper: fire-and-forget a Unit ReactiveCommand. Palette closes
-            // before the action runs (see CommandPaletteWindow.OnClosed), so
-            // any dialog the command pops up will be parented correctly.
+
             static void Run(ReactiveCommand<Unit, Unit> cmd) => cmd.Execute().Subscribe(_ => { }, _ => { });
 
             var list = new List<CommandPaletteAction>
             {
-                // ── Vault ───────────────────────────────────────────────
+
                 new("Lock vault now",            "Vault",    () => Run(LockCommand),
                     subtitle: "Clear keys and require keyfile + password again",
                     glyph: "🔒",
                     searchKeywords: "lock,logout,sign out,exit"),
 
-                // ── Add ────────────────────────────────────────────────
                 new("New login",                 "Add",      () => Run(AddLoginCredentialCommand),
                     glyph: "+", searchKeywords: "create,add,account,credential"),
                 new("New credit card",           "Add",      () => Run(AddCreditCardCommand),
@@ -2272,7 +2124,6 @@ namespace PhantomVault.UI.ViewModels
                 new("New contact",               "Add",      () => Run(AddContactCommand),
                     glyph: "👤", searchKeywords: "contact,address book"),
 
-                // ── Navigate ───────────────────────────────────────────
                 new("Show dashboard",            "Navigate", () => Run(ShowDashboardCommand),
                     glyph: "🏠", searchKeywords: "home,overview"),
                 new("Show all credentials",      "Navigate", () => Run(ShowAllCommand),
@@ -2290,7 +2141,6 @@ namespace PhantomVault.UI.ViewModels
                 new("Show flagged passwords",    "Navigate", () => Run(ShowFlaggedPasswordsCommand),
                     glyph: "🚩", searchKeywords: "weak,duplicate,breached"),
 
-                // ── Tools ───────────────────────────────────────────────
                 new("Open password health",      "Tools",    () => Run(OpenPasswordHealthPanelCommand),
                     glyph: "🩺", searchKeywords: "audit,strength,scan,duplicates"),
                 new("Toggle security dashboard", "Tools",    () => Run(ToggleSecurityDashboardCommand),
@@ -2304,13 +2154,11 @@ namespace PhantomVault.UI.ViewModels
                 new("Toggle sidebar",            "Tools",    () => Run(ToggleSidebarCommand),
                     glyph: "↔️", searchKeywords: "panel,collapse"),
 
-                // ── Theme ───────────────────────────────────────────────
                 new("Toggle dark / light theme", "Theme",    () => Run(ToggleThemeCommand),
                     glyph: "🌓", searchKeywords: "appearance,dark mode,light mode"),
                 new("Open theme settings",       "Theme",    () => Run(ShowThemeSettingsCommand),
                     glyph: "🎨", searchKeywords: "colour,style"),
 
-                // ── Settings ───────────────────────────────────────────
                 new("Open settings",             "Settings", () => Run(OpenSettingsPanelCommand),
                     glyph: "⚙️", searchKeywords: "preferences,options,config"),
                 new("Accessibility settings",    "Settings", () => Run(ShowAccessibilitySettingsCommand),
@@ -2324,7 +2172,6 @@ namespace PhantomVault.UI.ViewModels
                 new("Rubbish bin settings",      "Settings", () => Run(ShowRubbishBinSettingsCommand),
                     glyph: "🗑️", searchKeywords: "trash,recycle"),
 
-                // ── Import / Export ────────────────────────────────────
                 new("Import from file…",         "Import",   () => Run(OpenImportWindowCommand),
                     glyph: "📥", searchKeywords: "import,keepass,csv,1password,bitwarden"),
                 new("Export vault (encrypted)",  "Export",   () => Run(ExportVaultCommand),
@@ -2334,14 +2181,12 @@ namespace PhantomVault.UI.ViewModels
                 new("Export to KeePass",         "Export",   () => Run(ExportKeePassCommand),
                     glyph: "📤", searchKeywords: "keepass,kdbx"),
 
-                // ── Recovery ───────────────────────────────────────────
                 new("Open Phantom Recovery",     "Recovery", () => Run(OpenPhantomRecoveryCommand),
                     glyph: "🆘", searchKeywords: "recovery,phrase,backup"),
                 new("Open trash manager",        "Recovery", () => Run(OpenTrashManagerCommand),
                     glyph: "🗑️", searchKeywords: "trash,undelete,restore"),
             };
 
-            // Selection-aware actions — only meaningful with a credential selected
             var sel = SelectedCredential;
             if (sel is not null)
             {
@@ -2372,7 +2217,6 @@ namespace PhantomVault.UI.ViewModels
             return list;
         }
 
-        // Private methods
         private void InitializeCategories()
         {
             _categories.Add(new CategoryViewModel { Name = "Logins", Icon = IconPathMigrator.LoginsIcon, Count = 0, TileColor = "#FDE68A" });
@@ -2387,10 +2231,6 @@ namespace PhantomVault.UI.ViewModels
             _categories.Add(new CategoryViewModel { Name = "Secure Rubbish Bin", Icon = IconPathMigrator.TrashIcon, Count = _secureTrashService.Records.Count, TileColor = "#6B7280" });
         }
 
-        /// <summary>
-        /// Attempts to read category colors from the vault manifest and apply them to the sidebar categories.
-        /// Called during vault initialization so colours are visible immediately.
-        /// </summary>
         private void LoadCategoryColorsFromManifest()
         {
             try
@@ -2425,13 +2265,13 @@ namespace PhantomVault.UI.ViewModels
             }
             catch
             {
-                // Silently fail - category colors are cosmetic
+
             }
         }
 
         private void LoadSampleCredentials()
         {
-            // Sample credentials for demonstration
+
             var sampleCreds = new List<Credential>
             {
                 new Credential
@@ -2657,7 +2497,7 @@ namespace PhantomVault.UI.ViewModels
             foreach (var cred in sampleCreds)
             {
                 var vm = new CredentialViewModel(cred);
-                // Make first two favorites for demo
+
                 if (_credentials.Count < 2)
                 {
                     vm.IsFavorite = true;
@@ -2666,7 +2506,7 @@ namespace PhantomVault.UI.ViewModels
             }
 
             UpdateCategoryCounts();
-            // Don't apply filters if dashboard is showing - let it stay on dashboard
+
             if (!IsShowingDashboard)
             {
                 ApplyFilters();
@@ -2697,10 +2537,8 @@ namespace PhantomVault.UI.ViewModels
                 return;
             }
 
-            // Exclude passkeys from regular credentials view
             var filtered = _credentials.Where(c => !c.GetCredential().IsPasskey).AsEnumerable();
 
-            // Apply entry type filter if specified
             if (_currentEntryType.HasValue)
             {
                 filtered = filtered.Where(c => c.GetCredential().EntryType == _currentEntryType.Value);
@@ -2711,14 +2549,13 @@ namespace PhantomVault.UI.ViewModels
                 filtered = filtered.Where(c => string.Equals(c.Group, _activeCategory, StringComparison.OrdinalIgnoreCase));
             }
 
-            // Apply search filter with fuzzy matching
             if (!string.IsNullOrWhiteSpace(SearchText))
             {
                 var searchResults = new List<Services.SearchResult<CredentialViewModel>>();
 
                 foreach (var credential in filtered)
                 {
-                    // Calculate scores for different fields
+
                     int titleScore = Services.FuzzyMatcher.CalculateScore(SearchText, credential.Title);
                     int usernameScore = Services.FuzzyMatcher.CalculateScore(SearchText, credential.Username);
                     int groupScore = Services.FuzzyMatcher.CalculateScore(SearchText, credential.Group);
@@ -2726,10 +2563,9 @@ namespace PhantomVault.UI.ViewModels
                         ? Services.FuzzyMatcher.CalculateScore(SearchText, credential.Url)
                         : 0;
 
-                    // Use highest score
                     int maxScore = Math.Max(Math.Max(titleScore, usernameScore), Math.Max(groupScore, urlScore));
 
-                    if (maxScore >= 30) // Threshold for match
+                    if (maxScore >= 30)
                     {
                         searchResults.Add(new Services.SearchResult<CredentialViewModel>(credential)
                         {
@@ -2741,14 +2577,12 @@ namespace PhantomVault.UI.ViewModels
                     }
                 }
 
-                // Sort by score descending, then by title
                 filtered = searchResults
                     .OrderByDescending(r => r.Score)
                     .ThenBy(r => r.Item.Title)
                     .Select(r => r.Item);
             }
 
-            // Apply view filter
             if (IsShowingFavorites)
             {
                 filtered = filtered.Where(c => c.IsFavorite);
@@ -2770,36 +2604,31 @@ namespace PhantomVault.UI.ViewModels
                 }).OrderBy(c => c.GetCredential().ExpiryUtc);
             }
 
-            // Apply sorting
             filtered = SortOption switch
             {
-                0 => filtered.OrderBy(c => c.Title), // Name A-Z
-                1 => filtered.OrderByDescending(c => c.Title), // Name Z-A
-                2 => filtered.OrderByDescending(c => c.CreatedUtc), // Recently Added
-                3 => filtered.OrderByDescending(c => c.LastUpdatedUtc), // Recently Modified
-                4 => filtered.OrderBy(c => c.Group).ThenBy(c => c.Title), // Category
+                0 => filtered.OrderBy(c => c.Title),
+                1 => filtered.OrderByDescending(c => c.Title),
+                2 => filtered.OrderByDescending(c => c.CreatedUtc),
+                3 => filtered.OrderByDescending(c => c.LastUpdatedUtc),
+                4 => filtered.OrderBy(c => c.Group).ThenBy(c => c.Title),
                 _ => filtered
             };
 
-            // Materialize the filtered collection before posting to UI thread
             var materializedList = filtered.ToList();
 
-            // Build grouped list with category headers when sorted by category
             var groupedItems = new List<ListItemWrapper>();
-            if (SortOption == 4) // Category sort
+            if (SortOption == 4)
             {
                 var grouped = materializedList.GroupBy(c => c.Group ?? "Uncategorized");
                 foreach (var group in grouped)
                 {
-                    // Find category color
+
                     var categoryVm = _categories.FirstOrDefault(cat =>
                         string.Equals(cat.Name, group.Key, StringComparison.OrdinalIgnoreCase));
                     var categoryColor = categoryVm?.TileColor;
 
-                    // Add category header
                     groupedItems.Add(ListItemWrapper.CreateCategoryHeader(group.Key, categoryColor, group.Count()));
 
-                    // Add credentials in this category
                     foreach (var cred in group)
                     {
                         groupedItems.Add(ListItemWrapper.CreateCredential(cred));
@@ -2808,7 +2637,7 @@ namespace PhantomVault.UI.ViewModels
             }
             else
             {
-                // No grouping - just wrap credentials
+
                 foreach (var cred in materializedList)
                 {
                     groupedItems.Add(ListItemWrapper.CreateCredential(cred));
@@ -2819,11 +2648,10 @@ namespace PhantomVault.UI.ViewModels
 
             Dispatcher.UIThread.Post(() =>
             {
-                // Replace entire collection to force UI rebind
+
                 FilteredCredentials = new ObservableCollection<CredentialViewModel>(materializedList);
                 GroupedListItems = new ObservableCollection<ListItemWrapper>(groupedItems);
 
-                // Also raise property change notifications
                 this.RaisePropertyChanged(nameof(FilteredCount));
                 this.RaisePropertyChanged(nameof(IsEmpty));
                 this.RaisePropertyChanged(nameof(HasTrashSelection));
@@ -2971,7 +2799,6 @@ namespace PhantomVault.UI.ViewModels
                 return;
             }
 
-            // Ask target category
             var categories = _categories
                 .Where(c => !string.Equals(c.Name, "Secure Rubbish Bin", StringComparison.OrdinalIgnoreCase))
                 .Select(c => c.Name)
@@ -3118,7 +2945,7 @@ namespace PhantomVault.UI.ViewModels
 
         private async Task AddCredentialAsync()
         {
-            // Default to Password type
+
             await AddCredentialWithTypeAsync("0");
         }
 
@@ -3127,7 +2954,6 @@ namespace PhantomVault.UI.ViewModels
             Core.Models.EntryType entryType = Core.Models.EntryType.Password;
             var isSecureNote = false;
 
-            // Map string names to EntryType enum
             if (!string.IsNullOrEmpty(entryTypeValue))
             {
                 if (int.TryParse(entryTypeValue, out int typeInt) && Enum.IsDefined(typeof(Core.Models.EntryType), typeInt))
@@ -3136,7 +2962,7 @@ namespace PhantomVault.UI.ViewModels
                 }
                 else
                 {
-                    // Map friendly names to enum values
+
                     var lowerValue = entryTypeValue.ToLowerInvariant();
                     switch (lowerValue)
                     {
@@ -3159,7 +2985,7 @@ namespace PhantomVault.UI.ViewModels
                             break;
                         case "secure note":
                         case "note":
-                            entryType = Core.Models.EntryType.Password; // Notes use Password type with empty password
+                            entryType = Core.Models.EntryType.Password;
                             isSecureNote = true;
                             break;
                         case "software license":
@@ -3194,7 +3020,6 @@ namespace PhantomVault.UI.ViewModels
                 }
             }
 
-            // Create a new credential with the specified type
             var newCredential = new Credential
             {
                 EntryType = entryType
@@ -3205,8 +3030,7 @@ namespace PhantomVault.UI.ViewModels
                 newCredential.Group = "Secure Notes";
             }
 
-            // Open overlay panel for adding new credentials
-            CloseAllOverlays(); // Close any other open overlays
+            CloseAllOverlays();
             EditViewModel = new AddEditCredentialViewModel(newCredential, (credential) =>
             {
                 OnCredentialSaved(credential);
@@ -3215,7 +3039,6 @@ namespace PhantomVault.UI.ViewModels
 
             IsEditPanelVisible = true;
 
-            // Set the entry type filter to match what we're adding
             SetEntryType(entryTypeValue);
             StatusMessage = $"Adding new {entryTypeValue ?? entryType.ToString()} entry";
 
@@ -3229,7 +3052,6 @@ namespace PhantomVault.UI.ViewModels
                 return;
             }
 
-            // Keep detail panel aligned with whichever tile triggered the edit action
             SelectedCredential = credentialVm;
 
             var editingTitle = credentialVm.Title;
@@ -3239,15 +3061,14 @@ namespace PhantomVault.UI.ViewModels
             }
             catch
             {
-                // Diagnostics only
+
             }
 
             StatusMessage = string.IsNullOrWhiteSpace(editingTitle)
                 ? "Editing credential"
                 : $"Editing: {editingTitle}";
 
-            // Open overlay panel for editing instead of dialog
-            CloseAllOverlays(); // Close any other open overlays
+            CloseAllOverlays();
             EditViewModel = new AddEditCredentialViewModel(credentialVm.GetCredential(), (credential) =>
             {
                 OnCredentialSaved(credential);
@@ -3256,7 +3077,6 @@ namespace PhantomVault.UI.ViewModels
 
             IsEditPanelVisible = true;
 
-            // Window-based editing removed - now using overlay panel
             await Task.CompletedTask;
         }
 
@@ -3266,9 +3086,6 @@ namespace PhantomVault.UI.ViewModels
             EditViewModel = null;
         }
 
-        /// <summary>
-        /// Closes all overlay panels to ensure only one is visible at a time
-        /// </summary>
         private void CloseAllOverlays()
         {
             IsEditPanelVisible = false;
@@ -3281,12 +3098,12 @@ namespace PhantomVault.UI.ViewModels
 
         private void OnCredentialSaved(Credential credential)
         {
-            // Check if this is an existing credential being edited
+
             var existing = _credentials.FirstOrDefault(c => c.GetCredential() == credential);
 
             if (existing != null)
             {
-                // Update existing credential
+
                 var index = _credentials.IndexOf(existing);
                 var updatedVm = new CredentialViewModel(credential);
                 _credentials[index] = updatedVm;
@@ -3295,18 +3112,16 @@ namespace PhantomVault.UI.ViewModels
             }
             else
             {
-                // Add new credential
+
                 var newVm = new CredentialViewModel(credential);
                 _credentials.Add(newVm);
                 SelectedCredential = newVm;
                 StatusMessage = $"Added: {credential.Title}";
             }
 
-            // Update UI
             UpdateCategoryCounts();
             ApplyFilters();
 
-            // Persist changes to the encrypted vault database
             _ = SaveVaultAsync();
         }
 
@@ -3346,24 +3161,17 @@ namespace PhantomVault.UI.ViewModels
                 _undoStack.Push(("Delete", (object)record));
             }
 
-            // Persist vault after deletion (credential already removed from collection)
             await SaveVaultAsync();
         }
 
-        /// <summary>
-        /// Persists the in-memory credentials to the encrypted vault.pvault file.
-        /// This writes to a temporary plaintext file and uses the zero-knowledge
-        /// service to encrypt it into the mounted container.
-        /// </summary>
         private async Task SaveVaultAsync()
         {
             try
             {
-                // CRITICAL: If decoy vault is active, silently ignore all write operations
-                // This prevents attackers from modifying the real vault while decoy is active
+
                 if (_tamperDetectionService?.IsDecoyActive == true && _decoyVaultService?.IsDecoyActive == true)
                 {
-                    // Simulate write delay to make decoy appear realistic
+
                     await Task.Delay(Random.Shared.Next(50, 150));
                     return;
                 }
@@ -3371,7 +3179,6 @@ namespace PhantomVault.UI.ViewModels
                 if (string.IsNullOrEmpty(_mountPath) || string.IsNullOrEmpty(_vaultFilePath))
                     return;
 
-                // Build the database object
                 var database = new VaultDatabase
                 {
                     Version = "2.0",
@@ -3382,7 +3189,6 @@ namespace PhantomVault.UI.ViewModels
                     Groups = new System.Collections.Generic.List<VaultGroup>()
                 };
 
-                // Group credentials by Group name
                 var grouped = _credentials.Select(c => c.GetCredential()).GroupBy(c => c.Group ?? "General");
                 foreach (var g in grouped)
                 {
@@ -3396,10 +3202,8 @@ namespace PhantomVault.UI.ViewModels
                     database.Groups.Add(vg);
                 }
 
-                // Serialize to JSON
                 var json = JsonSerializer.Serialize(database, new JsonSerializerOptions { WriteIndented = true });
 
-                // Encrypt directly from memory to avoid writing plaintext to disk.
                 var bytes = System.Text.Encoding.UTF8.GetBytes(json);
                 try
                 {
@@ -3427,7 +3231,7 @@ namespace PhantomVault.UI.ViewModels
                 }
                 finally
                 {
-                    // Zero the plaintext bytes after encryption (best-effort, should never fail)
+
                     System.Security.Cryptography.CryptographicOperations.ZeroMemory(bytes);
                 }
             }
@@ -3491,7 +3295,7 @@ namespace PhantomVault.UI.ViewModels
             try
             {
                 _idleLockService.Reset();
-                // Check clipboard guard
+
                 if (_clipboardGuard != null && !_clipboardGuard.CanCopy())
                 {
                     await _dialogService.ShowWarningAsync(
@@ -3505,7 +3309,7 @@ namespace PhantomVault.UI.ViewModels
                 var clipboard = TopLevel.GetTopLevel(_ownerWindow)?.Clipboard;
                 if (clipboard != null)
                 {
-                    // Choose the most sensitive field per entry type
+
                     var secret = credential.EntryType switch
                     {
                         EntryType.WiFi => credential.WiFiPassword,
@@ -3525,14 +3329,13 @@ namespace PhantomVault.UI.ViewModels
                         return;
                     }
 
-                    // Check if we should auto-copy TOTP with password  
                     var settings = SettingsService.Load();
                     var autoCopyTotp = settings.AutoCopyTotpWithPassword;
                     var totpCopied = false;
 
                     if (autoCopyTotp && credential.EntryType == EntryType.Password && credential.HasTotpSecret && !string.IsNullOrWhiteSpace(credential.CurrentTotpCode))
                     {
-                        // Append TOTP code to password
+
                         secret = $"{secret}\nTOTP: {credential.CurrentTotpCode}";
                         totpCopied = true;
                     }
@@ -3542,19 +3345,16 @@ namespace PhantomVault.UI.ViewModels
                         ? $"Password and TOTP copied for: {credential.Title}"
                         : $"Secret copied for: {credential.Title}";
 
-                    // Register copy with guard
                     _clipboardGuard?.RegisterCopy(credential.Title);
 
-                    // Cancel any previous clipboard clear timer so it doesn't wipe the new content
                     _clipboardClearCts?.Cancel();
                     _clipboardClearCts = new CancellationTokenSource();
                     var clearToken = _clipboardClearCts.Token;
 
-                    // Schedule clipboard clearing based on user settings
                     var clearDelay = settings.GetClipboardClearDelay();
                     if (clearDelay.HasValue)
                     {
-                        var copiedSecret = secret; // Capture actual copied value
+                        var copiedSecret = secret;
                         _ = Task.Run(async () =>
                         {
                             try
@@ -3573,12 +3373,11 @@ namespace PhantomVault.UI.ViewModels
                                     }
                                 });
                             }
-                            catch (OperationCanceledException) { /* New copy cancelled this timer */ }
-                            catch { /* Ignore clipboard clear failures */ }
+                            catch (OperationCanceledException) {  }
+                            catch {  }
                         });
                     }
 
-                    // Show brief confirmation
                     await Task.Delay(2000);
                     StatusMessage = "Ready";
                 }
@@ -3607,7 +3406,6 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Skip if username is empty
                 if (string.IsNullOrWhiteSpace(credential.Username))
                 {
                     StatusMessage = "Nothing to copy";
@@ -3620,20 +3418,17 @@ namespace PhantomVault.UI.ViewModels
                     await clipboard.SetTextAsync(credential.Username);
                     StatusMessage = $"Username copied for: {credential.Title}";
 
-                    // Register copy with guard
                     _clipboardGuard?.RegisterCopy(credential.Title);
 
-                    // Cancel any previous clipboard clear timer so it doesn't wipe the new content
                     _clipboardClearCts?.Cancel();
                     _clipboardClearCts = new CancellationTokenSource();
                     var clearToken = _clipboardClearCts.Token;
 
-                    // Schedule clipboard clearing based on user settings
                     var settings = SettingsService.Load();
                     var clearDelay = settings.GetClipboardClearDelay();
                     if (clearDelay.HasValue)
                     {
-                        var copiedUsername = credential.Username; // Capture copied value
+                        var copiedUsername = credential.Username;
                         _ = Task.Run(async () =>
                         {
                             try
@@ -3652,12 +3447,11 @@ namespace PhantomVault.UI.ViewModels
                                     }
                                 });
                             }
-                            catch (OperationCanceledException) { /* New copy cancelled this timer */ }
-                            catch { /* Ignore clipboard clear failures */ }
+                            catch (OperationCanceledException) {  }
+                            catch {  }
                         });
                     }
 
-                    // Show brief confirmation
                     await Task.Delay(2000);
                     StatusMessage = "Ready";
                 }
@@ -3675,7 +3469,7 @@ namespace PhantomVault.UI.ViewModels
         {
             try
             {
-                // Check clipboard guard
+
                 if (_clipboardGuard != null && !_clipboardGuard.CanCopy())
                 {
                     await _dialogService.ShowWarningAsync(
@@ -3686,7 +3480,6 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Skip if TOTP code is empty
                 if (string.IsNullOrWhiteSpace(credential.CurrentTotpCode))
                 {
                     StatusMessage = "No TOTP code available";
@@ -3699,15 +3492,12 @@ namespace PhantomVault.UI.ViewModels
                     await clipboard.SetTextAsync(credential.CurrentTotpCode);
                     StatusMessage = $"TOTP code copied for: {credential.Title}";
 
-                    // Register copy with guard
                     _clipboardGuard?.RegisterCopy(credential.Title);
 
-                    // Cancel any previous clipboard clear timer so it doesn't wipe the new content
                     _clipboardClearCts?.Cancel();
                     _clipboardClearCts = new CancellationTokenSource();
                     var clearToken = _clipboardClearCts.Token;
 
-                    // TOTP codes expire, so clear clipboard after code expires
                     var clearDelay = TimeSpan.FromSeconds(credential.TotpSecondsRemaining + 5);
                     var copiedCode = credential.CurrentTotpCode;
                     _ = Task.Run(async () =>
@@ -3728,11 +3518,10 @@ namespace PhantomVault.UI.ViewModels
                                 }
                             });
                         }
-                        catch (OperationCanceledException) { /* New copy cancelled this timer */ }
-                        catch { /* Ignore clipboard clear failures */ }
+                        catch (OperationCanceledException) {  }
+                        catch {  }
                     });
 
-                    // Show brief confirmation
                     await Task.Delay(2000);
                     StatusMessage = "Ready";
                 }
@@ -3759,7 +3548,6 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Pre-populate with credential info
                 var viewModel = new TotpScannerViewModel
                 {
                     Issuer = SelectedCredential.Title,
@@ -3774,14 +3562,13 @@ namespace PhantomVault.UI.ViewModels
 
                 if (result != null && result.Success)
                 {
-                    // Find the credential in the underlying collection
+
                     var credential = _credentials.FirstOrDefault(c => c.Title == SelectedCredential.Title);
                     if (credential != null)
                     {
-                        // Get the core credential
+
                         var coreCredential = credential.GetCredential();
 
-                        // Update TOTP fields
                         coreCredential.TotpSecret = result.Secret;
                         coreCredential.TotpDigits = result.Digits;
                         coreCredential.TotpTimeStep = result.Period;
@@ -3790,16 +3577,13 @@ namespace PhantomVault.UI.ViewModels
                         coreCredential.TotpAccountName = result.AccountName;
                         coreCredential.LastUpdatedUtc = DateTimeOffset.UtcNow;
 
-                        // Save the vault to persist changes
                         await SaveVaultAsync();
 
-                        // Recreate the credential view model to reflect changes
                         var index = _credentials.IndexOf(credential);
                         _credentials.RemoveAt(index);
                         var newCredentialVM = new CredentialViewModel(coreCredential);
                         _credentials.Insert(index, newCredentialVM);
 
-                        // Update selected credential
                         SelectedCredential = newCredentialVM;
 
                         StatusMessage = $"TOTP added to {SelectedCredential.Title}";
@@ -3819,7 +3603,7 @@ namespace PhantomVault.UI.ViewModels
         {
             try
             {
-                // Pre-populate with existing TOTP data
+
                 var viewModel = new TotpScannerViewModel
                 {
                     Issuer = credential.TotpIssuer,
@@ -3840,21 +3624,19 @@ namespace PhantomVault.UI.ViewModels
 
                 if (result != null && result.Success)
                 {
-                    // Handle delete request
+
                     if (result.Deleted)
                     {
                         await RemoveTotpAsync();
                         return;
                     }
 
-                    // Find the credential in the underlying collection
                     var credentialVM = _credentials.FirstOrDefault(c => c.Title == credential.Title);
                     if (credentialVM != null)
                     {
-                        // Get the core credential
+
                         var coreCredential = credentialVM.GetCredential();
 
-                        // Update TOTP fields
                         coreCredential.TotpSecret = result.Secret;
                         coreCredential.TotpDigits = result.Digits;
                         coreCredential.TotpTimeStep = result.Period;
@@ -3863,16 +3645,13 @@ namespace PhantomVault.UI.ViewModels
                         coreCredential.TotpAccountName = result.AccountName;
                         coreCredential.LastUpdatedUtc = DateTimeOffset.UtcNow;
 
-                        // Save the vault to persist changes
                         await SaveVaultAsync();
 
-                        // Recreate the credential view model to reflect changes
                         var index = _credentials.IndexOf(credentialVM);
                         _credentials.RemoveAt(index);
                         var newCredentialVM = new CredentialViewModel(coreCredential);
                         _credentials.Insert(index, newCredentialVM);
 
-                        // Update selected credential if it was the one being edited
                         if (SelectedCredential?.Title == credential.Title)
                         {
                             SelectedCredential = newCredentialVM;
@@ -3914,7 +3693,6 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Basic Base32 validation
                 var validBase32 = System.Text.RegularExpressions.Regex.IsMatch(secret, @"^[A-Z2-7]+=*$");
                 if (!validBase32)
                 {
@@ -3925,13 +3703,11 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Find the credential in the underlying collection
                 var credential = _credentials.FirstOrDefault(c => c == SelectedCredential);
                 if (credential != null)
                 {
                     var coreCredential = credential.GetCredential();
 
-                    // Update TOTP fields
                     coreCredential.TotpSecret = secret;
                     coreCredential.TotpDigits = 6;
                     coreCredential.TotpTimeStep = 30;
@@ -3940,22 +3716,17 @@ namespace PhantomVault.UI.ViewModels
                     coreCredential.TotpAccountName = coreCredential.Username;
                     coreCredential.LastUpdatedUtc = DateTimeOffset.UtcNow;
 
-                    // Save the vault to persist changes
                     await SaveVaultAsync();
 
-                    // Sync updated TOTP to shared file for Attestor
                     await ExportTotpToSyncAsync();
 
-                    // Recreate the credential view model to start the TOTP timer
                     var index = _credentials.IndexOf(credential);
                     _credentials.RemoveAt(index);
                     var newCredentialVM = new CredentialViewModel(coreCredential);
                     _credentials.Insert(index, newCredentialVM);
 
-                    // Update selected credential
                     SelectedCredential = newCredentialVM;
 
-                    // Clear the input
                     TotpSecretInput = string.Empty;
 
                     StatusMessage = $"TOTP added to {newCredentialVM.Title}";
@@ -3981,7 +3752,6 @@ namespace PhantomVault.UI.ViewModels
                 {
                     var coreCredential = credential.GetCredential();
 
-                    // Clear TOTP fields
                     coreCredential.TotpSecret = string.Empty;
                     coreCredential.TotpIssuer = string.Empty;
                     coreCredential.TotpAccountName = string.Empty;
@@ -3989,10 +3759,8 @@ namespace PhantomVault.UI.ViewModels
 
                     await SaveVaultAsync();
 
-                    // Sync updated TOTP to shared file for Attestor (entry removed)
                     await ExportTotpToSyncAsync();
 
-                    // Recreate credential VM
                     var index = _credentials.IndexOf(credential);
                     _credentials.RemoveAt(index);
                     var newCredentialVM = new CredentialViewModel(coreCredential);
@@ -4123,24 +3891,19 @@ namespace PhantomVault.UI.ViewModels
 
         private void ShowDashboard()
         {
-            // If dashboard is disabled by user, redirect to Passwords view
+
             if (!IsDashboardEnabled)
             {
                 ShowPasswords();
                 return;
             }
 
-            // FORCE COMPLETE VIEW DESTRUCTION AND RECREATION
-            // Step 1: Hide dashboard view to unload from visual tree
             IsShowingDashboard = false;
 
-            // Step 2: Force UI thread to process the visibility change
             System.Threading.Tasks.Task.Delay(1).Wait();
 
-            // Step 3: Clear all old data completely
             DashboardViewModel.ClearDashboard();
 
-            // Step 4: Clear all other view states
             IsShowingAll = false;
             IsShowingPasswords = false;
             IsShowingFavorites = false;
@@ -4154,20 +3917,16 @@ namespace PhantomVault.UI.ViewModels
             SelectedTrashItem = null;
             CurrentViewTitle = "Dashboard";
 
-            // Always collapse sidebar in dashboard view
             IsSidebarCollapsed = true;
 
-            // Step 5: Show dashboard view (forces re-render with clean state)
             IsShowingDashboard = true;
 
-            // Step 6: Load fresh data
             _ = DashboardViewModel.LoadDashboardDataAsync();
             DashboardViewModel.OwnerWindow = _ownerWindow;
             DashboardViewModel.ClipboardGuard = _clipboardGuard;
             DashboardViewModel.LoadQuickAccessCredentials(_credentials, _categories);
             DashboardViewModel.SetRecoveryAvailability(IsEmbeddedRecoveryAvailable, DashboardRecoveryStatus);
 
-            // Force rebind ToggleButton IsChecked (ToggleButton internal toggle can desync OneWay binding)
             this.RaisePropertyChanged(nameof(IsShowingDashboard));
             this.RaisePropertyChanged(nameof(IsShowingPasswords));
         }
@@ -4190,7 +3949,7 @@ namespace PhantomVault.UI.ViewModels
             SetActiveCategory(null);
             SelectedTrashItem = null;
             CurrentViewTitle = "Passwords";
-            IsSidebarCollapsed = false;  // Expand sidebar to show full navigation
+            IsSidebarCollapsed = false;
 
             FilterByEntryType("Password");
             IsShowingPasswords = true;
@@ -4198,14 +3957,13 @@ namespace PhantomVault.UI.ViewModels
             CurrentViewTitle = "Passwords";
             ApplyFilters();
 
-            // Force rebind ToggleButton IsChecked (ToggleButton internal toggle can desync OneWay binding)
             this.RaisePropertyChanged(nameof(IsShowingPasswords));
             this.RaisePropertyChanged(nameof(IsShowingDashboard));
         }
 
         private void ShowAll()
         {
-            // Don't switch away from dashboard during initialization
+
             if (_isInitializing)
             {
                 return;
@@ -4253,7 +4011,7 @@ namespace PhantomVault.UI.ViewModels
             SetActiveCategory(null);
             SelectedTrashItem = null;
             CurrentViewTitle = "Passkeys";
-            // Don't call ApplyFilters - we'll show the Passkeys collection directly
+
             UpdateQuickFilterHighlight(2);
         }
 
@@ -4318,7 +4076,7 @@ namespace PhantomVault.UI.ViewModels
         {
             if (string.IsNullOrEmpty(entryTypeValue))
             {
-                // Show all types
+
                 CurrentEntryType = null;
                 CurrentViewTitle = "All Entry Types";
             }
@@ -4333,7 +4091,6 @@ namespace PhantomVault.UI.ViewModels
         {
             var keepPasswordsNavActive = IsShowingPasswords || IsShowingDashboard;
 
-            // Reset other filters
             IsShowingAll = false;
             IsShowingFavorites = false;
             IsShowingPasskeys = false;
@@ -4372,10 +4129,9 @@ namespace PhantomVault.UI.ViewModels
 
         private void NavigateToVaultWithFilter(string filterType)
         {
-            // Hide the category landing page and show the vault view
+
             IsShowingCategoryLanding = false;
 
-            // Apply the appropriate filter
             switch (filterType)
             {
                 case "Dashboard":
@@ -4440,7 +4196,7 @@ namespace PhantomVault.UI.ViewModels
                     break;
                 case "TOTP":
                     IsShowingDashboard = false;
-                    // Filter to show only credentials with TOTP
+
                     IsShowingAll = false;
                     IsShowingFavorites = false;
                     IsShowingPasskeys = false;
@@ -4569,27 +4325,17 @@ namespace PhantomVault.UI.ViewModels
             return false;
         }
 
-        /// <summary>
-        /// Sets the manifest context with the provided credentials.
-        /// This allows the vault to be initialized with password/keyfile before mounting.
-        /// </summary>
-        /// <param name="manifestPath">Path to the vault manifest file.</param>
-        /// <param name="password">The vault password.</param>
-        /// <param name="keyfilePath">Optional path to the keyfile.</param>
         internal void SetManifestContext(string manifestPath, string? password, string? keyfilePath)
         {
-            // Store the credentials for later use
+
             _vaultPassword = password;
             _vaultKeyfilePath = keyfilePath;
 
-            // Persist re-auth context for in-app lock/unlock.
             _manifestPath = manifestPath;
             _reauthKeyfilePath = keyfilePath;
 
-            // Clear password parameter immediately after copying to field (security best practice)
             password = null!;
 
-            // Set mount path to the directory containing the manifest
             var manifestDir = Path.GetDirectoryName(manifestPath);
             if (!string.IsNullOrEmpty(manifestDir))
             {
@@ -4612,7 +4358,6 @@ namespace PhantomVault.UI.ViewModels
                 _requestedStorageTransport = null;
             }
 
-            // Clear local parameter after copying to field (security best practice)
             password = null!;
 
             this.RaisePropertyChanged(nameof(PasswordUnlockAvailable));
@@ -4620,7 +4365,6 @@ namespace PhantomVault.UI.ViewModels
             this.RaisePropertyChanged(nameof(ShowPassphraseFallbackSection));
             this.RaisePropertyChanged(nameof(ShowPassphraseFallbackLink));
 
-            // Apply manifest category colors so they appear immediately in the sidebar
             LoadCategoryColorsFromManifest();
         }
 
@@ -4629,9 +4373,9 @@ namespace PhantomVault.UI.ViewModels
             try
             {
                 EnsureVaultVisible();
-                // Attempt to locate the manifest file using the stored path or by searching on disk.
+
                 string? manifestPath = _manifestPath;
-                // If we have a mount path, check for .pvault then legacy .manifest
+
                 if (manifestPath == null && !string.IsNullOrEmpty(_mountPath))
                 {
                     var candidate = System.IO.Path.Combine(_mountPath, "vault.pvault");
@@ -4645,7 +4389,7 @@ namespace PhantomVault.UI.ViewModels
 
                 if (manifestPath != null)
                 {
-                    // Use cached vault credentials from initial unlock — never re-prompt the user.
+
                     var passphrase = string.IsNullOrEmpty(_vaultPassword) ? null : _vaultPassword;
                     var keyfile = string.IsNullOrEmpty(_vaultKeyfilePath) ? null : _vaultKeyfilePath;
 
@@ -4668,8 +4412,8 @@ namespace PhantomVault.UI.ViewModels
                 }
                 else
                 {
-                    // No manifest found; still open a manager synced to the current sidebar categories
-                    CloseAllOverlays(); // Close any other open overlays
+
+                    CloseAllOverlays();
                     var categoryVm = new CategoryManagerViewModel(this);
                     AttachCategoryManagerViewModel(categoryVm);
                     IsCategoryManagerPanelVisible = true;
@@ -4705,15 +4449,13 @@ namespace PhantomVault.UI.ViewModels
 
         private void ToggleSidebar()
         {
-            // Don't allow sidebar expansion when on dashboard
+
             if (IsShowingDashboard && IsSidebarCollapsed)
             {
                 StatusMessage = "Sidebar cannot be expanded in dashboard view";
                 return;
             }
 
-            // Toggle between collapsed and expanded states
-            // If auto-collapsed, this is a manual expand
             if (_isSidebarAutoCollapsed)
             {
                 _isSidebarAutoCollapsed = false;
@@ -4725,29 +4467,28 @@ namespace PhantomVault.UI.ViewModels
 
         public void UpdateSidebarVisibility(double windowWidth)
         {
-            // In smaller windows (<1200px), auto-collapse unless manually expanded
-            // In larger windows (>=1200px), respect user's preference (don't auto-expand)
+
             if (windowWidth >= 1200)
             {
-                // Large screen: clear auto-collapse state, but don't force expand
+
                 _isSidebarAutoCollapsed = false;
             }
             else
             {
-                // Small screen: auto-collapse unless user manually expanded
+
                 if (!_isSidebarAutoCollapsed && !IsSidebarCollapsed)
                 {
-                    // First time going small: auto-collapse
+
                     _isSidebarAutoCollapsed = true;
                     IsSidebarCollapsed = true;
                 }
-                // If user manually expanded (_isSidebarAutoCollapsed == false), respect their choice
+
             }
         }
 
         private void ToggleTheme()
         {
-            // Light mode only — toggle disabled
+
         }
 
         private void ApplyThemeVariant()
@@ -4806,7 +4547,7 @@ namespace PhantomVault.UI.ViewModels
                 }
                 catch
                 {
-                    // Best-effort scrub of managed string copy.
+
                 }
             }
 
@@ -4829,26 +4570,20 @@ namespace PhantomVault.UI.ViewModels
                     LockscreenError = e.Result.Error.Message;
                 }
 
-                // Always enter the lockscreen instead of closing the window.
                 EnterLockedState(
                     title: "Vault Locked",
                     message: e.Reason == LockReason.AutoLock ? "Vault auto-locked due to inactivity." : "Vault locked.",
                     softLock: false);
 
-                // Clear sensitive UI state so nothing is visible behind the overlay.
                 ClearVaultUiState();
 
-                // Auto-lock should not kill the app window.
                 await Task.CompletedTask;
             });
         }
 
         private void OnIdleLockElapsed()
         {
-            // Issue #1: auto-lock must not activate before a PIN is configured for this
-            // vault. If the user has never set a PIN, idle expiry is a no-op — there is
-            // nothing to fall back to except the full passphrase, which is a bad UX
-            // when the user hasn't opted into PIN-protected sessions yet.
+
             try
             {
                 var settings = SettingsService.Load();
@@ -4862,8 +4597,7 @@ namespace PhantomVault.UI.ViewModels
             }
             catch
             {
-                // If settings can't be loaded for any reason, fail closed by skipping
-                // auto-lock rather than locking a user who has never set a PIN.
+
                 return;
             }
 
@@ -4885,7 +4619,6 @@ namespace PhantomVault.UI.ViewModels
             SelectedCredential = null;
             SelectedTrashItem = null;
 
-            // Dispose TOTP sync service
             if (_totpSyncService != null)
             {
                 _totpSyncService.EntriesChanged -= OnTotpEntriesChanged;
@@ -4904,9 +4637,6 @@ namespace PhantomVault.UI.ViewModels
             _lockscreenFailedUnlockAttempts = 0;
             _lockscreenLockedUntilUtc = null;
 
-            // If a vault was opened via a flow that didn't provide re-auth context,
-            // try to locate the manifest on the current mount/base directory.
-            // Skip this in developer bypass mode (no real vault to re-auth).
             if (!_isDeveloperBypassMode
                 && string.IsNullOrWhiteSpace(_manifestPath)
                 && TryGetManifestContext(out var inferredManifestPath, out _, out _))
@@ -4941,7 +4671,7 @@ namespace PhantomVault.UI.ViewModels
 
         private void DismissLockscreen()
         {
-            // Developer bypass has no mounted vault to re-auth; avoid trapping the user.
+
             _vaultLockDurationService.UnlockVault();
             ExitLockedState();
         }
@@ -4964,18 +4694,14 @@ namespace PhantomVault.UI.ViewModels
                 var viewModel = dialog.DataContext as PhantomVault.UI.ViewModels.Dialogs.PinSetupDialogViewModel;
                 if (viewModel?.Success == true)
                 {
-                    // Update settings to enable PIN lock
+
                     var settings = SettingsService.Load();
                     settings.EnablePinLock = true;
                     SettingsService.Save(settings);
 
-                    // Issue #1: now that a PIN is configured, arm the auto-lock
-                    // timer and reset it so the freshly-armed countdown starts
-                    // from now rather than from whenever the vault was unlocked.
                     _vaultLockDurationService.AutoLockEnabled = true;
                     _vaultLockDurationService.ResetTimer();
 
-                    // Refresh lockscreen computed properties
                     this.RaisePropertyChanged(nameof(PinUnlockAvailable));
                     this.RaisePropertyChanged(nameof(ShowPassphraseFallbackSection));
                 }
@@ -4988,8 +4714,7 @@ namespace PhantomVault.UI.ViewModels
 
         private async Task LockInAppAsync(LockReason reason)
         {
-            // If PIN lock is enabled, we default manual lock to soft-lock (UI lock).
-            // Auto-lock can be configured in settings.
+
             var settings = SettingsService.Load();
             bool pinConfigured = settings.EnablePinLock && PinLockService.HasPinConfigured(settings, _manifestPath);
             bool usePinForAutoLock = settings.UsePinLockForAutoLock && pinConfigured;
@@ -5008,10 +4733,9 @@ namespace PhantomVault.UI.ViewModels
                 return;
             }
 
-            // Hard lock: dismount and wipe keys.
             if (string.IsNullOrEmpty(_mountPath))
             {
-                // Dev-bypass / no mount path: still lock UI.
+
                 EnterLockedState("Vault Locked", "Vault locked.", softLock: true);
                 ClearVaultUiState();
                 return;
@@ -5115,7 +4839,6 @@ namespace PhantomVault.UI.ViewModels
                 return false;
             }
 
-            // USB binding check (best-effort)
             if (!string.IsNullOrEmpty(_usbRootPath) && !string.IsNullOrEmpty(manifest.DeviceId))
             {
                 var usbBinding = TryResolve<UsbBindingService>();
@@ -5130,7 +4853,6 @@ namespace PhantomVault.UI.ViewModels
                 }
             }
 
-            // TOTP
             if (!string.IsNullOrEmpty(manifest.TotpSecret))
             {
                 var totpService = TryResolve<TotpService>();
@@ -5158,7 +4880,6 @@ namespace PhantomVault.UI.ViewModels
                 }
             }
 
-            // Hardware token presence
             if (manifest.RequiresHardwareToken)
             {
                 var yubi = TryResolve<YubiKeyService>();
@@ -5183,7 +4904,6 @@ namespace PhantomVault.UI.ViewModels
                 }
             }
 
-            // Local device authenticator (Windows Hello-backed)
             if (!string.IsNullOrEmpty(manifest.PasskeyId))
             {
                 var services = TryGetServiceProvider();
@@ -5274,7 +4994,6 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Hard unlock: re-mount and reload.
                 if (string.IsNullOrWhiteSpace(_containerAbsPath))
                 {
                     LockscreenError = "Missing container path; cannot re-mount.";
@@ -5381,10 +5100,6 @@ namespace PhantomVault.UI.ViewModels
             _ownerWindow = null;
         }
 
-        /// <summary>
-        /// Loads the encrypted vault database from the mounted container.
-        /// Uses zero-knowledge decryption to read the vault.pvault file.
-        /// </summary>
         public async Task LoadAsync(string mountPath, string password, string? keyfilePath = null, CancellationToken cancellationToken = default)
         {
             try
@@ -5402,16 +5117,14 @@ namespace PhantomVault.UI.ViewModels
                     }
                     catch
                     {
-                        // Best effort: vault loading can continue even if master volume metadata can't be re-read here.
+
                     }
                 }
 
-                // Clear password parameter immediately after copying to field (security best practice)
                 password = null!;
 
                 _vaultLockDurationService.SetActiveSession(null);
 
-                // Clear existing items
                 Items.Clear();
                 _credentials.Clear();
 
@@ -5421,7 +5134,6 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Path to the encrypted vault database
                 _vaultFilePath = Path.Combine(mountPath, "vault.pvault");
                 if (!File.Exists(_vaultFilePath))
                 {
@@ -5440,10 +5152,9 @@ namespace PhantomVault.UI.ViewModels
 
                 VaultDatabase? database;
 
-                // CRITICAL: Check if decoy vault is active
                 if (_tamperDetectionService?.IsDecoyActive == true && _decoyVaultService?.IsDecoyActive == true)
                 {
-                    // Return decoy database instead of real vault
+
                     database = _decoyVaultService.DecoyDatabase;
 
                     if (database == null)
@@ -5454,8 +5165,7 @@ namespace PhantomVault.UI.ViewModels
                 }
                 else
                 {
-                    // Normal operation: Decrypt and load the vault database using ZK service
-                    // The ZK service should already be unlocked by SignInDialogViewModel
+
                     if (!_zkVaultService.IsUnlocked)
                     {
                         StatusMessage = "Zero-knowledge vault service is not unlocked";
@@ -5484,7 +5194,6 @@ namespace PhantomVault.UI.ViewModels
                         using var reader = new StreamReader(stream);
                         var json = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
 
-                        // Deserialize the vault database structure
                         database = JsonSerializer.Deserialize<VaultDatabase>(json);
                     }
 
@@ -5495,7 +5204,6 @@ namespace PhantomVault.UI.ViewModels
                     }
                 }
 
-                // Load credentials from all groups
                 if (database.Groups != null)
                 {
                     foreach (var group in database.Groups)
@@ -5504,7 +5212,7 @@ namespace PhantomVault.UI.ViewModels
                         {
                             foreach (var credential in group.Entries)
                             {
-                                // Set the group name from the parent group
+
                                 credential.Group = group.Name;
                                 _credentials.Add(new CredentialViewModel(credential));
                             }
@@ -5512,16 +5220,12 @@ namespace PhantomVault.UI.ViewModels
                     }
                 }
 
-                // Update UI
                 UpdateCategoryCounts();
 
-                // Apply manifest category colors so they appear immediately
                 LoadCategoryColorsFromManifest();
 
-                // Set "Logins" as the default category filter
                 SelectCategory("Logins");
 
-                // Load file system entries for the Items list
                 foreach (var entry in Directory.GetFileSystemEntries(mountPath))
                 {
                     Items.Add(Path.GetFileName(entry));
@@ -5531,11 +5235,6 @@ namespace PhantomVault.UI.ViewModels
 
                 RegisterAutoLockSession();
 
-                // Issue #1: arm auto-lock only when a PIN has been configured.
-                // Without a PIN the only fallback is the full passphrase, which
-                // is a poor surprise for a user who hasn't opted in to a PIN
-                // session. Recomputed here on every vault open so it picks up
-                // PIN setup that happened in a previous session.
                 try
                 {
                     var lockSettings = SettingsService.Load();
@@ -5546,27 +5245,20 @@ namespace PhantomVault.UI.ViewModels
                 }
                 catch
                 {
-                    // Fail closed: if we can't read settings, disable auto-lock
-                    // rather than surprise-locking the user.
+
                     _vaultLockDurationService.AutoLockEnabled = false;
                 }
 
                 _vaultLockDurationService.UnlockVault();
 
-                // Start idle-lock timer. Fires IdleElapsed after 15 minutes of inactivity,
-                // which is handled in App to lock and wipe the vault.
                 _idleLockService.Reset();
 
-                // Analyze passwords and update Security Dashboard
                 UpdateWeakCredentials();
 
-                // Check if key rotation is required
                 CheckRotationStatus();
 
-                // Initialize TOTP synchronization service
                 await InitializeTotpSyncAsync();
 
-                // Load dashboard data so quick access tiles are populated on startup
                 if (_isShowingDashboard)
                 {
                     _ = DashboardViewModel.LoadDashboardDataAsync();
@@ -5589,10 +5281,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Legacy method for loading file system entries only (for backwards compatibility).
-        /// For full vault loading with credential decryption, use LoadAsync instead.
-        /// </summary>
         public void Load(string mountPath)
         {
             _mountPath = mountPath;
@@ -5606,9 +5294,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Sets the owner window for dialog display.
-        /// </summary>
         public void SetOwnerWindow(Window window)
         {
             if (window == null) throw new ArgumentNullException(nameof(window));
@@ -5628,17 +5313,11 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Gets all credentials for export.
-        /// </summary>
         public List<Credential> GetAllCredentials()
         {
             return _credentials.Select(c => c.GetCredential()).ToList();
         }
 
-        /// <summary>
-        /// Adds a credential from import operation.
-        /// </summary>
         public void AddCredentialFromImport(Credential credential)
         {
             PrivacyShield.DebugSensitive("VaultVM", () => $"AddCredentialFromImport called for: {credential.Title}");
@@ -5648,13 +5327,11 @@ namespace PhantomVault.UI.ViewModels
 
             var credentialVm = new CredentialViewModel(credential);
 
-            // Add to main collection
             _credentials.Add(credentialVm);
             PrivacyShield.DebugInfo("VaultVM", $"Added to _credentials. New count: {_credentials.Count}");
 
             UpdateFlaggedCredentials();
 
-            // DIRECTLY add to appropriate collection based on type
             Dispatcher.UIThread.Post(() =>
             {
                 if (credential.IsPasskey)
@@ -5675,16 +5352,13 @@ namespace PhantomVault.UI.ViewModels
                     this.RaisePropertyChanged(nameof(IsEmpty));
                 }
 
-                // Force property change notifications
                 this.RaisePropertyChanged(nameof(TotalCount));
 
                 PrivacyShield.DebugInfo("VaultVM", "Raised all property notifications");
             });
 
-            // Also update category counts
             UpdateCategoryCounts();
 
-            // Save the vault to persist imported credentials
             _ = SaveVaultAsync();
 
             PrivacyShield.DebugInfo("VaultVM", "AddCredentialFromImport complete");
@@ -5703,7 +5377,7 @@ namespace PhantomVault.UI.ViewModels
             }
 
             UpdateFlaggedCredentials(flaggedSnapshot);
-            CloseAllOverlays(); // Close any other open overlays
+            CloseAllOverlays();
             IsFlaggedPanelVisible = true;
             StatusMessage = "Reviewing flagged passwords";
         }
@@ -5719,9 +5393,6 @@ namespace PhantomVault.UI.ViewModels
             StatusMessage = "Flagged passwords panel closed";
         }
 
-        /// <summary>
-        /// Opens the PhantomRecovery application integrated into PhantomVault
-        /// </summary>
         private async Task OpenPhantomRecoveryAsync()
         {
             await Task.CompletedTask;
@@ -5794,9 +5465,6 @@ namespace PhantomVault.UI.ViewModels
             return parent?.FullName;
         }
 
-        /// <summary>
-        /// Toggles the embedded recovery panel visibility
-        /// </summary>
         private void ToggleRecoveryPanel()
         {
             if (!IsEmbeddedRecoveryAvailable)
@@ -5817,7 +5485,7 @@ namespace PhantomVault.UI.ViewModels
             if (IsRecoveryPanelVisible)
             {
                 EnsureVaultVisible();
-                // Close other panels when opening recovery
+
                 IsEditPanelVisible = false;
                 IsSettingsPanelVisible = false;
                 IsFlaggedPanelVisible = false;
@@ -5830,9 +5498,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Closes the recovery panel
-        /// </summary>
         public void CloseRecoveryPanel()
         {
             if (IsRecoveryPanelVisible)
@@ -5889,7 +5554,7 @@ namespace PhantomVault.UI.ViewModels
             }
             catch
             {
-                // Best effort only; failure to stage bootstrap metadata should not block Recovery launch.
+
             }
         }
 
@@ -5940,7 +5605,6 @@ namespace PhantomVault.UI.ViewModels
         {
             var filtered = _credentials.AsEnumerable();
 
-            // Apply search filter
             if (!string.IsNullOrWhiteSpace(SearchText))
             {
                 var search = SearchText.ToLower();
@@ -5951,7 +5615,6 @@ namespace PhantomVault.UI.ViewModels
                     (!string.IsNullOrEmpty(c.Url) && c.Url.ToLower().Contains(search)));
             }
 
-            // Apply view filter
             if (IsShowingFavorites)
             {
                 filtered = filtered.Where(c => c.IsFavorite);
@@ -5973,36 +5636,26 @@ namespace PhantomVault.UI.ViewModels
                 }).OrderBy(c => c.GetCredential().ExpiryUtc);
             }
 
-            // Apply sorting
             filtered = SortOption switch
             {
-                0 => filtered.OrderBy(c => c.Title), // Name A-Z
-                1 => filtered.OrderByDescending(c => c.Title), // Name Z-A
-                2 => filtered.OrderByDescending(c => c.CreatedUtc), // Recently Added
-                3 => filtered.OrderByDescending(c => c.LastUpdatedUtc), // Recently Modified
-                4 => filtered.OrderBy(c => c.Group).ThenBy(c => c.Title), // Category
+                0 => filtered.OrderBy(c => c.Title),
+                1 => filtered.OrderByDescending(c => c.Title),
+                2 => filtered.OrderByDescending(c => c.CreatedUtc),
+                3 => filtered.OrderByDescending(c => c.LastUpdatedUtc),
+                4 => filtered.OrderBy(c => c.Group).ThenBy(c => c.Title),
                 _ => filtered
             };
 
-            // Replace entire collection to force UI rebind
             FilteredCredentials = new ObservableCollection<CredentialViewModel>(filtered);
         }
 
         private void OpenSettingsPanel()
         {
-            // Entry point from the top-level "Settings" button. Always lands on
-            // General; tab switches inside the panel go through the individual
-            // Show*Settings handlers and reuse EnsureSettingsPanelOpen.
+
             ShowGeneralSettings();
             StatusMessage = "Settings opened";
         }
 
-        /// <summary>
-        /// Guarantees the settings overlay is visible and records the active
-        /// pane key. Safe to call when the panel is already open (no overlay
-        /// churn). When the panel is closed it first dismisses any other
-        /// overlay so the settings panel takes focus cleanly.
-        /// </summary>
         private void EnsureSettingsPanelOpen(string tabKey)
         {
             if (!IsSettingsPanelVisible)
@@ -6013,23 +5666,18 @@ namespace PhantomVault.UI.ViewModels
             SelectedSettingsTab = tabKey;
         }
 
-        // Issue #21: prompt the user when there are staged but unsaved settings
-        // changes before the overlay closes. Returns to caller via the
-        // CloseSettingsPanelCommand wrapper.
         private async Task CloseSettingsPanelAsync()
         {
             if (_settingsDraftTracker.HasUnsavedChanges)
             {
-                // The existing two-button confirmation dialog maps to
-                // "Save & Close" (true) / "Cancel" (false). False means stay
-                // on the settings panel so the user can review.
+
                 bool save = await _dialogService.ShowConfirmationAsync(
                     "Some settings have changed",
                     "Save the staged changes before closing? Click Cancel to stay and review.",
                     confirmText: "Save & Close",
                     cancelText: "Cancel",
                     owner: _ownerWindow);
-                if (!save) return; // user wants to keep editing
+                if (!save) return;
                 int saved = _settingsDraftTracker.CommitAll();
                 AnnounceSettingsSaved(saved);
             }
@@ -6042,18 +5690,11 @@ namespace PhantomVault.UI.ViewModels
 
         private void SaveStagedSettings()
         {
-            // Always give the user feedback when they click Save — even if
-            // nothing was staged (some toggles auto-persist), the animated
-            // "Saved" toast should still confirm the action.
+
             int n = _settingsDraftTracker.HasUnsavedChanges ? _settingsDraftTracker.CommitAll() : 0;
             AnnounceSettingsSaved(n);
         }
 
-        // Issue #31: tab-switch unsaved-changes intercept. If the user has
-        // staged changes on the currently-active tab (or anywhere — the
-        // tracker is overlay-wide), prompt before swapping tab content.
-        // Returns true if the switch should proceed, false to stay on the
-        // current tab.
         private async Task SwitchTabIfAllowedAsync(Action switchAction)
         {
             if (_settingsDraftTracker.HasUnsavedChanges)
@@ -6064,7 +5705,7 @@ namespace PhantomVault.UI.ViewModels
                     confirmText: "Save & Switch",
                     cancelText: "Cancel",
                     owner: _ownerWindow);
-                if (!save) return; // stay on current tab
+                if (!save) return;
                 int saved = _settingsDraftTracker.CommitAll();
                 AnnounceSettingsSaved(saved);
             }
@@ -6108,7 +5749,7 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (OperationCanceledException)
             {
-                // A newer save superseded this notification.
+
             }
         }
 
@@ -6119,7 +5760,7 @@ namespace PhantomVault.UI.ViewModels
             if (IsSecurityDashboardVisible)
             {
                 _ = CloseSettingsPanelAsync();
-                // Refresh all dashboard metrics when opened
+
                 UpdateWeakCredentials();
                 RefreshSecurityDashboardMetrics();
             }
@@ -6130,26 +5771,24 @@ namespace PhantomVault.UI.ViewModels
         {
             System.Diagnostics.Debug.WriteLine(">>> OpenSecurityDashboardWindow called");
             StatusMessage = "🔍 Opening Security Dashboard window...";
-            
+
             try
             {
-                // Close the summary dashboard overlay
+
                 if (IsSecurityDashboardVisible)
                 {
                     IsSecurityDashboardVisible = false;
                 }
 
-                // Refresh metrics before opening the full window
                 UpdateWeakCredentials();
                 RefreshSecurityDashboardMetrics();
 
                 var window = new Views.SecurityDashboardWindow { DataContext = this };
                 System.Diagnostics.Debug.WriteLine(">>> SecurityDashboardWindow created");
 
-                // Show the window directly (don't use ShowDialog with owner to avoid visibility issues)
                 window.Show();
                 System.Diagnostics.Debug.WriteLine(">>> SecurityDashboardWindow shown");
-                
+
                 StatusMessage = "✓ Security Dashboard opened successfully";
             }
             catch (Exception ex)
@@ -6168,14 +5807,13 @@ namespace PhantomVault.UI.ViewModels
                 var cred = credVm.GetCredential();
                 if (string.IsNullOrEmpty(cred.Password)) continue;
 
-                // Simple password strength analysis
                 var strength = AnalyzePasswordStrength(cred.Password);
 
-                if (strength.Severity >= 1) // Medium, High, or Critical issues
+                if (strength.Severity >= 1)
                 {
                     WeakCredentials.Add(new PhantomVault.UI.Desktop.Controls.WeakCredentialItem
                     {
-                        Id = cred.Title, // Use Title as identifier
+                        Id = cred.Title,
                         Title = cred.Title,
                         Username = cred.Username,
                         MaskedPassword = new string('\u2022', Math.Min(cred.Password.Length, 12)),
@@ -6186,7 +5824,6 @@ namespace PhantomVault.UI.ViewModels
                 }
             }
 
-            // Sort by severity (Critical first)
             var sorted = WeakCredentials.OrderByDescending(c => c.Severity).ToList();
             WeakCredentials.Clear();
             foreach (var item in sorted)
@@ -6195,23 +5832,18 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Refreshes all security dashboard metrics: score, password issues, 2FA coverage, etc.
-        /// Called when dashboard is opened or refreshed.
-        /// </summary>
         private void RefreshSecurityDashboardMetrics()
         {
             try
             {
                 IsRefreshingDashboard = true;
 
-                // Calculate security score (0-100)
                 int score = 100;
                 int totalCredentials = _credentials.Count;
 
                 if (totalCredentials == 0)
                 {
-                    SecurityScore = 50; // Default score for empty vault
+                    SecurityScore = 50;
                     BreachedPasswordCount = 0;
                     ReusedPasswordCount = 0;
                     ExpiringCredentialCount = 0;
@@ -6222,11 +5854,9 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Count weak/breached passwords
                 int weakCount = WeakCredentials.Count;
-                score -= (weakCount * 5); // 5 points per weak password
+                score -= (weakCount * 5);
 
-                // Count reused passwords (simple check: same password appears multiple times)
                 var passwordFrequency = _credentials
                     .Where(c => !string.IsNullOrEmpty(c.Password))
                     .GroupBy(c => c.Password)
@@ -6236,12 +5866,11 @@ namespace PhantomVault.UI.ViewModels
                 int reusedCount = 0;
                 foreach (var group in passwordFrequency)
                 {
-                    reusedCount += group.Count() - 1; // Count duplicates only
+                    reusedCount += group.Count() - 1;
                 }
                 ReusedPasswordCount = reusedCount;
-                score -= (reusedCount * 3); // 3 points per reused password
+                score -= (reusedCount * 3);
 
-                // Count expiring credentials (next 30 days)
                 var now = DateTimeOffset.UtcNow;
                 var expiringThreshold = now.AddDays(30);
                 int expiringCount = _credentials
@@ -6254,39 +5883,28 @@ namespace PhantomVault.UI.ViewModels
                     })
                     .Count();
                 ExpiringCredentialCount = expiringCount;
-                score -= (expiringCount * 2); // 2 points per expiring credential
+                score -= (expiringCount * 2);
 
-                // Count 2FA enabled credentials
                 int twoFactorCount = _credentials
                     .Where(c => c.HasTotpSecret)
                     .Count();
                 TwoFactorEnabledCount = twoFactorCount;
 
-                // Award points for 2FA coverage
                 if (twoFactorCount > 0)
                 {
                     int twoFactorBonus = Math.Min((twoFactorCount * 2), 15);
                     score += twoFactorBonus;
                 }
 
-                // Breached-password count: keep last known value while a fresh
-                // k-anonymous HIBP check runs asynchronously. The HIBP service
-                // only transmits the first 5 chars of each SHA-1 hash, never
-                // the password itself, so this is safe to fire-and-forget.
                 int breachedCount = _breachedPasswordCount;
-                score -= (breachedCount * 10); // 10 points per breached password
+                score -= (breachedCount * 10);
 
-                // Clamp score to 0-100 range
                 SecurityScore = Math.Clamp(score, 0, 100);
 
-                // Update last breach check time
                 LastBreachCheckTime = DateTime.UtcNow;
 
-                // Populate dashboard credentials list with scores
                 PopulateDashboardCredentials();
 
-                // Kick off a background HIBP refresh. The result will update
-                // BreachedPasswordCount and SecurityScore on the UI thread.
                 _ = RefreshBreachCountAsync();
             }
             finally
@@ -6295,21 +5913,13 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        // Lazily-constructed singleton HIBP client; disposed with the VM.
         private HaveIBeenPwnedService? _hibpService;
-        // Guards against overlapping background breach scans.
+
         private int _breachCheckRunning;
 
-        /// <summary>
-        /// Runs a k-anonymous Have I Been Pwned check across all non-empty
-        /// passwords currently loaded in the vault and updates
-        /// <see cref="BreachedPasswordCount"/> + <see cref="SecurityScore"/>
-        /// when finished. Fails closed: on network error the previous count
-        /// is preserved.
-        /// </summary>
         private async Task RefreshBreachCountAsync()
         {
-            // Single-flight: skip if a scan is already in progress.
+
             if (Interlocked.Exchange(ref _breachCheckRunning, 1) == 1)
                 return;
 
@@ -6337,8 +5947,7 @@ namespace PhantomVault.UI.ViewModels
                 {
                     int hits = await hibp.CheckPasswordBreachAsync(pw).ConfigureAwait(false);
                     if (hits > 0) breached++;
-                    // CheckPasswordBreachAsync returns -1 on transport failure;
-                    // treat as "unknown" (do not count) per fail-closed policy.
+
                 }
 
                 int finalBreached = breached;
@@ -6346,7 +5955,7 @@ namespace PhantomVault.UI.ViewModels
                 {
                     int oldBreached = BreachedPasswordCount;
                     BreachedPasswordCount = finalBreached;
-                    // Adjust security score for the delta (10 pts per breached pw).
+
                     int delta = (oldBreached - finalBreached) * 10;
                     SecurityScore = Math.Clamp(SecurityScore + delta, 0, 100);
                     LastBreachCheckTime = DateTime.UtcNow;
@@ -6382,18 +5991,16 @@ namespace PhantomVault.UI.ViewModels
 
             if (ShowAllFilter)
             {
-                // Show all credentials
+
                 PopulateDashboardCredentials();
                 return;
             }
 
-            // Apply selected filters
             foreach (var credVM in _credentials)
             {
                 var cred = credVM.GetCredential();
                 int credScore = CalculateCredentialSecurityScore(credVM, cred);
 
-                // Check if this credential matches any selected filter
                 bool matches = false;
                 if (_showCriticalFilter && credScore >= 0 && credScore <= 40)
                     matches = true;
@@ -6448,12 +6055,10 @@ namespace PhantomVault.UI.ViewModels
         {
             int score = PasswordStrengthEvaluator.Evaluate(cred.Password).Score;
 
-            // Check if password is reused
             int reusedCount = _credentials.Count(c => c.GetCredential().Password == cred.Password && c.GetCredential().Id != cred.Id);
             if (reusedCount > 0)
                 score -= 25;
 
-            // Check if expired or expiring soon
             if (cred.ExpiryUtc.HasValue)
             {
                 var now = DateTimeOffset.UtcNow;
@@ -6463,7 +6068,6 @@ namespace PhantomVault.UI.ViewModels
                     score -= 15;
             }
 
-            // Add bonus for 2FA
             if (credVM.HasTotpSecret)
                 score += 12;
 
@@ -6532,7 +6136,6 @@ namespace PhantomVault.UI.ViewModels
         {
             if (string.IsNullOrEmpty(original)) return 0;
 
-            // Simple similarity: count matching characters at same position
             int matches = 0;
             for (int i = 0; i < Math.Min(original.Length, suggested.Length); i++)
             {
@@ -6599,7 +6202,7 @@ namespace PhantomVault.UI.ViewModels
 
             try
             {
-                // Pass existing credentials to detect duplicates during import
+
                 var existingCreds = _credentials.Select(c => c.GetCredential()).ToList();
                 var importWindow = new ImportWindow(existingCreds);
                 importWindow.ImportCompleted += (_, importedCreds) =>
@@ -6623,11 +6226,10 @@ namespace PhantomVault.UI.ViewModels
 
             try
             {
-                // Get all credentials for export
+
                 var credentials = GetAllCredentials();
                 var exportWindow = new ExportWindow(credentials);
 
-                // Pre-select the format based on the button clicked
                 if (exportWindow.DataContext is ExportViewModel exportVm)
                 {
                     exportVm.SelectedFormat = format switch
@@ -6649,7 +6251,12 @@ namespace PhantomVault.UI.ViewModels
         private void ShowAutoFillSettings()
         {
             EnsureSettingsPanelOpen("autofill");
-            SelectedSettingsContent = new Views.Settings.AutoFillSettingsView();
+            var trayService = (Application.Current as App)?.Services?.GetService(typeof(PhantomVault.UI.Services.TrayBackground.ITrayBackgroundService))
+                              as PhantomVault.UI.Services.TrayBackground.ITrayBackgroundService;
+            SelectedSettingsContent = new Views.Settings.AutoFillSettingsView
+            {
+                DataContext = new AutoFillSettingsViewModel(trayService, _settingsDraftTracker)
+            };
         }
 
         private void ShowPasswordHealth()
@@ -6674,10 +6281,10 @@ namespace PhantomVault.UI.ViewModels
 
         private void OpenPasswordHealthPanel()
         {
-            CloseAllOverlays(); // Close any other open overlays
+            CloseAllOverlays();
             EnsureVaultVisible();
             IsPasswordHealthPanelVisible = true;
-            IsSidebarCollapsed = false;  // Expand sidebar
+            IsSidebarCollapsed = false;
 
             var healthVm = new PasswordHealthViewModel(new PhantomVault.Core.Services.PasswordHealthService());
             foreach (var cred in _credentials)
@@ -6739,7 +6346,7 @@ namespace PhantomVault.UI.ViewModels
 
         private void OpenIconManager()
         {
-            // Use the injected singleton IconManager
+
             IconManagerViewModel = new IconManagerViewModel(_iconManager);
             IsIconManagerPanelVisible = true;
             StatusMessage = "Icon Manager opened";
@@ -6770,11 +6377,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Checks if key rotation is required based on vault manifest LastKeyRotation timestamp.
-        /// Updates IsRotationRequired and DaysSinceRotation properties to control the rotation banner visibility.
-        /// Called automatically after vault LoadAsync completes.
-        /// </summary>
         public void CheckRotationStatus()
         {
             if (_rekeyService == null)
@@ -6842,13 +6444,13 @@ namespace PhantomVault.UI.ViewModels
                     manifestPath,
                     keyfilePath ?? string.Empty,
                     passphrase,
-                    null, // usbSerial
+                    null,
                     progress,
                     CancellationToken.None);
 
                 if (result.Success)
                 {
-                    // Update cached keyfile path if changed
+
                     if (!string.IsNullOrEmpty(result.NewKeyfilePath))
                     {
                         _vaultKeyfilePath = result.NewKeyfilePath;
@@ -6889,7 +6491,6 @@ namespace PhantomVault.UI.ViewModels
             IsRotationBannerDismissed = true;
         }
 
-        /// <summary>Display string for the current keyfile (name + folder).</summary>
         public string CurrentKeyfileDisplay
         {
             get
@@ -6901,11 +6502,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Regenerate (rotate) the vault keyfile, keeping the current password.
-        /// A brand-new entropy-blended keyfile is created and the vault is
-        /// re-encrypted under it.
-        /// </summary>
         private async Task RegenerateKeyfileAsync()
         {
             if (!TryGetKeyfileContext(out var manifestPath, out var passphrase, out var keyfilePath))
@@ -6919,17 +6515,47 @@ namespace PhantomVault.UI.ViewModels
                 _ownerWindow);
             if (!confirm) return;
 
-            await RunKeyfileRekeyAsync(manifestPath, passphrase, keyfilePath,
-                providedNewKeyfile: keyfilePath, // same path → service generates a new one
-                successTitle: "Keyfile Regenerated",
-                successMessage: "A new keyfile was generated and your vault re-encrypted. " +
-                                "Use Backup Keyfile to save a copy somewhere safe.");
+            string? entropyTempPath = null;
+            try
+            {
+                if (_ownerWindow != null)
+                {
+                    var entropyDialog = new Views.EntropyKeyfileGeneratorWindow();
+                    var entropyResult = await entropyDialog.ShowDialog<Services.EntropyKeyfileGenerationResult?>(_ownerWindow);
+                    if (entropyResult == null)
+                    {
+                        StatusMessage = "Keyfile regeneration cancelled.";
+                        return;
+                    }
+
+                    var keyfileDir = Path.GetDirectoryName(keyfilePath!) ?? Path.GetTempPath();
+                    entropyTempPath = Path.Combine(keyfileDir, $"vault.key.entropy-{Guid.NewGuid():N}.tmp");
+                    try
+                    {
+                        await File.WriteAllBytesAsync(entropyTempPath, entropyResult.KeyMaterial);
+                    }
+                    finally
+                    {
+                        System.Security.Cryptography.CryptographicOperations.ZeroMemory(entropyResult.KeyMaterial);
+                    }
+                }
+
+                await RunKeyfileRekeyAsync(manifestPath, passphrase, keyfilePath,
+                    providedNewKeyfile: entropyTempPath ?? keyfilePath,
+                    successTitle: "Keyfile Regenerated",
+                    successMessage: "A new keyfile was generated and your vault re-encrypted. " +
+                                    "Use Backup Keyfile to save a copy somewhere safe.");
+            }
+            finally
+            {
+                if (entropyTempPath != null)
+                {
+                    try { if (File.Exists(entropyTempPath)) File.Delete(entropyTempPath); }
+                    catch {  }
+                }
+            }
         }
 
-        /// <summary>
-        /// Replace the vault keyfile with an existing keyfile chosen by the user
-        /// (keeps the current password).
-        /// </summary>
         private async Task ChangeKeyfileAsync()
         {
             if (!TryGetKeyfileContext(out var manifestPath, out var passphrase, out var keyfilePath))
@@ -6963,7 +6589,6 @@ namespace PhantomVault.UI.ViewModels
                 successMessage: "Your vault is now protected by the selected keyfile.");
         }
 
-        /// <summary>Copy the current keyfile to a user-chosen location.</summary>
         private async Task BackupKeyfileAsync()
         {
             if (string.IsNullOrEmpty(_vaultKeyfilePath) || !File.Exists(_vaultKeyfilePath))
@@ -7000,10 +6625,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Shared keyfile-context guard: requires an unlocked vault with a
-        /// mandatory keyfile and a resolvable manifest.
-        /// </summary>
         private bool TryGetKeyfileContext(out string manifestPath, out string? passphrase, out string? keyfilePath)
         {
             manifestPath = string.Empty; passphrase = null; keyfilePath = null;
@@ -7035,7 +6656,7 @@ namespace PhantomVault.UI.ViewModels
                 bool success = _rekeyService!.RekeyVault(
                     manifestPath,
                     passphrase ?? string.Empty,
-                    passphrase ?? string.Empty, // keep password
+                    passphrase ?? string.Empty,
                     keyfilePath,
                     providedNewKeyfile);
 
@@ -7070,13 +6691,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Change the vault's (optional) master password. The keyfile is
-        /// mandatory and is rotated by the rekey service; the new password may
-        /// be empty (keyfile-only protection). Verifies the current password
-        /// when one is set, performs the rekey, then updates the cached
-        /// credentials so subsequent vault operations use the new secret.
-        /// </summary>
         private async Task ChangeMasterPasswordAsync()
         {
             if (_rekeyService == null)
@@ -7097,7 +6711,6 @@ namespace PhantomVault.UI.ViewModels
                 return;
             }
 
-            // Keyfile is mandatory in this vault model.
             if (string.IsNullOrEmpty(keyfilePath))
             {
                 await _dialogService.ShowErrorAsync(
@@ -7118,7 +6731,6 @@ namespace PhantomVault.UI.ViewModels
             if (!dialog.Confirmed)
                 return;
 
-            // Verify the current password (only when one is set).
             if (hasCurrentPassword &&
                 !string.Equals(dialog.CurrentPassword, passphrase, StringComparison.Ordinal))
             {
@@ -7129,7 +6741,7 @@ namespace PhantomVault.UI.ViewModels
                 return;
             }
 
-            var newPassword = dialog.NewPassword; // may be empty (keyfile-only)
+            var newPassword = dialog.NewPassword;
 
             IsBusy = true;
             StatusMessage = "Changing master password...";
@@ -7152,8 +6764,6 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Update cached credentials so subsequent operations (saving
-                // entries, re-auth) use the new secret + rotated keyfile.
                 _vaultPassword = string.IsNullOrEmpty(newPassword) ? null : newPassword;
                 var rotatedKeyfile = Path.Combine(
                     Path.GetDirectoryName(keyfilePath) ?? string.Empty, "vault.key.new");
@@ -7203,7 +6813,6 @@ namespace PhantomVault.UI.ViewModels
 
             ShowSecurityAlert = e.CurrentLevel >= SecurityThreatLevel.Medium;
 
-            // Log threat
             Debug.WriteLine($"[Security] Threat level changed: {e.PreviousLevel} → {e.CurrentLevel}");
             Debug.WriteLine($"[Security] Tamper: {e.Check.TamperCheckResult.GetDescription()}");
             Debug.WriteLine($"[Security] Keylogging: {e.Check.KeyloggingCheckResult.GetDescription()}");
@@ -7214,10 +6823,8 @@ namespace PhantomVault.UI.ViewModels
             if (_securityCoordinator == null)
                 return;
 
-            // Determine action
             var action = await _securityCoordinator.RespondToThreatAsync(e.Check);
 
-            // Show alert
             await Dispatcher.UIThread.InvokeAsync(async () =>
             {
                 await _dialogService.ShowWarningAsync(
@@ -7226,14 +6833,12 @@ namespace PhantomVault.UI.ViewModels
                     _ownerWindow);
             });
 
-            // Take action
             if (action.ShouldLockVault)
             {
                 await Dispatcher.UIThread.InvokeAsync(async () =>
                 {
                     StatusMessage = "Vault locked due to security threat";
 
-                    // Lock vault using security lockdown
                     if (!string.IsNullOrEmpty(_mountPath))
                     {
                         try
@@ -7268,9 +6873,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Starts security monitoring when vault is unlocked.
-        /// </summary>
         private void StartSecurityMonitoring()
         {
             if (_securityCoordinator == null)
@@ -7284,9 +6886,6 @@ namespace PhantomVault.UI.ViewModels
             Debug.WriteLine("[Security] Monitoring started");
         }
 
-        /// <summary>
-        /// Stops security monitoring when vault is locked.
-        /// </summary>
         private void StopSecurityMonitoring()
         {
             if (_securityCoordinator == null)
@@ -7304,9 +6903,6 @@ namespace PhantomVault.UI.ViewModels
 
         #region USB Auto-Inject
 
-        /// <summary>
-        /// Initializes the USB auto-inject service
-        /// </summary>
         private void InitializeAutoInject()
         {
             if (_autoInjectService == null)
@@ -7314,15 +6910,13 @@ namespace PhantomVault.UI.ViewModels
 
             try
             {
-                // Set the factory that creates credential provider on-demand
+
                 _autoInjectService.SetCredentialProviderFactory(() =>
                     new VaultViewModelCredentialProvider(this));
 
-                // Subscribe to events
                 _autoInjectService.PromptRequired += OnAutoInjectPromptRequired;
                 _autoInjectService.PasskeyReady += OnPasskeyReady;
 
-                // Start the service
                 _ = _autoInjectService.StartAsync();
 
                 Debug.WriteLine("[VaultViewModel] Auto-inject service initialized");
@@ -7333,12 +6927,9 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Handles auto-inject prompt events when credentials are matched
-        /// </summary>
         private void OnAutoInjectPromptRequired(object? sender, AutoInjectPromptEventArgs e)
         {
-            // Show the prompt window on UI thread
+
             Dispatcher.UIThread.InvokeAsync(async () =>
             {
                 try
@@ -7352,7 +6943,7 @@ namespace PhantomVault.UI.ViewModels
 
                     var promptWindow = new AutoInjectPromptWindow
                     {
-                        DataContext = e  // Window binds to Matches array
+                        DataContext = e
                     };
 
                     var result = await promptWindow.ShowDialog<bool?>(owner);
@@ -7371,12 +6962,9 @@ namespace PhantomVault.UI.ViewModels
             });
         }
 
-        /// <summary>
-        /// Handles passkey authentication events (silent)
-        /// </summary>
         private void OnPasskeyReady(object? sender, PasskeyReadyEventArgs e)
         {
-            // Handle silent passkey authentication
+
             Dispatcher.UIThread.InvokeAsync(async () =>
             {
                 try
@@ -7416,9 +7004,6 @@ namespace PhantomVault.UI.ViewModels
             });
         }
 
-        /// <summary>
-        /// Gets the owner window for dialogs
-        /// </summary>
         private Window? GetOwnerWindowForDialog()
         {
             return _ownerWindow ??
@@ -7427,9 +7012,6 @@ namespace PhantomVault.UI.ViewModels
 
         #region TOTP Synchronization
 
-        /// <summary>
-        /// Initializes the TOTP synchronization service for cross-app sync with PhantomAttestor
-        /// </summary>
         private async Task InitializeTotpSyncAsync()
         {
             try
@@ -7439,45 +7021,36 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Path to TOTP sync file on USB device
                 var syncPath = Path.Combine(_mountPath, ".phantom", "vaults", "totp-sync.json");
                 var syncDir = Path.GetDirectoryName(syncPath);
 
-                // Create directory if it doesn't exist
                 if (!string.IsNullOrEmpty(syncDir) && !Directory.Exists(syncDir))
                 {
                     Directory.CreateDirectory(syncDir);
                 }
 
-                // Initialize sync service
                 _totpSyncService = new PhantomVault.Core.Services.Sync.TotpSyncServiceObscura(syncPath);
                 _totpSyncService.EntriesChanged += OnTotpEntriesChanged;
                 await _totpSyncService.InitializeAsync();
 
-                // Export Obscura's existing TOTP entries to sync file so Attestor can pick them up
                 await ExportTotpToSyncAsync();
 
                 StatusMessage = "TOTP sync initialized";
             }
             catch (Exception ex)
             {
-                // Don't fail vault loading if TOTP sync fails
+
                 System.Diagnostics.Debug.WriteLine($"Failed to initialize TOTP sync: {ex.Message}");
                 StatusMessage = "TOTP sync unavailable";
             }
         }
 
-        /// <summary>
-        /// Exports all Obscura TOTP-enabled credentials to the shared sync file.
-        /// Uses merge logic so Attestor entries are preserved.
-        /// </summary>
         private async Task ExportTotpToSyncAsync()
         {
             try
             {
                 if (_totpSyncService == null) return;
 
-                // Extract TOTP entries from all credentials that have a TOTP secret
                 var coreCredentials = _credentials
                     .Select(c => c.GetCredential())
                     .Where(c => !string.IsNullOrWhiteSpace(c.TotpSecret));
@@ -7496,14 +7069,11 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Handles TOTP entries changed event from PhantomAttestor
-        /// </summary>
         private async void OnTotpEntriesChanged(object? sender, System.Collections.Generic.List<PhantomVault.Core.Models.SharedTotpEntry> entries)
         {
             try
             {
-                // Update credentials with TOTP data from PhantomAttestor
+
                 foreach (var entry in entries)
                 {
                     var cred = _credentials.FirstOrDefault(c => c.Title == entry.LinkedPasswordEntryId);
@@ -7511,7 +7081,6 @@ namespace PhantomVault.UI.ViewModels
                     {
                         var coreCred = cred.GetCredential();
 
-                        // Update TOTP fields
                         coreCred.TotpSecret = entry.Secret;
                         coreCred.TotpDigits = entry.Digits;
                         coreCred.TotpTimeStep = entry.Period;
@@ -7520,13 +7089,11 @@ namespace PhantomVault.UI.ViewModels
                         coreCred.TotpAccountName = entry.AccountName;
                         coreCred.LastUpdatedUtc = DateTimeOffset.UtcNow;
 
-                        // Recreate ViewModel to refresh UI and reinitialize TOTP timer
                         var index = _credentials.IndexOf(cred);
                         _credentials.RemoveAt(index);
                         var newCredentialVM = new CredentialViewModel(coreCred);
                         _credentials.Insert(index, newCredentialVM);
 
-                        // Update selected credential if it was the synced one
                         if (SelectedCredential?.Title == entry.LinkedPasswordEntryId)
                         {
                             SelectedCredential = newCredentialVM;
@@ -7534,7 +7101,6 @@ namespace PhantomVault.UI.ViewModels
                     }
                 }
 
-                // Save updated credentials to vault
                 await SaveVaultAsync();
 
                 StatusMessage = $"Synced {entries.Count} TOTP entries from PhantomAttestor";
@@ -7588,9 +7154,6 @@ namespace PhantomVault.UI.ViewModels
     }
 }
 
-/// <summary>
-/// Wrapper class for dashboard credential items with security score and status information.
-/// </summary>
 public class DashboardCredentialItem
 {
     private readonly PhantomVault.Core.Models.Credential _credential;
@@ -7616,10 +7179,10 @@ public class DashboardCredentialItem
 
     public string SecurityScoreColor => SecurityScore switch
     {
-        >= 81 => "#4CAF50", // Green
-        >= 61 => "#FFC107", // Amber
-        >= 41 => "#FF9800", // Orange
-        _ => "#F44336"       // Red
+        >= 81 => "#4CAF50",
+        >= 61 => "#FFC107",
+        >= 41 => "#FF9800",
+        _ => "#F44336"
     };
 
     public ObservableCollection<StatusIndicator> StatusIndicators
@@ -7645,17 +7208,15 @@ public class DashboardCredentialItem
     }
 
     public bool IsTwoFactorEnabled => _hasTwoFactor;
-    public string LastModifiedFormatted => _credential.ModifiedDate > DateTime.MinValue 
-        ? _credential.ModifiedDate.ToString("yyyy-MM-dd") 
+    public string LastModifiedFormatted => _credential.ModifiedDate > DateTime.MinValue
+        ? _credential.ModifiedDate.ToString("yyyy-MM-dd")
         : "N/A";
 }
 
-/// <summary>
-/// Status indicator for dashboard display.
-/// </summary>
 public class StatusIndicator
 {
     public string Label { get; set; } = "";
     public string Tooltip { get; set; } = "";
     public string Color { get; set; } = "#666";
 }
+

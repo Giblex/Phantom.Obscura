@@ -1,12 +1,6 @@
 <Styles xmlns="https://github.com/avaloniaui"
          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- ═══════════════════════════════════════════════════════════════════
-         Tile Button Styles — Single source of truth for credential tiles
-         Shadow handling moved to theme files (Dark/Light/HighContrast.axaml)
-         ═══════════════════════════════════════════════════════════════════ -->
-
-    <!-- List tile variant — stretches to fill available width -->
     <Style Selector="Button.tile-button">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>
@@ -20,12 +14,12 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border Background="{TemplateBinding Background}" 
-                            BorderBrush="{TemplateBinding BorderBrush}" 
-                            BorderThickness="{TemplateBinding BorderThickness}" 
-                            CornerRadius="{TemplateBinding CornerRadius}" 
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
                             ClipToBounds="True">
-                        <ContentPresenter Content="{TemplateBinding Content}" 
+                        <ContentPresenter Content="{TemplateBinding Content}"
                                           ContentTemplate="{TemplateBinding ContentTemplate}"
                                           HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                           VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
@@ -35,7 +29,6 @@
         </Setter>
     </Style>
 
-    <!-- Grid tile variant — fixed sizing -->
     <Style Selector="Button.tile-button-grid">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>
@@ -45,12 +38,12 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border Background="{TemplateBinding Background}" 
-                            BorderBrush="{TemplateBinding BorderBrush}" 
-                            BorderThickness="{TemplateBinding BorderThickness}" 
-                            CornerRadius="{TemplateBinding CornerRadius}" 
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
                             ClipToBounds="True">
-                        <ContentPresenter Content="{TemplateBinding Content}" 
+                        <ContentPresenter Content="{TemplateBinding Content}"
                                           ContentTemplate="{TemplateBinding ContentTemplate}"
                                           HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                           VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
@@ -60,7 +53,6 @@
         </Setter>
     </Style>
 
-    <!-- Tile hover: subtle highlight for interaction feedback -->
     <Style Selector="Button.tile-button:pointerover, Button.tile-button-grid:pointerover">
         <Setter Property="Background" Value="#08FFFFFF" />
     </Style>
@@ -68,18 +60,15 @@
         <Setter Property="Background" Value="#04FFFFFF" />
     </Style>
 
-    <!-- Keyboard accessibility: subtle focus outline on tile buttons -->
     <Style Selector="Button.tile-button:focus, Button.tile-button-grid:focus">
         <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
     </Style>
 
-    <!-- Defensive: remove any BoxShadow or Effect applied by base themes -->
     <Style Selector="Button.tile-button /template/ Border">
         <Setter Property="Effect" Value="{x:Null}" />
         <Setter Property="BoxShadow" Value="0 0 0 0 #00000000" />
     </Style>
 
-    <!-- Copy and nested buttons inside tiles: keep flat -->
     <Style Selector="Button.tile-button Button, Button.tile-button-grid Button">
         <Setter Property="Effect" Value="{x:Null}" />
     </Style>
@@ -88,15 +77,11 @@
         <Setter Property="Effect" Value="{x:Null}" />
     </Style>
 
-    <!-- ListBox items: keep flat (no shadow/effects from base themes) -->
     <Style Selector="ListBoxItem /template/ Border">
         <Setter Property="BoxShadow" Value="0 0 0 0 #00000000" />
         <Setter Property="Effect" Value="{x:Null}" />
     </Style>
 
-    <!-- ═══════════════════════════════════════════════════════════════════
-         Header Action Buttons — toolbar buttons with hover/press/focus
-         ═══════════════════════════════════════════════════════════════════ -->
     <Style Selector="Button.header-action">
         <Setter Property="Background" Value="{DynamicResource HeaderButtonBackgroundBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource HeaderButtonBorderBrush}" />
@@ -121,5 +106,57 @@
     <Style Selector="Button.header-action:focus">
         <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
     </Style>
-    
+
+    <Style Selector="Button.dull-blue">
+        <Setter Property="Background" Value="#26385C" />
+        <Setter Property="BorderBrush" Value="#26385C" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="14,8" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect BlurRadius="10" OffsetX="0" OffsetY="3" Color="#30000000" />
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.15" />
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Button.dull-blue /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="#26385C" />
+        <Setter Property="BorderBrush" Value="#26385C" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="10" />
+    </Style>
+
+    <Style Selector="Button.dull-blue:pointerover">
+        <Setter Property="Background" Value="#2F4470" />
+        <Setter Property="BorderBrush" Value="#2F4470" />
+    </Style>
+    <Style Selector="Button.dull-blue:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="#2F4470" />
+        <Setter Property="BorderBrush" Value="#2F4470" />
+    </Style>
+
+    <Style Selector="Button.dull-blue:pressed">
+        <Setter Property="Background" Value="#1F2E4A" />
+        <Setter Property="BorderBrush" Value="#1F2E4A" />
+    </Style>
+    <Style Selector="Button.dull-blue:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="#1F2E4A" />
+        <Setter Property="BorderBrush" Value="#1F2E4A" />
+    </Style>
+
+    <Style Selector="Button.dull-blue:disabled">
+        <Setter Property="Opacity" Value="0.5" />
+    </Style>
+
 </Styles>
+

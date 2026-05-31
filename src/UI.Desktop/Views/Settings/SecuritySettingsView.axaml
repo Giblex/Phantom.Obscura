@@ -3,37 +3,36 @@
              x:Class="PhantomVault.UI.Views.Settings.SecuritySettingsView">
     <StackPanel Spacing="{StaticResource Space.Xl}"
                 Margin="0,0,30,60">
-        <TextBlock Text="Security Settings" 
-                   FontSize="{StaticResource Type.H3.Size}" 
+        <TextBlock Text="Security Settings"
+                   FontSize="{StaticResource Type.H3.Size}"
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource PrimaryTextBrush}"/>
-        
+
         <Border Classes="fade-in stagger-1"
-                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
-                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
-                BorderThickness="1" 
-                CornerRadius="16" 
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
                 Padding="20"
-                MaxWidth="640"
                 HorizontalAlignment="Stretch">
             <StackPanel Spacing="15">
-                <TextBlock Text="Authentication" 
-                           FontSize="{StaticResource Type.Body.Size}" 
+                <TextBlock Text="Authentication"
+                           FontSize="{StaticResource Type.Body.Size}"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
-                
-                <CheckBox Content="Require hardware-token presence check" 
+
+                <CheckBox Content="Require hardware-token presence check"
                           IsChecked="{Binding RequireHardwareToken, Mode=TwoWay}"
                           ToolTip.Tip="Require the supported hardware-token presence check during unlock on compatible Windows builds"/>
-                
-                <CheckBox Content="Require keyfile" 
+
+                <CheckBox Content="Require keyfile"
                           IsChecked="{Binding RequireKeyfile, Mode=TwoWay}"
                           ToolTip.Tip="Require a keyfile in addition to password"/>
-                
+
                 <StackPanel Spacing="{StaticResource Space.Sm}">
-                    <TextBlock Text="Idle timeout (minutes):" 
+                    <TextBlock Text="Idle timeout (minutes):"
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
-                    <TextBox Width="100" 
+                    <TextBox Width="100"
                              HorizontalAlignment="Left"
                              Text="{Binding IdleTimeoutMinutes, Mode=TwoWay}"
                              ToolTip.Tip="Lock vault after this many minutes of inactivity"/>
@@ -80,25 +79,24 @@
         </Border>
 
         <Border Classes="fade-in stagger-2"
-                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
-                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
-                BorderThickness="1" 
-                CornerRadius="16" 
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
                 Padding="20"
-                MaxWidth="640"
                 HorizontalAlignment="Stretch">
             <StackPanel Spacing="15">
-                <TextBlock Text="Clipboard Security" 
-                           FontSize="{StaticResource Type.Body.Size}" 
+                <TextBlock Text="Clipboard Security"
+                           FontSize="{StaticResource Type.Body.Size}"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
-                
-                <CheckBox Content="Clear clipboard after copying passwords" 
+
+                <CheckBox Content="Clear clipboard after copying passwords"
                           IsChecked="{Binding ClearClipboardAfterCopy, Mode=TwoWay}"
                           ToolTip.Tip="Automatically clear copied secrets after the selected delay"/>
-                
+
                 <StackPanel Spacing="{StaticResource Space.Sm}">
-                    <TextBlock Text="Clipboard clear delay:" 
+                    <TextBlock Text="Clipboard clear delay:"
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                     <ComboBox Width="180"
                               HorizontalAlignment="Left"
@@ -110,47 +108,43 @@
                         <ComboBoxItem Content="Never"/>
                     </ComboBox>
                 </StackPanel>
-                
-                <CheckBox Content="Auto-copy TOTP code with password" 
+
+                <CheckBox Content="Auto-copy TOTP code with password"
                           IsChecked="{Binding AutoCopyTotpWithPassword, Mode=TwoWay}"
                           ToolTip.Tip="When copying passwords, automatically include the current TOTP code in the clipboard"/>
             </StackPanel>
         </Border>
 
-        <!-- Screenshot Protection -->
         <Border Classes="fade-in stagger-3"
-                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
-                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
-                BorderThickness="1" 
-                CornerRadius="16" 
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
                 Padding="20"
-                MaxWidth="640"
                 HorizontalAlignment="Stretch">
             <StackPanel Spacing="15">
-                <TextBlock Text="Screenshot Protection" 
-                           FontSize="{StaticResource Type.Body.Size}" 
+                <TextBlock Text="Screenshot Protection"
+                           FontSize="{StaticResource Type.Body.Size}"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
-                
-                <CheckBox Content="Enable screenshot protection" 
+
+                <CheckBox Content="Enable screenshot protection"
                           IsChecked="{Binding EnableScreenshotProtection, Mode=TwoWay}"
                           ToolTip.Tip="When enabled, the vault window appears black in screenshots and screen recordings"/>
-                
+
                 <TextBlock Text="This security feature prevents credential exposure through screenshots, screen recordings, and screen sharing. When enabled, the vault window will be hidden from screen capture tools."
-                           FontSize="{StaticResource Type.Small.Size}" 
+                           FontSize="{StaticResource Type.Small.Size}"
                            Foreground="{DynamicResource MutedTextBrush}"
                            TextWrapping="Wrap"/>
             </StackPanel>
         </Border>
 
-        <!-- Decoy Vault Section -->
         <Border Classes="fade-in stagger-4"
                 Background="{DynamicResource SettingsPanelBackgroundBrush}"
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="16"
                 Padding="20"
-                MaxWidth="640"
                 HorizontalAlignment="Stretch">
             <StackPanel Spacing="15">
                 <TextBlock Text="Decoy Vault Protection"
@@ -220,7 +214,6 @@
                 BorderThickness="1"
                 CornerRadius="16"
                 Padding="20"
-                MaxWidth="640"
                 HorizontalAlignment="Stretch">
             <StackPanel Spacing="15">
                 <TextBlock Text="Master Password"
@@ -237,14 +230,12 @@
             </StackPanel>
         </Border>
 
-        <!-- Keyfile Management Section -->
         <Border Classes="fade-in stagger-5"
                 Background="{DynamicResource SettingsPanelBackgroundBrush}"
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="16"
                 Padding="20"
-                MaxWidth="640"
                 HorizontalAlignment="Stretch">
             <StackPanel Spacing="15">
                 <StackPanel Orientation="Horizontal" Spacing="10">
@@ -263,7 +254,6 @@
                            Foreground="{DynamicResource MutedTextBrush}"
                            TextWrapping="Wrap"/>
 
-                <!-- Current keyfile -->
                 <Border Background="{DynamicResource WindowBackgroundBrush}"
                         BorderBrush="{DynamicResource ControlBorderBrush}"
                         BorderThickness="1"
@@ -308,28 +298,26 @@
             </StackPanel>
         </Border>
 
-        <!-- Multi-Factor Authentication Section -->
         <Border Classes="fade-in stagger-6"
-                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
-                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
-                BorderThickness="1" 
-                CornerRadius="16" 
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
                 Padding="20"
-                MaxWidth="640"
                 HorizontalAlignment="Stretch">
             <StackPanel Spacing="15">
-                <TextBlock Text="Multi-Factor Authentication" 
-                           FontSize="{StaticResource Type.Body.Size}" 
+                <TextBlock Text="Multi-Factor Authentication"
+                           FontSize="{StaticResource Type.Body.Size}"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
-                
-                <TextBlock Text="Review the security factors that are currently available for this vault and this device" 
-                           FontSize="{StaticResource Type.Small.Size}" 
+
+                <TextBlock Text="Review the security factors that are currently available for this vault and this device"
+                           FontSize="{StaticResource Type.Small.Size}"
                            Foreground="{DynamicResource MutedTextBrush}"
                            TextWrapping="Wrap"/>
 
                 <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" Margin="0,8,0,0">
-                    <!-- TOTP Setup -->
+
                     <Button Grid.Row="0" Grid.Column="0"
                             Click="OpenTotpSettings_Click"
                             Classes="liquid-glass"
@@ -344,8 +332,7 @@
                             <TextBlock Text="TOTP Setup" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-                    
-                    <!-- Passkey Setup -->
+
                     <Button Grid.Row="0" Grid.Column="1"
                             Click="OpenPasskeySettings_Click"
                             Classes="liquid-glass"
@@ -360,8 +347,7 @@
                             <TextBlock Text="Device Authenticator" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-                    
-                    <!-- Windows Hello Setup -->
+
                     <Button Grid.Row="1" Grid.Column="0"
                             Click="OpenWindowsHelloSettings_Click"
                             Classes="liquid-glass"
@@ -376,8 +362,7 @@
                             <TextBlock Text="Windows Hello" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-                    
-                    <!-- Backup Codes -->
+
                     <Button Grid.Row="1" Grid.Column="1"
                             Click="OpenBackupCodes_Click"
                             Classes="liquid-glass"
@@ -397,7 +382,4 @@
         </Border>
     </StackPanel>
 </UserControl>
-
-
-
 

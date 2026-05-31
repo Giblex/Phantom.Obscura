@@ -4,18 +4,12 @@
              x:Class="PhantomVault.UI.Views.Overlays.SettingsPanelOverlay">
 
     <UserControl.Resources>
-        <!-- Drives nav-tab.active toggling from VaultViewModel.SelectedSettingsTab. -->
+
         <conv:StringEqualsConverter x:Key="SettingsTabEqualsConverter"/>
     </UserControl.Resources>
 
     <UserControl.Styles>
-        <!-- Active settings tab: accent foreground + semibold text. Layered on
-             top of liquid-glass; the left-edge accent bar is in the Button
-             content template itself so we don't have to fight the templated
-             parts. -->
-        <!-- Selected settings tab uses primary (white) text — keeping the accent
-             colour for the left-edge bar only avoids the 'blue text on dark panel'
-             low-contrast issue (#7). -->
+
         <Style Selector="Button.settings-tab.active TextBlock.tab-label">
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
@@ -23,19 +17,12 @@
         <Style Selector="Button.settings-tab.active Border.tab-accent">
             <Setter Property="IsVisible" Value="True"/>
         </Style>
-        <!-- Issue: Save button visual priority. When enabled (HasUnsavedSettings
-             = true) the button takes an accent-tinted background so it reads as
-             the primary action. When disabled it falls back to the standard
-             liquid-glass look so it doesn't look 'ready' while inert. -->
+
         <Style Selector="Button.settings-save-primary.dirty /template/ ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
             <Setter Property="TextBlock.Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
         </Style>
 
-        <!-- Settings-scoped liquid-glass override.
-             Buttons read as transparent with only a left-side gradient sheen
-             that fades to nothing across the button, while keeping the cyan
-             glass rim border. No white halo Effect. -->
         <Style Selector="Border#SettingsSlideHost Button.liquid-glass">
             <Setter Property="Effect" Value="{x:Null}"/>
         </Style>
@@ -74,13 +61,6 @@
             <Setter Property="Opacity" Value="0.25"/>
         </Style>
 
-        <!-- Uniform settings tile width. Every section card in the settings
-             views carries Classes="fade-in stagger-N", so we scope on that
-             inside the slide host to force a consistent tile size regardless
-             of the content sitting inside. -->
-        <!-- Animated "Saved" toast: starts hidden (faded + scaled down + nudged
-             down), pops in when .toast-shown is applied, and animates back out
-             when it's removed. Auto-dismiss timing is driven by the VM. -->
         <Style Selector="Border.save-toast">
             <Setter Property="Opacity" Value="0"/>
             <Setter Property="RenderTransform" Value="scale(0.85) translateY(10px)"/>
@@ -97,27 +77,26 @@
         </Style>
 
         <Style Selector="Border#SettingsSlideHost Border.fade-in">
-            <Setter Property="Width" Value="640"/>
-            <Setter Property="HorizontalAlignment" Value="Left"/>
-            <!-- Fallback rounding for any tile that doesn't set CornerRadius
-                 locally. Per-view tiles set CornerRadius="16" directly (a local
-                 value, which outranks this setter) so they stay consistent. -->
-            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+
+            <Setter Property="CornerRadius" Value="18"/>
             <Setter Property="ClipToBounds" Value="True"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="#000000" BlurRadius="20" Opacity="0.32" OffsetX="0" OffsetY="5"/>
+                </Setter.Value>
+            </Setter>
         </Style>
     </UserControl.Styles>
 
     <Border Background="{DynamicResource OverlayBackgroundBrush}"
             IsVisible="{Binding IsSettingsPanelVisible}"
             IsHitTestVisible="{Binding IsSettingsPanelVisible}">
-        <!-- No fade animation on the overlay backdrop; slide-in is handled by
-             the inner SettingsSlideHost panel for a panel-only motion feel. -->
 
         <Grid ClipToBounds="True">
-            <!-- Transparent area to close panel -->
+
             <Border Background="Transparent" PointerPressed="OnBackgroundClicked" />
 
-            <!-- Settings Panel Container - Slides in from right -->
             <Border x:Name="SettingsSlideHost"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Stretch"
@@ -125,7 +104,9 @@
                     Background="{DynamicResource WindowBackgroundBrush}"
                     BorderBrush="{DynamicResource ControlBorderBrush}"
                     BorderThickness="1,0,0,0"
-                    BoxShadow="-32 0 110 -10 #D0000000, -12 0 36 -6 #90000000"
+                    CornerRadius="20,0,0,20"
+                    ClipToBounds="True"
+                    BoxShadow="-40 0 140 -10 #E0000000, -18 0 48 -8 #B0000000, -6 0 18 -4 #80000000"
                     RenderTransformOrigin="1,0.5">
                 <Border.IsVisible>
                     <MultiBinding Converter="{x:Static BoolConverters.Or}">
@@ -149,29 +130,28 @@
                 </Border.Styles>
                 <Border.Transitions>
                     <Transitions>
-                        <!-- Slower, smoother slide-in. QuinticEaseOut gives a long
-                             gentle settle without the abrupt finish of CubicEaseOut.
-                             Duration 1.7s so the panel feels weighty and deliberate. -->
+
                         <TransformOperationsTransition Property="RenderTransform" Duration="0:0:1.7" Easing="QuinticEaseOut"/>
                     </Transitions>
                 </Border.Transitions>
 
-                    <!-- Settings Panel Content -->
                 <Grid RowDefinitions="Auto,*">
-                    <!-- Header -->
-                    <Border Grid.Row="0" 
+
+                    <Border Grid.Row="0"
                             Classes="header-surface"
-                            Background="{DynamicResource HeaderBackgroundBrush}" 
+                            Background="{DynamicResource HeaderBackgroundBrush}"
                             Padding="25,20"
                             BorderBrush="{DynamicResource ControlBorderBrush}"
-                            BorderThickness="0,0,0,1">
+                            BorderThickness="0,0,0,1"
+                            ZIndex="2"
+                            BoxShadow="0 6 18 -4 #80000000, 0 2 6 -2 #60000000">
                         <Grid ColumnDefinitions="*,Auto">
                             <StackPanel Grid.Column="0" Spacing="6">
-                                <TextBlock Text="Settings" 
-                                           FontSize="{StaticResource Type.Icon.Size}" 
+                                <TextBlock Text="Settings"
+                                           FontSize="{StaticResource Type.Icon.Size}"
                                            FontWeight="Bold"/>
-                                <TextBlock Text="Configure your vault preferences and appearance" 
-                                           FontSize="{StaticResource Type.Label.Size}" 
+                                <TextBlock Text="Configure your vault preferences and appearance"
+                                           FontSize="{StaticResource Type.Label.Size}"
                                            Classes="header-muted"/>
                             </StackPanel>
                             <Button Grid.Column="1"
@@ -188,15 +168,8 @@
                         </Grid>
                     </Border>
 
-                    <!-- Tabbed Content -->
                     <Grid Grid.Row="1" ColumnDefinitions="220,*" VerticalAlignment="Stretch">
-                        <!-- Tab Navigation -->
-                        <!-- Issue #3: left sidebar ScrollViewer wasn't scrolling
-                             because Padding was on the ScrollViewer itself (which in
-                             Avalonia interacts oddly with viewport sizing) and the
-                             StackPanel was unconstrained. Move padding onto the inner
-                             StackPanel and pin ScrollViewer to Stretch so it always
-                             gets a bounded viewport from the * row above. -->
+
                         <Border Grid.Column="0"
                                 VerticalAlignment="Stretch"
                                 ClipToBounds="True"
@@ -430,25 +403,17 @@
                             </ScrollViewer>
                         </Border>
 
-                        <!-- Tab Content Area + Issue #21 Save/Discard row.
-                             Column 1 becomes a vertical Grid with the scrolling
-                             content above a sticky button row at the bottom. -->
                         <Grid Grid.Column="1" RowDefinitions="*,Auto">
-                            <!-- Issue #2: bottom of tab content got cut off because
-                                 the ScrollViewer's bottom padding wasn't enough to
-                                 clear the window edge and the content had no inner
-                                 bottom margin to compensate. Pin to Stretch + add
-                                 a generous bottom margin on the ContentControl so
-                                 even tall tabs scroll past the final input. -->
+
                             <ScrollViewer Grid.Row="0"
-                                         VerticalScrollBarVisibility="Auto"
+                                         VerticalScrollBarVisibility="Visible"
                                          HorizontalScrollBarVisibility="Disabled"
                                          VerticalAlignment="Stretch"
                                          MinHeight="0"
-                                         Padding="30,20,20,30">
+                                         Padding="28,20,4,30">
                                 <ContentControl Content="{Binding SelectedSettingsContent}"
                                               HorizontalAlignment="Stretch"
-                                              Margin="0,0,20,40"/>
+                                              Margin="0,0,32,40"/>
                             </ScrollViewer>
 
                             <Border Grid.Row="0"
@@ -484,14 +449,6 @@
                                 </StackPanel>
                             </Border>
 
-                            <!-- Issue #21: sticky Save / Discard row. Always
-                                 visible at the bottom of the tab content area.
-                                 Buttons are disabled until at least one staged
-                                 change exists (driven by HasUnsavedSettings).
-                                 Save is the primary action — accent fill +
-                                 stronger weight; Discard is secondary glass.
-                                 An amber dot + 'You have unsaved changes' hint
-                                 sits to the left so dirty state is legible. -->
                             <Border Grid.Row="1"
                                     Background="{DynamicResource HeaderBackgroundBrush}"
                                     BorderBrush="{DynamicResource ControlBorderBrush}"
@@ -514,11 +471,7 @@
                                             Classes="liquid-glass"
                                             Command="{Binding DiscardSettingsCommand}"
                                             Padding="14,6"/>
-                                    <!-- Save is the primary action: accent-tinted
-                                         background so it visually leads the eye.
-                                         Falls back to plain liquid-glass when no
-                                         changes are staged so the button doesn't
-                                         look 'live' while inert. -->
+
                                     <Button Grid.Column="3"
                                             Content="Save"
                                             Classes="liquid-glass settings-save-primary"
@@ -534,5 +487,6 @@
             </Border>
         </Grid>
     </Border>
-    
+
 </UserControl>
+
