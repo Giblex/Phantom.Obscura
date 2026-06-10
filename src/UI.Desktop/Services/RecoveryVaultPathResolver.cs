@@ -14,9 +14,6 @@ namespace PhantomVault.UI.Services
         bool HasHeader,
         string Message);
 
-    /// <summary>
-    /// Resolves the PhantomRecovery workspace path that belongs to the current Obscura vault.
-    /// </summary>
     public sealed class RecoveryVaultPathResolver
     {
         private readonly UsbArtifactProtectionService _usbArtifactProtectionService;
@@ -61,8 +58,7 @@ namespace PhantomVault.UI.Services
             }
             catch
             {
-                // Best effort: the recovery record can remain unreadable while the manifest
-                // still provides enough information to resolve the suite workspace path.
+
             }
 
             foreach (var baseDirectory in candidateDirectories)
@@ -147,3 +143,4 @@ namespace PhantomVault.UI.Services
         }
     }
 }
+

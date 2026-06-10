@@ -18,7 +18,6 @@ namespace PhantomVault.UI.Views
         {
             InitializeComponent();
 
-            // Set the owner window for the ViewModel
             this.Opened += (s, e) =>
             {
                 if (DataContext is ProvisionViewModel viewModel)
@@ -35,7 +34,7 @@ namespace PhantomVault.UI.Views
 
         private void GoBack_Click(object? sender, RoutedEventArgs e)
         {
-            // Return to WelcomePage
+
             if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 desktop.MainWindow?.Show();
@@ -87,9 +86,6 @@ namespace PhantomVault.UI.Views
             });
         }
 
-        /// <summary>
-        /// Wrapper for async void event handlers to ensure exceptions are logged and displayed.
-        /// </summary>
         private async Task HandleEventAsync(Func<Task> action)
         {
             try
@@ -112,3 +108,4 @@ namespace PhantomVault.UI.Views
         }
     }
 }
+

@@ -11,9 +11,7 @@ using PhantomVault.Core.Services;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// View model wrapper for a credential with UI-specific properties.
-    /// </summary>
+
     public sealed class CredentialViewModel : ReactiveObject
     {
         private readonly Credential _credential;
@@ -35,8 +33,6 @@ namespace PhantomVault.UI.ViewModels
         private double _totpCodeOpacity = 1.0;
         private double _totpCodeScale = 1.0;
 
-        // Shared IconManager for all credential VMs – avoids rebuilding the
-        // 8 000-file directory index on every credential construction.
         private static readonly Lazy<IconManager> _sharedIconManager = new(() =>
         {
             var visualsDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Visuals");
@@ -46,7 +42,7 @@ namespace PhantomVault.UI.ViewModels
         public CredentialViewModel(Credential credential)
         {
             _credential = credential ?? throw new ArgumentNullException(nameof(credential));
-            // Initialize icon color/brush from model if available
+
             try
             {
                 if (!string.IsNullOrEmpty(_credential.IconColor))
@@ -66,7 +62,6 @@ namespace PhantomVault.UI.ViewModels
                 _iconBackgroundBrush = new SolidColorBrush(Colors.Transparent);
             }
 
-            // Attempt to auto-detect an icon from Assets/Visuals/Entry Logos
             try
             {
                 var iconManager = _sharedIconManager.Value;
@@ -91,7 +86,6 @@ namespace PhantomVault.UI.ViewModels
             UpdatePasswordFlagState();
             UpdatePasswordStrengthState();
 
-            // Initialize TOTP timer if this entry has a TOTP secret (any entry type)
             if (!string.IsNullOrWhiteSpace(_credential.TotpSecret))
             {
                 UpdateTotpCode();
@@ -119,16 +113,11 @@ namespace PhantomVault.UI.ViewModels
         public bool HasUsername => !string.IsNullOrWhiteSpace(Username);
         public bool HasPassword => !string.IsNullOrWhiteSpace(Password);
 
-        /// <summary>
-        /// Gets the icon path for the credential's category by looking it up in the vault manifest.
-        /// Returns null if category not found or has no icon.
-        /// </summary>
         public string? CategoryIcon
         {
             get
             {
-                // This will be populated by the VaultViewModel when categories are available
-                // For now, return null as a placeholder
+
                 return null;
             }
         }
@@ -147,7 +136,7 @@ namespace PhantomVault.UI.ViewModels
             set
             {
                 this.RaiseAndSetIfChanged(ref _isFavorite, value);
-                // Notify the FavoriteIcon text and any other dependent UI
+
                 this.RaisePropertyChanged(nameof(FavoriteIcon));
                 this.RaisePropertyChanged(nameof(FavoriteIconBrush));
                 this.RaisePropertyChanged(nameof(FavoriteIconOpacity));
@@ -160,20 +149,17 @@ namespace PhantomVault.UI.ViewModels
 
         private string GetDisplayIcon()
         {
-            // Priority 1: Use explicitly set icon
+
             if (!string.IsNullOrEmpty(Icon))
             {
                 return Icon;
             }
 
-            // If we found an image for this credential, return empty string
-            // so the UI knows to render the image instead of a text icon.
             if (HasAutoDetectedIcon)
             {
                 return string.Empty;
             }
 
-            // Fallback: attempt to return an emoji fallback
             try
             {
                 var iconsDir = System.IO.Path.Combine(
@@ -191,10 +177,9 @@ namespace PhantomVault.UI.ViewModels
             }
             catch
             {
-                // Ignore errors in auto-detection
+
             }
 
-            // Priority 3: No icon found
             return string.Empty;
         }
 
@@ -212,12 +197,10 @@ namespace PhantomVault.UI.ViewModels
 
         public string FavoriteIcon => IsFavorite ? "⭐" : "☆";
 
-        /// <summary>Brush for the favourite SVG icon: gold when favourite, dim white when not.</summary>
         public IBrush FavoriteIconBrush => IsFavorite
             ? new SolidColorBrush(Color.Parse("#FFD700"))
             : new SolidColorBrush(Color.Parse("#AAAAAA"));
 
-        /// <summary>Opacity for the favourite SVG icon: full when favourite, dimmed when not.</summary>
         public double FavoriteIconOpacity => IsFavorite ? 1.0 : 0.45;
 
         public bool HasGroup => !string.IsNullOrEmpty(Group);
@@ -227,7 +210,6 @@ namespace PhantomVault.UI.ViewModels
         public string DetailLine2 => GetDetailLines().line2;
         public bool HasDetailLine2 => !string.IsNullOrWhiteSpace(DetailLine2);
 
-        // Credit card details
         public string CardholderName => _credential.CardholderName;
         public string CardNumber => _credential.CardNumber;
         public string MaskedCardNumber => MaskSensitiveValue(CardNumber);
@@ -248,7 +230,6 @@ namespace PhantomVault.UI.ViewModels
         public bool HasCardPIN => !string.IsNullOrWhiteSpace(CardPIN);
         public bool HasCardBillingAddress => !string.IsNullOrWhiteSpace(CardBillingAddress);
 
-        // Bank account details
         public string BankName => _credential.BankName;
         public string BankAccountNumber => _credential.BankAccountNumber;
         public string MaskedBankAccountNumber => MaskBankAccount(BankAccountNumber);
@@ -270,7 +251,6 @@ namespace PhantomVault.UI.ViewModels
         public bool HasBankBranchCode => !string.IsNullOrWhiteSpace(BankBranchCode);
         public bool HasBankBranchAddress => !string.IsNullOrWhiteSpace(BankBranchAddress);
 
-        // WiFi details
         public string WiFiSSID => _credential.WiFiSSID;
         public string WiFiSecurityType => _credential.WiFiSecurityType;
         public string WiFiBSSID => _credential.WiFiBSSID;
@@ -281,7 +261,6 @@ namespace PhantomVault.UI.ViewModels
         public bool HasWiFiBssid => !string.IsNullOrWhiteSpace(WiFiBSSID);
         public bool HasWiFiPassword => !string.IsNullOrWhiteSpace(WiFiPassword);
 
-        // Identity details
         public string IdDocumentType => _credential.IdDocumentType;
         public string IdNumber => _credential.IdNumber;
         public string IdIssuingCountry => _credential.IdIssuingCountry;
@@ -297,7 +276,6 @@ namespace PhantomVault.UI.ViewModels
         public bool HasIdIssueDate => IdIssueDate.HasValue;
         public bool HasIdExpiryDate => IdExpiryDate.HasValue;
 
-        // API key details
         public string ApiKeyValue => _credential.ApiKeyValue;
         public string ApiKeyType => _credential.ApiKeyType;
         public string MaskedApiKeyValue => MaskApiKey(ApiKeyValue);
@@ -308,7 +286,6 @@ namespace PhantomVault.UI.ViewModels
         public bool HasApiKeyType => !string.IsNullOrWhiteSpace(ApiKeyType);
         public bool HasApiEndpoint => !string.IsNullOrWhiteSpace(ApiEndpoint);
 
-        // TOTP authenticator details
         public string TotpSecret => _credential.TotpSecret;
         public int TotpDigits => _credential.TotpDigits;
         public int TotpTimeStep => _credential.TotpTimeStep;
@@ -319,7 +296,6 @@ namespace PhantomVault.UI.ViewModels
         public bool HasTotpIssuer => !string.IsNullOrWhiteSpace(TotpIssuer);
         public bool HasTotpAccountName => !string.IsNullOrWhiteSpace(TotpAccountName);
 
-        // PIN code details
         public string PinLabel => _credential.PinLabel;
         public string PinValue => _credential.PinValue;
         public string MaskedPinValue => MaskSensitiveValue(PinValue, 0);
@@ -362,13 +338,8 @@ namespace PhantomVault.UI.ViewModels
 
         public double TotpProgressPercent => TotpTimeStep > 0 ? (double)TotpSecondsRemaining / TotpTimeStep * 100 : 0;
 
-        /// <summary>True when fewer than 6 seconds remain — used to trigger urgency color.</summary>
         public bool TotpIsExpiring => TotpSecondsRemaining > 0 && TotpSecondsRemaining <= 5;
 
-        /// <summary>
-        /// Opacity for the TOTP code text; pulses from 0 → 1 when code changes.
-        /// Bind a DoubleTransition on Opacity to animate the fade-in.
-        /// </summary>
         public double TotpCodeOpacity
         {
             get => _totpCodeOpacity;
@@ -382,9 +353,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Scale multiplier for TOTP code; pulses from 0.85 → 1.0 on code change.
-        /// </summary>
         public double TotpCodeScale
         {
             get => _totpCodeScale;
@@ -398,27 +366,16 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Gets the Geometry for the circular timer arc that decreases clockwise as time runs out.
-        /// Builds geometry programmatically for reliable dynamic updates.
-        /// </summary>
         public Geometry? TotpTimerArcPath
         {
             get => BuildArcGeometry(20, 16, TotpSecondsRemaining, TotpTimeStep);
         }
 
-        /// <summary>
-        /// Compact Geometry for the smaller 32x32 timer ring (center=16, radius=12).
-        /// </summary>
         public Geometry? TotpTimerArcPathCompact
         {
             get => BuildArcGeometry(16, 12, TotpSecondsRemaining, TotpTimeStep);
         }
 
-        /// <summary>
-        /// Builds an arc geometry for the TOTP countdown ring.
-        /// Uses StreamGeometry with invariant culture to avoid locale issues.
-        /// </summary>
         private static Geometry? BuildArcGeometry(double center, double radius, int secondsRemaining, int timeStep)
         {
             if (secondsRemaining <= 0 || timeStep <= 0)
@@ -433,7 +390,7 @@ namespace PhantomVault.UI.ViewModels
             string pathData;
             if (angleDegrees >= 359.99)
             {
-                // Near-full circle (two semicircular arcs to avoid SVG zero-length arc issue)
+
                 pathData = string.Format(
                     CultureInfo.InvariantCulture,
                     "M {0},{1} A {2},{2} 0 1,1 {3},{1}",
@@ -458,7 +415,6 @@ namespace PhantomVault.UI.ViewModels
         public bool HasApiEnvironment => !string.IsNullOrWhiteSpace(ApiEnvironment);
         public bool HasApiDocumentation => !string.IsNullOrWhiteSpace(ApiDocumentationUrl);
 
-        // Contact details
         public string ContactFullName => _credential.ContactFullName;
         public string ContactEmail => _credential.ContactEmail;
         public string ContactPhone => _credential.ContactPhone;
@@ -499,12 +455,6 @@ namespace PhantomVault.UI.ViewModels
 
         public Credential GetCredential() => _credential;
 
-        /// <summary>
-        /// Refresh raises property change notifications for all derived
-        /// properties so views bound to this view model update when the
-        /// underlying model is modified externally (for example while an
-        /// edit dialog is open).
-        /// </summary>
         public void Refresh()
         {
             UpdatePasswordFlagState();
@@ -845,7 +795,6 @@ namespace PhantomVault.UI.ViewModels
                     _credential.TotpTimeStep
                 );
 
-                // Calculate seconds remaining
                 var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                 var timeStep = _credential.TotpTimeStep;
                 var secondsElapsed = (int)(now % timeStep);
@@ -859,10 +808,10 @@ namespace PhantomVault.UI.ViewModels
 
                     if (codeChanged && !string.IsNullOrEmpty(code))
                     {
-                        // Kick off fade-in + scale-up animation
+
                         TotpCodeOpacity = 0.0;
                         TotpCodeScale = 0.85;
-                        // After a tiny delay let transitions animate to final values
+
                         _ = AnimateTotpCodeInAsync();
                     }
                 });
@@ -877,13 +826,9 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Briefly yields to let the UI apply opacity=0 / scale=0.85, then sets
-        /// them back to 1.0 so the bound Transitions animate smoothly.
-        /// </summary>
         private async System.Threading.Tasks.Task AnimateTotpCodeInAsync()
         {
-            // One frame delay so the transition sees the "from" values
+
             await System.Threading.Tasks.Task.Delay(30);
             TotpCodeOpacity = 1.0;
             TotpCodeScale = 1.0;
@@ -896,3 +841,4 @@ namespace PhantomVault.UI.ViewModels
         }
     }
 }
+

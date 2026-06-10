@@ -1,16 +1,16 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="PhantomVault.UI.Views.EditForms.IdentityEditForm">
-    
+
     <UserControl.Styles>
-        <!-- Remove yellow validation border from DatePicker -->
+
         <Style Selector="DatePicker:focus /template/ Border#Background">
             <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrush}"/>
         </Style>
         <Style Selector="DatePicker:pointerover /template/ Border#Background">
             <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrushPointerOver}"/>
         </Style>
-        <!-- Center text in DatePicker -->
+
         <Style Selector="DatePicker /template/ Button#PART_PickerPresenter">
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
         </Style>
@@ -18,7 +18,7 @@
             <Setter Property="TextAlignment" Value="Center"/>
         </Style>
     </UserControl.Styles>
-    
+
     <Border x:Name="IdentityPanelBorder" Background="Transparent" IsVisible="{Binding IsIdentityEntry}">
         <StackPanel x:Name="IdentityPanel" Spacing="12">
         <TextBlock Text="Identity Document" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -58,3 +58,4 @@
         </StackPanel>
     </Border>
 </UserControl>
+

@@ -9,12 +9,7 @@ using Avalonia.Xaml.Interactivity;
 
 namespace PhantomVault.UI.Behaviors
 {
-    /// <summary>
-    /// Behavior that scales up a control slightly on hover.
-    /// Respects ReduceMotion accessibility settings.
-    /// Uses DispatcherTimer interpolation because Avalonia's
-    /// Animation.RunAsync() cannot target ScaleTransform (it is not a Visual).
-    /// </summary>
+
     public class HoverScaleBehavior : Behavior<Control>
     {
         public static readonly StyledProperty<double> HoverScaleProperty =
@@ -29,21 +24,15 @@ namespace PhantomVault.UI.Behaviors
         private double _animFromScale;
         private double _animToScale;
         private DateTime _animStart;
-        private double _animDuration; // seconds
+        private double _animDuration;
         private readonly CubicEaseOut _easing = new();
 
-        /// <summary>
-        /// Scale factor on hover (default: 1.02 = 102%)
-        /// </summary>
         public double HoverScale
         {
             get => GetValue(HoverScaleProperty);
             set => SetValue(HoverScaleProperty, value);
         }
 
-        /// <summary>
-        /// Animation duration in seconds (default: 0.2s)
-        /// </summary>
         public double Duration
         {
             get => GetValue(DurationProperty);
@@ -98,7 +87,6 @@ namespace PhantomVault.UI.Behaviors
         {
             if (_transform == null || AssociatedObject == null) return;
 
-            // Check ReduceMotion — if enabled, snap immediately
             var reduceMotion = Services.AccessibilityService.Instance.ReduceMotion;
             if (reduceMotion)
             {
@@ -108,7 +96,6 @@ namespace PhantomVault.UI.Behaviors
                 return;
             }
 
-            // Set up timer-driven interpolation (~60 fps)
             _animFromScale = fromScale;
             _animToScale = toScale;
             _animDuration = AnimationHelper.GetDuration(AnimationTiming.Fast);
@@ -134,7 +121,6 @@ namespace PhantomVault.UI.Behaviors
             var elapsed = (DateTime.UtcNow - _animStart).TotalSeconds;
             var t = Math.Clamp(elapsed / _animDuration, 0.0, 1.0);
 
-            // Apply cubic-ease-out
             var easedT = _easing.Ease(t);
             var val = _animFromScale + (_animToScale - _animFromScale) * easedT;
             _transform.ScaleX = val;
@@ -159,3 +145,4 @@ namespace PhantomVault.UI.Behaviors
         }
     }
 }
+

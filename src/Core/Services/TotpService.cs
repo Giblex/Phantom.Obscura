@@ -6,37 +6,22 @@ using System.Text;
 
 namespace PhantomVault.Core.Services
 {
-    /// <summary>
-    /// Specifies the HMAC algorithm used for TOTP generation.
-    /// RFC 6238 defaults to SHA1 but allows SHA256 and SHA512 for higher security.
-    /// </summary>
+
     public enum TotpAlgorithm
     {
-        /// <summary>HMAC-SHA1 (RFC 6238 default, 160-bit digest).</summary>
+
         SHA1,
-        /// <summary>HMAC-SHA256 (256-bit digest, recommended for new implementations).</summary>
+
         SHA256,
-        /// <summary>HMAC-SHA512 (512-bit digest, highest security).</summary>
+
         SHA512
     }
 
-    /// <summary>
-    /// Implements RFC 6238 Time-based One-Time Password (TOTP) generation.
-    /// Given a shared secret and the current time, this service produces a
-    /// numeric code valid for a short time window (usually 30 seconds). TOTP
-    /// is commonly used as a second factor in multi-factor authentication.
-    /// Supports SHA1 (default), SHA256, and SHA512 hash algorithms.
-    /// </summary>
     public sealed class TotpService
     {
         private const int DefaultTimeStepSeconds = 30;
         private const int DefaultDigits = 6;
 
-        /// <summary>
-        /// Generates a new random secret suitable for TOTP. The secret
-        /// consists of the specified number of bytes and is returned as a
-        /// base32-encoded string without padding.
-        /// </summary>
         public static string GenerateSecret(int length = 16)
         {
             if (length <= 0) throw new ArgumentOutOfRangeException(nameof(length));
@@ -45,18 +30,11 @@ namespace PhantomVault.Core.Services
             return Base32Encode(bytes);
         }
 
-        /// <summary>
-        /// Generates a TOTP code from a base32-encoded secret using HMAC-SHA1 (default).
-        /// </summary>
         public string GenerateCode(string base32Secret, DateTimeOffset? timestamp = null, int digits = DefaultDigits, int timeStepSeconds = DefaultTimeStepSeconds)
         {
             return GenerateCode(base32Secret, TotpAlgorithm.SHA1, timestamp, digits, timeStepSeconds);
         }
 
-        /// <summary>
-        /// Generates a TOTP code from a base32-encoded secret using the specified HMAC algorithm.
-        /// SHA256 and SHA512 provide stronger security than the default SHA1.
-        /// </summary>
         public string GenerateCode(string base32Secret, TotpAlgorithm algorithm, DateTimeOffset? timestamp = null, int digits = DefaultDigits, int timeStepSeconds = DefaultTimeStepSeconds)
         {
             if (string.IsNullOrWhiteSpace(base32Secret)) throw new ArgumentException("Secret must not be null or empty", nameof(base32Secret));
@@ -141,3 +119,4 @@ namespace PhantomVault.Core.Services
         }
     }
 }
+

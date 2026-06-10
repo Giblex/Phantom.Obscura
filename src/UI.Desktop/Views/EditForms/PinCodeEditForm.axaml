@@ -1,7 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="PhantomVault.UI.Views.EditForms.PinCodeEditForm">
-    
+
     <Border x:Name="PinCodePanelBorder" Background="Transparent" IsVisible="{Binding IsPinCodeEntry}">
         <StackPanel x:Name="PinCodePanel" Spacing="12">
         <TextBlock Text="PIN Code" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -24,3 +24,4 @@
         </StackPanel>
     </Border>
 </UserControl>
+

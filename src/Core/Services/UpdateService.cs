@@ -8,10 +8,7 @@ using System.Threading.Tasks;
 
 namespace PhantomVault.Core.Services
 {
-    /// <summary>
-    /// Provides secure application update checking and download functionality.
-    /// All updates are verified using Ed25519 signatures before installation.
-    /// </summary>
+
     public sealed class UpdateService : IDisposable
     {
         private readonly HttpClient _httpClient;
@@ -19,9 +16,6 @@ namespace PhantomVault.Core.Services
         private readonly string _updateManifestUrl;
         private bool _disposed;
 
-        /// <summary>
-        /// Update check result containing version info and download details.
-        /// </summary>
         public sealed class UpdateInfo
         {
             public string Version { get; init; } = string.Empty;
@@ -35,9 +29,6 @@ namespace PhantomVault.Core.Services
             public bool IsAvailable { get; init; }
         }
 
-        /// <summary>
-        /// Update download progress information.
-        /// </summary>
         public sealed class DownloadProgress
         {
             public long BytesDownloaded { get; init; }
@@ -45,11 +36,6 @@ namespace PhantomVault.Core.Services
             public int PercentComplete => TotalBytes > 0 ? (int)(BytesDownloaded * 100 / TotalBytes) : 0;
         }
 
-        /// <summary>
-        /// Creates a new UpdateService instance.
-        /// </summary>
-        /// <param name="currentVersion">Current application version (e.g., "1.0.0").</param>
-        /// <param name="updateManifestUrl">URL to the update manifest JSON file.</param>
         public UpdateService(string currentVersion, string updateManifestUrl)
         {
             _currentVersion = currentVersion ?? throw new ArgumentNullException(nameof(currentVersion));
@@ -62,11 +48,6 @@ namespace PhantomVault.Core.Services
             _httpClient.DefaultRequestHeaders.Add("User-Agent", $"PhantomVault/{currentVersion}");
         }
 
-        /// <summary>
-        /// Checks for available updates.
-        /// </summary>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>Update information if available, null otherwise.</returns>
         public async Task<UpdateInfo?> CheckForUpdateAsync(CancellationToken cancellationToken = default)
         {
             try
@@ -82,7 +63,6 @@ namespace PhantomVault.Core.Services
                     return null;
                 }
 
-                // Compare versions
                 if (!IsNewerVersion(manifest.LatestVersion, _currentVersion))
                 {
                     return new UpdateInfo { IsAvailable = false, Version = _currentVersion };
@@ -103,19 +83,11 @@ namespace PhantomVault.Core.Services
             }
             catch (Exception)
             {
-                // Silently fail on update check errors - don't disrupt user
+
                 return null;
             }
         }
 
-        /// <summary>
-        /// Downloads an update file to the specified path with progress reporting.
-        /// </summary>
-        /// <param name="updateInfo">Update information from CheckForUpdateAsync.</param>
-        /// <param name="destinationPath">Path to save the downloaded file.</param>
-        /// <param name="progress">Progress reporter.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>True if download and verification succeeded.</returns>
         public async Task<bool> DownloadUpdateAsync(
             UpdateInfo updateInfo,
             string destinationPath,
@@ -157,10 +129,9 @@ namespace PhantomVault.Core.Services
                     });
                 }
 
-                // Verify hash
                 if (!await VerifyFileHashAsync(destinationPath, updateInfo.Sha256Hash, cancellationToken).ConfigureAwait(false))
                 {
-                    // Delete corrupted download
+
                     try { File.Delete(destinationPath); } catch { }
                     return false;
                 }
@@ -169,15 +140,12 @@ namespace PhantomVault.Core.Services
             }
             catch (Exception)
             {
-                // Clean up partial download
+
                 try { File.Delete(destinationPath); } catch { }
                 return false;
             }
         }
 
-        /// <summary>
-        /// Verifies a downloaded file against its expected SHA-256 hash.
-        /// </summary>
         private static async Task<bool> VerifyFileHashAsync(string filePath, string expectedHash, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(expectedHash))
@@ -200,9 +168,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Compares two semantic version strings to determine if newVersion is newer.
-        /// </summary>
         private static bool IsNewerVersion(string newVersion, string currentVersion)
         {
             try
@@ -219,7 +184,7 @@ namespace PhantomVault.Core.Services
                     if (newPart < currentPart) return false;
                 }
 
-                return false; // Versions are equal
+                return false;
             }
             catch
             {
@@ -229,16 +194,15 @@ namespace PhantomVault.Core.Services
 
         private static int[] ParseVersion(string version)
         {
-            // Remove 'v' prefix if present
+
             version = version.TrimStart('v', 'V');
 
-            // Split by dots and parse each part
             var parts = version.Split('.');
             var result = new int[parts.Length];
 
             for (int i = 0; i < parts.Length; i++)
             {
-                // Handle pre-release suffixes like "1.0.0-beta"
+
                 var part = parts[i].Split('-')[0];
                 result[i] = int.TryParse(part, out var num) ? num : 0;
             }
@@ -255,9 +219,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Internal model for parsing update manifest JSON.
-        /// </summary>
         private sealed class UpdateManifest
         {
             public string LatestVersion { get; set; } = string.Empty;
@@ -271,3 +232,4 @@ namespace PhantomVault.Core.Services
         }
     }
 }
+

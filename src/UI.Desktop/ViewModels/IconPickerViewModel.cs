@@ -21,12 +21,11 @@ namespace PhantomVault.UI.ViewModels
         private string _selectedIcon = string.Empty;
         private string _searchText = string.Empty;
         private string _statusMessage = "Select an icon or search categories";
-        private Color _selectedIconColor = Color.Parse("#FFB5E5FF"); // Default pastel blue
+        private Color _selectedIconColor = Color.Parse("#FFB5E5FF");
         private readonly IconManager? _iconManager;
-        private SecureIconDownloaderService? _iconDownloader; // Not readonly - lazy initialized
+        private SecureIconDownloaderService? _iconDownloader;
         private readonly DialogService _dialogService = new();
 
-        // Asset and Flaticon icons
         private string? _autoDetectedAssetPath;
         private Bitmap? _autoDetectedAssetBitmap;
         private bool _hasAutoDetectedAsset;
@@ -34,23 +33,21 @@ namespace PhantomVault.UI.ViewModels
         private ObservableCollection<FlaticonResult> _flaticonResults = new();
         private FlaticonResult? _selectedFlaticonResult;
 
-        // Available icon files from Assets/Visuals/Cat Icons and Entry Logos
         public ObservableCollection<string> AvailableIconPaths { get; } = new();
         public ObservableCollection<string> EntryLogoPaths { get; } = new();
 
-        // Pastel color options for icon backgrounds
         public Color[] AvailableColors { get; } = new[]
         {
-            Color.Parse("#FFB5E5FF"), // Pastel Blue
-            Color.Parse("#FFFFC1E3"), // Pastel Pink
-            Color.Parse("#FFFFDFBB"), // Pastel Peach
-            Color.Parse("#FFC7E5C7"), // Pastel Green
-            Color.Parse("#FFFFE5B4"), // Pastel Yellow
-            Color.Parse("#FFE5D4FF"), // Pastel Purple
-            Color.Parse("#FFFFC9C9"), // Pastel Red
-            Color.Parse("#FFD4F4FF"), // Pastel Cyan
-            Color.Parse("#FFFFE4F0"), // Pastel Rose
-            Color.Parse("#FFE8F5E9")  // Pastel Mint
+            Color.Parse("#FFB5E5FF"),
+            Color.Parse("#FFFFC1E3"),
+            Color.Parse("#FFFFDFBB"),
+            Color.Parse("#FFC7E5C7"),
+            Color.Parse("#FFFFE5B4"),
+            Color.Parse("#FFE5D4FF"),
+            Color.Parse("#FFFFC9C9"),
+            Color.Parse("#FFD4F4FF"),
+            Color.Parse("#FFFFE4F0"),
+            Color.Parse("#FFE8F5E9")
         };
 
         public IconPickerViewModel(string currentIcon = "", Color? currentColor = null, string? searchHint = null, IconManager? iconManager = null)
@@ -59,10 +56,8 @@ namespace PhantomVault.UI.ViewModels
             _selectedIconColor = currentColor ?? Color.Parse("#FFB5E5FF");
             _iconManager = iconManager;
 
-            // Don't initialize icon downloader here - it will be created lazily when needed
             _iconDownloader = null;
 
-            // Load available icons from Cat Icons folder
             LoadAvailableIcons();
 
             SelectIconCommand = ReactiveCommand.Create<string>(SelectIcon);
@@ -75,11 +70,9 @@ namespace PhantomVault.UI.ViewModels
             BrowseIconLibraryCommand = ReactiveCommand.CreateFromTask(BrowseIconLibraryAsync);
             UploadCustomIconCommand = ReactiveCommand.CreateFromTask(UploadCustomIconAsync);
 
-            // Subscribe to search changes
             this.WhenAnyValue(x => x.SearchText)
                 .Subscribe(_ => UpdateCategoryVisibility());
 
-            // Auto-detect asset icon if search hint provided
             if (!string.IsNullOrWhiteSpace(searchHint))
             {
                 SearchText = searchHint;
@@ -91,22 +84,22 @@ namespace PhantomVault.UI.ViewModels
         {
             try
             {
-                // Get the base directory for the application
+
                 var baseDir = AppDomain.CurrentDomain.BaseDirectory;
                 var iconsPath = Path.Combine(baseDir, "Assets", "Visuals", "Cat Icons");
 
                 if (Directory.Exists(iconsPath))
                 {
-                    // Recursively find all PNG files in Cat Icons folder
+
                     var pngFiles = Directory.GetFiles(iconsPath, "*.png", SearchOption.AllDirectories);
 
                     foreach (var file in pngFiles.OrderBy(f => Path.GetFileName(f)))
                     {
-                        // Convert to relative path for Assets
+
                         var relativePath = file.Replace(baseDir, "").Replace("\\", "/").TrimStart('/');
                         AvailableIconPaths.Add($"/{relativePath}");
 
-                        if (AvailableIconPaths.Count >= 200) break; // Limit for performance
+                        if (AvailableIconPaths.Count >= 200) break;
                     }
 
                     Debug.WriteLine($"[ICON-PICKER] Loaded {AvailableIconPaths.Count} icons from {iconsPath}");
@@ -116,7 +109,6 @@ namespace PhantomVault.UI.ViewModels
                     Debug.WriteLine($"[ICON-PICKER] Cat Icons directory not found: {iconsPath}");
                 }
 
-                // Also load entry logos from Entry Logos folder
                 var entryLogosPath = Path.Combine(baseDir, "Assets", "Visuals", "Entry Logos");
                 if (Directory.Exists(entryLogosPath))
                 {
@@ -128,10 +120,10 @@ namespace PhantomVault.UI.ViewModels
 
                     foreach (var file in entryFiles)
                     {
-                        // Use absolute file path - avares:// URIs don't work for spaces in folder names
+
                         EntryLogoPaths.Add(file);
 
-                        if (EntryLogoPaths.Count >= 500) break; // Higher limit for entry logos
+                        if (EntryLogoPaths.Count >= 500) break;
                     }
 
                     Debug.WriteLine($"[ICON-PICKER] Loaded {EntryLogoPaths.Count} entry logos from {entryLogosPath}");
@@ -153,7 +145,16 @@ namespace PhantomVault.UI.ViewModels
             {
                 try
                 {
-                    _iconDownloader = new SecureIconDownloaderService();
+                    var gateway = (Avalonia.Application.Current as PhantomVault.UI.App)?
+                        .Services?
+                        .GetService(typeof(PhantomVault.Core.Services.Network.IInternetGateway))
+                        as PhantomVault.Core.Services.Network.IInternetGateway;
+                    if (gateway == null)
+                    {
+                        Debug.WriteLine("[ICON-PICKER] InternetGateway not registered — icon downloader unavailable.");
+                        return null;
+                    }
+                    _iconDownloader = new SecureIconDownloaderService(gateway);
                 }
                 catch (Exception ex)
                 {
@@ -188,7 +189,6 @@ namespace PhantomVault.UI.ViewModels
             set => this.RaiseAndSetIfChanged(ref _statusMessage, value);
         }
 
-        // Category visibility
         private bool _showSocialCategory = true;
         private bool _showTechCategory = true;
         private bool _showFinanceCategory = true;
@@ -246,7 +246,6 @@ namespace PhantomVault.UI.ViewModels
             set => this.RaiseAndSetIfChanged(ref _showMiscCategory, value);
         }
 
-        // Commands
         public ReactiveCommand<string, Unit> SelectIconCommand { get; }
         public ReactiveCommand<Color, Unit> SelectColorCommand { get; }
         public ReactiveCommand<Unit, Unit> ConfirmCommand { get; }
@@ -257,7 +256,6 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> BrowseIconLibraryCommand { get; }
         public ReactiveCommand<Unit, Unit> UploadCustomIconCommand { get; }
 
-        // Properties for asset and Flaticon icons
         public string? AutoDetectedAssetPath
         {
             get => _autoDetectedAssetPath;
@@ -324,7 +322,7 @@ namespace PhantomVault.UI.ViewModels
         {
             if (string.IsNullOrWhiteSpace(SearchText))
             {
-                // Show all categories
+
                 ShowSocialCategory = true;
                 ShowTechCategory = true;
                 ShowFinanceCategory = true;
@@ -356,7 +354,7 @@ namespace PhantomVault.UI.ViewModels
 
             try
             {
-                // Create temp credential for icon detection
+
                 var tempCredential = new Core.Models.Credential
                 {
                     Title = searchTerm
@@ -412,14 +410,19 @@ namespace PhantomVault.UI.ViewModels
                 IsSearchingFlaticon = true;
                 StatusMessage = $"Searching Flaticon for '{SearchText}'...";
 
-                downloader.EnableInternet();
+                var granted = await downloader.RequestInternetAccessAsync();
+                if (!granted)
+                {
+                    StatusMessage = "Internet access was denied.";
+                    return;
+                }
                 var results = await downloader.SearchIconsAsync(SearchText);
                 downloader.DisableInternet();
 
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     FlaticonResults.Clear();
-                    foreach (var result in results.Take(12)) // Show top 12 results
+                    foreach (var result in results.Take(12))
                     {
                         FlaticonResults.Add(new FlaticonResult
                         {
@@ -466,7 +469,6 @@ namespace PhantomVault.UI.ViewModels
             {
                 StatusMessage = $"Downloading icon from Flaticon...";
 
-                // Convert to IconSearchResult
                 var iconResult = new IconSearchResult
                 {
                     Id = result.Id,
@@ -474,7 +476,12 @@ namespace PhantomVault.UI.ViewModels
                     Url = result.DownloadUrl
                 };
 
-                downloader.EnableInternet();
+                var granted = await downloader.RequestInternetAccessAsync();
+                if (!granted)
+                {
+                    StatusMessage = "Internet access was denied.";
+                    return;
+                }
                 var downloadedPath = await downloader.DownloadIconAsync(iconResult);
                 downloader.DisableInternet();
 
@@ -501,7 +508,7 @@ namespace PhantomVault.UI.ViewModels
             try
             {
                 await IconLibraryLauncher.ShowAsync(_ownerWindow, "Choose from Icon Library");
-                // Note: Icon library returns selected icon via its own mechanism
+
             }
             catch (Exception ex)
             {
@@ -590,3 +597,4 @@ namespace PhantomVault.UI.ViewModels
         }
     }
 }
+

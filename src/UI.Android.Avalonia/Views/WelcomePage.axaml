@@ -9,19 +9,6 @@
              x:DataType="vm:WelcomePageViewModel"
              Background="{DynamicResource WindowBackgroundBrush}">
 
-  <!--
-    Android adaptation of Views/WelcomePage.axaml from UI.Desktop.
-    Layout deltas vs desktop:
-      (1) Root is UserControl (Window doesn't host under SingleViewApplicationLifetime).
-      (2) Redundant page-level header dropped — the AppShell already shows the
-          "Phantom Obscura" title + brand icon in the top bar, so we lead with
-          the welcome message + logo tile instead of repeating the title.
-      (3) Logo + USB-gate cards stack vertically for phone widths; tablet form
-          factors get the same layout but with more breathing room.
-      (4) Pulse-ring + trace animations from desktop's 800-LOC code-behind are
-          deferred to a later phase.
-  -->
-
   <UserControl.Resources>
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
@@ -49,10 +36,8 @@
     </Style>
   </UserControl.Styles>
 
-  <!-- Two-row grid: scrolling body + sticky action footer. -->
   <Grid RowDefinitions="*,Auto" Background="{DynamicResource WindowBackgroundBrush}">
 
-    <!-- ─── Main content (logo + status + gate card) ───────────────────────── -->
     <ScrollViewer Grid.Row="0"
                   Background="{DynamicResource WindowBackgroundBrush}"
                   Padding="20,16,20,16"
@@ -60,7 +45,6 @@
                   HorizontalScrollBarVisibility="Disabled">
       <StackPanel Spacing="16" HorizontalAlignment="Stretch" VerticalAlignment="Top">
 
-        <!-- Welcome subtitle (single tagline, no duplicated app name). -->
         <TextBlock Text="{Binding WelcomeMessage}"
                    FontSize="{StaticResource Type.Body.Size}"
                    Foreground="{DynamicResource HeaderMutedTextBrush}"
@@ -69,7 +53,6 @@
                    TextWrapping="Wrap"
                    Margin="0,4,0,0"/>
 
-        <!-- Brand tile: icon stacked above wordmark — fits any phone width. -->
         <Border CornerRadius="16"
                 ClipToBounds="True"
                 Background="{DynamicResource CardBackgroundBrush}"
@@ -94,13 +77,11 @@
           </StackPanel>
         </Border>
 
-        <!-- Version, centred under the logo. -->
         <TextBlock Text="{Binding AppVersion}"
                    FontSize="{StaticResource Type.Tiny.Size}"
                    Foreground="{DynamicResource MutedTextBrush}"
                    HorizontalAlignment="Center"/>
 
-        <!-- Status pill: indeterminate progress + status copy. -->
         <Border Background="{DynamicResource ControlBackgroundBrush}"
                 BorderBrush="{DynamicResource ControlBorderBrush}"
                 BorderThickness="1"
@@ -120,7 +101,6 @@
           </StackPanel>
         </Border>
 
-        <!-- USB gate / vault discovery card — vertically stacked content. -->
         <Border Background="{DynamicResource ControlBackgroundBrush}"
                 BorderBrush="{DynamicResource ControlBorderBrush}"
                 BorderThickness="1"
@@ -129,7 +109,7 @@
                 HorizontalAlignment="Stretch"
                 IsVisible="{Binding IsLandingVisible}">
           <StackPanel Spacing="12" HorizontalAlignment="Stretch">
-            <!-- Centred indicator dot. -->
+
             <Border Width="22" Height="22" CornerRadius="11"
                     Background="{DynamicResource AccentBrush}"
                     HorizontalAlignment="Center"/>
@@ -155,7 +135,6 @@
                        TextTrimming="CharacterEllipsis"
                        IsVisible="{Binding HasRecognizedVaults}"/>
 
-            <!-- Picker for the multi-vault case. -->
             <StackPanel Spacing="6" IsVisible="{Binding ShowVaultPicker}" Margin="0,6,0,0">
               <TextBlock Text="Available vaults on this USB"
                          FontSize="{StaticResource Type.Label.Size}"
@@ -193,7 +172,6 @@
           </StackPanel>
         </Border>
 
-        <!-- ─── Setup choice (after Get Started tapped) ──────────────────── -->
         <Border Background="{DynamicResource CardBackgroundBrush}"
                 CornerRadius="16"
                 Padding="20,18"
@@ -208,10 +186,6 @@
                        TextAlignment="Center"
                        TextWrapping="Wrap"/>
 
-            <!-- Two tap-target tiles stacked vertically on phone (WrapPanel
-                 places them side-by-side on tablet). Each has a "?" help button
-                 anchored to the top-right that opens a Flyout with the full
-                 description, so the tile itself stays at-a-glance. -->
             <WrapPanel ItemSpacing="12" LineSpacing="12" HorizontalAlignment="Center">
               <Grid Width="280" Height="120">
                 <Border CornerRadius="16" Background="#162235"/>
@@ -236,7 +210,7 @@
                                HorizontalAlignment="Center"/>
                   </StackPanel>
                 </Button>
-                <!-- Help icon, top-right -->
+
                 <Button HorizontalAlignment="Right" VerticalAlignment="Top"
                         Margin="0,8,8,0"
                         Width="28" Height="28"
@@ -327,7 +301,6 @@
       </StackPanel>
     </ScrollViewer>
 
-    <!-- ─── Action footer (sticky bottom row) ────────────────────────────── -->
     <Border Grid.Row="1"
             Background="{DynamicResource HeaderBackgroundBrush}"
             BorderBrush="{DynamicResource FooterBorderBrush}"
@@ -335,7 +308,7 @@
             Padding="14,12">
       <WrapPanel Orientation="Horizontal" ItemSpacing="8" LineSpacing="8"
                  HorizontalAlignment="Center">
-        <!-- Landing-state buttons -->
+
         <Button Classes="action-pill"
                 Command="{Binding GetStartedCommand}"
                 IsVisible="{Binding IsLandingVisible}">
@@ -358,7 +331,6 @@
           <TextBlock Text="Import" Foreground="{DynamicResource ButtonTextBrush}"/>
         </Button>
 
-        <!-- Setup-choice-state button -->
         <Button Classes="action-pill"
                 Command="{Binding BackToWelcomeCommand}"
                 IsVisible="{Binding IsSetupChoiceVisible}">
@@ -368,3 +340,4 @@
     </Border>
   </Grid>
 </UserControl>
+

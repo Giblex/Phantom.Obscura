@@ -10,10 +10,7 @@ using static ObscuraPolicy;
 
 namespace PhantomVault.UI.ViewModels.Settings
 {
-    /// <summary>
-    /// ViewModel for policy validation and configuration UI.
-    /// Provides safe defaults and allows users to customize security policies.
-    /// </summary>
+
     public partial class PolicySettingsViewModel : ObservableObject
     {
         [ObservableProperty]
@@ -95,42 +92,33 @@ namespace PhantomVault.UI.ViewModels.Settings
             LoadSafeDefaults();
         }
 
-        /// <summary>
-        /// Loads safe default policy settings suitable for new users.
-        /// Minimal restrictions with security recommendations.
-        /// </summary>
         [RelayCommand]
         public void LoadSafeDefaults()
         {
-            // USB Configuration - Not required by default (user-friendly)
+
             UsbRequired = false;
             RequireRemovable = false;
             UsbIdentityMode = "Any";
             VolumeLabel = null;
             MinUsbStandard = "USB2";
 
-            // Security Settings - Balanced defaults
-            RequireMfa = false; // Can be enabled later
-            RequirePassphrase = true; // Always require at least a password
-            RequireKeyfile = false; // Optional for beginners
-            AllowBiometrics = true; // Enable convenience features
+            RequireMfa = false;
+            RequirePassphrase = true;
+            RequireKeyfile = false;
+            AllowBiometrics = true;
 
-            // Session Management - Secure but reasonable
             SessionTimeoutMinutes = 15;
-            AutoLockOnMinimize = false; // Don't interrupt workflow
-            AutoLockOnScreenLock = true; // Lock when system locks
+            AutoLockOnMinimize = false;
+            AutoLockOnScreenLock = true;
             AutoLockOnIdle = true;
             IdleTimeoutMinutes = 5;
 
-            // Authentication Protection
             MaxFailedAttempts = 5;
             ThrottleUnlockAttempts = true;
 
-            // Advanced Features - Disabled by default
-            UsePostQuantum = false; // Can enable when ready
-            AutoBackupEnabled = false; // Let user configure first
+            UsePostQuantum = false;
+            AutoBackupEnabled = false;
 
-            // Audit - Enabled for security tracking
             AuditEnabled = true;
 
             PolicyModified = false;
@@ -138,37 +126,29 @@ namespace PhantomVault.UI.ViewModels.Settings
             ShowingRecommendations = true;
         }
 
-        /// <summary>
-        /// Loads high-security policy settings for advanced users.
-        /// Maximum security with all protections enabled.
-        /// </summary>
         [RelayCommand]
         public void LoadHighSecurityPolicy()
         {
-            // USB Configuration - Required and validated
+
             UsbRequired = true;
             RequireRemovable = true;
             UsbIdentityMode = "Serial";
             MinUsbStandard = "USB3";
 
-            // Security Settings - All protections enabled
             RequireMfa = true;
             RequirePassphrase = true;
             RequireKeyfile = true;
-            AllowBiometrics = false; // Require explicit auth
+            AllowBiometrics = false;
 
-            // Session Management - Aggressive locking
             SessionTimeoutMinutes = 5;
             AutoLockOnMinimize = true;
             AutoLockOnScreenLock = true;
             AutoLockOnIdle = true;
             IdleTimeoutMinutes = 2;
 
-            // Authentication Protection - Strict
             MaxFailedAttempts = 3;
             ThrottleUnlockAttempts = true;
 
-            // Advanced Features - All enabled
             UsePostQuantum = true;
             AutoBackupEnabled = true;
             AuditEnabled = true;
@@ -178,9 +158,6 @@ namespace PhantomVault.UI.ViewModels.Settings
             ShowingRecommendations = false;
         }
 
-        /// <summary>
-        /// Loads an existing policy from file.
-        /// </summary>
         [RelayCommand]
         public void LoadPolicyFromFile(string filePath)
         {
@@ -215,17 +192,14 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
         }
 
-        /// <summary>
-        /// Saves current policy settings to file.
-        /// </summary>
         [RelayCommand]
         public void SavePolicy(string? filePath = null)
         {
             try
             {
                 var policy = CreatePolicyFromUI();
-                
-                var targetPath = filePath ?? _currentPolicyPath ?? 
+
+                var targetPath = filePath ?? _currentPolicyPath ??
                     Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                         "PhantomVault", "custom_policy.json");
 
@@ -242,7 +216,7 @@ namespace PhantomVault.UI.ViewModels.Settings
                 });
 
                 File.WriteAllText(targetPath, json);
-                
+
                 _currentPolicyPath = targetPath;
                 PolicyModified = false;
                 StatusMessage = $"Policy saved to: {Path.GetFileName(targetPath)}";
@@ -253,16 +227,12 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
         }
 
-        /// <summary>
-        /// Validates current policy settings.
-        /// </summary>
         [RelayCommand]
         public void ValidatePolicy()
         {
             var result = new ValidationResult { IsValid = true };
             ValidationErrors.Clear();
 
-            // Validate USB settings
             if (UsbRequired && string.IsNullOrWhiteSpace(UsbIdentityMode))
             {
                 result.IsValid = false;
@@ -275,14 +245,12 @@ namespace PhantomVault.UI.ViewModels.Settings
                 result.Errors.Add("Volume label must be specified for LabelOnly mode.");
             }
 
-            // Validate authentication requirements
             if (!RequirePassphrase && !RequireKeyfile && !RequireMfa)
             {
                 result.IsValid = false;
                 result.Errors.Add("At least one authentication method must be required.");
             }
 
-            // Validate timeouts
             if (SessionTimeoutMinutes < 1 || SessionTimeoutMinutes > 1440)
             {
                 result.IsValid = false;
@@ -295,14 +263,12 @@ namespace PhantomVault.UI.ViewModels.Settings
                 result.Errors.Add("Idle timeout must be between 1 minute and session timeout.");
             }
 
-            // Validate failed attempts
             if (MaxFailedAttempts < 1 || MaxFailedAttempts > 10)
             {
                 result.IsValid = false;
                 result.Errors.Add("Max failed attempts must be between 1 and 10.");
             }
 
-            // Add warnings for weak settings
             if (!RequireMfa)
             {
                 result.Warnings.Add("MFA is not required. Consider enabling for better security.");
@@ -318,7 +284,6 @@ namespace PhantomVault.UI.ViewModels.Settings
                 result.Warnings.Add("Post-quantum encryption is not enabled. Enable for future-proof security.");
             }
 
-            // Update ValidationErrors and status
             ValidationErrors.Clear();
             if (!result.IsValid)
             {
@@ -331,26 +296,21 @@ namespace PhantomVault.UI.ViewModels.Settings
             else
             {
                 PolicyModified = false;
-                StatusMessage = "Policy validation passed. " + 
+                StatusMessage = "Policy validation passed. " +
                     (result.Warnings.Count > 0 ? $"{result.Warnings.Count} warnings found." : "No issues found.");
             }
         }
 
-        /// <summary>
-        /// Applies policy object to UI properties.
-        /// </summary>
         private void ApplyPolicyToUI(ObscuraPolicy policy)
         {
-            // USB settings
+
             UsbRequired = policy.Usb.Required;
             RequireRemovable = policy.Usb.RequireRemovable;
             UsbIdentityMode = policy.Usb.IdentityMode ?? "Any";
             VolumeLabel = policy.Usb.VolumeLabel;
             MinUsbStandard = policy.Usb.MinStandard ?? "USB2";
 
-            // Security settings (if available in policy)
-            // Note: These may need to be added to ObscuraPolicy model
-            RequirePassphrase = true; // Default
+            RequirePassphrase = true;
             AllowBiometrics = true;
             AutoLockOnScreenLock = true;
             AutoLockOnIdle = true;
@@ -360,9 +320,6 @@ namespace PhantomVault.UI.ViewModels.Settings
             AuditEnabled = true;
         }
 
-        /// <summary>
-        /// Creates policy object from UI properties.
-        /// </summary>
         private ObscuraPolicy CreatePolicyFromUI()
         {
             return new ObscuraPolicy
@@ -377,7 +334,7 @@ namespace PhantomVault.UI.ViewModels.Settings
                     AllowedSerials = Array.Empty<string>(),
                     RequiredKeyIds = Array.Empty<string>()
                 }
-                // Add other policy sections as needed
+
             };
         }
 
@@ -389,7 +346,6 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
         }
 
-        // Property change handlers to track modifications
         partial void OnUsbRequiredChanged(bool value) => PolicyModified = true;
         partial void OnRequireRemovableChanged(bool value) => PolicyModified = true;
         partial void OnUsbIdentityModeChanged(string value) => PolicyModified = true;
@@ -411,9 +367,6 @@ namespace PhantomVault.UI.ViewModels.Settings
         partial void OnAutoBackupEnabledChanged(bool value) => PolicyModified = true;
     }
 
-    /// <summary>
-    /// Result of policy validation.
-    /// </summary>
     public class ValidationResult
     {
         public bool IsValid { get; set; }
@@ -421,3 +374,4 @@ namespace PhantomVault.UI.ViewModels.Settings
         public List<string> Warnings { get; } = new();
     }
 }
+

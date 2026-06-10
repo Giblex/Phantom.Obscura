@@ -10,7 +10,7 @@
         Classes="animated-window">
 
     <StackPanel Margin="24" Spacing="14">
-        <!-- App identity -->
+
         <StackPanel Spacing="4">
             <TextBlock Text="Phantom Vault"
                        FontSize="{StaticResource Type.H2.Size}"
@@ -23,7 +23,6 @@
 
         <Border Height="1" Background="{DynamicResource SeparatorBrush}" Margin="0,4"/>
 
-        <!-- Description -->
         <TextBlock Text="A secure credential vault built with privacy-first principles.&#x0a;Designed and developed by Giblex."
                    FontSize="{StaticResource Type.Body.Size}"
                    Foreground="{DynamicResource SecondaryTextBrush}"
@@ -35,7 +34,6 @@
                    Foreground="{DynamicResource MutedTextBrush}"
                    Margin="0,4,0,0"/>
 
-        <!-- Close button -->
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
             <Button Click="Close_Click"
                     Classes="primary"
@@ -51,5 +49,4 @@
         </StackPanel>
     </StackPanel>
 </views:ThemeAwareWindow>
-
 

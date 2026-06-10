@@ -23,27 +23,20 @@ namespace PhantomVault.UI.Views
         private Border? _tileContainer;
         private Point _lastDragPosition;
         private Transitions? _savedTransitions;
-        private CategoryItem? _currentFlyoutCategory; // Store category when flyout opens
-        private Flyout? _currentFlyout; // Store the flyout reference
+        private CategoryItem? _currentFlyoutCategory;
+        private Flyout? _currentFlyout;
 
-        /// <summary>
-        /// Set the dragged tile container to a high ZIndex so it renders on top of siblings.
-        /// </summary>
         private void ElevateDraggedTile()
         {
             if (_tileContainer == null) return;
             _tileContainer.ZIndex = 9999;
-            // The actual child of the StackPanel is the ContentPresenter wrapping TileContainer.
-            // We must also elevate it so the Panel respects the ZIndex for rendering order.
+
             if (_tileContainer.Parent is Avalonia.Controls.Presenters.ContentPresenter cp)
             {
                 cp.ZIndex = 9999;
             }
         }
 
-        /// <summary>
-        /// Reset all tile container ZIndex values back to 0.
-        /// </summary>
         private void ResetAllTileZIndex()
         {
             try
@@ -51,7 +44,6 @@ namespace PhantomVault.UI.Views
                 var ic = this.FindControl<ItemsControl>("CategoryItems");
                 if (ic == null) return;
 
-                // Walk the visual tree to find all TileContainer borders
                 foreach (var child in ic.GetVisualDescendants())
                 {
                     if (child is Border b && b.Name == "TileContainer")
@@ -79,18 +71,18 @@ namespace PhantomVault.UI.Views
 
         private CategoryItem? FindCategoryItemFromFlyout(Control control)
         {
-            // Walk up the visual tree to find the Flyout's PlacementTarget (the color button)
+
             var current = control.Parent as Avalonia.StyledElement;
             while (current != null)
             {
-                // Check if this is a Popup (the flyout root)
+
                 if (current is PopupRoot popupRoot)
                 {
                     if (popupRoot.Parent is Popup popup)
                     {
                         if (popup.PlacementTarget is Control target)
                         {
-                            // Now walk up from the placement target to find the CategoryItem DataContext
+
                             return FindCategoryItemFromControl(target);
                         }
                     }
@@ -168,7 +160,6 @@ namespace PhantomVault.UI.Views
                 if (sender is not Flyout flyout)
                     return;
 
-                // Store the flyout reference so we can close it later
                 _currentFlyout = flyout;
 
                 if (flyout.Content is not Control root)
@@ -177,7 +168,7 @@ namespace PhantomVault.UI.Views
                 var category = FindCategoryItemFromFlyout(root);
                 if (category == null)
                 {
-                    // Alternative: try to get from PlacementTarget directly
+
                     if (flyout.Target is Control target)
                     {
                         category = FindCategoryItemFromControl(target);
@@ -187,7 +178,6 @@ namespace PhantomVault.UI.Views
                 if (category == null)
                     return;
 
-                // Store the category for use in click handlers
                 _currentFlyoutCategory = category;
 
                 UpdatePaletteSelection(root, category.TileColor);
@@ -209,7 +199,7 @@ namespace PhantomVault.UI.Views
         {
             try
             {
-                // Use the stored flyout reference if available
+
                 if (_currentFlyout != null)
                 {
                     _currentFlyout.Hide();
@@ -217,13 +207,12 @@ namespace PhantomVault.UI.Views
                     return;
                 }
 
-                // Fallback: Walk up the visual tree to find the PopupRoot
                 var current = control.Parent as Avalonia.StyledElement;
                 while (current != null)
                 {
                     if (current is PopupRoot popupRoot)
                     {
-                        // The Popup should be the parent of PopupRoot
+
                         if (popupRoot.Parent is Popup popup)
                         {
                             popup.IsOpen = false;
@@ -323,11 +312,10 @@ namespace PhantomVault.UI.Views
 
                             if (transformGroup.Children[1] is RotateTransform rotate)
                             {
-                                rotate.Angle = 1.0; // slight tilt for "lifted" feel
+                                rotate.Angle = 1.0;
                             }
                         }
 
-                        // Add a drop shadow to the dragged tile
                         if (_draggedTile != null)
                         {
                             _draggedTile.BoxShadow = new Avalonia.Media.BoxShadows(
@@ -406,7 +394,6 @@ namespace PhantomVault.UI.Views
                     ResetAllTileZIndex();
                     _tileContainer.Opacity = 1.0;
 
-                    // Clear drop shadow
                     if (_draggedTile != null)
                     {
                         _draggedTile.BoxShadow = default;
@@ -457,7 +444,6 @@ namespace PhantomVault.UI.Views
                 ResetAllTileZIndex();
                 _tileContainer.Opacity = 1.0;
 
-                // Clear drop shadow
                 if (_draggedTile != null)
                 {
                     _draggedTile.BoxShadow = default;
@@ -497,7 +483,6 @@ namespace PhantomVault.UI.Views
 
                 var normalized = NormalizeColor(button.Tag as string);
 
-                // Use stored category from flyout opened event
                 var category = _currentFlyoutCategory;
                 if (category == null)
                 {
@@ -521,7 +506,6 @@ namespace PhantomVault.UI.Views
                     hexBox.Text = NormalizeColor(newColor);
                 }
 
-                // Close the flyout after color selection
                 CloseFlyout(button);
             }
             catch (Exception ex)
@@ -546,7 +530,6 @@ namespace PhantomVault.UI.Views
                 var normalized = NormalizeColor(raw);
                 Color.Parse(normalized);
 
-                // Use stored category from flyout opened event
                 var category = _currentFlyoutCategory;
                 if (category == null)
                 {
@@ -566,7 +549,6 @@ namespace PhantomVault.UI.Views
 
                     UpdatePaletteSelection(paletteRoot, newColor);
 
-                    // Close the flyout after applying custom color
                     CloseFlyout(applyBtn);
                 }
             }
@@ -577,3 +559,4 @@ namespace PhantomVault.UI.Views
         }
     }
 }
+

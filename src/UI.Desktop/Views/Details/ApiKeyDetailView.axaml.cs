@@ -10,3 +10,4 @@ public partial class ApiKeyDetailView : UserControl
         AvaloniaXamlLoader.Load(this);
     }
 }
+

@@ -21,13 +21,13 @@ namespace PhantomVault.UI.ViewModels.Settings
 {
     public class RubbishBinSettingsViewModel : ReactiveObject
     {
-        private int _selectedErasureMethod = 2; // DoD 5220.22-M
+        private int _selectedErasureMethod = 2;
         private string _methodDescription = "US Department of Defense standard. Overwrites data 7 times with specific patterns. Provides high security with reasonable performance. Recommended for most users.";
         private bool _enableRecovery = true;
-        private int _selectedRetentionPeriod = 2; // 30 days
+        private int _selectedRetentionPeriod = 2;
         private bool _enableDuplicateDetection = false;
         private bool _autoDeleteDuplicates = false;
-        private int _selectedScanFrequency = 1; // Weekly
+        private int _selectedScanFrequency = 1;
         private int _itemsInBin = 0;
         private string _totalSize = "0 KB";
         private string _oldestItem = "N/A";
@@ -42,8 +42,6 @@ namespace PhantomVault.UI.ViewModels.Settings
         private readonly SecureTrashService _secureTrashService;
         private readonly Window? _owner;
 
-        // Issue #29: shared draft tracker — PersistSettings now stages a single
-        // 'RubbishBin.All' entry; commits/discards drive disk + live config.
         private readonly SettingsDraftTracker _draft;
         private RubbishBinBaseline _baseline;
         private bool _suppressStage;
@@ -86,8 +84,9 @@ namespace PhantomVault.UI.ViewModels.Settings
             get => _enableRecovery;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _enableRecovery, value))
+                if (_enableRecovery != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _enableRecovery, value);
                     PersistSettings();
                     ApplySecureTrashConfiguration();
                     UpdateStatusMessages();
@@ -115,8 +114,9 @@ namespace PhantomVault.UI.ViewModels.Settings
             get => _enableDuplicateDetection;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _enableDuplicateDetection, value))
+                if (_enableDuplicateDetection != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _enableDuplicateDetection, value);
                     PersistSettings();
                     UpdateStatusMessages();
                 }
@@ -128,8 +128,9 @@ namespace PhantomVault.UI.ViewModels.Settings
             get => _autoDeleteDuplicates;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _autoDeleteDuplicates, value))
+                if (_autoDeleteDuplicates != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _autoDeleteDuplicates, value);
                     PersistSettings();
                     UpdateStatusMessages();
                 }
@@ -173,8 +174,9 @@ namespace PhantomVault.UI.ViewModels.Settings
             get => _autoEmptyOnClose;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _autoEmptyOnClose, value))
+                if (_autoEmptyOnClose != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _autoEmptyOnClose, value);
                     PersistSettings();
                     UpdateStatusMessages();
                 }
@@ -186,8 +188,9 @@ namespace PhantomVault.UI.ViewModels.Settings
             get => _promptBeforeDeletion;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _promptBeforeDeletion, value))
+                if (_promptBeforeDeletion != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _promptBeforeDeletion, value);
                     PersistSettings();
                     UpdateStatusMessages();
                 }
@@ -275,10 +278,7 @@ namespace PhantomVault.UI.ViewModels.Settings
 
         private void PersistSettings()
         {
-            // Issue #29: stage instead of writing immediately. Setters still
-            // call this on every change; re-staging replaces the prior pair
-            // under the 'RubbishBin.All' key so a burst of toggles still
-            // results in a single commit/discard pair.
+
             if (_suppressStage) return;
             if (MatchesBaseline())
             {
@@ -302,7 +302,6 @@ namespace PhantomVault.UI.ViewModels.Settings
                         settings.SecureTrashPromptBeforeDeletion = staged.PromptBeforeDeletion;
                         settings.SecureTrashErasureMethod = staged.SelectedErasureMethod;
                         settings.SecureTrashEnabled = staged.EnableRecovery;
-                        settings.SecureTrashAutoPurge = true;
                         settings.SecureTrashWipePasses = MapErasureMethodToWipePasses(staged.SelectedErasureMethod);
                     });
                     _baseline = staged;
@@ -481,9 +480,14 @@ namespace PhantomVault.UI.ViewModels.Settings
         {
             try
             {
-                if (PromptBeforeDeletion)
+                // Emptying the bin is irreversible — always require explicit confirmation.
+                var confirmed = await _dialogService.ShowConfirmationAsync(
+                    "Empty Bin",
+                    "This will securely and permanently erase all items in the bin. This cannot be undone. Continue?",
+                    _owner);
+                if (!confirmed)
                 {
-                    await _dialogService.ShowWarningAsync("Empty Bin", "This will securely erase all items. Continue?", _owner);
+                    return;
                 }
 
                 var fileItems = _trashItemsProvider()?.Where(File.Exists).ToArray() ?? Array.Empty<string>();
@@ -515,7 +519,7 @@ namespace PhantomVault.UI.ViewModels.Settings
 
                 foreach (var item in fileItems)
                 {
-                    await SecureDeletionService.SecureDeleteFileAsync(item, MapDeletionMethod(), null);
+                    await SecureDeletionService.BestEffortDeleteAsync(item, MapDeletionMethod(), null);
                 }
 
                 foreach (var record in secureTrashRecords)
@@ -660,3 +664,4 @@ namespace PhantomVault.UI.ViewModels.Settings
         }
     }
 }
+

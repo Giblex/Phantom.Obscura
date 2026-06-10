@@ -8,10 +8,6 @@ using System.Threading.Tasks;
 
 namespace PhantomVault.UI.Desktop.Controls;
 
-/// <summary>
-/// Toast notification control for non-intrusive user feedback.
-/// Automatically dismisses after a timeout or can be closed manually.
-/// </summary>
 public partial class ToastNotification : UserControl
 {
     private Border? _toastBorder;
@@ -39,20 +35,15 @@ public partial class ToastNotification : UserControl
         }
     }
 
-    /// <summary>
-    /// Show the toast notification with specified type, title, and message.
-    /// </summary>
     public void Show(ToastType type, string title, string message, int durationMs = 4000)
     {
         if (_toastBorder == null || _toastIcon == null || _titleText == null || _messageText == null)
             return;
 
-        // Set content
         _titleText.Text = title;
         _messageText.Text = message;
         _messageText.IsVisible = !string.IsNullOrWhiteSpace(message);
 
-        // Set icon and styling based on type
         _toastBorder.Classes.Clear();
         _toastBorder.Classes.Add("toast");
         _toastBorder.Classes.Add("show");
@@ -78,7 +69,6 @@ public partial class ToastNotification : UserControl
                 break;
         }
 
-        // Auto-close after duration
         _autoCloseTimer?.Stop();
         _autoCloseTimer = new DispatcherTimer
         {
@@ -92,9 +82,6 @@ public partial class ToastNotification : UserControl
         _autoCloseTimer.Start();
     }
 
-    /// <summary>
-    /// Close the toast notification with animation.
-    /// </summary>
     public void Close()
     {
         if (_toastBorder == null)
@@ -102,7 +89,6 @@ public partial class ToastNotification : UserControl
 
         _toastBorder.Classes.Remove("show");
 
-        // Wait for animation to complete before raising Closed event
         Task.Delay(300).ContinueWith(_ =>
         {
             Dispatcher.UIThread.Post(() =>
@@ -118,9 +104,6 @@ public partial class ToastNotification : UserControl
     }
 }
 
-/// <summary>
-/// Type of toast notification determining icon and color.
-/// </summary>
 public enum ToastType
 {
     Success,
@@ -128,3 +111,4 @@ public enum ToastType
     Warning,
     Info
 }
+

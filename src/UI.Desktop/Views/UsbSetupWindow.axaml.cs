@@ -15,13 +15,13 @@ namespace PhantomVault.UI.Views
         public UsbSetupWindow()
         {
             InitializeComponent();
-            // Exclude from runtime theme switching - setup workflow remains unchanged
+
             ThemeScope.SetIsThemed(this, false);
         }
 
         private void GoBack_Click(object? sender, RoutedEventArgs e)
         {
-            // Return to WelcomePage
+
             if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 desktop.MainWindow?.Show();
@@ -36,3 +36,4 @@ namespace PhantomVault.UI.Views
         }
     }
 }
+

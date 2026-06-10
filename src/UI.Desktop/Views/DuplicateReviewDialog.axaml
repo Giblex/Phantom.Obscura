@@ -5,9 +5,9 @@
     xmlns:views="clr-namespace:PhantomVault.UI.Views"
     xmlns:controls="clr-namespace:Giblex.Controls"
     x:Class="PhantomVault.UI.Views.DuplicateReviewDialog"
-        Title="Review Duplicate Credentials" 
-        Width="900" Height="600" 
-        CanResize="True" 
+        Title="Review Duplicate Credentials"
+        Width="900" Height="600"
+        CanResize="True"
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource WindowBackgroundBrush}"
         Classes="animated-window">
@@ -17,58 +17,54 @@
     </Design.DataContext>
 
     <Grid RowDefinitions="Auto,*,Auto" Margin="16">
-        
-        <!-- Header -->
+
         <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,16">
-            <TextBlock Text="🔍 Duplicate Credentials Detected" 
-                      FontSize="{StaticResource Type.Icon.Size}" 
+            <TextBlock Text="🔍 Duplicate Credentials Detected"
+                      FontSize="{StaticResource Type.Icon.Size}"
                       FontWeight="Bold"/>
-            <TextBlock Text="{Binding DuplicateSummary}" 
-                      FontSize="{StaticResource Type.Label.Size}" 
+            <TextBlock Text="{Binding DuplicateSummary}"
+                      FontSize="{StaticResource Type.Label.Size}"
                       Foreground="{DynamicResource MutedTextBrush}"
                       TextWrapping="Wrap"/>
             <Separator Margin="0,8"/>
         </StackPanel>
 
-        <!-- Duplicate List -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <ItemsControl ItemsSource="{Binding DuplicateItems}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Border BorderBrush="{DynamicResource ControlBorderBrush}" 
-                               BorderThickness="1" 
-                               CornerRadius="6" 
-                               Padding="12" 
+                        <Border BorderBrush="{DynamicResource ControlBorderBrush}"
+                               BorderThickness="1"
+                               CornerRadius="6"
+                               Padding="12"
                                Margin="0,0,0,12"
                                Background="{DynamicResource CardBackgroundBrush}">
                             <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto,*">
-                                
-                                <!-- Match Type Header -->
-                                <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" 
-                                           Orientation="Horizontal" 
-                                           Spacing="8" 
+
+                                <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"
+                                           Orientation="Horizontal"
+                                           Spacing="8"
                                            Margin="0,0,0,12">
                                     <TextBlock Text="{Binding MatchTypeIcon}" FontSize="{StaticResource Type.H4.Size}"/>
-                                    <TextBlock Text="{Binding MatchTypeText}" 
-                                              FontWeight="SemiBold" 
+                                    <TextBlock Text="{Binding MatchTypeText}"
+                                              FontWeight="SemiBold"
                                               FontSize="{StaticResource Type.Body.Size}"/>
                                 </StackPanel>
 
-                                <!-- Existing Credential (Left) -->
-                                <Border Grid.Row="1" Grid.Column="0" 
-                                       BorderBrush="{DynamicResource ControlBorderBrush}" 
-                                       BorderThickness="1" 
-                                       CornerRadius="4" 
+                                <Border Grid.Row="1" Grid.Column="0"
+                                       BorderBrush="{DynamicResource ControlBorderBrush}"
+                                       BorderThickness="1"
+                                       CornerRadius="4"
                                        Padding="10"
                                        Background="{DynamicResource ExistingCredentialBrush}">
                                     <StackPanel Spacing="6">
-                                        <TextBlock Text="📌 Existing in Vault" 
-                                                  FontWeight="Bold" 
-                                                  FontSize="{StaticResource Type.Small.Size}" 
+                                        <TextBlock Text="📌 Existing in Vault"
+                                                  FontWeight="Bold"
+                                                  FontSize="{StaticResource Type.Small.Size}"
                                                   Foreground="{DynamicResource SuccessTextBrush}"/>
                                         <StackPanel Spacing="4">
-                                            <TextBlock Text="{Binding ExistingTitle}" 
-                                                      FontWeight="SemiBold" 
+                                            <TextBlock Text="{Binding ExistingTitle}"
+                                                      FontWeight="SemiBold"
                                                       FontSize="{StaticResource Type.Body.Size}"/>
                                             <TextBlock>
                                                 <Run Text="👤 " FontSize="{StaticResource Type.Tiny.Size}"/>
@@ -82,37 +78,35 @@
                                                 <Run Text="🌐 " FontSize="{StaticResource Type.Tiny.Size}"/>
                                                 <Run Text="{Binding ExistingUrl}" FontSize="{StaticResource Type.Tiny.Size}" Foreground="{DynamicResource AccentBrush}"/>
                                             </TextBlock>
-                                            <TextBlock Text="{Binding ExistingModified}" 
-                                                      FontSize="{StaticResource Type.Micro.Size}" 
+                                            <TextBlock Text="{Binding ExistingModified}"
+                                                      FontSize="{StaticResource Type.Micro.Size}"
                                                       Foreground="{DynamicResource MutedTextBrush}"
                                                       Margin="0,4,0,0"/>
                                         </StackPanel>
                                     </StackPanel>
                                 </Border>
 
-                                <!-- VS Separator -->
-                                <TextBlock Grid.Row="1" Grid.Column="1" 
-                                          Text="⚡" 
-                                          FontSize="{StaticResource Type.Icon.Size}" 
-                                          VerticalAlignment="Center" 
-                                          HorizontalAlignment="Center" 
+                                <TextBlock Grid.Row="1" Grid.Column="1"
+                                          Text="⚡"
+                                          FontSize="{StaticResource Type.Icon.Size}"
+                                          VerticalAlignment="Center"
+                                          HorizontalAlignment="Center"
                                           Margin="12,0"/>
 
-                                <!-- New Credential (Right) -->
-                                <Border Grid.Row="1" Grid.Column="2" 
-                                       BorderBrush="{DynamicResource ControlBorderBrush}" 
-                                       BorderThickness="1" 
-                                       CornerRadius="4" 
+                                <Border Grid.Row="1" Grid.Column="2"
+                                       BorderBrush="{DynamicResource ControlBorderBrush}"
+                                       BorderThickness="1"
+                                       CornerRadius="4"
                                        Padding="10"
                                        Background="{DynamicResource NewCredentialBrush}">
                                     <StackPanel Spacing="6">
-                                        <TextBlock Text="✨ New from Import" 
-                                                  FontWeight="Bold" 
-                                                  FontSize="{StaticResource Type.Small.Size}" 
+                                        <TextBlock Text="✨ New from Import"
+                                                  FontWeight="Bold"
+                                                  FontSize="{StaticResource Type.Small.Size}"
                                                   Foreground="{DynamicResource AccentBrush}"/>
                                         <StackPanel Spacing="4">
-                                            <TextBlock Text="{Binding NewTitle}" 
-                                                      FontWeight="SemiBold" 
+                                            <TextBlock Text="{Binding NewTitle}"
+                                                      FontWeight="SemiBold"
                                                       FontSize="{StaticResource Type.Body.Size}"/>
                                             <TextBlock>
                                                 <Run Text="👤 " FontSize="{StaticResource Type.Tiny.Size}"/>
@@ -130,30 +124,29 @@
                                     </StackPanel>
                                 </Border>
 
-                                <!-- Action Buttons -->
-                                <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" 
-                                           Orientation="Horizontal" 
-                                           HorizontalAlignment="Center" 
-                                           Spacing="12" 
+                                <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
+                                           Orientation="Horizontal"
+                                           HorizontalAlignment="Center"
+                                           Spacing="12"
                                            Margin="0,12,0,0">
-                                    <Button Content="⬅️ Keep Existing" 
-                                           Width="140" 
+                                    <Button Content="⬅️ Keep Existing"
+                                           Width="140"
                                            Command="{Binding $parent[Window].DataContext.KeepExistingCommand}"
                                            CommandParameter="{Binding}"
                                            Classes="liquid-glass compact"/>
-                                    <Button Content="➡️ Keep New" 
-                                           Width="140" 
+                                    <Button Content="➡️ Keep New"
+                                           Width="140"
                                            Command="{Binding $parent[Window].DataContext.KeepNewCommand}"
                                            CommandParameter="{Binding}"
                                            Classes="liquid-glass compact primary"/>
-                                    <Button Content="📥 Keep Both" 
-                                           Width="140" 
+                                    <Button Content="📥 Keep Both"
+                                           Width="140"
                                            Command="{Binding $parent[Window].DataContext.KeepBothCommand}"
                                            CommandParameter="{Binding}"
                                            Classes="liquid-glass compact"/>
-                                    <TextBlock Text="{Binding ChoiceIndicator}" 
-                                              FontWeight="Bold" 
-                                              FontSize="{StaticResource Type.Label.Size}" 
+                                    <TextBlock Text="{Binding ChoiceIndicator}"
+                                              FontWeight="Bold"
+                                              FontSize="{StaticResource Type.Label.Size}"
                                               VerticalAlignment="Center"
                                               Margin="12,0,0,0"/>
                                 </StackPanel>
@@ -164,34 +157,31 @@
             </ItemsControl>
         </ScrollViewer>
 
-        <!-- Footer Actions -->
-        <Border Grid.Row="2" 
-               BorderBrush="{DynamicResource ControlBorderBrush}" 
-               BorderThickness="0,1,0,0" 
-               Padding="0,16,0,0" 
+        <Border Grid.Row="2"
+               BorderBrush="{DynamicResource ControlBorderBrush}"
+               BorderThickness="0,1,0,0"
+               Padding="0,16,0,0"
                Margin="0,16,0,0">
             <Grid ColumnDefinitions="Auto,*,Auto,Auto">
-                
-                <!-- Quick Actions -->
+
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
-                    <controls:LiquidGlassButton Content="⬅️ Keep All Existing" 
-                           WidthOverride="150" 
+                    <controls:LiquidGlassButton Content="⬅️ Keep All Existing"
+                           WidthOverride="150"
                            Command="{Binding KeepAllExistingCommand}"/>
-                    <controls:LiquidGlassButton Content="➡️ Keep All New" 
-                           WidthOverride="150" 
+                    <controls:LiquidGlassButton Content="➡️ Keep All New"
+                           WidthOverride="150"
                            Command="{Binding KeepAllNewCommand}"/>
                 </StackPanel>
 
-                <!-- Dialog Buttons -->
-                <StackPanel Grid.Column="2" Grid.ColumnSpan="2" 
-                           Orientation="Horizontal" 
-                           HorizontalAlignment="Right" 
+                <StackPanel Grid.Column="2" Grid.ColumnSpan="2"
+                           Orientation="Horizontal"
+                           HorizontalAlignment="Right"
                            Spacing="12">
-                    <controls:LiquidGlassButton Content="Cancel Import" 
-                           WidthOverride="120" 
+                    <controls:LiquidGlassButton Content="Cancel Import"
+                           WidthOverride="120"
                            Command="{Binding CancelCommand}"/>
-                    <controls:LiquidGlassButton Content="Apply Choices" 
-                           WidthOverride="120" 
+                    <controls:LiquidGlassButton Content="Apply Choices"
+                           WidthOverride="120"
                            Command="{Binding ApplyCommand}"
                            IsPrimary="True"/>
                 </StackPanel>
@@ -215,3 +205,4 @@
         </Style>
     </views:ThemeAwareWindow.Styles>
 </views:ThemeAwareWindow>
+

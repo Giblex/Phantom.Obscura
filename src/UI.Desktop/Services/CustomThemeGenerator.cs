@@ -5,15 +5,10 @@ using System.Text;
 
 namespace PhantomVault.UI.Services
 {
-    /// <summary>
-    /// Generates a complete theme AXAML file from a small set of user-chosen base colors.
-    /// Derives all ~150 resource keys automatically.
-    /// </summary>
+
     public static class CustomThemeGenerator
     {
-        /// <summary>
-        /// Base colors the user picks in the theme editor.
-        /// </summary>
+
         public sealed class ThemeColors
         {
             public string Name { get; set; } = "My Theme";
@@ -30,18 +25,12 @@ namespace PhantomVault.UI.Services
             public string Error { get; set; } = "#F87171";
         }
 
-        /// <summary>
-        /// Gets the custom themes directory path.
-        /// </summary>
         public static string GetCustomThemesDir()
         {
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             return Path.Combine(appData, "PhantomVault", "custom-themes");
         }
 
-        /// <summary>
-        /// Generates and saves a theme AXAML file from user colors. Returns the file path.
-        /// </summary>
         public static string GenerateAndSave(ThemeColors colors, string? existingPath = null)
         {
             var dir = GetCustomThemesDir();
@@ -55,12 +44,9 @@ namespace PhantomVault.UI.Services
             return filePath;
         }
 
-        /// <summary>
-        /// Generates theme AXAML content from base colors.
-        /// </summary>
         public static string GenerateXaml(ThemeColors c)
         {
-            // Determine if this is a light or dark theme based on primary background luminance
+
             bool isDark = IsColorDark(c.PrimaryBackground);
             var controlFg = isDark ? c.PrimaryBackground : "#FFFFFF";
             var popupBg = isDark ? LightenColor(c.TextPrimary, 0.95) : "#FFFFFF";
@@ -88,7 +74,6 @@ namespace PhantomVault.UI.Services
             sb.AppendLine($"    <!-- Custom Theme: {EscapeXml(c.Name)} -->");
             sb.AppendLine();
 
-            // Color scale
             sb.AppendLine($"    <Color x:Key=\"Color.Navy900\">{c.PrimaryBackground}</Color>");
             sb.AppendLine($"    <Color x:Key=\"Color.Navy800\">{MixColor(c.PrimaryBackground, c.SecondaryBackground, 0.5)}</Color>");
             sb.AppendLine($"    <Color x:Key=\"Color.Navy700\">{c.SecondaryBackground}</Color>");
@@ -111,7 +96,6 @@ namespace PhantomVault.UI.Services
             sb.AppendLine($"    <Color x:Key=\"Color.Info\">{info}</Color>");
             sb.AppendLine();
 
-            // Brushes
             sb.AppendLine($"    <SolidColorBrush x:Key=\"WindowBackgroundBrush\" Color=\"{windowBg}\"/>");
             sb.AppendLine($"    <SolidColorBrush x:Key=\"HeaderBackgroundBrush\" Color=\"{headerBg}\"/>");
             sb.AppendLine($"    <SolidColorBrush x:Key=\"FooterBackgroundBrush\" Color=\"{headerBg}\"/>");
@@ -247,13 +231,10 @@ namespace PhantomVault.UI.Services
             return sb.ToString();
         }
 
-        /// <summary>
-        /// Generates theme AXAML with Attestor-specific brush keys appended.
-        /// </summary>
         public static string GenerateAttestorXaml(ThemeColors c)
         {
             var baseXaml = GenerateXaml(c);
-            // Insert Attestor section before closing </ResourceDictionary>
+
             var insertPoint = baseXaml.LastIndexOf("</ResourceDictionary>", StringComparison.Ordinal);
             if (insertPoint < 0) return baseXaml;
 
@@ -331,8 +312,6 @@ namespace PhantomVault.UI.Services
             return result;
         }
 
-        // ──── Color helpers ────
-
         private static string SanitizeId(string name) =>
             new string(name.Where(c => char.IsLetterOrDigit(c) || c == '_').ToArray());
 
@@ -352,7 +331,7 @@ namespace PhantomVault.UI.Services
         private static void ParseRgb(string hex, out int r, out int g, out int b)
         {
             hex = StripHash(hex);
-            // Skip alpha if 8-char hex
+
             if (hex.Length == 8) hex = hex.Substring(2);
             r = Convert.ToInt32(hex.Substring(0, 2), 16);
             g = Convert.ToInt32(hex.Substring(2, 2), 16);
@@ -392,10 +371,6 @@ namespace PhantomVault.UI.Services
             return ToHex(r, g, b);
         }
 
-        /// <summary>
-        /// Lists all custom theme files from the custom themes directory.
-        /// Returns a list of (themeId, displayName, filePath) tuples.
-        /// </summary>
         public static List<(string Id, string DisplayName, string FilePath)> DiscoverCustomThemes()
         {
             var results = new List<(string, string, string)>();
@@ -405,7 +380,7 @@ namespace PhantomVault.UI.Services
             foreach (var file in Directory.GetFiles(dir, "Theme.Custom_*.axaml"))
             {
                 var fileName = Path.GetFileNameWithoutExtension(file);
-                // Parse "Theme.Custom_MyThemeName" -> id="Custom_MyThemeName", display="MyThemeName"
+
                 var id = fileName.Replace("Theme.", "");
                 var displayName = id.Replace("Custom_", "").Replace("_", " ");
                 results.Add((id, displayName, file));
@@ -414,9 +389,6 @@ namespace PhantomVault.UI.Services
             return results;
         }
 
-        /// <summary>
-        /// Deletes a custom theme file.
-        /// </summary>
         public static bool DeleteCustomTheme(string filePath)
         {
             try
@@ -427,8 +399,9 @@ namespace PhantomVault.UI.Services
                     return true;
                 }
             }
-            catch { /* ignore */ }
+            catch {  }
             return false;
         }
     }
 }
+

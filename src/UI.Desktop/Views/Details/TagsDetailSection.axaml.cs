@@ -10,3 +10,4 @@ public partial class TagsDetailSection : UserControl
         AvaloniaXamlLoader.Load(this);
     }
 }
+

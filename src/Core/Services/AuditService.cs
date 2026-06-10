@@ -8,9 +8,7 @@ using System.Text.Json;
 
 namespace PhantomVault.Core.Services
 {
-    /// <summary>
-    /// Lightweight audit logger with optional encryption and hash chaining.
-    /// </summary>
+
     public sealed class AuditService
     {
         private readonly EncryptionService? _encryptionService;
@@ -21,7 +19,6 @@ namespace PhantomVault.Core.Services
             _encryptionService = encryptionService;
         }
 
-        /// <summary>Call once after vault unlock to derive the audit log key.</summary>
         public void InitializeEncryption(byte[] vaultMasterKey, byte[] salt)
         {
             if (_encryptionService == null)
@@ -35,9 +32,6 @@ namespace PhantomVault.Core.Services
 
         public record AuditEntry(DateTimeOffset Timestamp, string Category, string Message, string? PreviousHash, string Hash);
 
-        /// <summary>
-        /// Append an audit entry. If encryption is not initialized, falls back to plaintext logging.
-        /// </summary>
         public void LogEvent(string logFilePath, string category, string message)
         {
             if (string.IsNullOrWhiteSpace(logFilePath))
@@ -58,7 +52,7 @@ namespace PhantomVault.Core.Services
                         var last = JsonSerializer.Deserialize<AuditEntry>(lastLine);
                         prevHash = last?.Hash;
                     }
-                    catch { /* ignore */ }
+                    catch {  }
                 }
             }
 
@@ -94,7 +88,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>Verify encrypted audit log chain. Returns true if valid.</summary>
         public bool VerifyAuditLog(string logFilePath, out string? error)
         {
             error = null;
@@ -156,3 +149,4 @@ namespace PhantomVault.Core.Services
         }
     }
 }
+

@@ -13,9 +13,7 @@ using PhantomVault.UI.ViewModels;
 
 namespace PhantomVault.UI.Views
 {
-    /// <summary>
-    /// First-time setup wizard window that guides users through vault creation.
-    /// </summary>
+
     public partial class SetupWizardWindow : ThemeAwareWindow
     {
         private bool _entropyLeftPressed;
@@ -23,7 +21,7 @@ namespace PhantomVault.UI.Views
 
         public SetupWizardWindow()
         {
-            // Fixed dark navy — pre-vault screens never follow user theme
+
             ThemeScope.SetIsThemed(this, false);
             InitializeComponent();
             var viewModel = new SetupWizardViewModel();
@@ -34,7 +32,7 @@ namespace PhantomVault.UI.Views
 
         public SetupWizardWindow(SetupWizardViewModel viewModel)
         {
-            // Fixed dark navy — pre-vault screens never follow user theme
+
             ThemeScope.SetIsThemed(this, false);
             InitializeComponent();
             viewModel.SetOwnerWindow(this);
@@ -91,9 +89,6 @@ namespace PhantomVault.UI.Views
         }
     }
 
-    /// <summary>
-    /// Converts step number to visibility (true if current step matches).
-    /// </summary>
     public class StepVisibilityConverter : IValueConverter
     {
         public static readonly StepVisibilityConverter Instance = new();
@@ -111,9 +106,6 @@ namespace PhantomVault.UI.Views
             => BindingOperations.DoNothing;
     }
 
-    /// <summary>
-    /// Converts step number to progress indicator background (completed, current, or pending).
-    /// </summary>
     public class StepProgressConverter : IValueConverter
     {
         public static readonly StepProgressConverter Instance = new();
@@ -142,9 +134,6 @@ namespace PhantomVault.UI.Views
             => BindingOperations.DoNothing;
     }
 
-    /// <summary>
-    /// Converts storage location to radio button selection.
-    /// </summary>
     public class StorageLocationConverter : IValueConverter
     {
         public static readonly StorageLocationConverter Instance = new();
@@ -164,9 +153,6 @@ namespace PhantomVault.UI.Views
         }
     }
 
-    /// <summary>
-    /// Converts storage location to border highlight.
-    /// </summary>
     public class StorageLocationBorderConverter : IValueConverter
     {
         public static readonly StorageLocationBorderConverter Instance = new();
@@ -183,9 +169,6 @@ namespace PhantomVault.UI.Views
             => BindingOperations.DoNothing;
     }
 
-    /// <summary>
-    /// Converts password strength to progress value.
-    /// </summary>
     public class PasswordStrengthValueConverter : IValueConverter
     {
         public static readonly PasswordStrengthValueConverter Instance = new();
@@ -207,9 +190,6 @@ namespace PhantomVault.UI.Views
             => BindingOperations.DoNothing;
     }
 
-    /// <summary>
-    /// Converts password strength to color.
-    /// </summary>
     public class PasswordStrengthColorConverter : IValueConverter
     {
         public static readonly PasswordStrengthColorConverter Instance = new();
@@ -231,9 +211,6 @@ namespace PhantomVault.UI.Views
             => BindingOperations.DoNothing;
     }
 
-    /// <summary>
-    /// Converts password match to icon.
-    /// </summary>
     public class PasswordMatchIconConverter : IValueConverter
     {
         public static readonly PasswordMatchIconConverter Instance = new();
@@ -247,9 +224,6 @@ namespace PhantomVault.UI.Views
             => BindingOperations.DoNothing;
     }
 
-    /// <summary>
-    /// Converts password match to text.
-    /// </summary>
     public class PasswordMatchTextConverter : IValueConverter
     {
         public static readonly PasswordMatchTextConverter Instance = new();
@@ -263,9 +237,6 @@ namespace PhantomVault.UI.Views
             => BindingOperations.DoNothing;
     }
 
-    /// <summary>
-    /// Converts password match to color.
-    /// </summary>
     public class PasswordMatchColorConverter : IValueConverter
     {
         public static readonly PasswordMatchColorConverter Instance = new();
@@ -281,9 +252,6 @@ namespace PhantomVault.UI.Views
             => BindingOperations.DoNothing;
     }
 
-    /// <summary>
-    /// Converts bool to "Enabled/Disabled" text.
-    /// </summary>
     public class BoolToEnabledConverter : IValueConverter
     {
         public static readonly BoolToEnabledConverter Instance = new();
@@ -297,9 +265,6 @@ namespace PhantomVault.UI.Views
             => BindingOperations.DoNothing;
     }
 
-    /// <summary>
-    /// Converts bool to "Will be generated/Not used" text.
-    /// </summary>
     public class BoolToGeneratedConverter : IValueConverter
     {
         public static readonly BoolToGeneratedConverter Instance = new();
@@ -313,9 +278,6 @@ namespace PhantomVault.UI.Views
             => BindingOperations.DoNothing;
     }
 
-    /// <summary>
-    /// Converts bool to status background color (green for available, orange for unavailable).
-    /// </summary>
     public class BoolToStatusBackgroundConverter : IValueConverter
     {
         public static readonly BoolToStatusBackgroundConverter Instance = new();
@@ -324,17 +286,14 @@ namespace PhantomVault.UI.Views
         {
             bool available = value is true;
             return available
-                ? new SolidColorBrush(Color.Parse("#2D4A3A")) // Green-ish
-                : new SolidColorBrush(Color.Parse("#4A3A2D")); // Orange-ish
+                ? new SolidColorBrush(Color.Parse("#2D4A3A"))
+                : new SolidColorBrush(Color.Parse("#4A3A2D"));
         }
 
         public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
             => BindingOperations.DoNothing;
     }
 
-    /// <summary>
-    /// Converts bool to check/cross icon.
-    /// </summary>
     public class BoolToCheckConverter : IValueConverter
     {
         public static readonly BoolToCheckConverter Instance = new();
@@ -348,9 +307,6 @@ namespace PhantomVault.UI.Views
             => BindingOperations.DoNothing;
     }
 
-    /// <summary>
-    /// Converts current step and target step to determine if step is clickable (completed steps only).
-    /// </summary>
     public class StepClickableConverter : IValueConverter
     {
         public static readonly StepClickableConverter Instance = new();
@@ -359,7 +315,7 @@ namespace PhantomVault.UI.Views
         {
             if (value is int currentStep && parameter is string stepParam && int.TryParse(stepParam, out int targetStep))
             {
-                // Can click completed steps (before current step)
+
                 return currentStep > targetStep;
             }
             return false;
@@ -369,9 +325,6 @@ namespace PhantomVault.UI.Views
             => BindingOperations.DoNothing;
     }
 
-    /// <summary>
-    /// Converts current step to cursor for clickable steps.
-    /// </summary>
     public class StepCursorConverter : IValueConverter
     {
         public static readonly StepCursorConverter Instance = new();
@@ -380,7 +333,7 @@ namespace PhantomVault.UI.Views
         {
             if (value is int currentStep && parameter is string stepParam && int.TryParse(stepParam, out int targetStep))
             {
-                // Completed steps get Hand cursor
+
                 return currentStep > targetStep ? Avalonia.Input.StandardCursorType.Hand : Avalonia.Input.StandardCursorType.Arrow;
             }
             return Avalonia.Input.StandardCursorType.Arrow;
@@ -390,3 +343,4 @@ namespace PhantomVault.UI.Views
             => BindingOperations.DoNothing;
     }
 }
+

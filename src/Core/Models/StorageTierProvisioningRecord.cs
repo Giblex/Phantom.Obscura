@@ -3,11 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace PhantomVault.Core.Models
 {
-    /// <summary>
-    /// Captures the storage tier that was provisioned for a vault and the
-    /// transport contract needed to migrate it later without guessing from
-    /// media state alone.
-    /// </summary>
+
     public sealed class StorageTierProvisioningRecord
     {
         [JsonPropertyName("protectionTier")]
@@ -59,3 +55,4 @@ namespace PhantomVault.Core.Models
             = null;
     }
 }
+

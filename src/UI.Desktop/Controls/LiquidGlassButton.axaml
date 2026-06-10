@@ -4,7 +4,6 @@
              x:Class="Giblex.Controls.LiquidGlassButton"
              x:Name="RootControl">
 
-  <!-- This UserControl wraps a real Button with liquid-glass styling -->
   <Button x:Name="PART_Button"
           Classes="liquid-glass"
           HorizontalContentAlignment="Center"

@@ -5,10 +5,7 @@ using Avalonia.Media;
 
 namespace PhantomVault.UI.Converters
 {
-    /// <summary>
-    /// Returns a muted grey brush when the category IsTrash, otherwise transparent.
-    /// Used to visually distinguish the locked rubbish-bin tile.
-    /// </summary>
+
     public sealed class IsTrashToBrushConverter : IValueConverter
     {
         public static readonly IsTrashToBrushConverter Instance = new();
@@ -27,3 +24,4 @@ namespace PhantomVault.UI.Converters
             => throw new NotSupportedException();
     }
 }
+

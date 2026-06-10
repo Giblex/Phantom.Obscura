@@ -33,11 +33,9 @@ namespace PhantomVault.UI.ViewModels
             ExportLogsCommand = ReactiveCommand.CreateFromTask(ExportLogs);
             OpenLogFolderCommand = ReactiveCommand.Create(OpenLogFolder);
 
-            // Watch for search text changes
             this.WhenAnyValue(x => x.SearchText, x => x.SelectedLogLevel)
                 .Subscribe(async _ => await FilterLogs());
 
-            // Load logs on initialization
             _ = LoadLogs();
         }
 
@@ -96,7 +94,7 @@ namespace PhantomVault.UI.ViewModels
 
                     var logFiles = Directory.GetFiles(_logPath, "*.log")
                         .OrderByDescending(f => File.GetLastWriteTime(f))
-                        .Take(5); // Load last 5 log files
+                        .Take(5);
 
                     if (!logFiles.Any())
                     {
@@ -120,7 +118,6 @@ namespace PhantomVault.UI.ViewModels
                             var lines = File.ReadAllLines(logFile);
                             totalLines += lines.Length;
 
-                            // Take last 500 lines from each file to prevent memory issues
                             var recentLines = lines.TakeLast(500);
                             foreach (var line in recentLines)
                             {
@@ -176,20 +173,19 @@ namespace PhantomVault.UI.ViewModels
 
                 foreach (var line in lines)
                 {
-                    // Apply level filter
+
                     if (levelFilter != null && !line.Contains(levelFilter))
                     {
-                        // Keep separator lines
+
                         if (!line.StartsWith("==="))
                             continue;
                     }
 
-                    // Apply search filter
                     if (!string.IsNullOrWhiteSpace(SearchText))
                     {
                         if (!line.Contains(SearchText, StringComparison.OrdinalIgnoreCase))
                         {
-                            // Keep separator lines
+
                             if (!line.StartsWith("==="))
                                 continue;
                         }
@@ -288,3 +284,4 @@ namespace PhantomVault.UI.ViewModels
         }
     }
 }
+

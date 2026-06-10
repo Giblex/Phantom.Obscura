@@ -5,15 +5,12 @@ using System.IO;
 
 namespace PhantomVault.Core.Services
 {
-    /// <summary>
-    /// Provides comprehensive, user-friendly error messages for all PhantomVault operations.
-    /// Includes troubleshooting guidance and actionable steps for resolution.
-    /// </summary>
+
     public static class ErrorMessageService
     {
         private static readonly Dictionary<string, ErrorMessageInfo> _errorMessages = new()
         {
-            // Authentication Errors
+
             ["AUTH_INVALID_PASSWORD"] = new()
             {
                 Title = "Incorrect Password",
@@ -69,7 +66,6 @@ namespace PhantomVault.Core.Services
                 Severity = ErrorSeverity.High
             },
 
-            // USB/Storage Errors
             ["USB_NOT_FOUND"] = new()
             {
                 Title = "USB Device Not Found",
@@ -113,7 +109,6 @@ namespace PhantomVault.Core.Services
                 Severity = ErrorSeverity.Critical
             },
 
-            // Encryption Errors
             ["CRYPTO_AUTHENTICATION_TAG_MISMATCH"] = new()
             {
                 Title = "Data Authentication Failed",
@@ -159,7 +154,6 @@ namespace PhantomVault.Core.Services
                 Severity = ErrorSeverity.Critical
             },
 
-            // Vault Errors
             ["VAULT_CORRUPTED"] = new()
             {
                 Title = "Vault Data Corrupted",
@@ -204,7 +198,6 @@ namespace PhantomVault.Core.Services
                 Severity = ErrorSeverity.High
             },
 
-            // VeraCrypt Errors
             ["VERACRYPT_NOT_FOUND"] = new()
             {
                 Title = "VeraCrypt Not Installed",
@@ -234,7 +227,6 @@ namespace PhantomVault.Core.Services
                 Severity = ErrorSeverity.High
             },
 
-            // Import/Export Errors
             ["IMPORT_UNSUPPORTED_FORMAT"] = new()
             {
                 Title = "Unsupported Import Format",
@@ -263,7 +255,6 @@ namespace PhantomVault.Core.Services
                 Severity = ErrorSeverity.Medium
             },
 
-            // Policy Errors
             ["POLICY_SIGNATURE_INVALID"] = new()
             {
                 Title = "Invalid Policy Signature",
@@ -293,7 +284,6 @@ namespace PhantomVault.Core.Services
                 Severity = ErrorSeverity.High
             },
 
-            // System Errors
             ["SYSTEM_INSUFFICIENT_MEMORY"] = new()
             {
                 Title = "Insufficient Memory",
@@ -323,9 +313,6 @@ namespace PhantomVault.Core.Services
             }
         };
 
-        /// <summary>
-        /// Gets a comprehensive error message with troubleshooting steps.
-        /// </summary>
         public static ErrorMessageInfo GetErrorMessage(string errorCode, params object[] formatArgs)
         {
             if (_errorMessages.TryGetValue(errorCode, out var errorInfo))
@@ -355,28 +342,25 @@ namespace PhantomVault.Core.Services
             };
         }
 
-        /// <summary>
-        /// Gets an error message from an exception.
-        /// </summary>
         public static ErrorMessageInfo GetErrorMessageFromException(Exception ex)
         {
             return ex switch
             {
                 CryptographicException when ex.Message.Contains("authentication tag") =>
                     GetErrorMessage("CRYPTO_AUTHENTICATION_TAG_MISMATCH"),
-                
+
                 CryptographicException =>
                     GetErrorMessage("CRYPTO_DECRYPTION_FAILED"),
-                
+
                 UnauthorizedAccessException =>
                     GetErrorMessage("SYSTEM_PERMISSION_DENIED"),
-                
+
                 OutOfMemoryException =>
                     GetErrorMessage("SYSTEM_INSUFFICIENT_MEMORY"),
-                
+
                 FileNotFoundException =>
                     GetErrorMessage("AUTH_KEYFILE_NOT_FOUND"),
-                
+
                 _ => new ErrorMessageInfo
                 {
                     Title = "Error",
@@ -414,3 +398,4 @@ namespace PhantomVault.Core.Services
         Critical
     }
 }
+

@@ -17,9 +17,7 @@ using PhantomVault.UI.Views.Dialogs;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// ViewModel for importing credentials from external formats (CSV, KeePass XML, JSON).
-    /// </summary>
+
     public sealed class ImportViewModel : ReactiveObject
     {
         private readonly ImportExportService _importExportService;
@@ -44,7 +42,6 @@ namespace PhantomVault.UI.ViewModels
             _dialogService = new DialogService();
             _existingCredentials = existingCredentials ?? new List<Credential>();
 
-            // Place the most common import formats first: JSON and CSV
             Formats = new ObservableCollection<string>
             {
                 "JSON",
@@ -61,7 +58,6 @@ namespace PhantomVault.UI.ViewModels
                 "Firefox CSV"
             };
 
-            // Build a lightweight representation for tile UI (name + icon)
             ImportMethods = new ObservableCollection<ImportMethod>(
                 Formats.Select(f => new ImportMethod { Name = f, IconSource = GetIconForFormat(f) })
             );
@@ -75,14 +71,13 @@ namespace PhantomVault.UI.ViewModels
                     (file, importing) => !string.IsNullOrEmpty(file) && !importing));
             StartImportCommand = ReactiveCommand.CreateFromTask<string>(async format =>
             {
-                // Set selected format and immediately open file picker; start import automatically after file selection
+
                 SelectedFormat = format;
                 var fileSelected = await BrowseForFileAsync();
 
-                // If a file was selected, start the import immediately
                 if (fileSelected && !string.IsNullOrEmpty(SelectedFile))
                 {
-                    // Small delay to allow UI to update status/preview
+
                     await Task.Delay(120);
                     await ExecuteImportAsync();
                 }
@@ -143,16 +138,13 @@ namespace PhantomVault.UI.ViewModels
         public sealed class ImportMethod
         {
             public string Name { get; set; } = string.Empty;
-            // Use a Bitmap so the Image control can bind directly to an IImage instance
+
             public Bitmap? IconSource { get; set; }
         }
 
         private Bitmap? GetIconForFormat(string format)
         {
-            // Map format names to the embedded provider logos that ship as
-            // AvaloniaResource under "Entry Logos/Import logos". These are
-            // loaded via avares:// (the previous file-system path under
-            // Assets/Icons/Logos/import never existed, so all icons were blank).
+
             var fileName = format switch
             {
                 "1Password CSV" => "Password.png",
@@ -239,10 +231,8 @@ namespace PhantomVault.UI.ViewModels
                 SelectedFile = files[0].Path.LocalPath;
                 StatusMessage = $"Selected: {System.IO.Path.GetFileName(SelectedFile)}";
 
-                // Auto-detect format
                 await AutoDetectFormatAsync();
 
-                // Load preview
                 await LoadPreviewAsync();
                 return true;
             }
@@ -260,7 +250,7 @@ namespace PhantomVault.UI.ViewModels
 
                 if (!string.IsNullOrEmpty(detectedFormat))
                 {
-                    // Check if detected format is in our supported list
+
                     if (Formats.Contains(detectedFormat))
                     {
                         SelectedFormat = detectedFormat;
@@ -330,7 +320,7 @@ namespace PhantomVault.UI.ViewModels
                 }
 
                 PreviewCount = credentials.Count;
-                PreviewCredentials = new ObservableCollection<Credential>(credentials.Take(5)); // Show first 5
+                PreviewCredentials = new ObservableCollection<Credential>(credentials.Take(5));
                 StatusMessage = $"Found {PreviewCount} credential(s). Preview showing first {Math.Min(5, PreviewCount)}.";
             }
             catch (Exception ex)
@@ -383,7 +373,6 @@ namespace PhantomVault.UI.ViewModels
                     );
                 }
 
-                // Handle duplicates if any
                 var credentialsToImport = importResult.SuccessfulCredentials;
                 if (importResult.Duplicates.Any())
                 {
@@ -398,7 +387,7 @@ namespace PhantomVault.UI.ViewModels
 
                     if (reviewChoice)
                     {
-                        // Show merge window for manual selection
+
                         var mergeViewModel = new MergeCredentialsViewModel(importResult.Duplicates);
                         var mergeWindow = new Views.MergeCredentialsWindow
                         {
@@ -409,7 +398,7 @@ namespace PhantomVault.UI.ViewModels
 
                         if (mergeViewModel.IsMerged)
                         {
-                            // Apply user choices from the merge window
+
                             credentialsToImport = ApplyMergeChoices(
                                 importResult.SuccessfulCredentials,
                                 mergeViewModel.ResolvedDuplicates
@@ -417,7 +406,7 @@ namespace PhantomVault.UI.ViewModels
                         }
                         else
                         {
-                            // User cancelled - abort import
+
                             StatusMessage = "Import cancelled by user.";
                             IsImporting = false;
                             return;
@@ -425,7 +414,7 @@ namespace PhantomVault.UI.ViewModels
                     }
                     else
                     {
-                        // Auto-apply smart default resolution (keep most recent)
+
                         credentialsToImport = _importExportService.ApplyDuplicateResolution(
                             importResult.SuccessfulCredentials,
                             importResult.Duplicates
@@ -433,14 +422,12 @@ namespace PhantomVault.UI.ViewModels
                     }
                 }
 
-                // Show import summary
                 await _dialogService.ShowImportSummaryAsync(
                     "Import Complete",
                     importResult,
                     _ownerWindow
                 );
 
-                // Return credentials to caller
                 if (credentialsToImport.Any())
                 {
                     ImportCompleted?.Invoke(this, credentialsToImport);
@@ -475,18 +462,16 @@ namespace PhantomVault.UI.ViewModels
             var result = new List<Credential>();
             var duplicateNewCredentials = new HashSet<Credential>(resolvedDuplicates.Select(d => d.NewCredential));
 
-            // Add all non-duplicate credentials
             result.AddRange(allCredentials.Where(c => !duplicateNewCredentials.Contains(c)));
 
-            // Process resolved duplicates based on user choices
             foreach (var duplicate in resolvedDuplicates)
             {
                 if (duplicate.KeepNew)
                 {
-                    // Keep new credential (will replace existing)
+
                     result.Add(duplicate.NewCredential);
                 }
-                // If KeepNew is false, we keep existing (don't add new credential)
+
             }
 
             return result;
@@ -503,29 +488,27 @@ namespace PhantomVault.UI.ViewModels
                 duplicates.Select(d => d.ExistingCredential).Where(c => c != null)!
             );
 
-            // Add all non-duplicate credentials
             result.AddRange(allCredentials.Where(c => !duplicateNewCredentials.Contains(c)));
 
-            // Process user choices for duplicates
             foreach (var duplicate in duplicates)
             {
                 var choice = userChoices.ContainsKey(duplicate)
                     ? userChoices[duplicate]
-                    : DuplicateChoice.KeepNew; // Default to keep new
+                    : DuplicateChoice.KeepNew;
 
                 switch (choice)
                 {
                     case DuplicateChoice.KeepExisting:
-                        // Don't add the new credential (existing is already in vault)
+
                         break;
 
                     case DuplicateChoice.KeepNew:
-                        // Add new credential (will replace existing)
+
                         result.Add(duplicate.NewCredential);
                         break;
 
                     case DuplicateChoice.KeepBoth:
-                        // Add new credential with modified title to avoid confusion
+
                         var newCred = duplicate.NewCredential;
                         if (!string.IsNullOrEmpty(newCred.Title) && !newCred.Title.EndsWith(" (imported)"))
                         {
@@ -541,7 +524,7 @@ namespace PhantomVault.UI.ViewModels
 
         private async Task<List<Credential>> ImportFromKdbxAsync()
         {
-            // Prompt for password and keyfile
+
             var credentials = await KeePassPasswordDialog.ShowAsync(_ownerWindow);
             if (credentials == null || string.IsNullOrWhiteSpace(credentials.Value.password))
             {
@@ -551,7 +534,6 @@ namespace PhantomVault.UI.ViewModels
 
             var (password, keyfilePath) = credentials.Value;
 
-            // Use KeePassImportService to import
             var keePassService = new KeePassImportService();
             var progressReporter = new Progress<int>(percent =>
             {
@@ -581,3 +563,4 @@ namespace PhantomVault.UI.ViewModels
         }
     }
 }
+

@@ -9,7 +9,7 @@
              Stretch="Uniform"
              UseLayoutRounding="False">
         <Canvas x:Name="IconCanvas" Width="24" Height="24">
-            <!-- SVG content will be loaded dynamically -->
+
             <Path x:Name="IconPath"
                   Fill="Transparent"
                   Stroke="{Binding $parent[UserControl].IconColor}"
@@ -20,3 +20,4 @@
     </Viewbox>
 
 </UserControl>
+

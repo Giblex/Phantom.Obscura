@@ -56,14 +56,14 @@ jobs:
           "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0" "platform-tools"
 
       - name: Restore .NET workloads
-        run: dotnet workload restore src/UI.Android/PhantomVault.Android.csproj
+        run: dotnet workload restore src/UI.Android.Avalonia/PhantomVault.UI.Android.csproj
 
       - name: Restore NuGet packages
-        run: dotnet restore src/UI.Android/PhantomVault.Android.csproj
+        run: dotnet restore src/UI.Android.Avalonia/PhantomVault.UI.Android.csproj
 
       - name: Publish APK (debug-signed, sideloadable)
         run: |
-          dotnet publish src/UI.Android/PhantomVault.Android.csproj \
+          dotnet publish src/UI.Android.Avalonia/PhantomVault.UI.Android.csproj \
             -f net10.0-android \
             -c Release \
             -p:AndroidKeyStore=false \

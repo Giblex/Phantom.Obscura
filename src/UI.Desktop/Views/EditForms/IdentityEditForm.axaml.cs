@@ -10,3 +10,4 @@ public partial class IdentityEditForm : UserControl
         AvaloniaXamlLoader.Load(this);
     }
 }
+

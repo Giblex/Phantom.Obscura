@@ -8,40 +8,21 @@ using PhantomVault.Core.Models;
 
 namespace PhantomVault.Core.Services.Security
 {
-    /// <summary>
-    /// Options for configuring decoy vault behavior.
-    /// </summary>
+
     public sealed class DecoyVaultOptions
     {
-        /// <summary>
-        /// Number of fake credentials to generate (default: random 15-30)
-        /// </summary>
+
         public int? CredentialCount { get; set; }
 
-        /// <summary>
-        /// Seed for deterministic decoy generation (null = random)
-        /// </summary>
         public int? RandomSeed { get; set; }
 
-        /// <summary>
-        /// Path where decoy vault database should be stored
-        /// </summary>
         public string? DecoyDatabasePath { get; set; }
 
-        /// <summary>
-        /// Whether to log decoy activation (for security auditing)
-        /// </summary>
         public bool LogActivation { get; set; } = true;
 
-        /// <summary>
-        /// Whether to simulate read-only mode in decoy (prevents attacker modifications)
-        /// </summary>
         public bool SimulateReadOnly { get; set; } = true;
     }
 
-    /// <summary>
-    /// Manages the decoy vault lifecycle including generation, activation, and state management.
-    /// </summary>
     public sealed class DecoyVaultService
     {
         private readonly ILogger<DecoyVaultService>? _logger;
@@ -51,14 +32,8 @@ namespace PhantomVault.Core.Services.Security
         private VaultDatabase? _decoyDatabase;
         private bool _isDecoyActive;
 
-        /// <summary>
-        /// Returns true if the decoy vault is currently active
-        /// </summary>
         public bool IsDecoyActive => _isDecoyActive;
 
-        /// <summary>
-        /// Returns the active decoy database (null if not activated)
-        /// </summary>
         public VaultDatabase? DecoyDatabase => _decoyDatabase;
 
         public DecoyVaultService(DecoyVaultOptions? options = null, ILogger<DecoyVaultService>? logger = null)
@@ -68,11 +43,6 @@ namespace PhantomVault.Core.Services.Security
             _generator = new DecoyCredentialGenerator(_options.RandomSeed);
         }
 
-        /// <summary>
-        /// Generates and activates a decoy vault database.
-        /// This creates fake credentials that appear realistic to an attacker.
-        /// </summary>
-        /// <returns>The generated decoy database</returns>
         public async Task<VaultDatabase> ActivateDecoyVaultAsync()
         {
             if (_isDecoyActive)
@@ -83,24 +53,20 @@ namespace PhantomVault.Core.Services.Security
 
             _logger?.LogCritical("ACTIVATING DECOY VAULT - Suspected security compromise");
 
-            // Generate fake credentials
             var decoyCredentials = _generator.GenerateDecoyCredentials(_options.CredentialCount);
 
-            // Organize credentials into groups
             var groups = OrganizeCredentialsIntoGroups(decoyCredentials);
 
-            // Create decoy database
             _decoyDatabase = new VaultDatabase
             {
                 VaultName = "Personal Vault",
                 Description = "Secure Password Manager",
-                Created = DateTime.UtcNow.AddDays(-new Random().Next(180, 730)),
+                Created = DateTime.UtcNow.AddDays(-System.Security.Cryptography.RandomNumberGenerator.GetInt32(180, 730)),
                 Groups = groups
             };
 
             _isDecoyActive = true;
 
-            // Optionally persist decoy to disk for future use
             if (!string.IsNullOrEmpty(_options.DecoyDatabasePath))
             {
                 await PersistDecoyDatabaseAsync(_decoyDatabase, _options.DecoyDatabasePath);
@@ -119,10 +85,6 @@ namespace PhantomVault.Core.Services.Security
             return _decoyDatabase;
         }
 
-        /// <summary>
-        /// Deactivates the decoy vault and returns to normal operation.
-        /// WARNING: This should only be called during legitimate recovery operations.
-        /// </summary>
         public void DeactivateDecoyVault()
         {
             if (!_isDecoyActive)
@@ -137,14 +99,10 @@ namespace PhantomVault.Core.Services.Security
             _isDecoyActive = false;
         }
 
-        /// <summary>
-        /// Organizes flat list of credentials into groups by their Group property.
-        /// </summary>
         private List<VaultGroup> OrganizeCredentialsIntoGroups(List<Credential> credentials)
         {
             var groups = new List<VaultGroup>();
 
-            // Group credentials by their Group property
             var grouped = credentials.GroupBy(c => string.IsNullOrEmpty(c.Group) ? "Uncategorized" : c.Group);
 
             foreach (var group in grouped)
@@ -197,10 +155,6 @@ namespace PhantomVault.Core.Services.Security
             }
         }
 
-        /// <summary>
-        /// Generates a plausible fake master password hash for the decoy vault.
-        /// This is used to make the decoy appear legitimate during authentication.
-        /// </summary>
         public string GenerateFakeMasterPasswordHash()
         {
             var fakeHash = Convert.ToBase64String(new byte[64]);
@@ -208,3 +162,4 @@ namespace PhantomVault.Core.Services.Security
         }
     }
 }
+

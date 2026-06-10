@@ -41,10 +41,7 @@ public sealed class LiquidGlassScrollChrome
     private const double RestingBorderOpacity = 0.46;
     private const double HoverBorderOpacity = 0.72;
     private const double PressedBorderOpacity = 0.82;
-    // Tuned for a calmer, less twitchy liquid-glass trace:
-    //   - smaller influence radius → border only reacts when pointer is nearby
-    //   - smaller trajectory fraction → smaller travel distance per pointer motion
-    //   - reduced midpoint bounce → softer settle when the pointer stops
+
     private const double PointerInfluenceRadius = 140.0;
     private const double MaxTrajectoryFraction = 0.08;
     private const double MidpointBounceFactor = 0.55;
@@ -380,8 +377,7 @@ public sealed class LiquidGlassScrollChrome
         var progress = GetProgressFromPointer(button, pointer);
         var delta = GetShortestProgressDelta(state.Progress, progress, button);
         var perimeter = GetPerimeter(button);
-        // Damped follow strength — keeps the trace from snapping to fast pointer
-        // motion. Lower coefficients = smoother, slower-moving border highlight.
+
         var speedFactor = Math.Clamp(pointerSpeed / 4800.0, 0.0, 1.0);
         var followStrength = 0.025 + (influence * 0.035) + (speedFactor * 0.025);
         var maxTrajectory = perimeter * MaxTrajectoryFraction;
@@ -504,7 +500,6 @@ public sealed class LiquidGlassScrollChrome
         var quarterArc = Math.PI * cornerInset / 2.0;
         var perimeter = (trackWidth * 2.0) + (trackHeight * 2.0) + (quarterArc * 4.0);
 
-        // Center the primary anchor on the top-left rounded corner arc.
         var anchor = perimeter - (quarterArc / 2.0);
         return NormalizeProgress(anchor, perimeter);
     }
@@ -560,3 +555,4 @@ public sealed class LiquidGlassScrollChrome
         return Math.Sqrt((dx * dx) + (dy * dy));
     }
 }
+

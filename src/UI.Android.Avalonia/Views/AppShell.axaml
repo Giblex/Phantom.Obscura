@@ -5,15 +5,8 @@
              x:DataType="vm:ShellViewModel"
              Background="{DynamicResource WindowBackgroundBrush}">
 
-  <!--
-    Single-view shell: top bar with brand + back button, body switches via
-    ShellViewModel.CurrentView. Desktop equivalent is the multi-window flow
-    (WelcomePage → VaultUnlockWindow → VaultWindow); we collapse that into
-    nested UserControls because Avalonia.Android can only host one Control.
-  -->
-
   <Grid RowDefinitions="Auto,*">
-    <!-- Top app bar -->
+
     <Border Grid.Row="0"
             Background="{DynamicResource HeaderBackgroundBrush}"
             BorderBrush="{DynamicResource FooterBorderBrush}"
@@ -42,7 +35,7 @@
       </Grid>
     </Border>
 
-    <!-- Body slot -->
     <ContentControl Grid.Row="1" Content="{Binding CurrentView}"/>
   </Grid>
 </UserControl>
+

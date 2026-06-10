@@ -13,8 +13,6 @@ public partial class ImportExportView : UserControl
     {
         base.OnAttachedToVisualTree(e);
 
-        // Mobile pickers must originate from the TopLevel's StorageProvider —
-        // hand it to the VM as soon as the view is materialized.
         if (DataContext is ImportExportViewModel vm)
         {
             var top = TopLevel.GetTopLevel(this);
@@ -25,3 +23,4 @@ public partial class ImportExportView : UserControl
         }
     }
 }
+

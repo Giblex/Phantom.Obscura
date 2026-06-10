@@ -15,26 +15,18 @@ using GiblexVault.Security.ZK.Wrapping;
 
 namespace GiblexVault.Security.ZK.Container
 {
-    /// <summary>
-    /// Zero-knowledge encrypted container format. Stores multiple files with
-    /// per-entry DEKs wrapped by a container encryption key (CEK) derived from the master key.
-    /// </summary>
+
     public sealed class GvContainerZk
     {
         private static readonly byte[] Magic = { 0x47, 0x56, 0x2D, 0x43, 0x5A, 0x4B, 0x01, 0x00 };
         private static readonly byte[] TocFooterMagic = { 0x47, 0x56, 0x2D, 0x54, 0x4F, 0x43, 0x02, 0x00 };
         private const int TocFooterSize = 16;
-        private const int ChunkSize = 64 * 1024; // 64 KB streaming buffer
+        private const int ChunkSize = 64 * 1024;
 
         private sealed record CHeader(string Type, string Version, CipherSuite Suite, KdfParams Kdf, string? Label, string? PolicyHash = null);
         private sealed record Entry(string Name, long RealLength, long Offset, long BlobLength, byte[] WrappedDek);
         private sealed record Toc(List<Entry> Entries);
 
-        /// <summary>
-        /// Creates a new encrypted container. If signingKey is provided, an Ed25519 signature
-        /// is written over the header. The corresponding public key must be supplied during Open
-        /// to verify the header has not been tampered with before any key derivation occurs.
-        /// </summary>
         public static async Task CreateAsync(string path, byte[] masterKey, EngineOptions options, string? label = null, string? policyHash = null, byte[]? signingKey = null)
         {
             var suite = options.Suite;
@@ -56,7 +48,6 @@ namespace GiblexVault.Security.ZK.Container
             await fs.WriteAsync(l);
             await fs.WriteAsync(header);
 
-            // Write Ed25519 signature over the header (64 bytes, or 0 bytes if unsigned)
             if (signingKey != null)
             {
                 var headerStr = Encoding.UTF8.GetString(header);
@@ -96,11 +87,6 @@ namespace GiblexVault.Security.ZK.Container
             await fs.FlushAsync();
         }
 
-        /// <summary>
-        /// Opens an existing container. If verifyingKey is provided, the Ed25519 signature
-        /// over the header is verified BEFORE any key derivation occurs. If the signature
-        /// is invalid or missing when a verifying key is expected, the operation fails.
-        /// </summary>
         private static (byte[] header, CipherSuite suite, byte[] cek, long tocStart, FileStream fs) Open(string path, byte[] masterKey, byte[]? verifyingKey = null)
         {
             var fs = File.Open(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
@@ -117,9 +103,8 @@ namespace GiblexVault.Security.ZK.Container
             if (fs.Read(header, 0, (int)hlen) != (int)hlen)
                 throw new InvalidOperationException("Bad header");
 
-            // Read signature length (2 bytes) - present in v2+ containers
             var hdoc = JsonSerializer.Deserialize<CHeader>(header)!;
-            if (hdoc.Version != "1") // v2+ includes signature block
+            if (hdoc.Version != "1")
             {
                 byte[] sigLenBuf = new byte[2];
                 if (fs.Read(sigLenBuf) != 2)
@@ -132,7 +117,6 @@ namespace GiblexVault.Security.ZK.Container
                     if (fs.Read(sig, 0, sigLen) != sigLen)
                         throw new InvalidOperationException("Bad signature");
 
-                    // Verify signature BEFORE key derivation
                     if (verifyingKey != null)
                     {
                         var headerStr = Encoding.UTF8.GetString(header);
@@ -142,12 +126,11 @@ namespace GiblexVault.Security.ZK.Container
                 }
                 else if (verifyingKey != null)
                 {
-                    // Signature expected but not present
+
                     throw new CryptographicException("Container header signature required but not found.");
                 }
             }
 
-            // Only derive key AFTER signature verification passes
             var cek = Hkdf.Sha256(masterKey, hdoc.Kdf.Salt, Encoding.UTF8.GetBytes("container::cek"));
             var initialTocStart = fs.Position;
             var tocStart = ReadLatestTocStart(fs, initialTocStart);
@@ -246,9 +229,6 @@ namespace GiblexVault.Security.ZK.Container
 
         private static long PadLen(long len, int bucket = 64 * 1024) => ((len + bucket - 1) / bucket) * bucket;
 
-        /// <summary>
-        /// Adds a file to the container using streaming to avoid loading the entire file into memory.
-        /// </summary>
         public static void AddFile(string path, byte[] masterKey, EngineOptions options, string entryName, string filePath, byte[]? verifyingKey = null)
         {
             var (header, suite, cek, tocStart, fs) = Open(path, masterKey, verifyingKey);
@@ -257,7 +237,6 @@ namespace GiblexVault.Security.ZK.Container
                 fs.Position = tocStart;
                 var toc = ReadToc(fs, header, suite, cek);
 
-                // Find the end of all existing data (may include entries after the old TOC)
                 long entryPosition = fs.Length;
                 fs.Position = entryPosition;
 
@@ -268,12 +247,9 @@ namespace GiblexVault.Security.ZK.Container
                 var dek = RandomNumberGenerator.GetBytes(32);
                 var wrapped = KeyWrap.WrapAead(suite, cek, dek, header);
 
-                // Write entry using streaming
                 var ns = Aead.GetSuite(suite).NonceSize;
                 var nonce = RandomNumberGenerator.GetBytes(ns);
 
-                // For AEAD we need to encrypt the entire padded content as one block
-                // Use a memory stream to collect the padded plaintext
                 byte[] paddedPlain;
                 byte[] buffer = ArrayPool<byte>.Shared.Rent(ChunkSize);
                 try
@@ -291,7 +267,6 @@ namespace GiblexVault.Security.ZK.Container
                         remaining -= bytesRead;
                     }
 
-                    // Add padding if needed
                     long paddingNeeded = padLen - realLength;
                     if (paddingNeeded > 0)
                     {
@@ -304,7 +279,7 @@ namespace GiblexVault.Security.ZK.Container
                 finally
                 {
                     CryptographicOperations.ZeroMemory(buffer.AsSpan(0, ChunkSize));
-                    ArrayPool<byte>.Shared.Return(buffer);
+                    ArrayPool<byte>.Shared.Return(buffer, clearArray: true);
                 }
 
                 var ct = Aead.Encrypt(suite, dek, nonce, header, paddedPlain);
@@ -319,8 +294,6 @@ namespace GiblexVault.Security.ZK.Container
                 var name = options.Profile == EncryptionProfile.Paranoid ? HashName(entryName, cek) : entryName;
                 toc.Entries.Add(new Entry(name, realLength, entryPosition, ct.Length + ns + 4, wrapped));
 
-                // Append the replacement TOC and footer. Older TOCs remain unreachable
-                // because Open reads the latest footer.
                 WriteToc(fs, tocStart, header, suite, cek, toc);
 
                 CryptographicOperations.ZeroMemory(dek);
@@ -379,6 +352,4 @@ namespace GiblexVault.Security.ZK.Container
         }
     }
 }
-
-
 

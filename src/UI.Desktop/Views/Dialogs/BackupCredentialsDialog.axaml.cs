@@ -74,3 +74,4 @@ namespace PhantomVault.UI.Views.Dialogs
         private void InitializeComponent() => Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(this);
     }
 }
+

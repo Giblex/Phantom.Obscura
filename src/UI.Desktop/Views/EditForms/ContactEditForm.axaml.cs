@@ -10,3 +10,4 @@ public partial class ContactEditForm : UserControl
         AvaloniaXamlLoader.Load(this);
     }
 }
+

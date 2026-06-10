@@ -1,11 +1,15 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Win32.SafeHandles;
 using PhantomVault.Core.Models;
 using PhantomVault.Core.Services.AutoInject;
 using PhantomVault.Core.Services.Autofill;
@@ -21,12 +25,6 @@ namespace PhantomVault.UI.Services.AutoFill
         void Stop();
     }
 
-    /// <summary>
-    /// Named pipe server that bridges the running desktop vault to
-    /// <c>PhantomVault.UI.exe --native-messaging</c> subprocesses spawned by browsers.
-    /// Listens on <c>\\.\pipe\PhantomVaultAutofill</c> and answers NDJSON credential
-    /// queries from the native messaging subprocess.
-    /// </summary>
     public sealed class NativeHostPipeServer : INativeHostPipeServer, IDisposable
     {
         public const string PipeName = "PhantomVaultAutofill";
@@ -87,11 +85,20 @@ namespace PhantomVault.UI.Services.AutoFill
                         PipeDirection.InOut,
                         NamedPipeServerStream.MaxAllowedServerInstances,
                         PipeTransmissionMode.Byte,
-                        PipeOptions.Asynchronous);
+                        PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
 
                     await server.WaitForConnectionAsync(ct);
+
+                    if (!IsClientProcessAllowed(server, out var rejectReason))
+                    {
+                        Log.Warning("NativeHostPipeServer: rejected client connection — {Reason}", rejectReason);
+                        try { server.Disconnect(); } catch { /* ignore */ }
+                        server.Dispose();
+                        continue;
+                    }
+
                     _ = HandleConnectionAsync(server, ct);
-                    server = null; // ownership transferred
+                    server = null;
                 }
                 catch (OperationCanceledException)
                 {
@@ -146,19 +153,32 @@ namespace PhantomVault.UI.Services.AutoFill
                 {
                     "getVaultState" => BuildVaultStateResponse(),
                     "getCredentials" => BuildCredentialsResponse(root),
-                    // Credential creation from the browser is intentionally refused:
-                    // the native messaging host has no way to obtain explicit user
-                    // confirmation, validate the origin against vault policy, or
-                    // capture an AAGUID/passkey attestation. New credentials must
-                    // be added from inside the Phantom desktop app (fail-closed).
+
                     "saveCredential" => JsonSerializer.Serialize(new { success = false, error = "Save from browser is not permitted; add credentials inside the Phantom app." }),
                     _ => Fail($"Unknown action: {action}")
                 };
             }
             catch (Exception ex)
             {
-                Log.Warning(ex, "NativeHostPipeServer: request parse error for: {Json}", requestJson);
+                // Never log the raw request body — it may contain credential lookup
+                // data or partial secrets. Log a content hash + size only.
+                Log.Warning(ex, "NativeHostPipeServer: request parse error (sha256={Hash}, bytes={Length})",
+                    HashForLog(requestJson), Encoding.UTF8.GetByteCount(requestJson ?? string.Empty));
                 return Fail("Invalid request");
+            }
+        }
+
+        private static string HashForLog(string? value)
+        {
+            try
+            {
+                var bytes = Encoding.UTF8.GetBytes(value ?? string.Empty);
+                var hash = System.Security.Cryptography.SHA256.HashData(bytes);
+                return Convert.ToHexString(hash, 0, 8); // first 8 bytes is enough to correlate
+            }
+            catch
+            {
+                return "unavailable";
             }
         }
 
@@ -206,5 +226,207 @@ namespace PhantomVault.UI.Services.AutoFill
         }
 
         public void Dispose() => Stop();
+
+        // Allowed browser process names (lowercased, no extension). Anything
+        // else connecting to the pipe is rejected. Combined with the Authenticode
+        // check below this is defence-in-depth on top of PipeOptions.CurrentUserOnly;
+        // the OS identity boundary remains the primary security guarantee.
+        private static readonly string[] AllowedBrowserProcessNames =
+        {
+            "chrome",
+            "msedge",
+            "firefox",
+            "brave",
+            "opera",
+            "vivaldi",
+            "arc",
+            "chromium",
+        };
+
+        [SupportedOSPlatform("windows")]
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool GetNamedPipeClientProcessId(SafePipeHandle Pipe, out uint ClientProcessId);
+
+        private static bool IsClientProcessAllowed(NamedPipeServerStream pipe, out string reason)
+        {
+            if (!OperatingSystem.IsWindows())
+            {
+                reason = "non-windows host";
+                return false;
+            }
+
+            uint pid;
+            try
+            {
+                if (!GetNamedPipeClientProcessId(pipe.SafePipeHandle, out pid) || pid == 0)
+                {
+                    reason = "could not resolve client PID";
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                reason = $"PID query threw: {ex.Message}";
+                return false;
+            }
+
+            try
+            {
+                using var proc = Process.GetProcessById((int)pid);
+                var name = (proc.ProcessName ?? string.Empty).ToLowerInvariant();
+                if (string.IsNullOrEmpty(name))
+                {
+                    reason = $"empty process name for PID {pid}";
+                    return false;
+                }
+
+                if (!AllowedBrowserProcessNames.Contains(name))
+                {
+                    reason = $"process '{name}' (PID {pid}) is not an allowed browser";
+                    return false;
+                }
+
+                // Process names are trivially spoofable (copy any exe as chrome.exe), so
+                // additionally require a valid Authenticode signature on the client image.
+                string? imagePath;
+                try
+                {
+                    imagePath = proc.MainModule?.FileName;
+                }
+                catch (Exception ex)
+                {
+                    reason = $"could not resolve image path for PID {pid}: {ex.Message}";
+                    return false;
+                }
+
+                if (string.IsNullOrEmpty(imagePath))
+                {
+                    reason = $"empty image path for PID {pid}";
+                    return false;
+                }
+
+                if (!IsImageSignatureTrusted(imagePath))
+                {
+#if DEBUG
+                    // Permit unsigned dev/Chromium builds in Debug only.
+                    Log.Warning("AutofillPipe: '{Path}' has no valid Authenticode signature; allowed in DEBUG build only", imagePath);
+#else
+                    reason = $"image '{imagePath}' (PID {pid}) failed Authenticode verification";
+                    return false;
+#endif
+                }
+
+                reason = string.Empty;
+                return true;
+            }
+            catch (ArgumentException)
+            {
+                reason = $"client PID {pid} no longer alive";
+                return false;
+            }
+            catch (Exception ex)
+            {
+                reason = $"process inspection failed: {ex.Message}";
+                return false;
+            }
+        }
+
+        // Cached Authenticode verdicts keyed by image path + last-write time so a
+        // swapped binary at the same path is re-verified.
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, (DateTime Stamp, bool Trusted)> SignatureCache = new(StringComparer.OrdinalIgnoreCase);
+
+        [SupportedOSPlatform("windows")]
+        private static bool IsImageSignatureTrusted(string imagePath)
+        {
+            try
+            {
+                var stamp = File.GetLastWriteTimeUtc(imagePath);
+                if (SignatureCache.TryGetValue(imagePath, out var cached) && cached.Stamp == stamp)
+                    return cached.Trusted;
+
+                var trusted = WinVerifyTrustFile(imagePath);
+                SignatureCache[imagePath] = (stamp, trusted);
+                return trusted;
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "AutofillPipe: Authenticode verification threw for {Path}", imagePath);
+                return false;
+            }
+        }
+
+        private static readonly Guid WintrustActionGenericVerifyV2 = new("00AAC56B-CD44-11d0-8CC2-00C04FC295EE");
+
+        [DllImport("wintrust.dll", CharSet = CharSet.Unicode, SetLastError = false)]
+        private static extern int WinVerifyTrust(IntPtr hwnd, [In] ref Guid pgActionID, IntPtr pWVTData);
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        private struct WintrustFileInfo
+        {
+            public uint cbStruct;
+            public IntPtr pcwszFilePath;
+            public IntPtr hFile;
+            public IntPtr pgKnownSubject;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct WintrustData
+        {
+            public uint cbStruct;
+            public IntPtr pPolicyCallbackData;
+            public IntPtr pSIPClientData;
+            public uint dwUIChoice;              // 2 = WTD_UI_NONE
+            public uint fdwRevocationChecks;     // 0 = WTD_REVOKE_NONE
+            public uint dwUnionChoice;           // 1 = WTD_CHOICE_FILE
+            public IntPtr pFile;
+            public uint dwStateAction;           // 0 = WTD_STATEACTION_IGNORE
+            public IntPtr hWVTStateData;
+            public IntPtr pwszURLReference;
+            public uint dwProvFlags;             // 0x10 = WTD_REVOCATION_CHECK_NONE
+            public uint dwUIContext;
+            public IntPtr pSignatureSettings;
+        }
+
+        [SupportedOSPlatform("windows")]
+        private static bool WinVerifyTrustFile(string filePath)
+        {
+            var pathPtr = Marshal.StringToCoTaskMemUni(filePath);
+            var fileInfo = new WintrustFileInfo
+            {
+                cbStruct = (uint)Marshal.SizeOf<WintrustFileInfo>(),
+                pcwszFilePath = pathPtr,
+                hFile = IntPtr.Zero,
+                pgKnownSubject = IntPtr.Zero,
+            };
+
+            var fileInfoPtr = Marshal.AllocCoTaskMem(Marshal.SizeOf<WintrustFileInfo>());
+            var dataPtr = Marshal.AllocCoTaskMem(Marshal.SizeOf<WintrustData>());
+            try
+            {
+                Marshal.StructureToPtr(fileInfo, fileInfoPtr, false);
+
+                var data = new WintrustData
+                {
+                    cbStruct = (uint)Marshal.SizeOf<WintrustData>(),
+                    dwUIChoice = 2,          // WTD_UI_NONE
+                    fdwRevocationChecks = 0, // WTD_REVOKE_NONE — offline-friendly; chain validity still enforced
+                    dwUnionChoice = 1,       // WTD_CHOICE_FILE
+                    pFile = fileInfoPtr,
+                    dwProvFlags = 0x10,      // WTD_REVOCATION_CHECK_NONE
+                };
+                Marshal.StructureToPtr(data, dataPtr, false);
+
+                var action = WintrustActionGenericVerifyV2;
+                return WinVerifyTrust(IntPtr.Zero, ref action, dataPtr) == 0;
+            }
+            finally
+            {
+                Marshal.FreeCoTaskMem(dataPtr);
+                Marshal.FreeCoTaskMem(fileInfoPtr);
+                Marshal.FreeCoTaskMem(pathPtr);
+            }
+        }
     }
 }
+

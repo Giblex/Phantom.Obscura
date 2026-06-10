@@ -12,7 +12,7 @@
     Classes="animated-window">
 
     <views:ThemeAwareWindow.Styles>
-        <!-- Import tile styles -->
+
         <Style Selector="Button.import-tile">
             <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
             <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}" />
@@ -23,7 +23,6 @@
             <Setter Property="Cursor" Value="Hand" />
         </Style>
 
-        <!-- Tab button styles -->
         <Style Selector="ToggleButton.tab-button">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
@@ -39,8 +38,8 @@
     </views:ThemeAwareWindow.Styles>
 
     <DockPanel>
-        <!-- Tab Strip at Top -->
-        <Border DockPanel.Dock="Top" 
+
+        <Border DockPanel.Dock="Top"
                 Background="{DynamicResource HeaderBackgroundBrush}"
                 BorderBrush="{DynamicResource ControlBorderBrush}"
                 BorderThickness="0,0,0,1"
@@ -60,30 +59,28 @@
             </StackPanel>
         </Border>
 
-        <!-- Content Area -->
         <Grid>
-            <!-- Import Panel -->
+
             <ScrollViewer x:Name="ImportPanel"
                          IsVisible="{Binding #ImportTab.IsChecked}"
-                         VerticalScrollBarVisibility="Auto" 
+                         VerticalScrollBarVisibility="Auto"
                          HorizontalScrollBarVisibility="Disabled">
                 <Border Padding="30,25" ClipToBounds="True">
                     <StackPanel Spacing="16">
-                        <!-- Import Header -->
-                        <TextBlock Text="Import Credentials" 
-                                  FontSize="{StaticResource Type.Icon.Size}" 
+
+                        <TextBlock Text="Import Credentials"
+                                  FontSize="{StaticResource Type.Icon.Size}"
                                   FontWeight="SemiBold"
                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
-                        
-                        <TextBlock Text="Import credentials from other password managers or backup files" 
-                                  TextWrapping="Wrap" 
+
+                        <TextBlock Text="Import credentials from other password managers or backup files"
+                                  TextWrapping="Wrap"
                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
 
-                        <!-- Import Format Tiles -->
-                        <TextBlock Text="Select Import Format:" 
+                        <TextBlock Text="Select Import Format:"
                                   FontWeight="SemiBold"
                                   Margin="0,8,0,0"/>
-                        
+
                         <UniformGrid Columns="3" ColumnSpacing="16" RowSpacing="16" Margin="0,8">
                             <Button Command="{Binding ImportKeePassCommand}"
                                    Classes="import-tile"
@@ -93,7 +90,7 @@
                                     <TextBlock Text="KeePass" FontWeight="SemiBold"/>
                                 </StackPanel>
                             </Button>
-                            
+
                             <Button Command="{Binding ImportLastPassCommand}"
                                    Classes="import-tile"
                                    Height="100">
@@ -102,7 +99,7 @@
                                     <TextBlock Text="LastPass" FontWeight="SemiBold"/>
                                 </StackPanel>
                             </Button>
-                            
+
                             <Button Command="{Binding Import1PasswordCommand}"
                                    Classes="import-tile"
                                    Height="100">
@@ -111,7 +108,7 @@
                                     <TextBlock Text="1Password" FontWeight="SemiBold"/>
                                 </StackPanel>
                             </Button>
-                            
+
                             <Button Command="{Binding ImportBitwardenCommand}"
                                    Classes="import-tile"
                                    Height="100">
@@ -120,7 +117,7 @@
                                     <TextBlock Text="Bitwarden" FontWeight="SemiBold"/>
                                 </StackPanel>
                             </Button>
-                            
+
                             <Button Command="{Binding ImportDashlaneCommand}"
                                    Classes="import-tile"
                                    Height="100">
@@ -129,7 +126,7 @@
                                     <TextBlock Text="Dashlane" FontWeight="SemiBold"/>
                                 </StackPanel>
                             </Button>
-                            
+
                             <Button Command="{Binding ImportCsvCommand}"
                                    Classes="import-tile"
                                    Height="100">
@@ -140,7 +137,6 @@
                             </Button>
                         </UniformGrid>
 
-                        <!-- Import Status -->
                         <Border Background="{DynamicResource TileGlassBrush}"
                                BorderBrush="{DynamicResource ControlBorderBrush}"
                                BorderThickness="1"
@@ -156,49 +152,45 @@
                 </Border>
             </ScrollViewer>
 
-            <!-- Export Panel -->
             <ScrollViewer x:Name="ExportPanel"
                          IsVisible="{Binding #ExportTab.IsChecked}"
                          VerticalScrollBarVisibility="Auto">
                 <Border Padding="30,25" ClipToBounds="True">
                     <StackPanel Spacing="16">
-                        <!-- Export Header -->
-                        <TextBlock Text="Export Credentials" 
-                                  FontSize="{StaticResource Type.Icon.Size}" 
+
+                        <TextBlock Text="Export Credentials"
+                                  FontSize="{StaticResource Type.Icon.Size}"
                                   FontWeight="SemiBold"
                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
-                        
-                        <TextBlock Text="Export your credentials to external formats for backup or migration" 
-                                  TextWrapping="Wrap" 
+
+                        <TextBlock Text="Export your credentials to external formats for backup or migration"
+                                  TextWrapping="Wrap"
                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
 
-                        <!-- Format Selection -->
                         <StackPanel Spacing="8">
                             <TextBlock Text="Export Format:" FontWeight="SemiBold"/>
-                            <ComboBox ItemsSource="{Binding ExportFormats}" 
-                                     SelectedValue="{Binding SelectedExportFormat}" 
+                            <ComboBox ItemsSource="{Binding ExportFormats}"
+                                     SelectedValue="{Binding SelectedExportFormat}"
                                      Width="250"
                                      HorizontalAlignment="Left"
                                      ToolTip.Tip="Choose the file format for export"/>
                         </StackPanel>
 
-                        <!-- Group Filter -->
                         <StackPanel Spacing="8">
                             <TextBlock Text="Filter by Group:" FontWeight="SemiBold"/>
-                            <ComboBox ItemsSource="{Binding ExportGroups}" 
-                                     SelectedValue="{Binding FilterGroup}" 
+                            <ComboBox ItemsSource="{Binding ExportGroups}"
+                                     SelectedValue="{Binding FilterGroup}"
                                      Width="250"
                                      HorizontalAlignment="Left"
                                      ToolTip.Tip="Export all credentials or filter by specific group"/>
                         </StackPanel>
 
-                        <!-- Security Options -->
                         <StackPanel Spacing="8">
                             <TextBlock Text="Security Options:" FontWeight="SemiBold"/>
-                            <CheckBox IsChecked="{Binding IncludePasswords}" 
+                            <CheckBox IsChecked="{Binding IncludePasswords}"
                                      Content="Include passwords in export"
                                      ToolTip.Tip="Uncheck to export without passwords"/>
-                            <TextBlock Text="⚠️ Warning: Exported files are NOT encrypted. Handle with care!" 
+                            <TextBlock Text="⚠️ Warning: Exported files are NOT encrypted. Handle with care!"
                                       Foreground="{DynamicResource ErrorBrush}"
                                       FontSize="{StaticResource Type.Small.Size}"
                                       TextWrapping="Wrap"
@@ -206,24 +198,22 @@
                                       IsVisible="{Binding IncludePasswords}"/>
                         </StackPanel>
 
-                        <!-- Destination Selection -->
                         <StackPanel Spacing="8">
                             <TextBlock Text="Destination File:" FontWeight="SemiBold"/>
                             <Grid ColumnDefinitions="*,Auto">
-                                <TextBox Grid.Column="0" 
-                                        Text="{Binding DestinationFile}" 
-                                        IsReadOnly="True" 
+                                <TextBox Grid.Column="0"
+                                        Text="{Binding DestinationFile}"
+                                        IsReadOnly="True"
                                         Watermark="No destination selected..."
                                         Margin="0,0,8,0"/>
-                                <Button Grid.Column="1" 
-                                       Content="Browse..." 
+                                <Button Grid.Column="1"
+                                       Content="Browse..."
                                        Width="100"
                                        Classes="liquid-glass"
                                        Command="{Binding BrowseExportCommand}"/>
                             </Grid>
                         </StackPanel>
 
-                        <!-- Export Status -->
                         <Border Background="{DynamicResource TileGlassBrush}"
                                BorderBrush="{DynamicResource ControlBorderBrush}"
                                BorderThickness="1"
@@ -240,7 +230,6 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Export Button -->
                         <Button Content="Export Credentials"
                                Command="{Binding ExportCommand}"
                                HorizontalAlignment="Left"
@@ -253,16 +242,15 @@
             </ScrollViewer>
         </Grid>
 
-        <!-- Bottom Button Bar -->
         <Border DockPanel.Dock="Bottom"
                Background="{DynamicResource HeaderBackgroundBrush}"
                BorderBrush="{DynamicResource ControlBorderBrush}"
                BorderThickness="0,1,0,0"
                Padding="20,15">
-            <StackPanel Orientation="Horizontal" 
-                       HorizontalAlignment="Right" 
+            <StackPanel Orientation="Horizontal"
+                       HorizontalAlignment="Right"
                        Spacing="12">
-                <Button Content="Close" 
+                <Button Content="Close"
                        Command="{Binding CloseCommand}"
                        Width="100"
                        Classes="liquid-glass"/>
@@ -270,3 +258,4 @@
         </Border>
     </DockPanel>
 </views:ThemeAwareWindow>
+

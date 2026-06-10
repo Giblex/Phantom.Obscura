@@ -10,3 +10,4 @@ public partial class BankAccountEditForm : UserControl
         AvaloniaXamlLoader.Load(this);
     }
 }
+

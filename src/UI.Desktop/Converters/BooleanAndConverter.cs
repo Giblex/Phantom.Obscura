@@ -5,9 +5,7 @@ using Avalonia.Data.Converters;
 
 namespace PhantomVault.UI.Converters
 {
-    /// <summary>
-    /// Multi-value converter that returns true only if all input boolean values are true.
-    /// </summary>
+
     public sealed class BooleanAndConverter : IMultiValueConverter
     {
         public object? Convert(IList<object?> values, Type targetType, object? parameter, CultureInfo culture)
@@ -19,3 +17,4 @@ namespace PhantomVault.UI.Converters
         }
     }
 }
+

@@ -18,7 +18,6 @@ namespace PhantomVault.UI.Views.Settings
             var shadowTrash = services?.GetService(typeof(ShadowTrashService)) as ShadowTrashService;
             var secureTrash = services?.GetService(typeof(SecureTrashService)) as SecureTrashService;
 
-            // File-based trash location (if used by the app); provide real paths for shadow snapshots.
             string trashFilesRoot = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "PhantomVault", "SecureTrashFiles");
             string[] TrashFilesProvider() =>
                 System.IO.Directory.Exists(trashFilesRoot)
@@ -29,3 +28,4 @@ namespace PhantomVault.UI.Views.Settings
         }
     }
 }
+

@@ -8,3 +8,4 @@ public partial class SecurityDashboardView : UserControl
     public SecurityDashboardView() => InitializeComponent();
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
 }
+

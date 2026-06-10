@@ -3,10 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace PhantomVault.Core.Models
 {
-    /// <summary>
-    /// Describes the recovery container bound to a vault setup.
-    /// Stored as an individually encrypted USB sidecar artifact.
-    /// </summary>
+
     public sealed class RecoveryVaultRecord
     {
         [JsonPropertyName("bindingId")]
@@ -43,3 +40,4 @@ namespace PhantomVault.Core.Models
             = null;
     }
 }
+

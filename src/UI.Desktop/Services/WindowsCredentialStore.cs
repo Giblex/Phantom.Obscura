@@ -143,3 +143,4 @@ internal static class WindowsCredentialStore
         public string UserName;
     }
 }
+

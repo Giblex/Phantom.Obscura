@@ -8,11 +8,7 @@ using PhantomVault.UI.ViewModels;
 
 namespace PhantomVault.UI.Converters
 {
-    /// <summary>
-    /// Given a category name (value[0]) and a categories collection (value[1]),
-    /// returns a SolidColorBrush from the category's TileColor hex.
-    /// Falls back to White when not found or invalid.
-    /// </summary>
+
     public sealed class CategoryNameToBrushConverter : IMultiValueConverter
     {
         public static readonly CategoryNameToBrushConverter Instance = new CategoryNameToBrushConverter();
@@ -40,7 +36,7 @@ namespace PhantomVault.UI.Converters
                                 var color = Color.Parse(vm.TileColor);
                                 return new SolidColorBrush(color);
                             }
-                            catch { /* ignore parse errors */ }
+                            catch {  }
                         }
                         break;
                     }
@@ -51,3 +47,4 @@ namespace PhantomVault.UI.Converters
         }
     }
 }
+

@@ -36,7 +36,6 @@ namespace GiblexVault.Security.ZK.Keys
                 using var my = Key.Import(Alg, priv, KeyBlobFormat.RawPrivateKey);
                 var their = PublicKey.Import(Alg, theirPub, KeyBlobFormat.RawPublicKey);
 
-                // Derive a 32-byte shared secret using HKDF-SHA256 over the ECDH shared secret
                 using var shared = Alg.Agree(my, their);
                 if (shared == null)
                     throw new CryptographicException("Failed to derive shared secret");
@@ -47,9 +46,10 @@ namespace GiblexVault.Security.ZK.Keys
             }
             finally
             {
-                // Zero the unprotected private key bytes as soon as possible
+
                 try { CryptographicOperations.ZeroMemory(priv); } catch { }
             }
         }
     }
 }
+

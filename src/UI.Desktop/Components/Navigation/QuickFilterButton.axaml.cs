@@ -5,10 +5,6 @@ using System.Windows.Input;
 
 namespace PhantomVault.UI.Components.Navigation;
 
-/// <summary>
-/// A reusable quick filter toggle button component with optional count badge.
-/// Used in the sidebar for filter buttons like Passkeys, Recent, Expiring Soon, etc.
-/// </summary>
 public partial class QuickFilterButton : UserControl
 {
     public static readonly StyledProperty<string> LabelProperty =
@@ -61,3 +57,4 @@ public partial class QuickFilterButton : UserControl
         AvaloniaXamlLoader.Load(this);
     }
 }
+

@@ -1,35 +1,33 @@
 # Phantom Obscura (PhantomVault)
 
-A local-first, privacy-preserving password vault and security suite. Phantom Obscura stores credentials encrypted on-device using Argon2id-derived keys and AES-GCM authenticated encryption — no cloud sync required. It ships a Windows desktop app, an Android app (Avalonia and a parallel MAUI track), and a browser extension that communicates with the local vault over native messaging.
+A local-first, privacy-preserving password vault and security suite. Phantom Obscura stores credentials encrypted on-device using Argon2id-derived keys and AES-GCM authenticated encryption — no cloud sync required. It ships a Windows desktop app, an Android app (Avalonia), and a browser extension that communicates with the local vault over native messaging.
 
 ---
 
 ## Projects
 
-`PhantomVault.sln` contains the four projects that ship in the production desktop build (`Core`, `UI.Desktop`, `Autofill`, `Platform`). The Crypto library, Android heads, dev tools, and tests live in the same repo and build via direct `ProjectReference`s, `Tools/Tools.sln`, or per-project `dotnet build`.
+`PhantomVault.sln` contains the four projects that ship in the production desktop build (`Core`, `UI.Desktop`, `Autofill`, `Platform`). The Crypto library, Android head, dev tools, and tests live in the same repo and build via direct `ProjectReference`s, `Tools/Tools.sln`, or per-project `dotnet build`.
 
 | Project | Path | Target | Role |
 |---|---|---|---|
-| `GiblexVault.Security.ZK` | `src/Crypto` | `net9.0` | Cryptographic primitives: Argon2id, AES-GCM, HKDF, key wrapping, ZK vault format, recovery material |
-| `PhantomVault.Core` | `src/Core` | `net9.0;net9.0-android` | Vault services: encryption, ZK vault, containers, passkeys, TOTP, import/export, USB binding, policy, security defence. Android builds substitute `Services/Mobile/*Mobile.cs` for desktop-only services. |
-| `PhantomVault.Platform` | `src/Platform` | `net9.0` | Platform-specific services behind interfaces |
-| `PhantomVault.Autofill` | `src/Autofill` | `net9.0` | Autofill backend: native messaging host, Windows + Android autofill, form field detection |
-| `PhantomVault.UI` (Desktop) | `src/UI.Desktop` | `net9.0-windows10.0.19041.0` | Windows desktop app (Avalonia 11) |
-| `PhantomVault.UI` (Android/Avalonia) | `src/UI.Android.Avalonia` | `net9.0-android` | Android app (Avalonia) — shares assembly name with desktop to reuse `avares://` resources |
-| `PhantomVault.Android` (MAUI) | `src/UI.Android` | `net9.0-android` | Android app (MAUI) — full page set, parallel track |
+| `GiblexVault.Security.ZK` | `src/Crypto` | `net10.0` | Cryptographic primitives: Argon2id, AES-GCM, HKDF, key wrapping, ZK vault format, recovery material |
+| `PhantomVault.Core` | `src/Core` | `net10.0;net10.0-android` | Vault services: encryption, ZK vault, containers, passkeys, TOTP, import/export, USB binding, policy, security defence, update verification. Android builds substitute `Services/Mobile/*Mobile.cs` for desktop-only services. |
+| `PhantomVault.Platform` | `src/Platform` | `net10.0` | Platform-specific services behind interfaces |
+| `PhantomVault.Autofill` | `src/Autofill` | `net10.0` | Autofill backend: native messaging host, Windows + Android autofill, form field detection |
+| `PhantomVault.UI` (Desktop) | `src/UI.Desktop` | `net10.0-windows10.0.19041.0` | Windows desktop app (Avalonia 11) |
+| `PhantomVault.UI` (Android/Avalonia) | `src/UI.Android.Avalonia` | `net10.0-android` | Android app (Avalonia) — shares assembly name with desktop to reuse `avares://` resources |
 | Browser Extension | `src/Extension` | — | MV3 extension (Chrome/Edge/Firefox) — relays autofill via native messaging |
-| `Obscura.Keysmith` | `Tools/Obscura.Keysmith` | `net9.0` | Dev tool for generating and inspecting vault keys and signing policies (`Tools/Tools.sln`) |
-| `PhantomVault.Core.Tests` | `tests/PhantomVault.Core.Tests` | `net9.0` | Unit and integration tests for Core and Crypto |
-| `PhantomVault.UI.Tests` | `tests/PhantomVault.UI.Tests` | `net9.0` | UI-layer tests (ViewModel coverage) |
+| `Obscura.Keysmith` | `Tools/Obscura.Keysmith` | `net10.0` | Dev tool for generating and inspecting vault keys and signing policies (`Tools/Tools.sln`) |
+| `PhantomVault.Core.Tests` | `tests/PhantomVault.Core.Tests` | `net10.0` | Unit and integration tests for Core and Crypto |
+| `PhantomVault.UI.Tests` | `tests/PhantomVault.UI.Tests` | `net10.0` | UI-layer tests (ViewModel coverage) |
 
 ### External (shared) dependencies
 
-Phantom Obscura links into the shared `Phantom.Shared` libraries that live alongside it in the workspace:
+Phantom Obscura links into the shared libraries that live alongside it in the workspace:
 
 | Reference | Consumed by | Role |
 |---|---|---|
-| `Phantom.Shared/Phantom.Sync` | `PhantomVault.Core` | Encrypted cross-app sync of TOTP, session, and trust material |
-| `Phantom.Shared/Giblex.AssetShield` | `PhantomVault.UI` (Desktop) | Shared asset / brand-shielding helpers |
+| `Phantom.Shared/Giblex.AssetShield` | `PhantomVault.UI` (Desktop) | Shared asset / brand-shielding helpers; the AssetShield tool also encrypts all published files except the main exe at publish time |
 
 The integrated recovery panel (`Views/RecoveryPanelStub.cs` → `RecoveryPanel`, plus `RecoveryWindow.axaml`) is wired and launches the external `PhantomRecovery` process when the recovery vault is detected; the `PhantomRecovery.App` / `PhantomRecovery.Core` references remain commented out in the desktop project file because recovery runs as a separate process for isolation.
 
@@ -38,7 +36,7 @@ The integrated recovery panel (`Views/RecoveryPanelStub.cs` → `RecoveryPanel`,
 ## Features
 
 ### Vault & Encryption
-- Argon2id master key derivation with DPAPI-protected pepper and a **mandatory USB keyfile** (the keyfile is required to unlock — passwords are optional)
+- Argon2id master key derivation with DPAPI-protected pepper and a **mandatory USB keyfile** (enforced by `KeyfileGuard.Require` at every create/unlock/mount entry point — passwords are an optional additional factor)
 - AES-GCM authenticated encryption for all vault data
 - Custom `PhantomContainerService` container format (v4): static bootstrap header, Argon2id KDF material, encrypted private header with payload hash and HMAC, backwards-compatible with v2/v3
 - Zero-knowledge vault service (`ZkVaultService`) — master key verified against a stored HMAC verifier before access is granted; key material zeroed after lock via `CryptographicOperations.ZeroMemory`
@@ -46,36 +44,49 @@ The integrated recovery panel (`Views/RecoveryPanelStub.cs` → `RecoveryPanel`,
 - Layered and hybrid encryption pipelines
 
 ### Authentication
-- **Mandatory USB keyfile** + optional password + optional device binding (`DeviceBinding.DeviceSalt()`) — the keyfile is the required unlock factor; a password is an additional optional factor, never required
+- **Mandatory USB keyfile** + optional password + optional device binding (`DeviceBinding.DeviceSalt()`)
 - Windows Hello (biometric / PIN)
 - Passkeys (FIDO2 interface; platform-backed)
 - YubiKey hardware token — device enumeration, info, and OATH TOTP credential listing / code generation via Yubico.YubiKey 1.12.0 (desktop only)
 - TOTP with QR scanner
-- Recovery codes — 10 codes × 128-bit entropy, formatted `XXXX-XXXX-XXXX-XXXX`, Argon2-hashed, single-use, constant-time validation
+- PIN lock (PBKDF2-150k, stored in the vault manifest with a settings fallback) with unlock throttling
+- Recovery codes — 10 codes × 128-bit entropy, formatted `XXXX-XXXX-XXXX-XXXX`, Argon2-hashed, single-use, constant-time validation; exportable as a printable PDF recovery kit (rendered locally via SkiaSharp, no extra dependency)
 
 ### Security Defence
-- Idle auto-lock with configurable timeout and unlock throttle
-- Anti-keylogging, clipboard guard, clipboard history exclusion
+- Idle auto-lock with configurable timeout and unlock throttle; auto-lock on minimize / screen lock
+- Anti-keylogging heuristics, clipboard guard with auto-clear, clipboard history exclusion
 - Crash dump suppression and memory protection
 - Build integrity verifier (embedded git hash + build timestamp)
 - Tamper detection and advanced debugger detection
 - Decoy vault / decoy credential generator
 - Intrusion defence rule engine with signed policy (`Policies/base_policy.signed.json`)
 - Virtual machine detection (desktop only — gated out of the Android `Core` build)
-- Window protection service
+- Window protection and screenshot protection services
+- Verified update pipeline — Ed25519 signature over the update manifest, SHA-256 over the downloaded asset, then Authenticode check on Windows (`UpdateVerifier`); auto-check is **off by default**
+
+### Privacy
+- Master "Go Offline" switch (`PrivacyShield` / `IInternetGateway`) gates every outbound HTTP client (HIBP, icon downloads, updates) and revokes active consent grants
+- HIBP breach checking uses k-anonymity — only the first 5 characters of a password hash ever leave the device
+- No telemetry or analytics SDKs
 
 ### Credentials
-- Full credential CRUD with categories, tags, and icons
+- Full credential CRUD with categories, tags, and icons; nine entry types (passwords, API keys, bank accounts, cards, contacts, identities, PINs, Wi-Fi, notes)
 - Duplicate scan and merge, password health checker (HIBP), password generator
 - KeePass import (`.kdbx`) via KeePassLib.Standard 2.57.1
 - Import / export with history and template support
-- Secure deletion, USB artifact protection and binding
-- Sharing service
+- Secure deletion with a retention-based Secure Rubbish Bin, USB artifact protection and binding
+- Sharing service (RSA public-key encrypted share payloads)
 
 ### Autofill
 - Native messaging host `com.phantomvault.autofill` — desktop runs as `PhantomVault.UI.exe --native-messaging`
+- Local IPC pipe restricted with `PipeOptions.CurrentUserOnly`
 - MV3 extension detects login / registration / TOTP forms and injects an inline fill chip
 - Windows and Android autofill service backends
+
+### Desktop Experience
+- **Start with Windows** — optional per-user launch registration (`Software\Microsoft\Windows\CurrentVersion\Run`); off by default and toggled from Settings
+- **Global hotkey** — optional system-wide chord (default `Ctrl+Alt+P`) that brings the vault to the foreground, served by a dedicated message-only window so it never subclasses the Avalonia window proc; off by default
+- **Recent Issues panel** — a bounded, in-memory log (last 50 entries) of warnings and errors surfaced to the user, reviewable from Settings after a toast fades; error/warning toasts feed it automatically and security-relevant silent failures (settings persistence, PIN setup, auto-lock-on-threat, auto-fill init, TOTP sync) are recorded so nothing fails invisibly
 
 ---
 
@@ -83,19 +94,22 @@ The integrated recovery panel (`Views/RecoveryPanelStub.cs` → `RecoveryPanel`,
 
 | Requirement | Version |
 |---|---|
-| .NET SDK | 9.0.311 (pinned via `global.json`) |
+| .NET SDK | 10.0.x (no pin; uses latest installed) |
 | Windows (desktop) | Windows 10 build 19041+ |
 | Android SDK | API 26+ (Android 8.0+) |
-| Avalonia | 11.3.9 (restored automatically) |
+| Avalonia | 11.3.11 (restored automatically) |
 
 ---
 
 ## Build & Run
 
-Per repo policy, the desktop app **must** be launched via the Dev Pass script — it sets `PHANTOM_DEV_BYPASS_POLICY=1` and the MSBuild flags needed for a clean run. Do not add alternate run paths.
+Use the standard launcher for a normal run with full policy enforcement. The Dev Pass script (`run-dev.ps1` / `run-dev.cmd`) sets `PHANTOM_DEV_BYPASS_POLICY=1` for development only — the bypass is honoured in Debug builds exclusively, and Release builds refuse to start if the variable is set.
 
 ```powershell
-# Quick-start desktop (Dev Pass — required entry point)
+# Standard launch (full policy enforcement)
+.\run.ps1            # or run.cmd
+
+# Development launch (policy bypass, Debug builds only)
 .\run-dev.ps1        # or run-dev.cmd
 
 # Build the production solution (Core, UI.Desktop, Autofill, Platform)
@@ -103,8 +117,7 @@ dotnet build PhantomVault.sln
 
 # Build individual projects not in the solution
 dotnet build src\Crypto\GiblexVault.Security.ZK.csproj
-dotnet build src\UI.Android.Avalonia\PhantomVault.UI.Android.csproj -f net9.0-android
-dotnet build src\UI.Android\PhantomVault.Android.csproj -f net9.0-android
+dotnet build src\UI.Android.Avalonia\PhantomVault.UI.Android.csproj -f net10.0-android
 dotnet build Tools\Tools.sln
 
 # Tests (run per project — they are not part of PhantomVault.sln)
@@ -112,15 +125,13 @@ dotnet test tests\PhantomVault.Core.Tests
 dotnet test tests\PhantomVault.UI.Tests
 ```
 
-`PhantomObscura-Release.apk` (MAUI track) and `PhantomObscura-Avalonia.apk` (Avalonia track) at the repository root are the latest Android release builds.
+The Android APK is produced by the `build-apk.yml` GitHub Actions workflow.
 
 ---
 
 ## Browser Extension
 
 ### Load as Unpacked (Dev)
-
-See `deployment/install-dev-extension.md` for full instructions.
 
 - **Chrome / Edge** — `chrome://extensions` → "Load unpacked" → select `src/Extension/`
 - **Firefox** — `about:debugging` → "Load Temporary Add-on" → select `src/Extension/manifest.json`
@@ -144,16 +155,16 @@ Templates `deployment/com.phantomvault.autofill-chromium.json.template` and `com
 Phantom.Obscura/
 ├── src/
 │   ├── Crypto/                   GiblexVault.Security.ZK — Argon2id, AES-GCM, HKDF, key wrap, recovery, ZK vault format
-│   ├── Core/                     PhantomVault.Core — all vault services (multi-target net9.0 / net9.0-android)
+│   ├── Core/                     PhantomVault.Core — all vault services (multi-target net10.0 / net10.0-android)
 │   │   └── Services/
 │   │       ├── Security/         Defence engine, tamper detection, clipboard guard, decoy vault
+│   │       ├── Update/           Signed update manifest + UpdateVerifier (Ed25519 / SHA-256 / Authenticode)
 │   │       ├── ZeroKnowledge/    ZkVaultService
 │   │       └── Mobile/           Android substitutes for desktop-only services
 │   ├── Platform/                 Platform abstraction (Windows / mobile)
 │   ├── Autofill/                 Native messaging host + OS autofill services
 │   ├── UI.Desktop/               Windows app (Avalonia)
 │   ├── UI.Android.Avalonia/      Android app (Avalonia shell — shares avares:// with desktop)
-│   ├── UI.Android/               Android app (MAUI — full page set, parallel track)
 │   └── Extension/                Browser extension (MV3)
 │       ├── manifest.json         Firefox ID: phantomvault@giblex.com; min Firefox 128
 │       ├── background.js         Service worker / native messaging bridge
@@ -167,13 +178,14 @@ Phantom.Obscura/
 │   └── Obscura.Keysmith/         Key/certificate utility + policy signing
 ├── Policies/                     Signed security policies (base_policy.signed.json), linked into Core
 ├── deployment/                   Native host registration scripts + manifest templates
-├── scripts/                      Diagnostic / validation run logs and helper scripts
-├── artifacts/                    Build artifacts
+├── scripts/                      Helper scripts
+├── .github/workflows/            CI: desktop build, Android APK, CodeQL, security hard rules
 ├── PhantomVault.sln              Production solution (Core, UI.Desktop, Autofill, Platform)
-├── global.json                   .NET SDK 9.0.311 pin
-├── run-dev.ps1 / run-dev.cmd     Dev Pass launcher (sets PHANTOM_DEV_BYPASS_POLICY=1)
-├── PhantomObscura-Release.apk    Latest MAUI Android release build
-└── PhantomObscura-Avalonia.apk   Latest Avalonia Android release build
+├── global.json                   .NET SDK (no pin)
+├── run.ps1 / run.cmd             Standard launcher (full policy enforcement)
+├── run-dev.ps1 / run-dev.cmd     Dev launcher (sets PHANTOM_DEV_BYPASS_POLICY=1; Debug builds only)
+├── SECURITY.md                   Vulnerability disclosure policy
+└── THREAT_MODEL.md               Threat model (per-surface)
 ```
 
 ---
@@ -182,7 +194,7 @@ Phantom.Obscura/
 
 | Package | Version | Purpose |
 |---|---|---|
-| Avalonia | 11.3.9 | Cross-platform UI (desktop + Android) |
+| Avalonia | 11.3.11 | Cross-platform UI (desktop + Android) |
 | Isopoh.Cryptography.Argon2 | 2.0.0 | Argon2id master key derivation |
 | NSec.Cryptography | 22.4.0 | Modern libsodium-backed crypto primitives |
 | BouncyCastle.Cryptography | 2.4.0 | ML-KEM (Kyber) post-quantum KEM (referenced from `Core`) |
@@ -190,8 +202,8 @@ Phantom.Obscura/
 | KeePassLib.Standard | 2.57.1 | KeePass `.kdbx` import |
 | Serilog | 4.2.0 | Structured logging |
 | System.Runtime.WindowsRuntime | 4.7.0 | WinRT async bridging (Windows Hello — Windows only) |
-| System.Management | 9.0.0 | WMI for policy / VM detection (Windows only) |
-| System.Security.Cryptography.ProtectedData | 9.0.0 | DPAPI pepper protection |
+| System.Management | 10.0.0 | WMI for policy / VM detection (Windows only) |
+| System.Security.Cryptography.ProtectedData | 10.0.0 | DPAPI pepper protection |
 
 Windows-only packages (`System.Runtime.WindowsRuntime`, `System.Management`, `Yubico.YubiKey`) are conditionally referenced and excluded from the Android `Core` target.
 
@@ -202,11 +214,11 @@ Windows-only packages (`System.Runtime.WindowsRuntime`, `System.Management`, `Yu
 | Area | Detail |
 |---|---|
 | Platform passkeys (non-Windows) | macOS and Linux platform passkeys are surfaced as unsupported in `PasskeySettingsWindow`; only Windows Hello passkeys are wired |
-| USB binding / phone | Binding only occurs on the desktop. The mobile heads can read a binding token from an already-bound USB vault but cannot create or rebind on Android |
-| Android (Avalonia) | `UI.Android.Avalonia` ships Welcome, Unlock, Dashboard, CredentialList, AddEditCredential, CategoryLanding, SecurityDashboard, ImportExport, IconDownloader, Settings, ThemeSettings, and SmokeTest views; remaining desktop windows are tracked for future ports |
-| Android (MAUI) | `UI.Android` has a full 25+ page set as a parallel track; both Android targets share the same application ID (`com.giblex.phantom.obscura`) |
+| USB binding / phone | Binding only occurs on the desktop. The mobile head can read a binding token from an already-bound USB vault but cannot create or rebind on Android |
+| Android (Avalonia) | `UI.Android.Avalonia` is the single Android head (application ID `com.giblex.phantom.obscura`). It ships Welcome, Unlock, Dashboard, CredentialList, AddEditCredential, CategoryLanding, SecurityDashboard, ImportExport, IconDownloader, Settings, ThemeSettings, and SmokeTest views; remaining desktop windows are tracked for future ports |
 | Multi-session vault access | Concurrent multi-session vault access is intentionally not implemented; the settings toggle is shown for roadmap visibility only |
 | Keysmith certs | `Tools/Obscura.Keysmith/certs/` contains development certificate material; should not be committed to production branches |
+| Settings storage | `%APPDATA%\PhantomVault\settings.json` is plaintext JSON and includes PIN verification material (salt/hash); the vault manifest copy is authoritative |
 
 ---
 
@@ -218,10 +230,10 @@ The `Policies/` directory holds the runtime security policy consumed by `PolicyE
 
 ## Development Notes
 
-- **Dev Pass only** — runnable apps must be launched via `run-dev.ps1` / `run-dev.cmd`. Do not add alternate run paths or bypass the launcher; it sets `PHANTOM_DEV_BYPASS_POLICY=1` and the MSBuild flags the app expects in dev.
+- **Launchers** — `run.ps1` / `run.cmd` start the app with full policy enforcement. `run-dev.ps1` / `run-dev.cmd` set `PHANTOM_DEV_BYPASS_POLICY=1` for development; the bypass is compiled in for Debug builds only (`#if DEBUG`), and Release builds refuse to start when it is set.
 - **Deterministic builds** are enabled on Core and Crypto (`<Deterministic>true</Deterministic>`) for reproducibility.
 - **Build metadata** — git commit hash (`SourceRevisionId`) and UTC build timestamp are embedded as assembly attributes and verified at startup by `BuildIntegrityVerifier`.
-- The desktop project excludes a `Legacy/` folder from compilation (`<Compile Remove="Legacy\**\*" />`); those files are archived stubs kept for reference. `IntegratedRecoveryService.cs`, `RecoveryDeveloperMode.cs`, and `RecoveryPanel.axaml(.cs)` live there.
+- A root `Legacy/` folder holds archived snapshots (e.g. `Legacy/2026-06-04/`) kept for reference; nothing in it is compiled.
 - The `UI.Android.Avalonia` project sets `AssemblyName=PhantomVault.UI` intentionally so that `avares://PhantomVault.UI/…` URIs resolve to the same resources as on desktop.
-- `PhantomVault.Core` multi-targets `net9.0;net9.0-android`. The Android target removes desktop-only services (`BlackSecureRawVolumeService`, `PasskeyService`, `UsbBindingService`, `YubiKeyService`, `VirtualMachineDetection`, `PolicyService`) and substitutes the `Services/Mobile/*Mobile.cs` stubs in their place.
+- `PhantomVault.Core` multi-targets `net10.0;net10.0-android`. The Android target removes desktop-only services (`BlackSecureRawVolumeService`, `PasskeyService`, `UsbBindingService`, `YubiKeyService`, `VirtualMachineDetection`, `PolicyService`) and substitutes the `Services/Mobile/*Mobile.cs` stubs in their place.
 - Test runner: xUnit. Run `dotnet test` against an individual test project (the test projects are not part of `PhantomVault.sln`).

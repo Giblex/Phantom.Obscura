@@ -17,21 +17,18 @@ namespace GiblexVault.Security.ZK
     {
         private sealed record HeaderDoc(string Type, string Version, CipherSuite Suite, KdfParams Kdf, byte[] WrappedDek, string? Note);
 
-        // File-to-file compatibility API - delegates to stream-based API
         public static async Task EncryptAsync(string inputPath, string outputPath, byte[] masterKey, EngineOptions options, string? note = null)
         {
             await using var fin = File.OpenRead(inputPath);
             await EncryptAsync(fin, outputPath, masterKey, options, note).ConfigureAwait(false);
         }
 
-        // Stream-based encrypt: reads plaintext from inputStream and writes encrypted file to outputPath
         public static async Task EncryptAsync(Stream inputStream, string outputPath, byte[] masterKey, EngineOptions options, string? note = null)
         {
             await using var fout = File.Create(outputPath);
             await EncryptToStreamAsync(inputStream, fout, masterKey, options, note).ConfigureAwait(false);
         }
 
-        // Stream-to-stream encrypt: keeps plaintext off disk when callers already manage the output stream.
         public static async Task EncryptToStreamAsync(Stream inputStream, Stream outputStream, byte[] masterKey, EngineOptions options, string? note = null)
         {
             var salt = new byte[32];
@@ -105,19 +102,18 @@ namespace GiblexVault.Security.ZK
                 {
                     cipherDisposable?.Dispose();
                     CryptographicOperations.ZeroMemory(buf.AsSpan(0, options.ChunkSizeBytes));
-                    ArrayPool<byte>.Shared.Return(buf);
+                    ArrayPool<byte>.Shared.Return(buf, clearArray: true);
                 }
             }
             finally
             {
                 l[0] = l[1] = l[2] = l[3] = 0;
-                ArrayPool<byte>.Shared.Return(l);
+                ArrayPool<byte>.Shared.Return(l, clearArray: true);
                 CryptographicOperations.ZeroMemory(kek);
                 CryptographicOperations.ZeroMemory(dek);
             }
         }
 
-        // File-to-file decrypt delegates to stream implementation
         public static async Task DecryptAsync(string inputPath, string outputPath, byte[] masterKey, EngineOptions options)
         {
             await using var fin = File.OpenRead(inputPath);
@@ -125,7 +121,6 @@ namespace GiblexVault.Security.ZK
             await DecryptToStreamAsync(fin, fout, masterKey, options).ConfigureAwait(false);
         }
 
-        // Decrypt to byte[] (useful for in-memory viewing)
         public static async Task<byte[]> DecryptToArrayAsync(string inputPath, byte[] masterKey, EngineOptions options)
         {
             await using var fin = File.OpenRead(inputPath);
@@ -134,7 +129,6 @@ namespace GiblexVault.Security.ZK
             return ms.ToArray();
         }
 
-        // Core decrypt implementation that writes plaintext to the provided output stream
         public static async Task DecryptToStreamAsync(Stream inputStream, Stream outputStream, byte[] masterKey, EngineOptions options)
         {
             var magic = ArrayPool<byte>.Shared.Rent(8);
@@ -161,7 +155,6 @@ namespace GiblexVault.Security.ZK
 
                 var ns = Aead.GetSuite(doc.Suite).NonceSize;
 
-                // Create reusable cipher instance for the entire stream
                 IDisposable? cipherDisposable = null;
                 AesGcm? aesGcm = null;
                 Key? xChaChaKey = null;
@@ -190,7 +183,7 @@ namespace GiblexVault.Security.ZK
                             throw new InvalidOperationException("Truncated length");
 
                         var clen = (int)BinaryPrimitives.ReadUInt32LittleEndian(l);
-                        if (clen == 0) break; // zero-length chunk = PHANTOM1 container padding sentinel
+                        if (clen == 0) break;
                         var ct = new byte[clen];
                         if (await inputStream.ReadAsync(ct, 0, clen).ConfigureAwait(false) != clen)
                             throw new InvalidOperationException("Truncated chunk");
@@ -215,11 +208,11 @@ namespace GiblexVault.Security.ZK
             }
             finally
             {
-                // Zero and return rented arrays
+
                 CryptographicOperations.ZeroMemory(magic.AsSpan(0, 8));
-                ArrayPool<byte>.Shared.Return(magic);
+                ArrayPool<byte>.Shared.Return(magic, clearArray: true);
                 CryptographicOperations.ZeroMemory(l.AsSpan(0, 4));
-                ArrayPool<byte>.Shared.Return(l);
+                ArrayPool<byte>.Shared.Return(l, clearArray: true);
             }
         }
     }

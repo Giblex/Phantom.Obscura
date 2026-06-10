@@ -1,8 +1,7 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:converters="clr-namespace:PhantomVault.UI.Converters">
-    
-    <!-- Value Converters - Reusable converter instances -->
+
     <converters:BoolToStarBrushConverter x:Key="BoolToStarBrushConverter"/>
     <converters:WidthToButtonSizeConverter x:Key="WidthToButtonSizeConverter"/>
     <converters:BoolToOpacityConverter x:Key="BoolToOpacityConverter"/>
@@ -22,7 +21,6 @@
     <converters:BooleanAndConverter x:Key="BooleanAndConverter"/>
     <converters:ObjectReferenceEqualsConverter x:Key="ObjectReferenceEqualsConverter"/>
 
-    <!-- NEW: Security score and utility converters -->
     <converters:SecurityScoreToBrushConverter x:Key="SecurityScoreToBrushConverter"/>
     <converters:IntGreaterThanZeroConverter x:Key="IntGreaterThanZeroConverter"/>
     <converters:PercentageToWidthConverter x:Key="PercentageToWidthConverter"/>

@@ -13,13 +13,7 @@ using System.Windows.Automation;
 
 namespace PhantomVault.Core.Services.Platform.Windows
 {
-    /// <summary>
-    /// Uses the Windows UI Automation API to detect login form fields in native
-    /// applications and fill them without keyboard simulation.
-    ///
-    /// Requires <c>UIAutomationClient</c> and <c>UIAutomationTypes</c> references
-    /// (available in-box on net8.0-windows10.0.19041.0).
-    /// </summary>
+
     public sealed class WindowsNativeLoginDetector
     {
         [DllImport("user32.dll")]
@@ -37,11 +31,6 @@ namespace PhantomVault.Core.Services.Platform.Windows
         private static readonly string[] TotpKeywords =
             { "code", "otp", "totp", "mfa", "2fa", "token", "verification", "auth", "one-time" };
 
-        /// <summary>
-        /// Inspects the foreground window via UI Automation and returns a
-        /// <see cref="NativeLoginContext"/> if both a username and password field
-        /// are found. Returns <c>null</c> when the window is not a login form.
-        /// </summary>
         public NativeLoginContext? DetectLoginFields()
         {
 #if WINDOWS
@@ -53,7 +42,6 @@ namespace PhantomVault.Core.Services.Platform.Windows
                 var root = AutomationElement.FromHandle(hwnd);
                 if (root is null) return null;
 
-                // Collect all Edit controls in the window
                 var editCondition = new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Edit);
                 var allEdits = root.FindAll(TreeScope.Descendants, editCondition);
 
@@ -114,12 +102,6 @@ namespace PhantomVault.Core.Services.Platform.Windows
 #endif
         }
 
-        /// <summary>
-        /// Attempts to fill username and password into the controls described by
-        /// <paramref name="context"/> using <c>ValuePattern.SetValue</c>.
-        /// Returns <c>true</c> on success, <c>false</c> when the pattern is not
-        /// supported (caller should fall back to SendInput / AutoType).
-        /// </summary>
         public async Task<bool> TryFillLoginAsync(NativeLoginContext context, string username, string password)
         {
 #if WINDOWS
@@ -133,7 +115,6 @@ namespace PhantomVault.Core.Services.Platform.Windows
                 if (context.UsernameAutomationId is not null)
                     filled += SetValueById(root, context.UsernameAutomationId, username) ? 1 : 0;
 
-                // Brief pause to let the app react to username input
                 await Task.Delay(80);
 
                 if (context.PasswordAutomationId is not null)
@@ -152,10 +133,6 @@ namespace PhantomVault.Core.Services.Platform.Windows
 #endif
         }
 
-        /// <summary>
-        /// Attempts to fill a TOTP code into the field described by
-        /// <paramref name="context"/>. Returns <c>false</c> when not supported.
-        /// </summary>
         public async Task<bool> TryFillTotpAsync(NativeLoginContext context, string totpCode)
         {
 #if WINDOWS
@@ -181,10 +158,6 @@ namespace PhantomVault.Core.Services.Platform.Windows
 #endif
         }
 
-        /// <summary>
-        /// Polls the foreground window for a TOTP input field.
-        /// Returns the AutomationId/Name of the field, or <c>null</c> if not found.
-        /// </summary>
         public NativeLoginContext? DetectTotpField(IntPtr hwnd)
         {
 #if WINDOWS
@@ -233,7 +206,7 @@ namespace PhantomVault.Core.Services.Platform.Windows
         {
             try
             {
-                // Try AutomationId first, then Name
+
                 AutomationElement? el = null;
                 if (!string.IsNullOrEmpty(automationId))
                 {
@@ -267,3 +240,4 @@ namespace PhantomVault.Core.Services.Platform.Windows
 #endif
     }
 }
+

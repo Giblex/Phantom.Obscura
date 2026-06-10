@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:converters="clr-namespace:PhantomVault.UI.Converters"
              x:Class="PhantomVault.UI.Views.Details.ExpiryDetailSection">
-    
+
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -10,11 +10,10 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
-    
-    <!-- Expiry Date -->
+
     <StackPanel Spacing="6">
-        <TextBlock Text="Expiration" 
-                   FontSize="{StaticResource Type.Label.Size}" 
+        <TextBlock Text="Expiration"
+                   FontSize="{StaticResource Type.Label.Size}"
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource MutedTextBrush}"/>
         <Border Background="{DynamicResource InputBackgroundBrush}"
@@ -33,3 +32,4 @@
         </Border>
     </StackPanel>
 </UserControl>
+

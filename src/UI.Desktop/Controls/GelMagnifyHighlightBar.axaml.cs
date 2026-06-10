@@ -13,9 +13,6 @@ using SkiaSharp;
 
 namespace PhantomVault.UI.Controls;
 
-/// <summary>
-/// Glossy, refractive gel highlight bar that magnifies the content behind it using a Skia runtime shader.
-/// </summary>
 public partial class GelMagnifyHighlightBar : UserControl
 {
     public static readonly StyledProperty<Visual?> SourceElementProperty =
@@ -431,3 +428,4 @@ half4 main(float2 fragCoord) {
     }
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
 }
+

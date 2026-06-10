@@ -66,7 +66,7 @@
     </UserControl.Styles>
 
     <Grid RowDefinitions="Auto,*,Auto" ClipToBounds="False">
-        <!-- Header with theme-matching background -->
+
         <Border Grid.Row="0"
                 Background="{DynamicResource HeaderBackgroundBrush}"
                 Padding="20,16"
@@ -262,7 +262,7 @@
                                                      FontSize="{StaticResource Type.Label.Size}"
                                                      Padding="8,4"
                                                      IsReadOnly="{Binding ., Converter={StaticResource CategoryDeletedNameToReadOnlyConverter}}"/>
-                                            <!-- Entry count badge -->
+
                                             <Border Background="{DynamicResource HeaderBackgroundBrush}"
                                                     BorderBrush="{DynamicResource ControlBorderBrush}"
                                                     BorderThickness="1"
@@ -330,7 +330,6 @@
             </Grid>
         </Border>
 
-        <!-- Bottom action bar with Apply Changes moved to right -->
         <Border Grid.Row="2"
                 Background="{DynamicResource WindowBackgroundBrush}"
                 BorderBrush="{DynamicResource ControlBorderBrush}"
@@ -353,3 +352,4 @@
         </Border>
     </Grid>
 </UserControl>
+

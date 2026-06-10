@@ -18,12 +18,7 @@ using PhantomVault.UI.Services;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// View model for the main window. Provides high‑level UI state for
-    /// selecting a removable drive, unlocking an existing vault and
-    /// launching the provisioning wizard. Uses ReactiveUI to simplify
-    /// property change notifications and command wiring.
-    /// </summary>
+
     public sealed class MainViewModel : ReactiveObject
     {
         private readonly UsbDetector _usbDetector;
@@ -88,7 +83,6 @@ namespace PhantomVault.UI.ViewModels
 
             RefreshDriveSelections();
 
-            // Subscribe to hot plug events
             _usbDetector.RemovableDriveInserted += _ => RefreshDriveSelections();
             _usbDetector.RemovableDriveRemoved += _ => RefreshDriveSelections();
 
@@ -103,7 +97,7 @@ namespace PhantomVault.UI.ViewModels
                     Status = "Please select a USB drive.";
                     return;
                 }
-                // Discover vault: prefer the hidden master volume, then fall back to direct container layouts.
+
                 string? manifestPath = null;
                 string? extractedVolumeRoot = null;
                 string? selectedDriveRoot = _blackSecureRawVolumeService.IsRawSelection(SelectedDrive) ? null : SelectedDrive;
@@ -173,8 +167,7 @@ namespace PhantomVault.UI.ViewModels
                     Status = "No vault manifest found on selected drive.";
                     return;
                 }
-                // For simplicity we prompt using an Avalonia dialog. In a
-                // production system you'd build a proper password input in XAML.
+
                 var password = await AskForPasswordAsync();
                 if (password == null) return;
                 try
@@ -195,12 +188,11 @@ namespace PhantomVault.UI.ViewModels
                         }
                     }
 
-                    // Enforce manifest policy (version, signature requirements)
                     try
                     {
-                        // VaultManifest.Version is an int (schema version), convert to semver format
+
                         string versionString = $"{manifest.Version}.0.0";
-                        // Since manifest is encrypted (not separately signed), signature validation = manifest decryption succeeded
+
                         bool signatureValid = true;
                         Program.PolicyService.EnforceManifestPolicy(versionString, signatureValid);
                     }
@@ -214,7 +206,6 @@ namespace PhantomVault.UI.ViewModels
                         return;
                     }
 
-                    // Check for cooldown/lockout
                     if (manifest.LockedUntilUtc.HasValue && DateTimeOffset.UtcNow < manifest.LockedUntilUtc.Value)
                     {
                         await _dialogService.ShowWarningAsync(
@@ -225,7 +216,6 @@ namespace PhantomVault.UI.ViewModels
                         return;
                     }
 
-                    // Verify that the vault is bound to this USB device
                     string deviceId = _usbBindingService.ComputeDeviceId(selectedPhysicalDrivePath ?? selectedDriveRoot!);
                     if (!string.IsNullOrEmpty(manifest.DeviceId) && !string.Equals(manifest.DeviceId, deviceId, StringComparison.OrdinalIgnoreCase))
                     {
@@ -234,21 +224,19 @@ namespace PhantomVault.UI.ViewModels
                             "This vault is bound to a different USB device. Please insert the original USB drive that was used to create this vault.",
                             _ownerWindow);
                         Status = "The vault is bound to a different USB device. Please insert the original device.";
-                        // Record failed attempt
+
                         _intrusionService.RegisterFailedAttempt(manifest, manifestPath, password, null, selectedPhysicalDrivePath ?? selectedDriveRoot!);
                         return;
                     }
 
                     _phantomKeyBridgeValidator.Validate(manifest, password, null);
 
-                    // Verify TOTP if enabled
                     if (!string.IsNullOrEmpty(manifest.TotpSecret))
                     {
                         var totpInput = await AskForTotpAsync();
                         if (totpInput == null) return;
                         string expected = _totpService.GenerateCode(manifest.TotpSecret);
 
-                        // Use constant-time comparison to prevent timing attacks
                         byte[] totpInputBytes = Encoding.UTF8.GetBytes(totpInput ?? string.Empty);
                         byte[] expectedBytes = Encoding.UTF8.GetBytes(expected ?? string.Empty);
 
@@ -264,7 +252,6 @@ namespace PhantomVault.UI.ViewModels
                         }
                     }
 
-                    // If hardware token is required, verify presence
                     if (manifest.RequiresHardwareToken)
                     {
                         try
@@ -287,12 +274,11 @@ namespace PhantomVault.UI.ViewModels
                                 "This vault requires the configured hardware-token presence check, but this device or build cannot perform it. Use a supported Windows build to unlock this vault.",
                                 _ownerWindow);
                             Status = "Hardware-token presence verification unavailable on this device.";
-                            // Do not increment counter when feature missing
+
                             return;
                         }
                     }
 
-                    // Verify the linked device authenticator if the manifest requires it
                     if (!string.IsNullOrEmpty(manifest.PasskeyId))
                     {
                         try
@@ -312,16 +298,13 @@ namespace PhantomVault.UI.ViewModels
                                 return;
                             }
 
-                            // Generate challenge for authentication
                             byte[] challenge = new byte[32];
                             System.Security.Cryptography.RandomNumberGenerator.Fill(challenge);
 
-                            // Decode stored credential ID from manifest
                             byte[] credentialId = Convert.FromBase64String(manifest.PasskeyId);
 
                             Status = "Waiting for device-authenticator verification...";
 
-                            // Request device-authenticator verification
                             bool passkeyVerified = await passkeyService.AuthenticateAsync(
                                 credentialId,
                                 "PhantomVault",
@@ -369,7 +352,6 @@ namespace PhantomVault.UI.ViewModels
                         }
                     }
 
-                    // Phase 2: Check if vault uses hybrid encryption
                     byte[]? hybridDek = null;
                     if (!string.IsNullOrEmpty(manifest.KemCiphertextBase64) &&
                         !string.IsNullOrEmpty(manifest.KemPrivateKeyEncryptedBase64))
@@ -378,11 +360,10 @@ namespace PhantomVault.UI.ViewModels
 
                         try
                         {
-                            // Step 1: Decrypt KEM private key from manifest
+
                             var encryptedPrivateKey = PhantomVault.Core.Utils.HybridKeyDerivation.DeserializeEncryptionResult(
                                 manifest.KemPrivateKeyEncryptedBase64);
 
-                            // Derive KEK to decrypt the private key
                             byte[] salt = Convert.FromBase64String(manifest.SaltBase64 ?? throw new InvalidOperationException("Missing manifest salt"));
 
                             string combinedSecret = password ?? string.Empty;
@@ -410,14 +391,11 @@ namespace PhantomVault.UI.ViewModels
                                 System.Security.Cryptography.CryptographicOperations.ZeroMemory(aad);
                             }
 
-                            // Step 2: Decapsulate KEM ciphertext to get shared secret
                             byte[] kemCiphertext = Convert.FromBase64String(manifest.KemCiphertextBase64);
                             byte[] kemSharedSecret = _hybridEncryptionService.DecapsulateSecret(kemCiphertext, kemPrivateKey);
 
-                            // Step 3: Derive hybrid DEK = KEK ⊕ shared_secret
                             hybridDek = PhantomVault.Core.Utils.HybridKeyDerivation.DeriveHybridKey(kek, kemSharedSecret);
 
-                            // Step 4: Unlock ZK vault service with hybrid DEK
                             Status = "Unlocking vault with hybrid encryption key...";
                             bool zkUnlocked = await _zkVaultService.UnlockWithHybridKeyAsync(hybridDek);
 
@@ -428,13 +406,13 @@ namespace PhantomVault.UI.ViewModels
                                     "Unlock Failed",
                                     "Failed to unlock zero-knowledge vault service with hybrid encryption key.",
                                     _ownerWindow);
-                                // Clean up and fall back
+
                                 PhantomVault.Core.Utils.HybridKeyDerivation.ZeroMemory(kek, kemPrivateKey, kemSharedSecret, hybridDek);
                                 hybridDek = null;
                             }
                             else
                             {
-                                // Clean up sensitive material (but keep hybridDek for reference)
+
                                 PhantomVault.Core.Utils.HybridKeyDerivation.ZeroMemory(kek, kemPrivateKey, kemSharedSecret);
                                 Status = "Hybrid encryption key derived and vault unlocked successfully";
                             }
@@ -446,12 +424,11 @@ namespace PhantomVault.UI.ViewModels
                                 "Encryption Error",
                                 $"Failed to derive post-quantum hybrid encryption key: {ex.Message}\n\nFalling back to traditional encryption.",
                                 _ownerWindow);
-                            // Fall back to traditional encryption
+
                             hybridDek = null;
                         }
                     }
 
-                    // If no hybrid encryption, fall back to traditional ZK unlock
                     if (hybridDek == null && !_zkVaultService.IsUnlocked)
                     {
                         Status = "Unlocking vault with traditional encryption...";
@@ -469,25 +446,23 @@ namespace PhantomVault.UI.ViewModels
                         }
                     }
 
-                    // Device fingerprint check: Raise threat if new device is detected
                     if (_deviceFingerprintProvider != null && _defenceEngine != null)
                     {
                         Status = "Checking device fingerprint...";
-                        
+
                         var currentFingerprint = _deviceFingerprintProvider.GetCurrentFingerprint();
-                        bool deviceTrusted = manifest.TrustedDevices.Any(d => 
+                        bool deviceTrusted = manifest.TrustedDevices.Any(d =>
                             d.MachineId.Equals(currentFingerprint.MachineId, StringComparison.OrdinalIgnoreCase));
 
                         if (!deviceTrusted)
                         {
-                            // Raise NewDeviceFingerprint threat
+
                             _defenceEngine.RaiseThreat(new ThreatEvent(
                                 ThreatType.NewDeviceFingerprint,
                                 ThreatLevel.Warning,
                                 $"Vault '{manifest.VaultName}' accessed from unrecognized device: {currentFingerprint.Hostname} ({currentFingerprint.UserName})"
                             ));
 
-                            // Ask user if they want to trust this device
                             var trustResult = await _dialogService.ShowConfirmationAsync(
                                 "New Device Detected",
                                 $"This vault is being accessed from a device that hasn't been seen before:\n\n" +
@@ -499,11 +474,10 @@ namespace PhantomVault.UI.ViewModels
 
                             if (trustResult)
                             {
-                                // Add device to trusted list
+
                                 currentFingerprint.FriendlyName = $"{currentFingerprint.Hostname} ({currentFingerprint.UserName})";
                                 manifest.TrustedDevices.Add(currentFingerprint);
-                                
-                                // Persist updated manifest
+
                                 try
                                 {
                                     _manifestService.WriteManifest(manifest, manifestPath, password ?? string.Empty, null);
@@ -511,7 +485,7 @@ namespace PhantomVault.UI.ViewModels
                                 }
                                 catch (Exception ex)
                                 {
-                                    // Non-fatal: vault will still open, just won't save trust
+
                                     await _dialogService.ShowWarningAsync(
                                         "Trust Save Failed",
                                         $"Failed to save trusted device to manifest: {ex.Message}\n\nVault will open but this device won't be remembered.",
@@ -525,34 +499,32 @@ namespace PhantomVault.UI.ViewModels
                         }
                         else
                         {
-                            // Update LastAccessAt for existing trusted device
-                            var existingDevice = manifest.TrustedDevices.FirstOrDefault(d => 
+
+                            var existingDevice = manifest.TrustedDevices.FirstOrDefault(d =>
                                 d.MachineId.Equals(currentFingerprint.MachineId, StringComparison.OrdinalIgnoreCase));
-                            
+
                             if (existingDevice != null)
                             {
                                 existingDevice.LastAccessAt = DateTimeOffset.UtcNow;
-                                
-                                // Persist updated timestamp
+
                                 try
                                 {
                                     _manifestService.WriteManifest(manifest, manifestPath, password ?? string.Empty, null);
                                 }
                                 catch
                                 {
-                                    // Non-fatal: timestamp update failure is not critical
+
                                 }
                             }
-                            
+
                             Status = "Device fingerprint verified (trusted)";
                         }
                     }
 
-                    // Check if vault requires rekey before allowing normal access
                     if (manifest.RekeyRequired)
                     {
                         Status = "⚠️ Vault Compromised - Rekey Required";
-                        
+
                         var rekeyConfirm = await _dialogService.ShowConfirmationAsync(
                             "Security Alert: Rekey Required",
                             $"This vault has been marked as COMPROMISED by the Defence Engine.\n\n" +
@@ -561,27 +533,25 @@ namespace PhantomVault.UI.ViewModels
                             $"This requires providing your current password and choosing a new password.\n\n" +
                             $"Would you like to rekey the vault now?",
                             _ownerWindow);
-                        
+
                         if (!rekeyConfirm)
                         {
                             Status = "Vault access blocked - rekey required";
                             return;
                         }
-                        
-                        // Prompt for new password
+
                         var newPassword = await AskForNewPasswordAsync();
                         if (newPassword == null)
                         {
                             Status = "Rekey cancelled";
                             return;
                         }
-                        
+
                         Status = "Performing rekey operation...";
-                        
-                        // Get RekeyService from DI
+
                         var services = (Avalonia.Application.Current as App)?.Services;
                         var rekeyService = services?.GetService(typeof(RekeyService)) as RekeyService;
-                        
+
                         if (rekeyService == null)
                         {
                             await _dialogService.ShowErrorAsync(
@@ -591,14 +561,14 @@ namespace PhantomVault.UI.ViewModels
                             Status = "Rekey service unavailable";
                             return;
                         }
-                        
+
                         bool rekeySuccess = rekeyService.RekeyVault(
                             manifestPath,
                             password ?? string.Empty,
                             newPassword,
                             manifest.KeyfilePath,
                             manifest.KeyfilePath);
-                        
+
                         if (!rekeySuccess)
                         {
                             await _dialogService.ShowErrorAsync(
@@ -608,7 +578,7 @@ namespace PhantomVault.UI.ViewModels
                             Status = "⚠️ Rekey failed";
                             return;
                         }
-                        
+
                         Status = "✅ Rekey successful - Vault access restored";
                         await _dialogService.ShowSuccessAsync(
                             "Rekey Complete",
@@ -616,15 +586,12 @@ namespace PhantomVault.UI.ViewModels
                             "Security state reset to Normal.\n" +
                             "Please use your new password for future access.",
                             _ownerWindow);
-                        
-                        // Update password for subsequent operations
+
                         password = newPassword;
-                        
-                        // Reload manifest to get updated state
+
                         manifest = _manifestService.ReadManifest(manifestPath, password);
                     }
 
-                    // Mount container (vault service is now unlocked)
                     string containerAbs = Path.IsPathRooted(manifest.ContainerPath)
                         ? manifest.ContainerPath
                         : Path.Combine(selectedDriveRoot!, manifest.ContainerPath);
@@ -633,7 +600,6 @@ namespace PhantomVault.UI.ViewModels
                         ? extractedVolumeRoot
                         : await _vaultService.MountVaultAsync(containerAbs, mountName, password ?? string.Empty);
 
-                    // For Phase 1 vaults: Try to load KEM private key from inside vault
                     if (string.IsNullOrEmpty(manifest.KemCiphertextBase64) &&
                         !string.IsNullOrEmpty(manifest.KemPublicKeyBase64))
                     {
@@ -653,9 +619,9 @@ namespace PhantomVault.UI.ViewModels
                         _ownerWindow);
 
                     Status = $"Vault mounted at {mountPath}";
-                    // Reset failed attempts on successful unlock
+
                     _intrusionService.ResetAttempts(manifest, manifestPath, password ?? string.Empty, null);
-                    // Record unlock event in audit log
+
                     try
                     {
                         string auditPath = !string.IsNullOrWhiteSpace(selectedDriveRoot)
@@ -665,10 +631,9 @@ namespace PhantomVault.UI.ViewModels
                     }
                     catch
                     {
-                        // Ignore audit errors
+
                     }
 
-                    // Clean up hybrid DEK from memory (ZK service already has a copy)
                     if (hybridDek != null)
                     {
                         PhantomVault.Core.Utils.HybridKeyDerivation.ZeroMemory(hybridDek);
@@ -694,14 +659,11 @@ namespace PhantomVault.UI.ViewModels
                         }
                         catch
                         {
-                            // Best effort cleanup only.
+
                         }
                     }
                     Status = ex.Message;
-                    // If reading manifest failed due to wrong passphrase
-                    // we cannot increment the counter because we cannot
-                    // decrypt the manifest. This could be improved by
-                    // storing the counter in a separate tamper‑evident log.
+
                 }
                 finally
                 {
@@ -711,67 +673,41 @@ namespace PhantomVault.UI.ViewModels
 
             ProvisionCommand = ReactiveCommand.Create(() =>
             {
-                // Create a new provision window and show it. We use
-                // Interaction for this to keep view model decoupled from view.
+
                 OnRequestProvision?.Invoke();
             });
         }
 
-        /// <summary>
-        /// Gets the list of detected removable drives.
-        /// </summary>
         public ObservableCollection<string> RemovableDrives => _removableDrives;
 
-        /// <summary>
-        /// Gets or sets the currently selected drive path.
-        /// </summary>
         public string? SelectedDrive
         {
             get => _selectedDrive;
             set => this.RaiseAndSetIfChanged(ref _selectedDrive, value);
         }
 
-        /// <summary>
-        /// Indicates whether an operation is in progress. Disables commands
-        /// when true.
-        /// </summary>
         public bool IsBusy
         {
             get => _isBusy;
             private set => this.RaiseAndSetIfChanged(ref _isBusy, value);
         }
 
-        /// <summary>
-        /// A human readable status message displayed in the UI.
-        /// </summary>
         public string Status
         {
             get => _status;
             private set => this.RaiseAndSetIfChanged(ref _status, value);
         }
 
-        /// <summary>
-        /// Command executed when the user chooses to unlock a vault.
-        /// </summary>
         public ReactiveCommand<Unit, Unit> UnlockCommand { get; }
 
-        /// <summary>
-        /// Command executed when the user wants to provision a new vault.
-        /// </summary>
         public ReactiveCommand<Unit, Unit> ProvisionCommand { get; }
 
-        /// <summary>
-        /// Event raised when the provision window should be opened. The view
-        /// subscribes to this to create and show the provision window.
-        /// </summary>
         public event Action? OnRequestProvision;
         public event EventHandler<VaultUnlockRequestedEventArgs>? OnRequestOpenVault;
 
         private async Task<string?> AskForPasswordAsync()
         {
-            // Secure password prompt using Avalonia TextBox with PasswordChar.
-            // Password is cleared from the control after reading to minimize
-            // exposure in memory.
+
             var dialog = new Window
             {
                 Title = "Enter passphrase",
@@ -781,140 +717,53 @@ namespace PhantomVault.UI.ViewModels
                 CanResize = false
             };
             var panel = new StackPanel { Margin = new Thickness(15), Spacing = 10 };
-            
-            var label = new TextBlock 
-            { 
+
+            var label = new TextBlock
+            {
                 Text = "Enter your vault passphrase:",
                 FontWeight = Avalonia.Media.FontWeight.SemiBold
             };
-            
-            // TextBox with PasswordChar for secure input
-            var box = new TextBox 
-            { 
-                Width = 350, 
+
+            var box = new TextBox
+            {
+                Width = 350,
                 PasswordChar = '●',
                 Watermark = "Passphrase",
                 Classes = { "SecureInput" }
             };
-            
-            var buttonPanel = new StackPanel 
-            { 
-                Orientation = Orientation.Horizontal, 
+
+            var buttonPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
                 Spacing = 10
             };
-            
-            var okButton = new Button 
-            { 
+
+            var okButton = new Button
+            {
                 IsDefault = true,
                 Content = new TextBlock { Text = "Unlock" },
                 Width = 80
             };
-            
-            var cancelButton = new Button 
-            { 
+
+            var cancelButton = new Button
+            {
                 IsCancel = true,
                 Content = new TextBlock { Text = "Cancel" },
                 Width = 80
             };
-            
+
             buttonPanel.Children.Add(okButton);
             buttonPanel.Children.Add(cancelButton);
             panel.Children.Add(label);
             panel.Children.Add(box);
             panel.Children.Add(buttonPanel);
             dialog.Content = panel;
-            
+
             string? result = null;
             okButton.Click += (_, __) => { result = box.Text; dialog.Close(); };
             cancelButton.Click += (_, __) => { dialog.Close(); };
-            
-            // Resolve a non-null owner when possible (prefer the explicitly set owner,
-            // otherwise use the application's main window). If none available, fall
-            // back to the previous behaviour and suppress the nullable warning locally.
-            Window? owner = _ownerWindow;
-            if (owner == null)
-            {
-                owner = (Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime)?.MainWindow;
-            }
 
-            if (owner != null)
-            {
-                await dialog.ShowDialog(owner);
-            }
-            else
-            {
-#pragma warning disable CS8625 // Allow passing null for owner as a last-resort fallback
-                await dialog.ShowDialog((Window?)null);
-#pragma warning restore CS8625
-            }
-            
-            // Clear password from the TextBox to minimize memory exposure
-            box.Text = string.Empty;
-            
-            return result;
-        }
-
-        /// <summary>
-        /// Prompts the user for a new password during rekey operation.
-        /// </summary>
-        private async Task<string?> AskForNewPasswordAsync()
-        {
-            var dialog = new Window
-            {
-                Title = "Enter New Password for Rekey",
-                Width = 450,
-                Height = 200,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner
-            };
-            var panel = new StackPanel { Margin = new Thickness(10) };
-            
-            panel.Children.Add(new TextBlock 
-            { 
-                Text = "Enter a new password to secure your vault:",
-                Margin = new Thickness(0, 0, 0, 10)
-            });
-            
-            var box1 = new TextBox { Width = 410, PasswordChar = '●', Watermark = "New password" };
-            var box2 = new TextBox { Width = 410, PasswordChar = '●', Watermark = "Confirm password", Margin = new Thickness(0, 5, 0, 0) };
-            
-            var okButton = new Button { IsDefault = true };
-            okButton.Content = new TextBlock { Text = "Rekey Vault" };
-            var cancelButton = new Button { IsCancel = true };
-            cancelButton.Content = new TextBlock { Text = "Cancel" };
-            var buttons = new StackPanel 
-            { 
-                Orientation = Orientation.Horizontal, 
-                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
-                Margin = new Thickness(0, 10, 0, 0)
-            };
-            buttons.Children.Add(okButton);
-            buttons.Children.Add(cancelButton);
-            
-            panel.Children.Add(box1);
-            panel.Children.Add(box2);
-            panel.Children.Add(buttons);
-            dialog.Content = panel;
-            
-            string? result = null;
-            okButton.Click += (_, __) => 
-            { 
-                if (string.IsNullOrEmpty(box1.Text))
-                {
-                    // Show error - password cannot be empty
-                    return;
-                }
-                if (box1.Text != box2.Text)
-                {
-                    // Show error - passwords don't match
-                    box2.Text = string.Empty;
-                    return;
-                }
-                result = box1.Text; 
-                dialog.Close(); 
-            };
-            cancelButton.Click += (_, __) => { dialog.Close(); };
-            
             Window? owner = _ownerWindow;
             if (owner == null)
             {
@@ -931,20 +780,92 @@ namespace PhantomVault.UI.ViewModels
                 await dialog.ShowDialog((Window?)null);
 #pragma warning restore CS8625
             }
-            
-            // Clear passwords from TextBoxes to minimize memory exposure
-            box1.Text = string.Empty;
-            box2.Text = string.Empty;
-            
+
+            box.Text = string.Empty;
+
             return result;
         }
 
-        /// <summary>
-        /// Prompts the user for a time‑based one‑time password (TOTP) code.
-        /// Uses a simple dialog with a text box. Returns null if the user
-        /// cancels the dialog. In a production system you may want to
-        /// implement a custom dialog with additional validation or masking.
-        /// </summary>
+        private async Task<string?> AskForNewPasswordAsync()
+        {
+            var dialog = new Window
+            {
+                Title = "Enter New Password for Rekey",
+                Width = 450,
+                Height = 200,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+            var panel = new StackPanel { Margin = new Thickness(10) };
+
+            panel.Children.Add(new TextBlock
+            {
+                Text = "Enter a new password to secure your vault:",
+                Margin = new Thickness(0, 0, 0, 10)
+            });
+
+            var box1 = new TextBox { Width = 410, PasswordChar = '●', Watermark = "New password" };
+            var box2 = new TextBox { Width = 410, PasswordChar = '●', Watermark = "Confirm password", Margin = new Thickness(0, 5, 0, 0) };
+
+            var okButton = new Button { IsDefault = true };
+            okButton.Content = new TextBlock { Text = "Rekey Vault" };
+            var cancelButton = new Button { IsCancel = true };
+            cancelButton.Content = new TextBlock { Text = "Cancel" };
+            var buttons = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+                Margin = new Thickness(0, 10, 0, 0)
+            };
+            buttons.Children.Add(okButton);
+            buttons.Children.Add(cancelButton);
+
+            panel.Children.Add(box1);
+            panel.Children.Add(box2);
+            panel.Children.Add(buttons);
+            dialog.Content = panel;
+
+            string? result = null;
+            okButton.Click += (_, __) =>
+            {
+                if (string.IsNullOrEmpty(box1.Text))
+                {
+
+                    return;
+                }
+                if (box1.Text != box2.Text)
+                {
+
+                    box2.Text = string.Empty;
+                    return;
+                }
+                result = box1.Text;
+                dialog.Close();
+            };
+            cancelButton.Click += (_, __) => { dialog.Close(); };
+
+            Window? owner = _ownerWindow;
+            if (owner == null)
+            {
+                owner = (Application.Current?.ApplicationLifetime as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+            }
+
+            if (owner != null)
+            {
+                await dialog.ShowDialog(owner);
+            }
+            else
+            {
+#pragma warning disable CS8625
+                await dialog.ShowDialog((Window?)null);
+#pragma warning restore CS8625
+            }
+
+            box1.Text = string.Empty;
+            box2.Text = string.Empty;
+
+            return result;
+        }
+
         private async Task<string?> AskForTotpAsync()
         {
             var dialog = new Window
@@ -969,9 +890,7 @@ namespace PhantomVault.UI.ViewModels
             string? result = null;
             okButton.Click += (_, __) => { result = box.Text?.Trim(); dialog.Close(); };
             cancelButton.Click += (_, __) => dialog.Close();
-            // Resolve a non-null owner when possible (prefer the explicitly set owner,
-            // otherwise use the application's main window). If none available, fall
-            // back to the previous behaviour and suppress the nullable warning locally.
+
             Window? owner = _ownerWindow;
             if (owner == null)
             {
@@ -984,31 +903,18 @@ namespace PhantomVault.UI.ViewModels
             }
             else
             {
-#pragma warning disable CS8625 // Allow passing null for owner as a last-resort fallback
+#pragma warning disable CS8625
                 await dialog.ShowDialog((Window?)null);
 #pragma warning restore CS8625
             }
             return result;
         }
 
-        /// <summary>
-        /// Sets the owner window for dialog display.
-        /// </summary>
         public void SetOwnerWindow(Window window)
         {
             _ownerWindow = window;
         }
 
-        /// <summary>
-        /// Loads and decrypts the ML-KEM-768 private key from the vault.
-        /// This method retrieves the encrypted KEM private key (kem.key) from the mounted
-        /// vault container and decrypts it using the user's passphrase and keyfile.
-        /// The decrypted private key can then be used for post-quantum hybrid decryption operations.
-        /// </summary>
-        /// <param name="mountPath">Path to the mounted vault container.</param>
-        /// <param name="password">User passphrase for key derivation.</param>
-        /// <param name="keyfilePath">Optional keyfile path for additional entropy.</param>
-        /// <returns>The decrypted ML-KEM-768 private key (2400 bytes), or null if not found.</returns>
         private async System.Threading.Tasks.Task<byte[]?> LoadKemPrivateKeyAsync(string mountPath, string password, string? keyfilePath)
         {
             try
@@ -1016,7 +922,7 @@ namespace PhantomVault.UI.ViewModels
                 string kemKeyPath = Path.Combine(mountPath, "kem.key");
                 if (!File.Exists(kemKeyPath))
                 {
-                    // KEM private key not found - vault may have been created before PQ encryption was added
+
                     return null;
                 }
 
@@ -1034,7 +940,6 @@ namespace PhantomVault.UI.ViewModels
                 byte[] tag = Convert.FromBase64String(tagBase64);
                 byte[] ciphertext = Convert.FromBase64String(ciphertextBase64);
 
-                // Combine passphrase with keyfile if present
                 string combinedSecret = password;
                 if (!string.IsNullOrEmpty(keyfilePath) && File.Exists(keyfilePath))
                 {
@@ -1043,12 +948,11 @@ namespace PhantomVault.UI.ViewModels
                     System.Security.Cryptography.CryptographicOperations.ZeroMemory(keyfileBytes);
                 }
 
-                // Derive encryption key
                 byte[] masterKey = _encryptionService.DeriveKey(combinedSecret.AsSpan(), salt);
 
                 try
                 {
-                    // Decrypt the KEM private key
+
                     byte[] aad = System.Text.Encoding.UTF8.GetBytes("ML-KEM-768-PRIVATE-KEY");
                     byte[] privateKey = _encryptionService.Decrypt(ciphertext, nonce, tag, masterKey, aad);
 
@@ -1061,14 +965,14 @@ namespace PhantomVault.UI.ViewModels
                 }
                 finally
                 {
-                    // Wipe master key from memory
+
                     System.Security.Cryptography.CryptographicOperations.ZeroMemory(masterKey);
                 }
             }
             catch (Exception ex)
             {
                 Status = $"Warning: Could not load post-quantum encryption key: {ex.Message}";
-                // Return null to allow vault operations to proceed without PQ encryption
+
                 return null;
             }
         }
@@ -1152,3 +1056,4 @@ namespace PhantomVault.UI.ViewModels
         public string ContainerAbsPath { get; }
     }
 }
+

@@ -11,11 +11,7 @@ using AndroidX.Fragment.App;
 namespace PhantomVault.Core.Services.Platform
 {
 #if ANDROID
-    /// <summary>
-    /// Android implementation of passkey service using BiometricPrompt API.
-    /// Requires Android 9.0 (API 28) or later for full biometric support.
-    /// Falls back to device credentials (PIN/pattern/password) on older devices.
-    /// </summary>
+
     public sealed class AndroidPasskeyService : IPasskeyService
     {
         private readonly FragmentActivity _activity;
@@ -62,25 +58,22 @@ namespace PhantomVault.Core.Services.Platform
             if (string.IsNullOrEmpty(userName)) throw new ArgumentException("User name cannot be empty.", nameof(userName));
             if (challenge == null) throw new ArgumentException("Challenge cannot be null.", nameof(challenge));
 
-            // For Android, we'll use the Android Keystore to generate a hardware-backed key
-            // The credential ID will be the key alias
             var credentialId = $"phantomvault_{userId}_{Guid.NewGuid():N}";
-            
+
             try
             {
-                // Prompt for biometric authentication to confirm registration
+
                 var authenticated = await AuthenticateBiometricAsync("Register new credential", "Confirm your identity to create a new vault credential");
-                
+
                 if (!authenticated)
                     throw new InvalidOperationException("User cancelled biometric authentication.");
 
-                // Generate hardware-backed key in Android Keystore
                 var keyStore = Java.Security.KeyStore.GetInstance("AndroidKeyStore");
                 keyStore?.Load(null);
 
                 var keyPairGenerator = Java.Security.KeyPairGenerator.GetInstance(
                     Java.Security.KeyFactory.DefaultType, "AndroidKeyStore");
-                
+
                 var builder = new Android.Security.Keystore.KeyGenParameterSpec.Builder(
                     credentialId,
                     Android.Security.Keystore.KeyStorePurpose.Sign | Android.Security.Keystore.KeyStorePurpose.Verify)
@@ -108,15 +101,13 @@ namespace PhantomVault.Core.Services.Platform
             try
             {
                 var credentialIdStr = System.Text.Encoding.UTF8.GetString(credentialId);
-                
-                // Verify the key exists in Keystore
+
                 var keyStore = Java.Security.KeyStore.GetInstance("AndroidKeyStore");
                 keyStore?.Load(null);
-                
+
                 if (keyStore?.ContainsAlias(credentialIdStr) != true)
                     return false;
 
-                // Prompt for biometric authentication
                 return await AuthenticateBiometricAsync("Unlock vault", "Confirm your identity to unlock the vault");
             }
             catch (Exception)
@@ -136,7 +127,7 @@ namespace PhantomVault.Core.Services.Platform
                     var promptInfo = new BiometricPrompt.PromptInfo.Builder()
                         .SetTitle(title)
                         .SetSubtitle(subtitle)
-                        .SetAllowedAuthenticators(BiometricManager.Authenticators.BiometricStrong | 
+                        .SetAllowedAuthenticators(BiometricManager.Authenticators.BiometricStrong |
                                                   BiometricManager.Authenticators.DeviceCredential)
                         .Build();
 
@@ -176,14 +167,12 @@ namespace PhantomVault.Core.Services.Platform
             public override void OnAuthenticationFailed()
             {
                 base.OnAuthenticationFailed();
-                // Don't complete the task yet - user can retry
+
             }
         }
     }
 #else
-    /// <summary>
-    /// Placeholder for when Android-specific code is not being compiled.
-    /// </summary>
+
     public sealed class AndroidPasskeyService : IPasskeyService
     {
         public bool IsSupported => false;
@@ -212,3 +201,4 @@ namespace PhantomVault.Core.Services.Platform
     }
 #endif
 }
+

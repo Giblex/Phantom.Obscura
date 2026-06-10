@@ -25,3 +25,4 @@ public sealed partial class CategoryTileViewModel : ObservableObject
     [ObservableProperty] private IBrush  _color     = Brushes.Gray;
     [ObservableProperty] private string  _filterType= "";
 }
+

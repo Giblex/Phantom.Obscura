@@ -16,7 +16,7 @@ namespace PhantomVault.UI.Views
 {
     public partial class VaultCreationLoadingWindow : ThemeAwareWindow
     {
-        // ── Core UI elements ──
+
         private Border? _progressFill;
         private TextBlock? _statusText;
         private TextBlock? _stepDetailText;
@@ -26,13 +26,11 @@ namespace PhantomVault.UI.Views
         private TextBlock? _progressLabel;
         private TextBlock? _hashReadout;
 
-        // ── Techy elements ──
         private TextBlock? _hexColumnLeft;
         private TextBlock? _hexColumnRight;
         private Border? _scanLine;
         private StackPanel? _phaseChecklist;
 
-        // ── Animation elements ──
         private Border? _orbitDot1;
         private Border? _orbitDot2;
         private Border? _orbitDot3;
@@ -46,20 +44,17 @@ namespace PhantomVault.UI.Views
         private DateTime _animationStart;
         private readonly Random _rng = new();
 
-        // ── Cipher scramble state ──
         private string _targetDetailText = "";
         private double _scrambleProgress;
         private bool _isScrambling;
         private const string HexChars = "0123456789ABCDEF";
         private const string CipherChars = "0123456789ABCDEFabcdef!@#$%^&*(){}[]<>|/\\~";
 
-        // ── Hex column state ──
         private readonly List<string> _hexLinesLeft = new();
         private readonly List<string> _hexLinesRight = new();
         private int _hexScrollOffset;
         private const int HexVisibleLines = 38;
 
-        // ── Phase tracking ──
         private int _currentPhaseIndex = -1;
         private double _currentPercent;
         private readonly List<(string icon, string label, Border border, TextBlock iconText, TextBlock labelText)> _phaseItems = new();
@@ -67,7 +62,6 @@ namespace PhantomVault.UI.Views
         public event EventHandler? CreationCompleted;
         private SetupWizardViewModel? _wizardViewModel;
 
-        // Phase definitions
         private static readonly (string Icon, string Label)[] Phases =
         {
             ("\u25B7", "INITIALIZE"),
@@ -81,11 +75,10 @@ namespace PhantomVault.UI.Views
 
         public VaultCreationLoadingWindow()
         {
-            // Fixed dark navy — pre-vault screens never follow user theme
+
             ThemeScope.SetIsThemed(this, false);
             InitializeComponent();
 
-            // Core elements
             _progressFill = this.FindControl<Border>("ProgressFill");
             _statusText = this.FindControl<TextBlock>("StatusText");
             _stepDetailText = this.FindControl<TextBlock>("StepDetailText");
@@ -95,13 +88,11 @@ namespace PhantomVault.UI.Views
             _progressLabel = this.FindControl<TextBlock>("ProgressLabel");
             _hashReadout = this.FindControl<TextBlock>("HashReadout");
 
-            // Techy elements
             _hexColumnLeft = this.FindControl<TextBlock>("HexColumnLeft");
             _hexColumnRight = this.FindControl<TextBlock>("HexColumnRight");
             _scanLine = this.FindControl<Border>("ScanLine");
             _phaseChecklist = this.FindControl<StackPanel>("PhaseChecklist");
 
-            // Animated elements
             _orbitDot1 = this.FindControl<Border>("OrbitDot1");
             _orbitDot2 = this.FindControl<Border>("OrbitDot2");
             _orbitDot3 = this.FindControl<Border>("OrbitDot3");
@@ -117,13 +108,9 @@ namespace PhantomVault.UI.Views
             StartAnimationTimer();
         }
 
-        // ══════════════════════════════════════════════════════════════
-        //  INITIALIZATION
-        // ══════════════════════════════════════════════════════════════
-
         private void InitializeHexData()
         {
-            // Pre-generate random hex lines for scrolling columns
+
             for (int i = 0; i < HexVisibleLines * 3; i++)
             {
                 _hexLinesLeft.Add(GenerateHexLine(8));
@@ -145,9 +132,9 @@ namespace PhantomVault.UI.Views
 
         private void BuildSegmentedRings()
         {
-            // Outer ring: place small tick lines around a circle
+
             PopulateTickMarks(_segmentedRing, 175, 24, 6, "#186BB3AE");
-            // Inner ring: smaller, more ticks, dimmer
+
             PopulateTickMarks(_segmentedRingInner, 140, 36, 4, "#106BB3AE");
         }
 
@@ -161,7 +148,7 @@ namespace PhantomVault.UI.Views
             for (int i = 0; i < count; i++)
             {
                 double angle = (2.0 * Math.PI * i) / count;
-                // Tick sits on the outer edge, pointing inward
+
                 double x1 = radius + Math.Cos(angle) * radius;
                 double y1 = radius + Math.Sin(angle) * radius;
                 double x2 = radius + Math.Cos(angle) * (radius - tickLength);
@@ -224,10 +211,6 @@ namespace PhantomVault.UI.Views
                 _phaseItems.Add((icon, label, container, iconText, labelText));
             }
         }
-
-        // ══════════════════════════════════════════════════════════════
-        //  ANIMATION TIMER (~60fps)
-        // ══════════════════════════════════════════════════════════════
 
         private void StartAnimationTimer()
         {
@@ -301,23 +284,21 @@ namespace PhantomVault.UI.Views
 
         private void AnimateSegmentedRings(double elapsed)
         {
-            // Outer tick ring — slow clockwise
+
             if (_segmentedRing?.RenderTransform is RotateTransform segRot)
                 segRot.Angle = (elapsed / 18.0 * 360.0) % 360.0;
 
-            // Inner tick ring — slow counter-clockwise
             if (_segmentedRingInner?.RenderTransform is RotateTransform segRotInner)
                 segRotInner.Angle = 360.0 - ((elapsed / 14.0 * 360.0) % 360.0);
         }
 
         private void AnimateHexColumns(double elapsed)
         {
-            // Scroll hex data every ~150ms
+
             int newOffset = (int)(elapsed / 0.15);
             if (newOffset == _hexScrollOffset) return;
             _hexScrollOffset = newOffset;
 
-            // Occasionally mutate a random line to simulate data flow
             if (_rng.Next(3) == 0)
             {
                 int idx = _rng.Next(_hexLinesLeft.Count);
@@ -329,7 +310,6 @@ namespace PhantomVault.UI.Views
                 _hexLinesRight[idx] = GenerateHexLine(8);
             }
 
-            // Build visible text
             var sbLeft = new StringBuilder();
             var sbRight = new StringBuilder();
             for (int i = 0; i < HexVisibleLines; i++)
@@ -348,9 +328,8 @@ namespace PhantomVault.UI.Views
         {
             if (_scanLine == null) return;
 
-            // Sweep down over 3 seconds, then reset
             double period = 4.8;
-            double t = (elapsed % period) / period; // 0→1
+            double t = (elapsed % period) / period;
             double windowHeight = 560.0;
 
             _scanLine.Opacity = t < 0.05 || t > 0.95 ? 0 : 0.4;
@@ -361,7 +340,7 @@ namespace PhantomVault.UI.Views
         {
             if (!_isScrambling || _stepDetailText == null) return;
 
-            _scrambleProgress += 0.035; // speed of reveal
+            _scrambleProgress += 0.035;
 
             if (_scrambleProgress >= 1.0)
             {
@@ -370,7 +349,6 @@ namespace PhantomVault.UI.Views
                 return;
             }
 
-            // Progressively reveal characters left to right, with random chars for unrevealed
             var sb = new StringBuilder();
             int revealedCount = (int)(_targetDetailText.Length * _scrambleProgress);
 
@@ -389,7 +367,6 @@ namespace PhantomVault.UI.Views
         {
             if (_hashReadout == null) return;
 
-            // Update hash readout every ~200ms with random hash fragment
             if ((int)(elapsed / 0.2) % 2 == 0 && _currentPercent > 0 && _currentPercent < 100)
             {
                 var sb = new StringBuilder("SHA3: ");
@@ -403,10 +380,6 @@ namespace PhantomVault.UI.Views
             }
         }
 
-        // ══════════════════════════════════════════════════════════════
-        //  VAULT CREATION FLOW
-        // ══════════════════════════════════════════════════════════════
-
         public async Task RunCreationAsync(SetupWizardViewModel wizardViewModel)
         {
             _wizardViewModel = wizardViewModel;
@@ -416,6 +389,13 @@ namespace PhantomVault.UI.Views
                 ApplyProvisioningProgress(0, 3, "Initializing secure provisioning...", "Handing off the validated setup plan to the provisioning engine.");
                 _wizardViewModel.ProvisioningProgressChanged += OnProvisioningProgressChanged;
                 await _wizardViewModel.ExecuteVaultCreationAsync();
+
+                if (_wizardViewModel.HasStagedRecovery)
+                {
+                    await Dispatcher.UIThread.InvokeAsync(async () =>
+                        await Views.Dialogs.RecoveryExportDialog.ShowAsync(this, _wizardViewModel));
+                }
+
                 await ShowCompletion();
                 await Task.Delay(900);
 
@@ -495,32 +475,26 @@ namespace PhantomVault.UI.Views
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                // Progress bar
+
                 if (_progressFill != null)
                     _progressFill.Width = maxWidth * (toPercent / 100.0);
 
-                // Status text
                 if (_statusText != null)
                     _statusText.Text = status;
 
-                // Percentage readout
                 if (_progressPercent != null)
                     _progressPercent.Text = $"{(int)toPercent}%";
 
-                // Phase label
                 if (_progressLabel != null)
                     _progressLabel.Text = phaseLabel;
 
-                // Start cipher scramble for detail text
                 _targetDetailText = detail;
                 _scrambleProgress = 0;
                 _isScrambling = true;
 
-                // Update phase checklist
                 UpdatePhaseChecklist(phaseIndex);
             });
 
-            // Let transitions + scramble play out
             await Task.Delay(350);
         }
 
@@ -534,25 +508,25 @@ namespace PhantomVault.UI.Views
 
                 if (i < activeIndex)
                 {
-                    // Completed
+
                     border.Opacity = 0.55;
-                    iconText.Text = "\u2713"; // ✓
+                    iconText.Text = "\u2713";
                     iconText.Foreground = new SolidColorBrush(Color.Parse("#6BB3AE"));
                     labelText.Foreground = new SolidColorBrush(Color.Parse("#506BB3AE"));
                 }
                 else if (i == activeIndex)
                 {
-                    // Active
+
                     border.Opacity = 1.0;
-                    iconText.Text = "\u25B6"; // ▶
+                    iconText.Text = "\u25B6";
                     iconText.Foreground = new SolidColorBrush(Color.Parse("#8FB5DF"));
                     labelText.Foreground = new SolidColorBrush(Color.Parse("#C0FFFFFF"));
                 }
                 else
                 {
-                    // Pending
+
                     border.Opacity = 0.25;
-                    iconText.Text = "\u25B7"; // ▷
+                    iconText.Text = "\u25B7";
                     iconText.Foreground = new SolidColorBrush(Color.Parse("#306BB3AE"));
                     labelText.Foreground = new SolidColorBrush(Color.Parse("#30FFFFFF"));
                 }
@@ -565,7 +539,7 @@ namespace PhantomVault.UI.Views
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                // Mark all phases complete
+
                 for (int i = 0; i < _phaseItems.Count; i++)
                 {
                     var (_, _, border, iconText, labelText) = _phaseItems[i];
@@ -602,7 +576,6 @@ namespace PhantomVault.UI.Views
                     _completionCheck.Classes.Add("visible");
                 }
 
-                // Fade out hex columns
                 if (_hexColumnLeft != null) _hexColumnLeft.Opacity = 0;
                 if (_hexColumnRight != null) _hexColumnRight.Opacity = 0;
                 if (_scanLine != null) _scanLine.Opacity = 0;
@@ -621,3 +594,4 @@ namespace PhantomVault.UI.Views
         }
     }
 }
+

@@ -9,3 +9,4 @@ public sealed partial class PlaceholderViewModel : ObservableObject
     [ObservableProperty] private string _description    = "";
     [ObservableProperty] private string _portStatus     = "";
 }
+

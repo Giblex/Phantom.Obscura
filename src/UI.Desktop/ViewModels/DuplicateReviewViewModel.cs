@@ -10,10 +10,7 @@ using ReactiveUI;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// ViewModel for the duplicate credential review dialog that allows users to resolve conflicts
-    /// when importing credentials that match existing entries by username, URL, or title.
-    /// </summary>
+
     public class DuplicateReviewViewModel : ReactiveObject
     {
         private Window? _ownerWindow;
@@ -93,12 +90,12 @@ namespace PhantomVault.UI.ViewModels
 
         private void Apply()
         {
-            // Set default choices for any duplicates without explicit user choice
+
             foreach (var dup in _duplicates)
             {
                 if (!UserChoices.ContainsKey(dup))
                 {
-                    // Smart default: keep stronger/newer password
+
                     UserChoices[dup] = DetermineSmartChoice(dup);
                 }
             }
@@ -115,15 +112,13 @@ namespace PhantomVault.UI.ViewModels
 
         private DuplicateChoice DetermineSmartChoice(DuplicateInfo duplicate)
         {
-            // Same logic as ImportExportService.ApplyDuplicateResolution
+
             var newPassword = duplicate.NewCredential?.Password ?? string.Empty;
             var existingPassword = duplicate.ExistingCredential?.Password ?? string.Empty;
 
-            // If passwords are identical, keep existing
             if (newPassword == existingPassword)
                 return DuplicateChoice.KeepExisting;
 
-            // Keep the stronger password
             if (newPassword.Length > existingPassword.Length)
                 return DuplicateChoice.KeepNew;
 
@@ -131,9 +126,6 @@ namespace PhantomVault.UI.ViewModels
         }
     }
 
-    /// <summary>
-    /// Represents a single duplicate credential pair with comparison details for the review UI.
-    /// </summary>
     public class DuplicateItemViewModel : ReactiveObject
     {
         private DuplicateChoice _choice = DuplicateChoice.None;
@@ -207,3 +199,4 @@ namespace PhantomVault.UI.ViewModels
         KeepBoth
     }
 }
+

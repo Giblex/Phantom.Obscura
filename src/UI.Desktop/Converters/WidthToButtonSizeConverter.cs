@@ -4,10 +4,7 @@ using System.Globalization;
 
 namespace PhantomVault.UI.Converters
 {
-    /// <summary>
-    /// Converter that maps a tile width to sensible button sizes for responsive UI.
-    /// Parameter can be "copy" (returns width for the primary copy button) or "icon" (returns size for icon/action buttons).
-    /// </summary>
+
     public class WidthToButtonSizeConverter : IValueConverter
     {
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
@@ -21,19 +18,16 @@ namespace PhantomVault.UI.Converters
 
                 var param = (parameter ?? string.Empty).ToString()?.ToLowerInvariant() ?? string.Empty;
 
-                // Small tile sizes
                 if (width <= 200)
                 {
                     return param == "copy" ? 48.0 : 26.0;
                 }
 
-                // Medium
                 if (width <= 300)
                 {
                     return param == "copy" ? 64.0 : 30.0;
                 }
 
-                // Large
                 return param == "copy" ? 86.0 : 34.0;
             }
             catch
@@ -48,3 +42,4 @@ namespace PhantomVault.UI.Converters
         }
     }
 }
+

@@ -40,7 +40,6 @@ namespace PhantomVault.UI.ViewModels
             CancelCommand = ReactiveCommand.Create(Cancel);
             DeleteTotpCommand = ReactiveCommand.Create(DeleteTotp);
 
-            // Watch for changes to secret key
             this.WhenAnyValue(x => x.SecretKey)
                 .Subscribe(_ => ValidateAndUpdatePreview());
         }
@@ -50,9 +49,6 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> CancelCommand { get; }
         public ReactiveCommand<Unit, Unit> DeleteTotpCommand { get; }
 
-        /// <summary>
-        /// Whether this dialog is editing an existing TOTP entry (shows delete option).
-        /// </summary>
         public bool IsEditing
         {
             get => _isEditing;
@@ -76,7 +72,7 @@ namespace PhantomVault.UI.ViewModels
             get => _secretKey;
             set
             {
-                // Normalize: remove spaces and convert to uppercase
+
                 var normalized = value?.Replace(" ", "").Replace("-", "").ToUpperInvariant() ?? string.Empty;
                 this.RaiseAndSetIfChanged(ref _secretKey, normalized);
             }
@@ -171,37 +167,9 @@ namespace PhantomVault.UI.ViewModels
         private async void StartCamera()
         {
             QrScanStatus = "Camera scanning feature available. For now, please scan QR with mobile app and enter details manually.";
-            
-            // Note: Full camera implementation would require platform-specific code
-            // For Avalonia, we'd need to use platform invoke or a community camera control
-            // ZXing.Net can decode from bitmap images, so the flow would be:
-            // 1. Capture frame from camera (platform-specific)
-            // 2. Convert to bitmap
-            // 3. Decode with ZXing.Net
-            // 4. Parse otpauth:// URL
-            
-            // Example decoding logic (when we have a bitmap):
-            // var reader = new BarcodeReader
-            // {
-            //     AutoRotate = true,
-            //     TryInverted = true,
-            //     Options = new DecodingOptions
-            //     {
-            //         PossibleFormats = new[] { BarcodeFormat.QR_CODE },
-            //         TryHarder = true
-            //     }
-            // };
-            // var result = reader.Decode(bitmap);
-            // if (result != null && result.Text.StartsWith("otpauth://totp/"))
-            // {
-            //     ParseOtpAuthUrl(result.Text);
-            // }
+
         }
-        
-        /// <summary>
-        /// Parses an otpauth:// URL from a TOTP QR code
-        /// Format: otpauth://totp/Issuer:Account?secret=BASE32&digits=6&period=30&algorithm=SHA1
-        /// </summary>
+
         private void ParseOtpAuthUrl(string url)
         {
             try
@@ -211,11 +179,10 @@ namespace PhantomVault.UI.ViewModels
                     QrScanStatus = "Invalid QR code format. Expected TOTP authenticator code.";
                     return;
                 }
-                
+
                 var uri = new Uri(url);
                 var path = uri.LocalPath.TrimStart('/');
-                
-                // Parse Issuer:AccountName from path
+
                 if (path.Contains(':'))
                 {
                     var parts = path.Split(':');
@@ -226,38 +193,37 @@ namespace PhantomVault.UI.ViewModels
                 {
                     AccountName = Uri.UnescapeDataString(path);
                 }
-                
-                // Parse query parameters
+
                 var query = HttpUtility.ParseQueryString(uri.Query);
-                
+
                 var secret = query["secret"];
                 if (!string.IsNullOrEmpty(secret))
                 {
                     SecretKey = secret;
                 }
-                
+
                 if (int.TryParse(query["digits"], out var digits))
                 {
                     Digits = digits;
                 }
-                
+
                 if (int.TryParse(query["period"], out var period))
                 {
                     Period = period;
                 }
-                
+
                 var algorithm = query["algorithm"];
                 if (!string.IsNullOrEmpty(algorithm))
                 {
                     Algorithm = algorithm.ToUpper();
                 }
-                
+
                 var issuerParam = query["issuer"];
                 if (!string.IsNullOrEmpty(issuerParam) && string.IsNullOrEmpty(Issuer))
                 {
                     Issuer = Uri.UnescapeDataString(issuerParam);
                 }
-                
+
                 QrScanStatus = $"✓ Successfully scanned TOTP for {Issuer}";
                 ValidateAndUpdatePreview();
             }
@@ -280,7 +246,6 @@ namespace PhantomVault.UI.ViewModels
                 return;
             }
 
-            // Validate Base32 format
             if (!TotpIntegrationHelper.IsValidSecret(SecretKey))
             {
                 SecretValidationMessage = "❌ Invalid secret key format. Must be Base32 (A-Z, 2-7).";
@@ -298,7 +263,6 @@ namespace PhantomVault.UI.ViewModels
             CanSave = true;
             this.RaisePropertyChanged(nameof(HasValidSecret));
 
-            // Start preview timer
             UpdatePreview();
             _previewTimer?.Dispose();
             _previewTimer = new Timer(_ => UpdatePreview(), null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
@@ -321,7 +285,7 @@ namespace PhantomVault.UI.ViewModels
 
         private string FormatCode(string code, int digits)
         {
-            // Format as "123 456" for 6 digits, "1234 567" for 7 digits, etc.
+
             if (code.Length <= 3)
                 return code;
 
@@ -388,3 +352,4 @@ namespace PhantomVault.UI.ViewModels
         public bool LinkToCurrentEntry { get; set; } = true;
     }
 }
+

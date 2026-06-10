@@ -4,9 +4,7 @@ using System.IO;
 
 namespace PhantomVault.UI.Services
 {
-    /// <summary>
-    /// Locates and launches the suite-bundled PhantomRecovery application.
-    /// </summary>
+
     public class IntegratedRecoveryService
     {
         private readonly SuiteWorkspaceService _workspaceService;
@@ -83,3 +81,4 @@ namespace PhantomVault.UI.Services
         }
     }
 }
+

@@ -4,10 +4,6 @@ using Avalonia.Markup.Xaml;
 
 namespace PhantomVault.UI.Desktop.Controls;
 
-/// <summary>
-/// Skeleton loader control for displaying loading states.
-/// Shows animated shimmer effect while content is loading.
-/// </summary>
 public partial class SkeletonLoader : UserControl
 {
     private Border? _skeletonBorder;
@@ -68,9 +64,6 @@ public partial class SkeletonLoader : UserControl
     }
 }
 
-/// <summary>
-/// Type of skeleton loader shape.
-/// </summary>
 public enum SkeletonType
 {
     Text,
@@ -78,3 +71,4 @@ public enum SkeletonType
     Circle,
     Card
 }
+

@@ -21,15 +21,11 @@ namespace PhantomVault.UI.ViewModels.Settings
         private bool _autoLockOnScreenLock = true;
         private bool _clearClipboardOnLock = true;
         private bool _requireUnlockToShow = false;
-        private int _selectedFailedAttempts = 2; // 10 attempts
+        private int _selectedFailedAttempts = 2;
 
-        // Issue #25: shared draft tracker so the overlay-bottom Save/Discard
-        // buttons drive Advanced-tab persistence. _baselineSnapshot captures
-        // the on-disk state at the moment of first-stage so Discard can roll
-        // every field back without overwriting any intermediate commits.
         private readonly PhantomVault.UI.Services.SettingsDraftTracker _draft;
         private AdvancedBaseline _baselineSnapshot;
-        private bool _suppressStage; // set during LoadSettings so initial property writes don't stage
+        private bool _suppressStage;
 
         private readonly struct AdvancedBaseline
         {
@@ -50,20 +46,28 @@ namespace PhantomVault.UI.ViewModels.Settings
             get => _enableDebugLogging;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _enableDebugLogging, value))
+                if (_enableDebugLogging != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _enableDebugLogging, value);
                     SaveSettings();
                 }
             }
         }
+
+        /// <summary>Read-only privacy dashboard (local-first / USB-bound posture + live network state).</summary>
+        public PrivacyPostureViewModel Privacy { get; } = new PrivacyPostureViewModel();
+
+        /// <summary>Verified software-update panel; stays disabled until the signing key is provisioned.</summary>
+        public UpdatePanelViewModel Update { get; } = new UpdatePanelViewModel();
 
         public bool ShowDiagnosticInfo
         {
             get => _showDiagnosticInfo;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _showDiagnosticInfo, value))
+                if (_showDiagnosticInfo != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _showDiagnosticInfo, value);
                     SaveSettings();
                 }
             }
@@ -74,9 +78,11 @@ namespace PhantomVault.UI.ViewModels.Settings
             get => _enablePrivacyMode;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _enablePrivacyMode, value))
+                if (_enablePrivacyMode != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _enablePrivacyMode, value);
                     PrivacyShield.PrivacyModeEnabled = value;
+                    Privacy.Refresh();
                     SaveSettings();
                 }
             }
@@ -87,9 +93,11 @@ namespace PhantomVault.UI.ViewModels.Settings
             get => _redactLogs;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _redactLogs, value))
+                if (_redactLogs != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _redactLogs, value);
                     PrivacyShield.RedactDiagnostics = value;
+                    Privacy.Refresh();
                     SaveSettings();
                 }
             }
@@ -100,8 +108,9 @@ namespace PhantomVault.UI.ViewModels.Settings
             get => _blockRemoteDebugging;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _blockRemoteDebugging, value))
+                if (_blockRemoteDebugging != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _blockRemoteDebugging, value);
                     SaveSettings();
                 }
             }
@@ -125,8 +134,9 @@ namespace PhantomVault.UI.ViewModels.Settings
             get => _autoLockOnMinimize;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _autoLockOnMinimize, value))
+                if (_autoLockOnMinimize != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _autoLockOnMinimize, value);
                     SaveSettings();
                 }
             }
@@ -137,8 +147,9 @@ namespace PhantomVault.UI.ViewModels.Settings
             get => _autoLockOnScreenLock;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _autoLockOnScreenLock, value))
+                if (_autoLockOnScreenLock != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _autoLockOnScreenLock, value);
                     SaveSettings();
                 }
             }
@@ -149,8 +160,9 @@ namespace PhantomVault.UI.ViewModels.Settings
             get => _clearClipboardOnLock;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _clearClipboardOnLock, value))
+                if (_clearClipboardOnLock != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _clearClipboardOnLock, value);
                     SaveSettings();
                 }
             }
@@ -161,8 +173,9 @@ namespace PhantomVault.UI.ViewModels.Settings
             get => _requireUnlockToShow;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _requireUnlockToShow, value))
+                if (_requireUnlockToShow != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _requireUnlockToShow, value);
                     SaveSettings();
                 }
             }
@@ -189,7 +202,6 @@ namespace PhantomVault.UI.ViewModels.Settings
         public ICommand ClearAllVaultDataCommand { get; }
         public ICommand ResetToDefaultsCommand { get; }
 
-        // PhantomRecovery Developer Mode
         public bool IsRecoveryDeveloperModeEnabled
         {
             get => RecoveryDeveloperMode.IsEnabled;
@@ -239,8 +251,7 @@ namespace PhantomVault.UI.ViewModels.Settings
 
         public AdvancedSettingsViewModel(PhantomVault.UI.Services.SettingsDraftTracker? draftTracker)
         {
-            // Issue #25: resolve the singleton tracker from DI so this VM stages
-            // into the same instance the overlay's Save button drives.
+
             _draft = draftTracker
                 ?? ((Avalonia.Application.Current as App)?.Services?.GetService(typeof(PhantomVault.UI.Services.SettingsDraftTracker)) as PhantomVault.UI.Services.SettingsDraftTracker)
                 ?? new PhantomVault.UI.Services.SettingsDraftTracker();
@@ -288,23 +299,16 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
         }
 
-        // Issue #25: every setter routes through here. Instead of writing to
-        // disk on every keystroke / toggle, stage one batched "Advanced.All"
-        // entry in the shared tracker. Re-staging replaces the prior pair so
-        // a flurry of changes still results in a single commit/discard.
         private void SaveSettings()
         {
             if (_suppressStage) return;
 
-            // If the user toggled everything back to the originally-loaded
-            // baseline, drop the staged work entirely.
             if (CurrentMatchesBaseline())
             {
                 _draft.ClearKey("Advanced.All");
                 return;
             }
 
-            // Capture the snapshot of fields we want to commit.
             var staged = SnapshotCurrent();
             var baseline = _baselineSnapshot;
 
@@ -328,8 +332,7 @@ namespace PhantomVault.UI.ViewModels.Settings
                             settings.MaxFailedUnlockAttempts = SettingsService.GetMaxFailedUnlockAttemptsFromSelection(staged.SelectedFailedAttempts);
                         });
                         PrivacyShield.DebugLoggingEnabled = staged.EnableDebugLogging;
-                        // Update the baseline so further edits stage against the
-                        // newly-persisted state.
+
                         _baselineSnapshot = staged;
                     }
                     catch (Exception ex)
@@ -339,8 +342,7 @@ namespace PhantomVault.UI.ViewModels.Settings
                 },
                 discard: () =>
                 {
-                    // Roll every property back to the baseline that existed at
-                    // first-stage; raise property changes so the UI updates.
+
                     _suppressStage = true;
                     try
                     {
@@ -359,9 +361,7 @@ namespace PhantomVault.UI.ViewModels.Settings
                     {
                         _suppressStage = false;
                     }
-                    // Restore the live PrivacyShield flag too if it had been
-                    // toggled mid-session via the EnablePrivacyMode / RedactLogs
-                    // setters (those mutate static state).
+
                     PrivacyShield.PrivacyModeEnabled = baseline.EnablePrivacyMode;
                     PrivacyShield.RedactDiagnostics = baseline.RedactLogs;
                 });
@@ -458,7 +458,7 @@ namespace PhantomVault.UI.ViewModels.Settings
         {
             try
             {
-                await Task.Delay(500); // Simulate operation
+                await Task.Delay(500);
                 PrivacyShield.DebugInfo("AdvancedSettings", "Cache cleared successfully");
             }
             catch (Exception ex)
@@ -471,7 +471,7 @@ namespace PhantomVault.UI.ViewModels.Settings
         {
             try
             {
-                await Task.Delay(1000); // Simulate operation
+                await Task.Delay(1000);
                 PrivacyShield.DebugInfo("AdvancedSettings", "Search index rebuilt successfully");
             }
             catch (Exception ex)
@@ -550,7 +550,6 @@ namespace PhantomVault.UI.ViewModels.Settings
             sb.AppendLine($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
             sb.AppendLine();
 
-            // System Information
             sb.AppendLine("SYSTEM INFORMATION");
             sb.AppendLine("------------------");
             sb.AppendLine($"Operating System: {Environment.OSVersion}");
@@ -572,7 +571,6 @@ namespace PhantomVault.UI.ViewModels.Settings
             sb.AppendLine($"CLR Version: {Environment.Version}");
             sb.AppendLine();
 
-            // Application Information
             sb.AppendLine("APPLICATION INFORMATION");
             sb.AppendLine("-----------------------");
             sb.AppendLine($"Application: PhantomVault");
@@ -581,7 +579,6 @@ namespace PhantomVault.UI.ViewModels.Settings
             sb.AppendLine($"Base Directory: {AppContext.BaseDirectory}");
             sb.AppendLine();
 
-            // Memory Information
             sb.AppendLine("MEMORY INFORMATION");
             sb.AppendLine("------------------");
             var process = System.Diagnostics.Process.GetCurrentProcess();
@@ -590,7 +587,6 @@ namespace PhantomVault.UI.ViewModels.Settings
             sb.AppendLine($"Virtual Memory: {process.VirtualMemorySize64 / 1024 / 1024} MB");
             sb.AppendLine();
 
-            // Settings
             sb.AppendLine("CURRENT SETTINGS");
             sb.AppendLine("----------------");
             sb.AppendLine($"Debug Logging: {EnableDebugLogging}");
@@ -606,7 +602,6 @@ namespace PhantomVault.UI.ViewModels.Settings
             sb.AppendLine($"Failed Attempts Threshold: {GetFailedAttemptsValue()}");
             sb.AppendLine();
 
-            // Paths
             sb.AppendLine("APPLICATION PATHS");
             sb.AppendLine("-----------------");
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
@@ -614,7 +609,6 @@ namespace PhantomVault.UI.ViewModels.Settings
             sb.AppendLine($"Logs: {PrivacyShield.MaskText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "PhantomVault", "logs"))}");
             sb.AppendLine();
 
-            // Disk Space
             try
             {
                 var drive = new DriveInfo(Path.GetPathRoot(Environment.SystemDirectory) ?? "C:\\");
@@ -627,7 +621,7 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
             catch
             {
-                // Ignore disk space errors
+
             }
 
             sb.AppendLine("END OF REPORT");
@@ -649,3 +643,4 @@ namespace PhantomVault.UI.ViewModels.Settings
         }
     }
 }
+

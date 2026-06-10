@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Threading;
 using System;
 using ReactiveUI;
+using PhantomVault.UI.Services;
 
 namespace PhantomVault.UI.Controls
 {
@@ -13,7 +14,15 @@ namespace PhantomVault.UI.Controls
 
             this.Loaded += (s, e) =>
             {
-                // Focus search box when control becomes visible
+                bool focusOnOpen = true;
+                try { focusOnOpen = SettingsService.Load().FocusSearchOnOpen; }
+                catch { }
+
+                if (!focusOnOpen)
+                {
+                    return;
+                }
+
                 Dispatcher.UIThread.Post(() =>
                 {
                     var searchTextBox = this.FindControl<TextBox>("SearchTextBox");
@@ -23,3 +32,4 @@ namespace PhantomVault.UI.Controls
         }
     }
 }
+

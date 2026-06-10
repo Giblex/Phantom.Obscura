@@ -15,8 +15,7 @@
         Classes="animated-window">
 
     <DockPanel Margin="20" LastChildFill="True">
-        
-        <!-- Footer - Docked to bottom FIRST to reserve space -->
+
         <Border DockPanel.Dock="Bottom"
                 Background="{DynamicResource ControlBackgroundBrush}"
                 BorderBrush="{DynamicResource ControlBorderBrush}"
@@ -24,13 +23,12 @@
                 Padding="0,15,0,0"
                 Margin="0,15,0,0">
             <StackPanel Spacing="10">
-                <!-- Cache Info -->
+
                 <TextBlock Text="{Binding CacheInfo}"
                            FontSize="{StaticResource Type.Micro.Size}"
                            Foreground="{DynamicResource MutedTextBrush}"
                            HorizontalAlignment="Center"/>
-                
-                <!-- Action Buttons -->
+
                 <Grid ColumnDefinitions="*,10,*">
                     <Button Grid.Column="0"
                             Command="{Binding ClearCacheCommand}"
@@ -47,24 +45,21 @@
                 </Grid>
             </StackPanel>
         </Border>
-        
-        <!-- Header with Security Warning - Docked to top -->
+
         <StackPanel DockPanel.Dock="Top" Spacing="15">
-            
-            <!-- Title -->
+
             <TextBlock Text="Download Icons from Flaticon"
                        FontSize="{StaticResource Type.H3.Size}"
                        FontWeight="Bold"
                        Foreground="{DynamicResource PrimaryTextBrush}"/>
-            
-            <!-- Security Status -->
+
             <Border Background="{DynamicResource ControlBackgroundBrush}"
                     BorderBrush="{DynamicResource ControlBorderBrush}"
                     BorderThickness="1"
                     CornerRadius="6"
                     Padding="15">
                 <StackPanel Spacing="10">
-                    <!-- Internet Status Indicator -->
+
                     <Grid ColumnDefinitions="Auto,*">
                         <Border Grid.Column="0"
                                 Background="{Binding InternetStatusColor}"
@@ -74,19 +69,17 @@
                                 VerticalAlignment="Center"
                                 Margin="0,0,12,0"/>
                         <TextBlock Grid.Column="1"
-                                   Text="{Binding InternetStatusText}" 
-                                   FontSize="{StaticResource Type.Label.Size}" 
+                                   Text="{Binding InternetStatusText}"
+                                   FontSize="{StaticResource Type.Label.Size}"
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
                     </Grid>
-                    
-                    <!-- Security Message -->
+
                     <TextBlock Text="Secure Mode: HTTPS-only | No cookies | No tracking | Auto-disconnect"
                                FontSize="{StaticResource Type.Micro.Size}"
                                Foreground="{DynamicResource SuccessBrush}"
                                TextWrapping="Wrap"/>
-                    
-                    <!-- Internet Controls -->
+
                     <Grid ColumnDefinitions="Auto,10,*">
                         <Button Grid.Column="0"
                                 Command="{Binding EnableInternetCommand}"
@@ -105,8 +98,7 @@
                     </Grid>
                 </StackPanel>
             </Border>
-            
-            <!-- Search Box -->
+
             <Border Background="{DynamicResource ControlBackgroundBrush}"
                     BorderBrush="{DynamicResource ControlBorderBrush}"
                     BorderThickness="1"
@@ -129,16 +121,14 @@
                     </Button>
                 </Grid>
             </Border>
-            
-            <!-- Status Message -->
+
             <TextBlock Text="{Binding StatusMessage}"
                        FontSize="{StaticResource Type.Tiny.Size}"
                        Foreground="{DynamicResource MutedTextBrush}"
                        TextWrapping="Wrap"
                        IsVisible="{Binding !!StatusMessage}"/>
         </StackPanel>
-        
-        <!-- Results ScrollViewer - Fills remaining space -->
+
         <ScrollViewer Margin="0,15,0,0"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled">
@@ -153,7 +143,7 @@
                                     Padding="15"
                                     Margin="0,0,0,10">
                             <Grid ColumnDefinitions="Auto,*,Auto">
-                                <!-- Icon Preview -->
+
                                 <Border Grid.Column="0"
                                         Background="{DynamicResource AccentBrush}"
                                         Width="48"
@@ -165,8 +155,7 @@
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Center"/>
                                 </Border>
-                                
-                                <!-- Icon Info -->
+
                                 <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding Name}"
                                                FontSize="{StaticResource Type.Label.Size}"
@@ -176,8 +165,7 @@
                                                FontSize="{StaticResource Type.Micro.Size}"
                                                Foreground="{DynamicResource MutedTextBrush}"/>
                                 </StackPanel>
-                                
-                                <!-- Download Button -->
+
                                 <Button Grid.Column="2"
                                         Command="{Binding $parent[Window].DataContext.DownloadIconCommand}"
                                         CommandParameter="{Binding}"
@@ -193,8 +181,7 @@
                 </ItemsControl>
             </StackPanel>
         </ScrollViewer>
-        
+
     </DockPanel>
 </views:ThemeAwareWindow>
-
 

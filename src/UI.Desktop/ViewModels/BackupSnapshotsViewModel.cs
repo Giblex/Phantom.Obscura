@@ -41,7 +41,6 @@ namespace PhantomVault.UI.ViewModels
             RestoreCommand = ReactiveCommand.CreateFromTask<BackupSnapshotInfo>(RestoreSnapshot);
             DeleteCommand = ReactiveCommand.CreateFromTask<BackupSnapshotInfo>(DeleteSnapshot);
 
-            // Load snapshots on initialization
             _ = RefreshSnapshots();
         }
 
@@ -105,7 +104,7 @@ namespace PhantomVault.UI.ViewModels
                             SizeFormatted = FormatSize(fileInfo.Length),
                             Type = DetermineBackupType(file),
                             Status = "Valid",
-                            StatusColor = "#2D5F2E" // Green
+                            StatusColor = "#2D5F2E"
                         };
 
                         Snapshots.Add(snapshot);
@@ -266,3 +265,4 @@ namespace PhantomVault.UI.ViewModels
         public string StatusColor { get; set; } = "#555555";
     }
 }
+

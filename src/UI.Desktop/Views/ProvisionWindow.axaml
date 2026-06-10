@@ -21,18 +21,15 @@
         <vm:ProvisionViewModel/>
     </Design.DataContext>
 
-    <!-- Using global SuccessBrush from theme files for success states -->
-
     <Grid RowDefinitions="Auto,*,Auto" Margin="0">
-        
+
         <Grid.KeyBindings>
-            <!-- Ctrl+Enter: Create vault -->
+
             <KeyBinding Gesture="Ctrl+Enter" Command="{Binding CreateVaultCommand}"/>
-            <!-- Escape: Go back -->
+
             <KeyBinding Gesture="Escape" Command="{Binding GoBackCommand}"/>
         </Grid.KeyBindings>
-        
-        <!-- Header -->
+
         <Border Grid.Row="0" Background="{DynamicResource ContentBackgroundBrush}" Padding="15,8">
             <StackPanel Spacing="{StaticResource Space.Sm}">
             <TextBlock Text="Create Your Vault"
@@ -46,15 +43,12 @@
             </StackPanel>
         </Border>
 
-        <!-- Main Content with Tabs -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <TabControl Margin="12" Padding="0">
-                
-                <!-- Basic Tab -->
+
                 <TabItem Header="Basic">
                     <StackPanel Spacing="25" MaxWidth="980" HorizontalAlignment="Center" Margin="40,20,40,30">
-                        
-                        <!-- Vault Name -->
+
                         <StackPanel Spacing="10">
             <TextBlock Text="Vault Name"
                                        FontSize="{StaticResource Type.H5.Size}"
@@ -64,7 +58,7 @@
                                        FontSize="{StaticResource Type.Small.Size}"
                                        Foreground="{DynamicResource MutedTextBrush}"
                                        Margin="0,0,0,8"/>
-                            
+
                             <TextBox Text="{Binding VaultName, Mode=TwoWay}"
                                      MaxWidth="920"
                                      Height="36"
@@ -76,7 +70,6 @@
                                      AutomationProperties.HelpText="Enter a descriptive name for your vault"/>
                         </StackPanel>
 
-                        <!-- Volume Size -->
                         <StackPanel Spacing="10">
             <TextBlock Text="Volume Size (MB)"
                                        FontSize="{StaticResource Type.H5.Size}"
@@ -86,7 +79,7 @@
                                        FontSize="{StaticResource Type.Small.Size}"
                                        Foreground="{DynamicResource MutedTextBrush}"
                                        Margin="0,0,0,8"/>
-                            
+
                             <StackPanel Orientation="Horizontal" Spacing="15" HorizontalAlignment="Center">
                                 <NumericUpDown Value="{Binding VolumeSizeMb}"
                                                Minimum="10"
@@ -108,7 +101,6 @@
                             </StackPanel>
                         </StackPanel>
 
-                        <!-- Master Password -->
                         <StackPanel Spacing="10">
             <TextBlock Text="Master Password (Optional)"
                                        FontSize="{StaticResource Type.H5.Size}"
@@ -118,7 +110,7 @@
                                        FontSize="{StaticResource Type.Tiny.Size}"
                                        Foreground="{DynamicResource MutedTextBrush}"
                                        Margin="0,0,0,8"/>
-                            
+
                             <Grid HorizontalAlignment="Stretch" Margin="0,0,0,0">
             <TextBox Name="PasswordTextBox"
                                          Text="{Binding Passphrase, Mode=TwoWay}"
@@ -157,8 +149,7 @@
                     Background="Transparent"
                     BorderThickness="0"/>
                             </Grid>
-                            
-                            <!-- Password Error Message -->
+
             <TextBlock Text="{Binding PasswordError}"
                                        FontSize="{StaticResource Type.Small.Size}"
                                        Foreground="{DynamicResource ErrorBrush}"
@@ -168,13 +159,12 @@
                                        HorizontalAlignment="Left"/>
                         </StackPanel>
 
-                        <!-- Confirm Password -->
                         <StackPanel Spacing="10">
             <TextBlock Text="Confirm Password"
                                        FontSize="{StaticResource Type.H5.Size}"
                                        FontWeight="SemiBold"
                                        />
-                            
+
                             <Grid HorizontalAlignment="Stretch" Margin="0,0,0,0">
             <TextBox Name="ConfirmPasswordTextBox"
                                          Text="{Binding ConfirmPassphrase, Mode=TwoWay}"
@@ -206,8 +196,7 @@
                                         Background="Transparent"
                                         BorderThickness="0"/>
                             </Grid>
-                            
-                            <!-- Confirm Password Error Message -->
+
             <TextBlock Text="{Binding ConfirmPasswordError}"
                                        FontSize="{StaticResource Type.Small.Size}"
                                        Foreground="{DynamicResource ErrorBrush}"
@@ -217,7 +206,6 @@
                                        HorizontalAlignment="Left"/>
                         </StackPanel>
 
-                        <!-- USB Drive (Auto-configured) -->
                         <StackPanel Spacing="10">
             <TextBlock Text="USB Drive (Configured)"
                                        FontSize="{StaticResource Type.H5.Size}"
@@ -234,8 +222,6 @@
                                        Margin="0,0,0,0" HorizontalAlignment="Center"/>
                         </StackPanel>
 
-
-    <!-- Keyfile Section (REQUIRED) -->
                         <StackPanel Spacing="10">
             <TextBlock Text="Keyfile (Required)"
                                        FontSize="{StaticResource Type.H5.Size}"
@@ -248,8 +234,7 @@
                                 A keyfile is required for vault security.<LineBreak/>
                                 Generate a new one or select an existing file.
                             </TextBlock>
-                            
-                            <!-- Keyfile Path Display -->
+
                             <TextBox Text="{Binding KeyfilePath, Mode=TwoWay}"
                                      MaxWidth="920"
                                      Height="36"
@@ -257,8 +242,7 @@
                                      FontSize="{StaticResource Type.Small.Size}"
                                      IsReadOnly="True"
                                      Watermark="No keyfile selected (required)"/>
-                            
-                            <!-- Keyfile Buttons -->
+
                             <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,8,0,0">
                                 <Button Command="{Binding GenerateKeyfileCommand}"
                                         Width="150"
@@ -298,11 +282,9 @@
                     </StackPanel>
                 </TabItem>
 
-            <!-- Advanced Tab -->
             <TabItem Header="Advanced">
                 <StackPanel Spacing="25" MaxWidth="760" Margin="40,20,40,30" HorizontalAlignment="Center">
 
-                        <!-- Encryption Level -->
                         <StackPanel Spacing="10">
             <TextBlock Text="Encryption Level"
                                        FontSize="{StaticResource Type.H5.Size}"
@@ -312,7 +294,7 @@
                                        FontSize="{StaticResource Type.Small.Size}"
                                        Foreground="{DynamicResource MutedTextBrush}"
                                        Margin="0,0,0,8"/>
-                            
+
                             <ComboBox ItemsSource="{Binding EncryptionLevels}"
                                       SelectedValue="{Binding SelectedEncryptionLevel}"
                                       Width="300"
@@ -333,7 +315,6 @@
                                        Margin="0,5,0,0" TextAlignment="Center"/>
                         </StackPanel>
 
-                        <!-- Hardware Token -->
                         <StackPanel Spacing="10">
                             <CheckBox Content="Require Hardware-Token Presence Check"
                                       IsChecked="{Binding RequiresHardwareToken, Mode=TwoWay}"
@@ -347,7 +328,6 @@
                                        TextWrapping="Wrap" TextAlignment="Center"/>
                         </StackPanel>
 
-                        <!-- TOTP -->
                         <StackPanel Spacing="10">
                             <CheckBox Content="Enable TOTP (Time-based One-Time Password)"
                                       IsChecked="{Binding UseTotp, Mode=TwoWay}"
@@ -361,7 +341,6 @@
                                        TextWrapping="Wrap" TextAlignment="Center"/>
                         </StackPanel>
 
-                        <!-- Passkey -->
                         <StackPanel Spacing="10">
                             <CheckBox Content="Enable Device Authenticator Support"
                                       IsChecked="{Binding UsePasskey, Mode=TwoWay}"
@@ -378,11 +357,9 @@
                 </StackPanel>
             </TabItem>
 
-            <!-- Import Tab -->
             <TabItem Header="Import">
                 <StackPanel Spacing="25" MaxWidth="760" Margin="40,20,40,30">
-                        
-                        <!-- KeePass Import -->
+
                         <Border Background="{DynamicResource ControlBackgroundBrush}"
                                 Padding="20"
                                 CornerRadius="{DynamicResource Radius.Md}"
@@ -427,7 +404,6 @@
             <TextBlock Text="Select KeePass File" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                 </Button>
 
-                                <!-- Optional: Open full Import dialog (preview) -->
                                 <Button Command="{Binding OpenImportDialogCommand}"
                                         Width="200"
                                         Height="38"
@@ -447,7 +423,6 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- CSV / KeePass import — performed from the main app's Import panel post-provisioning -->
                         <Border Background="{DynamicResource ControlBackgroundBrush}"
                                 Padding="20"
                                 CornerRadius="{StaticResource Radius.Md}"
@@ -478,11 +453,9 @@
                 </StackPanel>
             </TabItem>
 
-            <!-- Authentication Tab -->
             <TabItem Header="Authentication">
                 <StackPanel Spacing="25" MaxWidth="760" Margin="40,20,40,30" HorizontalAlignment="Center">
 
-                    <!-- Tab Header -->
                     <StackPanel Spacing="{StaticResource Space.Sm}">
                         <TextBlock Text="⚙️ Authentication Options"
                                    FontSize="{StaticResource Type.H3.Size}"
@@ -496,7 +469,6 @@
                                    TextAlignment="Center"/>
                     </StackPanel>
 
-                    <!-- Windows Hello -->
                     <Border BorderBrush="{DynamicResource ControlBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="{DynamicResource Radius.Md}"
@@ -522,7 +494,6 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Passkeys -->
                     <Border BorderBrush="{DynamicResource ControlBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="{DynamicResource Radius.Md}"
@@ -548,7 +519,6 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- TOTP -->
                     <Border BorderBrush="{DynamicResource ControlBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="{StaticResource Radius.Md}"
@@ -574,7 +544,6 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Info Notice -->
                     <Border BorderBrush="{DynamicResource AccentBrush}"
                             BorderThickness="1"
                             CornerRadius="{StaticResource Radius.Md}"
@@ -602,11 +571,9 @@
             </TabControl>
         </ScrollViewer>
 
-                <!-- Progress and Action Buttons -->
         <Border Grid.Row="2" Background="{DynamicResource FooterBackgroundBrush}" Padding="25,15,25,15">
             <StackPanel Spacing="18" MaxWidth="1100" HorizontalAlignment="Center">
-                
-                <!-- Progress Bar -->
+
                     <StackPanel Spacing="{StaticResource Space.Sm}" IsVisible="{Binding IsBusy}">
                     <ProgressBar Value="{Binding Progress}"
                                  Minimum="0"
@@ -620,7 +587,6 @@
                                HorizontalAlignment="Center"/>
                 </StackPanel>
 
-                <!-- Status Message -->
                 <Border Background="{DynamicResource FooterBackgroundBrush}"
                         Padding="12,10"
                         CornerRadius="{StaticResource Radius.Md}"
@@ -635,12 +601,10 @@
                                HorizontalAlignment="Center"/>
                 </Border>
 
-                <!-- Action Buttons -->
-                <StackPanel Orientation="Horizontal" 
+                <StackPanel Orientation="Horizontal"
                             HorizontalAlignment="Center"
                             Spacing="15">
-                    
-                    <!-- Go Back Button -->
+
                     <Button Command="{Binding GoBackCommand}"
                             Width="140"
                             Height="42"
@@ -650,8 +614,7 @@
                             ToolTip.Tip="Return to the previous screen">
             <TextBlock Text="Go Back" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Button>
-                    
-                    <!-- Create Vault Button -->
+
                     <Button Command="{Binding CreateVaultCommand}"
                             Width="160"
                             Height="42"
@@ -668,5 +631,4 @@
         </Border>
     </Grid>
 </Window>
-
 

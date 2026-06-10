@@ -7,22 +7,14 @@ using PhantomVault.Core.Services.ZeroKnowledge;
 
 namespace PhantomVault.Core.Services
 {
-    /// <summary>
-    /// Service for managing vault auto-lock functionality.
-    /// Provides configurable lock durations and automatic vault locking.
-    /// </summary>
+
     public class VaultLockDurationService : IDisposable
     {
         private Timer? _lockTimer;
         private LockDuration _currentDuration = LockDuration.FiveMinutes;
         private DateTime _lastActivityTime;
         private bool _isLocked = true;
-        // Issue #1: master gate for auto-lock. UI sets this to false when the
-        // user hasn't configured a PIN — without a PIN, idle expiry shouldn't
-        // surprise-lock the vault since the only fallback is the full passphrase.
-        // Default true preserves the existing behaviour for callers that don't
-        // care (other entry points like USB removal / security threat still
-        // call LockVaultAsync directly, bypassing this gate, which is correct).
+
         private bool _autoLockEnabled = true;
         private readonly object _lockObject = new object();
         private readonly SemaphoreSlim _lockSemaphore = new SemaphoreSlim(1, 1);
@@ -40,23 +32,11 @@ namespace PhantomVault.Core.Services
             _zkVaultService = zkVaultService ?? throw new ArgumentNullException(nameof(zkVaultService));
         }
 
-        /// <summary>
-        /// Gets the current lock duration setting.
-        /// </summary>
         public LockDuration CurrentDuration
         {
             get { lock (_lockObject) return _currentDuration; }
         }
 
-        /// <summary>
-        /// Master gate for the idle auto-lock timer. When false, the timer is
-        /// not started by UnlockVault/SetLockDuration and OnTimerElapsed is a
-        /// no-op. Set false until a PIN has been configured so users who
-        /// haven't opted into PIN sessions aren't surprise-locked out.
-        ///
-        /// Manual locks and security-driven locks (USB removal, threats) call
-        /// LockVaultAsync directly and bypass this gate intentionally.
-        /// </summary>
         public bool AutoLockEnabled
         {
             get { lock (_lockObject) return _autoLockEnabled; }
@@ -68,25 +48,18 @@ namespace PhantomVault.Core.Services
                     _autoLockEnabled = value;
                     if (!value)
                     {
-                        // Tear down any running timer so an in-flight idle
-                        // countdown doesn't fire after auto-lock is disabled.
+
                         StopTimer();
                     }
                 }
             }
         }
 
-        /// <summary>
-        /// Gets whether the vault is currently locked.
-        /// </summary>
         public bool IsLocked
         {
             get { lock (_lockObject) return _isLocked; }
         }
 
-        /// <summary>
-        /// Gets the time remaining until auto-lock (null if disabled or locked).
-        /// </summary>
         public TimeSpan? TimeUntilLock
         {
             get
@@ -107,9 +80,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Set the auto-lock duration and start/restart the timer.
-        /// </summary>
         public void SetLockDuration(LockDuration duration)
         {
             lock (_lockObject)
@@ -117,51 +87,42 @@ namespace PhantomVault.Core.Services
                 _currentDuration = duration;
 
                 if (_isLocked)
-                    return; // Don't start timer if vault is locked
+                    return;
 
                 StopTimer();
 
                 if (duration == LockDuration.Never)
-                    return; // No auto-lock
+                    return;
 
-                // Issue #1: respect the master auto-lock gate even for Immediate.
-                // If the user has no PIN, never engage auto-lock here.
                 if (!_autoLockEnabled)
                     return;
 
                 if (duration == LockDuration.Immediate)
                 {
-                    // Lock immediately
+
                     _ = LockVaultAsync(LockReason.AutoLock);
                     return;
                 }
 
-                // Start new timer
                 int durationMs = GetDurationMilliseconds(duration);
                 _lastActivityTime = DateTime.UtcNow;
                 _lockTimer = new Timer(OnTimerElapsed, null, durationMs, Timeout.Infinite);
             }
         }
 
-        /// <summary>
-        /// Unlock the vault and start the auto-lock timer.
-        /// </summary>
         public void UnlockVault()
         {
             lock (_lockObject)
             {
                 if (!_isLocked)
-                    return; // Already unlocked
+                    return;
 
                 _isLocked = false;
                 _lastActivityTime = DateTime.UtcNow;
 
-                // Issue #1: master auto-lock gate — skip timer setup entirely
-                // when the user hasn't configured a PIN.
                 if (!_autoLockEnabled)
                     return;
 
-                // Start timer if duration is not Never or Immediate
                 if (_currentDuration != LockDuration.Never && _currentDuration != LockDuration.Immediate)
                 {
                     StopTimer();
@@ -170,23 +131,17 @@ namespace PhantomVault.Core.Services
                 }
                 else if (_currentDuration == LockDuration.Immediate)
                 {
-                    // If set to immediate, lock right away
+
                     _ = LockVaultAsync(LockReason.AutoLock);
                 }
             }
         }
 
-        /// <summary>
-        /// Lock the vault immediately and stop the timer.
-        /// </summary>
         public void LockVault()
         {
             _ = LockVaultAsync(LockReason.AutoLock);
         }
 
-        /// <summary>
-        /// Performs the secure lock sequence asynchronously.
-        /// </summary>
         public async Task<VaultLockResult> LockVaultAsync(LockReason reason = LockReason.AutoLock, CancellationToken cancellationToken = default)
         {
             await _lockSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -233,13 +188,10 @@ namespace PhantomVault.Core.Services
                     }
                 }
 
-                // Flush pending writes before locking
                 await executeStep(session?.FlushPendingWritesAsync).ConfigureAwait(false);
 
-                // Wipe keys from zero-knowledge service
                 await executeStep(() => _zkVaultService.LockAndWipeKeysAsync()).ConfigureAwait(false);
 
-                // Dismount vault container
                 await executeStep(async () =>
                 {
                     if (!string.IsNullOrWhiteSpace(session?.MountPath))
@@ -252,10 +204,8 @@ namespace PhantomVault.Core.Services
                     }
                 }).ConfigureAwait(false);
 
-                // Release any additional handles
                 await executeStep(session?.ReleaseHandlesAsync).ConfigureAwait(false);
 
-                // Kill residual processes if provided
                 await executeStep(session?.KillResidualProcessesAsync).ConfigureAwait(false);
 
                 try
@@ -303,9 +253,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Registers the active session so auto-lock can perform secure cleanup.
-        /// </summary>
         public void SetActiveSession(VaultLockSessionContext? session)
         {
             lock (_lockObject)
@@ -314,9 +261,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Reset the auto-lock timer (call this on user activity).
-        /// </summary>
         public void ResetTimer()
         {
             lock (_lockObject)
@@ -324,13 +268,11 @@ namespace PhantomVault.Core.Services
                 if (_isLocked || _currentDuration == LockDuration.Never)
                     return;
 
-                // Issue #1: don't arm the idle timer if auto-lock is gated off.
                 if (!_autoLockEnabled)
                     return;
 
                 _lastActivityTime = DateTime.UtcNow;
 
-                // Restart timer
                 StopTimer();
                 int durationMs = GetDurationMilliseconds(_currentDuration);
                 _lockTimer = new Timer(OnTimerElapsed, null, durationMs, Timeout.Infinite);
@@ -339,9 +281,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Get the duration description for UI display.
-        /// </summary>
         public static string GetDurationDescription(LockDuration duration)
         {
             return duration switch
@@ -360,9 +299,6 @@ namespace PhantomVault.Core.Services
             };
         }
 
-        /// <summary>
-        /// Get all available lock durations for UI binding.
-        /// </summary>
         public static LockDuration[] GetAllDurations()
         {
             return new[]
@@ -382,8 +318,7 @@ namespace PhantomVault.Core.Services
 
         private void OnTimerElapsed(object? state)
         {
-            // Issue #1: defensive gate — if auto-lock was disabled while a
-            // timer was already armed, swallow the elapsed fire.
+
             lock (_lockObject)
             {
                 if (!_autoLockEnabled) return;
@@ -411,7 +346,7 @@ namespace PhantomVault.Core.Services
                 LockDuration.ThirtyMinutes => 30 * 60 * 1000,
                 LockDuration.OneHour => 60 * 60 * 1000,
                 LockDuration.Never => Timeout.Infinite,
-                _ => 5 * 60 * 1000 // Default to 5 minutes
+                _ => 5 * 60 * 1000
             };
         }
 
@@ -422,9 +357,6 @@ namespace PhantomVault.Core.Services
         }
     }
 
-    /// <summary>
-    /// Auto-lock duration options.
-    /// </summary>
     public enum LockDuration
     {
         Immediate,
@@ -439,9 +371,6 @@ namespace PhantomVault.Core.Services
         Never
     }
 
-    /// <summary>
-    /// Event args for vault lock events.
-    /// </summary>
     public class VaultLockEventArgs : EventArgs
     {
         public DateTime LockTime { get; set; }
@@ -449,9 +378,6 @@ namespace PhantomVault.Core.Services
         public VaultLockResult Result { get; set; } = VaultLockResult.Successful;
     }
 
-    /// <summary>
-    /// Reason for vault locking.
-    /// </summary>
     public enum LockReason
     {
         AutoLock,
@@ -462,9 +388,6 @@ namespace PhantomVault.Core.Services
         SecurityThreat
     }
 
-    /// <summary>
-    /// Represents the outcome of a vault lock operation, including any cleanup errors.
-    /// </summary>
     public sealed record VaultLockResult(bool Success, Exception? Error)
     {
         public static VaultLockResult Successful { get; } = new VaultLockResult(true, null);
@@ -476,9 +399,6 @@ namespace PhantomVault.Core.Services
         }
     }
 
-    /// <summary>
-    /// Provides context for secure cleanup when the vault is auto-locked.
-    /// </summary>
     public sealed class VaultLockSessionContext
     {
         public string? MountPath { get; init; }
@@ -515,3 +435,4 @@ namespace PhantomVault.Core.Services
         }
     }
 }
+

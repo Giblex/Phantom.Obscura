@@ -5,10 +5,6 @@ using System.Windows.Input;
 
 namespace PhantomVault.UI.Components.Fields;
 
-/// <summary>
-/// A reusable field component with a label, read-only TextBox, and copy button.
-/// Used throughout detail views for displaying copyable credential fields.
-/// </summary>
 public partial class CopyableField : UserControl
 {
     public static readonly StyledProperty<string> LabelProperty =
@@ -105,7 +101,7 @@ public partial class CopyableField : UserControl
             var button = this.FindControl<Button>("ActionButton");
             if (button != null && !string.IsNullOrWhiteSpace(ButtonClasses))
             {
-                // Clear existing classes and add new ones
+
                 button.Classes.Clear();
                 foreach (var className in ButtonClasses.Split(' ', StringSplitOptions.RemoveEmptyEntries))
                 {
@@ -115,3 +111,4 @@ public partial class CopyableField : UserControl
         }
     }
 }
+

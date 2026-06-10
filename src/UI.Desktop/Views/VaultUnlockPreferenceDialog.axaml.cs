@@ -37,13 +37,12 @@ public partial class VaultUnlockPreferenceDialog : ThemeAwareWindow
 
     private void SelectOption(string preference, Border card, TextBlock checkMark, Border checkBorder, Color accentColor)
     {
-        // Deselect previous
+
         if (_selectedCard != null)
         {
             _selectedCard.Classes.Remove("selected");
         }
 
-        // Reset all checkmarks
         PinCheckMark.IsVisible = false;
         HelloCheckMark.IsVisible = false;
         AutoCheckMark.IsVisible = false;
@@ -52,7 +51,6 @@ public partial class VaultUnlockPreferenceDialog : ThemeAwareWindow
         HelloCheck.Background = Brushes.Transparent;
         AutoCheck.Background = Brushes.Transparent;
 
-        // Select new
         _selectedPreference = preference;
         _selectedCard = card;
         card.Classes.Add("selected");
@@ -67,3 +65,4 @@ public partial class VaultUnlockPreferenceDialog : ThemeAwareWindow
         Close(_selectedPreference);
     }
 }
+

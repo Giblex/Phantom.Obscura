@@ -3,9 +3,7 @@ using System.Diagnostics;
 
 namespace PhantomVault.UI.Services
 {
-    /// <summary>
-    /// Centralizes runtime privacy controls for masking diagnostics and UI surface data.
-    /// </summary>
+
     public static class PrivacyShield
     {
         private static bool _privacyModeEnabled;
@@ -53,7 +51,8 @@ namespace PhantomVault.UI.Services
 
         public static void DebugInfo(string category, string message)
         {
-            if (!_debugLoggingEnabled)
+            // P-4: privacy mode drops verbose diagnostics entirely.
+            if (_privacyModeEnabled || !_debugLoggingEnabled)
             {
                 return;
             }
@@ -84,3 +83,4 @@ namespace PhantomVault.UI.Services
         }
     }
 }
+

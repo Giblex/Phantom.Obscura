@@ -3,15 +3,13 @@ using PhantomVault.UI.Helpers;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// View model for a credential category.
-    /// </summary>
+
     public sealed class CategoryViewModel : ReactiveObject
     {
         private string _name = string.Empty;
         private string _icon = IconPathMigrator.DefaultIcon;
         private int _count;
-        private string? _tileColor; // optional hex color for sidebar tile background
+        private string? _tileColor;
         private bool _isActive;
         private bool _isPinned = true;
 
@@ -45,10 +43,6 @@ namespace PhantomVault.UI.ViewModels
             set => this.RaiseAndSetIfChanged(ref _isActive, value);
         }
 
-        /// <summary>
-        /// Whether this category is pinned (visible) in the dashboard quick access row.
-        /// Defaults to true so all categories appear initially.
-        /// </summary>
         public bool IsPinned
         {
             get => _isPinned;
@@ -56,3 +50,4 @@ namespace PhantomVault.UI.ViewModels
         }
     }
 }
+

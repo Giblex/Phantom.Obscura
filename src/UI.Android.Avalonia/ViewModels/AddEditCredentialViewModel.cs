@@ -3,17 +3,6 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace PhantomVault.UI.ViewModels;
 
-/// <summary>
-/// Android port of the desktop AddEditCredentialWindow (Phase 3e). The desktop
-/// equivalent (Views/AddEditCredentialWindow.axaml, ~845 LOC) hosts a
-/// type-aware editor — password, card, identity, API key, Wi-Fi, contact, bank,
-/// PIN, etc. — each as a templated section. This first cut implements the
-/// Login type only; additional types will land as templated branches keyed off
-/// <see cref="CredentialType"/>.
-///
-/// Save / Cancel currently just navigate back via <see cref="ShellViewModel"/>;
-/// the real persistence path lands together with the Core data-binding work.
-/// </summary>
 public sealed partial class AddEditCredentialViewModel : ObservableObject
 {
     [ObservableProperty] private string _credentialType = "login";
@@ -44,3 +33,4 @@ public sealed partial class AddEditCredentialViewModel : ObservableObject
     [RelayCommand]
     private void Cancel() => ShellViewModel.Current?.GoBackCommand.Execute(null);
 }
+

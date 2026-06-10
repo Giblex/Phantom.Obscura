@@ -11,10 +11,7 @@ using PhantomVault.Core.Services;
 
 namespace PhantomVault.UI.Services
 {
-    /// <summary>
-    /// Creates encrypted shadow snapshots of deleted items for limited restore.
-    /// Stores only metadata and optional encrypted payloads; governed by policy/cert bundle.
-    /// </summary>
+
     public sealed class ShadowTrashService
     {
         private readonly EncryptionService _encryptionService;
@@ -154,3 +151,4 @@ namespace PhantomVault.UI.Services
         }
     }
 }
+

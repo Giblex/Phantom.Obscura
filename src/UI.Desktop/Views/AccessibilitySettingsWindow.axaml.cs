@@ -12,12 +12,10 @@ namespace PhantomVault.UI.Views
             DataContext = new AccessibilitySettingsViewModel();
         }
 
-        /// <summary>
-        /// Sets the owner window for modal dialog display.
-        /// </summary>
         public void SetOwnerWindow(Window owner)
         {
-            // Store owner reference if needed for child dialogs
+
         }
     }
 }
+

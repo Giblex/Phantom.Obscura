@@ -39,3 +39,4 @@ namespace PhantomVault.Core.Models
         public List<Credential>? Entries { get; set; } = new();
     }
 }
+

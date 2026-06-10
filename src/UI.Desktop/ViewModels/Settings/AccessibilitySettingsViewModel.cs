@@ -13,19 +13,15 @@ namespace PhantomVault.UI.ViewModels.Settings
     public class AccessibilitySettingsViewModel : ReactiveObject
     {
         private int _selectedLanguage = 0;
-        private int _selectedDefaultView = 0; // List view
+        private int _selectedDefaultView = 0;
         private bool _showEntryIcons = true;
         private bool _showCategoryColors = true;
-        private int _selectedFontSize = 1; // Medium (13px)
+        private int _selectedFontSize = 1;
         private int _selectedFontFamily = 0;
         private bool _enableKeyboardShortcuts = true;
         private bool _focusSearchOnOpen = true;
         private bool _enableScreenReader = false;
 
-        // Maps the language dropdown index to a culture code. Only en-US and
-        // es-ES ship with translated string resources today; the rest persist
-        // the choice and set the culture (formatting) but fall back to English
-        // strings until their resource files exist.
         private static readonly string[] LanguageCultures =
         {
             "en-US", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-PT", "zh-CN", "ja-JP", "ko-KR"
@@ -120,6 +116,7 @@ namespace PhantomVault.UI.ViewModels.Settings
             {
                 this.RaiseAndSetIfChanged(ref _enableScreenReader, value);
                 Persist(s => s.EnableScreenReader = value);
+                AccessibilityService.Instance.ScreenReaderOptimizations = value;
             }
         }
 
@@ -129,8 +126,6 @@ namespace PhantomVault.UI.ViewModels.Settings
         {
             ConfigureShortcutsCommand = ReactiveCommand.Create(ConfigureShortcuts);
 
-            // Load persisted accessibility preferences directly into the backing
-            // fields (avoid the public setters so we don't re-persist on load).
             try
             {
                 var s = SettingsService.Load();
@@ -144,32 +139,28 @@ namespace PhantomVault.UI.ViewModels.Settings
                 _focusSearchOnOpen = s.FocusSearchOnOpen;
                 _enableScreenReader = s.EnableScreenReader;
             }
-            catch { /* defaults already set on the fields */ }
+            catch {  }
 
-            // Apply font preferences live on open.
             ApplyFontSettings();
         }
 
         private static void Persist(Action<UserSettings> update)
         {
             try { SettingsService.Update(update); }
-            catch { /* best-effort persistence */ }
+            catch {  }
         }
 
         private void ApplyLanguage()
         {
-            // Persist the choice.
+
             try
             {
                 var s = SettingsService.Load();
                 s.LanguageIndex = _selectedLanguage;
                 SettingsService.Save(s);
             }
-            catch { /* best-effort persistence */ }
+            catch {  }
 
-            // Apply the culture for formatting now; full UI string localization
-            // takes effect on next launch (only languages with shipped resource
-            // dictionaries change visible strings).
             try
             {
                 var code = LanguageCultures[Math.Clamp(_selectedLanguage, 0, LanguageCultures.Length - 1)];
@@ -177,12 +168,12 @@ namespace PhantomVault.UI.ViewModels.Settings
                 System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = culture;
                 System.Globalization.CultureInfo.DefaultThreadCurrentCulture = culture;
             }
-            catch { /* unsupported culture — keep current */ }
+            catch {  }
         }
 
         private void ApplyFontSettings()
         {
-            // Font sizes: Small=11px, Medium=13px, Large=15px, Extra Large=17px
+
             double[] sizes = { 11, 13, 15, 17 };
             string[] families = { "Segoe UI", "Aptos", "Times New Roman", "Calibri" };
 
@@ -191,7 +182,7 @@ namespace PhantomVault.UI.ViewModels.Settings
 
             if (Application.Current != null)
             {
-                // Apply font size globally to application resources
+
                 Application.Current.Resources["GlobalFontSize"] = size;
                 Application.Current.Resources["GlobalFontFamily"] = new FontFamily(familyName);
             }
@@ -207,3 +198,4 @@ namespace PhantomVault.UI.ViewModels.Settings
         }
     }
 }
+

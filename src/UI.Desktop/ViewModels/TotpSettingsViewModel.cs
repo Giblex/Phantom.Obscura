@@ -9,10 +9,7 @@ using PhantomVault.Core.Services;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// View model for TOTP (Time-based One-Time Password) authenticator settings.
-    /// Manages TOTP secret generation, QR code display, and backup codes.
-    /// </summary>
+
     public sealed class TotpSettingsViewModel : ReactiveObject
     {
         private readonly TotpService? _totpService;
@@ -103,11 +100,8 @@ namespace PhantomVault.UI.ViewModels
 
                 await Task.Delay(500);
 
-                // Generate a random base32 secret (160 bits / 32 characters)
-                TotpSecret = TotpService.GenerateSecret(20); // 20 bytes = 160 bits
-                
-                // Generate QR code data in otpauth:// format
-                // Format: otpauth://totp/{issuer}:{account}?secret={secret}&issuer={issuer}
+                TotpSecret = TotpService.GenerateSecret(20);
+
                 QrCodeData = $"otpauth://totp/PhantomVault:{VaultName}?secret={TotpSecret}&issuer=PhantomVault";
 
                 HasTotpSecret = true;
@@ -171,7 +165,6 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Use injected service or create one as fallback
                 var service = _totpService ?? new PhantomVault.Core.Services.TotpService();
                 string expectedCode = service.GenerateCode(TotpSecret);
                 bool isValid = expectedCode == TestCode.Trim();
@@ -216,13 +209,12 @@ namespace PhantomVault.UI.ViewModels
                     await clipboard.SetTextAsync(TotpSecret);
                     StatusMessage = "Secret copied to clipboard (will auto-clear in 30 seconds)";
 
-                    // Auto-clear clipboard after 30 seconds for security
                     _ = Task.Delay(30000).ContinueWith(async _ =>
                     {
                         try
                         {
                             var currentText = await clipboard.TryGetTextAsync();
-                            // Only clear if clipboard still contains our secret
+
                             if (currentText == TotpSecret)
                             {
                                 await clipboard.ClearAsync();
@@ -230,7 +222,7 @@ namespace PhantomVault.UI.ViewModels
                         }
                         catch
                         {
-                            // Best effort - ignore errors in auto-clear
+
                         }
                     });
                 }
@@ -249,19 +241,18 @@ namespace PhantomVault.UI.ViewModels
         private string GenerateRandomBase32Secret()
         {
             const string base32Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-            
-            // Use cryptographically secure random number generator
-            // Generate 20 bytes (160 bits) of entropy for TOTP secret
+
             Span<byte> randomBytes = stackalloc byte[32];
             RandomNumberGenerator.Fill(randomBytes);
-            
+
             var secret = new char[32];
             for (int i = 0; i < 32; i++)
             {
-                // Map random byte to base32 character index
+
                 secret[i] = base32Chars[randomBytes[i] % base32Chars.Length];
             }
             return new string(secret);
         }
     }
 }
+

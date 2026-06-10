@@ -3,33 +3,10 @@ using System.Security.Cryptography;
 
 namespace PhantomVault.Core.Utils
 {
-    /// <summary>
-    /// Utilities for deriving hybrid encryption keys that combine classical
-    /// password-based key derivation (Argon2id) with post-quantum key
-    /// encapsulation mechanisms (ML-KEM-768).
-    /// 
-    /// The hybrid approach provides defense-in-depth: an attacker must break
-    /// both the classical password scheme AND the quantum-resistant KEM to
-    /// compromise the vault.
-    /// </summary>
+
     public static class HybridKeyDerivation
     {
-        /// <summary>
-        /// Derives a hybrid encryption key by XORing a traditional key
-        /// (from Argon2id) with a quantum-resistant shared secret (from ML-KEM).
-        /// This provides dual resistance: classical password-based security
-        /// plus post-quantum key exchange.
-        /// 
-        /// Security Properties:
-        /// - If Argon2id is secure, the hybrid key is secure
-        /// - If ML-KEM is secure, the hybrid key is secure
-        /// - An attacker must break BOTH to compromise the key
-        /// - XOR is information-theoretically secure combiner (one-time pad)
-        /// </summary>
-        /// <param name="traditionalKey">32-byte key from Argon2id derivation (KEK).</param>
-        /// <param name="kemSharedSecret">32-byte shared secret from ML-KEM encapsulation.</param>
-        /// <returns>32-byte hybrid Data Encryption Key (DEK).</returns>
-        /// <exception cref="ArgumentException">If either input is not exactly 32 bytes.</exception>
+
         public static byte[] DeriveHybridKey(byte[] traditionalKey, byte[] kemSharedSecret)
         {
             if (traditionalKey == null)
@@ -49,10 +26,6 @@ namespace PhantomVault.Core.Utils
             return hybridKey;
         }
 
-        /// <summary>
-        /// Serializes an EncryptionResult to Base64 string for storage in manifest.
-        /// Format: nonce|tag|ciphertext (all Base64 encoded, pipe-separated)
-        /// </summary>
         public static string SerializeEncryptionResult(Services.EncryptionResult result)
         {
             string nonce = Convert.ToBase64String(result.Nonce);
@@ -62,9 +35,6 @@ namespace PhantomVault.Core.Utils
             return $"{nonce}|{tag}|{ciphertext}";
         }
 
-        /// <summary>
-        /// Deserializes a Base64 string back to EncryptionResult.
-        /// </summary>
         public static Services.EncryptionResult DeserializeEncryptionResult(string serialized)
         {
             if (string.IsNullOrEmpty(serialized))
@@ -81,10 +51,6 @@ namespace PhantomVault.Core.Utils
             return new Services.EncryptionResult(ciphertext, nonce, tag);
         }
 
-        /// <summary>
-        /// Securely zeros a byte array to remove sensitive key material from memory.
-        /// This is a best-effort operation as the GC may have already copied the data.
-        /// </summary>
         public static void ZeroMemory(byte[] data)
         {
             if (data != null)
@@ -93,10 +59,6 @@ namespace PhantomVault.Core.Utils
             }
         }
 
-        /// <summary>
-        /// Securely zeros multiple byte arrays in a single call.
-        /// Useful for cleanup in finally blocks.
-        /// </summary>
         public static void ZeroMemory(params byte[][] arrays)
         {
             if (arrays == null) return;
@@ -108,3 +70,4 @@ namespace PhantomVault.Core.Utils
         }
     }
 }
+

@@ -11,15 +11,7 @@ using Org.BouncyCastle.Crypto.Parameters;
 
 namespace PhantomVault.Core.Services
 {
-    /// <summary>
-    /// Provides layered encryption with configurable depth for defense-in-depth security.
-    /// Supports 2, 3, and 5-layer encryption schemes using multiple algorithms:
-    /// - Layer 1: AES-256-GCM (authenticated encryption with integrity)
-    /// - Layer 2: ChaCha20-Poly1305 (stream cipher with authentication)
-    /// - Layer 3: AES-256-CBC (traditional block cipher)
-    /// - Layer 4: Twofish-256 (additional algorithm diversity)
-    /// - Layer 5: Serpent-256 (final layer for maximum security)
-    /// </summary>
+
     public sealed class LayeredEncryptionService
     {
         private readonly EncryptionService _encryptionService;
@@ -29,12 +21,11 @@ namespace PhantomVault.Core.Services
             _encryptionService = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
         }
 
-        /// <summary>Encryption security levels matching different data sensitivity tiers.</summary>
         public enum SecurityLevel
         {
-            Standard = 2,   // AES-GCM + ChaCha20
-            Sensitive = 3,  // AES-GCM + ChaCha20 + AES-CBC
-            Maximum = 5     // Full cascade
+            Standard = 2,
+            Sensitive = 3,
+            Maximum = 5
         }
 
         public class LayeredEncryptionResult
@@ -85,7 +76,7 @@ namespace PhantomVault.Core.Services
 
             try
             {
-                // Layer 1: AES-256-GCM
+
                 var layer1Result = _encryptionService.Encrypt(currentData, masterKey, contextData);
                 result.Nonce1 = layer1Result.Nonce;
                 result.Tag1 = layer1Result.Tag;
@@ -102,7 +93,6 @@ namespace PhantomVault.Core.Services
                     return result;
                 }
 
-                // Layer 2: ChaCha20-Poly1305
                 var key2 = DeriveLayerKey(masterKey, salt, "Layer2-ChaCha20");
                 var enc2 = EncryptChaCha20(currentData, key2, contextData);
                 result.Nonce2 = enc2.Nonce;
@@ -120,21 +110,18 @@ namespace PhantomVault.Core.Services
                     return result;
                 }
 
-                // Layer 3: AES-256-CBC
                 var key3 = DeriveLayerKey(masterKey, salt, "Layer3-AES-CBC");
                 var enc3 = EncryptAesCbc(currentData, key3, out byte[] iv3Full);
                 result.IV3 = iv3Full;
                 currentData = enc3;
                 CryptographicOperations.ZeroMemory(key3);
 
-                // Layer 4: Twofish-256
                 var key4 = DeriveLayerKey(masterKey, salt, "Layer4-Twofish", contextData);
                 var enc4 = EncryptTwofish(currentData, key4, out byte[] iv4);
                 result.IV4 = iv4;
                 currentData = enc4;
                 CryptographicOperations.ZeroMemory(key4);
 
-                // Layer 5: Serpent-256
                 var key5 = DeriveLayerKey(masterKey, salt, "Layer5-Serpent", contextData);
                 var enc5 = EncryptSerpent(currentData, key5, out byte[] iv5);
                 result.IV5 = iv5;
@@ -221,7 +208,7 @@ namespace PhantomVault.Core.Services
 
         private byte[] DeriveLayerKey(ReadOnlySpan<byte> masterKey, ReadOnlySpan<byte> salt, string label, ReadOnlySpan<byte> context = default)
         {
-            // HKDF with SHA-512 and label + optional context info
+
             var info = CombineBytes(Encoding.UTF8.GetBytes(label), context.ToArray());
             var derived = new byte[32];
             using var hkdf = new HKDF(HashAlgorithmName.SHA512, masterKey.ToArray(), salt.ToArray());
@@ -394,3 +381,4 @@ namespace PhantomVault.Core.Services
         }
     }
 }
+

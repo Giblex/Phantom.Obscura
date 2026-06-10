@@ -10,9 +10,7 @@ using PhantomVault.Core.Services.Autofill;
 
 namespace PhantomVault.UI.ViewModels.Autofill
 {
-    /// <summary>
-    /// ViewModel for the autofill mini-window that displays credential suggestions.
-    /// </summary>
+
     public sealed class AutofillMiniWindowViewModel : ReactiveObject
     {
         private readonly AutofillSuggestionProvider _suggestionProvider;
@@ -40,7 +38,6 @@ namespace PhantomVault.UI.ViewModels.Autofill
             Suggestions = new ObservableCollection<CredentialSuggestion>();
             FilteredSuggestions = new ObservableCollection<CredentialSuggestion>();
 
-            // Commands
             SelectSuggestionCommand = ReactiveCommand.Create<CredentialSuggestion>(SelectSuggestion);
             CloseWindowCommand = ReactiveCommand.Create(CloseWindow);
             SwitchToSuggestionsTabCommand = ReactiveCommand.Create(() => { SelectedTab = AutofillTab.Suggestions; });
@@ -49,11 +46,9 @@ namespace PhantomVault.UI.ViewModels.Autofill
             UpdatePasswordCommand = ReactiveCommand.CreateFromTask(UpdatePasswordAsync);
             IgnoreCaptureCommand = ReactiveCommand.Create(IgnoreCapture);
 
-            // Subscribe to password capture events
             _captureService.PasswordCaptured += OnPasswordCaptured;
             _captureService.PasswordChanged += OnPasswordChanged;
 
-            // Subscribe to search filter changes
             this.WhenAnyValue(x => x.SearchFilter)
                 .Subscribe(_ => ApplyFilter());
         }
@@ -130,13 +125,12 @@ namespace PhantomVault.UI.ViewModels.Autofill
         public bool IsSuggestionsTabActive => SelectedTab == AutofillTab.Suggestions;
         public bool IsCaptureTabActive => SelectedTab == AutofillTab.Capture;
         public bool HasSuggestions => FilteredSuggestions.Any();
-        public string CaptureMessage => PendingCapture != null 
+        public string CaptureMessage => PendingCapture != null
             ? $"Save password for {PendingCapture.Username} at {PendingCapture.Domain}?"
             : PendingChange != null
                 ? $"Update password for {PendingChange.ExistingCredential.Username} at {PendingChange.Domain}?"
                 : string.Empty;
 
-        // Commands
         public ReactiveCommand<CredentialSuggestion, Unit> SelectSuggestionCommand { get; }
         public ReactiveCommand<Unit, Unit> CloseWindowCommand { get; }
         public ReactiveCommand<Unit, Unit> SwitchToSuggestionsTabCommand { get; }
@@ -145,34 +139,23 @@ namespace PhantomVault.UI.ViewModels.Autofill
         public ReactiveCommand<Unit, Unit> UpdatePasswordCommand { get; }
         public ReactiveCommand<Unit, Unit> IgnoreCaptureCommand { get; }
 
-        /// <summary>
-        /// Event raised when a credential is selected for autofill.
-        /// </summary>
         public event EventHandler<CredentialSelectedEventArgs>? CredentialSelected;
 
-        /// <summary>
-        /// Shows the autofill window at the specified field position with relevant suggestions.
-        /// </summary>
         public async Task ShowForFieldAsync(string url, FormFieldInfo field, FormFieldType fieldType)
         {
             _targetField = field;
             CurrentUrl = url;
             CurrentDomain = ExtractDomain(url);
 
-            // Position window near the input field
             PositionX = field.BoundingBox.X;
             PositionY = field.BoundingBox.Y + field.BoundingBox.Height + 5;
 
-            // Load suggestions
             await LoadSuggestionsAsync(fieldType);
 
             IsVisible = true;
             SelectedTab = AutofillTab.Suggestions;
         }
 
-        /// <summary>
-        /// Hides the autofill window.
-        /// </summary>
         public void Hide()
         {
             IsVisible = false;
@@ -196,7 +179,7 @@ namespace PhantomVault.UI.ViewModels.Autofill
                 suggestions = await _suggestionProvider.GetSuggestionsForDomainAsync(CurrentUrl);
             }
 
-            foreach (var suggestion in suggestions.Take(10)) // Limit to top 10
+            foreach (var suggestion in suggestions.Take(10))
             {
                 Suggestions.Add(suggestion);
             }
@@ -244,7 +227,7 @@ namespace PhantomVault.UI.ViewModels.Autofill
             PendingChange = null;
             HasNewPasswordCapture = true;
             SelectedTab = AutofillTab.Capture;
-            
+
             this.RaisePropertyChanged(nameof(CaptureMessage));
             this.RaisePropertyChanged(nameof(IsCaptureTabActive));
         }
@@ -255,7 +238,7 @@ namespace PhantomVault.UI.ViewModels.Autofill
             PendingCapture = null;
             HasNewPasswordCapture = true;
             SelectedTab = AutofillTab.Capture;
-            
+
             this.RaisePropertyChanged(nameof(CaptureMessage));
             this.RaisePropertyChanged(nameof(IsCaptureTabActive));
         }
@@ -273,7 +256,7 @@ namespace PhantomVault.UI.ViewModels.Autofill
             }
             catch (Exception ex)
             {
-                // Handle error (could raise an event for UI notification)
+
                 System.Diagnostics.Debug.WriteLine($"Failed to save captured password: {ex.Message}");
             }
         }
@@ -287,7 +270,7 @@ namespace PhantomVault.UI.ViewModels.Autofill
                 await _captureService.UpdateCredentialPasswordAsync(
                     PendingChange.ExistingCredential,
                     PendingChange.NewPassword);
-                
+
                 PendingChange = null;
                 HasNewPasswordCapture = false;
                 this.RaisePropertyChanged(nameof(CaptureMessage));
@@ -342,3 +325,4 @@ namespace PhantomVault.UI.ViewModels.Autofill
         public FormFieldInfo? TargetField { get; set; }
     }
 }
+

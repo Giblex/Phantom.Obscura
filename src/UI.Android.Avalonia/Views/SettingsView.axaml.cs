@@ -13,3 +13,4 @@ public partial class SettingsView : UserControl
     private void OpenThemeSettings_Click(object? sender, RoutedEventArgs e)
         => ShellViewModel.Current?.NavigateThemeSettings();
 }
+

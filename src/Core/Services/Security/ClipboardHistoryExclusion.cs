@@ -4,22 +4,15 @@ using System.Threading.Tasks;
 
 namespace PhantomVault.Core.Services.Security
 {
-    /// <summary>
-    /// Provides functionality to exclude clipboard data from Windows Clipboard History.
-    /// Windows 10 version 1809+ stores clipboard history which can expose sensitive data.
-    /// This service uses special clipboard formats to prevent history storage.
-    /// </summary>
+
     public static class ClipboardHistoryExclusion
     {
-        // Windows Clipboard Format constants
+
         private const uint CF_TEXT = 1;
         private const uint CF_UNICODETEXT = 13;
 
-        // Windows Clipboard History exclusion format
-        // When this format is present, Windows excludes the data from clipboard history
         private const string CLIPBOARD_EXCLUDE_FORMAT = "ExcludeClipboardContentFromMonitorProcessing";
 
-        // P/Invoke declarations for clipboard manipulation
         [DllImport("user32.dll", SetLastError = true)]
         private static extern bool OpenClipboard(IntPtr hWndNewOwner);
 
@@ -47,7 +40,6 @@ namespace PhantomVault.Core.Services.Security
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern IntPtr GlobalFree(IntPtr hMem);
 
-        // GlobalAlloc flags
         private const uint GMEM_MOVEABLE = 0x0002;
         private const uint GMEM_ZEROINIT = 0x0040;
         private const uint GHND = GMEM_MOVEABLE | GMEM_ZEROINIT;
@@ -55,22 +47,11 @@ namespace PhantomVault.Core.Services.Security
         private static uint? _excludeFormat;
         private static readonly object _lock = new();
 
-        /// <summary>
-        /// Checks if clipboard history exclusion is supported on this platform.
-        /// Only supported on Windows 10 version 1809 and later.
-        /// </summary>
         public static bool IsSupported()
         {
             return RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         }
 
-        /// <summary>
-        /// Copies text to clipboard while excluding it from Windows Clipboard History.
-        /// The data will still be available for immediate paste but won't appear in
-        /// clipboard history (Win+V) or be synced across devices.
-        /// </summary>
-        /// <param name="text">The text to copy to clipboard.</param>
-        /// <returns>True if the operation succeeded.</returns>
         public static bool CopyWithExclusion(string text)
         {
             if (!IsSupported())
@@ -85,7 +66,7 @@ namespace PhantomVault.Core.Services.Security
 
             lock (_lock)
             {
-                // Register the exclusion format if not already done
+
                 _excludeFormat ??= RegisterClipboardFormat(CLIPBOARD_EXCLUDE_FORMAT);
 
                 if (_excludeFormat == 0)
@@ -109,7 +90,6 @@ namespace PhantomVault.Core.Services.Security
                         return false;
                     }
 
-                    // Allocate and set the text data
                     var textBytes = System.Text.Encoding.Unicode.GetBytes(text + "\0");
                     hGlobalText = GlobalAlloc(GHND, (UIntPtr)textBytes.Length);
 
@@ -130,17 +110,14 @@ namespace PhantomVault.Core.Services.Security
                     Marshal.Copy(textBytes, 0, pText, textBytes.Length);
                     GlobalUnlock(hGlobalText);
 
-                    // Set the text data (ownership transfers to clipboard)
                     if (SetClipboardData(CF_UNICODETEXT, hGlobalText) == IntPtr.Zero)
                     {
                         GlobalFree(hGlobalText);
                         CloseClipboard();
                         return false;
                     }
-                    hGlobalText = IntPtr.Zero; // Ownership transferred
+                    hGlobalText = IntPtr.Zero;
 
-                    // Now add the exclusion marker format
-                    // The data content doesn't matter - just the presence of this format
                     hGlobalExclude = GlobalAlloc(GHND, (UIntPtr)1);
                     if (hGlobalExclude != IntPtr.Zero)
                     {
@@ -152,7 +129,7 @@ namespace PhantomVault.Core.Services.Security
 
                             if (SetClipboardData(_excludeFormat.Value, hGlobalExclude) != IntPtr.Zero)
                             {
-                                hGlobalExclude = IntPtr.Zero; // Ownership transferred
+                                hGlobalExclude = IntPtr.Zero;
                             }
                         }
                     }
@@ -165,7 +142,7 @@ namespace PhantomVault.Core.Services.Security
                 }
                 finally
                 {
-                    // Clean up any memory that wasn't transferred to clipboard
+
                     if (hGlobalText != IntPtr.Zero)
                     {
                         GlobalFree(hGlobalText);
@@ -180,12 +157,6 @@ namespace PhantomVault.Core.Services.Security
             }
         }
 
-        /// <summary>
-        /// Copies text to clipboard with exclusion and schedules automatic clearing.
-        /// </summary>
-        /// <param name="text">The text to copy.</param>
-        /// <param name="clearAfter">Time after which to clear the clipboard.</param>
-        /// <returns>True if the initial copy succeeded.</returns>
         public static async Task<bool> CopyWithExclusionAndAutoClearAsync(string text, TimeSpan clearAfter)
         {
             if (!CopyWithExclusion(text))
@@ -193,7 +164,6 @@ namespace PhantomVault.Core.Services.Security
                 return false;
             }
 
-            // Schedule clipboard clearing
             _ = Task.Run(async () =>
             {
                 await Task.Delay(clearAfter).ConfigureAwait(false);
@@ -203,9 +173,6 @@ namespace PhantomVault.Core.Services.Security
             return await Task.FromResult(true);
         }
 
-        /// <summary>
-        /// Clears the clipboard contents.
-        /// </summary>
         public static bool ClearClipboard()
         {
             if (!IsSupported())
@@ -234,3 +201,4 @@ namespace PhantomVault.Core.Services.Security
         }
     }
 }
+

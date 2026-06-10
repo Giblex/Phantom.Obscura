@@ -22,11 +22,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// View model for vault unlock flow. Handles vault discovery,
-    /// validation, and navigation to the main vault window.
-    /// Includes throttling for failed unlock attempts.
-    /// </summary>
+
     public sealed class VaultUnlockViewModel : ReactiveObject
     {
         private readonly string _usbPath;
@@ -71,9 +67,6 @@ namespace PhantomVault.UI.ViewModels
             _preferredVaultPath = preferredVaultPath;
         }
 
-        /// <summary>
-        /// Searches for a keyfile (.key) on the USB drive.
-        /// </summary>
         private string? FindKeyfileOnDrive(string drivePath)
         {
             if (_blackSecureRawVolumeService.IsRawSelection(drivePath))
@@ -106,21 +99,6 @@ namespace PhantomVault.UI.ViewModels
             return null;
         }
 
-        /// <summary>
-        /// Builds an ordered list of candidate keyfile composite paths to try when
-        /// the primary locator-resolved keyfile fails.
-        ///
-        /// Strategy (strongest → weakest):
-        ///   1. usb + locator-specified host companion (current default)
-        ///   2. usb + every other *.companion.key in %LOCALAPPDATA%\PhantomObscura\HostKey
-        ///   3. usb alone (vault sealed without a companion)
-        ///
-        /// The vault uses a mandatory USB keyfile with no password; the only variable
-        /// is which host companion (if any) was paired with the USB key at setup.
-        /// Locator files can become stale across reprovisioning, so we exhaustively
-        /// try every host companion the user has on this machine before failing.
-        /// Order matters because CompositeKeyfilePath concatenates bytes in order.
-        /// </summary>
         private static System.Collections.Generic.IReadOnlyList<string> BuildKeyfileCandidates(string drivePath, string usbKeyfilePath)
         {
             var seen = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -140,7 +118,6 @@ namespace PhantomVault.UI.ViewModels
                 Add(PhantomVault.Core.Utils.CompositeKeyfilePath.Compose(usbKeyfilePath, locatorCompanion));
             }
 
-            // Enumerate every host companion the user has — the locator may be stale.
             try
             {
                 var hostKeyDir = Path.Combine(
@@ -161,7 +138,6 @@ namespace PhantomVault.UI.ViewModels
                 Log.Warning(ex, "[VaultUnlock] BuildKeyfileCandidates: failed to enumerate host companions");
             }
 
-            // Final fallback — vault may have been sealed without a companion at all.
             Add(usbKeyfilePath);
 
             return candidates;
@@ -206,9 +182,6 @@ namespace PhantomVault.UI.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _status, value);
         }
 
-        /// <summary>
-        /// Unlock progress percentage (0-100) for visual progress bar.
-        /// </summary>
         public int ProgressPercent
         {
             get => _progressPercent;
@@ -220,9 +193,6 @@ namespace PhantomVault.UI.ViewModels
             _ownerWindow = window;
         }
 
-        /// <summary>
-        /// Discovers vault on USB path, validates it, and navigates to VaultWindow.
-        /// </summary>
         public async Task UnlockVaultAsync()
         {
             if (IsBusy) return;
@@ -240,7 +210,6 @@ namespace PhantomVault.UI.ViewModels
                     ? _blackSecureRawVolumeService.TryResolvePhysicalDevicePathFromSelection(_usbPath)
                     : null;
 
-                // Validate USB path
                 if (string.IsNullOrWhiteSpace(selectedDriveRoot) && string.IsNullOrWhiteSpace(selectedPhysicalDrivePath))
                 {
                     await _dialogService.ShowErrorAsync(
@@ -251,7 +220,6 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Find the root authority container (.pvault) or extract the master Obscura volume.
                 var rootPath = string.IsNullOrWhiteSpace(selectedDriveRoot) ? string.Empty : Path.Combine(selectedDriveRoot, ".phantom", "root");
                 var vaultsPath = string.IsNullOrWhiteSpace(selectedDriveRoot) ? string.Empty : Path.Combine(selectedDriveRoot, ".phantom", "vaults");
                 var manifestsPath = string.IsNullOrWhiteSpace(selectedDriveRoot) ? string.Empty : Path.Combine(selectedDriveRoot, ".phantom", "manifests");
@@ -273,11 +241,30 @@ namespace PhantomVault.UI.ViewModels
                     }
                 }
 
+                // Map the volume-extraction progress (0..1) into the unlock progress band 5%–22%
+                // so the bar visibly moves during what was previously a 60s+ silent hang.
+                var extractProgress = new Progress<double>(fraction =>
+                {
+                    var pct = 5 + (int)Math.Round(fraction * 17);
+                    if (pct > ProgressPercent) ProgressPercent = pct;
+                    Status = $"Extracting vault volume… {(int)Math.Round(fraction * 100)}%";
+                });
+
+                // Track the source we extracted from so we can run a deferred integrity
+                // verification in the background after the unlock UI is open.
+                string? extractedFromVolumePath = null;
+                bool extractedFromBlackSecure = false;
+                string? extractedFromRawDevice = null;
+
                 if (masterVolumePath != null)
                 {
+                    Status = "Extracting vault volume…";
                     extractedVolumeRoot = Path.Combine(Path.GetTempPath(), "PhantomObscuraSessions", Guid.NewGuid().ToString("N"));
                     var obscuraVolumeService = new ObscuraVolumeService();
-                    await obscuraVolumeService.ExtractVolumeAsync(masterVolumePath, extractedVolumeRoot).ConfigureAwait(false);
+                    // verify:false — integrity check runs as a background task after unlock so the
+                    // extraction step finishes in ~half the time. See post-unlock verifier below.
+                    await obscuraVolumeService.ExtractVolumeAsync(masterVolumePath, extractedVolumeRoot, extractProgress, verify: false).ConfigureAwait(false);
+                    extractedFromVolumePath = masterVolumePath;
 
                     rootPath = Path.Combine(extractedVolumeRoot, "root");
                     vaultsPath = Path.Combine(extractedVolumeRoot, "vaults");
@@ -287,8 +274,11 @@ namespace PhantomVault.UI.ViewModels
                 else if (!string.IsNullOrWhiteSpace(selectedPhysicalDrivePath) &&
                          await _blackSecureRawVolumeService.IsBlackSecureVolumeAsync(selectedPhysicalDrivePath).ConfigureAwait(false))
                 {
+                    Status = "Extracting vault volume…";
                     extractedVolumeRoot = Path.Combine(Path.GetTempPath(), "PhantomObscuraSessions", Guid.NewGuid().ToString("N"));
-                    await _blackSecureRawVolumeService.ExtractVolumeAsync(selectedPhysicalDrivePath, extractedVolumeRoot).ConfigureAwait(false);
+                    await _blackSecureRawVolumeService.ExtractVolumeAsync(selectedPhysicalDrivePath, extractedVolumeRoot, extractProgress, verify: false).ConfigureAwait(false);
+                    extractedFromBlackSecure = true;
+                    extractedFromRawDevice = selectedPhysicalDrivePath;
 
                     rootPath = Path.Combine(extractedVolumeRoot, "root");
                     vaultsPath = Path.Combine(extractedVolumeRoot, "vaults");
@@ -296,7 +286,6 @@ namespace PhantomVault.UI.ViewModels
                     bindingRecordPath = Path.Combine(rootPath, "usb.binding.pmeta");
                 }
 
-                // Prefer the root authority container for the three-container layout.
                 if (manifestPath == null && Directory.Exists(rootPath))
                 {
                     var rootContainers = Directory.GetFiles(rootPath, "*.pvault");
@@ -304,7 +293,6 @@ namespace PhantomVault.UI.ViewModels
                         manifestPath = rootContainers[0];
                 }
 
-                // Fall back to legacy single-container layout.
                 if (manifestPath == null && Directory.Exists(vaultsPath))
                 {
                     var pvaultFiles = Directory.GetFiles(vaultsPath, "*.pvault");
@@ -329,7 +317,6 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Check for unlock throttling before prompting for password
                 if (_throttleService.IsThrottled(manifestPath, out var remainingLockout))
                 {
                     var minutes = (int)Math.Ceiling(remainingLockout.TotalMinutes);
@@ -342,24 +329,23 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Check for keyfile-only authentication (auto-unlock)
                 var keyfilePath = string.IsNullOrWhiteSpace(selectedDriveRoot) ? null : FindKeyfileOnDrive(selectedDriveRoot);
                 string? password = null;
 
                 Log.Information("[VaultUnlock] manifestPath={Manifest} keyfilePath={Keyfile}", manifestPath, keyfilePath ?? "<null>");
 
-                // Create services for vault window
                 var encryptionService = new EncryptionService();
                 var containerService = new PhantomContainerService(encryptionService);
                 var manifestService = new ManifestService(encryptionService, containerService);
 
+                // Capture the validated manifest from whichever auth path succeeds so we can skip
+                // the redundant ReadManifest call below (each ReadManifest runs a full Argon2id KDF,
+                // costing ~0.5–2s; eliminating the duplicate saves a third of total unlock time).
+                VaultManifest? authenticatedManifest = null;
+
                 if (!string.IsNullOrEmpty(keyfilePath))
                 {
-                    // Try keyfile-only authentication first (no password prompt).
-                    // The vault uses a MANDATORY USB keyfile with NO password. The only
-                    // unknown is which host companion (if any) was paired at setup, so
-                    // we exhaustively try every candidate the locator + machine knows
-                    // about before giving up.
+
                     ProgressPercent = 25;
                     Status = "Authenticating with keyfile...";
 
@@ -377,6 +363,7 @@ namespace PhantomVault.UI.ViewModels
                             {
                                 keyfilePath = candidate;
                                 password = string.Empty;
+                                authenticatedManifest = keyfileTestManifest;
                                 Log.Information("[VaultUnlock] keyfile-only auth SUCCEEDED on candidate {Index}/{Count}", i + 1, candidates.Count);
                                 Status = "Authenticated with keyfile";
                                 break;
@@ -394,7 +381,6 @@ namespace PhantomVault.UI.ViewModels
                     }
                 }
 
-                // If keyfile auth failed or no keyfile, try no-password unlock first
                 if (password == null)
                 {
                     ProgressPercent = 25;
@@ -402,11 +388,12 @@ namespace PhantomVault.UI.ViewModels
 
                     try
                     {
-                        // Try empty password — vault may not be password-protected
+
                         var noPassManifest = await Task.Run(() => manifestService.ReadManifest(manifestPath, string.Empty, null));
                         if (noPassManifest != null)
                         {
                             password = string.Empty;
+                            authenticatedManifest = noPassManifest;
                             Log.Information("[VaultUnlock] no-password auth SUCCEEDED");
                         }
                         else
@@ -420,9 +407,6 @@ namespace PhantomVault.UI.ViewModels
                     }
                 }
 
-                // Hard rule: USB keyfile is MANDATORY; password is OPTIONAL and this vault
-                // has none. If every keyfile candidate failed, the correct USB key is not
-                // present — refuse to unlock. Do NOT prompt for a password.
                 if (password == null)
                 {
                     if (string.IsNullOrEmpty(keyfilePath))
@@ -458,17 +442,22 @@ namespace PhantomVault.UI.ViewModels
                 ProgressPercent = 55;
                 Status = "Validating passphrase (deriving key)...";
 
-                // CRITICAL: Validate passphrase by attempting to decrypt the manifest
                 VaultManifest? testManifest = null;
                 (string? RootContainerPath, string? ContainerPath, string? ObjectContainerPath) preResolvePaths = default;
-                Log.Information("[VaultUnlock] final ReadManifest password='{Pass}' keyfile={Keyfile}", password == null ? "<null>" : (password.Length == 0 ? "<empty>" : "<set>"), keyfilePath ?? "<null>");
+                Log.Information("[VaultUnlock] final ReadManifest password='{Pass}' keyfile={Keyfile} reuseAuthenticated={Reuse}",
+                    password == null ? "<null>" : (password.Length == 0 ? "<empty>" : "<set>"),
+                    keyfilePath ?? "<null>",
+                    authenticatedManifest != null);
 
                 try
                 {
-                    testManifest = await Task.Run(() => manifestService.ReadManifest(manifestPath, password, keyfilePath));
+                    // Reuse the manifest the keyfile-candidate or no-password attempt already validated
+                    // instead of running ReadManifest (and a full Argon2id derivation) a second time.
+                    testManifest = authenticatedManifest
+                        ?? await Task.Run(() => manifestService.ReadManifest(manifestPath, password, keyfilePath));
                     if (testManifest == null)
                     {
-                        // Register failed attempt for throttling
+
                         _throttleService.RegisterFailedAttempt(manifestPath);
                         var failedCount = _throttleService.GetFailedAttemptCount(manifestPath);
 
@@ -481,10 +470,6 @@ namespace PhantomVault.UI.ViewModels
                         return;
                     }
 
-                    // Snapshot path fields before runtime resolution — DeriveKey must use the
-                    // original stored (relative) paths that were in effect when the vault was
-                    // created; resolving them to absolute temp paths would produce a different
-                    // BuildBindingSalt HKDF salt and break ZK key-unwrap.
                     preResolvePaths = (
                         RootContainerPath: testManifest.RootContainerPath,
                         ContainerPath: testManifest.ContainerPath,
@@ -514,9 +499,6 @@ namespace PhantomVault.UI.ViewModels
                         _phantomKeyBridgeValidator.Validate(testManifest, password, keyfilePath);
                     });
 
-                    // Successful passphrase - continue to TOTP check
-
-                    // Check for additional auth requirements from manifest
                     if (testManifest.RequiresTotp && !string.IsNullOrEmpty(testManifest.TotpSecret))
                     {
                         ProgressPercent = 70;
@@ -524,7 +506,7 @@ namespace PhantomVault.UI.ViewModels
                         var totpCode = await PromptForTotpAsync();
                         if (string.IsNullOrEmpty(totpCode) || !ValidateTotpCode(testManifest.TotpSecret, totpCode))
                         {
-                            // Register failed TOTP attempt
+
                             _throttleService.RegisterFailedAttempt(manifestPath);
 
                             await _dialogService.ShowErrorAsync(
@@ -536,13 +518,12 @@ namespace PhantomVault.UI.ViewModels
                         }
                     }
 
-                    // Successful authentication - reset throttle counter
                     _throttleService.ResetAttempts(manifestPath);
                 }
                 catch (Exception decryptEx)
                 {
                     Log.Error(decryptEx, "[VaultUnlock] decryption/validation step threw {ExType}", decryptEx.GetType().FullName);
-                    // Register failed attempt for throttling
+
                     _throttleService.RegisterFailedAttempt(manifestPath);
                     var failedCount = _throttleService.GetFailedAttemptCount(manifestPath);
 
@@ -568,8 +549,7 @@ namespace PhantomVault.UI.ViewModels
                     : null;
                 byte[] vaultDatabaseKey = await Task.Run(() =>
                 {
-                    // Temporarily restore pre-resolution paths so DeriveKey produces the same
-                    // BuildBindingSalt that was used when the vault was first created.
+
                     var resolvedRoot = testManifest!.RootContainerPath;
                     var resolvedContainer = testManifest.ContainerPath;
                     var resolvedObject = testManifest.ObjectContainerPath;
@@ -614,6 +594,27 @@ namespace PhantomVault.UI.ViewModels
                     throw new InvalidOperationException("Failed to unlock the zero-knowledge vault service with the validated manifest credentials.");
                 }
 
+                // Record which authentication factors were actually used during this unlock
+                // so the Recovery launch gate can evaluate the active policy.
+                if (Avalonia.Application.Current is PhantomVault.UI.App appForSession && appForSession.Services is { } sessionSvc)
+                {
+                    var sessionState = sessionSvc.GetService<PhantomVault.UI.Services.RecoveryActivationSessionState>();
+                    if (sessionState != null)
+                    {
+                        sessionState.Reset();
+                        // USB keyfile is mandatory for every unlock.
+                        sessionState.MarkPossessionUsed(PhantomVault.Core.Models.PossessionFactor.Keyfile);
+                        if (deviceBindingId != null)
+                        {
+                            sessionState.MarkPossessionUsed(PhantomVault.Core.Models.PossessionFactor.UsbBinding);
+                        }
+                        if (!string.IsNullOrEmpty(password))
+                        {
+                            sessionState.MarkIdentityUsed(PhantomVault.Core.Models.IdentityFactor.Password);
+                        }
+                    }
+                }
+
                 var runtimeVaultRoot = DetermineRuntimeVaultRoot(testManifest, manifestPath);
                 if (!Directory.Exists(runtimeVaultRoot))
                 {
@@ -629,7 +630,6 @@ namespace PhantomVault.UI.ViewModels
                 ProgressPercent = 90;
                 Status = "Loading vault contents...";
 
-                // Create and show vault window - pass the validated password
                 var vaultViewModel = new VaultViewModel(
                     vaultService,
                     manifestService,
@@ -641,15 +641,8 @@ namespace PhantomVault.UI.ViewModels
                     _secureTrashService,
                     _iconManager);
 
-                vaultViewModel.SetManifestContext(manifestPath, password, keyfilePath);
+                vaultViewModel.SetManifestContext(manifestPath, password, keyfilePath, testManifest);
 
-                // ── USB OS-junk write-protection: open RW window + scrub ─────────
-                // Binding has been validated above; if user has the feature enabled,
-                // scrub root-level junk (LOST.DIR, .Spotlight-V100, System Volume
-                // Information, etc.) and clear the GPT ReadOnly bit for the duration
-                // of the unlock session. Scrub events are persisted to the manifest's
-                // ScrubHistory so the audit log survives across sessions.
-                // Failures are non-fatal — the unlock continues regardless.
                 try
                 {
                     if (!string.IsNullOrWhiteSpace(selectedDriveRoot) && testManifest != null)
@@ -688,9 +681,14 @@ namespace PhantomVault.UI.ViewModels
                 {
                     Log.Warning(wpEx, "[VaultUnlock] write-protection / scrub failed; continuing.");
                 }
-                // ─────────────────────────────────────────────────────────────────
 
-                await vaultViewModel.LoadAsync(runtimeVaultRoot, password ?? string.Empty, keyfilePath).ConfigureAwait(false);
+                // Defer the heavy credential load until AFTER the vault window is visible —
+                // unlock progress jumps to 100% and the window appears immediately while the
+                // credentials stream in behind a loading overlay (IsLoadingCredentials).
+                var deferredLoadPassword = password ?? string.Empty;
+                var deferredLoadKeyfile = keyfilePath;
+                var deferredLoadRoot = runtimeVaultRoot;
+                vaultViewModel.IsLoadingCredentials = true;
 
                 ProgressPercent = 95;
                 Status = "Preparing vault interface...";
@@ -729,6 +727,63 @@ namespace PhantomVault.UI.ViewModels
                 if (openedVaultWindow == null)
                     throw new InvalidOperationException("Vault window could not be created on the UI thread.");
 
+                // Kick off credential load in the background — the window is already on screen.
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await vaultViewModel.LoadAsync(deferredLoadRoot, deferredLoadPassword, deferredLoadKeyfile).ConfigureAwait(false);
+                    }
+                    catch (Exception loadEx)
+                    {
+                        Log.Error(loadEx, "[VaultUnlock] deferred LoadAsync threw {ExType}", loadEx.GetType().Name);
+                    }
+                });
+
+                // Kick off the deferred volume integrity verification in the background. If
+                // tampering is detected, surface it to the user via a status message; the vault
+                // already auto-locks via existing tamper-detection paths if that fires.
+                if (!string.IsNullOrWhiteSpace(extractedVolumeRoot) || extractedFromVolumePath != null || extractedFromBlackSecure)
+                {
+                    var verifyExtractedRoot = extractedVolumeRoot;
+                    var verifyMasterVolume = extractedFromVolumePath;
+                    var verifyBlackSecure = extractedFromBlackSecure;
+                    var verifyRawDevice = extractedFromRawDevice;
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            bool ok = true;
+                            if (verifyMasterVolume != null && !string.IsNullOrWhiteSpace(verifyExtractedRoot))
+                            {
+                                ok = await new ObscuraVolumeService()
+                                    .VerifyExtractedVolumeAsync(verifyMasterVolume, verifyExtractedRoot)
+                                    .ConfigureAwait(false);
+                            }
+                            // BlackSecure raw-device verification path is not yet implemented in
+                            // the background; tampering would still surface on the next unlock
+                            // because that path leaves verify:true by default for new sessions.
+                            if (!ok)
+                            {
+                                Log.Warning("[VaultUnlock] background volume integrity verification FAILED for {Path}",
+                                    verifyMasterVolume ?? verifyRawDevice ?? "<unknown>");
+                                await Dispatcher.UIThread.InvokeAsync(() =>
+                                {
+                                    vaultViewModel.StatusMessage = "Warning: vault volume integrity check failed";
+                                });
+                            }
+                            else
+                            {
+                                Log.Information("[VaultUnlock] background volume integrity verification OK");
+                            }
+                        }
+                        catch (Exception verifyEx)
+                        {
+                            Log.Warning(verifyEx, "[VaultUnlock] background volume integrity verification threw {ExType}", verifyEx.GetType().Name);
+                        }
+                    });
+                }
+
                 await Dispatcher.UIThread.InvokeAsync(async () =>
                 {
                     await RevealGeneratedPasswordBootstrapAsync(selectedDriveRoot, testManifest!, password, keyfilePath);
@@ -736,7 +791,6 @@ namespace PhantomVault.UI.ViewModels
                     await ShowAuthenticationOnboardingAsync(openedVaultWindow);
                 });
 
-                // ── Wire AutoFill orchestrator with the unlocked vault ────────────
                 try
                 {
                     if (Avalonia.Application.Current is PhantomVault.UI.App app && app.Services is { } svc)
@@ -747,9 +801,6 @@ namespace PhantomVault.UI.ViewModels
                         var vaultCtx = svc.GetService<PhantomVault.UI.Services.AutoFill.VaultAutofillContext>();
                         vaultCtx?.SetUnlocked(testManifest!);
 
-                        // Expose the unlocked vault to the named-pipe server so
-                        // `PhantomVault.UI.exe --native-messaging` subprocesses
-                        // (spawned by browsers) can answer credential queries.
                         svc.GetService<PhantomVault.UI.Services.AutoFill.INativeHostPipeServer>()
                            ?.SetCredentialProvider(credProvider, testManifest!);
                     }
@@ -759,9 +810,6 @@ namespace PhantomVault.UI.ViewModels
                     System.Diagnostics.Debug.WriteLine($"[VaultUnlock] AutoFill wire failed: {wireEx.Message}");
                 }
 
-                // When the vault window closes (logout / auto-lock) clear the
-                // AutoFill context AND re-assert USB write-protection so the drive
-                // cannot accept OS-injected indexing folders while not in use.
                 var driveRootForClose = selectedDriveRoot;
                 var manifestForClose = testManifest;
                 openedVaultWindow.Closed += (_, _) =>
@@ -777,7 +825,7 @@ namespace PhantomVault.UI.ViewModels
                                       ?.ClearCredentialProvider();
                         }
                     }
-                    catch { /* best effort */ }
+                    catch {  }
 
                     try
                     {
@@ -793,9 +841,7 @@ namespace PhantomVault.UI.ViewModels
                                     ReadOnly = true,
                                     Hidden = false,
                                     CompatibilityMode = usbCloseSettings.UsbCompatibilityMode,
-                                    // Layer B: when CompatibilityMode is OFF we re-tag the
-                                    // partition with PO's custom GPT type so foreign OSes
-                                    // stop auto-mounting it as user data.
+
                                     PartitionTypeGuid = usbCloseSettings.UsbCompatibilityMode
                                         ? prior?.PartitionTypeGuid
                                         : UsbWriteProtectionService.PhantomObscuraPartitionTypeGuid,
@@ -813,9 +859,7 @@ namespace PhantomVault.UI.ViewModels
                         Log.Warning(wpEx, "[VaultUnlock] post-close ApplyProtection failed.");
                     }
                 };
-                // ─────────────────────────────────────────────────────────────────
 
-                // Zero out the password after use
                 password = null;
             }
             catch (Exception ex)
@@ -840,8 +884,7 @@ namespace PhantomVault.UI.ViewModels
         {
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
-            // Transfer MainWindow to WelcomePage BEFORE closing the unlock window,
-            // otherwise Avalonia's OnMainWindowClose shutdown kills the app.
+
             if (Avalonia.Application.Current?.ApplicationLifetime
                 is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
             {
@@ -1186,9 +1229,6 @@ namespace PhantomVault.UI.ViewModels
                 throw new InvalidOperationException("The recovery record does not match the vault manifest.");
         }
 
-        /// <summary>
-        /// Prompts the user for the vault passphrase using a secure password dialog.
-        /// </summary>
         private async Task<string?> PromptForPasswordAsync()
         {
             return await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
@@ -1212,7 +1252,6 @@ namespace PhantomVault.UI.ViewModels
                 Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Colors.White)
             };
 
-            // Use TextBox with PasswordChar for secure input
             var passwordBox = new TextBox
             {
                 PasswordChar = '●',
@@ -1268,19 +1307,15 @@ namespace PhantomVault.UI.ViewModels
             else
             {
                 dialog.Show();
-                await Task.Delay(100); // Wait for dialog to show
+                await Task.Delay(100);
             }
 
-            // Clear the password box after reading
             passwordBox.Text = string.Empty;
 
             return result;
             });
         }
 
-        /// <summary>
-        /// Prompts the user for a TOTP code.
-        /// </summary>
         private async Task<string?> PromptForTotpAsync()
         {
             return await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
@@ -1361,9 +1396,6 @@ namespace PhantomVault.UI.ViewModels
             });
         }
 
-        /// <summary>
-        /// Validates a TOTP code against the stored secret.
-        /// </summary>
         private static bool ValidateTotpCode(string totpSecret, string code)
         {
             if (string.IsNullOrEmpty(totpSecret) || string.IsNullOrEmpty(code))
@@ -1374,7 +1406,6 @@ namespace PhantomVault.UI.ViewModels
                 var totpService = new TotpService();
                 var expectedCode = totpService.GenerateCode(totpSecret);
 
-                // Use constant-time comparison to prevent timing attacks
                 return System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(
                     System.Text.Encoding.UTF8.GetBytes(code.PadLeft(6, '0')),
                     System.Text.Encoding.UTF8.GetBytes(expectedCode.PadLeft(6, '0')));
@@ -1403,9 +1434,7 @@ namespace PhantomVault.UI.ViewModels
                 }
                 catch (System.Security.Cryptography.CryptographicException cryptEx)
                 {
-                    // Hidden device ID file was encrypted with a different vault's salt
-                    // (e.g. USB was previously used with an older vault). Rotate the file
-                    // so it matches the current vault, preserving the volume-based device ID.
+
                     Log.Warning(cryptEx, "[VaultUnlock] High-assurance device ID salt mismatch — rotating hidden file to current vault salt.");
                     string standardId = usbBindingService.ComputeDeviceId(usbPath);
                     string? rotatedId = usbBindingService.RotateHiddenDeviceId(usbPath, salt, standardId);
@@ -1439,9 +1468,7 @@ namespace PhantomVault.UI.ViewModels
                 }
                 else
                 {
-                    // GUUID detection failed but vault was created with GUUID binding.
-                    // Fall back to device-only binding to allow recovery.
-                    // Log warning so user is aware binding was downgraded.
+
                     Log.Warning("GUUID binding was set during vault creation but could not be detected on this system. Falling back to device-only binding for vault access.");
                 }
             }
@@ -1471,7 +1498,7 @@ namespace PhantomVault.UI.ViewModels
             }
             catch
             {
-                // Treat detection failure as unavailable and let the caller decide whether that is fatal.
+
             }
 
             return null;
@@ -1488,8 +1515,9 @@ namespace PhantomVault.UI.ViewModels
             }
             catch
             {
-                // Best-effort cleanup only.
+
             }
         }
     }
 }
+

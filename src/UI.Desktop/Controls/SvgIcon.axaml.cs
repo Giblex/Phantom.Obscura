@@ -13,10 +13,6 @@ using System.Text.RegularExpressions;
 
 namespace PhantomVault.UI.Desktop.Controls;
 
-/// <summary>
-/// Reusable SVG icon control that renders only embedded deterministic assets
-/// or shared built-in geometries. Network-backed icon fetching is prohibited.
-/// </summary>
 public partial class SvgIcon : UserControl
 {
     private Avalonia.Controls.Shapes.Path? _iconPath;
@@ -378,3 +374,4 @@ public partial class SvgIcon : UserControl
         AvaloniaXamlLoader.Load(this);
     }
 }
+

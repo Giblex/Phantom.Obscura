@@ -6,43 +6,30 @@ using System.Threading.Tasks;
 
 namespace PhantomVault.Core.Services;
 
-/// <summary>
-/// Provides multiple secure file deletion methods with cryptographic overwriting.
-/// Uses chunked streaming to handle files of any size without exhausting memory.
-/// </summary>
 public class SecureDeletionService
 {
-    private const int ChunkSize = 64 * 1024; // 64 KB buffer
+    private const int ChunkSize = 64 * 1024;
 
-    /// <summary>
-    /// Secure deletion method types
-    /// </summary>
     public enum DeletionMethod
     {
-        /// <summary>DoD 5220.22-M standard (7 passes)</summary>
+
         DoD522022M,
-        /// <summary>Gutmann method (35 passes)</summary>
+
         Gutmann,
-        /// <summary>Enhanced overwrite (7 passes with random data)</summary>
+
         EnhancedOverwrite,
-        /// <summary>Standard secure erasure (3 passes)</summary>
+
         StandardSecure,
-        /// <summary>Simple single pass overwrite</summary>
+
         SimpleOverwrite
     }
 
-    /// <summary>
-    /// Securely deletes a file using the specified method.
-    /// </summary>
-    /// <param name="filePath">Path to file to delete</param>
-    /// <param name="method">Deletion method to use</param>
-    /// <param name="progress">Optional progress callback (0-100)</param>
-    public static async Task SecureDeleteFileAsync(string filePath, DeletionMethod method, IProgress<int>? progress = null)
+    // Multi-pass overwrite cannot guarantee destruction on SSDs (TRIM/wear-leveling), copy-on-write filesystems, or any block-remapping storage. Treat as obfuscation, not erasure.
+    public static async Task BestEffortDeleteAsync(string filePath, DeletionMethod method, IProgress<int>? progress = null)
     {
         if (!File.Exists(filePath))
             throw new FileNotFoundException("File not found for secure deletion", filePath);
 
-        // Strip ReadOnly / Hidden / System so the overwrite passes can open the file
         var fileInfo = new FileInfo(filePath);
         if (fileInfo.IsReadOnly || (fileInfo.Attributes & (FileAttributes.Hidden | FileAttributes.System)) != 0)
             fileInfo.Attributes = FileAttributes.Normal;
@@ -61,13 +48,9 @@ public class SecureDeletionService
 
         await OverwriteFileAsync(filePath, fileSize, passes, method, progress);
 
-        // Final deletion
         File.Delete(filePath);
     }
 
-    /// <summary>
-    /// Overwrites a file with the specified number of passes using chunked streaming.
-    /// </summary>
     private static async Task OverwriteFileAsync(string filePath, long fileSize, int passes, DeletionMethod method, IProgress<int>? progress)
     {
         byte[] buffer = ArrayPool<byte>.Shared.Rent(ChunkSize);
@@ -111,9 +94,6 @@ public class SecureDeletionService
         }
     }
 
-    /// <summary>
-    /// Determines the fill byte for a given pass based on the deletion method.
-    /// </summary>
     private static byte GetFillByteForPass(int pass, DeletionMethod method)
     {
         return method switch
@@ -122,7 +102,7 @@ public class SecureDeletionService
             {
                 0 => 0x00,
                 1 => 0xFF,
-                _ => 0x00 // Random passes handled separately
+                _ => 0x00
             },
             DeletionMethod.StandardSecure => pass switch
             {
@@ -134,9 +114,6 @@ public class SecureDeletionService
         };
     }
 
-    /// <summary>
-    /// Determines if a pass should use random data instead of a fixed pattern.
-    /// </summary>
     private static bool ShouldUseRandomForPass(int pass, DeletionMethod method)
     {
         return method switch
@@ -150,3 +127,4 @@ public class SecureDeletionService
         };
     }
 }
+

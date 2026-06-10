@@ -5,7 +5,7 @@
              x:Class="PhantomVault.UI.Desktop.Controls.SecurityDashboard">
 
     <UserControl.Styles>
-        <!-- Stat card -->
+
         <Style Selector="Border.stat-card">
             <Setter Property="CornerRadius" Value="12"/>
             <Setter Property="Padding" Value="16,14"/>
@@ -28,7 +28,7 @@
     </UserControl.Styles>
 
     <StackPanel Spacing="18" Margin="0">
-        <!-- Main Security Score Card with Open Button -->
+
         <Border CornerRadius="14" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1" Padding="20,16">
             <StackPanel Spacing="12">
                 <Grid ColumnDefinitions="*,Auto">
@@ -36,7 +36,7 @@
                         <TextBlock Text="Security Score" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
                         <TextBlock Text="{Binding SecurityScore}" FontSize="44" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
                     </StackPanel>
-                    
+
                     <Button Grid.Column="1" VerticalAlignment="Center" Classes="liquid-glass" Padding="14,32"
                             Command="{Binding OpenSecurityDashboardWindowCommand}"
                             ToolTip.Tip="Open full security dashboard">
@@ -49,7 +49,7 @@
                 </Grid>
 
                 <ProgressBar Value="{Binding SecurityScore}" Maximum="100" Height="8" CornerRadius="4" Background="{DynamicResource DividerBrush}" Foreground="{DynamicResource AccentBrush}"/>
-                
+
                 <StackPanel Orientation="Horizontal" Spacing="16">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <TextBlock Text="✓" Foreground="{DynamicResource SuccessBrush}" FontWeight="Bold"/>
@@ -70,7 +70,6 @@
             </StackPanel>
         </Border>
 
-        <!-- Quick Stats Grid -->
         <UniformGrid Columns="2">
             <Border Classes="stat-card" Margin="0,0,5,0">
                 <StackPanel Spacing="4">
@@ -101,10 +100,10 @@
             </Border>
         </UniformGrid>
 
-        <!-- Footer Info -->
         <StackPanel Spacing="6" Margin="0,8,0,4">
             <TextBlock Text="{Binding LastBreachCheckTime}" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}" TextAlignment="Center"/>
             <TextBlock Text="Click 'Full Report' for comprehensive analysis" FontSize="10" Foreground="{DynamicResource MutedTextBrush}" TextAlignment="Center" FontStyle="Italic"/>
         </StackPanel>
     </StackPanel>
 </UserControl>
+

@@ -3,13 +3,7 @@ using System.Collections.Generic;
 
 namespace PhantomVault.Core.Models
 {
-    /// <summary>
-    /// Summarises the results of a password health analysis. Counters
-    /// track how many credentials are considered weak (entropy below a
-    /// threshold), old (not updated for a defined duration) or reused
-    /// across multiple entries. A list of titles for problematic
-    /// credentials can be provided for display.
-    /// </summary>
+
     public sealed class PasswordHealthReport
     {
         public int TotalCredentials { get; set; }
@@ -22,3 +16,4 @@ namespace PhantomVault.Core.Models
         public List<string> OldTitles { get; set; } = new();
     }
 }
+

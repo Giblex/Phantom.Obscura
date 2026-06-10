@@ -9,7 +9,7 @@ namespace PhantomVault.UI.Converters
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is bool b) return !b;
-            return value == null; // default - invert null as true
+            return value == null;
         }
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
@@ -19,3 +19,4 @@ namespace PhantomVault.UI.Converters
         }
     }
 }
+

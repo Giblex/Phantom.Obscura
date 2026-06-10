@@ -10,3 +10,4 @@ public partial class MetadataDetailSection : UserControl
         AvaloniaXamlLoader.Load(this);
     }
 }
+

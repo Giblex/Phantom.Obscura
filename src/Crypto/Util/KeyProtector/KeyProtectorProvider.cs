@@ -11,12 +11,6 @@ namespace GiblexVault.Security.ZK.Util.KeyProtector
             if (OperatingSystem.IsWindows())
                 return new DpapiKeyProtector();
 
-            // macOS / Linux: AES-256-GCM envelope key stored in ~/.config/PhantomVault/
-            // with Unix 0600 permissions (owner read/write only).
-            //
-            // Upgrade path:
-            //   macOS  → Keychain via Security.framework (SecItemAdd / SecItemCopyMatching)
-            //   Linux  → SecretService / libsecret D-Bus API
             var keyDir = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
                 ".config", "PhantomVault");
@@ -25,3 +19,4 @@ namespace GiblexVault.Security.ZK.Util.KeyProtector
         }
     }
 }
+

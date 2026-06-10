@@ -6,9 +6,7 @@ using Avalonia.Controls;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// View model for accessibility settings including language, themes, view preferences, and keyboard shortcuts.
-    /// </summary>
+
     public sealed class AccessibilitySettingsViewModel : ReactiveObject
     {
         private string _selectedLanguage = "English";
@@ -28,8 +26,15 @@ namespace PhantomVault.UI.ViewModels
             ToggleThemeCommand = ReactiveCommand.Create(ToggleTheme);
             ResetToDefaultsCommand = ReactiveCommand.Create(ResetToDefaults);
             ViewShortcutsCommand = ReactiveCommand.Create(ViewShortcuts);
-            
-            // Initialize collections
+
+            try
+            {
+                var s = Services.SettingsService.Load();
+                _largeTooltips = s.LargeTooltips;
+                _useHighContrast = s.EnableHighContrast;
+            }
+            catch { }
+
             AvailableLanguages = new ObservableCollection<string>
             {
                 "English",
@@ -62,12 +67,10 @@ namespace PhantomVault.UI.ViewModels
                 new UiScaleOption { Label = "Larger (125%)", Scale = 1.25 },
                 new UiScaleOption { Label = "Extra Large (150%)", Scale = 1.5 }
             };
-            
-            // Set default scale
-            _selectedScaleOption = UiScaleOptions[2]; // Normal (100%)
+
+            _selectedScaleOption = UiScaleOptions[2];
         }
 
-        // Language Settings
         public ObservableCollection<string> AvailableLanguages { get; }
 
         public string SelectedLanguage
@@ -76,7 +79,6 @@ namespace PhantomVault.UI.ViewModels
             set => this.RaiseAndSetIfChanged(ref _selectedLanguage, value);
         }
 
-        // Theme Settings
         public bool IsDarkTheme
         {
             get => _isDarkTheme;
@@ -96,15 +98,14 @@ namespace PhantomVault.UI.ViewModels
             get => _useHighContrast;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _useHighContrast, value))
+                if (_useHighContrast != value)
                 {
-                    // Update global accessibility service
+                    this.RaiseAndSetIfChanged(ref _useHighContrast, value);
                     PhantomVault.UI.Services.AccessibilityService.Instance.UseHighContrast = value;
                 }
             }
         }
 
-        // View Scale Settings
         public ObservableCollection<UiScaleOption> UiScaleOptions { get; }
 
         public UiScaleOption? SelectedScaleOption
@@ -115,7 +116,6 @@ namespace PhantomVault.UI.ViewModels
 
         public double UiScale => _selectedScaleOption?.Scale ?? 1.0;
 
-        // View Preferences
         public bool IsGridViewDefault
         {
             get => _isGridViewDefault;
@@ -128,14 +128,12 @@ namespace PhantomVault.UI.ViewModels
             set => IsGridViewDefault = !value;
         }
 
-        // Autofill Preferences
         public string DefaultEmailUsername
         {
             get => _defaultEmailUsername;
             set => this.RaiseAndSetIfChanged(ref _defaultEmailUsername, value);
         }
 
-        // Accessibility Features
         public bool ShowShortcutHints
         {
             get => _showShortcutHints;
@@ -147,9 +145,9 @@ namespace PhantomVault.UI.ViewModels
             get => _reduceMotion;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _reduceMotion, value))
+                if (_reduceMotion != value)
                 {
-                    // Update global accessibility service
+                    this.RaiseAndSetIfChanged(ref _reduceMotion, value);
                     PhantomVault.UI.Services.AccessibilityService.Instance.ReduceMotion = value;
                 }
             }
@@ -160,15 +158,16 @@ namespace PhantomVault.UI.ViewModels
             get => _largeTooltips;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _largeTooltips, value))
+                if (_largeTooltips != value)
                 {
-                    // Update global accessibility service
+                    this.RaiseAndSetIfChanged(ref _largeTooltips, value);
                     PhantomVault.UI.Services.AccessibilityService.Instance.LargeTooltips = value;
+                    try { Services.SettingsService.Update(s => s.LargeTooltips = value); }
+                    catch { }
                 }
             }
         }
 
-        // Commands
         public ReactiveCommand<Unit, Unit> ToggleThemeCommand { get; }
         public ReactiveCommand<Unit, Unit> ResetToDefaultsCommand { get; }
         public ReactiveCommand<Unit, Unit> ViewShortcutsCommand { get; }
@@ -181,7 +180,7 @@ namespace PhantomVault.UI.ViewModels
         private void ToggleTheme()
         {
             IsDarkTheme = !IsDarkTheme;
-            // Apply theme change through App
+
             if (Avalonia.Application.Current is App app)
             {
                 app.SetTheme(IsDarkTheme ? "dark" : "light");
@@ -206,7 +205,7 @@ namespace PhantomVault.UI.ViewModels
             SelectedLanguage = "English";
             SelectedThemeSkin = "Default";
             IsDarkTheme = true;
-            SelectedScaleOption = UiScaleOptions[2]; // 100% - Default
+            SelectedScaleOption = UiScaleOptions[2];
             IsGridViewDefault = false;
             DefaultEmailUsername = string.Empty;
             UseHighContrast = false;
@@ -222,3 +221,4 @@ namespace PhantomVault.UI.ViewModels
         public double Scale { get; set; }
     }
 }
+

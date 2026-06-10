@@ -9,7 +9,7 @@ namespace PhantomVault.UI.Views
         public PasskeySettingsWindow()
         {
             InitializeComponent();
-            
+
             if (DataContext is PasskeySettingsViewModel vm)
             {
                 vm.SetOwnerWindow(this);
@@ -19,16 +19,17 @@ namespace PhantomVault.UI.Views
         protected override void OnLoaded(RoutedEventArgs e)
         {
             base.OnLoaded(e);
-            
+
             if (DataContext is PasskeySettingsViewModel vm)
             {
                 vm.SetOwnerWindow(this);
             }
         }
-        
+
         private void CloseButton_Click(object? sender, RoutedEventArgs e)
         {
             Close();
         }
     }
 }
+

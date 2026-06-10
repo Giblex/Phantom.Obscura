@@ -23,9 +23,7 @@ using Serilog;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// View model for vault settings window.
-    /// </summary>
+
     public sealed class VaultSettingsViewModel : ReactiveObject
     {
         private readonly DialogService _dialogService;
@@ -39,7 +37,6 @@ namespace PhantomVault.UI.ViewModels
         private string _statusMessage = "Ready";
         private string _vaultName = "My Vault";
 
-        // Section visibility
         private bool _isShowingGeneral = true;
         private bool _isShowingSecurity;
         private bool _isShowingAutoFill;
@@ -50,40 +47,31 @@ namespace PhantomVault.UI.ViewModels
         private bool _isShowingSecuredRubbishBin;
         private bool _isShowingAbout;
 
-        // General settings
         private int _themeSelection;
-        private int _clipboardClearTime = 1; // Default to 1 minute
+        private int _clipboardClearTime = 1;
 
-        // Security settings
         private int _defaultPasswordLength = 16;
         private bool _includeUppercase = true;
         private bool _includeLowercase = true;
         private bool _includeNumbers = true;
         private bool _includeSymbols = true;
 
-        // Auto-fill settings
         private bool _autoFillEnabled = true;
 
-        // Backup settings
         private bool _autoBackupEnabled;
 
-        // Advanced settings
         private bool _enableDebugLogging;
 
-        // Browser extension and native host status
-        private string _extensionStatusColor = "#DC3545"; // Red by default
+        private string _extensionStatusColor = "#DC3545";
         private string _extensionStatusText = "Not Installed";
-        private string _nativeHostStatusColor = "#DC3545"; // Red by default
+        private string _nativeHostStatusColor = "#DC3545";
         private string _nativeHostStatusText = "Not Configured";
 
-        // Credentials collection for import/export
         private List<Credential> _credentials = new();
 
-        // Flaticon downloader
         private string _internetStatusText = "🔴 Internet Disconnected";
         private string _internetStatusColor = "#DC3545";
 
-        // Passkey & hardware token status state
         private string _passkeyStatusText = "Windows Hello status not checked";
         private string _passkeyStatusDetail = "Open this vault on the current device to link Windows Hello.";
         private string _passkeyStatusAccent = "#6C757D";
@@ -97,7 +85,6 @@ namespace PhantomVault.UI.ViewModels
         private string _yubiKeyStatusTimestamp = "Status not checked yet.";
         private string _yubiKeyActionHint = "Insert a YubiKey before starting the hardware check.";
 
-        // TOTP Authenticator status
         private string _totpStatusText = "TOTP not configured";
         private string _totpStatusDetail = "Set up time-based one-time password (TOTP) for additional security.";
         private string _totpStatusAccent = "#6C757D";
@@ -105,7 +92,6 @@ namespace PhantomVault.UI.ViewModels
         private string _totpActionHint = "Generate QR code or enter secret key to enable TOTP authentication.";
         private bool _hasTotpEnabled = false;
 
-        // Busy indicator state
         private bool _isBusy;
         private string _busyMessage = "Working...";
         private string _busyDetail = string.Empty;
@@ -115,22 +101,18 @@ namespace PhantomVault.UI.ViewModels
         private bool _isCategoryManagerPanelVisible;
         private CategoryManagerViewModel? _categoryManagerViewModel;
 
-        // UI layout / theme toggles (bound from XAML)
         private bool _useDarkTheme = true;
         private bool _useGridLayout = true;
         private bool _isDashboardEnabled = true;
 
-        // Privacy & diagnostics
         private bool _privacyModeEnabled;
         private bool _redactDiagnosticLogs = true;
 
-        // Secure trash settings
         private bool _secureTrashEnabled = true;
         private bool _secureTrashAutoPurge = true;
         private int _secureTrashRetentionDays = 30;
         private int _secureTrashWipePasses = 3;
 
-        // Storage tier migration
         private readonly ObservableCollection<string> _availableMigrationDrives = new();
         private string _currentProtectionTierText = "Unavailable";
         private string _currentStorageTransportText = "Unavailable";
@@ -140,9 +122,6 @@ namespace PhantomVault.UI.ViewModels
         private string? _selectedMigrationTargetDrive;
         private bool _isMigrationTargetDriveRequired;
 
-        /// <summary>
-        /// Provides access to theme settings for runtime theme switching.
-        /// </summary>
         public Settings.ThemeSettingsViewModel ThemeSettings { get; }
 
         public VaultSettingsViewModel(VaultViewModel? vaultViewModel = null)
@@ -151,18 +130,15 @@ namespace PhantomVault.UI.ViewModels
             _vaultViewModel = vaultViewModel;
             _securitySettingsViewModel = new SecuritySettingsViewModel();
             _advancedSettingsViewModel = new Settings.AdvancedSettingsViewModel();
-            
-            // Initialize theme settings with runtime theme service
+
             var app = Application.Current as App;
             var themeManager = app?.Services?.GetService(typeof(ThemeManagerService)) as ThemeManagerService;
             var runtimeThemeService = app?.Services?.GetService(typeof(IRuntimeThemeService)) as IRuntimeThemeService;
             _vaultTierMigrationService = app?.Services?.GetService(typeof(VaultTierMigrationService)) as VaultTierMigrationService;
             ThemeSettings = new Settings.ThemeSettingsViewModel(themeManager, runtimeThemeService);
-            
-            // Load persisted settings
+
             var settings = SettingsService.LoadVaultSnapshot();
 
-            // Initialize privacy and secure trash settings from persisted settings
             try
             {
                 _privacyModeEnabled = settings.PrivacyModeEnabled;
@@ -195,7 +171,6 @@ namespace PhantomVault.UI.ViewModels
                 Log.Warning(ex, "Failed to load user settings during VaultSettingsViewModel initialization, using defaults");
             }
 
-            // Navigation commands
             ShowGeneralCommand = ReactiveCommand.Create(ShowGeneral);
             ShowSecurityCommand = ReactiveCommand.Create(ShowSecurity);
             ShowAutoFillCommand = ReactiveCommand.Create(ShowAutoFill);
@@ -206,12 +181,10 @@ namespace PhantomVault.UI.ViewModels
             ShowSecuredRubbishBinCommand = ReactiveCommand.Create(ShowSecuredRubbishBin);
             ShowAboutCommand = ReactiveCommand.Create(ShowAbout);
 
-            // Common quick actions bound from settings XAML
             OpenAddEntryCommand = ReactiveCommand.CreateFromTask(OpenAddEntryAsync);
             OpenPasswordGeneratorCommand = ReactiveCommand.CreateFromTask(OpenPasswordGeneratorAsync);
             OpenCategoryManagerCommand = ReactiveCommand.CreateFromTask(ManageCategoriesAsync);
 
-            // Action commands
             ChangeMasterPasswordCommand = ReactiveCommand.CreateFromTask(ChangeMasterPasswordAsync);
             ConfigureTwoFactorCommand = ReactiveCommand.CreateFromTask(ConfigureTwoFactorAsync);
             ConfigurePasskeyCommand = ReactiveCommand.CreateFromTask(ConfigurePasskeyAsync);
@@ -259,7 +232,6 @@ namespace PhantomVault.UI.ViewModels
 
         }
 
-        // Command to open the local Icon Manager window
         public ReactiveCommand<Unit, Unit> OpenIconManagerCommand { get; }
 
         private async Task OpenIconManagerAsync()
@@ -274,7 +246,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        // Properties
         public string CurrentSectionTitle
         {
             get => _currentSectionTitle;
@@ -293,7 +264,6 @@ namespace PhantomVault.UI.ViewModels
             set => this.RaiseAndSetIfChanged(ref _vaultName, value);
         }
 
-        // Section visibility
         public bool IsShowingGeneral
         {
             get => _isShowingGeneral;
@@ -348,7 +318,6 @@ namespace PhantomVault.UI.ViewModels
             set => this.RaiseAndSetIfChanged(ref _isShowingAbout, value);
         }
 
-        // General settings properties
         public int ThemeSelection
         {
             get => _themeSelection;
@@ -366,7 +335,7 @@ namespace PhantomVault.UI.ViewModels
                     var useDarkTheme = ThemeSelection != 1;
                     if (ThemeSelection == 0) app.SetTheme("dark");
                     else if (ThemeSelection == 1) app.SetTheme("light");
-                    else app.SetTheme("dark"); // System default fallback
+                    else app.SetTheme("dark");
 
                     SettingsService.Update(settings => settings.IsDarkTheme = useDarkTheme);
 
@@ -393,7 +362,7 @@ namespace PhantomVault.UI.ViewModels
                 {
                     SettingsService.Update(settings => settings.ClipboardClearTime = sanitized);
                 }
-                catch { /* Ignore persistence failures */ }
+                catch {  }
             }
         }
 
@@ -508,7 +477,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        // Security settings properties
         public bool AutoLockEnabled
         {
             get => _securitySettingsViewModel.IdleTimeoutMinutes > 0;
@@ -580,8 +548,9 @@ namespace PhantomVault.UI.ViewModels
             get => _includeUppercase;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _includeUppercase, value))
+                if (_includeUppercase != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _includeUppercase, value);
                     PersistPasswordGeneratorDefaults();
                     StatusMessage = value ? "Uppercase letters enabled for generated passwords" : "Uppercase letters disabled for generated passwords";
                 }
@@ -593,8 +562,9 @@ namespace PhantomVault.UI.ViewModels
             get => _includeLowercase;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _includeLowercase, value))
+                if (_includeLowercase != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _includeLowercase, value);
                     PersistPasswordGeneratorDefaults();
                     StatusMessage = value ? "Lowercase letters enabled for generated passwords" : "Lowercase letters disabled for generated passwords";
                 }
@@ -606,8 +576,9 @@ namespace PhantomVault.UI.ViewModels
             get => _includeNumbers;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _includeNumbers, value))
+                if (_includeNumbers != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _includeNumbers, value);
                     PersistPasswordGeneratorDefaults();
                     StatusMessage = value ? "Numbers enabled for generated passwords" : "Numbers disabled for generated passwords";
                 }
@@ -619,15 +590,15 @@ namespace PhantomVault.UI.ViewModels
             get => _includeSymbols;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _includeSymbols, value))
+                if (_includeSymbols != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _includeSymbols, value);
                     PersistPasswordGeneratorDefaults();
                     StatusMessage = value ? "Symbols enabled for generated passwords" : "Symbols disabled for generated passwords";
                 }
             }
         }
 
-        // Decoy vault settings properties
         public bool EnableDecoyVault
         {
             get => _securitySettingsViewModel.EnableDecoyVault;
@@ -713,14 +684,14 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        // Auto-fill settings properties
         public bool AutoFillEnabled
         {
             get => _autoFillEnabled;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _autoFillEnabled, value))
+                if (_autoFillEnabled != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _autoFillEnabled, value);
                     try
                     {
                         SettingsService.Update(settings => settings.EnableAutoFill = value);
@@ -738,20 +709,19 @@ namespace PhantomVault.UI.ViewModels
 
         public bool SupportsInlineAutofillIcons => false;
 
-        // Backup settings properties
         public bool AutoBackupEnabled
         {
             get => _autoBackupEnabled;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _autoBackupEnabled, value))
+                if (_autoBackupEnabled != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _autoBackupEnabled, value);
                     _ = PersistAutoBackupEnabledAsync(value);
                 }
             }
         }
 
-        // Advanced settings properties
         public bool EnableDebugLogging
         {
             get => _advancedSettingsViewModel.EnableDebugLogging;
@@ -805,7 +775,6 @@ namespace PhantomVault.UI.ViewModels
             set => this.RaiseAndSetIfChanged(ref _nativeHostStatusText, value);
         }
 
-        // Flaticon downloader properties
         public string InternetStatusText
         {
             get => _internetStatusText;
@@ -1025,7 +994,6 @@ namespace PhantomVault.UI.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _categoryManagerViewModel, value);
         }
 
-        // Commands
         public ReactiveCommand<Unit, Unit> ShowGeneralCommand { get; }
         public ReactiveCommand<Unit, Unit> ShowSecurityCommand { get; }
         public ReactiveCommand<Unit, Unit> ShowAutoFillCommand { get; }
@@ -1061,19 +1029,18 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> RefreshStorageTierMigrationCommand { get; }
         public ReactiveCommand<Unit, Unit> ExecuteStorageTierMigrationCommand { get; }
 
-        // Quick action commands used by settings UI
         public ReactiveCommand<Unit, Unit> OpenAddEntryCommand { get; }
         public ReactiveCommand<Unit, Unit> OpenPasswordGeneratorCommand { get; }
         public ReactiveCommand<Unit, Unit> OpenCategoryManagerCommand { get; }
 
-        // Theme/layout toggles (bound from XAML)
         public bool UseDarkTheme
         {
             get => _useDarkTheme;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _useDarkTheme, value))
+                if (_useDarkTheme != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _useDarkTheme, value);
                     try
                     {
                         SettingsService.Update(settings => settings.IsDarkTheme = value);
@@ -1100,8 +1067,9 @@ namespace PhantomVault.UI.ViewModels
             get => _useGridLayout;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _useGridLayout, value))
+                if (_useGridLayout != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _useGridLayout, value);
                     try
                     {
                         SettingsService.Update(settings => settings.PreferGridView = value);
@@ -1125,22 +1093,18 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// When true the Dashboard view is available; when false the app skips
-        /// straight to the Passwords view and hides the sidebar Dashboard button.
-        /// </summary>
         public bool IsDashboardEnabled
         {
             get => _isDashboardEnabled;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _isDashboardEnabled, value))
+                if (_isDashboardEnabled != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _isDashboardEnabled, value);
                     try
                     {
                         SettingsService.Update(settings => settings.DashboardEnabled = value);
 
-                        // Propagate to VaultViewModel so it takes effect immediately
                         if (_vaultViewModel != null)
                         {
                             _vaultViewModel.IsDashboardEnabled = value;
@@ -1154,7 +1118,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        // Privacy & diagnostics (persisted)
         public bool PrivacyModeEnabled
         {
             get => _advancedSettingsViewModel.EnablePrivacyMode;
@@ -1195,14 +1158,14 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        // Secure trash settings
         public bool SecureTrashEnabled
         {
             get => _secureTrashEnabled;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _secureTrashEnabled, value))
+                if (_secureTrashEnabled != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _secureTrashEnabled, value);
                     try
                     {
                         SettingsService.Update(settings => settings.SecureTrashEnabled = value);
@@ -1221,8 +1184,9 @@ namespace PhantomVault.UI.ViewModels
             get => _secureTrashAutoPurge;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _secureTrashAutoPurge, value))
+                if (_secureTrashAutoPurge != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _secureTrashAutoPurge, value);
                     try
                     {
                         SettingsService.Update(settings => settings.SecureTrashAutoPurge = value);
@@ -1290,7 +1254,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        // Methods
         private void ShowGeneral()
         {
             HideAllSections();
@@ -1364,7 +1327,6 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Fallback: create a new AddEditCredential window
                 var viewModel = new AddEditCredentialViewModel(null, null);
                 var window = new AddEditCredentialWindow
                 {
@@ -1372,7 +1334,6 @@ namespace PhantomVault.UI.ViewModels
                 };
                 viewModel.SetOwnerWindow(window);
 
-                // Determine an owner window if available; otherwise show non-modally
                 Avalonia.Controls.Window? owner = _ownerWindow;
                 if (owner == null && Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
                 {
@@ -1385,7 +1346,7 @@ namespace PhantomVault.UI.ViewModels
                 }
                 else
                 {
-                    // Non-modal show returns void
+
                     window.Show();
                 }
             }
@@ -1406,7 +1367,6 @@ namespace PhantomVault.UI.ViewModels
                 };
                 viewModel.SetOwnerWindow(window);
 
-                // Determine an owner window if available; otherwise show non-modally
                 Avalonia.Controls.Window? owner = _ownerWindow;
                 if (owner == null && Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
                 {
@@ -1419,7 +1379,7 @@ namespace PhantomVault.UI.ViewModels
                 }
                 else
                 {
-                    // Non-modal show returns void
+
                     window.Show();
                 }
             }
@@ -2084,59 +2044,54 @@ namespace PhantomVault.UI.ViewModels
                     {
                         UpdateBusyStatus("Loading TOTP configuration…", "Preparing authenticator setup.");
 
-                        // Get the vault name for the TOTP label
                         string vaultName = "PhantomVault";
                         if (_vaultViewModel != null && _vaultViewModel.TryGetManifestContext(out var manifestPath, out _, out _))
                         {
                             vaultName = System.IO.Path.GetFileNameWithoutExtension(manifestPath) ?? "PhantomVault";
                         }
 
-                        // Create the TOTP settings view model
                         var totpService = new TotpService();
                         var totpViewModel = new TotpSettingsViewModel(totpService)
                         {
                             VaultName = vaultName
                         };
 
-                        // If we have an existing TOTP secret in the manifest, load it
                         if (_vaultViewModel != null && _vaultViewModel.TryGetManifestContext(out manifestPath, out var passphrase, out var keyfilePath))
                         {
                             try
                             {
                                 var services = (Avalonia.Application.Current as App)?.Services;
                                 var manifestService = services?.GetService(typeof(ManifestService)) as ManifestService;
-                                
+
                                 if (manifestService != null && File.Exists(manifestPath))
                                 {
                                     var manifest = manifestService.ReadManifest(
                                         manifestPath,
                                         string.IsNullOrWhiteSpace(passphrase) ? null : passphrase,
                                         string.IsNullOrWhiteSpace(keyfilePath) ? null : keyfilePath);
-                                    
+
                                     if (!string.IsNullOrEmpty(manifest?.TotpSecret))
                                     {
-                                        // Load existing TOTP configuration
+
                                         totpViewModel.IsTotpEnabled = manifest.RequiresTotp;
                                     }
                                 }
                             }
                             catch
                             {
-                                // Ignore manifest read errors - just show fresh setup
+
                             }
                         }
 
-                        // Create and show the TOTP settings window
                         var totpWindow = new PhantomVault.UI.Views.TotpSettingsWindow
                         {
                             DataContext = totpViewModel
                         };
-                        
+
                         totpViewModel.SetOwnerWindow(totpWindow);
-                        
+
                         await totpWindow.ShowDialog(_ownerWindow);
 
-                        // After dialog closes, if TOTP was configured, update the manifest
                         if (totpViewModel.IsTotpEnabled && !string.IsNullOrEmpty(totpViewModel.TotpSecret))
                         {
                             await SaveTotpToManifestAsync(totpViewModel.TotpSecret).ConfigureAwait(false);
@@ -2150,7 +2105,7 @@ namespace PhantomVault.UI.ViewModels
                         }
                         else if (!totpViewModel.IsTotpEnabled && string.IsNullOrEmpty(totpViewModel.TotpSecret))
                         {
-                            // TOTP was removed
+
                             HasTotpEnabled = false;
                             StatusMessage = "TOTP setup cancelled.";
                         }
@@ -2173,9 +2128,6 @@ namespace PhantomVault.UI.ViewModels
                 detail: "Prepare your authenticator app to scan the QR code.");
         }
 
-        /// <summary>
-        /// Saves the TOTP secret to the vault manifest.
-        /// </summary>
         private async System.Threading.Tasks.Task SaveTotpToManifestAsync(string totpSecret)
         {
             if (_vaultViewModel == null || !_vaultViewModel.TryGetManifestContext(out var manifestPath, out var passphrase, out var keyfilePath))
@@ -2185,7 +2137,7 @@ namespace PhantomVault.UI.ViewModels
 
             var services = (Avalonia.Application.Current as App)?.Services;
             var manifestService = services?.GetService(typeof(ManifestService)) as ManifestService;
-            
+
             if (manifestService == null || !File.Exists(manifestPath))
             {
                 throw new InvalidOperationException("Cannot save TOTP: manifest service unavailable.");
@@ -2195,7 +2147,7 @@ namespace PhantomVault.UI.ViewModels
                 manifestPath,
                 string.IsNullOrWhiteSpace(passphrase) ? null : passphrase,
                 string.IsNullOrWhiteSpace(keyfilePath) ? null : keyfilePath);
-            
+
             if (manifest == null)
             {
                 throw new InvalidOperationException("Cannot save TOTP: failed to read manifest.");
@@ -2203,7 +2155,7 @@ namespace PhantomVault.UI.ViewModels
 
             manifest.TotpSecret = totpSecret;
             manifest.RequiresTotp = true;
-            
+
             manifestService.WriteManifest(
                 manifest,
                 manifestPath,
@@ -2221,7 +2173,7 @@ namespace PhantomVault.UI.ViewModels
                 {
                     try
                     {
-                        // Get manifest context
+
                         if (_vaultViewModel == null)
                         {
                             await _dialogService.ShowErrorAsync(
@@ -2267,7 +2219,6 @@ namespace PhantomVault.UI.ViewModels
                             return;
                         }
 
-                        // Read manifest
                         VaultManifest manifest;
                         try
                         {
@@ -2285,7 +2236,6 @@ namespace PhantomVault.UI.ViewModels
                             return;
                         }
 
-                        // Check if TOTP is configured
                         if (string.IsNullOrWhiteSpace(manifest.TotpSecret))
                         {
                             await _dialogService.ShowInfoAsync(
@@ -2296,12 +2246,10 @@ namespace PhantomVault.UI.ViewModels
                             return;
                         }
 
-                        // Generate current TOTP code
                         var now = DateTimeOffset.UtcNow;
                         var totpCode = totpService.GenerateCode(manifest.TotpSecret);
                         var secondsRemaining = 30 - (now.Second % 30);
 
-                        // Build message
                         var messageBuilder = new StringBuilder();
                         messageBuilder.AppendLine("Your TOTP Code:");
                         messageBuilder.AppendLine();
@@ -2310,7 +2258,6 @@ namespace PhantomVault.UI.ViewModels
                         messageBuilder.AppendLine($"Time remaining: {secondsRemaining} seconds");
                         messageBuilder.AppendLine();
 
-                        // Show recovery codes if available
                         if (manifest.RecoveryCodes != null && manifest.RecoveryCodes.Length > 0)
                         {
                             var remainingCodes = recoveryCodeService.GetRemainingCodeCount(manifest);
@@ -2433,7 +2380,7 @@ namespace PhantomVault.UI.ViewModels
         {
             try
             {
-                // Check if extension folder exists
+
                 var extensionPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "BrowserExtension", "Chrome");
 
                 if (!Directory.Exists(extensionPath))
@@ -2445,13 +2392,11 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Open Chrome extensions page
                 await _dialogService.ShowInfoAsync(
                     "Install Chrome Extension",
                     $"🌐 Chrome Extension Installation\n\n1. Enable 'Developer mode' in Chrome (toggle in top-right)\n2. Click 'Load unpacked'\n3. Navigate to:\n   {extensionPath}\n4. Select the folder and click 'Select Folder'\n\nThe extension will appear in your browser toolbar.\n\nNote: You can also drag the folder directly onto the Extensions page.",
                     _ownerWindow);
 
-                // Try to open the extensions folder
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                 {
                     FileName = extensionPath,
@@ -2459,7 +2404,7 @@ namespace PhantomVault.UI.ViewModels
                 });
 
                 ExtensionStatusText = "Ready to Install";
-                ExtensionStatusColor = "#FFA500"; // Orange
+                ExtensionStatusColor = "#FFA500";
                 StatusMessage = "Chrome extension installation guide shown";
             }
             catch (Exception ex)
@@ -2473,7 +2418,7 @@ namespace PhantomVault.UI.ViewModels
         {
             try
             {
-                // Check if extension folder exists
+
                 var extensionPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "BrowserExtension", "Firefox");
 
                 if (!Directory.Exists(extensionPath))
@@ -2490,7 +2435,6 @@ namespace PhantomVault.UI.ViewModels
                     $"🦊 Firefox Extension Installation\n\n1. Open Firefox and navigate to:\n   about:debugging#/runtime/this-firefox\n\n2. Click 'Load Temporary Add-on'\n\n3. Navigate to:\n   {extensionPath}\n\n4. Select the 'manifest.json' file\n\nThe extension will appear in your browser toolbar.\n\nNote: Temporary extensions are removed when Firefox restarts. For permanent installation, the extension needs to be signed by Mozilla.",
                     _ownerWindow);
 
-                // Try to open the extensions folder
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                 {
                     FileName = extensionPath,
@@ -2498,7 +2442,7 @@ namespace PhantomVault.UI.ViewModels
                 });
 
                 ExtensionStatusText = "Ready to Install";
-                ExtensionStatusColor = "#FFA500"; // Orange
+                ExtensionStatusColor = "#FFA500";
                 StatusMessage = "Firefox extension installation guide shown";
             }
             catch (Exception ex)
@@ -2541,20 +2485,20 @@ namespace PhantomVault.UI.ViewModels
                                 FileName = "powershell.exe",
                                 Arguments = $"-ExecutionPolicy Bypass -File \"{scriptPath}\"",
                                 UseShellExecute = true,
-                                Verb = "runas" // Run as admin
+                                Verb = "runas"
                             };
 
                             System.Diagnostics.Process.Start(psi);
 
                             UpdateBusyStatus("Waiting for script completion…", "Finishing native host registration.", progress: 70, indeterminate: false);
-                            await Task.Delay(2000).ConfigureAwait(false); // Allow script time to register the host
+                            await Task.Delay(2000).ConfigureAwait(false);
                             UpdateBusyStatus("Finalising configuration…", progress: 100, indeterminate: false);
                         },
                         indeterminate: false,
                         detail: "Registering PhantomVault's browser integration.");
 
                     NativeHostStatusText = "Configured";
-                    NativeHostStatusColor = "#28A745"; // Green
+                    NativeHostStatusColor = "#28A745";
                     StatusMessage = "Native messaging host configured";
                 }
             }
@@ -3087,7 +3031,6 @@ namespace PhantomVault.UI.ViewModels
             if (string.IsNullOrEmpty(field))
                 return "\"\"";
 
-            // Escape quotes and wrap in quotes if contains comma, quote, or newline
             if (field.Contains(",") || field.Contains("\"") || field.Contains("\n") || field.Contains("\r"))
             {
                 return "\"" + field.Replace("\"", "\"\"") + "\"";
@@ -3160,18 +3103,14 @@ namespace PhantomVault.UI.ViewModels
             {
                 var importedAnyCredentials = false;
 
-                // Create and show the import window with existing credentials for duplicate detection
                 var importWindow = new ImportWindow(_credentials);
 
-                // Wire up the import window's event (not the ViewModel's) to receive imported credentials
                 importWindow.ImportCompleted += (sender, importedCredentials) =>
                 {
                     importedAnyCredentials = importedCredentials.Count > 0;
 
-                    // Add imported credentials to local collection
                     _credentials.AddRange(importedCredentials);
 
-                    // Notify parent (VaultWindow) about new credentials
                     if (OnCredentialsImported != null)
                     {
                         OnCredentialsImported.Invoke(importedCredentials);
@@ -3454,7 +3393,7 @@ namespace PhantomVault.UI.ViewModels
                 {
                     if (inQuotes && i + 1 < line.Length && line[i + 1] == '"')
                     {
-                        // Escaped quote
+
                         currentField.Append('"');
                         i++;
                     }
@@ -3544,7 +3483,7 @@ namespace PhantomVault.UI.ViewModels
 
             if (confirmed)
             {
-                // Reset to defaults
+
                 ThemeSelection = 0;
                 UseDarkTheme = true;
                 UseGridLayout = false;
@@ -3568,7 +3507,6 @@ namespace PhantomVault.UI.ViewModels
         {
             if (_ownerWindow == null) return;
 
-            // Create and show the icon downloader window
             var viewModel = new IconDownloaderViewModel();
             var window = new IconDownloaderWindow
             {
@@ -3599,3 +3537,4 @@ namespace PhantomVault.UI.ViewModels
         public Action<List<Credential>>? OnCredentialsImported { get; set; }
     }
 }
+

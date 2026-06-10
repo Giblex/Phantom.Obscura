@@ -9,11 +9,7 @@ using PhantomVault.UI.ViewModels;
 
 namespace PhantomVault.UI.Views
 {
-    /// <summary>
-    /// Borderless floating command palette (Ctrl+K). Opens centered on its
-    /// owner, autofocuses the search box, runs the activated action *after*
-    /// closing so any dialog the action raises gets clean focus.
-    /// </summary>
+
     public partial class CommandPaletteWindow : ThemeAwareWindow
     {
         private CommandPaletteAction? _pendingActionToRun;
@@ -32,15 +28,14 @@ namespace PhantomVault.UI.Views
         protected override void OnApplyTemplate(Avalonia.Controls.Primitives.TemplateAppliedEventArgs e)
         {
             base.OnApplyTemplate(e);
-            // Focus the search box as soon as the window is composed.
+
             var search = this.FindControl<TextBox>("SearchBox");
             search?.Focus();
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
         {
-            // We handle navigation/activation centrally so the user can drive
-            // the palette from the search box without re-focusing the list.
+
             if (DataContext is not CommandPaletteViewModel vm)
             {
                 base.OnKeyDown(e);
@@ -72,8 +67,7 @@ namespace PhantomVault.UI.Views
 
         private void OnActivateRequested(object? sender, CommandPaletteAction action)
         {
-            // Defer execution until after Close() so any modal the action
-            // opens isn't parented to a window that's about to vanish.
+
             _pendingActionToRun = action;
             Close();
         }
@@ -97,7 +91,7 @@ namespace PhantomVault.UI.Views
             }
             catch (Exception ex)
             {
-                // Never let a misbehaving action take down the host window.
+
                 System.Diagnostics.Debug.WriteLine($"Command palette action '{action.Title}' threw: {ex.Message}");
             }
         }
@@ -113,3 +107,4 @@ namespace PhantomVault.UI.Views
         private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
     }
 }
+

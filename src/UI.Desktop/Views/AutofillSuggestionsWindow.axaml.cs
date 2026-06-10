@@ -16,3 +16,4 @@ public partial class AutofillSuggestionsWindow : Window
         AvaloniaXamlLoader.Load(this);
     }
 }
+

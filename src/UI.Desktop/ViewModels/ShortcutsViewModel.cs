@@ -23,3 +23,4 @@ namespace PhantomVault.UI.ViewModels
         };
     }
 }
+

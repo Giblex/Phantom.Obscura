@@ -7,26 +7,12 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using PhantomVault.Core.Models;
+using PhantomVault.Core.Security;
 using PhantomVault.Core.Utils;
 
 namespace PhantomVault.Core.Services
 {
-    /// <summary>
-    /// Custom encrypted container format for PhantomVault.
-    /// Provides VeraCrypt-like security without external dependencies.
-    /// 
-    /// v2 Format: [Header][Version][Salt][IterationCount][Size][Encrypted Metadata][Encrypted Data Blocks]
-    /// v3 Format: [Header][Version][Salt][IterationCount][Size][ManifestOffset][Encrypted Metadata][Encrypted Data Blocks][Manifest Footer]
-    /// v4 Format: [Static Header 16B][Public Bootstrap Header][Encrypted Private Header][Encrypted Data Blocks][VaultManifest Footer]
-    ///
-    /// v4 introduces:
-    /// - Static header with explicit header size field
-    /// - Minimal public bootstrap material for KDF bootstrapping only
-    /// - Authenticated encrypted private header containing payload metadata,
-    ///   payload hash, and optional attestation fields
-    /// - Legacy cleartext-v4 headers remain readable for backwards compatibility
-    /// - VaultManifest remains encrypted in the footer (same as v3)
-    /// </summary>
+
     public sealed class PhantomContainerService : IDisposable
     {
         private sealed class V4ManifestSection
@@ -84,33 +70,30 @@ namespace PhantomVault.Core.Services
             public required byte[] Ciphertext { get; init; }
         }
 
-        // ── Shared constants ──────────────────────────────────────────
         private const string MagicHeader = "PHANTOM1";
         private const int HeaderMagicSize = 8;
         private const int VersionFieldSize = 4;
         private const int SaltSize = 32;
         private const int NonceSize = 12;
         private const int TagSize = 16;
-        private const int BlockSize = 1024 * 1024; // 1MB blocks
-        private const int DefaultIterations = 6; // Align with EncryptionService default Argon2id profile
-        private const int DefaultMemoryKb = 256 * 1024; // Align with EncryptionService default Argon2id profile
+        private const int BlockSize = 1024 * 1024;
+        private const int DefaultIterations = 6;
+        private const int DefaultMemoryKb = 256 * 1024;
         private const int SecureWipePassCount = 3;
         private const string ManifestMarker = "MNFST";
         private const int ManifestMarkerSize = 5;
         private const int CurrentVersion = 4;
         private const int MaxSupportedVersion = 4;
 
-        // ── v3 legacy constants ───────────────────────────────────────
         private const int V3_HeaderSize = 8;
         private const int V3_IterationCountSize = 4;
         private const int V3_ContainerSizeSize = 8;
         private const int V3_ManifestOffsetSize = 8;
 
-        // ── v4 constants ──────────────────────────────────────────────
         private const int V4_HeaderSizeFieldSize = 4;
-        private const int V4_StaticHeaderTotalSize = 16; // magic(8) + version(4) + headerSize(4)
+        private const int V4_StaticHeaderTotalSize = 16;
         private const int V4_ManifestSizeFieldSize = 4;
-        private const int V4_HmacSize = 32; // HMAC-SHA256
+        private const int V4_HmacSize = 32;
         private static readonly byte[] V4_HmacDomainInfo = Encoding.UTF8.GetBytes("PhantomContainer.ManifestHMAC.v4");
         private const string V4_PrivateHeaderMode = "private";
 
@@ -128,11 +111,6 @@ namespace PhantomVault.Core.Services
             _encryptionService = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
         }
 
-        /// <summary>
-        /// Creates an encrypted container file using the v4 format.
-        /// Layout: [Static Header 16B][Public Bootstrap Header][Encrypted Private Header][Encrypted Data Blocks][VaultManifest Footer]
-        /// The payload hash in the private header is backpatched after all blocks are written.
-        /// </summary>
         public async Task CreateContainerAsync(
             string containerPath,
             long sizeBytes,
@@ -153,10 +131,6 @@ namespace PhantomVault.Core.Services
                 cancellationToken).ConfigureAwait(false);
         }
 
-        /// <summary>
-        /// Creates or rewrites an encrypted container using payload bytes from the provided stream.
-        /// Any remaining unused payload capacity is filled with zeros before encryption.
-        /// </summary>
         public async Task CreateContainerFromStreamAsync(
             string containerPath,
             Stream? payloadStream,
@@ -174,6 +148,8 @@ namespace PhantomVault.Core.Services
             if (sizeBytes <= 0)
                 throw new ArgumentException("Container size must be positive", nameof(sizeBytes));
 
+            KeyfileGuard.Require(keyfilePath, nameof(keyfilePath));
+
             byte[] salt = new byte[SaltSize];
             RandomNumberGenerator.Fill(salt);
 
@@ -188,15 +164,12 @@ namespace PhantomVault.Core.Services
                 if (!string.IsNullOrEmpty(dir))
                     Directory.CreateDirectory(dir);
 
-                // ReadWrite needed for backpatching PayloadHash + HMAC
                 using var fs = new FileStream(containerPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
 
-                // ── Static Header (16 bytes) ────────────────────────────
                 await fs.WriteAsync(Encoding.ASCII.GetBytes(MagicHeader), cancellationToken);
-                await fs.WriteAsync(BitConverter.GetBytes(CurrentVersion), cancellationToken);       // 4
-                await fs.WriteAsync(BitConverter.GetBytes(V4_StaticHeaderTotalSize), cancellationToken); // 16
+                await fs.WriteAsync(BitConverter.GetBytes(CurrentVersion), cancellationToken);
+                await fs.WriteAsync(BitConverter.GetBytes(V4_StaticHeaderTotalSize), cancellationToken);
 
-                // ── Public bootstrap + encrypted private header ─────────
                 var containerManifest = new ContainerManifest
                 {
                     ContainerId = Guid.NewGuid(),
@@ -207,7 +180,7 @@ namespace PhantomVault.Core.Services
                     KdfMemoryKb = DefaultMemoryKb,
                     Salt = Convert.ToBase64String(salt),
                     PayloadSize = sizeBytes,
-                    PayloadHash = Convert.ToBase64String(new byte[32]), // temporary zero value — backpatched with real SHA-256 hash after blocks are written
+                    PayloadHash = Convert.ToBase64String(new byte[32]),
                 };
 
                 var bootstrapHeader = new V4PublicBootstrapHeader
@@ -216,7 +189,7 @@ namespace PhantomVault.Core.Services
                     KdfIterations = containerManifest.KdfIterations,
                     KdfMemoryKb = containerManifest.KdfMemoryKb,
                     Salt = containerManifest.Salt,
-                    PrivateHeaderCiphertextSize = 0, // backpatched below
+                    PrivateHeaderCiphertextSize = 0,
                 };
 
                 byte[] privateManifestJson = JsonSerializer.SerializeToUtf8Bytes(containerManifest, ContainerManifestJsonOptions);
@@ -247,7 +220,6 @@ namespace PhantomVault.Core.Services
 
                 progress?.Report(0.1);
 
-                // ── Encrypted Data Blocks ───────────────────────────────
                 using var payloadHasher = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
                 long totalBlocks = (sizeBytes + BlockSize - 1) / BlockSize;
                 byte[] payloadBlock = new byte[Math.Min(BlockSize, sizeBytes)];
@@ -281,7 +253,6 @@ namespace PhantomVault.Core.Services
                         containerKey,
                         Encoding.UTF8.GetBytes($"block-{blockIndex}"));
 
-                    // Accumulate hash over encrypted bytes on disk
                     payloadHasher.AppendData(encryptedBlock.Nonce);
                     payloadHasher.AppendData(encryptedBlock.Tag);
                     payloadHasher.AppendData(encryptedBlock.Ciphertext);
@@ -293,7 +264,6 @@ namespace PhantomVault.Core.Services
                     progress?.Report(0.1 + 0.7 * (blockIndex + 1) / totalBlocks);
                 }
 
-                // ── VaultManifest Footer (optional) ─────────────────────
                 if (manifest != null)
                 {
                     await WriteVaultManifestFooterAsync(fs, fs.Position, manifest, containerKey, cancellationToken).ConfigureAwait(false);
@@ -301,7 +271,6 @@ namespace PhantomVault.Core.Services
 
                 progress?.Report(0.9);
 
-                // ── Backpatch PayloadHash + encrypted private header ────
                 byte[] payloadHash = payloadHasher.GetHashAndReset();
                 containerManifest.PayloadHash = Convert.ToBase64String(payloadHash);
                 byte[] finalPrivateManifestJson = JsonSerializer.SerializeToUtf8Bytes(containerManifest, ContainerManifestJsonOptions);
@@ -327,11 +296,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Opens and decrypts a container (v3 or v4), writing decrypted data to the target path.
-        /// v4: Verifies HMAC + payload hash before returning.
-        /// v3: Falls back to legacy header + encrypted metadata + block decryption.
-        /// </summary>
         public async Task<string> OpenContainerAsync(
             string containerPath,
             string targetPath,
@@ -348,13 +312,11 @@ namespace PhantomVault.Core.Services
 
             using var fileStream = new FileStream(containerPath, FileMode.Open, FileAccess.Read, FileShare.Read);
 
-            // Read and verify magic header
             byte[] headerBytes = new byte[HeaderMagicSize];
             await fileStream.ReadExactlyAsync(headerBytes, cancellationToken);
             if (Encoding.ASCII.GetString(headerBytes) != MagicHeader)
                 throw new InvalidOperationException("Invalid container format");
 
-            // Read version
             byte[] versionBytes = new byte[VersionFieldSize];
             await fileStream.ReadExactlyAsync(versionBytes, cancellationToken);
             int version = BitConverter.ToInt32(versionBytes);
@@ -378,10 +340,6 @@ namespace PhantomVault.Core.Services
             return targetPath;
         }
 
-        /// <summary>
-        /// Opens and decrypts a container directly into the provided stream.
-        /// This is the preferred access path for nested containers to avoid plaintext files on disk.
-        /// </summary>
         public async Task OpenContainerToStreamAsync(
             string containerPath,
             Stream outputStream,
@@ -421,10 +379,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Reads the declared payload size from the container manifest/header.
-        /// New encrypted-private-header containers require the authenticated overload.
-        /// </summary>
         public async Task<long> GetPayloadSizeAsync(string containerPath, CancellationToken cancellationToken = default)
         {
             ThrowIfDisposed();
@@ -500,7 +454,7 @@ namespace PhantomVault.Core.Services
             FileStream fs, Stream outputStream, string? password, string? keyfilePath, CancellationToken ct)
         {
             using var context = await AuthenticateV4ContainerAsync(fs, password, keyfilePath, ct).ConfigureAwait(false);
-            // Decrypt blocks while accumulating payload hash
+
             long payloadSize = context.ManifestSection.ContainerManifest.PayloadSize;
             long totalBlocks = (payloadSize + BlockSize - 1) / BlockSize;
             using var payloadHasher = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
@@ -519,12 +473,10 @@ namespace PhantomVault.Core.Services
                 byte[] blockCiphertext = new byte[currentBlockSize];
                 await fs.ReadExactlyAsync(blockCiphertext, ct);
 
-                // Hash the raw encrypted bytes
                 payloadHasher.AppendData(blockNonce);
                 payloadHasher.AppendData(blockTag);
                 payloadHasher.AppendData(blockCiphertext);
 
-                // Decrypt
                 byte[] blockPlaintext = _encryptionService.Decrypt(
                     blockCiphertext, blockNonce, blockTag, context.ContainerKey,
                     Encoding.UTF8.GetBytes($"block-{blockIndex}"));
@@ -534,7 +486,6 @@ namespace PhantomVault.Core.Services
 
             await outputStream.FlushAsync(ct);
 
-            // Verify payload hash
             byte[] computedHash = payloadHasher.GetHashAndReset();
             byte[] expectedHash = ParsePayloadHash(context.ManifestSection.ContainerManifest.PayloadHash);
             if (!CryptographicOperations.FixedTimeEquals(computedHash, expectedHash))
@@ -554,7 +505,7 @@ namespace PhantomVault.Core.Services
         private async Task OpenContainerV3Async(
             FileStream fileStream, int version, Stream outputStream, string? password, string? keyfilePath, CancellationToken cancellationToken)
         {
-            // v3 header continuation: magic+version already consumed
+
             byte[] salt = new byte[SaltSize];
             await fileStream.ReadExactlyAsync(salt, cancellationToken);
 
@@ -580,7 +531,7 @@ namespace PhantomVault.Core.Services
 
             try
             {
-                // Read encrypted metadata
+
                 byte[] metadataSizeBytes = new byte[4];
                 await fileStream.ReadExactlyAsync(metadataSizeBytes, cancellationToken);
                 int metadataSize = BitConverter.ToInt32(metadataSizeBytes);
@@ -633,10 +584,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Closes a container by securely deleting the decrypted file.
-        /// Overwrites file contents with random data before deletion to prevent recovery.
-        /// </summary>
         public async Task CloseContainerAsync(string targetPath, CancellationToken cancellationToken = default)
         {
             ThrowIfDisposed();
@@ -647,10 +594,6 @@ namespace PhantomVault.Core.Services
             await SecureDeleteFileAsync(targetPath, cancellationToken);
         }
 
-        /// <summary>
-        /// Securely deletes a file by overwriting its contents multiple times before deletion.
-        /// This helps prevent data recovery from the physical storage medium.
-        /// </summary>
         private static async Task SecureDeleteFileAsync(string filePath, CancellationToken cancellationToken = default)
         {
             if (!File.Exists(filePath))
@@ -663,14 +606,14 @@ namespace PhantomVault.Core.Services
 
                 if (fileSize > 0)
                 {
-                    // Overwrite file contents multiple times with different patterns
+
                     using var fileStream = new FileStream(
                         filePath,
                         FileMode.Open,
                         FileAccess.Write,
                         FileShare.None,
                         bufferSize: 81920,
-                        FileOptions.WriteThrough); // Bypass OS cache
+                        FileOptions.WriteThrough);
 
                     byte[] buffer = new byte[Math.Min(BlockSize, fileSize)];
 
@@ -687,19 +630,18 @@ namespace PhantomVault.Core.Services
 
                             int bytesToWrite = (int)Math.Min(buffer.Length, remaining);
 
-                            // Use different patterns for each pass
                             switch (pass)
                             {
                                 case 0:
-                                    // Pass 1: Random data
+
                                     RandomNumberGenerator.Fill(buffer.AsSpan(0, bytesToWrite));
                                     break;
                                 case 1:
-                                    // Pass 2: Complement of zeros (0xFF)
+
                                     Array.Fill(buffer, (byte)0xFF, 0, bytesToWrite);
                                     break;
                                 case 2:
-                                    // Pass 3: Random data again
+
                                     RandomNumberGenerator.Fill(buffer.AsSpan(0, bytesToWrite));
                                     break;
                             }
@@ -711,23 +653,21 @@ namespace PhantomVault.Core.Services
                         await fileStream.FlushAsync(cancellationToken);
                     }
 
-                    // Zero the buffer before releasing
                     CryptographicOperations.ZeroMemory(buffer);
                 }
             }
             catch (Exception) when (!cancellationToken.IsCancellationRequested)
             {
-                // If secure overwrite fails, still attempt regular deletion
+
             }
 
-            // Finally, delete the file
             try
             {
                 File.Delete(filePath);
             }
             catch (IOException)
             {
-                // File might be locked; try with a slight delay
+
                 await Task.Delay(100, cancellationToken);
                 File.Delete(filePath);
             }
@@ -741,29 +681,27 @@ namespace PhantomVault.Core.Services
 
             try
             {
-                // Derive key from password using Argon2id via EncryptionService
+
                 if (!string.IsNullOrEmpty(password))
                 {
                     passwordKey = _encryptionService.DeriveKey(password.AsSpan(), salt, 32, memoryCostKb, iterations);
                 }
                 else
                 {
-                    // Use a zero key if no password (keyfile-only mode)
+
                     passwordKey = new byte[32];
                 }
 
-                // Derive key from keyfile using HKDF
                 if (!string.IsNullOrEmpty(keyfilePath))
                 {
                     byte[] keyfileBytes = await CompositeKeyfilePath.ReadCombinedBytesAsync(keyfilePath, required: true).ConfigureAwait(false);
                     try
                     {
-                        // Use HKDF to derive a key from the keyfile contents
-                        // This is more secure than simple concatenation
+
                         keyfileKey = HKDF.DeriveKey(
                             HashAlgorithmName.SHA256,
                             keyfileBytes,
-                            32, // output length
+                            32,
                             salt,
                             Encoding.UTF8.GetBytes("PhantomContainer.Keyfile.v2"));
                     }
@@ -777,8 +715,6 @@ namespace PhantomVault.Core.Services
                     keyfileKey = new byte[32];
                 }
 
-                // Combine password key and keyfile key using HKDF
-                // This ensures proper cryptographic mixing of both secrets
                 byte[] combinedInput = new byte[passwordKey.Length + keyfileKey.Length];
                 try
                 {
@@ -788,7 +724,7 @@ namespace PhantomVault.Core.Services
                     combinedKey = HKDF.DeriveKey(
                         HashAlgorithmName.SHA256,
                         combinedInput,
-                        32, // output length
+                        32,
                         salt,
                         Encoding.UTF8.GetBytes("PhantomContainer.Combined.v2"));
 
@@ -801,7 +737,7 @@ namespace PhantomVault.Core.Services
             }
             finally
             {
-                // Zero intermediate keys
+
                 if (passwordKey.Length > 0)
                     CryptographicOperations.ZeroMemory(passwordKey);
                 if (keyfileKey.Length > 0)
@@ -820,10 +756,6 @@ namespace PhantomVault.Core.Services
             return Convert.ToBase64String(sha256.Hash!);
         }
 
-        /// <summary>
-        /// Synchronous key derivation used for manifest operations on an existing container.
-        /// Same derivation as DeriveContainerKeyAsync but uses synchronous file I/O.
-        /// </summary>
         private byte[] DeriveContainerKey(string? password, string? keyfilePath, byte[] salt, int iterations, int memoryCostKb)
         {
             byte[] passwordKey = Array.Empty<byte>();
@@ -883,9 +815,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Derives the HMAC-SHA256 key from the container key using HKDF domain separation.
-        /// </summary>
         private static byte[] DeriveHmacKey(byte[] containerKey)
         {
             return HKDF.DeriveKey(
@@ -896,11 +825,6 @@ namespace PhantomVault.Core.Services
                 V4_HmacDomainInfo);
         }
 
-        /// <summary>
-        /// Reads the unauthenticated public container header from a v4 container.
-        /// Legacy v4 containers expose the full manifest and can still be read here.
-        /// New v4 containers expose only bootstrap data, so this returns null for them.
-        /// </summary>
         public static ContainerManifest? ReadContainerManifest(string containerPath)
         {
             if (string.IsNullOrEmpty(containerPath) || !File.Exists(containerPath))
@@ -908,18 +832,16 @@ namespace PhantomVault.Core.Services
 
             using var fs = new FileStream(containerPath, FileMode.Open, FileAccess.Read, FileShare.Read);
 
-            // Read and verify magic
             Span<byte> magicBuf = stackalloc byte[HeaderMagicSize];
             fs.ReadExactly(magicBuf);
             if (Encoding.ASCII.GetString(magicBuf) != MagicHeader)
                 return null;
 
-            // Read version
             Span<byte> versionBuf = stackalloc byte[VersionFieldSize];
             fs.ReadExactly(versionBuf);
             int version = BitConverter.ToInt32(versionBuf);
             if (version < 4)
-                return null; // Container manifests only exist in v4+
+                return null;
 
             try
             {
@@ -935,14 +857,10 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Computes the file offset where the VaultManifest footer starts in a v4 container.
-        /// </summary>
         private static long ComputeVaultManifestOffset(long payloadStartOffset, long payloadSize)
         {
             long totalBlocks = (payloadSize + BlockSize - 1) / BlockSize;
-            // Each encrypted block on disk: Nonce + Tag + ciphertext(blockSize or remainder)
-            // Total encrypted area = sum of per-block overhead + payloadSize
+
             return payloadStartOffset + totalBlocks * (NonceSize + TagSize) + payloadSize;
         }
 
@@ -1048,7 +966,7 @@ namespace PhantomVault.Core.Services
             }
             catch
             {
-                // Fall back to legacy parsing.
+
             }
 
             bootstrapHeader = null;
@@ -1468,12 +1386,6 @@ namespace PhantomVault.Core.Services
             };
         }
 
-        /// <summary>
-        /// Reads and decrypts the embedded VaultManifest from a container (v3 or v4).
-        /// v4: Verifies HMAC before decrypting the footer.
-        /// v3: Falls back to legacy offset-based manifest read.
-        /// Returns null if no manifest is embedded.
-        /// </summary>
         public VaultManifest? ReadManifestFromContainer(string containerPath, string? password, string? keyfilePath)
         {
             ThrowIfDisposed();
@@ -1483,7 +1395,6 @@ namespace PhantomVault.Core.Services
 
             using var fs = new FileStream(containerPath, FileMode.Open, FileAccess.Read, FileShare.Read);
 
-            // Read magic + version
             Span<byte> magic = stackalloc byte[HeaderMagicSize];
             fs.ReadExactly(magic);
             if (Encoding.ASCII.GetString(magic) != MagicHeader)
@@ -1506,7 +1417,7 @@ namespace PhantomVault.Core.Services
             {
                 var footer = ReadVaultManifestFooter(fs, context.FooterOffset);
                 if (footer == null)
-                    return null; // No footer present
+                    return null;
 
                 byte[] manifestBytes = _encryptionService.Decrypt(footer.Ciphertext, footer.Nonce, footer.Tag, context.ContainerKey, Array.Empty<byte>());
                 return JsonSerializer.Deserialize<VaultManifest>(Encoding.UTF8.GetString(manifestBytes));
@@ -1519,7 +1430,7 @@ namespace PhantomVault.Core.Services
 
         private VaultManifest? ReadManifestFromContainerV3(FileStream fs, int version, string? password, string? keyfilePath)
         {
-            // v3 header continuation: magic + version already consumed
+
             byte[] salt = new byte[SaltSize];
             fs.ReadExactly(salt);
 
@@ -1533,7 +1444,6 @@ namespace PhantomVault.Core.Services
 
             Span<byte> sizeBuf2 = stackalloc byte[V3_ContainerSizeSize];
             fs.ReadExactly(sizeBuf2);
-            // containerSize not needed for manifest read
 
             long manifestOffset = 0;
             if (version >= 3)
@@ -1565,11 +1475,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Updates the embedded VaultManifest footer in a container (v3 or v4).
-        /// v4: Verifies HMAC first, computes deterministic footer offset, truncates + rewrites footer.
-        /// v3: Falls back to legacy backpatch-offset behavior.
-        /// </summary>
         public void UpdateManifestInContainer(string containerPath, VaultManifest manifest, string? password, string? keyfilePath)
         {
             ThrowIfDisposed();
@@ -1581,7 +1486,6 @@ namespace PhantomVault.Core.Services
 
             using var fs = new FileStream(containerPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
 
-            // Read magic + version
             Span<byte> magic = stackalloc byte[HeaderMagicSize];
             fs.ReadExactly(magic);
             if (Encoding.ASCII.GetString(magic) != MagicHeader)
@@ -1609,7 +1513,7 @@ namespace PhantomVault.Core.Services
 
         private void UpdateManifestInContainerV3(FileStream fs, int version, VaultManifest manifest, string? password, string? keyfilePath)
         {
-            // v3 header continuation: magic + version already consumed
+
             if (version < 3)
                 throw new InvalidOperationException("Cannot update manifest in a v2 container — upgrade the container first");
 
@@ -1626,7 +1530,6 @@ namespace PhantomVault.Core.Services
 
             Span<byte> sizeBuf = stackalloc byte[V3_ContainerSizeSize];
             fs.ReadExactly(sizeBuf);
-            // containerSize not needed for update
 
             long manifestOffset = 0;
             if (version >= 3)
@@ -1642,7 +1545,6 @@ namespace PhantomVault.Core.Services
                 long writeOffset = manifestOffset > 0 ? manifestOffset : fs.Length;
                 WriteVaultManifestFooter(fs, writeOffset, manifest, containerKey);
 
-                // Backpatch manifest offset in header
                 long offsetFieldPos = HeaderMagicSize + VersionFieldSize + SaltSize + V3_IterationCountSize + V3_ContainerSizeSize;
                 fs.Seek(offsetFieldPos, SeekOrigin.Begin);
                 fs.Write(BitConverter.GetBytes(writeOffset));
@@ -1719,8 +1621,6 @@ namespace PhantomVault.Core.Services
 
             _disposed = true;
 
-            // Note: EncryptionService is injected and should not be disposed here
-            // as it may be shared across multiple consumers.
         }
 
         private void ThrowIfDisposed()
@@ -1730,3 +1630,4 @@ namespace PhantomVault.Core.Services
         }
     }
 }
+

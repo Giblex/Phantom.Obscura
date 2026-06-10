@@ -63,3 +63,4 @@ namespace PhantomVault.UI.Views.Settings
         }
     }
 }
+

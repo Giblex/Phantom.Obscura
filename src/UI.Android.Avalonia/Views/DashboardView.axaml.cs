@@ -18,3 +18,4 @@ public partial class DashboardView : UserControl
     private void Settings_Click(object? sender, RoutedEventArgs e)        => ShellViewModel.Current?.NavigateSettings();
     private void Lock_Click(object? sender, RoutedEventArgs e)            => ShellViewModel.Current?.GoBackCommand.Execute(null);
 }
+

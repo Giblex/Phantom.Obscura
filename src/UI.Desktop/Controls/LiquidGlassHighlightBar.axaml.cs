@@ -76,7 +76,6 @@ public partial class LiquidGlassHighlightBar : UserControl
         var normalizedX = Math.Clamp(position.X / bounds.Width, 0d, 1d);
         var normalizedY = Math.Clamp(position.Y / bounds.Height, 0d, 1d);
 
-        // Nudge the highlight layers toward the pointer for a subtle parallax effect.
         _parallaxTransform.X = (normalizedX - 0.5) * 2 * MaxOffsetX;
         _parallaxTransform.Y = (normalizedY - 0.5) * 2 * MaxOffsetY;
     }
@@ -96,3 +95,4 @@ public partial class LiquidGlassHighlightBar : UserControl
         _parallaxTransform.Y = 0;
     }
 }
+

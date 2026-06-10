@@ -9,10 +9,6 @@ using PhantomVault.Core.Models;
 
 namespace PhantomVault.UI.Services;
 
-/// <summary>
-/// Persists a metadata-only credential index that sibling suite apps can
-/// consume without needing direct access to vault secrets.
-/// </summary>
 public sealed class ObscuraCredentialIndexService
 {
     private const string IndexFileName = "obscura-search-index.json";
@@ -101,3 +97,4 @@ public sealed class ObscuraCredentialIndexEntry
     [JsonPropertyName("isFavorite")]
     public bool IsFavorite { get; set; }
 }
+

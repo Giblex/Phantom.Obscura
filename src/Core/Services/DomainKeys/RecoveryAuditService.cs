@@ -6,38 +6,12 @@ using PhantomVault.Core.Models.DomainStores;
 
 namespace PhantomVault.Core.Services.DomainKeys
 {
-    /// <summary>
-    /// Service for recovery audit logging and rekey trigger management.
-    ///
-    /// Responsibilities:
-    /// - Append hash-chained entries to recovery audit log
-    /// - Track rekey requirements after recovery operations
-    /// - Enforce recovery policy (delays, device binding, etc.)
-    /// - Maintain audit chain integrity
-    ///
-    /// CRITICAL: Every recovery operation MUST be logged.
-    /// The audit chain is tamper-evident via hash linking.
-    /// </summary>
+
     public sealed class RecoveryAuditService
     {
-        /// <summary>
-        /// Event raised when a domain requires rekeying after recovery.
-        /// Subscribers should initiate key rotation for the affected domain.
-        /// </summary>
+
         public event EventHandler<RekeyRequiredEventArgs>? RekeyRequired;
 
-        /// <summary>
-        /// Logs an audit entry to the recovery store.
-        /// Maintains hash chain integrity.
-        /// </summary>
-        /// <param name="store">Recovery store to append to</param>
-        /// <param name="eventType">Type of recovery event</param>
-        /// <param name="success">Whether the operation succeeded</param>
-        /// <param name="targetDomain">Target domain (if applicable)</param>
-        /// <param name="codeNumber">Recovery code number used (if applicable)</param>
-        /// <param name="failureReason">Failure reason (if failed)</param>
-        /// <param name="deviceFingerprint">Device fingerprint</param>
-        /// <param name="appVersion">Application version</param>
         public void LogAuditEntry(
             RecoveryStore store,
             RecoveryEventType eventType,
@@ -65,22 +39,17 @@ namespace PhantomVault.Core.Services.DomainKeys
                 PrevHash = store.AuditChainHead ?? "genesis"
             };
 
-            // Compute hash of this entry (excluding ThisHash field)
             entry.ThisHash = ComputeEntryHash(entry);
 
-            // Append to audit log
             store.AuditLog.Add(entry);
 
-            // Update chain head
             store.AuditChainHead = entry.ThisHash;
 
-            // Trim old entries if over limit
             while (store.AuditLog.Count > store.MaxAuditEntries)
             {
                 store.AuditLog.RemoveAt(0);
             }
 
-            // Trigger rekey if this was a successful domain recovery
             if (success && eventType == RecoveryEventType.DomainRecovered && targetDomain.HasValue)
             {
                 if (store.Policy.ForceRotationAfterRecovery)
@@ -90,14 +59,6 @@ namespace PhantomVault.Core.Services.DomainKeys
             }
         }
 
-        /// <summary>
-        /// Validates a recovery code against stored hashes.
-        /// Returns the matching entry if valid, null otherwise.
-        /// </summary>
-        /// <param name="store">Recovery store containing code hashes</param>
-        /// <param name="recoveryCode">Recovery code to validate</param>
-        /// <param name="verifyHash">Function to verify Argon2id hash</param>
-        /// <returns>Matching code entry if valid</returns>
         public RecoveryCodeEntry? ValidateRecoveryCode(
             RecoveryStore store,
             string recoveryCode,
@@ -110,7 +71,6 @@ namespace PhantomVault.Core.Services.DomainKeys
             if (verifyHash == null)
                 throw new ArgumentNullException(nameof(verifyHash));
 
-            // Normalize recovery code
             var normalizedCode = recoveryCode
                 .Replace("-", "")
                 .Replace(" ", "")
@@ -118,11 +78,10 @@ namespace PhantomVault.Core.Services.DomainKeys
 
             foreach (var entry in store.RecoveryCodes)
             {
-                // Skip already used codes
+
                 if (entry.Used)
                     continue;
 
-                // Verify against stored Argon2id hash
                 if (verifyHash(normalizedCode, entry.Hash))
                 {
                     return entry;
@@ -132,12 +91,6 @@ namespace PhantomVault.Core.Services.DomainKeys
             return null;
         }
 
-        /// <summary>
-        /// Marks a recovery code as used.
-        /// </summary>
-        /// <param name="store">Recovery store</param>
-        /// <param name="codeEntry">Code entry to mark</param>
-        /// <param name="usedForDomain">Domain that was recovered</param>
         public void MarkCodeUsed(
             RecoveryStore store,
             RecoveryCodeEntry codeEntry,
@@ -152,7 +105,6 @@ namespace PhantomVault.Core.Services.DomainKeys
             codeEntry.UsedUtc = DateTimeOffset.UtcNow;
             codeEntry.UsedForDomain = usedForDomain.ToString();
 
-            // If policy says to invalidate all codes after one is used
             if (store.Policy.InvalidateCodesAfterUse)
             {
                 foreach (var code in store.RecoveryCodes)
@@ -167,10 +119,6 @@ namespace PhantomVault.Core.Services.DomainKeys
             }
         }
 
-        /// <summary>
-        /// Marks a sealed recovery key as used.
-        /// </summary>
-        /// <param name="sealedKey">Sealed key that was used</param>
         public void MarkSealedKeyUsed(SealedRecoveryKey sealedKey)
         {
             if (sealedKey == null)
@@ -180,13 +128,6 @@ namespace PhantomVault.Core.Services.DomainKeys
             sealedKey.LastUsedUtc = DateTimeOffset.UtcNow;
         }
 
-        /// <summary>
-        /// Validates recovery policy before allowing recovery.
-        /// Throws if policy is violated.
-        /// </summary>
-        /// <param name="store">Recovery store with policy</param>
-        /// <param name="currentDeviceId">Current device identifier</param>
-        /// <param name="currentAppVersion">Current app version</param>
         public void ValidatePolicy(
             RecoveryStore store,
             string? currentDeviceId,
@@ -197,7 +138,6 @@ namespace PhantomVault.Core.Services.DomainKeys
 
             var policy = store.Policy;
 
-            // Check device binding
             if (policy.DeviceBindingMode == RecoveryDeviceBindingMode.Block)
             {
                 if (!string.IsNullOrEmpty(store.DeviceId) &&
@@ -208,7 +148,6 @@ namespace PhantomVault.Core.Services.DomainKeys
                 }
             }
 
-            // Check minimum app version
             if (!string.IsNullOrEmpty(policy.MinAppVersion) && !string.IsNullOrEmpty(currentAppVersion))
             {
                 if (CompareVersions(currentAppVersion, policy.MinAppVersion) < 0)
@@ -220,9 +159,6 @@ namespace PhantomVault.Core.Services.DomainKeys
             }
         }
 
-        /// <summary>
-        /// Checks if device matches and returns warning if mismatched (for Warn mode).
-        /// </summary>
         public bool CheckDeviceMatch(RecoveryStore store, string? currentDeviceId, out string? warning)
         {
             warning = null;
@@ -241,11 +177,6 @@ namespace PhantomVault.Core.Services.DomainKeys
             return true;
         }
 
-        /// <summary>
-        /// Verifies the integrity of the audit chain.
-        /// </summary>
-        /// <param name="store">Recovery store to verify</param>
-        /// <returns>True if chain is intact</returns>
         public bool VerifyAuditChainIntegrity(RecoveryStore store)
         {
             if (store == null || store.AuditLog.Count == 0)
@@ -255,11 +186,10 @@ namespace PhantomVault.Core.Services.DomainKeys
 
             foreach (var entry in store.AuditLog)
             {
-                // Verify prev hash links correctly
+
                 if (entry.PrevHash != expectedPrevHash)
                     return false;
 
-                // Verify entry hash is correct
                 var computedHash = ComputeEntryHash(entry);
                 if (computedHash != entry.ThisHash)
                     return false;
@@ -267,14 +197,10 @@ namespace PhantomVault.Core.Services.DomainKeys
                 expectedPrevHash = entry.ThisHash;
             }
 
-            // Verify chain head matches last entry
             var lastEntry = store.AuditLog[^1];
             return store.AuditChainHead == lastEntry.ThisHash;
         }
 
-        /// <summary>
-        /// Gets count of remaining (unused) recovery codes.
-        /// </summary>
         public int GetRemainingCodeCount(RecoveryStore store)
         {
             if (store == null)
@@ -289,12 +215,9 @@ namespace PhantomVault.Core.Services.DomainKeys
             return count;
         }
 
-        /// <summary>
-        /// Computes hash of an audit entry for chain linking.
-        /// </summary>
         private static string ComputeEntryHash(RecoveryAuditEntry entry)
         {
-            // Create a canonical representation for hashing
+
             var canonical = new
             {
                 entry.Id,
@@ -317,12 +240,9 @@ namespace PhantomVault.Core.Services.DomainKeys
             return $"sha256:{Convert.ToBase64String(hash)}";
         }
 
-        /// <summary>
-        /// Compares two version strings (simple semver comparison).
-        /// </summary>
         private static int CompareVersions(string current, string minimum)
         {
-            // Simple semver-like comparison
+
             var currentParts = current.Split('.');
             var minimumParts = minimum.Split('.');
 
@@ -340,9 +260,6 @@ namespace PhantomVault.Core.Services.DomainKeys
             return 0;
         }
 
-        /// <summary>
-        /// Raises the RekeyRequired event.
-        /// </summary>
         private void RaiseRekeyRequired(CryptoDomain domain, string auditEntryId)
         {
             RekeyRequired?.Invoke(this, new RekeyRequiredEventArgs
@@ -354,24 +271,14 @@ namespace PhantomVault.Core.Services.DomainKeys
         }
     }
 
-    /// <summary>
-    /// Event args for the RekeyRequired event.
-    /// </summary>
     public sealed class RekeyRequiredEventArgs : EventArgs
     {
-        /// <summary>
-        /// Domain that requires rekeying.
-        /// </summary>
+
         public CryptoDomain Domain { get; init; }
 
-        /// <summary>
-        /// ID of the audit entry that triggered this requirement.
-        /// </summary>
         public string TriggeringAuditEntryId { get; init; } = string.Empty;
 
-        /// <summary>
-        /// When the rekey was triggered.
-        /// </summary>
         public DateTimeOffset Timestamp { get; init; }
     }
 }
+

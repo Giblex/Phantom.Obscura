@@ -10,25 +10,7 @@ using PhantomVault.Core.Models;
 
 namespace PhantomVault.Core.Services
 {
-    /// <summary>
-    /// Locks a Phantom Obscura-bound USB partition against OS-side index/system
-    /// folder injection (LOST.DIR, .Spotlight-V100, System Volume Information,
-    /// etc.) by combining three layers:
-    ///
-    /// <list type="bullet">
-    /// <item>GPT ReadOnly attribute (bit 60) — Windows / macOS / Android honour.</item>
-    /// <item>(Optional) GPT Hidden attribute (bit 62) + drive-letter removal —
-    /// blocks Windows Search and AutoPlay.</item>
-    /// <item>OS-indexer suppression sentinel files at the drive root —
-    /// <c>.metadata_never_index</c>, <c>.nomedia</c>, <c>.Trashes</c> file,
-    /// <c>.fseventsd/no_log</c>.</item>
-    /// </list>
-    ///
-    /// Toggling between "locked for write" and "PO is editing" is done by
-    /// flipping the GPT ReadOnly bit via <c>MSFT_Partition.SetAttributes</c>.
-    /// Windows-only impl; <see cref="IsSupported"/> returns false on other
-    /// platforms and all mutation methods are no-ops there.
-    /// </summary>
+
     public sealed class UsbWriteProtectionService
     {
         private static readonly IReadOnlyList<(string Name, byte[] Contents)> SentinelFiles = new[]
@@ -42,31 +24,34 @@ namespace PhantomVault.Core.Services
         private const string FseventsdDir = ".fseventsd";
         private const string FseventsdSentinel = "no_log";
 
-        /// <summary>Custom GPT partition type GUID applied by Layer B re-tag.</summary>
         public const string PhantomObscuraPartitionTypeGuid = "{7C1B6BEF-2E0F-4F2A-9C8E-50414F50414FE5}";
 
-        /// <summary>Standard Microsoft Basic Data partition type GUID.</summary>
         public const string BasicDataPartitionTypeGuid = "{EBD0A0A2-B9E5-4433-87C0-68B6B72699C7}";
 
-        /// <summary>True when this platform supports the mutation methods.</summary>
         public bool IsSupported => OperatingSystem.IsWindows();
 
-        /// <summary>
-        /// Applies the full write-protection posture described by <paramref name="state"/>
-        /// to the partition that hosts <paramref name="driveRoot"/>. Safe to call
-        /// repeatedly. On non-Windows platforms or for partitions that cannot be
-        /// resolved via WMI, returns false without throwing so callers can degrade
-        /// gracefully.
-        /// </summary>
+        private static bool IsCurrentProcessElevated()
+        {
+            if (!OperatingSystem.IsWindows()) return false;
+            try
+            {
+#pragma warning disable CA1416
+                using var identity = System.Security.Principal.WindowsIdentity.GetCurrent();
+                var principal = new System.Security.Principal.WindowsPrincipal(identity);
+                return principal.IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
+#pragma warning restore CA1416
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         public bool ApplyProtection(string driveRoot, UsbWriteProtectionState state)
         {
             if (string.IsNullOrEmpty(driveRoot)) throw new ArgumentException(nameof(driveRoot));
             if (state == null) throw new ArgumentNullException(nameof(state));
 
-            // Sentinel files always apply (cross-platform).
-            // Drive must be writable to write them. If RO is already on we cannot
-            // self-heal sentinels — record that state.Hidden/ReadOnly may need a
-            // brief RW window first; for now we attempt and tolerate failures.
             TryWriteSentinels(driveRoot, state);
 
             if (!OperatingSystem.IsWindows()) return false;
@@ -89,17 +74,11 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Temporarily clears the GPT ReadOnly bit so Phantom Obscura can write to
-        /// the volume. Hidden bit and partition type GUID are left untouched.
-        /// Returns true on success.
-        /// </summary>
         public bool EnableWriteAccess(string driveRoot)
         {
             if (string.IsNullOrEmpty(driveRoot)) throw new ArgumentException(nameof(driveRoot));
             if (!OperatingSystem.IsWindows()) return false;
 
-            // 1. Try WMI / MSFT_Partition (requires elevation; best path)
             try
             {
                 SetPartitionAttributes(driveRoot, isReadOnly: false, isHidden: null);
@@ -110,7 +89,6 @@ namespace PhantomVault.Core.Services
                 System.Diagnostics.Debug.WriteLine($"[UsbWriteProtection] EnableWriteAccess WMI failed: {ex}");
             }
 
-            // 2. Clear Windows registry write-protect policy (no elevation needed)
             try
             {
                 using var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(
@@ -123,7 +101,6 @@ namespace PhantomVault.Core.Services
                 System.Diagnostics.Debug.WriteLine($"[UsbWriteProtection] EnableWriteAccess registry failed: {ex}");
             }
 
-            // 3. Diskpart fallback — elevated subprocess
             try
             {
                 var driveLetter = driveRoot.TrimEnd('\\').TrimEnd(':').ToUpperInvariant();
@@ -134,16 +111,23 @@ namespace PhantomVault.Core.Services
                         $"select volume {driveLetter}\r\nattributes disk clear readonly\r\nattributes volume clear readonly\r\nexit\r\n");
                     try
                     {
-                        var psi = new System.Diagnostics.ProcessStartInfo("diskpart.exe", $"/s \"{script}\"")
-                        {
-                            UseShellExecute = true,
-                            Verb = "runas",
-                            CreateNoWindow = true,
-                            WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden
-                        };
-                        var proc = System.Diagnostics.Process.Start(psi);
-                        proc?.WaitForExit(10_000);
-                        return true;
+                        // When the current process is already elevated (our app.manifest declares
+                    // requireAdministrator so this should be the normal case), spawn diskpart
+                    // directly without the "runas" verb — otherwise Windows pops a UAC prompt
+                    // every time even though we already have admin rights.
+                    var elevated = IsCurrentProcessElevated();
+                    var psi = new System.Diagnostics.ProcessStartInfo("diskpart.exe", $"/s \"{script}\"")
+                    {
+                        UseShellExecute = !elevated,
+                        Verb = elevated ? string.Empty : "runas",
+                        CreateNoWindow = true,
+                        WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden,
+                        RedirectStandardOutput = elevated,
+                        RedirectStandardError = elevated
+                    };
+                    var proc = System.Diagnostics.Process.Start(psi);
+                    proc?.WaitForExit(10_000);
+                    return true;
                     }
                     finally
                     {
@@ -159,10 +143,6 @@ namespace PhantomVault.Core.Services
             return false;
         }
 
-        /// <summary>
-        /// Re-applies the GPT ReadOnly bit. Equivalent to a partial
-        /// <see cref="ApplyProtection"/> that only flips the RO flag.
-        /// </summary>
         public bool DisableWriteAccess(string driveRoot)
         {
             if (string.IsNullOrEmpty(driveRoot)) throw new ArgumentException(nameof(driveRoot));
@@ -180,12 +160,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Writes the OS-indexer-suppression sentinel files at the drive root if
-        /// they are missing. Marks them hidden+system on Windows. Updates
-        /// <paramref name="state"/>'s <c>ExpectedSentinelFiles</c> list to match
-        /// what's now on disk.
-        /// </summary>
         public void EnsureSentinelFiles(string driveRoot, UsbWriteProtectionState state)
         {
             if (string.IsNullOrEmpty(driveRoot)) throw new ArgumentException(nameof(driveRoot));
@@ -193,11 +167,6 @@ namespace PhantomVault.Core.Services
             TryWriteSentinels(driveRoot, state);
         }
 
-        /// <summary>
-        /// Returns true if the drive root contains all of the expected sentinel
-        /// files referenced by <paramref name="state"/>. Useful for tamper hints
-        /// when scrubbing.
-        /// </summary>
         public bool VerifySentinelFiles(string driveRoot, UsbWriteProtectionState state)
         {
             if (string.IsNullOrEmpty(driveRoot)) return false;
@@ -230,20 +199,18 @@ namespace PhantomVault.Core.Services
                     if (OperatingSystem.IsWindows())
                     {
                         try { File.SetAttributes(path, FileAttributes.Hidden | FileAttributes.System); }
-                        catch { /* read-only volume — acceptable */ }
+                        catch {  }
                     }
 
                     state.ExpectedSentinelFiles.Add(name);
                 }
                 catch (Exception ex)
                 {
-                    // Likely the drive is currently RO. Caller will surface via
-                    // VerifySentinelFiles later; don't fail the whole apply.
+
                     System.Diagnostics.Debug.WriteLine($"[UsbWriteProtection] sentinel '{name}' write failed: {ex.Message}");
                 }
             }
 
-            // Special case: .fseventsd is a folder containing a 'no_log' marker.
             var fseventsdPath = Path.Combine(driveRoot, FseventsdDir);
             try
             {
@@ -256,7 +223,7 @@ namespace PhantomVault.Core.Services
                 if (OperatingSystem.IsWindows())
                 {
                     try { File.SetAttributes(fseventsdPath, FileAttributes.Hidden | FileAttributes.System | FileAttributes.Directory); }
-                    catch { /* ignore */ }
+                    catch {  }
                 }
                 state.ExpectedSentinelFiles.Add(FseventsdDir + "/" + FseventsdSentinel);
             }
@@ -295,8 +262,6 @@ namespace PhantomVault.Core.Services
             if (partition == null)
                 throw new InvalidOperationException($"Could not resolve MSFT_Partition for '{driveRoot}'.");
 
-            // MSFT_Partition exposes SetAttributes(GptType) on newer Windows;
-            // fall back to a direct property set for older builds.
             try
             {
                 var inParams = partition.GetMethodParameters("SetAttributes");
@@ -321,7 +286,6 @@ namespace PhantomVault.Core.Services
             var letter = driveRoot.TrimEnd('\\').TrimEnd(':');
             if (letter.Length == 0) return null;
 
-            // LogicalDisk → Partition (Win32) → DiskIndex
             int? diskIndex = null;
             uint? partitionIndex = null;
             using (var assoc = new ManagementObjectSearcher(
@@ -338,7 +302,6 @@ namespace PhantomVault.Core.Services
 
             if (diskIndex == null || partitionIndex == null) return null;
 
-            // Win32 Index is 0-based; MSFT_Partition PartitionNumber is 1-based.
             uint msftPartitionNumber = partitionIndex.Value + 1;
 
             using var storageQuery = new ManagementObjectSearcher(
@@ -354,8 +317,7 @@ namespace PhantomVault.Core.Services
 
         #endregion
 #else
-        // Android fallbacks: WMI is unavailable; these are unreachable because
-        // every public caller short-circuits via OperatingSystem.IsWindows().
+
         private static void SetPartitionAttributes(string driveRoot, bool? isReadOnly, bool? isHidden)
             => throw new PlatformNotSupportedException();
 
@@ -364,3 +326,4 @@ namespace PhantomVault.Core.Services
 #endif
     }
 }
+

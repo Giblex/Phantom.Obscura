@@ -6,13 +6,6 @@ using PhantomVault.UI.Views;
 
 namespace PhantomVault.UI.ViewModels;
 
-/// <summary>
-/// Tiny in-process navigator. Maintains a stack of <see cref="UserControl"/>
-/// instances and exposes the current one plus a Back command. Desktop
-/// equivalent is the multi-Window flow orchestrated by App.axaml.cs; on
-/// Android we fold that into a stack because <c>SingleViewApplicationLifetime</c>
-/// only hosts one Control.
-/// </summary>
 public sealed partial class ShellViewModel : ObservableObject
 {
     private readonly Stack<(string Title, UserControl View)> _stack = new();
@@ -21,20 +14,17 @@ public sealed partial class ShellViewModel : ObservableObject
     [ObservableProperty] private string _title = "Phantom Obscura";
     [ObservableProperty] private bool _canGoBack;
 
-    /// <summary>Process-wide singleton so any view's code-behind can request navigation.</summary>
     public static ShellViewModel? Current { get; private set; }
 
     public ShellViewModel()
     {
         Current = this;
-        // Initial route: WelcomePage.
+
         Navigate("Phantom Obscura", new WelcomePage
         {
             DataContext = new WelcomePageViewModel()
         });
     }
-
-    // ── Named navigation helpers ─────────────────────────────────────────────
 
     public void NavigateUnlock() => Navigate("Unlocking Vault", new VaultUnlockView
     {
@@ -86,7 +76,6 @@ public sealed partial class ShellViewModel : ObservableObject
         DataContext = new ImportExportViewModel()
     });
 
-    /// <summary>Push a new view onto the stack and show it.</summary>
     public void Navigate(string title, UserControl view)
     {
         _stack.Push((title, view));
@@ -106,3 +95,4 @@ public sealed partial class ShellViewModel : ObservableObject
         CanGoBack = _stack.Count > 1;
     }
 }
+

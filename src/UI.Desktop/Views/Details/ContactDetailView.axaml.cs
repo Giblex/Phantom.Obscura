@@ -10,3 +10,4 @@ public partial class ContactDetailView : UserControl
         AvaloniaXamlLoader.Load(this);
     }
 }
+

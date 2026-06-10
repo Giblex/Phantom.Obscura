@@ -9,11 +9,19 @@
 (function () {
   'use strict';
 
-  // Prevent double-injection in the same frame
-  if (window.__phantomVaultInjected) return;
-  window.__phantomVaultInjected = true;
+  // Per-session random tokens so page scripts cannot fingerprint our presence
+  // by probing fixed property names or element IDs.
+  const sessionToken = (() => {
+    const bytes = new Uint8Array(16);
+    (self.crypto || window.crypto).getRandomValues(bytes);
+    return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+  })();
+  const injectedFlag = `__pv_${sessionToken}`;
+  const chipElementId = `__pv_chip_${sessionToken}`;
 
-  // ── Field / form detection ───────────────────────────────────────────────
+  if (window[injectedFlag]) return;
+  Object.defineProperty(window, injectedFlag, { value: true, configurable: false, enumerable: false, writable: false });
+
 
   const PASSWORD_HINTS = ['password', 'passwd', 'pass', 'pwd'];
   const USERNAME_HINTS = ['username', 'user', 'login', 'account', 'email', 'e-mail', 'mail'];
@@ -60,7 +68,6 @@
     return fields.some(f => f.fieldClass === 'password');
   }
 
-  // ── Suggestion chip UI ──────────────────────────────────────────────────
 
   let activeChip = null;
 
@@ -70,13 +77,20 @@
     if (!credentials || credentials.length === 0) return;
 
     const rect = passwordInput.getBoundingClientRect();
-    const chip = document.createElement('div');
-    chip.id = '__phantomvault_chip__';
-    chip.style.cssText = `
+    // Host carries only positioning; all content lives in a closed shadow root
+    // so page scripts cannot read or fingerprint the chip's internals.
+    const host = document.createElement('div');
+    host.id = chipElementId;
+    host.style.cssText = `
       position: fixed;
       z-index: 2147483647;
       top: ${rect.bottom + window.scrollY + 4}px;
       left: ${rect.left + window.scrollX}px;
+    `;
+    const shadow = host.attachShadow({ mode: 'closed' });
+
+    const chip = document.createElement('div');
+    chip.style.cssText = `
       background: #1a1a2e;
       border: 1px solid #4a4a8a;
       border-radius: 8px;
@@ -128,8 +142,9 @@
       chip.appendChild(row);
     });
 
-    document.body.appendChild(chip);
-    activeChip = chip;
+    shadow.appendChild(chip);
+    document.body.appendChild(host);
+    activeChip = host;
 
     // Close chip on outside click
     setTimeout(() => {
@@ -148,7 +163,6 @@
     activeChip = null;
   }
 
-  // ── Credential fill ──────────────────────────────────────────────────────
 
   function fillCredential(cred) {
     const form = document.querySelector('form') || document.body;
@@ -183,7 +197,6 @@
     el.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
-  // ── Form detection & credential request ─────────────────────────────────
 
   async function handleForm(form) {
     const fields = collectFormFields(form);
@@ -219,7 +232,6 @@
     }
   }
 
-  // ── Submit capture ───────────────────────────────────────────────────────
 
   function watchFormSubmit(form) {
     form.addEventListener('submit', () => {
@@ -239,7 +251,6 @@
     });
   }
 
-  // ── DOM scanning ─────────────────────────────────────────────────────────
 
   const processedForms = new WeakSet();
 

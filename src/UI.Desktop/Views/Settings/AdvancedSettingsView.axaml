@@ -3,79 +3,170 @@
              xmlns:vm="using:PhantomVault.UI.ViewModels.Settings"
              x:Class="PhantomVault.UI.Views.Settings.AdvancedSettingsView"
              x:DataType="vm:AdvancedSettingsViewModel">
-    <StackPanel Spacing="20" Margin="0,0,30,60">
-        <TextBlock Text="Advanced Settings" 
-                   FontSize="{StaticResource Type.H3.Size}" 
+    <StackPanel Spacing="20" Margin="0,0,0,60">
+        <TextBlock Text="Advanced Settings"
+                   FontSize="{StaticResource Type.H3.Size}"
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource PrimaryTextBrush}"/>
-        
-        <Border Classes="fade-in stagger-1"
-                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
-                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
-                BorderThickness="1" 
-                CornerRadius="16" 
+
+        <!-- Privacy dashboard: read-only transparency on where data lives and what
+             (if anything) is allowed to touch the network right now. -->
+        <Border Classes="fade-in stagger-1" HorizontalAlignment="Stretch"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource Brush.Accent}"
+                BorderThickness="2"
+                CornerRadius="16"
+                Padding="20">
+            <StackPanel Spacing="14">
+                <TextBlock Text="🛡 Privacy Dashboard"
+                           FontSize="{StaticResource Type.Body.Size}"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource Brush.Accent}"/>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Where your data lives"
+                               FontWeight="SemiBold"
+                               FontSize="{StaticResource Type.Small.Size}"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <TextBlock Text="{Binding Privacy.StorageSummary}"
+                               TextWrapping="Wrap"
+                               FontSize="{StaticResource Type.Small.Size}"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+
+                <Border Background="{DynamicResource ContentBackgroundBrush}"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{StaticResource Radius.Md}"
+                        Padding="14">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="{Binding Privacy.NetworkStateText}"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <TextBlock Text="{Binding Privacy.NetworkStateDetail}"
+                                   TextWrapping="Wrap"
+                                   FontSize="{StaticResource Type.Small.Size}"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+
+                        <StackPanel Spacing="4" Margin="0,8,0,0"
+                                    IsVisible="{Binding Privacy.HasActiveGrant}">
+                            <TextBlock Text="Active network grants"
+                                       FontWeight="SemiBold"
+                                       FontSize="{StaticResource Type.Small.Size}"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <ItemsControl ItemsSource="{Binding Privacy.ActiveGrants}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid ColumnDefinitions="*,Auto" Margin="0,3">
+                                            <StackPanel Grid.Column="0" Spacing="1">
+                                                <TextBlock Text="{Binding Reason}" FontSize="{StaticResource Type.Small.Size}" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                <TextBlock Text="{Binding Hosts}" FontSize="{StaticResource Type.Tiny.Size}" Foreground="{DynamicResource MutedTextBrush}"/>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="{StaticResource Type.Tiny.Size}" Foreground="{DynamicResource SecondaryTextBrush}">
+                                                <Run Text="expires "/>
+                                                <Run Text="{Binding Expires}"/>
+                                            </TextBlock>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <StackPanel Spacing="6">
+                    <TextBlock Text="What can reach the network"
+                               FontWeight="SemiBold"
+                               FontSize="{StaticResource Type.Small.Size}"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <ItemsControl ItemsSource="{Binding Privacy.NetworkComponents}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="160,Auto,*" Margin="0,3">
+                                    <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="{StaticResource Type.Small.Size}" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                                    <Border Grid.Column="1" CornerRadius="4" Padding="6,2" Margin="0,0,10,0" VerticalAlignment="Center"
+                                            Background="{DynamicResource ControlBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1">
+                                        <TextBlock Text="{Binding Mode}" FontSize="{StaticResource Type.Tiny.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="2" Text="{Binding Detail}" TextWrapping="Wrap" FontSize="{StaticResource Type.Tiny.Size}" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <TextBlock Text="{Binding Privacy.TelemetrySummary}"
+                           TextWrapping="Wrap"
+                           FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+            </StackPanel>
+        </Border>
+
+        <Border Classes="fade-in stagger-1" HorizontalAlignment="Stretch"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
                 Padding="20">
             <StackPanel Spacing="15">
-                <TextBlock Text="Developer Tools" 
-                           FontSize="{StaticResource Type.Body.Size}" 
+                <TextBlock Text="Developer Tools"
+                           FontSize="{StaticResource Type.Body.Size}"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
-                
-                <CheckBox Content="Enable debug logging" 
+
+                <CheckBox Content="Enable debug logging"
                           IsChecked="{Binding EnableDebugLogging, Mode=TwoWay}"
                           ToolTip.Tip="Log detailed information for troubleshooting"/>
 
-                <CheckBox Content="Show diagnostic information" 
+                <CheckBox Content="Show diagnostic information"
                           IsChecked="{Binding ShowDiagnosticInfo, Mode=TwoWay}"
                           ToolTip.Tip="Display technical details in UI"/>
 
-                <Button Content="View Application Logs" 
-                        Width="180" 
+                <Button Content="View Application Logs"
+                        Width="180"
                         HorizontalAlignment="Left"
                         Command="{Binding ViewLogsCommand}"
                         Classes="liquid-glass"/>
 
-                <Button Content="Export Diagnostic Report" 
-                        Width="180" 
+                <Button Content="Export Diagnostic Report"
+                        Width="180"
                         HorizontalAlignment="Left"
                         Command="{Binding ExportDiagnosticReportCommand}"
                         Classes="liquid-glass"
                         ToolTip.Tip="Generate report for support"/>
 
-                <Button Content="Open Log Folder" 
-                        Width="180" 
+                <Button Content="Open Log Folder"
+                        Width="180"
                         HorizontalAlignment="Left"
                         Command="{Binding OpenLogFolderCommand}"
                         Classes="liquid-glass"/>
             </StackPanel>
         </Border>
 
-        <!-- PhantomRecovery Developer Mode -->
-        <Border Classes="fade-in stagger-3"
-                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
+        <Border Classes="fade-in stagger-3" HorizontalAlignment="Stretch"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
                 BorderBrush="{DynamicResource Brush.Accent}"
-                BorderThickness="2" 
-                CornerRadius="16" 
+                BorderThickness="2"
+                CornerRadius="16"
                 Padding="20">
             <StackPanel Spacing="15">
                 <StackPanel Spacing="4">
-                    <TextBlock Text="🔧 PhantomRecovery Developer Mode" 
-                               FontSize="{StaticResource Type.Body.Size}" 
+                    <TextBlock Text="🔧 PhantomRecovery Developer Mode"
+                               FontSize="{StaticResource Type.Body.Size}"
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource Brush.Accent}"/>
-                    <TextBlock Text="{Binding RecoveryDeveloperModeStatus}" 
+                    <TextBlock Text="{Binding RecoveryDeveloperModeStatus}"
                                TextWrapping="Wrap"
                                Foreground="{DynamicResource SecondaryTextBrush}"
                                FontSize="{StaticResource Type.Small.Size}"/>
                 </StackPanel>
-                
-                <CheckBox Content="Enable Developer Mode" 
+
+                <CheckBox Content="Enable Developer Mode"
                           IsChecked="{Binding IsRecoveryDeveloperModeEnabled}"
                           IsEnabled="{Binding IsRecoveryDeveloperModeAvailable}"
                           ToolTip.Tip="Use simulated USB paths and default credentials for testing"
                           FontWeight="SemiBold"/>
 
-                <!-- Developer Mode Options (visible when enabled) -->
                 <Border IsVisible="{Binding IsRecoveryDeveloperModeEnabled}"
                         Background="{DynamicResource ContentBackgroundBrush}"
                         BorderBrush="{DynamicResource ControlBorderBrush}"
@@ -84,31 +175,31 @@
                         Padding="15"
                         Margin="0,5,0,0">
                     <StackPanel Spacing="12">
-                        <TextBlock Text="Developer Settings" 
+                        <TextBlock Text="Developer Settings"
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
 
-                        <CheckBox Content="Skip USB binding checks" 
+                        <CheckBox Content="Skip USB binding checks"
                                   IsChecked="{Binding SkipUsbBindingCheck}"
                                   ToolTip.Tip="Bypass USB requirements for testing"/>
 
-                        <CheckBox Content="Verbose logging" 
+                        <CheckBox Content="Verbose logging"
                                   IsChecked="{Binding RecoveryVerboseLogging}"
                                   ToolTip.Tip="Enable detailed debug logs for recovery operations"/>
 
                         <Separator Margin="0,5"/>
 
                         <StackPanel Spacing="6">
-                            <TextBlock Text="Developer Paths" 
+                            <TextBlock Text="Developer Paths"
                                        FontSize="{StaticResource Type.Small.Size}"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource SecondaryTextBrush}"/>
-                            
+
                             <StackPanel Spacing="4">
-                                <TextBlock Text="Vault Path:" 
+                                <TextBlock Text="Vault Path:"
                                            FontSize="{StaticResource Type.Tiny.Size}"
                                            Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                <TextBox Text="{Binding RecoveryDeveloperVaultPath}" 
+                                <TextBox Text="{Binding RecoveryDeveloperVaultPath}"
                                          IsReadOnly="True"
                                          FontSize="{StaticResource Type.Micro.Size}"
                                          FontFamily="{StaticResource MonoFontFamily}"
@@ -116,10 +207,10 @@
                             </StackPanel>
 
                             <StackPanel Spacing="4">
-                                <TextBlock Text="Simulated USB Path:" 
+                                <TextBlock Text="Simulated USB Path:"
                                            FontSize="{StaticResource Type.Tiny.Size}"
                                            Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                <TextBox Text="{Binding RecoveryDeveloperUsbPath}" 
+                                <TextBox Text="{Binding RecoveryDeveloperUsbPath}"
                                          IsReadOnly="True"
                                          FontSize="{StaticResource Type.Micro.Size}"
                                          FontFamily="{StaticResource MonoFontFamily}"
@@ -136,39 +227,39 @@
             </StackPanel>
         </Border>
 
-        <Border Classes="fade-in stagger-4"
-                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
-                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
-                BorderThickness="1" 
-                CornerRadius="16" 
+        <Border Classes="fade-in stagger-4" HorizontalAlignment="Stretch"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
                 Padding="20">
             <StackPanel Spacing="15">
-                <TextBlock Text="Privacy &amp; Security" 
-                           FontSize="{StaticResource Type.Body.Size}" 
+                <TextBlock Text="Privacy &amp; Security"
+                           FontSize="{StaticResource Type.Body.Size}"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
-                
-                <CheckBox Content="Enable privacy mode" 
+
+                <CheckBox Content="Enable privacy mode"
                           IsChecked="{Binding EnablePrivacyMode, Mode=TwoWay}"
                           ToolTip.Tip="Hide sensitive information from screenshots"/>
 
-                <CheckBox Content="Redact logs" 
+                <CheckBox Content="Redact logs"
                           IsChecked="{Binding RedactLogs, Mode=TwoWay}"
                           ToolTip.Tip="Remove sensitive data from diagnostic logs"/>
 
-                <CheckBox Content="Block remote debugging" 
+                <CheckBox Content="Detect debugger attachment"
                           IsChecked="{Binding BlockRemoteDebugging, Mode=TwoWay}"
-                          ToolTip.Tip="Prevent external debugger attachment"/>
+                          ToolTip.Tip="Refuse to unlock the vault when a user-mode debugger is attached. Cannot stop kernel-mode debuggers (WinDbg /kernel), hardware debuggers, or DMA attacks."/>
 
-                <TextBlock Text="Remote-debug blocking is a hardening preference saved for startup and hardened builds. It is not hot-swapped into an already running process."
+                <TextBlock Text="Detection-only. The check runs at startup and unlock; toggling it does not affect a process that is already running. It is not a defence against an attacker with kernel-level access."
                            Foreground="{DynamicResource MutedTextBrush}"
                            FontSize="{StaticResource Type.Small.Size}"
                            TextWrapping="Wrap"/>
 
                 <StackPanel Spacing="8">
-                    <TextBlock Text="Session timeout (minutes):" 
+                    <TextBlock Text="Session timeout (minutes):"
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
-                    <TextBox Width="100" 
+                    <TextBox Width="100"
                              HorizontalAlignment="Left"
                              Text="{Binding SessionTimeout, Mode=TwoWay}"
                              ToolTip.Tip="Force logout after inactivity"/>
@@ -176,38 +267,97 @@
             </StackPanel>
         </Border>
 
-        <Border Classes="fade-in stagger-5"
-                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
-                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
-                BorderThickness="1" 
-                CornerRadius="16" 
+        <!-- Software updates: verified pipeline (Ed25519 manifest + SHA-256 asset +
+             Authenticode pin). Stays disabled until the signing key is provisioned. -->
+        <Border Classes="fade-in stagger-4" HorizontalAlignment="Stretch"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
                 Padding="20">
-            <StackPanel Spacing="15">
-                <TextBlock Text="Advanced Security Options" 
-                           FontSize="{StaticResource Type.Body.Size}" 
+            <StackPanel Spacing="14">
+                <TextBlock Text="Software Updates"
+                           FontSize="{StaticResource Type.Body.Size}"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
-                
-                <CheckBox Content="Auto-lock on minimize" 
+
+                <Border Background="{DynamicResource ContentBackgroundBrush}"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{StaticResource Radius.Md}"
+                        Padding="14">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="{Binding Update.StatusText}"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"
+                                   TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding Update.DetailText}"
+                                   IsVisible="{Binding Update.DetailText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                   TextWrapping="Wrap"
+                                   FontSize="{StaticResource Type.Small.Size}"
+                                   Foreground="{DynamicResource WarningBrush}"/>
+                    </StackPanel>
+                </Border>
+
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Button Content="Check for Updates"
+                            Command="{Binding Update.CheckForUpdatesCommand}"
+                            IsEnabled="{Binding Update.CanCheckForUpdates}"
+                            Classes="liquid-glass"/>
+                    <Button Content="Download"
+                            Command="{Binding Update.DownloadUpdateCommand}"
+                            IsVisible="{Binding Update.CanDownloadUpdate}"
+                            Classes="liquid-glass"/>
+                    <Button Content="Restart &amp; Install"
+                            Command="{Binding Update.RestartAndInstallCommand}"
+                            IsVisible="{Binding Update.CanRestartAndInstall}"
+                            Classes="dull-blue"/>
+                </StackPanel>
+
+                <CheckBox Content="Automatically check for updates"
+                          IsChecked="{Binding Update.AutoCheckEnabled, Mode=TwoWay}"
+                          IsEnabled="{Binding Update.IsUpdateAvailable}"
+                          ToolTip.Tip="Periodically check for a signed update. No update is ever applied without verification."/>
+
+                <TextBlock Text="{Binding Update.VerificationSummary}"
+                           TextWrapping="Wrap"
+                           FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource MutedTextBrush}"/>
+            </StackPanel>
+        </Border>
+
+        <Border Classes="fade-in stagger-5" HorizontalAlignment="Stretch"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
+                Padding="20">
+            <StackPanel Spacing="15">
+                <TextBlock Text="Advanced Security Options"
+                           FontSize="{StaticResource Type.Body.Size}"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+                <CheckBox Content="Auto-lock on minimize"
                           IsChecked="{Binding AutoLockOnMinimize, Mode=TwoWay}"
                           ToolTip.Tip="Lock vault when window is minimized"/>
 
-                <CheckBox Content="Auto-lock on screen lock" 
+                <CheckBox Content="Auto-lock on screen lock"
                           IsChecked="{Binding AutoLockOnScreenLock, Mode=TwoWay}"
                           ToolTip.Tip="Lock vault when Windows is locked"/>
 
-                <CheckBox Content="Clear clipboard on lock" 
+                <CheckBox Content="Clear clipboard on lock"
                           IsChecked="{Binding ClearClipboardOnLock, Mode=TwoWay}"
                           ToolTip.Tip="Automatically clear clipboard when locking"/>
 
-                <CheckBox Content="Require unlock to show window" 
+                <CheckBox Content="Require unlock to show window"
                           IsChecked="{Binding RequireUnlockToShow, Mode=TwoWay}"
                           ToolTip.Tip="Show unlock prompt before displaying vault"/>
 
                 <StackPanel Spacing="8">
-                    <TextBlock Text="Failed unlock attempts before lockout:" 
+                    <TextBlock Text="Failed unlock attempts before lockout:"
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
-                    <ComboBox Width="150" 
+                    <ComboBox Width="150"
                               HorizontalAlignment="Left"
                               SelectedIndex="{Binding SelectedFailedAttempts, Mode=TwoWay}">
                         <ComboBoxItem Content="3 attempts"/>
@@ -224,45 +374,43 @@
             </StackPanel>
         </Border>
 
-        <Border Classes="fade-in stagger-6"
-                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
-                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
-                BorderThickness="1" 
-                CornerRadius="16" 
+        <Border Classes="fade-in stagger-6" HorizontalAlignment="Stretch"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
                 Padding="20">
             <StackPanel Spacing="15">
-                <TextBlock Text="Data Management" 
-                           FontSize="{StaticResource Type.Body.Size}" 
+                <TextBlock Text="Data Management"
+                           FontSize="{StaticResource Type.Body.Size}"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
-                
-                <TextBlock Text="Clear cached data, temp files, and search indexes" 
+
+                <TextBlock Text="Clear cached data, temp files, and search indexes"
                            TextWrapping="Wrap"
                            Foreground="{DynamicResource SecondaryTextBrush}"/>
 
-                <Button Content="Clear Cache" 
-                        Width="150" 
+                <Button Content="Clear Cache"
+                        Width="150"
                         HorizontalAlignment="Left"
                         Command="{Binding ClearCacheCommand}"
                         Classes="liquid-glass"/>
 
-                <Button Content="Rebuild Search Index" 
-                        Width="180" 
+                <Button Content="Rebuild Search Index"
+                        Width="180"
                         HorizontalAlignment="Left"
                         Command="{Binding RebuildSearchIndexCommand}"
                         Classes="liquid-glass"/>
             </StackPanel>
         </Border>
 
-        <Border Classes="fade-in stagger-7"
+        <Border Classes="fade-in stagger-7" HorizontalAlignment="Stretch"
                 BorderBrush="#FFE25A5A"
                 BorderThickness="2"
                 CornerRadius="16"
                 BoxShadow="0 8 28 -8 #80000000"
                 Padding="20">
-            <!-- Danger Zone tile: distinct red gradient so the destructive
-                 section is unmistakable at a glance. Overrides the muted
-                 DangerBackgroundBrush which barely tinted the surface. -->
+
             <Border.Background>
                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
                     <GradientStop Color="#C0901218" Offset="0"/>
@@ -279,15 +427,15 @@
                            TextWrapping="Wrap"
                            Foreground="#FFF2D6D6"/>
 
-                <Button Content="Clear All Vault Data" 
-                        Width="180" 
+                <Button Content="Clear All Vault Data"
+                        Width="180"
                         HorizontalAlignment="Left"
                         Command="{Binding ClearAllVaultDataCommand}"
                         Classes="danger"
                         ToolTip.Tip="⚠ WARNING: This will permanently delete all vault contents"/>
 
-                <Button Content="Reset to Factory Defaults" 
-                        Width="200" 
+                <Button Content="Reset to Factory Defaults"
+                        Width="200"
                         HorizontalAlignment="Left"
                         Command="{Binding ResetToDefaultsCommand}"
                         Classes="danger"
@@ -296,3 +444,4 @@
         </Border>
     </StackPanel>
 </UserControl>
+

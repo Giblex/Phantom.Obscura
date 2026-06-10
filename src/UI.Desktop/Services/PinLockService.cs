@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using PhantomVault.Core.Models;
 using PhantomVault.Core.Services;
@@ -9,16 +10,58 @@ namespace PhantomVault.UI.Services
 {
     internal static class PinLockService
     {
-        // Keep the PIN hashing logic centralized and consistent.
+
         private const int SaltSizeBytes = 16;
         private const int HashSizeBytes = 32;
 
-        /// <summary>
-        /// Check if a PIN is configured for this vault. Priority: manifest PIN > UserSettings PIN.
-        /// </summary>
+        // PIN salt/hash at rest are DPAPI-sealed (CurrentUser) and stored with this
+        // prefix. Values without the prefix are legacy plaintext and are migrated
+        // opportunistically on first successful load.
+        private const string DpapiPrefix = "dpapi:";
+        private static readonly byte[] PinEntropy = Encoding.UTF8.GetBytes("PhantomVault.pinlock.v1");
+
+        private static string ProtectStored(string base64Value)
+        {
+            if (!OperatingSystem.IsWindows()) return base64Value;
+            var plain = Convert.FromBase64String(base64Value);
+            try
+            {
+                var sealedBytes = ProtectedData.Protect(plain, PinEntropy, DataProtectionScope.CurrentUser);
+                return DpapiPrefix + Convert.ToBase64String(sealedBytes);
+            }
+            finally
+            {
+                CryptographicOperations.ZeroMemory(plain);
+            }
+        }
+
+        private static string? UnprotectStored(string? stored)
+        {
+            if (string.IsNullOrWhiteSpace(stored)) return null;
+            if (!stored.StartsWith(DpapiPrefix, StringComparison.Ordinal)) return stored; // legacy plaintext
+            if (!OperatingSystem.IsWindows()) return null;
+
+            try
+            {
+                var sealedBytes = Convert.FromBase64String(stored.Substring(DpapiPrefix.Length));
+                var plain = ProtectedData.Unprotect(sealedBytes, PinEntropy, DataProtectionScope.CurrentUser);
+                try { return Convert.ToBase64String(plain); }
+                finally { CryptographicOperations.ZeroMemory(plain); }
+            }
+            catch
+            {
+                // Different machine/user profile or corrupt blob — PIN unlock is
+                // unavailable; the user falls back to the master password.
+                return null;
+            }
+        }
+
+        private static bool IsProtected(string? stored) =>
+            stored != null && stored.StartsWith(DpapiPrefix, StringComparison.Ordinal);
+
         public static bool HasPinConfigured(UserSettings settings, string? manifestPath = null)
         {
-            // Check manifest first if available
+
             if (!string.IsNullOrWhiteSpace(manifestPath) && File.Exists(manifestPath))
             {
                 try
@@ -31,11 +74,10 @@ namespace PhantomVault.UI.Services
                 }
                 catch
                 {
-                    // Fallback to UserSettings if manifest load fails
+
                 }
             }
 
-            // Fallback to UserSettings PIN
             if (settings == null) return false;
             return !string.IsNullOrWhiteSpace(settings.PinSaltBase64)
                    && !string.IsNullOrWhiteSpace(settings.PinHashBase64)
@@ -49,16 +91,11 @@ namespace PhantomVault.UI.Services
                    && manifest.PinPbkdf2Iterations > 0;
         }
 
-        /// <summary>
-        /// Set PIN for the vault. If manifestPath is provided, PIN is stored in manifest.
-        /// Otherwise, PIN is stored in UserSettings (global).
-        /// </summary>
         public static void SetPin(string pin, string? manifestPath = null)
         {
             if (string.IsNullOrWhiteSpace(pin))
                 throw new ArgumentException("PIN cannot be empty", nameof(pin));
 
-            // Very small guardrail; UI can enforce stricter rules later.
             if (pin.Length < 4)
                 throw new ArgumentException("PIN must be at least 4 digits/characters", nameof(pin));
 
@@ -75,7 +112,6 @@ namespace PhantomVault.UI.Services
             string saltBase64 = Convert.ToBase64String(salt);
             string hashBase64 = Convert.ToBase64String(hash);
 
-            // Store in manifest if path provided
             if (!string.IsNullOrWhiteSpace(manifestPath) && File.Exists(manifestPath))
             {
                 try
@@ -91,10 +127,10 @@ namespace PhantomVault.UI.Services
             }
             else
             {
-                // Fallback to UserSettings (global)
+
                 var settings = SettingsService.Load();
-                settings.PinSaltBase64 = saltBase64;
-                settings.PinHashBase64 = hashBase64;
+                settings.PinSaltBase64 = ProtectStored(saltBase64);
+                settings.PinHashBase64 = ProtectStored(hashBase64);
                 settings.EnablePinLock = true;
                 settings.PinPbkdf2Iterations = iterations;
                 SettingsService.Save(settings);
@@ -104,12 +140,9 @@ namespace PhantomVault.UI.Services
             CryptographicOperations.ZeroMemory(salt);
         }
 
-        /// <summary>
-        /// Clear PIN from both manifest (if provided) and UserSettings.
-        /// </summary>
         public static void ClearPin(string? manifestPath = null)
         {
-            // Clear from manifest if provided
+
             if (!string.IsNullOrWhiteSpace(manifestPath) && File.Exists(manifestPath))
             {
                 try
@@ -118,11 +151,10 @@ namespace PhantomVault.UI.Services
                 }
                 catch
                 {
-                    // Continue to clear UserSettings even if manifest fails
+
                 }
             }
 
-            // Also clear from UserSettings
             var settings = SettingsService.Load();
             settings.EnablePinLock = false;
             settings.PinSaltBase64 = null;
@@ -130,14 +162,10 @@ namespace PhantomVault.UI.Services
             SettingsService.Save(settings);
         }
 
-        /// <summary>
-        /// Verify PIN against manifest (if available) or UserSettings.
-        /// </summary>
         public static bool VerifyPin(string pin, string? manifestPath = null)
         {
             if (string.IsNullOrEmpty(pin)) return false;
 
-            // Try manifest first if available
             if (!string.IsNullOrWhiteSpace(manifestPath) && File.Exists(manifestPath))
             {
                 try
@@ -145,21 +173,45 @@ namespace PhantomVault.UI.Services
                     var manifest = LoadManifestFromDisk(manifestPath);
                     if (manifest != null && HasManifestPinConfigured(manifest))
                     {
-                        return VerifyPinAgainstData(pin, manifest.PinSaltBase64!, manifest.PinHashBase64!, manifest.PinPbkdf2Iterations);
+                        var manifestSalt = UnprotectStored(manifest.PinSaltBase64);
+                        var manifestHash = UnprotectStored(manifest.PinHashBase64);
+                        if (manifestSalt == null || manifestHash == null) return false;
+
+                        if (!IsProtected(manifest.PinSaltBase64) || !IsProtected(manifest.PinHashBase64))
+                        {
+                            try { SetManifestPin(manifestPath, manifestSalt, manifestHash, manifest.PinPbkdf2Iterations); }
+                            catch { /* best-effort migration */ }
+                        }
+
+                        return VerifyPinAgainstData(pin, manifestSalt, manifestHash, manifest.PinPbkdf2Iterations);
                     }
                 }
                 catch
                 {
-                    // Fallback to UserSettings if manifest verification fails
+
                 }
             }
 
-            // Fallback to UserSettings
             var settings = SettingsService.Load();
             if (!settings.EnablePinLock) return false;
             if (!HasPinConfigured(settings)) return false;
 
-            return VerifyPinAgainstData(pin, settings.PinSaltBase64!, settings.PinHashBase64!, settings.PinPbkdf2Iterations);
+            var salt = UnprotectStored(settings.PinSaltBase64);
+            var hash = UnprotectStored(settings.PinHashBase64);
+            if (salt == null || hash == null) return false;
+
+            if (!IsProtected(settings.PinSaltBase64) || !IsProtected(settings.PinHashBase64))
+            {
+                try
+                {
+                    settings.PinSaltBase64 = ProtectStored(salt);
+                    settings.PinHashBase64 = ProtectStored(hash);
+                    SettingsService.Save(settings);
+                }
+                catch { /* best-effort migration */ }
+            }
+
+            return VerifyPinAgainstData(pin, salt, hash, settings.PinPbkdf2Iterations);
         }
 
         private static bool VerifyPinAgainstData(string pin, string saltBase64, string hashBase64, int iterations)
@@ -194,15 +246,10 @@ namespace PhantomVault.UI.Services
             return ok;
         }
 
-        // Manifest persistence helpers (direct JSON access - bypasses encryption for simplicity)
         private static VaultManifest? LoadManifestFromDisk(string path)
         {
             if (!File.Exists(path)) return null;
-            
-            // For encrypted manifests, we can't easily decrypt without passphrase.
-            // Instead, we'll use a simpler approach: store PIN in a separate unencrypted sidecar file
-            // OR require the manifest to be decrypted first by VaultViewModel.
-            // For now, let's use a sidecar file approach: {manifestPath}.pin.json
+
             string pinFile = path + ".pin.json";
             if (!File.Exists(pinFile)) return null;
 
@@ -213,11 +260,11 @@ namespace PhantomVault.UI.Services
         private static void SetManifestPin(string manifestPath, string saltBase64, string hashBase64, int iterations)
         {
             string pinFile = manifestPath + ".pin.json";
-            
+
             var pinData = new VaultManifest
             {
-                PinSaltBase64 = saltBase64,
-                PinHashBase64 = hashBase64,
+                PinSaltBase64 = ProtectStored(saltBase64),
+                PinHashBase64 = ProtectStored(hashBase64),
                 PinPbkdf2Iterations = iterations
             };
 
@@ -235,3 +282,4 @@ namespace PhantomVault.UI.Services
         }
     }
 }
+

@@ -18,7 +18,6 @@ namespace PhantomVault.UI.Converters
                 exists = resolved != null && File.Exists(resolved);
             }
 
-            // Check if we should invert the result
             if (parameter is string param && param.Equals("invert", StringComparison.OrdinalIgnoreCase))
             {
                 return !exists;
@@ -32,16 +31,11 @@ namespace PhantomVault.UI.Converters
             return AvaloniaProperty.UnsetValue;
         }
 
-        /// <summary>
-        /// Resolves a relative icon path (starting with /) to an absolute path
-        /// using AppContext.BaseDirectory. Returns the original path if already absolute.
-        /// </summary>
         private static string? ResolveIconPath(string path)
         {
             if (File.Exists(path))
                 return path;
 
-            // Resolve paths like /Assets/Visuals/... relative to the app base directory
             if (path.StartsWith("/") || path.StartsWith("\\"))
             {
                 var resolved = Path.Combine(AppContext.BaseDirectory, path.TrimStart('/', '\\'));
@@ -53,3 +47,4 @@ namespace PhantomVault.UI.Converters
         }
     }
 }
+

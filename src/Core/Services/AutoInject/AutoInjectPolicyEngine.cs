@@ -8,9 +8,7 @@ using PhantomVault.Core.Models.AutoInject;
 
 namespace PhantomVault.Core.Services.AutoInject
 {
-    /// <summary>
-    /// Implementation of policy engine with file-based persistence
-    /// </summary>
+
     public class AutoInjectPolicyEngine : IAutoInjectPolicyEngine
     {
         private readonly string _policiesPath;
@@ -27,7 +25,7 @@ namespace PhantomVault.Core.Services.AutoInject
         {
             lock (_lock)
             {
-                // Try to find exact domain match first
+
                 if (!string.IsNullOrEmpty(context.Domain))
                 {
                     var exactMatch = _policies.FirstOrDefault(p =>
@@ -35,14 +33,12 @@ namespace PhantomVault.Core.Services.AutoInject
                     if (exactMatch != null)
                         return exactMatch;
 
-                    // Try wildcard matches
                     var wildcardMatch = _policies.FirstOrDefault(p =>
                         IsWildcardMatch(p.DomainPattern, context.Domain));
                     if (wildcardMatch != null)
                         return wildcardMatch;
                 }
 
-                // Try process name match
                 if (!string.IsNullOrEmpty(context.ProcessName))
                 {
                     var processMatch = _policies.FirstOrDefault(p =>
@@ -52,7 +48,6 @@ namespace PhantomVault.Core.Services.AutoInject
                         return processMatch;
                 }
 
-                // Return default policy (prompt)
                 return new AutoInjectPolicy
                 {
                     DomainPattern = "*",
@@ -63,11 +58,10 @@ namespace PhantomVault.Core.Services.AutoInject
 
         public bool IsAutoInjectAllowed(AutoInjectContext context, AutoInjectPolicy policy)
         {
-            // Check behavior
+
             if (policy.Behavior == AutoInjectBehavior.Never)
                 return false;
 
-            // Check machine restrictions
             if (policy.AllowedMachines.Count > 0 &&
                 !string.IsNullOrEmpty(context.MachineFingerprint))
             {
@@ -75,7 +69,6 @@ namespace PhantomVault.Core.Services.AutoInject
                     return false;
             }
 
-            // Check time restrictions
             if (policy.TimeRestriction != null)
             {
                 var now = DateTime.Now;
@@ -133,7 +126,6 @@ namespace PhantomVault.Core.Services.AutoInject
             if (string.IsNullOrEmpty(pattern) || string.IsNullOrEmpty(input))
                 return false;
 
-            // Convert wildcard pattern to regex
             var regexPattern = "^" + Regex.Escape(pattern)
                 .Replace("\\*", ".*")
                 .Replace("\\?", ".") + "$";
@@ -157,7 +149,7 @@ namespace PhantomVault.Core.Services.AutoInject
             }
             catch
             {
-                // Ignore errors on load, start with empty policies
+
             }
         }
 
@@ -181,8 +173,9 @@ namespace PhantomVault.Core.Services.AutoInject
             }
             catch
             {
-                // Log error in production
+
             }
         }
     }
 }
+

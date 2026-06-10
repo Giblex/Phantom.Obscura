@@ -13,13 +13,7 @@ using PhantomVault.UI.Views;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// View model for the security settings window. Allows the user to
-    /// configure advanced security parameters such as hardware token
-    /// requirements, keyfile usage and idle timeout. Saving the settings
-    /// triggers an action that could persist them to disk or apply them
-    /// immediately.
-    /// </summary>
+
     public sealed class SecuritySettingsViewModel : ReactiveObject
     {
         private readonly IDefenceSettingsService? _defenceSettings;
@@ -37,22 +31,19 @@ namespace PhantomVault.UI.ViewModels
         private bool _autoCopyTotpWithPassword;
         private int _clipboardClearTimeIndex;
         private bool _enableScreenshotProtection;
-        private string? _manifestPath; // Track current vault's manifest path
+        private string? _manifestPath;
 
-        // Decoy vault properties
         private bool _autoActivateDecoyOnTamper = true;
         private int _decoyCredentialCount = 25;
         private bool _decoyReadOnlyMode = true;
         private bool _logDecoyActivation = true;
         private bool _isDecoyCurrentlyActive;
 
-        // Issue #28: shared draft tracker so the overlay-bottom Save/Discard
-        // buttons drive Security persistence too. Baseline snapshot captures
-        // on-disk state at ctor for Discard rollback. _suppressStage guards
-        // initial-load + discard-path property writes from triggering staging.
         private readonly SettingsDraftTracker _draft;
         private SecurityBaseline _baseline;
         private bool _suppressStage;
+
+        private readonly VaultViewModel? _hostViewModel;
 
         private readonly struct SecurityBaseline
         {
@@ -75,7 +66,8 @@ namespace PhantomVault.UI.ViewModels
             string? manifestPath = null,
             DecoyVaultService? decoyVaultService = null,
             TamperDetectionService? tamperDetectionService = null,
-            SecurityOptions? securityOptions = null)
+            SecurityOptions? securityOptions = null,
+            VaultViewModel? hostViewModel = null)
         {
             _defenceSettings = defenceSettingsService;
             _dialogService = new DialogService();
@@ -83,8 +75,8 @@ namespace PhantomVault.UI.ViewModels
             _decoyVaultService = decoyVaultService;
             _tamperDetectionService = tamperDetectionService;
             _securityOptions = securityOptions ?? new SecurityOptions();
-            // Issue #28: resolve singleton tracker (with fallback for non-DI
-            // construction paths so tests/manual instantiation keep working).
+            _hostViewModel = hostViewModel;
+
             _draft = ((Avalonia.Application.Current as App)?.Services?.GetService(typeof(SettingsDraftTracker)) as SettingsDraftTracker)
                 ?? new SettingsDraftTracker();
             _suppressStage = true;
@@ -99,14 +91,12 @@ namespace PhantomVault.UI.ViewModels
             _clipboardClearTimeIndex = settings.ClipboardClearTime;
             _enableScreenshotProtection = settings.EnableScreenshotProtection;
 
-            // Load decoy settings
             _autoActivateDecoyOnTamper = settings.EnableDecoyVault;
             _decoyCredentialCount = settings.DecoyCredentialCount;
             _decoyReadOnlyMode = settings.DecoyReadOnlyMode;
             _logDecoyActivation = settings.DecoyLogActivations;
             _isDecoyCurrentlyActive = _tamperDetectionService?.IsDecoyActive ?? false;
 
-            // Snapshot the just-loaded values as the baseline for Discard.
             _baseline = SnapshotCurrent();
             _suppressStage = false;
 
@@ -119,13 +109,18 @@ namespace PhantomVault.UI.ViewModels
             ClearPinCommand = ReactiveCommand.CreateFromTask(ClearPinAsync,
                 this.WhenAnyValue(vm => vm.IsBusy).Select(b => !b));
 
+            // Fast Unlock state: load persisted user preference; the "needs re-key" flag is
+            // derived against the host VM's current manifest KDF tier.
+            try { _useFastUnlock = SettingsService.Load().UseFastUnlock; } catch { _useFastUnlock = false; }
+            ApplyFastUnlockReKeyCommand = ReactiveCommand.CreateFromTask(ApplyFastUnlockReKeyAsync,
+                this.WhenAnyValue(vm => vm.IsBusy).Select(b => !b));
+
             PreviewDecoyVaultCommand = ReactiveCommand.CreateFromTask(PreviewDecoyVaultAsync,
                 this.WhenAnyValue(vm => vm.IsBusy, vm => vm.AutoActivateDecoyOnTamper).Select(x => !x.Item1 && x.Item2));
 
             DeactivateDecoyCommand = ReactiveCommand.CreateFromTask(DeactivateDecoyAsync,
                 this.WhenAnyValue(vm => vm.IsBusy, vm => vm.IsDecoyCurrentlyActive).Select(x => !x.Item1 && x.Item2));
 
-            // Auto-save decoy settings on change
             this.WhenAnyValue(
                 x => x.AutoActivateDecoyOnTamper,
                 x => x.DecoyCredentialCount,
@@ -133,10 +128,28 @@ namespace PhantomVault.UI.ViewModels
                 .Throttle(TimeSpan.FromMilliseconds(500))
                 .Subscribe(_ => SaveDecoySettings());
 
-            // Subscribe to tamper detection events
             if (_tamperDetectionService != null)
             {
                 _tamperDetectionService.TamperDetected += OnTamperDetected;
+            }
+
+            if (_hostViewModel != null)
+            {
+                _hostViewModel.PropertyChanged += OnHostPropertyChanged;
+            }
+        }
+
+        private void OnHostPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(VaultViewModel.CurrentKeyfileDisplay))
+            {
+                this.RaisePropertyChanged(nameof(CurrentKeyfileDisplay));
+            }
+            else if (e.PropertyName == nameof(VaultViewModel.CurrentManifestKdfDisplay)
+                  || e.PropertyName == nameof(VaultViewModel.IsManifestKdfFast))
+            {
+                this.RaisePropertyChanged(nameof(CurrentManifestKdfDisplay));
+                this.RaisePropertyChanged(nameof(FastUnlockNeedsReKey));
             }
         }
 
@@ -155,20 +168,14 @@ namespace PhantomVault.UI.ViewModels
 
             try
             {
-                // Simulate save operation
+
                 await Task.Delay(300);
 
-                // Issue #28: clicking the tab's local Save commits the staged
-                // 'Security.All' entry (and anything else staged across the
-                // overlay — same semantics as the overlay-bottom Save). If
-                // nothing is staged (settings already match baseline) this is
-                // a no-op rather than a duplicate write.
                 _draft.CommitAll();
 
                 LastSaved = DateTimeOffset.UtcNow;
                 SaveButtonText = "✓ Saved";
 
-                // Reset button text after 2 seconds
                 await Task.Delay(2000);
                 SaveButtonText = "Save";
             }
@@ -191,8 +198,9 @@ namespace PhantomVault.UI.ViewModels
             get => _requireHardwareToken;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _requireHardwareToken, value))
+                if (_requireHardwareToken != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _requireHardwareToken, value);
                     StageAll();
                 }
             }
@@ -203,8 +211,9 @@ namespace PhantomVault.UI.ViewModels
             get => _requireKeyfile;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _requireKeyfile, value))
+                if (_requireKeyfile != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _requireKeyfile, value);
                     StageAll();
                 }
             }
@@ -242,15 +251,68 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> SetOrChangePinCommand { get; }
         public ReactiveCommand<Unit, Unit> ClearPinCommand { get; }
 
+        public ReactiveCommand<Unit, Unit>? BackupKeyfileCommand => _hostViewModel?.BackupKeyfileCommand;
+        public ReactiveCommand<Unit, Unit>? RegenerateKeyfileCommand => _hostViewModel?.RegenerateKeyfileCommand;
+        public ReactiveCommand<Unit, Unit>? ChangeKeyfileCommand => _hostViewModel?.ChangeKeyfileCommand;
+        public ReactiveCommand<Unit, Unit>? ChangeMasterPasswordCommand => _hostViewModel?.ChangeMasterPasswordCommand;
+        public string CurrentKeyfileDisplay => _hostViewModel?.CurrentKeyfileDisplay ?? "No keyfile on record";
+
+        // === Fast Unlock ===
+        // Setting flips the user's preference. The actual KDF change requires a re-key,
+        // which is triggered explicitly via ApplyFastUnlockReKeyCommand. We split the two
+        // so the user knows whether their preference matches the manifest's current state.
+        private bool _useFastUnlock;
+        public bool UseFastUnlock
+        {
+            get => _useFastUnlock;
+            set
+            {
+                if (_useFastUnlock != value)
+                {
+                    this.RaiseAndSetIfChanged(ref _useFastUnlock, value);
+                    try { SettingsService.Update(s => s.UseFastUnlock = value); }
+                    catch (Exception ex) { Serilog.Log.Warning(ex, "[SecuritySettings] persist UseFastUnlock failed"); }
+                    this.RaisePropertyChanged(nameof(FastUnlockNeedsReKey));
+                }
+            }
+        }
+
+        public string CurrentManifestKdfDisplay => _hostViewModel?.CurrentManifestKdfDisplay ?? "Unknown";
+
+        /// <summary>
+        /// True when the user's preference differs from the manifest's current KDF tier.
+        /// Used to highlight the "Apply Fast Unlock" button when an action is required.
+        /// </summary>
+        public bool FastUnlockNeedsReKey
+        {
+            get
+            {
+                if (_hostViewModel == null) return false;
+                bool manifestIsFast = _hostViewModel.IsManifestKdfFast;
+                return _useFastUnlock != manifestIsFast;
+            }
+        }
+
+        public ReactiveCommand<Unit, Unit> ApplyFastUnlockReKeyCommand { get; }
+
+        private async Task ApplyFastUnlockReKeyAsync()
+        {
+            if (_hostViewModel == null) return;
+            bool ok = await _hostViewModel.RekeyManifestForFastUnlockAsync(_useFastUnlock).ConfigureAwait(false);
+            if (ok)
+            {
+                this.RaisePropertyChanged(nameof(CurrentManifestKdfDisplay));
+                this.RaisePropertyChanged(nameof(FastUnlockNeedsReKey));
+            }
+        }
+
         public bool EnablePinLock
         {
             get => _enablePinLock;
             set
             {
                 this.RaiseAndSetIfChanged(ref _enablePinLock, value);
-                // Issue #28: if PIN-lock is being disabled, cascade-clear the
-                // related toggle in-memory so the user sees the dependent
-                // switch flip immediately. Persistence waits for Save.
+
                 if (!value && _usePinLockForAutoLock)
                 {
                     this.RaiseAndSetIfChanged(ref _usePinLockForAutoLock, false);
@@ -318,33 +380,18 @@ namespace PhantomVault.UI.ViewModels
             get => _enableScreenshotProtection;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _enableScreenshotProtection, value))
+                if (_enableScreenshotProtection != value)
                 {
-                    // Persist immediately — this is a live-effect security
-                    // toggle (the SettingsChanged event drives the window's
-                    // SetWindowDisplayAffinity call in VaultWindow), so the
-                    // user's expectation is that flipping the switch takes
-                    // effect now, not after clicking a Save button buried in
-                    // the overlay. We also rebase so the draft tracker
-                    // doesn't keep the value marked as "unsaved" and won't
-                    // re-stage it (which would clobber any other genuinely
-                    // staged fields on this tab).
+                    this.RaiseAndSetIfChanged(ref _enableScreenshotProtection, value);
                     SettingsService.Update(s => s.EnableScreenshotProtection = value);
                     _baseline = _baseline with { EnableScreenshotProtection = value };
                     StageAll();
-                    // Belt-and-suspenders: apply directly to every open window
-                    // now, rather than relying solely on the static
-                    // SettingsChanged event reaching VaultWindow.
+
                     ApplyScreenshotProtectionToWindows(value);
                 }
             }
         }
 
-        /// <summary>
-        /// Apply the WDA_EXCLUDEFROMCAPTURE affinity to every open top-level
-        /// window immediately so the screenshot-protection toggle takes effect
-        /// without waiting for (or depending on) the SettingsChanged event.
-        /// </summary>
         private static void ApplyScreenshotProtectionToWindows(bool enable)
         {
             try
@@ -364,7 +411,7 @@ namespace PhantomVault.UI.ViewModels
                     }
                 }
             }
-            catch { /* best-effort live apply */ }
+            catch {  }
         }
 
         private async Task SetOrChangePinAsync()
@@ -373,7 +420,7 @@ namespace PhantomVault.UI.ViewModels
             {
                 var owner = GetOwnerWindow();
                 var dialog = new PinSetupDialog(_manifestPath);
-                
+
                 if (owner != null)
                 {
                     await dialog.ShowDialog(owner);
@@ -412,7 +459,7 @@ namespace PhantomVault.UI.ViewModels
 
         private Window? GetOwnerWindow()
         {
-            // Settings panel can be hosted inside VaultWindow overlay; best-effort owner discovery.
+
             return Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
                 ? desktop.Windows.FirstOrDefault(w => w.IsActive)
                 : null;
@@ -460,7 +507,7 @@ namespace PhantomVault.UI.ViewModels
             else
             {
                 dialog.Show();
-                // Wait until the dialog closes.
+
                 var tcs = new TaskCompletionSource();
                 dialog.Closed += (_, _) => tcs.TrySetResult();
                 await tcs.Task;
@@ -470,12 +517,6 @@ namespace PhantomVault.UI.ViewModels
             return result;
         }
 
-        // ===== Defence Engine Settings =====
-
-        /// <summary>
-        /// Require Phantom Key / extra checks on new devices.
-        /// Maps to "new-device" rule.
-        /// </summary>
         public bool IsNewDeviceProtectionEnabled
         {
             get => _defenceSettings?.GetRuleEnabled("new-device") ?? true;
@@ -486,10 +527,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Open in Safe (read-only) mode if tampering suspected.
-        /// Maps to "integrity-critical" rule.
-        /// </summary>
         public bool IsIntegritySafeModeEnabled
         {
             get => _defenceSettings?.GetRuleEnabled("integrity-critical") ?? true;
@@ -500,10 +537,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Limit rapid copy-to-clipboard of secrets.
-        /// This is a conceptual flag for clipboard guard behavior.
-        /// </summary>
         public bool IsClipboardGuardEnabled
         {
             get => _defenceSettings?.GetRuleEnabled("clipboard-guard") ?? true;
@@ -514,10 +547,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Limit repeated vault exports in short time.
-        /// Maps to "excessive-exports" rule.
-        /// </summary>
         public bool IsExportGuardEnabled
         {
             get => _defenceSettings?.GetRuleEnabled("excessive-exports") ?? true;
@@ -528,10 +557,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Detect and respond to abnormal session behaviour.
-        /// Maps to "behavior-deviation" rule.
-        /// </summary>
         public bool IsBehaviourDeviationProtectionEnabled
         {
             get => _defenceSettings?.GetRuleEnabled("behavior-deviation") ?? true;
@@ -542,15 +567,14 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        // ===== Decoy Vault Settings =====
-
         public bool AutoActivateDecoyOnTamper
         {
             get => _autoActivateDecoyOnTamper;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _autoActivateDecoyOnTamper, value))
+                if (_autoActivateDecoyOnTamper != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _autoActivateDecoyOnTamper, value);
                     this.RaisePropertyChanged(nameof(EnableDecoyVault));
                     SaveDecoySettings();
                 }
@@ -575,8 +599,9 @@ namespace PhantomVault.UI.ViewModels
             get => _logDecoyActivation;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _logDecoyActivation, value))
+                if (_logDecoyActivation != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _logDecoyActivation, value);
                     this.RaisePropertyChanged(nameof(DecoyLogActivations));
                     SaveDecoySettings();
                 }
@@ -594,8 +619,9 @@ namespace PhantomVault.UI.ViewModels
             get => _decoyReadOnlyMode;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _decoyReadOnlyMode, value))
+                if (_decoyReadOnlyMode != value)
                 {
+                    this.RaiseAndSetIfChanged(ref _decoyReadOnlyMode, value);
                     SaveDecoySettings();
                 }
             }
@@ -621,9 +647,7 @@ namespace PhantomVault.UI.ViewModels
             _securityOptions.AutoActivateDecoyOnTamper = AutoActivateDecoyOnTamper;
             _securityOptions.DecoyCredentialCount = DecoyCredentialCount;
             _securityOptions.LogDecoyActivation = LogDecoyActivation;
-            // Issue #28: route through the shared tracker so the overlay Save
-            // button handles persistence. Live SecurityOptions update above
-            // still fires so any in-process consumers see the new value.
+
             StageAll();
         }
 
@@ -632,8 +656,6 @@ namespace PhantomVault.UI.ViewModels
             SettingsService.Update(update);
         }
 
-        // Issue #28: snapshot current property values for baseline + commit
-        // payload.
         private SecurityBaseline SnapshotCurrent() => new SecurityBaseline
         {
             EnablePinLock = EnablePinLock,
@@ -667,8 +689,6 @@ namespace PhantomVault.UI.ViewModels
                 && LogDecoyActivation == b.LogDecoyActivation;
         }
 
-        // Issue #28: re-staging the same key replaces the prior pair so a
-        // burst of property changes still results in a single commit/discard.
         private void StageAll()
         {
             if (_suppressStage) return;
@@ -740,10 +760,8 @@ namespace PhantomVault.UI.ViewModels
             {
                 IsBusy = true;
 
-                // Generate preview decoy vault
                 var decoyDb = await _decoyVaultService.ActivateDecoyVaultAsync();
 
-                // Show preview window
                 var previewWindow = new DecoyPreviewWindow
                 {
                     DataContext = new DecoyPreviewViewModel(decoyDb, _decoyVaultService)
@@ -759,7 +777,6 @@ namespace PhantomVault.UI.ViewModels
                     previewWindow.Show();
                 }
 
-                // Deactivate after preview
                 _decoyVaultService.DeactivateDecoyVault();
             }
             catch (Exception ex)
@@ -793,11 +810,9 @@ namespace PhantomVault.UI.ViewModels
             {
                 IsBusy = true;
 
-                // Deactivate decoy
                 _decoyVaultService.DeactivateDecoyVault();
                 IsDecoyCurrentlyActive = false;
 
-                // Restart tamper detection monitoring
                 _tamperDetectionService.StopMonitoring();
                 _tamperDetectionService.StartMonitoring();
 
@@ -821,3 +836,4 @@ namespace PhantomVault.UI.ViewModels
         }
     }
 }
+

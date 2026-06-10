@@ -1,7 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="PhantomVault.UI.Views.EditForms.BankAccountEditForm">
-    
+
     <Border x:Name="BankPanelBorder" Background="Transparent" IsVisible="{Binding IsBankAccountEntry}">
         <StackPanel x:Name="BankPanel" Spacing="12">
         <TextBlock Text="Bank Account" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -47,3 +47,4 @@
         </StackPanel>
     </Border>
 </UserControl>
+

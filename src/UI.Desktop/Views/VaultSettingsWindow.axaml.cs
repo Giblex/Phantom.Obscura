@@ -4,9 +4,7 @@ using PhantomVault.UI.ViewModels;
 
 namespace PhantomVault.UI.Views
 {
-    /// <summary>
-    /// Settings window for vault configuration.
-    /// </summary>
+
     public partial class VaultSettingsWindow : ThemeAwareWindow
     {
         public VaultSettingsWindow()
@@ -37,3 +35,4 @@ namespace PhantomVault.UI.Views
         }
     }
 }
+

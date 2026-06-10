@@ -10,3 +10,4 @@ public partial class CategoryLandingView : UserControl
         InitializeComponent();
     }
 }
+

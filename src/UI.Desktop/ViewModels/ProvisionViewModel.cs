@@ -22,11 +22,7 @@ using System.Security.Principal;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// View model for the provisioning window. Guides the user through
-    /// creating a new encrypted container and manifest on a selected
-    /// removable drive. Includes basic validation and progress reporting.
-    /// </summary>
+
     public sealed class ProvisionViewModel : ReactiveObject, PhantomVault.UI.Services.IResettableOnError
     {
         private readonly VaultService _vaultService;
@@ -66,7 +62,6 @@ namespace PhantomVault.UI.ViewModels
         private readonly IHybridEncryptionService _hybridEncryptionService;
         private Window? _ownerWindow;
 
-        // Event to navigate to vault window after successful creation
         public event EventHandler<string>? NavigateToVault;
 
         public ProvisionViewModel(
@@ -97,7 +92,6 @@ namespace PhantomVault.UI.ViewModels
             _keePassImportService = keePassImportService ?? throw new ArgumentNullException(nameof(keePassImportService));
             _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
 
-            // Populate removable drives
             foreach (var drive in _usbDetector.GetRemovableDrives())
             {
                 _drives.Add(drive);
@@ -105,7 +99,6 @@ namespace PhantomVault.UI.ViewModels
             _usbDetector.RemovableDriveInserted += d => _drives.Add(d);
             _usbDetector.RemovableDriveRemoved += d => _drives.Remove(d);
 
-            // Auto-select USB drive if pre-selected from USB Setup
             if (!string.IsNullOrEmpty(preSelectedUsbDrive))
             {
                 SelectedDrive = preSelectedUsbDrive;
@@ -121,7 +114,6 @@ namespace PhantomVault.UI.ViewModels
             ToggleShowPasswordCommand = ReactiveCommand.Create(() => { ShowPassword = !ShowPassword; });
             ToggleShowConfirmPasswordCommand = ReactiveCommand.Create(() => { ShowConfirmPassword = !ShowConfirmPassword; });
 
-            // Load user's default preferences for encryption and authentication
             LoadDefaultPreferences();
 
             CreateVaultCommand = ReactiveCommand.CreateFromTask(async () =>
@@ -139,7 +131,6 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Enforce USB policy before vault creation
                 try
                 {
                     if (Program.PolicyService.IsUsbRequired())
@@ -185,7 +176,6 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Password is optional, but if provided must match and meet requirements
                 if (!string.IsNullOrEmpty(Passphrase) || !string.IsNullOrEmpty(ConfirmPassphrase))
                 {
                     if (Passphrase != ConfirmPassphrase)
@@ -201,7 +191,6 @@ namespace PhantomVault.UI.ViewModels
                         return;
                     }
 
-                    // Check if password meets requirements
                     if (!string.IsNullOrEmpty(PasswordError))
                     {
                         await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
@@ -216,7 +205,6 @@ namespace PhantomVault.UI.ViewModels
                     }
                 }
 
-                // Keyfile is required
                 if (string.IsNullOrEmpty(KeyfilePath))
                 {
                     await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
@@ -234,33 +222,25 @@ namespace PhantomVault.UI.ViewModels
                 Status = "Creating encrypted vault...";
                 try
                 {
-                    // Create hidden .phantom folder structure
+
                     var phantomPath = CreatePhantomFolder(SelectedDrive!);
                     var encryptedName = GetEncryptedFilename(VaultName!);
 
-                    // Password is optional - use null if empty
                     var passwordToUse = string.IsNullOrEmpty(Passphrase) ? null : Passphrase;
-                    
+
                     byte[]? passkeyCredentialId = null;
-                    // Generate ML-KEM-768 key pair for post-quantum hybrid encryption FIRST
-                    // This happens before container creation so we can store it properly
+
                     Status = "Generating post-quantum cryptographic keys...";
                     Progress = 0.05;
                     var (kemPublicKey, kemPrivateKey) = _hybridEncryptionService.GenerateKeyPair();
 
-                    // Phase 2: Encapsulate a random value to generate KEM ciphertext and shared secret
-                    // This will be used for hybrid key derivation (KEK ⊕ shared_secret = DEK)
                     Status = "Establishing quantum-resistant key exchange...";
                     Progress = 0.06;
                     var (kemCiphertext, kemSharedSecret) = _hybridEncryptionService.EncapsulateSecret(kemPublicKey);
 
-                    // Phase 2: Encrypt KEM private key with traditional KEK for storage in manifest
-                    // This eliminates circular dependency: manifest encrypted with KEK, private key encrypted with KEK
                     Status = "Securing cryptographic keys...";
                     Progress = 0.07;
 
-                    // Note: We'll encrypt the KEM private key and store it in the manifest AFTER vault creation
-                    // For now, store the KEM keys and shared secret for use during vault creation
                     byte[]? kemCiphertextForManifest = kemCiphertext;
                     byte[]? kemSharedSecretForVault = kemSharedSecret;
 
@@ -269,7 +249,6 @@ namespace PhantomVault.UI.ViewModels
                     string vaultPath;
                     string kemKeyPath;
 
-                    // Create the encrypted database directly under .phantom using GiblexVaultContainer (ZK)
                     Status = "Creating encrypted vault (zero-knowledge)...";
                     Progress = 0.1;
                     var directDir = Path.Combine(phantomPath, "vaults");
@@ -278,13 +257,12 @@ namespace PhantomVault.UI.ViewModels
                     var vaultProgress = new Progress<double>(p => Progress = 0.1 + (p * 0.6));
                     await CreateHybridEncryptedDatabaseAsync(vaultPath, passwordToUse, KeyfilePath, kemSharedSecretForVault, vaultProgress);
 
-                    // Save the ML-KEM private key in the same directory
                     Status = "Securing post-quantum encryption keys...";
                     Progress = 0.7;
                     kemKeyPath = Path.Combine(directDir, "kem.key");
                     await SaveKemPrivateKeyAsync(kemKeyPath, kemPrivateKey, passwordToUse, KeyfilePath);
 
-                    containerPath = vaultPath; // ContainerPath points to inner file
+                    containerPath = vaultPath;
                     Progress = 0.8;
 
                     if (passkeyCredentialId != null)
@@ -293,10 +271,6 @@ namespace PhantomVault.UI.ViewModels
                         passkeyCredentialId = null;
                     }
 
-                    // Note: DO NOT zero kemPrivateKey yet - we need it for Phase 2 manifest encryption
-                    // It will be zeroed after the manifest is created
-
-                    // Bind the vault to this USB device by computing a unique ID
                     string deviceId = _usbBindingService.ComputeDeviceId(SelectedDrive!);
 
                     if (UsePasskey)
@@ -383,8 +357,6 @@ namespace PhantomVault.UI.ViewModels
                         }
                     }
 
-                    // Phase 2: Encrypt KEM private key for storage in manifest
-                    // We need to derive the KEK (Key Encryption Key) first
                     Status = "Encrypting post-quantum keys for manifest...";
                     Progress = 0.81;
 
@@ -406,18 +378,15 @@ namespace PhantomVault.UI.ViewModels
                     var encryptedPrivateKeyResult = encryptionService.Encrypt(kemPrivateKey, kek, aad);
                     string encryptedPrivateKeyBase64 = PhantomVault.Core.Utils.HybridKeyDerivation.SerializeEncryptionResult(encryptedPrivateKeyResult);
 
-                    // Wipe transient encryption buffers now that they have been serialized
                     CryptographicOperations.ZeroMemory(encryptedPrivateKeyResult.Ciphertext);
                     CryptographicOperations.ZeroMemory(encryptedPrivateKeyResult.Nonce);
                     CryptographicOperations.ZeroMemory(encryptedPrivateKeyResult.Tag);
                     CryptographicOperations.ZeroMemory(aad);
 
-                    // Clean up sensitive keys
                     PhantomVault.Core.Utils.HybridKeyDerivation.ZeroMemory(kek, kemSharedSecretForVault);
                     string manifestSaltBase64 = Convert.ToBase64String(manifestSalt);
                     PhantomVault.Core.Utils.HybridKeyDerivation.ZeroMemory(manifestSalt);
 
-                    // Construct the manifest and attach multi‑factor credentials
                     var manifest = new VaultManifest
                     {
                         VaultName = VaultName!,
@@ -425,12 +394,12 @@ namespace PhantomVault.UI.ViewModels
                         ContainerSizeBytes = containerSizeBytes,
                         RequiresHardwareToken = RequiresHardwareToken,
                         DeviceId = deviceId,
-                        // Enable automatic encrypted backups by default and set a retention window of 3 days.
+
                         AutoBackupEnabled = true,
                         BackupRetentionDays = 3,
-                        // Phase 1: Store the ML-KEM-768 public key in the manifest (1184 bytes, Base64 encoded)
+
                         KemPublicKeyBase64 = Convert.ToBase64String(kemPublicKey),
-                        // Phase 2: Store KEM ciphertext (for DEK derivation) and encrypted private key
+
                         KemCiphertextBase64 = Convert.ToBase64String(kemCiphertextForManifest!),
                         KemPrivateKeyEncryptedBase64 = encryptedPrivateKeyBase64,
                         SaltBase64 = manifestSaltBase64,
@@ -448,20 +417,17 @@ namespace PhantomVault.UI.ViewModels
 
                         manifest.PasskeyId = Convert.ToBase64String(passkeyCredentialId);
                     }
-                    // Store manifest in hidden folder with encrypted filename
+
                     var manifestPath = Path.Combine(phantomPath, "manifests", $"{encryptedName}.manifest");
 
-                    // Password is optional - use null if empty
                     var passwordForManifest = string.IsNullOrEmpty(Passphrase) ? null : Passphrase;
                     Progress = 0.82;
                     _manifestService.WriteManifest(manifest, manifestPath, passwordForManifest, KeyfilePath);
 
-                    // Phase 2: Now that manifest is written, zero all sensitive key material
                     PhantomVault.Core.Utils.HybridKeyDerivation.ZeroMemory(kemPrivateKey, kemPublicKey, kemCiphertextForManifest!);
 
                     Progress = 0.83;
 
-                    // Show success dialog
                     await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
                     {
                         await _dialogService.ShowSuccessAsync(
@@ -472,7 +438,6 @@ namespace PhantomVault.UI.ViewModels
 
                     Status = "Vault successfully created.";
 
-                    // Process KeePass import if a file was selected
                     if (!string.IsNullOrEmpty(KeePassFilePath))
                     {
                         await ProcessKeePassImportAsync(SelectedDrive!);
@@ -480,10 +445,7 @@ namespace PhantomVault.UI.ViewModels
 
                     try
                     {
-                        // If automatic backups are enabled on the manifest, write an encrypted copy
-                        // of the manifest to the backups directory and prune old backups.  This runs
-                        // synchronously after the manifest is persisted so that the backup reflects
-                        // the latest state.
+
                         if (manifest.AutoBackupEnabled)
                         {
                             string backupDir = Path.Combine(phantomPath, "backups");
@@ -493,25 +455,22 @@ namespace PhantomVault.UI.ViewModels
                     }
                     catch
                     {
-                        // Ignore backup errors; vault creation succeeded.
+
                     }
 
                     try
                     {
-                        // Append audit entry in hidden folder with encrypted filename
+
                         var auditPath = Path.Combine(phantomPath, "audit", $"{encryptedName}.audit");
                         _auditService.LogEvent(auditPath, "provision", $"Vault '{VaultName}' created on {SelectedDrive}");
                     }
                     catch
                     {
-                        // Ignore audit errors; vault creation succeeded.
+
                     }
 
-                    // Save user preferences for encryption and authentication
                     SaveAuthenticationMethodPreference();
 
-                    // Navigate to vault window to open the newly created vault
-                    // This must be on UI thread
                     await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                     {
                         NavigateToVault?.Invoke(this, SelectedDrive!);
@@ -535,21 +494,15 @@ namespace PhantomVault.UI.ViewModels
             }, CanCreateObservable());
         }
 
-        /// <summary>
-        /// Creates a hybrid encrypted password vault database using zero-knowledge cryptography.
-        /// This creates a .pvault file encrypted with VaultFileZk using GiblexVaultContainer.
-        /// </summary>
-        /// <param name="hybridSharedSecret">Optional ML-KEM shared secret for Phase 2 hybrid encryption</param>
         private async Task CreateHybridEncryptedDatabaseAsync(string dbPath, string? password, string? keyfilePath, byte[]? hybridSharedSecret = null, IProgress<double>? progress = null)
         {
             try
             {
                 progress?.Report(0.1);
 
-                // Create initial empty password database structure
                 var database = new
                 {
-                    Version = "2.0", // Version 2.0 indicates zero-knowledge encryption
+                    Version = "2.0",
                     EncryptionType = "ZeroKnowledge-VaultFileZk",
                     Created = DateTime.UtcNow,
                     VaultName = VaultName ?? "PhantomVault",
@@ -582,7 +535,6 @@ namespace PhantomVault.UI.ViewModels
 
                 progress?.Report(0.3);
 
-                // Serialize to JSON
                 var jsonContent = System.Text.Json.JsonSerializer.Serialize(database, new System.Text.Json.JsonSerializerOptions
                 {
                     WriteIndented = true
@@ -590,7 +542,6 @@ namespace PhantomVault.UI.ViewModels
 
                 progress?.Report(0.5);
 
-                // Write JSON to temporary file for encryption
                 var tempPlaintext = Path.GetTempFileName();
                 try
                 {
@@ -598,15 +549,11 @@ namespace PhantomVault.UI.ViewModels
 
                     progress?.Report(0.7);
 
-                    // Unlock the ZK vault service using hybrid DEK if available (Phase 2)
-                    // For Phase 2 vaults, we derive: DEK = KEK ⊕ ML-KEM shared secret
-                    // This provides quantum resistance while maintaining classical security
                     bool unlocked = false;
 
                     if (hybridSharedSecret != null)
                     {
-                        // Phase 2: Use hybrid key derivation
-                        // First derive traditional KEK
+
                         string combinedSecretForDek = password ?? string.Empty;
                         if (!string.IsNullOrEmpty(keyfilePath) && File.Exists(keyfilePath))
                         {
@@ -621,18 +568,15 @@ namespace PhantomVault.UI.ViewModels
                         var tempEncService = new PhantomVault.Core.Services.EncryptionService();
                         byte[] kek = tempEncService.DeriveKey(combinedSecretForDek.AsSpan(), dekSalt);
 
-                        // Derive hybrid DEK = KEK ⊕ KEM shared secret
                         byte[] hybridDek = PhantomVault.Core.Utils.HybridKeyDerivation.DeriveHybridKey(kek, hybridSharedSecret);
 
-                        // Unlock ZK service with hybrid DEK
                         unlocked = await _zkVaultService.UnlockWithHybridKeyAsync(hybridDek);
 
-                        // Zero sensitive materials
                         PhantomVault.Core.Utils.HybridKeyDerivation.ZeroMemory(kek, hybridDek, dekSalt);
                     }
                     else
                     {
-                        // Fallback: Traditional key derivation (for backward compatibility)
+
                         string deviceId = _usbBindingService.ComputeDeviceId(SelectedDrive!);
                         unlocked = await _zkVaultService.UnlockMasterKeyAsync(password ?? string.Empty, keyfilePath, deviceId);
                     }
@@ -646,23 +590,22 @@ namespace PhantomVault.UI.ViewModels
                     {
                         progress?.Report(0.8);
 
-                        // Encrypt plaintext file using VaultFileZk
                         await _zkVaultService.EncryptFileAsync(tempPlaintext, dbPath);
                     }
                     finally
                     {
-                        // Always lock the vault service after use
+
                         await _zkVaultService.LockAndWipeKeysAsync();
                     }
                 }
                 finally
                 {
-                    // Securely delete temporary plaintext file
+
                     if (File.Exists(tempPlaintext))
                     {
                         try
                         {
-                            // Overwrite with zeros before deletion
+
                             var fileInfo = new FileInfo(tempPlaintext);
                             using (var stream = new FileStream(tempPlaintext, FileMode.Open, FileAccess.Write, FileShare.None))
                             {
@@ -674,7 +617,7 @@ namespace PhantomVault.UI.ViewModels
                         }
                         catch
                         {
-                            // Best effort cleanup
+
                         }
                     }
                 }
@@ -687,15 +630,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Saves the ML-KEM-768 private key to disk in encrypted form.
-        /// The private key (2400 bytes) is encrypted using the same master key derivation
-        /// as the vault manifest to ensure it can only be accessed after authentication.
-        /// </summary>
-        /// <param name="keyPath">Path where the encrypted key will be stored.</param>
-        /// <param name="privateKey">The ML-KEM-768 private key (2400 bytes).</param>
-        /// <param name="password">User passphrase for key derivation.</param>
-        /// <param name="keyfilePath">Optional keyfile path for additional entropy.</param>
         private async Task SaveKemPrivateKeyAsync(string keyPath, byte[] privateKey, string? password, string? keyfilePath)
         {
             if (privateKey == null) throw new ArgumentNullException(nameof(privateKey));
@@ -704,14 +638,12 @@ namespace PhantomVault.UI.ViewModels
 
             try
             {
-                // Use the EncryptionService from the DI container (via App services)
+
                 var encryptionService = (Avalonia.Application.Current as App)?.Services?.GetService(typeof(EncryptionService)) as EncryptionService
                     ?? throw new InvalidOperationException("EncryptionService not available");
 
-                // Generate salt for key derivation
                 byte[] salt = encryptionService.GenerateSalt();
 
-                // Combine passphrase with keyfile contents if provided
                 string combinedSecret = password ?? string.Empty;
                 if (!string.IsNullOrEmpty(keyfilePath) && File.Exists(keyfilePath))
                 {
@@ -720,16 +652,14 @@ namespace PhantomVault.UI.ViewModels
                     CryptographicOperations.ZeroMemory(keyfileBytes);
                 }
 
-                // Derive encryption key using Argon2id
                 byte[] masterKey = encryptionService.DeriveKey(combinedSecret.AsSpan(), salt);
 
                 try
                 {
-                    // Encrypt the private key with AES-256-GCM
+
                     byte[] aad = Encoding.UTF8.GetBytes("ML-KEM-768-PRIVATE-KEY");
                     var encResult = encryptionService.Encrypt(privateKey, masterKey, aad);
 
-                    // Create encrypted key file structure
                     var payload = new
                     {
                         algorithm = "ML-KEM-768",
@@ -744,7 +674,7 @@ namespace PhantomVault.UI.ViewModels
                 }
                 finally
                 {
-                    // Wipe master key from memory
+
                     CryptographicOperations.ZeroMemory(masterKey);
                 }
             }
@@ -754,10 +684,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Creates an encrypted password vault database file directly.
-        /// Uses the same encryption as the manifest for consistency and .NET 8.0 compatibility.
-        /// </summary>
         private async Task CreateKeePassDatabaseAsync(string dbPath, string? password, string? keyfilePath, IProgress<double>? progress = null)
         {
             await Task.Run(() =>
@@ -766,7 +692,6 @@ namespace PhantomVault.UI.ViewModels
                 {
                     progress?.Report(0.2);
 
-                    // Create initial empty password database structure
                     var database = new
                     {
                         Version = "1.0",
@@ -786,7 +711,6 @@ namespace PhantomVault.UI.ViewModels
 
                     progress?.Report(0.5);
 
-                    // Serialize to JSON
                     var jsonContent = System.Text.Json.JsonSerializer.Serialize(database, new System.Text.Json.JsonSerializerOptions
                     {
                         WriteIndented = true
@@ -794,14 +718,11 @@ namespace PhantomVault.UI.ViewModels
 
                     progress?.Report(0.7);
 
-                    // Encrypt using the same method as manifest
                     var encryptionService = new PhantomVault.Core.Services.EncryptionService();
 
-                    // Generate a random salt for key derivation (same as manifest)
                     byte[] salt = new byte[32];
                     System.Security.Cryptography.RandomNumberGenerator.Fill(salt);
 
-                    // Combine password and keyfile into secret (same as manifest)
                     string combinedSecret = password ?? string.Empty;
                     if (!string.IsNullOrEmpty(keyfilePath) && File.Exists(keyfilePath))
                     {
@@ -810,25 +731,20 @@ namespace PhantomVault.UI.ViewModels
                         Array.Clear(keyfileBytes, 0, keyfileBytes.Length);
                     }
 
-                    // Derive encryption key from combined secret
                     byte[] key = encryptionService.DeriveKey(combinedSecret.AsSpan(), salt);
 
-                    // Encrypt the JSON content
                     byte[] plaintextBytes = System.Text.Encoding.UTF8.GetBytes(jsonContent);
                     var encryptionResult = encryptionService.Encrypt(plaintextBytes, key);
 
-                    // Combine salt + nonce + tag + ciphertext for storage
-                    // Format: [32 bytes: Salt][12 bytes: Nonce][16 bytes: Tag][Variable: Ciphertext]
                     using (var ms = new MemoryStream())
                     {
-                        ms.Write(salt, 0, salt.Length);                             // 32 bytes
-                        ms.Write(encryptionResult.Nonce, 0, encryptionResult.Nonce.Length);   // 12 bytes
-                        ms.Write(encryptionResult.Tag, 0, encryptionResult.Tag.Length);       // 16 bytes
+                        ms.Write(salt, 0, salt.Length);
+                        ms.Write(encryptionResult.Nonce, 0, encryptionResult.Nonce.Length);
+                        ms.Write(encryptionResult.Tag, 0, encryptionResult.Tag.Length);
                         ms.Write(encryptionResult.Ciphertext, 0, encryptionResult.Ciphertext.Length);
                         File.WriteAllBytes(dbPath, ms.ToArray());
                     }
 
-                    // Clear sensitive data
                     Array.Clear(key, 0, key.Length);
                     Array.Clear(salt, 0, salt.Length);
                     Array.Clear(plaintextBytes, 0, plaintextBytes.Length);
@@ -842,11 +758,6 @@ namespace PhantomVault.UI.ViewModels
             });
         }
 
-        /// <summary>
-        /// Observable that determines when the vault can be created. The user
-        /// must select a drive, provide a vault name, and have a keyfile.
-        /// Password is optional but if provided, confirm password must match.
-        /// </summary>
         private IObservable<bool> CanCreateObservable()
         {
             return this.WhenAnyValue(
@@ -858,17 +769,15 @@ namespace PhantomVault.UI.ViewModels
                 vm => vm.KeyfilePath,
                 (busy, drive, vaultName, p1, p2, keyfile) =>
                 {
-                    // Required: not busy, have drive, vault name, and keyfile
+
                     if (busy || string.IsNullOrEmpty(drive) || string.IsNullOrWhiteSpace(vaultName) || string.IsNullOrEmpty(keyfile))
                         return false;
 
-                    // If password is provided, confirm password must match
                     if (!string.IsNullOrEmpty(p1) || !string.IsNullOrEmpty(p2))
                     {
                         return p1 == p2;
                     }
 
-                    // Password is optional, so can proceed without it
                     return true;
                 });
         }
@@ -877,11 +786,9 @@ namespace PhantomVault.UI.ViewModels
         {
             PasswordError = string.Empty;
 
-            // Password is optional, so empty is valid
             if (string.IsNullOrEmpty(_passphrase))
                 return;
 
-            // Check length
             if (_passphrase.Length < 8)
             {
                 PasswordError = "⚠ Password must be at least 8 characters";
@@ -894,28 +801,24 @@ namespace PhantomVault.UI.ViewModels
                 return;
             }
 
-            // Check for uppercase
             if (!_passphrase.Any(char.IsUpper))
             {
                 PasswordError = "⚠ Password must contain at least 1 uppercase letter";
                 return;
             }
 
-            // Check for lowercase
             if (!_passphrase.Any(char.IsLower))
             {
                 PasswordError = "⚠ Password must contain at least 1 lowercase letter";
                 return;
             }
 
-            // Check for digit
             if (!_passphrase.Any(char.IsDigit))
             {
                 PasswordError = "⚠ Password must contain at least 1 number";
                 return;
             }
 
-            // Check for special character
             if (!_passphrase.Any(c => !char.IsLetterOrDigit(c)))
             {
                 PasswordError = "⚠ Password must contain at least 1 special character";
@@ -927,18 +830,15 @@ namespace PhantomVault.UI.ViewModels
         {
             ConfirmPasswordError = string.Empty;
 
-            // If both are empty, it's valid (password is optional)
             if (string.IsNullOrEmpty(_passphrase) && string.IsNullOrEmpty(_confirmPassphrase))
                 return;
 
-            // If one is filled but not the other
             if (string.IsNullOrEmpty(_passphrase) != string.IsNullOrEmpty(_confirmPassphrase))
             {
                 ConfirmPasswordError = "⚠ Passwords must match";
                 return;
             }
 
-            // If both are filled, they must match
             if (_passphrase != _confirmPassphrase)
             {
                 ConfirmPasswordError = "⚠ Passwords do not match";
@@ -1023,25 +923,12 @@ namespace PhantomVault.UI.ViewModels
             set => this.RaiseAndSetIfChanged(ref _requiresHardwareToken, value);
         }
 
-        /// <summary>
-        /// When enabled, a time‑based one‑time password secret will be
-        /// generated and stored in the manifest. The user will need to
-        /// supply a TOTP code in addition to their passphrase when
-        /// unlocking the vault.
-        /// </summary>
         public bool UseTotp
         {
             get => _useTotp;
             set => this.RaiseAndSetIfChanged(ref _useTotp, value);
         }
 
-        /// <summary>
-        /// When enabled, a passkey (FIDO2/WebAuthn credential) will be
-        /// registered during provisioning. The manifest will record the
-        /// credential ID. An external service will prompt the user to
-        /// interact with their authenticator (e.g. Windows Hello, YubiKey)
-        /// during registration.
-        /// </summary>
         public bool UsePasskey
         {
             get => _usePasskey;
@@ -1179,18 +1066,17 @@ namespace PhantomVault.UI.ViewModels
                 {
                     Status = "Generating keyfile...";
                     var filePath = file.Path.LocalPath;
-                    // Generate 64KB keyfile using KeyfileGeneratorService
+
                     _keyfileGeneratorService.GenerateKeyfile(filePath, sizeKB: 64);
                     KeyfilePath = filePath;
                     Status = $"✓ Keyfile generated: {Path.GetFileName(filePath)}";
 
-                    // Clear status after 3 seconds
                     await Task.Delay(3000);
                     Status = string.Empty;
                 }
                 else
                 {
-                    // User cancelled - reset status
+
                     Status = string.Empty;
                 }
             }
@@ -1259,7 +1145,6 @@ namespace PhantomVault.UI.ViewModels
                     var importVm = new ImportViewModel();
                     var importWindow = new ImportWindow(importVm);
 
-                    // When the import window is closed (modal or non-modal), capture any selected KeePass file
                     void OnClosed(object? s, EventArgs e)
                     {
                         try
@@ -1275,7 +1160,7 @@ namespace PhantomVault.UI.ViewModels
                                 }
                             }
                         }
-                        catch { /* best effort */ }
+                        catch {  }
                         finally
                         {
                             if (importWindow != null)
@@ -1302,7 +1187,6 @@ namespace PhantomVault.UI.ViewModels
                         importWindow.Show();
                     }
 
-                    // If we showed modally, Closed will still fire and OnClosed will capture the selection
                 });
             }
             catch (Exception ex)
@@ -1323,9 +1207,6 @@ namespace PhantomVault.UI.ViewModels
                 Status = "Processing KeePass import...";
                 ImportStatus = "🔄 Importing credentials from KeePass database...";
 
-                // For security, we'll ask for the KeePass password
-                // In a real implementation, this would show a password dialog
-                // For now, we'll use the vault password as a default attempt
                 string keePassPassword = Passphrase ?? "default";
 
                 var progress = new Progress<int>(percent =>
@@ -1341,19 +1222,17 @@ namespace PhantomVault.UI.ViewModels
 
                 if (importResult.IsSuccess)
                 {
-                    // Save imported credentials to vault (encrypted)
+
                     try
                     {
-                        // Store vault database inside the hidden .phantom/vaults/ folder (not USB root)
+
                         var phantomVaultsDir = Path.Combine(SelectedDrive!, ".phantom", "vaults");
                         Directory.CreateDirectory(phantomVaultsDir);
                         var vaultDbPath = Path.Combine(phantomVaultsDir, "vault.db");
 
-                        // Obtain EncryptionService for credential encryption
                         var encService = (Avalonia.Application.Current as App)?.Services?.GetService(typeof(EncryptionService)) as EncryptionService
                             ?? throw new InvalidOperationException("EncryptionService not available for credential encryption.");
 
-                        // Read existing vault database if it exists (encrypted), otherwise create new
                         VaultDatabase vaultDb;
                         if (File.Exists(vaultDbPath))
                         {
@@ -1361,16 +1240,16 @@ namespace PhantomVault.UI.ViewModels
                         }
                         else
                         {
-                            // Check legacy location at USB root for backward compatibility
+
                             var legacyPath = Path.Combine(SelectedDrive!, "vault.db");
                             if (File.Exists(legacyPath))
                             {
-                                // Attempt to read legacy plaintext, then migrate
+
                                 try
                                 {
                                     var legacyJson = await File.ReadAllTextAsync(legacyPath);
                                     vaultDb = System.Text.Json.JsonSerializer.Deserialize<VaultDatabase>(legacyJson) ?? new VaultDatabase();
-                                    // Delete plaintext legacy file after reading
+
                                     File.Delete(legacyPath);
                                 }
                                 catch
@@ -1392,18 +1271,15 @@ namespace PhantomVault.UI.ViewModels
                             }
                         }
 
-                        // Initialize Groups if null
                         if (vaultDb.Groups == null)
                             vaultDb.Groups = new List<VaultGroup>();
 
-                        // Organize imported credentials by group
                         var credentialsByGroup = importResult.Credentials.GroupBy(c => c.Group ?? "Imported");
 
                         foreach (var grouping in credentialsByGroup)
                         {
                             var groupName = string.IsNullOrWhiteSpace(grouping.Key) ? "Imported" : grouping.Key;
-                            
-                            // Find existing group or create new one
+
                             var group = vaultDb.Groups.FirstOrDefault(g => g.Name == groupName);
                             if (group == null)
                             {
@@ -1417,7 +1293,6 @@ namespace PhantomVault.UI.ViewModels
                                 vaultDb.Groups.Add(group);
                             }
 
-                            // Add credentials to the group
                             if (group.Entries == null)
                                 group.Entries = new List<Credential>();
 
@@ -1427,7 +1302,6 @@ namespace PhantomVault.UI.ViewModels
                             }
                         }
 
-                        // Encrypt and save the updated vault database
                         EncryptVaultDatabase(vaultDbPath, vaultDb, encService);
 
                         ImportStatus = $"✓ Import Complete!\n\n" +
@@ -1447,7 +1321,6 @@ namespace PhantomVault.UI.ViewModels
 
                     Status = $"Vault created successfully. Imported {importResult.TotalEntries} credentials from KeePass.";
 
-                    // Log the import in audit trail (inside .phantom/audit/)
                     try
                     {
                         var auditDir = Path.Combine(SelectedDrive!, ".phantom", "audit");
@@ -1458,7 +1331,7 @@ namespace PhantomVault.UI.ViewModels
                     }
                     catch
                     {
-                        // Ignore audit errors
+
                     }
                 }
                 else
@@ -1479,18 +1352,11 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Sets the owner window for dialog display.
-        /// </summary>
         public void SetOwnerWindow(Window window)
         {
             _ownerWindow = window;
         }
 
-        /// <summary>
-        /// Reset transient state after an error to allow the setup flow to continue.
-        /// This clears status messages, resets busy flag and refreshes detected drives.
-        /// </summary>
         public async Task ResetAfterErrorAsync()
         {
             try
@@ -1498,7 +1364,6 @@ namespace PhantomVault.UI.ViewModels
                 Status = string.Empty;
                 IsBusy = false;
 
-                // Refresh drives from detector in background
                 await Task.Run(() =>
                 {
                     _drives.Clear();
@@ -1506,7 +1371,6 @@ namespace PhantomVault.UI.ViewModels
                         _drives.Add(d);
                 });
 
-                // Auto-select a drive if none selected
                 if (string.IsNullOrEmpty(SelectedDrive) && _drives.Count > 0)
                 {
                     SelectedDrive = _drives[0];
@@ -1514,7 +1378,7 @@ namespace PhantomVault.UI.ViewModels
             }
             catch
             {
-                // Best-effort reset; swallow errors
+
             }
         }
 
@@ -1527,11 +1391,6 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> ToggleShowPasswordCommand { get; }
         public ReactiveCommand<Unit, Unit> ToggleShowConfirmPasswordCommand { get; }
 
-        /// <summary>
-        /// Encrypts and writes a VaultDatabase to disk using AES-256-GCM.
-        /// Format: [12-byte nonce][16-byte tag][ciphertext]
-        /// Key is derived via HKDF from the vault manifest salt with domain label "phantom.vaultdb.encryption.v1".
-        /// </summary>
         private static void EncryptVaultDatabase(string path, VaultDatabase vaultDb, EncryptionService encService)
         {
             var json = System.Text.Json.JsonSerializer.Serialize(vaultDb, new System.Text.Json.JsonSerializerOptions
@@ -1540,21 +1399,18 @@ namespace PhantomVault.UI.ViewModels
             });
 
             var plaintext = Encoding.UTF8.GetBytes(json);
-            var nonce = new byte[12]; // AES-GCM standard nonce size
+            var nonce = new byte[12];
             RandomNumberGenerator.Fill(nonce);
 
-            // Derive a domain-specific key for vault database encryption via HKDF
-            // We use the encryption service's current key material hashed with a domain label
             byte[] key;
             using (var sha = SHA256.Create())
             {
-                // Use the file path as additional domain separation so each vault.db gets a unique key context
+
                 var info = Encoding.UTF8.GetBytes("phantom.vaultdb.encryption.v1:" + Path.GetDirectoryName(path));
-                var ikm = sha.ComputeHash(Encoding.UTF8.GetBytes(path)); // Deterministic from path
+                var ikm = sha.ComputeHash(Encoding.UTF8.GetBytes(path));
                 key = HKDF.DeriveKey(HashAlgorithmName.SHA256, ikm, 32, salt: nonce, info: info);
             }
 
-            // Use the encryption service for actual encryption to leverage its key material
             var ciphertext = new byte[plaintext.Length];
             var tag = new byte[16];
 
@@ -1566,24 +1422,18 @@ namespace PhantomVault.UI.ViewModels
             CryptographicOperations.ZeroMemory(key);
             CryptographicOperations.ZeroMemory(plaintext);
 
-            // Write: [nonce][tag][ciphertext]
             using var fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
             fs.Write(nonce);
             fs.Write(tag);
             fs.Write(ciphertext);
         }
 
-        /// <summary>
-        /// Reads and decrypts a VaultDatabase from disk (AES-256-GCM).
-        /// Returns null if decryption fails (e.g. corrupted or legacy plaintext).
-        /// </summary>
         private static VaultDatabase? DecryptVaultDatabase(string path, EncryptionService encService)
         {
             try
             {
                 var raw = File.ReadAllBytes(path);
 
-                // Minimum: 12 (nonce) + 16 (tag) + 1 (ciphertext)
                 if (raw.Length < 29)
                     return TryReadPlaintextVaultDb(path);
 
@@ -1591,7 +1441,6 @@ namespace PhantomVault.UI.ViewModels
                 var tag = raw.AsSpan(12, 16);
                 var ciphertext = raw.AsSpan(28);
 
-                // Re-derive the same key
                 byte[] key;
                 using (var sha = SHA256.Create())
                 {
@@ -1615,7 +1464,7 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (AuthenticationTagMismatchException)
             {
-                // Might be legacy plaintext format — try that
+
                 return TryReadPlaintextVaultDb(path);
             }
             catch (Exception ex)
@@ -1625,9 +1474,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Attempts to read a legacy plaintext JSON vault database for backward compatibility.
-        /// </summary>
         private static VaultDatabase? TryReadPlaintextVaultDb(string path)
         {
             try
@@ -1641,10 +1487,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Creates the hidden .phantom folder structure on the USB drive.
-        /// Returns the path to the .phantom folder.
-        /// </summary>
         private string CreatePhantomFolder(string usbDrive)
         {
             var phantomPath = Path.Combine(usbDrive, ".phantom");
@@ -1657,7 +1499,6 @@ namespace PhantomVault.UI.ViewModels
                 Directory.CreateDirectory(Path.Combine(phantomPath, "audit"));
                 Directory.CreateDirectory(Path.Combine(phantomPath, "backups"));
 
-                // Set hidden + system attributes
                 var dirInfo = new DirectoryInfo(phantomPath);
                 dirInfo.Attributes = FileAttributes.Hidden | FileAttributes.System;
             }
@@ -1665,16 +1506,12 @@ namespace PhantomVault.UI.ViewModels
             return phantomPath;
         }
 
-        /// <summary>
-        /// Generates an encrypted filename using SHA256 hash of the vault name.
-        /// This prevents vault names from being visible in the filesystem.
-        /// </summary>
         private string GetEncryptedFilename(string vaultName)
         {
             using (var sha256 = SHA256.Create())
             {
                 byte[] hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(vaultName));
-                // Convert to base64 and make filesystem-safe
+
                 return Convert.ToBase64String(hash)
                     .Replace("/", "_")
                     .Replace("+", "-")
@@ -1684,14 +1521,10 @@ namespace PhantomVault.UI.ViewModels
 
         #region User Preferences
 
-        /// <summary>
-        /// Loads user's default preferences for encryption and authentication.
-        /// </summary>
         private void LoadDefaultPreferences()
         {
             var settings = SettingsService.Load();
-            
-            // Set encryption level based on saved preference
+
             if (!string.IsNullOrEmpty(settings.PreferredEncryptionProfile))
             {
                 SelectedEncryptionLevel = settings.PreferredEncryptionProfile switch
@@ -1703,20 +1536,15 @@ namespace PhantomVault.UI.ViewModels
                 };
             }
 
-            // Set authentication defaults
             RequiresHardwareToken = settings.DefaultRequireHardwareToken;
             UseTotp = settings.DefaultUseTotp;
             UsePasskey = settings.DefaultUsePasskey;
         }
 
-        /// <summary>
-        /// Saves the user's authentication method choice for future reference.
-        /// </summary>
         private void SaveAuthenticationMethodPreference()
         {
             var settings = SettingsService.Load();
-            
-            // Determine which auth method was used
+
             if (UsePasskey)
                 settings.LastAuthenticationMethod = "Passkey";
             else if (UseTotp)
@@ -1726,12 +1554,10 @@ namespace PhantomVault.UI.ViewModels
             else
                 settings.LastAuthenticationMethod = "Password";
 
-            // Save current selections as new defaults
             settings.DefaultRequireHardwareToken = RequiresHardwareToken;
             settings.DefaultUseTotp = UseTotp;
             settings.DefaultUsePasskey = UsePasskey;
 
-            // Save encryption preference
             settings.PreferredEncryptionProfile = SelectedEncryptionLevel switch
             {
                 "Low (Fast)" => "Basic",
@@ -1744,9 +1570,6 @@ namespace PhantomVault.UI.ViewModels
             SettingsService.Save(settings);
         }
 
-        /// <summary>
-        /// Generates a cryptographically secure random password for key derivation.
-        /// </summary>
         private static string GenerateSecurePassword(int length)
         {
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[]{}|;:,.<>?";
@@ -1755,13 +1578,13 @@ namespace PhantomVault.UI.ViewModels
             {
                 rng.GetBytes(passwordBytes);
             }
-            
+
             var password = new char[length];
             for (int i = 0; i < length; i++)
             {
                 password[i] = chars[passwordBytes[i] % chars.Length];
             }
-            
+
             CryptographicOperations.ZeroMemory(passwordBytes);
             return new string(password);
         }
@@ -1769,3 +1592,4 @@ namespace PhantomVault.UI.ViewModels
         #endregion
     }
 }
+

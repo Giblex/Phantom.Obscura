@@ -14,8 +14,7 @@
         Classes="animated-window">
 
     <Grid RowDefinitions="Auto,*,Auto">
-        
-        <!-- Header -->
+
         <Border Grid.Row="0"
                 BorderBrush="{DynamicResource ControlBorderBrush}"
                 BorderThickness="0,0,0,1"
@@ -32,12 +31,10 @@
             </StackPanel>
         </Border>
 
-        <!-- Shortcuts List -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <Border Padding="30,20">
                 <StackPanel Spacing="20">
-                    
-                    <!-- General Actions -->
+
                     <Border BorderBrush="{DynamicResource ControlBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="{DynamicResource Radius.Md}"
@@ -47,12 +44,12 @@
                             <TextBlock Text="General Actions"
                                        FontSize="{StaticResource Type.H4.Size}"
                                        FontWeight="SemiBold"/>
-                            
+
                             <Grid ColumnDefinitions="*,Auto,120" RowDefinitions="Auto,Auto,Auto,Auto,Auto" Margin="0,10,0,0">
-                                <!-- Row 0: Lock Vault -->
+
                                 <TextBlock Grid.Column="0" Grid.Row="0" Text="Lock Vault" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
                                 <TextBlock Grid.Column="1" Grid.Row="0" Text="→" FontSize="{StaticResource Type.Label.Size}" Margin="10,0" VerticalAlignment="Center"/>
-                                <Border Grid.Column="2" Grid.Row="0" 
+                                <Border Grid.Column="2" Grid.Row="0"
                                         BorderBrush="{DynamicResource ControlBorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="{DynamicResource Radius.Sm}"
@@ -61,10 +58,9 @@
                                     <TextBlock Text="Ctrl+L" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
 
-                                <!-- Row 1: Search -->
                                 <TextBlock Grid.Column="0" Grid.Row="1" Text="Search Credentials" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center" Margin="0,8,0,0"/>
                                 <TextBlock Grid.Column="1" Grid.Row="1" Text="→" FontSize="{StaticResource Type.Label.Size}" Margin="10,0" VerticalAlignment="Center"/>
-                                <Border Grid.Column="2" Grid.Row="1" 
+                                <Border Grid.Column="2" Grid.Row="1"
                                         BorderBrush="{DynamicResource ControlBorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="{DynamicResource Radius.Sm}"
@@ -74,10 +70,9 @@
                                     <TextBlock Text="Ctrl+F" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
 
-                                <!-- Row 2: New Entry -->
                                 <TextBlock Grid.Column="0" Grid.Row="2" Text="New Credential" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center" Margin="0,8,0,0"/>
                                 <TextBlock Grid.Column="1" Grid.Row="2" Text="→" FontSize="{StaticResource Type.Label.Size}" Margin="10,0" VerticalAlignment="Center"/>
-                                <Border Grid.Column="2" Grid.Row="2" 
+                                <Border Grid.Column="2" Grid.Row="2"
                                         BorderBrush="{DynamicResource ControlBorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="{DynamicResource Radius.Sm}"
@@ -87,10 +82,9 @@
                                     <TextBlock Text="Ctrl+N" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
 
-                                <!-- Row 3: Settings -->
                                 <TextBlock Grid.Column="0" Grid.Row="3" Text="Open Settings" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center" Margin="0,8,0,0"/>
                                 <TextBlock Grid.Column="1" Grid.Row="3" Text="→" FontSize="{StaticResource Type.Label.Size}" Margin="10,0" VerticalAlignment="Center"/>
-                                <Border Grid.Column="2" Grid.Row="3" 
+                                <Border Grid.Column="2" Grid.Row="3"
                                         BorderBrush="{DynamicResource ControlBorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="{DynamicResource Radius.Sm}"
@@ -100,10 +94,9 @@
                                     <TextBlock Text="Ctrl+," FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
 
-                                <!-- Row 4: Refresh -->
                                 <TextBlock Grid.Column="0" Grid.Row="4" Text="Refresh Vault" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center" Margin="0,8,0,0"/>
                                 <TextBlock Grid.Column="1" Grid.Row="4" Text="→" FontSize="{StaticResource Type.Label.Size}" Margin="10,0" VerticalAlignment="Center"/>
-                                <Border Grid.Column="2" Grid.Row="4" 
+                                <Border Grid.Column="2" Grid.Row="4"
                                         BorderBrush="{DynamicResource ControlBorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="{DynamicResource Radius.Sm}"
@@ -116,7 +109,6 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Credential Actions -->
                     <Border BorderBrush="{DynamicResource ControlBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="{DynamicResource Radius.Md}"
@@ -126,12 +118,12 @@
                             <TextBlock Text="Credential Actions"
                                        FontSize="{StaticResource Type.H4.Size}"
                                        FontWeight="SemiBold"/>
-                            
+
                             <Grid ColumnDefinitions="*,Auto,120" RowDefinitions="Auto,Auto,Auto,Auto,Auto" Margin="0,10,0,0">
-                                <!-- Copy Username -->
+
                                 <TextBlock Grid.Column="0" Grid.Row="0" Text="Copy Username" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
                                 <TextBlock Grid.Column="1" Grid.Row="0" Text="→" FontSize="{StaticResource Type.Label.Size}" Margin="10,0" VerticalAlignment="Center"/>
-                                <Border Grid.Column="2" Grid.Row="0" 
+                                <Border Grid.Column="2" Grid.Row="0"
                                         BorderBrush="{DynamicResource ControlBorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="{DynamicResource Radius.Sm}"
@@ -140,10 +132,9 @@
                                     <TextBlock Text="Ctrl+C" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
 
-                                <!-- Copy Password -->
                                 <TextBlock Grid.Column="0" Grid.Row="1" Text="Copy Password" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center" Margin="0,8,0,0"/>
                                 <TextBlock Grid.Column="1" Grid.Row="1" Text="→" FontSize="{StaticResource Type.Label.Size}" Margin="10,0" VerticalAlignment="Center"/>
-                                <Border Grid.Column="2" Grid.Row="1" 
+                                <Border Grid.Column="2" Grid.Row="1"
                                         BorderBrush="{DynamicResource ControlBorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="{DynamicResource Radius.Sm}"
@@ -153,10 +144,9 @@
                                     <TextBlock Text="Ctrl+Shift+C" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
 
-                                <!-- Edit Entry -->
                                 <TextBlock Grid.Column="0" Grid.Row="2" Text="Edit Selected Entry" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center" Margin="0,8,0,0"/>
                                 <TextBlock Grid.Column="1" Grid.Row="2" Text="→" FontSize="{StaticResource Type.Label.Size}" Margin="10,0" VerticalAlignment="Center"/>
-                                <Border Grid.Column="2" Grid.Row="2" 
+                                <Border Grid.Column="2" Grid.Row="2"
                                         BorderBrush="{DynamicResource ControlBorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="{DynamicResource Radius.Sm}"
@@ -166,10 +156,9 @@
                                     <TextBlock Text="Ctrl+E" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
 
-                                <!-- Delete Entry -->
                                 <TextBlock Grid.Column="0" Grid.Row="3" Text="Delete Selected Entry" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center" Margin="0,8,0,0"/>
                                 <TextBlock Grid.Column="1" Grid.Row="3" Text="→" FontSize="{StaticResource Type.Label.Size}" Margin="10,0" VerticalAlignment="Center"/>
-                                <Border Grid.Column="2" Grid.Row="3" 
+                                <Border Grid.Column="2" Grid.Row="3"
                                         BorderBrush="{DynamicResource ControlBorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="{DynamicResource Radius.Sm}"
@@ -179,10 +168,9 @@
                                     <TextBlock Text="Delete" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
 
-                                <!-- Toggle Favorite -->
                                 <TextBlock Grid.Column="0" Grid.Row="4" Text="Toggle Favorite" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center" Margin="0,8,0,0"/>
                                 <TextBlock Grid.Column="1" Grid.Row="4" Text="→" FontSize="{StaticResource Type.Label.Size}" Margin="10,0" VerticalAlignment="Center"/>
-                                <Border Grid.Column="2" Grid.Row="4" 
+                                <Border Grid.Column="2" Grid.Row="4"
                                         BorderBrush="{DynamicResource ControlBorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="{DynamicResource Radius.Sm}"
@@ -195,7 +183,6 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Navigation -->
                     <Border BorderBrush="{DynamicResource ControlBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="{DynamicResource Radius.Md}"
@@ -205,12 +192,12 @@
                             <TextBlock Text="Navigation"
                                        FontSize="{StaticResource Type.H4.Size}"
                                        FontWeight="SemiBold"/>
-                            
+
                             <Grid ColumnDefinitions="*,Auto,120" RowDefinitions="Auto,Auto,Auto,Auto" Margin="0,10,0,0">
-                                <!-- Next Entry -->
+
                                 <TextBlock Grid.Column="0" Grid.Row="0" Text="Next Entry" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
                                 <TextBlock Grid.Column="1" Grid.Row="0" Text="→" FontSize="{StaticResource Type.Label.Size}" Margin="10,0" VerticalAlignment="Center"/>
-                                <Border Grid.Column="2" Grid.Row="0" 
+                                <Border Grid.Column="2" Grid.Row="0"
                                         BorderBrush="{DynamicResource ControlBorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="{DynamicResource Radius.Sm}"
@@ -219,10 +206,9 @@
                                     <TextBlock Text="↓ / Tab" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
 
-                                <!-- Previous Entry -->
                                 <TextBlock Grid.Column="0" Grid.Row="1" Text="Previous Entry" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center" Margin="0,8,0,0"/>
                                 <TextBlock Grid.Column="1" Grid.Row="1" Text="→" FontSize="{StaticResource Type.Label.Size}" Margin="10,0" VerticalAlignment="Center"/>
-                                <Border Grid.Column="2" Grid.Row="1" 
+                                <Border Grid.Column="2" Grid.Row="1"
                                         BorderBrush="{DynamicResource ControlBorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="{DynamicResource Radius.Sm}"
@@ -232,10 +218,9 @@
                                     <TextBlock Text="↑ / Shift+Tab" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
 
-                                <!-- Jump to Search -->
                                 <TextBlock Grid.Column="0" Grid.Row="2" Text="Jump to Search Box" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center" Margin="0,8,0,0"/>
                                 <TextBlock Grid.Column="1" Grid.Row="2" Text="→" FontSize="{StaticResource Type.Label.Size}" Margin="10,0" VerticalAlignment="Center"/>
-                                <Border Grid.Column="2" Grid.Row="2" 
+                                <Border Grid.Column="2" Grid.Row="2"
                                         BorderBrush="{DynamicResource ControlBorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="{DynamicResource Radius.Sm}"
@@ -245,10 +230,9 @@
                                     <TextBlock Text="/" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
 
-                                <!-- Close Dialog -->
                                 <TextBlock Grid.Column="0" Grid.Row="3" Text="Close Window/Dialog" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center" Margin="0,8,0,0"/>
                                 <TextBlock Grid.Column="1" Grid.Row="3" Text="→" FontSize="{StaticResource Type.Label.Size}" Margin="10,0" VerticalAlignment="Center"/>
-                                <Border Grid.Column="2" Grid.Row="3" 
+                                <Border Grid.Column="2" Grid.Row="3"
                                         BorderBrush="{DynamicResource ControlBorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="{DynamicResource Radius.Sm}"
@@ -261,7 +245,6 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- View Options -->
                     <Border BorderBrush="{DynamicResource ControlBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="{DynamicResource Radius.Md}"
@@ -271,12 +254,12 @@
                             <TextBlock Text="View Options"
                                        FontSize="{StaticResource Type.H4.Size}"
                                        FontWeight="SemiBold"/>
-                            
+
                             <Grid ColumnDefinitions="*,Auto,120" RowDefinitions="Auto,Auto,Auto" Margin="0,10,0,0">
-                                <!-- Toggle List/Grid -->
+
                                 <TextBlock Grid.Column="0" Grid.Row="0" Text="Toggle List/Grid View" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
                                 <TextBlock Grid.Column="1" Grid.Row="0" Text="→" FontSize="{StaticResource Type.Label.Size}" Margin="10,0" VerticalAlignment="Center"/>
-                                <Border Grid.Column="2" Grid.Row="0" 
+                                <Border Grid.Column="2" Grid.Row="0"
                                         BorderBrush="{DynamicResource ControlBorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="{DynamicResource Radius.Sm}"
@@ -285,10 +268,9 @@
                                     <TextBlock Text="Ctrl+G" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
 
-                                <!-- Show Favorites -->
                                 <TextBlock Grid.Column="0" Grid.Row="1" Text="Show Favorites Only" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center" Margin="0,8,0,0"/>
                                 <TextBlock Grid.Column="1" Grid.Row="1" Text="→" FontSize="{StaticResource Type.Label.Size}" Margin="10,0" VerticalAlignment="Center"/>
-                                <Border Grid.Column="2" Grid.Row="1" 
+                                <Border Grid.Column="2" Grid.Row="1"
                                         BorderBrush="{DynamicResource ControlBorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="{DynamicResource Radius.Sm}"
@@ -298,10 +280,9 @@
                                     <TextBlock Text="Ctrl+Shift+F" FontSize="{StaticResource Type.Small.Size}" FontFamily="Consolas" HorizontalAlignment="Center"/>
                                 </Border>
 
-                                <!-- Toggle Theme -->
                                 <TextBlock Grid.Column="0" Grid.Row="2" Text="Toggle Dark/Light Theme" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center" Margin="0,8,0,0"/>
                                 <TextBlock Grid.Column="1" Grid.Row="2" Text="→" FontSize="{StaticResource Type.Label.Size}" Margin="10,0" VerticalAlignment="Center"/>
-                                <Border Grid.Column="2" Grid.Row="2" 
+                                <Border Grid.Column="2" Grid.Row="2"
                                         BorderBrush="{DynamicResource ControlBorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="{DynamicResource Radius.Sm}"
@@ -314,7 +295,6 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Note -->
                     <Border BorderBrush="{DynamicResource InfoBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="{DynamicResource Radius.Md}"
@@ -333,7 +313,6 @@
             </Border>
         </ScrollViewer>
 
-        <!-- Footer -->
         <Border Grid.Row="2"
                 BorderBrush="{DynamicResource ControlBorderBrush}"
                 BorderThickness="0,1,0,0"
@@ -346,5 +325,4 @@
         </Border>
     </Grid>
 </Window>
-
 

@@ -3,6 +3,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const statusText = document.getElementById('status-text');
   const btnFill = document.getElementById('btn-fill');
 
+  // Apply the cached, non-secret theme/UI prefs (mirrored from the desktop app).
+  try {
+    chrome.storage.local.get('phantomSyncState', (items) => {
+      const sync = items && items.phantomSyncState;
+      if (sync && sync.themeId) {
+        document.documentElement.setAttribute('data-theme', sync.themeId);
+      }
+    });
+  } catch {
+    /* storage unavailable; popup still works without theming */
+  }
+
   function setStatus(state, text) {
     dot.className = `dot ${state}`;
     statusText.textContent = text;

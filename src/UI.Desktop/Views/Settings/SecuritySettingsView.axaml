@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="PhantomVault.UI.Views.Settings.SecuritySettingsView">
     <StackPanel Spacing="{StaticResource Space.Xl}"
-                Margin="0,0,30,60">
+                Margin="0,0,0,60">
         <TextBlock Text="Security Settings"
                    FontSize="{StaticResource Type.H3.Size}"
                    FontWeight="SemiBold"
@@ -24,10 +24,6 @@
                 <CheckBox Content="Require hardware-token presence check"
                           IsChecked="{Binding RequireHardwareToken, Mode=TwoWay}"
                           ToolTip.Tip="Require the supported hardware-token presence check during unlock on compatible Windows builds"/>
-
-                <CheckBox Content="Require keyfile"
-                          IsChecked="{Binding RequireKeyfile, Mode=TwoWay}"
-                          ToolTip.Tip="Require a keyfile in addition to password"/>
 
                 <StackPanel Spacing="{StaticResource Space.Sm}">
                     <TextBlock Text="Idle timeout (minutes):"
@@ -225,7 +221,7 @@
                         Width="240"
                         HorizontalAlignment="Left"
                         Classes="liquid-glass"
-                        Command="{Binding $parent[Window].DataContext.ChangeMasterPasswordCommand}"
+                        Command="{Binding ChangeMasterPasswordCommand}"
                         ToolTip.Tip="Set a master password if you don't have one yet, or change your existing one. Password is optional — keyfile is mandatory."/>
             </StackPanel>
         </Border>
@@ -263,7 +259,7 @@
                         <TextBlock Text="Current keyfile"
                                    FontSize="{StaticResource Type.Tiny.Size}"
                                    Foreground="{DynamicResource MutedTextBrush}"/>
-                        <TextBlock Text="{Binding $parent[Window].DataContext.CurrentKeyfileDisplay}"
+                        <TextBlock Text="{Binding CurrentKeyfileDisplay}"
                                    FontSize="{StaticResource Type.Small.Size}"
                                    Foreground="{DynamicResource PrimaryTextBrush}"
                                    TextWrapping="Wrap"/>
@@ -275,25 +271,75 @@
                             Margin="0,0,10,10"
                             Padding="14,8"
                             Classes="liquid-glass"
-                            Command="{Binding $parent[Window].DataContext.BackupKeyfileCommand}"
+                            Command="{Binding BackupKeyfileCommand}"
                             ToolTip.Tip="Save a copy of your current keyfile to a safe location"/>
                     <Button Content="Regenerate Keyfile"
                             Margin="0,0,10,10"
                             Padding="14,8"
                             Classes="liquid-glass"
-                            Command="{Binding $parent[Window].DataContext.RegenerateKeyfileCommand}"
+                            Command="{Binding RegenerateKeyfileCommand}"
                             ToolTip.Tip="Generate a brand-new keyfile and re-encrypt the vault (password unchanged)"/>
                     <Button Content="Change to Existing Keyfile…"
                             Margin="0,0,10,10"
                             Padding="14,8"
                             Classes="liquid-glass"
-                            Command="{Binding $parent[Window].DataContext.ChangeKeyfileCommand}"
+                            Command="{Binding ChangeKeyfileCommand}"
                             ToolTip.Tip="Re-encrypt the vault using a keyfile you select"/>
                 </WrapPanel>
 
                 <TextBlock Text="⚠ Regenerating or changing the keyfile re-encrypts your vault. Make a backup of the new keyfile immediately afterwards."
                            FontSize="{StaticResource Type.Tiny.Size}"
                            Foreground="{DynamicResource WarningBrush}"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+
+        <Border Classes="fade-in stagger-5"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
+                Padding="20"
+                HorizontalAlignment="Stretch">
+            <StackPanel Spacing="12">
+                <TextBlock Text="Fast Unlock"
+                           FontSize="{StaticResource Type.Body.Size}"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <TextBlock Text="Reduces the Argon2id parameters used to derive the manifest decryption key from 256 MiB / 6 iterations down to 64 MiB / 3 iterations. Unlock is noticeably faster; offline brute-force resistance is weaker. The mandatory USB keyfile still applies."
+                           FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
+
+                <CheckBox Content="Use Fast Unlock for this vault"
+                          IsChecked="{Binding UseFastUnlock, Mode=TwoWay}"
+                          ToolTip.Tip="Persists your preference. Apply changes to the vault using the button below."/>
+
+                <Border Background="{DynamicResource WindowBackgroundBrush}"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{StaticResource Radius.Md}"
+                        Padding="12,10">
+                    <StackPanel Spacing="3">
+                        <TextBlock Text="Current manifest tier"
+                                   FontSize="{StaticResource Type.Tiny.Size}"
+                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                        <TextBlock Text="{Binding CurrentManifestKdfDisplay}"
+                                   FontSize="{StaticResource Type.Small.Size}"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    </StackPanel>
+                </Border>
+
+                <Button Content="Apply to this vault now"
+                        Padding="14,8"
+                        Classes="liquid-glass"
+                        IsEnabled="{Binding FastUnlockNeedsReKey}"
+                        Command="{Binding ApplyFastUnlockReKeyCommand}"
+                        ToolTip.Tip="Re-encrypt the manifest under the selected tier. Only the manifest is touched — your credentials and vault database are not re-encrypted."/>
+
+                <TextBlock Text="The vault database itself is always encrypted at the higher Standard tier — this toggle only changes manifest decryption, so applying it never re-encrypts your credentials."
+                           FontSize="{StaticResource Type.Tiny.Size}"
+                           Foreground="{DynamicResource MutedTextBrush}"
                            TextWrapping="Wrap"/>
             </StackPanel>
         </Border>

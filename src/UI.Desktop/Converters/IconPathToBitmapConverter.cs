@@ -20,11 +20,11 @@ namespace PhantomVault.UI.Converters
             {
                 try
                 {
-                    // Resolve relative paths (e.g. /Assets/Visuals/...) to absolute
+
                     var resolved = ResolveIconPath(s);
                     if (resolved != null && File.Exists(resolved))
                     {
-                        // Check cache first
+
                         lock (_lock)
                         {
                             if (_cache.TryGetValue(resolved, out var cachedBitmap))
@@ -33,18 +33,15 @@ namespace PhantomVault.UI.Converters
                             }
                         }
 
-                        // Load bitmap
                         var bitmap = new Bitmap(resolved);
 
-                        // Cache it
                         lock (_lock)
                         {
                             _cache[resolved] = bitmap;
 
-                            // Limit cache size to prevent memory issues
                             if (_cache.Count > 500)
                             {
-                                // Remove oldest entries (simple approach: clear half)
+
                                 var toRemove = _cache.Keys.Take(_cache.Count / 2).ToList();
                                 foreach (var key in toRemove)
                                 {
@@ -60,7 +57,7 @@ namespace PhantomVault.UI.Converters
                 catch (Exception ex)
                 {
                     System.Diagnostics.Debug.WriteLine($"[IconPathToBitmapConverter] Failed to load {s}: {ex.Message}");
-                    // Return null to allow fallback icon display
+
                 }
             }
             return null;
@@ -71,16 +68,11 @@ namespace PhantomVault.UI.Converters
             return AvaloniaProperty.UnsetValue;
         }
 
-        /// <summary>
-        /// Resolves a relative icon path (starting with /) to an absolute path
-        /// using AppContext.BaseDirectory. Returns the original path if already absolute.
-        /// </summary>
         private static string? ResolveIconPath(string path)
         {
             if (File.Exists(path))
                 return path;
 
-            // Resolve paths like /Assets/Visuals/... relative to the app base directory
             if (path.StartsWith("/") || path.StartsWith("\\"))
             {
                 var resolved = Path.Combine(AppContext.BaseDirectory, path.TrimStart('/', '\\'));
@@ -92,3 +84,4 @@ namespace PhantomVault.UI.Converters
         }
     }
 }
+

@@ -31,13 +31,9 @@ namespace PhantomVault.UI.Views
             AttachedToVisualTree += OnAttachedToVisualTree;
         }
 
-        /// <summary>
-        /// One-time setup: create the TranslateTransform, wire grab handle events,
-        /// and subscribe to VaultViewModel.IsShowingDashboard changes.
-        /// </summary>
         private void OnAttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
         {
-            // Find the hosting "DashboardSheet" Panel in VaultWindow
+
             if (_sheetTranslate == null)
             {
                 var sheetPanel = FindDashboardSheet();
@@ -45,13 +41,11 @@ namespace PhantomVault.UI.Views
                 {
                     _sheetTranslate = new TranslateTransform();
                     sheetPanel.RenderTransform = _sheetTranslate;
-                    // Start off-screen above (behind header)
+
                     _sheetTranslate.Y = -1200;
                 }
             }
 
-            // Attach a BlurEffect to the underlying CredentialList so we can animate
-            // its Radius in sync with the sheet slide (true backdrop blur).
             if (_backdropBlur == null)
             {
                 var credList = FindCredentialList();
@@ -62,7 +56,6 @@ namespace PhantomVault.UI.Views
                 }
             }
 
-            // Wire grab handle events (once)
             if (!_grabWired)
             {
                 var grabHandle = this.FindControl<Border>("GrabHandle");
@@ -76,7 +69,6 @@ namespace PhantomVault.UI.Views
                 }
             }
 
-            // Subscribe to VaultViewModel.IsShowingDashboard property changes (once)
             if (!_vmWired)
             {
                 _vaultVm = FindVaultViewModel();
@@ -88,9 +80,6 @@ namespace PhantomVault.UI.Views
             }
         }
 
-        /// <summary>
-        /// Reacts to VaultViewModel.IsShowingDashboard changes — animates open/close.
-        /// </summary>
         private void OnVaultVmPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName != nameof(ViewModels.VaultViewModel.IsShowingDashboard)) return;
@@ -98,7 +87,7 @@ namespace PhantomVault.UI.Views
 
             if (_vaultVm.IsShowingDashboard)
             {
-                // Dashboard opened — slide down from above
+
                 var h = Bounds.Height > 0 ? Bounds.Height : 1200;
                 _sheetTranslate.Y = -h;
                 _isAnimating = false;
@@ -107,8 +96,7 @@ namespace PhantomVault.UI.Views
             }
             else
             {
-                // Dashboard closed (e.g. sidebar button pressed) — glide up to close
-                // Only animate if the sheet is reasonably visible (not already closed by drag)
+
                 if (_sheetTranslate.Y > -10 && !_isAnimating)
                 {
                     var h = Bounds.Height > 0 ? Bounds.Height : 1200;
@@ -144,7 +132,7 @@ namespace PhantomVault.UI.Views
 
         private Control? FindCredentialList()
         {
-            // Walk to window root, then descend to the named CredentialList control.
+
             Visual? root = (Visual?)this.GetVisualRoot();
             if (root == null) return null;
             return FindByName(root, "CredentialList") as Control;
@@ -167,8 +155,7 @@ namespace PhantomVault.UI.Views
             if (sender is not Border handle) return;
 
             _isDragging = true;
-            // Use position relative to window root for stable coordinates —
-            // GetPosition(this) drifts because 'this' moves with the TranslateTransform.
+
             var root = (Visual?)this.GetVisualRoot();
             _dragStartY = root != null ? e.GetPosition(root).Y : e.GetPosition(this).Y;
             _dragStartTranslateY = _sheetTranslate.Y;
@@ -187,11 +174,9 @@ namespace PhantomVault.UI.Views
             var currentY = root != null ? e.GetPosition(root).Y : e.GetPosition(this).Y;
             var delta = currentY - _dragStartY;
 
-            // Track velocity for fling gesture
             _dragVelocity = currentY - _lastDragY;
             _lastDragY = currentY;
 
-            // Only allow dragging upward (negative Y = dismissing toward top)
             var newY = Math.Min(0, _dragStartTranslateY + delta);
             _sheetTranslate.Y = newY;
         }
@@ -218,20 +203,18 @@ namespace PhantomVault.UI.Views
             var height = Bounds.Height;
             if (height <= 0) height = 800;
 
-            // progress: 1 = fully open (Y=0), 0 = fully closed (Y=-height)
             var progress = 1.0 - Math.Abs(_sheetTranslate.Y) / height;
 
-            // Fling detection: fast upward swipe dismisses regardless of position
             var isFling = _dragVelocity < -12;
 
             if (!isFling && progress > 0.45)
             {
-                // Snap open with spring
+
                 AnimateSheetTo(0, 420);
             }
             else
             {
-                // Snap closed — animate up off screen then update ViewModel
+
                 var closeDuration = isFling ? 280 : 350;
                 AnimateSheetTo(-height, closeDuration, onComplete: () =>
                 {
@@ -241,9 +224,6 @@ namespace PhantomVault.UI.Views
             }
         }
 
-        /// <summary>
-        /// iOS-style spring ease: fast start, smooth deceleration with subtle overshoot.
-        /// </summary>
         private static double SpringEase(double t)
         {
             return 1.0 - Math.Exp(-5.5 * t) * Math.Cos(1.8 * t);
@@ -286,10 +266,6 @@ namespace PhantomVault.UI.Views
             onComplete?.Invoke();
         }
 
-        /// <summary>
-        /// Animates the underlying CredentialList's BlurEffect.Radius from its current
-        /// value to <paramref name="targetRadius"/>, in sync with the sheet slide.
-        /// </summary>
         private async void AnimateBackdropBlurTo(double targetRadius, double durationMs)
         {
             if (_backdropBlur == null) return;
@@ -319,3 +295,4 @@ namespace PhantomVault.UI.Views
         }
     }
 }
+

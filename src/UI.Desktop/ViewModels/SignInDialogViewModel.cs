@@ -13,17 +13,9 @@ using Avalonia;
 using Avalonia.Layout;
 using Avalonia.Media;
 
-// Note: This ViewModel is constructed by the XAML designer in some files.
-// To keep previews working we provide a parameterless constructor that
-// creates lightweight service instances when running in design mode. In
-// normal app code the parameterized constructor should be used.
-
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// ViewModel for the sign-in dialog that prompts for vault passphrase and optional keyfile
-    /// to unlock an existing encrypted vault container.
-    /// </summary>
+
     public class SignInDialogViewModel : ReactiveObject
     {
         private readonly ManifestService? _manifestService;
@@ -33,7 +25,7 @@ namespace PhantomVault.UI.ViewModels
 
         public SignInDialogViewModel()
         {
-            // Designer-friendly: services are not available in design mode.
+
             _manifestService = null;
             _vaultService = null;
             _zkVaultService = null;
@@ -66,10 +58,9 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> SignInCommand { get; }
         public ReactiveCommand<Unit, Unit> CancelCommand { get; }
 
-
         private async Task SignInAsync()
         {
-            // Validate inputs
+
             if (string.IsNullOrEmpty(ManifestPath) || !File.Exists(ManifestPath))
             {
                 await ShowDialogMessage("Manifest Missing", "Please select a valid vault file (.pvault or .manifest) on the USB drive.");
@@ -90,14 +81,12 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Attempt to read the manifest using provided credentials (non-throwing)
                 if (!_manifestService.TryReadManifest(ManifestPath, string.IsNullOrEmpty(Passphrase) ? null : Passphrase, KeyfilePath, out var manifest, out var manifestError))
                 {
                     await ShowDialogMessage("Manifest Error", manifestError ?? "Failed to read manifest. Please check the file and try again.");
                     return;
                 }
 
-                // Optional: check key rotation status
                 var services = (Avalonia.Application.Current as App)?.Services;
                 var rekeyService = services?.GetService(typeof(RekeyService)) as RekeyService;
                 if (rekeyService != null && manifest != null && rekeyService.IsRotationRequired(manifest))
@@ -105,7 +94,7 @@ namespace PhantomVault.UI.ViewModels
                     var rotate = await ShowRotationPrompt(manifest);
                     if (rotate)
                     {
-                        // Use legacy sync hook to avoid breaking existing flows
+
                         bool rekeyOk = rekeyService.RekeyVault(
                             ManifestPath,
                             Passphrase ?? string.Empty,
@@ -121,7 +110,6 @@ namespace PhantomVault.UI.ViewModels
                     }
                 }
 
-                // Use container path from manifest to mount the vault
                 string containerPath = manifest!.ContainerPath;
                 if (string.IsNullOrEmpty(containerPath) || !File.Exists(containerPath))
                 {
@@ -129,12 +117,9 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Step 1: Mount the vault container
                 string mountName = manifest.VaultName ?? Path.GetFileNameWithoutExtension(containerPath);
                 string mountPath = await _vaultService.MountVaultAsync(containerPath, mountName, Passphrase ?? string.Empty, KeyfilePath);
 
-                // Step 2: Unlock the zero-knowledge vault service (for inner encryption layer)
-                // This derives the master key using Argon2id + DPAPI pepper + device binding
                 bool unlocked = await _zkVaultService.UnlockMasterKeyAsync(
                     Passphrase ?? string.Empty,
                     KeyfilePath,
@@ -143,24 +128,20 @@ namespace PhantomVault.UI.ViewModels
 
                 if (!unlocked)
                 {
-                    // Unlock failed - dismount the container and show error
+
                     await _vaultService.DismountVaultAsync(mountName);
                     await ShowDialogMessage("Unlock Failed", "Failed to unlock the encrypted vault. Please check your credentials.");
                     return;
                 }
 
-                // Success: Both layers unlocked
-                // The vault.pvault file inside the mounted container can now be decrypted using ZkVaultService
                 await ShowDialogMessage("Unlocked", $"Vault '{mountName}' successfully unlocked.\n\nContainer mounted at: {mountPath}\nZero-knowledge encryption layer unlocked.");
 
-                // Close the owner window if present
                 _ownerWindow?.Close();
 
-                // NOTE: leave ManifestPath/KeyfilePath/Passphrase set so callers (e.g., VaultViewModel) can read and pass them to other windows.
             }
             catch (Exception ex)
             {
-                // Ensure ZK service is locked on error
+
                 if (_zkVaultService?.IsUnlocked == true)
                 {
                     await _zkVaultService.LockAndWipeKeysAsync();
@@ -169,7 +150,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-
         private void Cancel()
         {
             _ownerWindow?.Close();
@@ -177,7 +157,7 @@ namespace PhantomVault.UI.ViewModels
 
         private async Task ShowDialogMessage(string title, string message)
         {
-            // Use a simple message box (DialogService exists elsewhere; to avoid circular deps we'll use Avalonia Window here)
+
             if (_ownerWindow != null)
             {
                 var dialog = new Window
@@ -245,3 +225,4 @@ namespace PhantomVault.UI.ViewModels
         }
     }
 }
+

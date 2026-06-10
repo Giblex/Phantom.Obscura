@@ -11,13 +11,13 @@
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource WindowBackgroundBrush}"
         Classes="animated-window">
-    
+
     <Design.DataContext>
         <vm:AddCategoryDialogViewModel/>
     </Design.DataContext>
 
     <Grid RowDefinitions="Auto,Auto,*,Auto">
-        <!-- Header -->
+
         <Border Grid.Row="0"
                 Background="{DynamicResource HeaderBackgroundBrush}"
                 Padding="20,16"
@@ -29,7 +29,6 @@
                        Foreground="{DynamicResource HeaderTextBrush}"/>
         </Border>
 
-        <!-- Source category selector -->
         <Border Grid.Row="1" Padding="20,16" Background="{DynamicResource ContentBackgroundBrush}">
             <StackPanel Spacing="8">
                 <TextBlock Text="Select source category to populate from:"
@@ -42,9 +41,8 @@
             </StackPanel>
         </Border>
 
-        <!-- Two-column drag-drop area -->
         <Grid Grid.Row="2" ColumnDefinitions="*,*" Margin="20">
-            <!-- Left column: Source entries -->
+
             <Border Grid.Column="0"
                     Background="{DynamicResource ContentBackgroundBrush}"
                     BorderBrush="{DynamicResource ControlBorderBrush}"
@@ -86,7 +84,6 @@
                 </Grid>
             </Border>
 
-            <!-- Right column: New category destination -->
             <Border Grid.Column="1"
                     Background="{DynamicResource ContentBackgroundBrush}"
                     BorderBrush="{DynamicResource AccentBrush}"
@@ -129,7 +126,6 @@
             </Border>
         </Grid>
 
-        <!-- Bottom action bar -->
         <Border Grid.Row="3"
                 Background="{DynamicResource WindowBackgroundBrush}"
                 BorderBrush="{DynamicResource ControlBorderBrush}"
@@ -165,3 +161,4 @@
         </Border>
     </Grid>
 </Window>
+

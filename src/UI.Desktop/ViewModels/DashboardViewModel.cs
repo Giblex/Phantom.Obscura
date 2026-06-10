@@ -14,6 +14,7 @@ using PhantomVault.Core.Models;
 using PhantomVault.Core.Services;
 using PhantomVault.Core.Services.Security;
 using PhantomVault.UI.Services;
+using PhantomVault.UI.Messages;
 using ReactiveUI;
 using Serilog;
 
@@ -21,8 +22,6 @@ namespace PhantomVault.UI.ViewModels
 {
     public class DashboardViewModel : ReactiveObject
     {
-        // Note: These services would be injected in a real implementation
-        // For now, making the ViewModel simpler without constructor dependencies
 
         private string _welcomeMessage = string.Empty;
         private int _totalCredentials;
@@ -215,7 +214,6 @@ namespace PhantomVault.UI.ViewModels
         public ObservableCollection<CredentialViewModel> QuickAccessCredentials { get; }
         public ObservableCollection<CategoryViewModel> Categories { get; }
 
-        /// <summary>Whether the category pin/unpin options panel is open.</summary>
         public bool IsCategoryPinOptionsOpen
         {
             get => _isCategoryPinOptionsOpen;
@@ -278,16 +276,8 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<CategoryViewModel, Unit> NavigateToCategoryCommand { get; }
         public ReactiveCommand<CategoryViewModel, Unit> ToggleCategoryPinCommand { get; }
 
-        /// <summary>
-        /// Reference to the owner window for clipboard access.
-        /// Set by VaultViewModel when creating this instance.
-        /// </summary>
         public Window? OwnerWindow { get; set; }
 
-        /// <summary>
-        /// Reference to the clipboard guard for rate limiting.
-        /// Set by VaultViewModel when creating this instance.
-        /// </summary>
         public IClipboardGuard? ClipboardGuard { get; set; }
 
         public Action<string>? NavigateToFilter { get; set; }
@@ -310,18 +300,15 @@ namespace PhantomVault.UI.ViewModels
         {
             try
             {
-                // Load welcome message
+
                 var timeOfDay = DateTime.Now.Hour switch
                 {
                     < 12 => "Good morning",
                     < 18 => "Good afternoon",
                     _ => "Good evening"
                 };
-                WelcomeMessage = $"{timeOfDay}! Your vault is secure.";
+                WelcomeMessage = $"{timeOfDay} — here's your vault overview.";
 
-                // Statistics (TotalCredentials, TotalCategories, TwoFactorCoverage)
-                // are computed in LoadQuickAccessCredentials when VaultViewModel
-                // passes the real credential and category collections after unlock.
             }
             catch (Exception ex)
             {
@@ -374,10 +361,6 @@ namespace PhantomVault.UI.ViewModels
             HasFavorites = FavoriteCredentials.Any();
         }
 
-        /// <summary>
-        /// Loads the quick access password tiles from the vault's credential view models.
-        /// Picks the most recently used credentials, falling back to most recently updated.
-        /// </summary>
         public void LoadQuickAccessCredentials(
             IEnumerable<CredentialViewModel> credentials,
             IEnumerable<CategoryViewModel> categories)
@@ -393,10 +376,6 @@ namespace PhantomVault.UI.ViewModels
 
                 var credList = credentials.ToList();
 
-                // Pick up to 8 most-used credentials, prioritizing:
-                // 1. Recently used (LastUsedUtc descending)
-                // 2. Favorites first as tiebreaker
-                // 3. Most recently updated as final fallback
                 var topCredentials = credList
                     .Where(c => c.EntryType == EntryType.Password || c.EntryType == EntryType.WiFi || c.EntryType == EntryType.ApiKey)
                     .OrderByDescending(c => c.GetCredential().LastUsedUtc ?? DateTime.MinValue)
@@ -410,7 +389,6 @@ namespace PhantomVault.UI.ViewModels
 
                 HasQuickAccessCredentials = QuickAccessCredentials.Count > 0 || Categories.Any(c => c.IsPinned);
 
-                // Compute dashboard statistics from the real data
                 TotalCredentials = credList.Count;
                 TotalCategories = Categories.Count;
                 var passwordCreds = credList.Where(c => c.EntryType == EntryType.Password).ToList();
@@ -418,7 +396,6 @@ namespace PhantomVault.UI.ViewModels
                     ? (int)Math.Round(100.0 * passwordCreds.Count(c => c.HasTotpSecret) / passwordCreds.Count)
                     : 0;
 
-                // Load recent activity and favorites from underlying credential models
                 var allCredentials = credList.Select(c => c.GetCredential()).ToList();
                 LoadRecentActivityAsync(allCredentials);
                 LoadFavoritesAsync(allCredentials);
@@ -450,7 +427,6 @@ namespace PhantomVault.UI.ViewModels
             {
                 if (credential == null) return;
 
-                // Check clipboard guard
                 if (ClipboardGuard != null && !ClipboardGuard.CanCopy())
                 {
                     CopiedFeedback = "Too many clipboard ops - wait";
@@ -463,7 +439,6 @@ namespace PhantomVault.UI.ViewModels
 
                 if (clipboard == null) return;
 
-                // Get the secret based on entry type
                 var secret = credential.EntryType switch
                 {
                     EntryType.WiFi => credential.WiFiPassword,
@@ -482,7 +457,6 @@ namespace PhantomVault.UI.ViewModels
 
                 CopiedFeedback = $"Copied: {credential.Title}";
 
-                // Clear feedback after 2 seconds
                 _feedbackCts?.Cancel();
                 _feedbackCts = new System.Threading.CancellationTokenSource();
                 var token = _feedbackCts.Token;
@@ -497,7 +471,6 @@ namespace PhantomVault.UI.ViewModels
                     catch (OperationCanceledException) { }
                 });
 
-                // Schedule clipboard clearing based on user settings
                 var settings = SettingsService.Load();
                 var clearDelay = settings.GetClipboardClearDelay();
                 if (clearDelay.HasValue)
@@ -556,35 +529,35 @@ namespace PhantomVault.UI.ViewModels
 
         private async Task AddPasswordAsync()
         {
-            // Navigate to all passwords view
+
             RequestNavigation("Password");
             await Task.CompletedTask;
         }
 
         private async Task OpenGeneratorAsync()
         {
-            // Navigate to password generator - for now go to all passwords
+
             RequestNavigation("All");
             await Task.CompletedTask;
         }
 
         private async Task OpenImportAsync()
         {
-            // Navigate to all items view where import functionality is available
+
             RequestNavigation("All");
             await Task.CompletedTask;
         }
 
         private async Task OpenPasswordHealthAsync()
         {
-            // Navigate to all passwords for health check
+
             RequestNavigation("Password");
             await Task.CompletedTask;
         }
 
         private void ViewAllActivity()
         {
-            // Navigate to all items view
+
             RequestNavigation("All");
         }
 
@@ -598,6 +571,35 @@ namespace PhantomVault.UI.ViewModels
             if (!IsRecoveryAvailable)
             {
                 CopiedFeedback = RecoveryStatus;
+                return;
+            }
+
+            // Recovery Activation gate — enforce required possession/identity factor counts
+            // from the post-unlock session. If unmet, route the user to Settings → Recovery
+            // Activation rather than launching Recovery.
+            try
+            {
+                var sp = (Avalonia.Application.Current as App)?.Services;
+                var store = sp?.GetService(typeof(PhantomVault.UI.Services.RecoveryActivationPolicyStore))
+                    as PhantomVault.UI.Services.RecoveryActivationPolicyStore;
+                var session = sp?.GetService(typeof(PhantomVault.UI.Services.RecoveryActivationSessionState))
+                    as PhantomVault.UI.Services.RecoveryActivationSessionState;
+
+                var policy = store?.Load();
+                var snapshot = session?.Snapshot();
+                var gate = PhantomVault.Core.Services.RecoveryActivationPolicyEvaluator.Evaluate(policy, snapshot);
+                if (!gate.Allowed)
+                {
+                    RecoveryStatus = gate.Reason;
+                    CopiedFeedback = gate.Reason;
+                    MessageBus.Current.SendMessage(new OpenSettingsTabMessage("RecoveryActivation"));
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Recovery Activation gate evaluation failed; failing closed.");
+                CopiedFeedback = "Recovery is blocked: activation policy could not be evaluated.";
                 return;
             }
 
@@ -658,7 +660,7 @@ namespace PhantomVault.UI.ViewModels
 
         private async Task OpenCredentialAsync(Credential credential)
         {
-            // Navigate to all items and select the credential
+
             RequestNavigation("All");
             await Task.CompletedTask;
         }
@@ -679,16 +681,8 @@ namespace PhantomVault.UI.ViewModels
         public string TimeAgo { get; set; } = string.Empty;
     }
 
-    /// <summary>
-    /// Bindable scope for the dashboard's <c>controls:SecurityDashboard</c>
-    /// surface. Live security metrics (score, breach counts, weak passwords,
-    /// 2FA coverage, etc.) are exposed directly on <see cref="DashboardViewModel"/>
-    /// and the parent <c>VaultViewModel</c>; this type exists so XAML can bind
-    /// a dedicated DataContext without coupling to those VMs. It is intentionally
-    /// empty — extend it only when the security panel needs state that is not
-    /// already published by the parent view-models.
-    /// </summary>
     public class SecurityDashboardViewModel
     {
     }
 }
+

@@ -2,11 +2,7 @@ using System;
 
 namespace PhantomVault.Core.Models
 {
-    /// <summary>
-    /// Canonical Phantom Key bridge contract for Obscura-side provisioning and runtime validation.
-    /// The bridge is intentionally narrow: only policy, continuity, mapping, and audit records cross
-    /// the boundary. Raw credential or private key material must never be copied into Obscura state.
-    /// </summary>
+
     public static class PhantomKeyBridgeContract
     {
         public const string WorkspaceRelativePath = "vaults/phantomkey";
@@ -90,3 +86,4 @@ namespace PhantomVault.Core.Models
         public string Notes { get; init; } = string.Empty;
     }
 }
+

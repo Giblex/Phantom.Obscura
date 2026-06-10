@@ -1,71 +1,52 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    
-    <!-- PhantomVault Custom Theme: Matted Light Navy Blue with Charcoal Grey -->
-    
+
     <Style>
         <Style.Resources>
-            <!-- Color Palette -->
-            <!-- Main Background: Deep Navy -->
+
             <SolidColorBrush x:Key="WindowBackgroundBrush">#1E2A38</SolidColorBrush>
-            
-            <!-- Header Background: Deep teal -->
+
             <SolidColorBrush x:Key="HeaderBackgroundBrush">#162030</SolidColorBrush>
             <SolidColorBrush x:Key="HeaderBorderBrush">Transparent</SolidColorBrush>
-            
-            <!-- Footer Background: Darkest navy -->
+
             <SolidColorBrush x:Key="FooterBackgroundBrush">#141C28</SolidColorBrush>
-            
-            <!-- Content Background: Deep base surface -->
+
             <SolidColorBrush x:Key="ContentBackgroundBrush">#1A2535</SolidColorBrush>
-            
-            <!-- Accent Color: Pastel Duller Blue (#6B8CAE) -->
+
             <SolidColorBrush x:Key="AccentBrush">#6B8CAE</SolidColorBrush>
-            
-            <!-- Accent Hover: Slightly Lighter Pastel Blue (#7FA3C3) -->
+
             <SolidColorBrush x:Key="AccentHoverBrush">#7FA3C3</SolidColorBrush>
-            
-            <!-- Secondary Accent: Muted Teal (#6FA89F) -->
+
             <SolidColorBrush x:Key="SecondaryAccentBrush">#6FA89F</SolidColorBrush>
-            
-            <!-- Text Colors -->
+
             <SolidColorBrush x:Key="PrimaryTextBrush">#FFFFFF</SolidColorBrush>
             <SolidColorBrush x:Key="SecondaryTextBrush">#E0E6ED</SolidColorBrush>
             <SolidColorBrush x:Key="MutedTextBrush">#D0D8E0</SolidColorBrush>
             <SolidColorBrush x:Key="DisabledTextBrush">#7A8590</SolidColorBrush>
-            
-            <!-- Control Backgrounds -->
+
             <SolidColorBrush x:Key="ControlBackgroundBrush">#1E2530</SolidColorBrush>
-            <!-- IMPROVED: Better contrast border for accessibility (WCAG AA compliant) -->
+
             <SolidColorBrush x:Key="ControlBorderBrush">#6A8BAF</SolidColorBrush>
-            
-            <!-- Success/Warning/Error Text Colors -->
-            <!-- Changed to a softer pastel/dull green per UX request -->
+
             <SolidColorBrush x:Key="SuccessBrush">#B8E6C8</SolidColorBrush>
             <SolidColorBrush x:Key="WarningBrush">#FFC107</SolidColorBrush>
             <SolidColorBrush x:Key="ErrorBrush">#F48771</SolidColorBrush>
-            
-            <!-- Dialog/Info Background Colors -->
+
             <SolidColorBrush x:Key="SuccessBackgroundBrush">#1A2A38</SolidColorBrush>
             <SolidColorBrush x:Key="WarningBackgroundBrush">#1A2A38</SolidColorBrush>
             <SolidColorBrush x:Key="ErrorBackgroundBrush">#1A2A38</SolidColorBrush>
             <SolidColorBrush x:Key="InfoBackgroundBrush">#1A2A38</SolidColorBrush>
-            
-            <!-- Font Family -->
+
             <FontFamily x:Key="MainFontFamily">Segoe UI Variable, Segoe UI</FontFamily>
-            
-            <!-- Text Selection Colors -->
-            <!-- Light grey selection for dark theme -->
+
             <SolidColorBrush x:Key="TextSelectionBrush">#60A0A0A0</SolidColorBrush>
             <SolidColorBrush x:Key="TextCaretBrush">#FFFFFF</SolidColorBrush>
 
-            <!-- FIXED: Dark input surface for dark theme (was light #F5F7FA) -->
             <SolidColorBrush x:Key="InputBackgroundBrush">#2A3A4E</SolidColorBrush>
             <SolidColorBrush x:Key="InputForegroundBrush">#FFFFFF</SolidColorBrush>
-            <!-- IMPROVED: Better contrast placeholder text for dark theme -->
+
             <SolidColorBrush x:Key="InputPlaceholderBrush">#C5CDD5</SolidColorBrush>
 
-            <!-- ADDED: Dropdown/Flyout brushes for dark theme -->
             <SolidColorBrush x:Key="FlyoutPresenterBackground">#222E3E</SolidColorBrush>
             <SolidColorBrush x:Key="MenuFlyoutPresenterBackground">#222E3E</SolidColorBrush>
             <SolidColorBrush x:Key="ComboBoxDropDownBackground">#222E3E</SolidColorBrush>
@@ -73,11 +54,10 @@
             <SolidColorBrush x:Key="SystemControlBackgroundChromeMediumLowBrush">#222E3E</SolidColorBrush>
             <SolidColorBrush x:Key="SystemControlForegroundBaseHighBrush">#FFFFFF</SolidColorBrush>
 
-            <!-- ComboBox item states for dark theme - SUBTLER: Barely visible highlights -->
             <SolidColorBrush x:Key="ComboBoxItemBackground">#222E3E</SolidColorBrush>
-            <!-- SUBTLER: Barely noticeable hover (was #4A5C6E) -->
+
             <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver">#283848</SolidColorBrush>
-            <!-- SUBTLER: Subtle pressed/selected (was #556D8A) -->
+
             <SolidColorBrush x:Key="ComboBoxItemBackgroundPressed">#2E4050</SolidColorBrush>
             <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected">#2E4050</SolidColorBrush>
             <SolidColorBrush x:Key="ComboBoxItemForeground">#FFFFFF</SolidColorBrush>
@@ -86,12 +66,10 @@
             <SolidColorBrush x:Key="ComboBoxItemForegroundSelected">#FFFFFF</SolidColorBrush>
             <SolidColorBrush x:Key="ComboBoxItemForegroundDisabled">#7A8590</SolidColorBrush>
 
-            <!-- ADDED: Focus and accessibility colors -->
             <SolidColorBrush x:Key="FocusBorderBrush">#7FA3C3</SolidColorBrush>
             <SolidColorBrush x:Key="FocusGlowBrush">#406B8CAE</SolidColorBrush>
             <x:Double x:Key="FocusBorderThickness">2</x:Double>
-        
-            <!-- ═══ Dashboard sheet overlay (transparent glass behind dashboard) ═══ -->
+
             <LinearGradientBrush x:Key="DashboardSheetOverlayBrush" StartPoint="0%,0%" EndPoint="0%,100%">
                 <GradientStop Color="#68102035" Offset="0"/>
                 <GradientStop Color="#600E1C30" Offset="0.5"/>
@@ -100,7 +78,6 @@
             <Color x:Key="DashboardSheetAcrylicTint">#1E2A38</Color>
             <Color x:Key="DashboardSheetAcrylicFallback">#18182838</Color>
 
-            <!-- ═══ Dashboard glass panel resources ═══ -->
             <LinearGradientBrush x:Key="DashboardSectionBg" StartPoint="0%,0%" EndPoint="100%,100%">
                 <GradientStop Color="#5C15253A" Offset="0"/>
                 <GradientStop Color="#50101E30" Offset="0.5"/>
@@ -185,14 +162,12 @@
             <Color x:Key="DashboardAcrylicFallback">#0C15253A</Color>
 </Style.Resources>
     </Style>
-    
-    <!-- Global Text Style -->
+
     <Style Selector="TextBlock">
         <Setter Property="FontFamily" Value="{DynamicResource MainFontFamily}" />
         <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
     </Style>
-    
-    <!-- Button Styles -->
+
     <Style Selector="Button">
         <Setter Property="FontFamily" Value="{DynamicResource MainFontFamily}" />
         <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
@@ -206,17 +181,16 @@
         <Setter Property="MinHeight" Value="36" />
         <Setter Property="MinWidth" Value="90" />
     </Style>
-    
+
     <Style Selector="Button:pointerover">
         <Setter Property="Background" Value="{DynamicResource AccentHoverBrush}" />
     </Style>
-    
+
     <Style Selector="Button:disabled">
         <Setter Property="Opacity" Value="0.4" />
         <Setter Property="Cursor" Value="Arrow" />
     </Style>
 
-    <!-- ADDED: Focus state for accessibility -->
     <Style Selector="Button:focus-visible">
         <Setter Property="BorderBrush" Value="{DynamicResource FocusBorderBrush}" />
         <Setter Property="BorderThickness" Value="{DynamicResource FocusBorderThickness}" />
@@ -226,21 +200,20 @@
             </TransformGroup>
         </Setter>
     </Style>
-    
+
     <Style Selector="Button.secondary">
         <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}" />
     </Style>
-    
+
     <Style Selector="Button.secondary:pointerover">
         <Setter Property="Background" Value="{DynamicResource ControlBorderBrush}" />
     </Style>
-    
+
     <Style Selector="Button.secondary:disabled">
         <Setter Property="Opacity" Value="0.3" />
         <Setter Property="Cursor" Value="Arrow" />
     </Style>
-    
-    <!-- Accent Button Style (liquid glass with accent tint) -->
+
     <Style Selector="Button.accent">
         <Setter Property="CornerRadius" Value="10"/>
         <Setter Property="BorderThickness" Value="1"/>
@@ -293,7 +266,7 @@
             </ControlTemplate>
         </Setter>
     </Style>
-    
+
     <Style Selector="Button.accent:pointerover /template/ Border#BaseBorder">
         <Setter Property="BorderBrush" Value="#A0FFFFFF"/>
         <Setter Property="Background">
@@ -304,14 +277,13 @@
             </LinearGradientBrush>
         </Setter>
     </Style>
-    
+
     <Style Selector="Button.accent:pressed">
         <Setter Property="RenderTransform">
             <TranslateTransform Y="1"/>
         </Setter>
     </Style>
-    
-    <!-- TextBox Styles -->
+
     <Style Selector="TextBox">
         <Setter Property="FontFamily" Value="{DynamicResource MainFontFamily}" />
         <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}" />
@@ -323,7 +295,6 @@
         <Setter Property="CaretBrush" Value="{DynamicResource TextCaretBrush}" />
     </Style>
 
-    <!-- ADDED: TextBox focus and error states -->
     <Style Selector="TextBox:focus">
         <Setter Property="BorderBrush" Value="{DynamicResource FocusBorderBrush}" />
         <Setter Property="BorderThickness" Value="2" />
@@ -333,56 +304,52 @@
         <Setter Property="BorderBrush" Value="{DynamicResource ErrorBrush}" />
         <Setter Property="BorderThickness" Value="2" />
     </Style>
-    
-    <!-- ComboBox Styles -->
+
     <Style Selector="ComboBox">
         <Setter Property="FontFamily" Value="{DynamicResource MainFontFamily}" />
         <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
     </Style>
-    
-    <!-- CheckBox Styles -->
+
     <Style Selector="CheckBox">
         <Setter Property="FontFamily" Value="{DynamicResource MainFontFamily}" />
         <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
     </Style>
-    
-    <!-- ScrollBar Styles - Fix scrollbar to go all the way down -->
+
     <Style Selector="ScrollBar">
         <Setter Property="Background" Value="{DynamicResource WindowBackgroundBrush}" />
     </Style>
-    
+
     <Style Selector="ScrollBar:vertical">
         <Setter Property="Width" Value="12" />
     </Style>
-    
+
     <Style Selector="ScrollBar:horizontal">
         <Setter Property="Height" Value="12" />
     </Style>
-    
+
     <Style Selector="ScrollBar /template/ RepeatButton">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
     </Style>
-    
+
     <Style Selector="ScrollBar /template/ Thumb">
         <Setter Property="Background" Value="{DynamicResource ControlBorderBrush}" />
         <Setter Property="BorderThickness" Value="0" />
     </Style>
-    
+
     <Style Selector="ScrollBar /template/ Thumb:pointerover">
         <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
     </Style>
-    
-    <!-- ScrollViewer Styles -->
+
     <Style Selector="ScrollViewer">
         <Setter Property="Background" Value="Transparent" />
     </Style>
-    
-    <!-- MenuFlyout Rounded Corners -->
+
     <Style Selector="MenuFlyoutPresenter">
         <Setter Property="CornerRadius" Value="8" />
     </Style>
-    
+
 </Styles>
+

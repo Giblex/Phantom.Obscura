@@ -17,7 +17,7 @@ namespace PhantomVault.UI.Views
             {
                 if (DataContext is AddPasswordViewModel vm && this is Window w)
                 {
-                    // No-op: owner coupling not needed here but kept for parity
+
                 }
             };
         }
@@ -29,17 +29,15 @@ namespace PhantomVault.UI.Views
 
         public async void OpenPasswordGenerator_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
         {
-            // Create viewmodel and window
+
             var viewModel = new PasswordGeneratorViewModel();
             var window = new PasswordGeneratorWindow
             {
                 DataContext = viewModel
             };
 
-            // Set owner to this window
             viewModel.SetOwnerWindow(window);
 
-            // Show as dialog — when it closes, if the user accepted, copy password
             await window.ShowDialog(this);
 
             if (viewModel.Accepted && !string.IsNullOrEmpty(viewModel.GeneratedPassword) && !viewModel.GeneratedPassword.StartsWith("Please select"))
@@ -52,3 +50,4 @@ namespace PhantomVault.UI.Views
         }
     }
 }
+

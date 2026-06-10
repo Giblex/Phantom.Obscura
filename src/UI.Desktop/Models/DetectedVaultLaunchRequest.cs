@@ -9,3 +9,4 @@ namespace PhantomVault.UI.Models
         public bool AutoOpenEligible { get; init; }
     }
 }
+

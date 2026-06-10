@@ -5,25 +5,20 @@ using PhantomVault.Core.Models;
 
 namespace PhantomVault.Core.Services
 {
-    /// <summary>
-    /// Defines merge strategies for handling duplicate credentials.
-    /// </summary>
+
     public enum MergeStrategy
     {
-        ReplaceWithNew,          // Replace existing with new (default)
-        KeepExisting,            // Keep existing, discard new
-        KeepBoth,                // Keep both as separate entries
-        MergeNotes,              // Merge notes, keep newer password
-        MergeTags,               // Merge tags, keep newer password
-        MergeCustomFields,       // Merge custom fields, keep newer password
-        MergeAll,                // Merge all fields intelligently
-        KeepOlderPassword,       // Keep existing password, update other fields
-        KeepStrongerPassword     // Keep whichever password is stronger
+        ReplaceWithNew,
+        KeepExisting,
+        KeepBoth,
+        MergeNotes,
+        MergeTags,
+        MergeCustomFields,
+        MergeAll,
+        KeepOlderPassword,
+        KeepStrongerPassword
     }
 
-    /// <summary>
-    /// Configuration options for merge operations.
-    /// </summary>
     public sealed class MergeOptions
     {
         public MergeStrategy DefaultStrategy { get; set; } = MergeStrategy.ReplaceWithNew;
@@ -36,14 +31,9 @@ namespace PhantomVault.Core.Services
         public Dictionary<string, MergeStrategy> PerCredentialStrategies { get; set; } = new();
     }
 
-    /// <summary>
-    /// Provides advanced merge strategies for duplicate credentials.
-    /// </summary>
     public sealed class MergeStrategyService
     {
-        /// <summary>
-        /// Merges two credentials based on the specified strategy.
-        /// </summary>
+
         public Credential MergeCredentials(
             Credential existing,
             Credential newCred,
@@ -71,7 +61,7 @@ namespace PhantomVault.Core.Services
                     return CloneCredential(existing);
 
                 case MergeStrategy.KeepBoth:
-                    // Return new with modified title
+
                     var bothCred = CloneCredential(newCred);
                     bothCred.Title += " (imported)";
                     return bothCred;
@@ -135,9 +125,6 @@ namespace PhantomVault.Core.Services
             return merged;
         }
 
-        /// <summary>
-        /// Applies merge strategies to a list of duplicates.
-        /// </summary>
         public List<Credential> ApplyMergeStrategies(
             List<Credential> allCredentials,
             List<DuplicateInfo> duplicates,
@@ -147,16 +134,13 @@ namespace PhantomVault.Core.Services
             var processedNewCreds = new HashSet<Credential>();
             var duplicateExisting = new HashSet<Credential>(duplicates.Select(d => d.ExistingCredential).Where(c => c != null)!);
 
-            // Add non-duplicate credentials
             result.AddRange(allCredentials.Where(c => !duplicates.Any(d => d.NewCredential == c)));
 
-            // Process duplicates with merge strategies
             foreach (var duplicate in duplicates)
             {
                 if (processedNewCreds.Contains(duplicate.NewCredential))
                     continue;
 
-                // Check for per-credential strategy
                 var strategy = options.DefaultStrategy;
                 var credKey = $"{duplicate.NewCredential.Title}|{duplicate.NewCredential.Username}";
                 if (options.PerCredentialStrategies.ContainsKey(credKey))
@@ -174,7 +158,7 @@ namespace PhantomVault.Core.Services
                     }
                     else
                     {
-                        // Keep both - existing already in vault, add new with modified title
+
                         result.Add(merged);
                     }
                 }
@@ -222,7 +206,6 @@ namespace PhantomVault.Core.Services
             if (string.IsNullOrEmpty(password1)) return password2 ?? "";
             if (string.IsNullOrEmpty(password2)) return password1;
 
-            // Simple strength: length + complexity
             var strength1 = CalculateSimpleStrength(password1);
             var strength2 = CalculateSimpleStrength(password2);
 
@@ -250,7 +233,7 @@ namespace PhantomVault.Core.Services
         {
             if (string.IsNullOrEmpty(existing)) return newNotes ?? "";
             if (string.IsNullOrEmpty(newNotes)) return existing;
-            if (existing.Contains(newNotes)) return existing; // Avoid duplicates
+            if (existing.Contains(newNotes)) return existing;
             return existing + separator + newNotes;
         }
 
@@ -282,3 +265,4 @@ namespace PhantomVault.Core.Services
         }
     }
 }
+

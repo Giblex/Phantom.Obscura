@@ -1,23 +1,6 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-<!-- ═══════════════════════════════════════════════════════════════════════════════
-     ULTRA-REALISTIC LIQUID GLASS BUTTON - ENHANCED VERSION
-
-     NEW FEATURES:
-     - Chromatic aberration (RGB light split)
-     - Caustic light patterns (water/glass ripples)
-     - Fresnel edge glow (brighter glass edges)
-     - Volumetric depth (internal fog)
-     - Specular highlights (sharp light reflections)
-     - Glass imperfections (bubbles, scratches)
-     - Color temperature (warm highlights, cool shadows)
-     - Parallax depth (multi-layer movement)
-     - Enhanced hover/press states
-
-     PERFORMANCE: Optimized with GPU acceleration and smart layering
-     ═══════════════════════════════════════════════════════════════════════════════ -->
-
 <Style Selector="Button.liquid-glass-enhanced">
   <Setter Property="CornerRadius" Value="10"/>
   <Setter Property="BorderThickness" Value="1"/>
@@ -30,7 +13,6 @@
   <Setter Property="HorizontalContentAlignment" Value="Center"/>
   <Setter Property="VerticalContentAlignment" Value="Center"/>
 
-  <!-- GPU acceleration -->
   <Setter Property="RenderTransform">
     <TranslateTransform X="0" Y="0"/>
   </Setter>
@@ -45,7 +27,6 @@
     <ControlTemplate>
       <Panel>
 
-        <!-- LAYER 1: Base glass fill with enhanced gradient -->
         <Border Name="BaseBorder"
                 CornerRadius="{TemplateBinding CornerRadius}"
                 BorderThickness="{TemplateBinding BorderThickness}"
@@ -58,7 +39,7 @@
             </Transitions>
           </Border.Transitions>
           <Border.Background>
-            <!-- Color temperature aware gradient (warm->cool) -->
+
             <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
               <GradientStop Color="#35D8E8F8" Offset="0"/>
               <GradientStop Color="#2BCCE0F4" Offset="0.08"/>
@@ -72,7 +53,6 @@
           </Border.Background>
         </Border>
 
-        <!-- LAYER 1.5: Volumetric Depth (fog inside glass) -->
         <Border CornerRadius="{TemplateBinding CornerRadius}"
                 Margin="3"
                 Opacity="0.25"
@@ -89,7 +69,6 @@
           </Border.Background>
         </Border>
 
-        <!-- LAYER 2: Sheen with physics (wobble via margin shifts) + PARALLAX -->
         <Border Name="Sheen"
                 CornerRadius="{TemplateBinding CornerRadius}"
                 Opacity="0.55"
@@ -106,20 +85,19 @@
             </Transitions>
           </Border.Transitions>
           <Border.Background>
-            <!-- Temperature-aware sheen gradient -->
+
             <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-              <GradientStop Color="#40FFF8F0" Offset="0"/>     <!-- Warm white -->
-              <GradientStop Color="#30F0E8DC" Offset="0.12"/>  <!-- Warm tint -->
+              <GradientStop Color="#40FFF8F0" Offset="0"/>
+              <GradientStop Color="#30F0E8DC" Offset="0.12"/>
               <GradientStop Color="#25E8F4FF" Offset="0.22"/>
               <GradientStop Color="#18D8E8F8" Offset="0.32"/>
-              <GradientStop Color="#12A0C8E8" Offset="0.45"/>  <!-- Cool transition -->
+              <GradientStop Color="#12A0C8E8" Offset="0.45"/>
               <GradientStop Color="#0C8FB5DF" Offset="0.65"/>
               <GradientStop Color="#067FA8BC" Offset="0.8"/>
-              <GradientStop Color="#04394D68" Offset="1"/>     <!-- Cool shadow -->
+              <GradientStop Color="#04394D68" Offset="1"/>
             </LinearGradientBrush>
           </Border.Background>
 
-          <!-- Animated sheen movement -->
           <Border.Styles>
             <Style Selector="Border">
               <Style.Animations>
@@ -139,7 +117,6 @@
           </Border.Styles>
         </Border>
 
-        <!-- LAYER 2.5: Additional refraction layer for bubble effect -->
         <Border CornerRadius="{TemplateBinding CornerRadius}"
                 Opacity="0.4"
                 Margin="0"
@@ -155,7 +132,6 @@
           </Border.Background>
         </Border>
 
-        <!-- LAYER 2.75: Border highlight reflection layer -->
         <Border CornerRadius="{TemplateBinding CornerRadius}"
                 BorderThickness="2"
                 Margin="0"
@@ -172,7 +148,6 @@
           </Border.BorderBrush>
         </Border>
 
-        <!-- LAYER 2.85: Subtle noise/grain texture for glass imperfection -->
         <Border CornerRadius="{TemplateBinding CornerRadius}"
                 Opacity="0.08"
                 Margin="0"
@@ -189,29 +164,25 @@
           </Border.Background>
         </Border>
 
-        <!-- LAYER 2.88: Glass Bubbles/Imperfections (only on larger buttons) -->
         <Canvas Opacity="0.12"
                 IsHitTestVisible="False"
                 ClipToBounds="True"
                 Width="{TemplateBinding Width}"
                 Height="{TemplateBinding Height}">
-          <!-- Small bubble 1 -->
+
           <Ellipse Canvas.Left="20" Canvas.Top="10"
                    Width="3" Height="3"
                    Fill="#60FFFFFF"/>
 
-          <!-- Small bubble 2 -->
           <Ellipse Canvas.Left="50" Canvas.Top="16"
                    Width="2" Height="2"
                    Fill="#40E8F4FF"/>
 
-          <!-- Small bubble 3 -->
           <Ellipse Canvas.Left="35" Canvas.Top="26"
                    Width="2.5" Height="2.5"
                    Fill="#50D8E8F8"/>
         </Canvas>
 
-        <!-- LAYER 2.9: Chromatic Aberration Edge Effect (RGB light split) -->
         <Border CornerRadius="{TemplateBinding CornerRadius}"
                 Margin="1"
                 IsHitTestVisible="False"
@@ -224,19 +195,18 @@
           </Border.Transitions>
           <Border.BorderBrush>
             <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-              <!-- Red channel shift -->
+
               <GradientStop Color="#30FF0000" Offset="0"/>
               <GradientStop Color="#00FF0000" Offset="0.05"/>
-              <!-- Green channel -->
+
               <GradientStop Color="#3000FF00" Offset="0.5"/>
-              <!-- Blue channel shift -->
+
               <GradientStop Color="#300000FF" Offset="0.95"/>
               <GradientStop Color="#000000FF" Offset="1"/>
             </LinearGradientBrush>
           </Border.BorderBrush>
         </Border>
 
-        <!-- LAYER 2.95: Caustic Light Patterns -->
         <Border Name="Caustics"
                 CornerRadius="{TemplateBinding CornerRadius}"
                 Opacity="0.15"
@@ -263,7 +233,6 @@
           </Border.Background>
         </Border>
 
-        <!-- LAYER 3.1: Fresnel Edge Glow -->
         <Border CornerRadius="{TemplateBinding CornerRadius}"
                 Margin="1"
                 IsHitTestVisible="False"
@@ -280,12 +249,11 @@
           </Border.BorderBrush>
         </Border>
 
-        <!-- LAYER 3.2: Specular Highlights (sharp light reflections) -->
         <Canvas IsHitTestVisible="False"
                 ClipToBounds="True"
                 Width="{TemplateBinding Width}"
                 Height="{TemplateBinding Height}">
-          <!-- Top-left specular -->
+
           <Ellipse Canvas.Left="8" Canvas.Top="6"
                    Width="24" Height="12"
                    Opacity="0.6">
@@ -298,7 +266,6 @@
             </Ellipse.Fill>
           </Ellipse>
 
-          <!-- Bottom-right specular (dimmer) -->
           <Ellipse Canvas.Right="12" Canvas.Bottom="8"
                    Width="18" Height="10"
                    Opacity="0.3">
@@ -312,7 +279,6 @@
           </Ellipse>
         </Canvas>
 
-        <!-- LAYER 3: Content -->
         <ContentPresenter Name="PART_ContentPresenter"
                           Background="{x:Null}"
                           Padding="{TemplateBinding Padding}"
@@ -322,7 +288,6 @@
                           ContentTemplate="{TemplateBinding ContentTemplate}"
                           RecognizesAccessKey="True"/>
 
-        <!-- Disabled overlay -->
         <Border Name="DisabledMask"
                 IsVisible="False"
                 CornerRadius="{TemplateBinding CornerRadius}"
@@ -332,9 +297,6 @@
   </Setter>
 </Style>
 
-<!-- ═══════════════════════════════════════════════════════════════════════════════
-     ENHANCED HOVER STATE - Liquid flow animation
-     ═══════════════════════════════════════════════════════════════════════════════ -->
 <Style Selector="Button.liquid-glass-enhanced:pointerover">
   <Setter Property="RenderTransform">
     <ScaleTransform ScaleX="1.01" ScaleY="1.01"/>
@@ -345,7 +307,7 @@
   <Setter Property="BorderBrush" Value="#80A8C5E8"/>
   <Setter Property="Background">
     <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
-      <!-- Brighter, more vibrant gradient -->
+
       <GradientStop Color="#50E8F4FF" Offset="0"/>
       <GradientStop Color="#42DCE8F8" Offset="0.08"/>
       <GradientStop Color="#38C8DCF2" Offset="0.15"/>
@@ -358,14 +320,12 @@
   </Setter>
 </Style>
 
-<!-- Parallax sheen movement on hover -->
 <Style Selector="Button.liquid-glass-enhanced:pointerover /template/ Border#Sheen">
   <Setter Property="RenderTransform">
     <TranslateTransform X="-1" Y="-1"/>
   </Setter>
 </Style>
 
-<!-- Caustics intensify on hover -->
 <Style Selector="Button.liquid-glass-enhanced:pointerover /template/ Border#Caustics">
   <Setter Property="Opacity" Value="0.35"/>
   <Setter Property="RenderTransform">
@@ -373,9 +333,6 @@
   </Setter>
 </Style>
 
-<!-- ═══════════════════════════════════════════════════════════════════════════════
-     PRESSED STATE - Glass compression effect
-     ═══════════════════════════════════════════════════════════════════════════════ -->
 <Style Selector="Button.liquid-glass-enhanced:pressed">
   <Setter Property="RenderTransform">
     <TransformGroup>
@@ -394,7 +351,6 @@
   <Setter Property="Margin" Value="1,2,0,0"/>
 </Style>
 
-<!-- Disabled State -->
 <Style Selector="Button.liquid-glass-enhanced:disabled">
   <Setter Property="Opacity" Value="0.5"/>
   <Setter Property="Cursor" Value="Arrow"/>
@@ -404,7 +360,6 @@
   <Setter Property="IsVisible" Value="True"/>
 </Style>
 
-<!-- Focus State (keyboard navigation) -->
 <Style Selector="Button.liquid-glass-enhanced:focus-visible">
   <Setter Property="Opacity" Value="1.0"/>
   <Setter Property="BorderBrush" Value="#A8C5E8"/>
@@ -417,3 +372,4 @@
 </Style>
 
 </Styles>
+

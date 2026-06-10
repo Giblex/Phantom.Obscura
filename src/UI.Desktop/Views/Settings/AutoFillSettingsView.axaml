@@ -1,24 +1,24 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="PhantomVault.UI.Views.Settings.AutoFillSettingsView">
-    <StackPanel Spacing="20" Margin="0,0,30,60">
-        <TextBlock Text="Auto-Fill Settings" 
-                   FontSize="{StaticResource Type.H3.Size}" 
+    <StackPanel Spacing="20" Margin="0,0,0,60">
+        <TextBlock Text="Auto-Fill Settings"
+                   FontSize="{StaticResource Type.H3.Size}"
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource PrimaryTextBrush}"/>
-        
-        <Border Classes="fade-in stagger-1"
-                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
-                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
-                BorderThickness="1" 
-                CornerRadius="16" 
+
+        <Border Classes="fade-in stagger-1" HorizontalAlignment="Stretch"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
                 Padding="20">
             <StackPanel Spacing="15">
-                <TextBlock Text="Browser Integration" 
-                           FontSize="{StaticResource Type.Body.Size}" 
+                <TextBlock Text="Browser Integration"
+                           FontSize="{StaticResource Type.Body.Size}"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
-                
+
                 <CheckBox Content="Enable browser auto-fill"
                           IsChecked="{Binding EnableAutoFill, Mode=TwoWay}"
                           ToolTip.Tip="Allow PhantomVault to auto-fill credentials in browsers"/>
@@ -33,23 +33,23 @@
             </StackPanel>
         </Border>
 
-        <Border Classes="fade-in stagger-2"
-                Background="{DynamicResource SettingsPanelBackgroundBrush}" 
-                BorderBrush="{DynamicResource SettingsPanelBorderBrush}" 
-                BorderThickness="1" 
-                CornerRadius="16" 
+        <Border Classes="fade-in stagger-2" HorizontalAlignment="Stretch"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
                 Padding="20">
             <StackPanel Spacing="15">
-                <TextBlock Text="Mobile Integration" 
-                           FontSize="{StaticResource Type.Body.Size}" 
+                <TextBlock Text="Mobile Integration"
+                           FontSize="{StaticResource Type.Body.Size}"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
-                
-                <TextBlock Text="Configure auto-fill settings for Android and iOS devices" 
+
+                <TextBlock Text="Configure auto-fill settings for Android and iOS devices"
                            FontSize="{StaticResource Type.Small.Size}"
                            Foreground="{DynamicResource MutedTextBrush}"
                            TextWrapping="Wrap"/>
-                
+
                 <Button Content="Configure Mobile Auto-Fill"
                         Width="240"
                         HorizontalAlignment="Left"
@@ -59,7 +59,7 @@
             </StackPanel>
         </Border>
 
-        <Border Classes="fade-in stagger-3"
+        <Border Classes="fade-in stagger-3" HorizontalAlignment="Stretch"
                 Background="{DynamicResource SettingsPanelBackgroundBrush}"
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
                 BorderThickness="1"
@@ -84,8 +84,7 @@
             </StackPanel>
         </Border>
 
-        <!-- AutoFill Mode (USB-Triggered) -->
-        <Border Classes="fade-in stagger-4"
+        <Border Classes="fade-in stagger-4" HorizontalAlignment="Stretch"
                 Background="{DynamicResource SettingsPanelBackgroundBrush}"
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
                 BorderThickness="1"
@@ -121,5 +120,4 @@
         </Border>
     </StackPanel>
 </UserControl>
-
 

@@ -29,7 +29,7 @@ namespace PhantomVault.UI.ViewModels.Dialogs
             set
             {
                 this.RaiseAndSetIfChanged(ref _pin, value);
-                ErrorMessage = null; // Clear error when user types
+                ErrorMessage = null;
             }
         }
 
@@ -58,7 +58,7 @@ namespace PhantomVault.UI.ViewModels.Dialogs
         {
             try
             {
-                // Validate PIN length
+
                 if (string.IsNullOrWhiteSpace(Pin))
                 {
                     ErrorMessage = "PIN cannot be empty.";
@@ -71,14 +71,12 @@ namespace PhantomVault.UI.ViewModels.Dialogs
                     return;
                 }
 
-                // Validate PIN match
                 if (!string.Equals(Pin, ConfirmPin, StringComparison.Ordinal))
                 {
                     ErrorMessage = "PINs do not match.";
                     return;
                 }
 
-                // Set PIN in PinLockService (which will handle both settings and manifest)
                 if (!string.IsNullOrWhiteSpace(_manifestPath))
                 {
                     PinLockService.SetPin(Pin, _manifestPath);
@@ -104,3 +102,4 @@ namespace PhantomVault.UI.ViewModels.Dialogs
         }
     }
 }
+

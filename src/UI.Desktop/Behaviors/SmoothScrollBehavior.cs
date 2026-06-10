@@ -3,17 +3,12 @@ using Avalonia.Animation.Easings;
 
 namespace PhantomVault.UI.Behaviors
 {
-    /// <summary>
-    /// Utility class providing animation timing helpers with ReduceMotion support.
-    /// </summary>
+
     public static class AnimationHelper
     {
-        private const double DefaultDuration = 0.3; // 300ms
-        private const double ReducedMotionDuration = 0.1; // 100ms (faster for reduced motion)
+        private const double DefaultDuration = 0.3;
+        private const double ReducedMotionDuration = 0.1;
 
-        /// <summary>
-        /// Gets the appropriate animation duration based on ReduceMotion setting.
-        /// </summary>
         public static double GetAnimationDuration()
         {
             return Services.AccessibilityService.Instance.ReduceMotion
@@ -21,9 +16,6 @@ namespace PhantomVault.UI.Behaviors
                 : DefaultDuration;
         }
 
-        /// <summary>
-        /// Gets the appropriate easing function based on ReduceMotion setting.
-        /// </summary>
         public static Easing GetEasing()
         {
             return Services.AccessibilityService.Instance.ReduceMotion
@@ -31,9 +23,6 @@ namespace PhantomVault.UI.Behaviors
                 : new CubicEaseOut();
         }
 
-        /// <summary>
-        /// Gets animation duration for a specific timing category.
-        /// </summary>
         public static double GetDuration(AnimationTiming timing)
         {
             bool reduceMotion = Services.AccessibilityService.Instance.ReduceMotion;
@@ -50,9 +39,6 @@ namespace PhantomVault.UI.Behaviors
         }
     }
 
-    /// <summary>
-    /// Standard animation timing categories.
-    /// </summary>
     public enum AnimationTiming
     {
         Instant,
@@ -62,3 +48,4 @@ namespace PhantomVault.UI.Behaviors
         VerySlow
     }
 }
+

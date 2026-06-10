@@ -8,9 +8,7 @@ using PhantomVault.Core.Models;
 
 namespace PhantomVault.Core.Services
 {
-    /// <summary>
-    /// Represents a single import session with rollback capability.
-    /// </summary>
+
     public sealed class ImportSession
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
@@ -23,9 +21,6 @@ namespace PhantomVault.Core.Services
         public bool CanRevert { get; set; } = true;
     }
 
-    /// <summary>
-    /// Manages import history and provides rollback capabilities.
-    /// </summary>
     public sealed class ImportHistoryService
     {
         private readonly string _historyFilePath;
@@ -37,9 +32,6 @@ namespace PhantomVault.Core.Services
             LoadHistory();
         }
 
-        /// <summary>
-        /// Records a new import session.
-        /// </summary>
         public async Task<ImportSession> RecordImportAsync(
             string sourceFile,
             string format,
@@ -62,17 +54,11 @@ namespace PhantomVault.Core.Services
             return session;
         }
 
-        /// <summary>
-        /// Gets all import sessions, newest first.
-        /// </summary>
         public List<ImportSession> GetAllSessions()
         {
             return _sessions.OrderByDescending(s => s.Timestamp).ToList();
         }
 
-        /// <summary>
-        /// Gets import sessions from a specific date range.
-        /// </summary>
         public List<ImportSession> GetSessionsByDateRange(DateTimeOffset start, DateTimeOffset end)
         {
             return _sessions
@@ -81,17 +67,11 @@ namespace PhantomVault.Core.Services
                 .ToList();
         }
 
-        /// <summary>
-        /// Gets a specific import session by ID.
-        /// </summary>
         public ImportSession? GetSession(string sessionId)
         {
             return _sessions.FirstOrDefault(s => s.Id == sessionId);
         }
 
-        /// <summary>
-        /// Marks a session as reverted (cannot be reverted again).
-        /// </summary>
         public async Task MarkSessionRevertedAsync(string sessionId)
         {
             var session = GetSession(sessionId);
@@ -102,9 +82,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Deletes old import sessions (older than specified days).
-        /// </summary>
         public async Task CleanupOldSessionsAsync(int olderThanDays = 90)
         {
             var cutoffDate = DateTimeOffset.UtcNow.AddDays(-olderThanDays);
@@ -112,9 +89,6 @@ namespace PhantomVault.Core.Services
             await SaveHistoryAsync();
         }
 
-        /// <summary>
-        /// Gets summary statistics for import history.
-        /// </summary>
         public ImportHistorySummary GetSummary()
         {
             return new ImportHistorySummary
@@ -160,14 +134,11 @@ namespace PhantomVault.Core.Services
             }
             catch
             {
-                // Log error but don't throw - history is not critical
+
             }
         }
     }
 
-    /// <summary>
-    /// Summary statistics for import history.
-    /// </summary>
     public sealed class ImportHistorySummary
     {
         public int TotalSessions { get; set; }
@@ -176,3 +147,4 @@ namespace PhantomVault.Core.Services
         public int RevertableSessions { get; set; }
     }
 }
+

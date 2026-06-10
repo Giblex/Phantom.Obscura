@@ -10,49 +10,29 @@ using PhantomVault.Core.Models;
 
 namespace PhantomVault.Core.Services.Autofill
 {
-    /// <summary>
-    /// Native messaging host implementation for browser extension communication.
-    /// Implements the Chrome/Firefox native messaging protocol:
-    /// - Reads 4-byte message length (little-endian) from stdin
-    /// - Reads JSON message body of specified length
-    /// - Writes 4-byte response length + JSON response to stdout
-    /// 
-    /// Security:
-    /// - Validates extension origins against allowlist
-    /// - Never logs credentials
-    /// - Validates message structure before processing
-    /// </summary>
+
     public class NativeMessagingHostService : INativeMessagingHost
     {
         private readonly ICredentialRepository _credentialRepository;
         private readonly IAutofillVaultContext _vaultContext;
+        private readonly ISyncStateBridge? _syncBridge;
         private bool _isRunning;
 
-        // Allowed extension IDs (in production, load from config). Defaults to an empty set to fail closed.
         private readonly HashSet<string> _allowedOrigins;
+
+        // Serializes all writes to stdout: response writes from the read loop and
+        // unsolicited onSyncChanged push writes from the sync watcher can race.
+        private readonly SemaphoreSlim _stdoutGate = new(1, 1);
+        private Stream? _stdout;
 
         public bool IsRunning => _isRunning;
 
-        /// <summary>
-        /// Event raised when a form is detected on a webpage.
-        /// </summary>
         public event EventHandler<FormDetectedEventArgs>? FormDetected;
 
-        /// <summary>
-        /// Event raised when a form is submitted (for password capture).
-        /// </summary>
         public event EventHandler<FormSubmittedEventArgs>? FormSubmitted;
 
-        /// <summary>
-        /// Pending fill request set by the AutoFill orchestrator so the extension
-        /// can pick it up on its next <c>fill</c> or <c>detectForm</c> poll.
-        /// </summary>
         private PendingFillRequest? _pendingFill;
 
-        /// <summary>
-        /// Registers a credential fill that the browser extension should apply to
-        /// the active login form. Called by the AutoFill orchestrator after matching.
-        /// </summary>
         public void SetPendingFill(string username, string password, string? totpCode = null)
         {
             _pendingFill = new PendingFillRequest
@@ -63,20 +43,20 @@ namespace PhantomVault.Core.Services.Autofill
             };
         }
 
-        /// <summary>Clears any pending fill (e.g. after the extension confirms fill).</summary>
         public void ClearPendingFill() => _pendingFill = null;
 
         public NativeMessagingHostService(
             ICredentialRepository credentialRepository,
             IAutofillVaultContext vaultContext,
-            IEnumerable<string>? allowedOrigins = null)
+            IEnumerable<string>? allowedOrigins = null,
+            ISyncStateBridge? syncBridge = null)
         {
             _credentialRepository = credentialRepository ?? throw new ArgumentNullException(nameof(credentialRepository));
             _vaultContext = vaultContext ?? throw new ArgumentNullException(nameof(vaultContext));
             _allowedOrigins = BuildAllowlist(allowedOrigins);
+            _syncBridge = syncBridge;
         }
 
-        // Backward-compatible constructor that fails closed until a real context and allowlist are supplied.
         public NativeMessagingHostService(ICredentialRepository credentialRepository)
             : this(credentialRepository, new LockedVaultContext(), null)
         {
@@ -87,7 +67,6 @@ namespace PhantomVault.Core.Services.Autofill
             if (string.IsNullOrWhiteSpace(origin) || _allowedOrigins.Count == 0)
                 return false;
 
-            // Origin must match exactly (case-insensitive)
             return _allowedOrigins.Contains(origin.Trim());
         }
 
@@ -102,18 +81,23 @@ namespace PhantomVault.Core.Services.Autofill
             {
                 using var stdin = Console.OpenStandardInput();
                 using var stdout = Console.OpenStandardOutput();
+                _stdout = stdout;
+
+                // Push non-secret sync changes to the extension as they happen.
+                if (_syncBridge != null)
+                    _syncBridge.Changed += OnSyncBridgeChanged;
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     try
                     {
-                        // Read message length (4 bytes, little-endian)
+
                         var lengthBytes = new byte[4];
                         var bytesRead = await stdin.ReadAsync(lengthBytes, 0, 4, cancellationToken);
 
                         if (bytesRead == 0)
                         {
-                            // stdin closed - browser extension disconnected
+
                             break;
                         }
 
@@ -125,14 +109,12 @@ namespace PhantomVault.Core.Services.Autofill
 
                         var messageLength = BitConverter.ToInt32(lengthBytes, 0);
 
-                        // Sanity check - max message size 1MB
                         if (messageLength <= 0 || messageLength > 1024 * 1024)
                         {
                             await SendErrorAsync(stdout, "Message length out of bounds", cancellationToken);
                             continue;
                         }
 
-                        // Read message body
                         var messageBytes = new byte[messageLength];
                         var totalRead = 0;
 
@@ -158,10 +140,8 @@ namespace PhantomVault.Core.Services.Autofill
 
                         var messageJson = Encoding.UTF8.GetString(messageBytes);
 
-                        // Parse and handle message
                         var response = await HandleMessageAsync(messageJson, cancellationToken);
 
-                        // Send response
                         await SendMessageAsync(stdout, response, cancellationToken);
                     }
                     catch (OperationCanceledException)
@@ -170,13 +150,16 @@ namespace PhantomVault.Core.Services.Autofill
                     }
                     catch (Exception ex)
                     {
-                        // Log error but continue running
+
                         await SendErrorAsync(stdout, $"Error processing message: {ex.Message}", cancellationToken);
                     }
                 }
             }
             finally
             {
+                if (_syncBridge != null)
+                    _syncBridge.Changed -= OnSyncBridgeChanged;
+                _stdout = null;
                 _isRunning = false;
             }
         }
@@ -190,11 +173,9 @@ namespace PhantomVault.Core.Services.Autofill
                 if (message == null)
                     return CreateErrorResponse("Invalid message format");
 
-                // Validate origin
                 if (string.IsNullOrEmpty(message.Origin) || !ValidateOrigin(message.Origin))
                     return CreateErrorResponse("Unauthorized origin");
 
-                // Enforce vault unlock + manifest flag for credential operations
                 if (message.Type == "getCredentials" || message.Type == "saveCredential")
                 {
                     var (allowed, reason) = EnsureAutofillAllowed();
@@ -204,17 +185,18 @@ namespace PhantomVault.Core.Services.Autofill
                     }
                 }
 
-                // Handle different message types
                 return message.Type switch
                 {
                     "getCredentials" => await HandleGetCredentialsAsync(message, cancellationToken),
                     "saveCredential" => await HandleSaveCredentialAsync(message, cancellationToken),
                     "detectForm" => HandleDetectForm(message),
                     "submitForm" => HandleSubmitForm(message),
-                    // AutoFill Mode: extension polls for pending fill after USB insertion
+
                     "fill" => HandleFill(message),
-                    // AutoFill Mode: extension signals that a TOTP field has appeared
+
                     "detectTotp" => HandleDetectTotp(message),
+                    "getSyncState" => HandleGetSyncState(),
+                    "pushSyncState" => HandlePushSyncState(message),
                     "ping" => CreateSuccessResponse(new { status = "ok" }),
                     _ => CreateErrorResponse($"Unknown message type: {message.Type}")
                 };
@@ -240,10 +222,9 @@ namespace PhantomVault.Core.Services.Autofill
 
                 var credentials = await _credentialRepository.GetCredentialsByDomainAsync(domain, cancellationToken);
 
-                // Map to response format (never send actual passwords in response - only metadata)
                 var credentialList = credentials.Select(c => new
                 {
-                    id = c.Title, // Using Title as ID for now
+                    id = c.Title,
                     username = c.Username,
                     title = c.Title,
                     domain = ExtractDomain(c.Url)
@@ -279,7 +260,6 @@ namespace PhantomVault.Core.Services.Autofill
                     return CreateErrorResponse("Missing required fields");
                 }
 
-                // Save credential to repository
                 var credential = new Credential
                 {
                     Url = domain,
@@ -338,7 +318,6 @@ namespace PhantomVault.Core.Services.Autofill
                     fields.Add(field);
                 }
 
-                // Raise event for UI handling
                 FormDetected?.Invoke(this, new FormDetectedEventArgs
                 {
                     Url = url,
@@ -393,12 +372,11 @@ namespace PhantomVault.Core.Services.Autofill
                     };
 
                     fields.Add(field);
-                    
+
                     if (!string.IsNullOrEmpty(fieldId))
                         fieldValues[fieldId] = fieldValue;
                 }
 
-                // Raise event for password capture
                 FormSubmitted?.Invoke(this, new FormSubmittedEventArgs
                 {
                     Url = url,
@@ -414,11 +392,6 @@ namespace PhantomVault.Core.Services.Autofill
             }
         }
 
-        /// <summary>
-        /// Handles a <c>fill</c> message from the browser extension.
-        /// If a pending fill request exists (set by the AutoFill orchestrator after USB
-        /// insertion), it is returned and cleared. Otherwise responds with no-op.
-        /// </summary>
         private string HandleFill(NativeMessage message)
         {
             var (allowed, reason) = EnsureAutofillAllowed();
@@ -432,7 +405,7 @@ namespace PhantomVault.Core.Services.Autofill
                 return CreateSuccessResponse(new { hasFill = false });
 
             var fill = _pendingFill;
-            _pendingFill = null; // consume once
+            _pendingFill = null;
 
             return CreateSuccessResponse(new
             {
@@ -443,11 +416,6 @@ namespace PhantomVault.Core.Services.Autofill
             });
         }
 
-        /// <summary>
-        /// Handles a <c>detectTotp</c> message: the browser extension reports that
-        /// a 2FA code field has appeared after password fill. Raises <see cref="FormDetected"/>
-        /// with the TOTP field so <c>TotpFieldPoller</c> can resolve its wait.
-        /// </summary>
         private string HandleDetectTotp(NativeMessage message)
         {
             try
@@ -460,8 +428,6 @@ namespace PhantomVault.Core.Services.Autofill
                 var fieldId = data.Value.TryGetProperty("fieldId", out var idProp) ? idProp.GetString() ?? "" : "";
                 var fieldName = data.Value.TryGetProperty("fieldName", out var nameProp) ? nameProp.GetString() ?? "" : "";
 
-                // Synthesise a FormDetected event with a TwoFactor field so that
-                // TotpFieldPoller's subscription resolves.
                 FormDetected?.Invoke(this, new FormDetectedEventArgs
                 {
                     Url = url,
@@ -507,6 +473,98 @@ namespace PhantomVault.Core.Services.Autofill
             }
         }
 
+        // ── Sync (non-secret layer only) ──────────────────────────────────────
+        // getSyncState / pushSyncState / onSyncChanged mirror theme, UI prefs and
+        // the origin allowlist between the desktop app and the extension. They are
+        // deliberately NOT gated on vault unlock because they carry no secrets, and
+        // they never touch credentials or TOTP secrets.
+
+        private static readonly JsonSerializerOptions SyncJsonOptions = new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true
+        };
+
+        private string HandleGetSyncState()
+        {
+            if (_syncBridge == null)
+                return CreateErrorResponse("Sync is not available.");
+
+            try
+            {
+                return JsonSerializer.Serialize(
+                    new { success = true, data = _syncBridge.Read() }, SyncJsonOptions);
+            }
+            catch (Exception ex)
+            {
+                return CreateErrorResponse($"Failed to read sync state: {ex.Message}");
+            }
+        }
+
+        private string HandlePushSyncState(NativeMessage message)
+        {
+            if (_syncBridge == null)
+                return CreateErrorResponse("Sync is not available.");
+
+            if (message.Data == null)
+                return CreateErrorResponse("pushSyncState requires a data payload.");
+
+            try
+            {
+                var incoming = JsonSerializer.Deserialize<SyncState>(
+                    message.Data.Value.GetRawText(), SyncJsonOptions);
+                if (incoming == null)
+                    return CreateErrorResponse("Invalid sync payload.");
+
+                // Defence in depth: never accept secret-bearing fields from the
+                // extension. Only theme + UI prefs are writable back to the app.
+                incoming.TotpIssuers = new System.Collections.Generic.List<string>();
+                _syncBridge.Apply(incoming);
+                return CreateSuccessResponse(new { applied = true });
+            }
+            catch (JsonException ex)
+            {
+                return CreateErrorResponse($"Invalid sync payload: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                return CreateErrorResponse($"Failed to apply sync state: {ex.Message}");
+            }
+        }
+
+        private void OnSyncBridgeChanged(object? sender, EventArgs e)
+        {
+            if (_syncBridge == null) return;
+
+            try
+            {
+                var state = _syncBridge.Read();
+                var push = JsonSerializer.Serialize(
+                    new { type = "syncChanged", data = state }, SyncJsonOptions);
+                // Fire-and-forget; the stdout gate serializes against response writes.
+                _ = PushToExtensionAsync(push);
+            }
+            catch
+            {
+                // Best-effort push; a missed notification is recovered on next getSyncState.
+            }
+        }
+
+        private async Task PushToExtensionAsync(string message)
+        {
+            var stdout = _stdout;
+            if (stdout == null) return;
+
+            try
+            {
+                await SendMessageAsync(stdout, message, CancellationToken.None);
+            }
+            catch
+            {
+                // Extension may have disconnected; ignore.
+            }
+        }
+
         private string CreateSuccessResponse(object data)
         {
             var response = new
@@ -532,12 +590,17 @@ namespace PhantomVault.Core.Services.Autofill
             var messageBytes = Encoding.UTF8.GetBytes(message);
             var lengthBytes = BitConverter.GetBytes(messageBytes.Length);
 
-            // Write length
-            await stdout.WriteAsync(lengthBytes, 0, lengthBytes.Length, cancellationToken);
-
-            // Write message
-            await stdout.WriteAsync(messageBytes, 0, messageBytes.Length, cancellationToken);
-            await stdout.FlushAsync(cancellationToken);
+            await _stdoutGate.WaitAsync(cancellationToken);
+            try
+            {
+                await stdout.WriteAsync(lengthBytes, 0, lengthBytes.Length, cancellationToken);
+                await stdout.WriteAsync(messageBytes, 0, messageBytes.Length, cancellationToken);
+                await stdout.FlushAsync(cancellationToken);
+            }
+            finally
+            {
+                _stdoutGate.Release();
+            }
         }
 
         private async Task SendErrorAsync(Stream stdout, string error, CancellationToken cancellationToken)
@@ -546,9 +609,6 @@ namespace PhantomVault.Core.Services.Autofill
             await SendMessageAsync(stdout, errorResponse, cancellationToken);
         }
 
-        /// <summary>
-        /// Native messaging message format
-        /// </summary>
         private class NativeMessage
         {
             public string Type { get; set; } = string.Empty;
@@ -612,18 +672,12 @@ namespace PhantomVault.Core.Services.Autofill
         }
     }
 
-    /// <summary>
-    /// Event args for form detection.
-    /// </summary>
     public sealed class FormDetectedEventArgs : EventArgs
     {
         public string Url { get; set; } = string.Empty;
         public List<FormFieldInfo> Fields { get; set; } = new();
     }
 
-    /// <summary>
-    /// Event args for form submission.
-    /// </summary>
     public sealed class FormSubmittedEventArgs : EventArgs
     {
         public string Url { get; set; } = string.Empty;
@@ -631,3 +685,4 @@ namespace PhantomVault.Core.Services.Autofill
         public Dictionary<string, string> FieldValues { get; set; } = new();
     }
 }
+

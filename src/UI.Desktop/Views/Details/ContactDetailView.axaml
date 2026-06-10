@@ -2,8 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:converters="clr-namespace:PhantomVault.UI.Converters"
              x:Class="PhantomVault.UI.Views.Details.ContactDetailView">
-    
-    <!-- Contact Cards -->
+
     <StackPanel Spacing="12"
                 IsVisible="{Binding SelectedCredential.IsContactEntry}">
         <TextBlock Text="Contact Details"
@@ -44,3 +43,4 @@
         </StackPanel>
     </StackPanel>
 </UserControl>
+

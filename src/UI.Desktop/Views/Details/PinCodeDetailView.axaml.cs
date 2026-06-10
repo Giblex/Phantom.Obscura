@@ -10,3 +10,4 @@ public partial class PinCodeDetailView : UserControl
         AvaloniaXamlLoader.Load(this);
     }
 }
+

@@ -10,7 +10,7 @@
         Classes="animated-window">
 
     <Grid RowDefinitions="Auto,*,Auto">
-        <!-- Header -->
+
         <Border Grid.Row="0" Padding="25,20" BorderThickness="0,0,0,1"
                 BorderBrush="{DynamicResource ControlBorderBrush}"
                 Background="{DynamicResource ContentBackgroundBrush}">
@@ -29,7 +29,6 @@
             </StackPanel>
         </Border>
 
-        <!-- Credential list -->
         <ScrollViewer Grid.Row="1" Padding="25,20">
             <ItemsControl ItemsSource="{Binding DecoyCredentials}">
                 <ItemsControl.ItemTemplate>
@@ -41,7 +40,7 @@
                                 Padding="20"
                                 Margin="0,0,0,12">
                             <StackPanel Spacing="10">
-                                <!-- Title and Type -->
+
                                 <Grid ColumnDefinitions="*,Auto">
                                     <TextBlock Grid.Column="0"
                                                Text="{Binding Title}"
@@ -59,7 +58,6 @@
                                     </Border>
                                 </Grid>
 
-                                <!-- Username (if exists) -->
                                 <StackPanel Spacing="4" IsVisible="{Binding Username, Converter={StaticResource NullToBoolConverter}}">
                                     <TextBlock Text="Username:"
                                                FontSize="{StaticResource Type.Tiny.Size}"
@@ -70,7 +68,6 @@
                                                Foreground="{DynamicResource SecondaryTextBrush}"/>
                                 </StackPanel>
 
-                                <!-- Password (if exists) -->
                                 <StackPanel Spacing="4" IsVisible="{Binding Password, Converter={StaticResource NullToBoolConverter}}">
                                     <TextBlock Text="Password:"
                                                FontSize="{StaticResource Type.Tiny.Size}"
@@ -82,7 +79,6 @@
                                                Foreground="{DynamicResource AccentBrush}"/>
                                 </StackPanel>
 
-                                <!-- URL (if exists) -->
                                 <StackPanel Spacing="4" IsVisible="{Binding Url, Converter={StaticResource NullToBoolConverter}}">
                                     <TextBlock Text="URL:"
                                                FontSize="{StaticResource Type.Tiny.Size}"
@@ -93,7 +89,6 @@
                                                Foreground="{DynamicResource AccentBrush}"/>
                                 </StackPanel>
 
-                                <!-- Notes (if exists) -->
                                 <StackPanel Spacing="4" IsVisible="{Binding Notes, Converter={StaticResource NullToBoolConverter}}">
                                     <TextBlock Text="Notes:"
                                                FontSize="{StaticResource Type.Tiny.Size}"
@@ -105,7 +100,6 @@
                                                Foreground="{DynamicResource SecondaryTextBrush}"/>
                                 </StackPanel>
 
-                                <!-- Category -->
                                 <StackPanel Spacing="4">
                                     <TextBlock Text="Category:"
                                                FontSize="{StaticResource Type.Tiny.Size}"
@@ -122,7 +116,6 @@
             </ItemsControl>
         </ScrollViewer>
 
-        <!-- Footer -->
         <Border Grid.Row="2" Padding="25,20" BorderThickness="0,1,0,0"
                 BorderBrush="{DynamicResource ControlBorderBrush}"
                 Background="{DynamicResource ContentBackgroundBrush}">
@@ -143,3 +136,4 @@
         </Border>
     </Grid>
 </Window>
+

@@ -11,11 +11,7 @@ using Serilog;
 
 namespace PhantomVault.UI.Services.TrayBackground
 {
-    /// <summary>
-    /// Owns the system-tray icon and wires USB insertion events to the
-    /// <see cref="IAutoFillOrchestrator"/>. When AutoFill Mode is enabled the
-    /// main window hides to tray on close rather than exiting the process.
-    /// </summary>
+
     public sealed class TrayBackgroundService : ITrayBackgroundService
     {
         private readonly IUsbDetector _usbDetector;
@@ -76,7 +72,7 @@ namespace PhantomVault.UI.Services.TrayBackground
         {
             try
             {
-                // Brief delay so the drive mounts fully before we try to read from it
+
                 await Task.Delay(500);
                 await _orchestrator.RunAutoFillFlowAsync(drivePath);
             }
@@ -145,3 +141,4 @@ namespace PhantomVault.UI.Services.TrayBackground
         }
     }
 }
+

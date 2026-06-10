@@ -1,7 +1,6 @@
 <Styles xmlns="https://github.com/avaloniaui"
          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    
-    <!-- Quick filter toggle buttons - liquid glass effect sidebar buttons -->
+
     <Style Selector="ToggleButton.quick-filter">
         <Setter Property="FontFamily" Value="{DynamicResource MainFontFamily}" />
         <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
@@ -11,15 +10,14 @@
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="Height" Value="44" />
         <Setter Property="Cursor" Value="Hand" />
-        <!-- Issue #37: 8 → 12 so quick-filter sidebar buttons are visibly
-             rounded matching the liquid-glass aesthetic. -->
+
         <Setter Property="CornerRadius" Value="12" />
         <Setter Property="Margin" Value="0" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
                     <Panel>
-                        <!-- Base body with glass gradient -->
+
                         <Border Name="BaseBorder"
                                 CornerRadius="{TemplateBinding CornerRadius}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
@@ -33,16 +31,14 @@
                                 </LinearGradientBrush>
                             </Border.Background>
                         </Border>
-                        
-                        <!-- Inner rim highlight -->
+
                         <Border Margin="1"
                                 CornerRadius="{TemplateBinding CornerRadius}"
                                 BorderThickness="1"
                                 BorderBrush="#10FFFFFF"
                                 Opacity="0.95"
                                 IsHitTestVisible="False"/>
-                        
-                        <!-- Liquid sheen effect -->
+
                         <Border Name="Sheen"
                                 CornerRadius="{TemplateBinding CornerRadius}"
                                 Opacity="0.90"
@@ -55,8 +51,7 @@
                                 </LinearGradientBrush>
                             </Border.Background>
                         </Border>
-                        
-                        <!-- Specular top highlight -->
+
                         <Border Height="16"
                                 VerticalAlignment="Top"
                                 CornerRadius="{TemplateBinding CornerRadius}"
@@ -69,8 +64,7 @@
                                 </LinearGradientBrush>
                             </Border.Background>
                         </Border>
-                        
-                        <!-- Content -->
+
                         <ContentPresenter Name="PART_ContentPresenter"
                                           Margin="{TemplateBinding Padding}"
                                           HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
@@ -84,11 +78,6 @@
         </Setter>
     </Style>
 
-    <!-- Issue #37: quick-filter hover/checked were hardcoded white-alpha
-         gradients which read as flat white wash, not liquid glass. Use the
-         theme-tokenised QuickFilterGlass* brushes so the hover/active state
-         picks up the cyan-tinted glass look from the theme, with reduced
-         opacity for a glassier feel. -->
     <Style Selector="ToggleButton.quick-filter:pointerover /template/ Border#BaseBorder">
         <Setter Property="CornerRadius" Value="12"/>
         <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassBorderBrush}"/>
@@ -108,7 +97,6 @@
         <Setter Property="Background" Value="{DynamicResource QuickFilterGlassActiveHoverBrush}"/>
     </Style>
 
-    <!-- Category filter toggle buttons - liquid glass effect, slightly shorter -->
     <Style Selector="ToggleButton.category-filter">
         <Setter Property="FontFamily" Value="{DynamicResource MainFontFamily}" />
         <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
@@ -118,18 +106,14 @@
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="Height" Value="38" />
         <Setter Property="Cursor" Value="Hand" />
-        <!-- Issue #17: 8 → 12 across base + hover/checked overrides so dropdown
-             toggle and list-item corners read visibly rounded. -->
+
         <Setter Property="CornerRadius" Value="12" />
         <Setter Property="Margin" Value="0" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
                     <Panel>
-                        <!-- Issue #35: category list items were still too dull.
-                             Bump the rest-state white-alpha higher (1A→30 / 10→20)
-                             AND mix in a faint cyan tint via the gradient so the
-                             items read as present even at rest. -->
+
                         <Border Name="BaseBorder"
                                 CornerRadius="{TemplateBinding CornerRadius}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
@@ -142,8 +126,7 @@
                                 </LinearGradientBrush>
                             </Border.Background>
                         </Border>
-                        
-                        <!-- Content -->
+
                         <ContentPresenter Name="PART_ContentPresenter"
                                           Margin="{TemplateBinding Padding}"
                                           HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
@@ -157,9 +140,6 @@
         </Setter>
     </Style>
 
-    <!-- Issue #18: category-filter hover/checked were near-black overlays which
-         read flat and too dim. Switch to white-alpha + cyan glass border so
-         the categories tone up slightly and have liquid-glass border feel. -->
     <Style Selector="ToggleButton.category-filter:pointerover /template/ Border#BaseBorder">
         <Setter Property="CornerRadius" Value="12"/>
         <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassBorderBrush}"/>
@@ -192,5 +172,6 @@
             </LinearGradientBrush>
         </Setter>
     </Style>
-    
+
 </Styles>
+

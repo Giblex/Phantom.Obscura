@@ -14,9 +14,6 @@ using System.Windows.Input;
 
 namespace PhantomVault.UI.Desktop.Controls;
 
-/// <summary>
-/// Represents a credential with password strength issues.
-/// </summary>
 public class WeakCredentialItem : ReactiveObject
 {
     public string Id { get; set; } = string.Empty;
@@ -25,13 +22,9 @@ public class WeakCredentialItem : ReactiveObject
     public string MaskedPassword { get; set; } = "••••••••";
     public string IssueLabel { get; set; } = string.Empty;
     public IBrush SeverityColor { get; set; } = Brushes.Orange;
-    public int Severity { get; set; } // 0=Low, 1=Medium, 2=High, 3=Critical
+    public int Severity { get; set; }
 }
 
-/// <summary>
-/// Security dashboard widget displaying password health metrics and breach status.
-/// Shows overall security score, weak passwords, breached passwords, and quick actions.
-/// </summary>
 public partial class SecurityDashboard : UserControl
 {
     private TextBlock? _securityScoreValue;
@@ -139,7 +132,6 @@ public partial class SecurityDashboard : UserControl
         _issueCountText = this.FindControl<TextBlock>("IssueCountText");
         _weakCredentialsList = this.FindControl<ItemsControl>("WeakCredentialsList");
 
-        // DataContext is set by parent (VaultViewModel)
         UpdateDisplay();
     }
 
@@ -208,10 +200,6 @@ public partial class SecurityDashboard : UserControl
         return $"{(int)(timeSpan.TotalDays / 30)} months ago";
     }
 
-    /// <summary>
-    /// Calculate overall security score based on password health metrics.
-    /// Score ranges from 0-100, with 100 being perfect security.
-    /// </summary>
     public static int CalculateSecurityScore(
         int totalCredentials,
         int weakPasswords,
@@ -220,23 +208,19 @@ public partial class SecurityDashboard : UserControl
         int twoFactorEnabled)
     {
         if (totalCredentials == 0)
-            return 100; // No credentials = no risk
+            return 100;
 
         double score = 100.0;
 
-        // Deduct points for weak passwords (up to -30 points)
         double weakRatio = (double)weakPasswords / totalCredentials;
         score -= Math.Min(30, weakRatio * 100);
 
-        // Deduct points for breached passwords (up to -40 points, more severe)
         double breachedRatio = (double)breachedPasswords / totalCredentials;
         score -= Math.Min(40, breachedRatio * 150);
 
-        // Deduct points for reused passwords (up to -20 points)
         double reusedRatio = (double)reusedPasswords / totalCredentials;
         score -= Math.Min(20, reusedRatio * 80);
 
-        // Add points for 2FA usage (up to +15 points)
         double twoFactorRatio = (double)twoFactorEnabled / totalCredentials;
         score += Math.Min(15, twoFactorRatio * 15);
 
@@ -248,3 +232,4 @@ public partial class SecurityDashboard : UserControl
         AvaloniaXamlLoader.Load(this);
     }
 }
+

@@ -6,9 +6,7 @@ using PhantomVault.Core.Models;
 
 namespace PhantomVault.Core.Services.Autofill
 {
-    /// <summary>
-    /// Provides credential suggestions for autofill based on domain matching and relevance scoring.
-    /// </summary>
+
     public sealed class AutofillSuggestionProvider
     {
         private readonly ICredentialRepository _repository;
@@ -18,10 +16,6 @@ namespace PhantomVault.Core.Services.Autofill
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         }
 
-        /// <summary>
-        /// Gets credential suggestions for a given domain/URL.
-        /// Returns credentials ordered by relevance (exact match > subdomain > similar domain).
-        /// </summary>
         public async Task<List<CredentialSuggestion>> GetSuggestionsForDomainAsync(string url)
         {
             if (string.IsNullOrWhiteSpace(url))
@@ -61,9 +55,6 @@ namespace PhantomVault.Core.Services.Autofill
                 .ToList();
         }
 
-        /// <summary>
-        /// Gets suggestions for username/email fields based on the current input value.
-        /// </summary>
         public async Task<List<CredentialSuggestion>> GetSuggestionsForUsernameAsync(string url, string partialUsername)
         {
             var domainSuggestions = await GetSuggestionsForDomainAsync(url);
@@ -85,7 +76,7 @@ namespace PhantomVault.Core.Services.Autofill
 
             try
             {
-                // Handle URLs without protocol
+
                 if (!url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
                     !url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
                 {
@@ -104,20 +95,17 @@ namespace PhantomVault.Core.Services.Autofill
         private int CalculateMatchScore(string targetDomain, string credentialDomain)
         {
             if (targetDomain == credentialDomain)
-                return 100; // Exact match
+                return 100;
 
-            // Remove www. prefix for comparison
             var targetClean = targetDomain.Replace("www.", "");
             var credentialClean = credentialDomain.Replace("www.", "");
 
             if (targetClean == credentialClean)
-                return 95; // Exact match without www
+                return 95;
 
-            // Check subdomain match (e.g., login.github.com matches github.com)
             if (targetDomain.EndsWith("." + credentialDomain) || credentialDomain.EndsWith("." + targetDomain))
                 return 80;
 
-            // Check if base domain matches (e.g., github.com and api.github.com)
             var targetParts = targetClean.Split('.');
             var credentialParts = credentialClean.Split('.');
 
@@ -127,10 +115,10 @@ namespace PhantomVault.Core.Services.Autofill
                 var credentialBase = string.Join(".", credentialParts.Skip(Math.Max(0, credentialParts.Length - 2)));
 
                 if (targetBase == credentialBase)
-                    return 60; // Same base domain
+                    return 60;
             }
 
-            return 0; // No match
+            return 0;
         }
 
         private MatchType GetMatchType(string targetDomain, string credentialDomain)
@@ -151,9 +139,6 @@ namespace PhantomVault.Core.Services.Autofill
         }
     }
 
-    /// <summary>
-    /// A credential suggestion with relevance scoring.
-    /// </summary>
     public sealed class CredentialSuggestion
     {
         public Credential Credential { get; set; } = null!;
@@ -161,9 +146,6 @@ namespace PhantomVault.Core.Services.Autofill
         public MatchType MatchType { get; set; }
     }
 
-    /// <summary>
-    /// Type of domain match.
-    /// </summary>
     public enum MatchType
     {
         Exact,
@@ -171,3 +153,4 @@ namespace PhantomVault.Core.Services.Autofill
         BaseDomain
     }
 }
+

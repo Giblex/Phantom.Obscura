@@ -6,26 +6,20 @@ using PhantomVault.Core.Utils;
 
 namespace PhantomVault.Core.Models
 {
-    /// <summary>
-    /// Type of credential entry to determine which fields are relevant.
-    /// </summary>
+
     public enum EntryType
     {
-        Password = 0,   // Traditional website/app login
-        WiFi = 1,       // WiFi network credentials
-        Identity = 2,   // ID documents (driver's license, passport, etc.)
-        ApiKey = 3,     // API keys and tokens
-        Contact = 4,    // Contact information cards
-        CreditCard = 5, // Credit/debit cards
-        BankAccount = 6,// Bank accounts with EFT support
-        TotpGenerator = 7, // TOTP authenticator codes
-        PinCode = 8       // PIN codes (bank, SIM, device, security)
+        Password = 0,
+        WiFi = 1,
+        Identity = 2,
+        ApiKey = 3,
+        Contact = 4,
+        CreditCard = 5,
+        BankAccount = 6,
+        TotpGenerator = 7,
+        PinCode = 8
     }
 
-    /// <summary>
-    /// Legacy compatibility credential type used by older tests/callers.
-    /// Maps to <see cref="EntryType"/>.
-    /// </summary>
     public enum CredentialType
     {
         Login = 0,
@@ -40,23 +34,13 @@ namespace PhantomVault.Core.Models
         PinCode = 9
     }
 
-    /// <summary>
-    /// Represents a single credential (e.g. a website login) stored in
-    /// the vault. In a full implementation this model would map to
-    /// records in an encrypted database. Here it is kept simple for
-    /// demonstration purposes.
-    /// </summary>
     public sealed class Credential : IDisposable
     {
-        // Stable identifier used by import/export and legacy callers.
+
         public string Id { get; set; } = Guid.NewGuid().ToString();
 
-        // Entry type classification
         public EntryType EntryType { get; set; } = EntryType.Password;
 
-        /// <summary>
-        /// Legacy alias that maps to <see cref="EntryType"/>.
-        /// </summary>
         public CredentialType Type
         {
             get => EntryType switch
@@ -88,7 +72,6 @@ namespace PhantomVault.Core.Models
             };
         }
 
-        // Common fields (used by all types)
         public string Title { get; set; } = string.Empty;
         public string Username
         {
@@ -119,7 +102,7 @@ namespace PhantomVault.Core.Models
                 _secureNotes = value.ToSecureString();
             }
         }
-        public string Group { get; set; } = string.Empty; // Folder/category
+        public string Group { get; set; } = string.Empty;
         public string Category
         {
             get => Group;
@@ -127,10 +110,10 @@ namespace PhantomVault.Core.Models
         }
 
         public bool IsFavorite { get; set; }
-        public string Icon { get; set; } = string.Empty; // Custom icon emoji or brand name
-        // Optional hex color for the icon background (e.g. "#FFB5E5FF")
+        public string Icon { get; set; } = string.Empty;
+
         public string IconColor { get; set; } = string.Empty;
-        public bool IsPasskey { get; set; } = false; // Identifies if this is a passkey vs traditional password
+        public bool IsPasskey { get; set; } = false;
         public Dictionary<string, string> CustomFields { get; set; } = new();
         public List<string> Tags { get; set; } = new();
         public DateTimeOffset CreatedUtc { get; set; } = DateTimeOffset.UtcNow;
@@ -165,15 +148,13 @@ namespace PhantomVault.Core.Models
             set => LastUsedUtc = value;
         }
 
-        // Auto-type/Auto-inject fields
-        public string? AutoTypeSequence { get; set; } // Custom auto-type sequence (e.g., "{username}{tab}{password}{delay:500}{enter}")
-        public DateTime? LastUsedUtc { get; set; } // Timestamp when credential was last used for auto-fill
-        public string? PasskeyId { get; set; } // Passkey credential ID if this is a passkey entry
+        public string? AutoTypeSequence { get; set; }
+        public DateTime? LastUsedUtc { get; set; }
+        public string? PasskeyId { get; set; }
 
-        // WiFi-specific fields (EntryType.WiFi)
         public string WiFiSSID { get; set; } = string.Empty;
-        public string WiFiSecurityType { get; set; } = string.Empty; // WPA2, WPA3, WEP, Open, etc.
-        public string WiFiBSSID { get; set; } = string.Empty; // MAC address of access point
+        public string WiFiSecurityType { get; set; } = string.Empty;
+        public string WiFiBSSID { get; set; } = string.Empty;
         public string WiFiPassword
         {
             get => _secureWiFiPassword?.ToUnsecureString() ?? string.Empty;
@@ -184,23 +165,20 @@ namespace PhantomVault.Core.Models
             }
         }
 
-        // Identity document fields (EntryType.Identity)
-        public string IdDocumentType { get; set; } = string.Empty; // Passport, Driver's License, Medicare, etc.
+        public string IdDocumentType { get; set; } = string.Empty;
         public string IdNumber { get; set; } = string.Empty;
-        public string IdCardNumber { get; set; } = string.Empty; // Card/License number for physical documents
+        public string IdCardNumber { get; set; } = string.Empty;
         public string IdIssuingCountry { get; set; } = string.Empty;
         public string IdIssuingState { get; set; } = string.Empty;
         public DateTimeOffset? IdIssueDate { get; set; }
         public DateTimeOffset? IdExpiryDate { get; set; }
 
-        // API key fields (EntryType.ApiKey)
         public string ApiKeyValue { get; set; } = string.Empty;
         public string ApiKeyType { get; set; } = string.Empty;
         public string ApiEndpoint { get; set; } = string.Empty;
-        public string ApiEnvironment { get; set; } = string.Empty; // Production, Staging, Development
+        public string ApiEnvironment { get; set; } = string.Empty;
         public string ApiDocumentationUrl { get; set; } = string.Empty;
 
-        // Contact card fields (EntryType.Contact)
         public string ContactFullName { get; set; } = string.Empty;
         public string ContactEmail { get; set; } = string.Empty;
         public string ContactPhone { get; set; } = string.Empty;
@@ -208,7 +186,6 @@ namespace PhantomVault.Core.Models
         public string ContactCompany { get; set; } = string.Empty;
         public string ContactJobTitle { get; set; } = string.Empty;
 
-        // Credit card fields (EntryType.CreditCard)
         public string CardNumber
         {
             get => _secureCardNumber?.ToUnsecureString() ?? string.Empty;
@@ -219,7 +196,7 @@ namespace PhantomVault.Core.Models
             }
         }
         public string CardholderName { get; set; } = string.Empty;
-        public string CardType { get; set; } = string.Empty; // Visa, Mastercard, Amex, etc.
+        public string CardType { get; set; } = string.Empty;
         public string CardCVV
         {
             get => _secureCardCvv?.ToUnsecureString() ?? string.Empty;
@@ -229,8 +206,8 @@ namespace PhantomVault.Core.Models
                 _secureCardCvv = value.ToSecureString();
             }
         }
-        public string CardExpiryMonth { get; set; } = string.Empty; // MM format
-        public string CardExpiryYear { get; set; } = string.Empty; // YYYY format
+        public string CardExpiryMonth { get; set; } = string.Empty;
+        public string CardExpiryYear { get; set; } = string.Empty;
         public string CardPIN
         {
             get => _secureCardPin?.ToUnsecureString() ?? string.Empty;
@@ -242,7 +219,6 @@ namespace PhantomVault.Core.Models
         }
         public string CardBillingAddress { get; set; } = string.Empty;
 
-        // Bank account fields (EntryType.BankAccount)
         public string BankName { get; set; } = string.Empty;
         public string BankAccountNumber
         {
@@ -261,7 +237,7 @@ namespace PhantomVault.Core.Models
                 _secureBankRoutingNumber?.Dispose();
                 _secureBankRoutingNumber = value.ToSecureString();
             }
-        } // For US accounts
+        }
         public string BankIBAN
         {
             get => _secureBankIban?.ToUnsecureString() ?? string.Empty;
@@ -270,7 +246,7 @@ namespace PhantomVault.Core.Models
                 _secureBankIban?.Dispose();
                 _secureBankIban = value.ToSecureString();
             }
-        } // International Bank Account Number
+        }
         public string BankSWIFT
         {
             get => _secureBankSwift?.ToUnsecureString() ?? string.Empty;
@@ -279,12 +255,11 @@ namespace PhantomVault.Core.Models
                 _secureBankSwift?.Dispose();
                 _secureBankSwift = value.ToSecureString();
             }
-        } // SWIFT/BIC code
-        public string BankAccountType { get; set; } = string.Empty; // Checking, Savings, etc.
+        }
+        public string BankAccountType { get; set; } = string.Empty;
         public string BankBranchCode { get; set; } = string.Empty;
         public string BankBranchAddress { get; set; } = string.Empty;
 
-        // TOTP authenticator fields (EntryType.TotpGenerator)
         public string TotpSecret
         {
             get => _secureTotpSecret?.ToUnsecureString() ?? string.Empty;
@@ -293,15 +268,14 @@ namespace PhantomVault.Core.Models
                 _secureTotpSecret?.Dispose();
                 _secureTotpSecret = value.ToSecureString();
             }
-        } // Base32-encoded secret
-        public int TotpDigits { get; set; } = 6; // Usually 6, sometimes 8
-        public int TotpTimeStep { get; set; } = 30; // Seconds per code
-        public string TotpAlgorithm { get; set; } = "SHA1"; // SHA1, SHA256, or SHA512
-        public string TotpIssuer { get; set; } = string.Empty; // e.g., "Google", "Microsoft"
-        public string TotpAccountName { get; set; } = string.Empty; // e.g., "user@example.com"
+        }
+        public int TotpDigits { get; set; } = 6;
+        public int TotpTimeStep { get; set; } = 30;
+        public string TotpAlgorithm { get; set; } = "SHA1";
+        public string TotpIssuer { get; set; } = string.Empty;
+        public string TotpAccountName { get; set; } = string.Empty;
 
-        // PIN code fields (EntryType.PinCode)
-        public string PinLabel { get; set; } = string.Empty; // e.g., "Bank PIN", "SIM PIN"
+        public string PinLabel { get; set; } = string.Empty;
         public string PinValue
         {
             get => _securePinValue?.ToUnsecureString() ?? string.Empty;
@@ -311,10 +285,9 @@ namespace PhantomVault.Core.Models
                 _securePinValue = value.ToSecureString();
             }
         }
-        public string PinCategory { get; set; } = string.Empty; // Banking, SIM, Device, Security, Other
-        public string PinIssuer { get; set; } = string.Empty; // e.g., "Chase", "Vodafone"
+        public string PinCategory { get; set; } = string.Empty;
+        public string PinIssuer { get; set; } = string.Empty;
 
-        // Secure in-memory copies of sensitive fields.
         [JsonIgnore] private SecureString? _secureUsername;
         [JsonIgnore] private SecureString? _securePassword;
         [JsonIgnore] private SecureString? _secureNotes;
@@ -331,10 +304,6 @@ namespace PhantomVault.Core.Models
         [JsonIgnore] private SecureString? _secureTotpSecret;
         [JsonIgnore] private SecureString? _securePinValue;
 
-        /// <summary>
-        /// Explicit secure-only accessors for highly sensitive card data.
-        /// They mirror the plain properties but avoid binding collisions.
-        /// </summary>
         [JsonIgnore]
         public string CardCVVSecure
         {
@@ -369,9 +338,6 @@ namespace PhantomVault.Core.Models
             }
         }
 
-        /// <summary>
-        /// Secure view of custom fields. Values are converted to/from SecureString on demand.
-        /// </summary>
         [JsonIgnore]
         public Dictionary<SecureString, SecureString> SecureCustomFields
         {
@@ -430,3 +396,4 @@ namespace PhantomVault.Core.Models
         public void Dispose() => DisposeSecure();
     }
 }
+

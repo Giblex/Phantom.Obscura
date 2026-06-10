@@ -8,11 +8,7 @@ using PhantomVault.Core.Models;
 
 namespace PhantomVault.Core.Services
 {
-    /// <summary>
-    /// Validates the Obscura-side Phantom Key bridge contract at runtime.
-    /// This validator is intentionally strict and fails closed whenever the
-    /// bridge is required but missing, incomplete, or inconsistent.
-    /// </summary>
+
     public sealed class PhantomKeyBridgeValidator
     {
         private readonly UsbArtifactProtectionService _artifactProtectionService;
@@ -210,3 +206,4 @@ namespace PhantomVault.Core.Services
         }
     }
 }
+

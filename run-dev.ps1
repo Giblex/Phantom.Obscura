@@ -1,7 +1,10 @@
 # ===================================================================
 # Phantom Obscura V6 - Developer Mode Launcher (PowerShell)
 # ===================================================================
-# This script bypasses USB policy enforcement for development/testing
+# Bypasses USB policy enforcement for development/testing.
+# The bypass is honoured in Debug builds only; Release builds refuse
+# to start when PHANTOM_DEV_BYPASS_POLICY is set. Use run.ps1 for a
+# normal (fully enforced) launch.
 
 Write-Host "Starting Phantom Obscura V6 in developer mode..." -ForegroundColor Cyan
 Write-Host "USB policy enforcement: BYPASSED" -ForegroundColor Yellow

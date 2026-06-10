@@ -35,7 +35,6 @@ namespace PhantomVault.UI.ViewModels.Settings
             ViewReusedPasswordsCommand = ReactiveCommand.Create(ViewReusedPasswords);
             ViewOldPasswordsCommand = ReactiveCommand.Create(ViewOldPasswords);
 
-            // Listen to property changes
             this.WhenAnyValue(x => x.EntropyThreshold, x => x.AgeThresholdDays)
                 .Subscribe(_ => UpdateThresholdsAsync());
         }
@@ -125,7 +124,6 @@ namespace PhantomVault.UI.ViewModels.Settings
         public bool HasOldPasswords => Report.OldCount > 0;
         public bool HasFlaggedPasswords => Report.WeakCount > 0 || Report.ReusedCount > 0;
 
-        // Security Score (0-100)
         public int SecurityScore
         {
             get
@@ -134,19 +132,15 @@ namespace PhantomVault.UI.ViewModels.Settings
 
                 int score = 100;
 
-                // Deduct points for weak passwords (max -40 points)
                 double weakRatio = (double)Report.WeakCount / Report.TotalCredentials;
                 score -= (int)(weakRatio * 40);
 
-                // Deduct points for reused passwords (max -30 points)
                 double reuseRatio = (double)Report.ReusedCount / Report.TotalCredentials;
                 score -= (int)(reuseRatio * 30);
 
-                // Deduct points for old passwords (max -20 points)
                 double oldRatio = (double)Report.OldCount / Report.TotalCredentials;
                 score -= (int)(oldRatio * 20);
 
-                // Bonus/penalty based on average entropy
                 if (Report.AverageEntropy < 30) score -= 10;
                 else if (Report.AverageEntropy > 60) score += 10;
 
@@ -172,11 +166,11 @@ namespace PhantomVault.UI.ViewModels.Settings
             get
             {
                 var score = SecurityScore;
-                if (score >= 90) return new SolidColorBrush(Color.Parse("#22C55E")); // Green
-                if (score >= 75) return new SolidColorBrush(Color.Parse("#84CC16")); // Lime
-                if (score >= 60) return new SolidColorBrush(Color.Parse("#EAB308")); // Yellow
-                if (score >= 40) return new SolidColorBrush(Color.Parse("#F97316")); // Orange
-                return new SolidColorBrush(Color.Parse("#EF4444")); // Red
+                if (score >= 90) return new SolidColorBrush(Color.Parse("#22C55E"));
+                if (score >= 75) return new SolidColorBrush(Color.Parse("#84CC16"));
+                if (score >= 60) return new SolidColorBrush(Color.Parse("#EAB308"));
+                if (score >= 40) return new SolidColorBrush(Color.Parse("#F97316"));
+                return new SolidColorBrush(Color.Parse("#EF4444"));
             }
         }
 
@@ -212,9 +206,9 @@ namespace PhantomVault.UI.ViewModels.Settings
         {
             get
             {
-                if (Report.AverageEntropy >= 60) return new SolidColorBrush(Color.Parse("#22C55E")); // Green
-                if (Report.AverageEntropy >= 40) return new SolidColorBrush(Color.Parse("#EAB308")); // Yellow
-                return new SolidColorBrush(Color.Parse("#EF4444")); // Red
+                if (Report.AverageEntropy >= 60) return new SolidColorBrush(Color.Parse("#22C55E"));
+                if (Report.AverageEntropy >= 40) return new SolidColorBrush(Color.Parse("#EAB308"));
+                return new SolidColorBrush(Color.Parse("#EF4444"));
             }
         }
 
@@ -222,9 +216,9 @@ namespace PhantomVault.UI.ViewModels.Settings
         {
             get
             {
-                // Scale entropy to 0-100% (assuming max entropy ~80 bits)
+
                 double percentage = Math.Clamp(Report.AverageEntropy / 80.0 * 100, 0, 100);
-                return percentage * 3; // Scale to pixel width (max 300px)
+                return percentage * 3;
             }
         }
 
@@ -267,8 +261,7 @@ namespace PhantomVault.UI.ViewModels.Settings
 
         private void ShowFlaggedPasswords()
         {
-            // This would trigger the flagged passwords overlay in VaultWindow
-            // For now, just a placeholder
+
         }
 
         private async Task ExportReportAsync()
@@ -315,7 +308,7 @@ namespace PhantomVault.UI.ViewModels.Settings
 
         private void ViewWeakPasswords()
         {
-            // Filter the credentials list to show only weak entries
+
             if (!HasReport || Report.WeakCount == 0) return;
             var weakSet = new System.Collections.Generic.HashSet<string>(Report.WeakTitles, StringComparer.OrdinalIgnoreCase);
             FilteredCredentialTitles = Report.WeakTitles;
@@ -360,3 +353,4 @@ namespace PhantomVault.UI.ViewModels.Settings
         }
     }
 }
+

@@ -45,8 +45,8 @@ public partial class HeaderView : UserControl
             var openCorner = new Avalonia.CornerRadius(14, 14, 0, 0);
             var closedCorner = new Avalonia.CornerRadius(12);
             const int closeAnimMs = 520;
-            var openOpacityMs = TimeSpan.FromMilliseconds(360);
-            var openTransformMs = TimeSpan.FromMilliseconds(360);
+            var openOpacityMs = TimeSpan.FromMilliseconds(240);
+            var openTransformMs = TimeSpan.FromMilliseconds(280);
             var closeAnimDuration = TimeSpan.FromMilliseconds(closeAnimMs);
             var allowClose = false;
 

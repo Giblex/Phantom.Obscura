@@ -5,112 +5,53 @@ using PhantomVault.Core.Models.Security;
 
 namespace PhantomVault.Core.Models.DomainStores
 {
-    /// <summary>
-    /// Obscura domain store - encrypted vault/credential storage ONLY.
-    ///
-    /// This store contains:
-    /// - Credential entries (passwords, notes, cards, etc.)
-    /// - Categories for organization
-    /// - Vault metadata (name, description)
-    ///
-    /// This store does NOT contain:
-    /// - TOTP secrets (moved to Attestor)
-    /// - Passkey data (moved to Attestor)
-    /// - Recovery codes (moved to Recovery)
-    ///
-    /// Encrypted with: K_obscura (domain key)
-    /// File: obscura.store.encrypted
-    /// </summary>
+
     public sealed class ObscuraStore
     {
-        /// <summary>
-        /// Schema version for migration support.
-        /// </summary>
+
         [JsonPropertyName("version")]
         public int Version { get; set; } = 1;
 
-        /// <summary>
-        /// Store identifier (UUIDv7 recommended).
-        /// </summary>
         [JsonPropertyName("store_id")]
         public string StoreId { get; set; } = Guid.NewGuid().ToString();
 
-        /// <summary>
-        /// Human-readable vault name.
-        /// </summary>
         [JsonPropertyName("vault_name")]
         public string VaultName { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Optional description.
-        /// </summary>
         [JsonPropertyName("description")]
         public string? Description { get; set; }
 
-        /// <summary>
-        /// UTC timestamp when store was created.
-        /// </summary>
         [JsonPropertyName("created_utc")]
         public DateTimeOffset CreatedUtc { get; set; } = DateTimeOffset.UtcNow;
 
-        /// <summary>
-        /// UTC timestamp when store was last modified.
-        /// </summary>
         [JsonPropertyName("modified_utc")]
         public DateTimeOffset ModifiedUtc { get; set; } = DateTimeOffset.UtcNow;
 
-        /// <summary>
-        /// Credential entries in this vault.
-        /// </summary>
         [JsonPropertyName("credentials")]
         public List<CredentialEntry> Credentials { get; set; } = new();
 
-        /// <summary>
-        /// Categories for organizing credentials.
-        /// </summary>
         [JsonPropertyName("categories")]
         public List<CategoryModel> Categories { get; set; } = new();
 
-        /// <summary>
-        /// Autofill settings for this vault.
-        /// </summary>
         [JsonPropertyName("autofill")]
         public AutofillSettings Autofill { get; set; } = new();
 
-        /// <summary>
-        /// Domain whitelist for autofill.
-        /// </summary>
         [JsonPropertyName("domain_whitelist")]
         public List<string> DomainWhitelist { get; set; } = new();
 
-        /// <summary>
-        /// Explicit threat model for this vault.
-        /// </summary>
         [JsonPropertyName("threat_model")]
         public ThreatModelMetadata? ThreatModel { get; set; }
 
-        /// <summary>
-        /// AI access policy for this vault.
-        /// </summary>
         [JsonPropertyName("ai_policy")]
         public AIAccessPolicy? AiPolicy { get; set; }
 
-        /// <summary>
-        /// Supply chain evidence for forensics.
-        /// </summary>
         [JsonPropertyName("supply_chain")]
         public SupplyChainEvidence? SupplyChain { get; set; }
 
-        /// <summary>
-        /// Security capabilities manifest for compliance.
-        /// </summary>
         [JsonPropertyName("security_capabilities")]
         public SecurityCapabilitiesManifest? SecurityCapabilities { get; set; }
     }
 
-    /// <summary>
-    /// A single credential entry in the Obscura store.
-    /// </summary>
     public sealed class CredentialEntry
     {
         [JsonPropertyName("id")]
@@ -149,22 +90,13 @@ namespace PhantomVault.Core.Models.DomainStores
         [JsonPropertyName("use_count")]
         public int UseCount { get; set; }
 
-        /// <summary>
-        /// Entry type for specialized rendering.
-        /// </summary>
         [JsonPropertyName("entry_type")]
         public CredentialEntryType EntryType { get; set; } = CredentialEntryType.Login;
 
-        /// <summary>
-        /// Custom fields for this entry.
-        /// </summary>
         [JsonPropertyName("custom_fields")]
         public List<CustomField> CustomFields { get; set; } = new();
     }
 
-    /// <summary>
-    /// Types of credential entries.
-    /// </summary>
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum CredentialEntryType
     {
@@ -178,9 +110,6 @@ namespace PhantomVault.Core.Models.DomainStores
         Document
     }
 
-    /// <summary>
-    /// Custom field for extensible credential data.
-    /// </summary>
     public sealed class CustomField
     {
         [JsonPropertyName("name")]
@@ -208,9 +137,6 @@ namespace PhantomVault.Core.Models.DomainStores
         Number
     }
 
-    /// <summary>
-    /// Autofill settings for the vault.
-    /// </summary>
     public sealed class AutofillSettings
     {
         [JsonPropertyName("enabled")]
@@ -229,3 +155,4 @@ namespace PhantomVault.Core.Models.DomainStores
         public int ClearClipboardSeconds { get; set; } = 30;
     }
 }
+

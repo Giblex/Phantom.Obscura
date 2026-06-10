@@ -1,0 +1,95 @@
+name: Security Hard-Rules
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  hard-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reject PHANTOM_DEV_BYPASS_POLICY without #if !DEBUG guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          BAD=$(grep -RIn --include='*.cs' 'PHANTOM_DEV_BYPASS_POLICY' src || true)
+          if [ -n "$BAD" ]; then
+            echo "$BAD" | while IFS= read -r line; do
+              file=$(echo "$line" | cut -d: -f1)
+              # Each occurrence must live inside a #if !DEBUG block.
+              if ! awk '/#if !DEBUG/{flag=1} /#endif/{flag=0} flag && /PHANTOM_DEV_BYPASS_POLICY/{found=1} END{exit !found}' "$file"; then
+                echo "::error file=$file::PHANTOM_DEV_BYPASS_POLICY appears outside a #if !DEBUG block"
+                exit 1
+              fi
+            done
+          fi
+
+      - name: Reject System.Random in src
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -RIn --include='*.cs' -E '\bnew[[:space:]]+Random\(' src; then
+            echo "::error::System.Random is forbidden — use RandomNumberGenerator"
+            exit 1
+          fi
+
+      - name: Reject placeholder pin in committed config
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Allow placeholder pin in *GatewayPolicy.cs (intentional sentinel).
+          # Reject elsewhere.
+          if grep -RIn --include='*.cs' --exclude='*GatewayPolicy.cs' 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=' src; then
+            echo "::error::Placeholder SPKI pin must only appear in *GatewayPolicy.cs"
+            exit 1
+          fi
+
+      - name: Reject == / Equals on byte[] secret comparisons
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Heuristic: byte[] variable name ending in Key/Hash/Tag/Mac compared with ==
+          if grep -RInE --include='*.cs' '(Key|Hash|Tag|Mac|Secret|Pin)[[:space:]]*==[[:space:]]*' src \
+             | grep -v 'FixedTimeEquals' \
+             | grep -v '//.*==' ; then
+            echo "::warning::Possible non-constant-time secret comparison — verify or use CryptographicOperations.FixedTimeEquals"
+          fi
+
+      - name: Reject "master password" required phrasing
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Hard rule (user memory): keyfile mandatory, password optional.
+          if grep -RIn --include='*.cs' --include='*.axaml' --include='*.md' \
+             -E 'master password.*required|require[sd]?[[:space:]]+a?[[:space:]]*master password' src docs README.md SECURITY.md THREAT_MODEL.md 2>/dev/null; then
+            echo "::error::Hard-rule violation — password is OPTIONAL, keyfile is MANDATORY"
+            exit 1
+          fi
+
+      - name: Update-signing key gate (single source of truth)
+        shell: bash
+        run: |
+          set -euo pipefail
+          # The Ed25519 update-signing public key lives in exactly one file.
+          # A duplicate would silently allow a forked-but-unsigned trust root.
+          COUNT=$(find src -type f -name 'UpdatePublicKey.cs' | wc -l | tr -d ' ')
+          if [ "$COUNT" != "1" ]; then
+            echo "::error::Expected exactly one UpdatePublicKey.cs in src/, found $COUNT"
+            find src -type f -name 'UpdatePublicKey.cs'
+            exit 1
+          fi
+
+      - name: Update-signing provisioning gate not removed
+        shell: bash
+        run: |
+          set -euo pipefail
+          # UpdateVerifier MUST consult UpdatePublicKey.IsProvisioned before
+          # attempting any Ed25519 verify; without that gate the all-zero
+          # placeholder key would be silently accepted as a valid public key.
+          if ! grep -RIn --include='UpdateVerifier.cs' 'UpdatePublicKey\.IsProvisioned' src >/dev/null; then
+            echo "::error::UpdateVerifier.cs no longer references UpdatePublicKey.IsProvisioned — provisioning gate has been removed"
+            exit 1
+          fi

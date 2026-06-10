@@ -5,9 +5,7 @@ using PhantomVault.Core.Services.Autofill;
 
 namespace PhantomVault.UI.Controls
 {
-    /// <summary>
-    /// Visual overlay that highlights an autofillable input field.
-    /// </summary>
+
     public sealed class FieldOverlay : Control
     {
         public static readonly StyledProperty<BoundingBox?> TargetFieldProperty =
@@ -24,7 +22,7 @@ namespace PhantomVault.UI.Controls
 
         public FieldOverlay()
         {
-            IsHitTestVisible = false; // Allow clicks to pass through
+            IsHitTestVisible = false;
         }
 
         public BoundingBox? TargetField
@@ -58,32 +56,28 @@ namespace PhantomVault.UI.Controls
             var field = TargetField;
             var rect = new Rect(field.X, field.Y, field.Width, field.Height);
 
-            // Draw border around field
             var borderBrush = GetBorderBrush();
             var pen = new Pen(borderBrush, BorderWidth);
             context.DrawRectangle(null, pen, rect, 4);
 
-            // Draw icon in top-right corner
             var iconRect = new Rect(
                 field.X + field.Width - IconSize - 4,
                 field.Y + 4,
                 IconSize,
                 IconSize);
 
-            // Icon background
             context.DrawRectangle(
                 new SolidColorBrush(Color.Parse("#5865F2")),
                 null,
                 iconRect,
                 IconSize / 2);
 
-            // Icon (simplified key symbol)
             var iconBrush = Brushes.White;
             var iconPen = new Pen(iconBrush, 2);
-            
+
             var keyCircleCenter = new Point(iconRect.Center.X, iconRect.Center.Y - 2);
             context.DrawEllipse(null, iconPen, keyCircleCenter, 3, 3);
-            
+
             var lineStart = new Point(keyCircleCenter.X, keyCircleCenter.Y + 3);
             var lineEnd = new Point(keyCircleCenter.X, iconRect.Bottom - 4);
             context.DrawLine(iconPen, lineStart, lineEnd);
@@ -96,12 +90,13 @@ namespace PhantomVault.UI.Controls
 
             return FieldType switch
             {
-                FormFieldType.Password => new SolidColorBrush(Color.Parse("#5865F2")), // Blue
-                FormFieldType.Username or FormFieldType.Email => new SolidColorBrush(Color.Parse("#4CAF50")), // Green
-                FormFieldType.TwoFactor => new SolidColorBrush(Color.Parse("#FF9800")), // Orange
-                FormFieldType.Passkey => new SolidColorBrush(Color.Parse("#9C27B0")), // Purple
-                _ => new SolidColorBrush(Color.Parse("#5865F2")) // Default blue
+                FormFieldType.Password => new SolidColorBrush(Color.Parse("#5865F2")),
+                FormFieldType.Username or FormFieldType.Email => new SolidColorBrush(Color.Parse("#4CAF50")),
+                FormFieldType.TwoFactor => new SolidColorBrush(Color.Parse("#FF9800")),
+                FormFieldType.Passkey => new SolidColorBrush(Color.Parse("#9C27B0")),
+                _ => new SolidColorBrush(Color.Parse("#5865F2"))
             };
         }
     }
 }
+

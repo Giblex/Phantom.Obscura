@@ -4,14 +4,7 @@ using System.Threading.Tasks;
 
 namespace PhantomVault.Core.Services.Autofill
 {
-    /// <summary>
-    /// Linux autofill provider. Supports browser-based autofill via the
-    /// PhantomVault browser extension and native messaging host.
-    ///
-    /// Linux has no single OS-level autofill framework comparable to Android
-    /// or iOS. The primary autofill surface is browser extensions (Chrome/Firefox
-    /// native messaging). Future: integrate with IBus/AT-SPI for desktop forms.
-    /// </summary>
+
     public sealed class LinuxAutofillService : IAutofillProvider
     {
         private readonly ICredentialRepository _credentialRepository;
@@ -30,10 +23,6 @@ namespace PhantomVault.Core.Services.Autofill
             _nativeMessagingHost = nativeMessagingHost;
         }
 
-        /// <summary>
-        /// Verifies that credentials exist for the domain. Actual browser filling
-        /// is performed by the browser extension via the native messaging host.
-        /// </summary>
         public bool TryFill(string domain)
         {
             if (string.IsNullOrWhiteSpace(domain)) return false;
@@ -54,7 +43,6 @@ namespace PhantomVault.Core.Services.Autofill
             }
         }
 
-        /// <summary>Starts the native messaging host so the browser extension can connect.</summary>
         public async Task StartNativeMessagingHostAsync(CancellationToken cancellationToken = default)
         {
             if (_nativeMessagingHost == null)
@@ -63,7 +51,7 @@ namespace PhantomVault.Core.Services.Autofill
             await _nativeMessagingHost.StartAsync(cancellationToken);
         }
 
-        /// <summary>Gets whether the native messaging host is currently running.</summary>
         public bool IsNativeMessagingHostRunning => _nativeMessagingHost?.IsRunning ?? false;
     }
 }
+

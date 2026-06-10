@@ -9,12 +9,7 @@ using Avalonia.Xaml.Interactivity;
 
 namespace PhantomVault.UI.Behaviors
 {
-    /// <summary>
-    /// Behavior that lifts a control slightly upward on hover.
-    /// Respects ReduceMotion accessibility settings.
-    /// Uses DispatcherTimer interpolation because Avalonia's
-    /// Animation.RunAsync() cannot target TranslateTransform (it is not a Visual).
-    /// </summary>
+
     public class HoverLiftBehavior : Behavior<Control>
     {
         public static readonly StyledProperty<double> LiftDistanceProperty =
@@ -29,21 +24,15 @@ namespace PhantomVault.UI.Behaviors
         private double _animFrom;
         private double _animTo;
         private DateTime _animStart;
-        private double _animDuration; // seconds
+        private double _animDuration;
         private readonly CubicEaseOut _easing = new();
 
-        /// <summary>
-        /// Distance to lift in pixels (negative = up, default: -2px)
-        /// </summary>
         public double LiftDistance
         {
             get => GetValue(LiftDistanceProperty);
             set => SetValue(LiftDistanceProperty, value);
         }
 
-        /// <summary>
-        /// Animation duration in seconds (default: 0.2s)
-        /// </summary>
         public double Duration
         {
             get => GetValue(DurationProperty);
@@ -97,7 +86,6 @@ namespace PhantomVault.UI.Behaviors
         {
             if (_transform == null || AssociatedObject == null) return;
 
-            // Check ReduceMotion — if enabled, snap immediately
             var reduceMotion = Services.AccessibilityService.Instance.ReduceMotion;
             if (reduceMotion)
             {
@@ -106,7 +94,6 @@ namespace PhantomVault.UI.Behaviors
                 return;
             }
 
-            // Set up timer-driven interpolation (~60 fps)
             _animFrom = fromY;
             _animTo = toY;
             _animDuration = AnimationHelper.GetDuration(AnimationTiming.Fast);
@@ -132,7 +119,6 @@ namespace PhantomVault.UI.Behaviors
             var elapsed = (DateTime.UtcNow - _animStart).TotalSeconds;
             var t = Math.Clamp(elapsed / _animDuration, 0.0, 1.0);
 
-            // Apply cubic-ease-out
             var easedT = _easing.Ease(t);
             _transform.Y = _animFrom + (_animTo - _animFrom) * easedT;
 
@@ -154,3 +140,4 @@ namespace PhantomVault.UI.Behaviors
         }
     }
 }
+

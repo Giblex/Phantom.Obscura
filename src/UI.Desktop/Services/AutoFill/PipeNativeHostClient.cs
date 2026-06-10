@@ -7,10 +7,7 @@ using System.Threading.Tasks;
 
 namespace PhantomVault.UI.Services.AutoFill
 {
-    /// <summary>
-    /// Named pipe client used by the <c>--native-messaging</c> subprocess to send
-    /// NDJSON requests to the running PhantomVault desktop instance and receive responses.
-    /// </summary>
+
     public sealed class PipeNativeHostClient : IDisposable
     {
         private NamedPipeClientStream? _pipe;
@@ -20,9 +17,6 @@ namespace PhantomVault.UI.Services.AutoFill
 
         public bool IsConnected => _pipe?.IsConnected ?? false;
 
-        /// <summary>
-        /// Attempts to connect to the desktop app pipe. Returns false if the app is not running.
-        /// </summary>
         public async Task<bool> ConnectAsync(int timeoutMs = 3000, CancellationToken ct = default)
         {
             try
@@ -46,10 +40,6 @@ namespace PhantomVault.UI.Services.AutoFill
             }
         }
 
-        /// <summary>
-        /// Sends a JSON request line and returns the JSON response line. Thread-safe.
-        /// Returns null if the connection is not established or was lost.
-        /// </summary>
         public async Task<string?> SendAsync(string requestJson, CancellationToken ct = default)
         {
             if (_writer == null || _reader == null) return null;
@@ -79,3 +69,4 @@ namespace PhantomVault.UI.Services.AutoFill
         }
     }
 }
+

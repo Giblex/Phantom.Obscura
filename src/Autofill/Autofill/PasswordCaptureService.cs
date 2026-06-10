@@ -6,10 +6,7 @@ using PhantomVault.Core.Models;
 
 namespace PhantomVault.Core.Services.Autofill
 {
-    /// <summary>
-    /// Captures new passwords during registration/login and prompts to save or update vault entries.
-    /// Detects password changes and offers to update existing credentials.
-    /// </summary>
+
     public sealed class PasswordCaptureService
     {
         private readonly ICredentialRepository _repository;
@@ -20,19 +17,10 @@ namespace PhantomVault.Core.Services.Autofill
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         }
 
-        /// <summary>
-        /// Event raised when a new password is detected and ready to be saved.
-        /// </summary>
         public event EventHandler<PasswordCaptureEventArgs>? PasswordCaptured;
 
-        /// <summary>
-        /// Event raised when a password change is detected for an existing credential.
-        /// </summary>
         public event EventHandler<PasswordChangeEventArgs>? PasswordChanged;
 
-        /// <summary>
-        /// Detects and captures password submission from a login/registration form.
-        /// </summary>
         public async Task DetectPasswordSubmissionAsync(string url, LoginFormDetectionResult formData, Dictionary<string, string> fieldValues)
         {
             if (formData == null || fieldValues == null)
@@ -42,21 +30,18 @@ namespace PhantomVault.Core.Services.Autofill
             if (string.IsNullOrEmpty(domain))
                 return;
 
-            // Extract username and password
             var username = ExtractUsername(formData, fieldValues);
             var password = ExtractPassword(formData, fieldValues);
 
             if (string.IsNullOrWhiteSpace(password))
                 return;
 
-            // Check if this is a registration form (has password confirmation)
             if (formData.FormType == FormType.Registration)
             {
                 var confirmPassword = ExtractConfirmPassword(formData, fieldValues);
                 if (password != confirmPassword)
-                    return; // Passwords don't match, don't capture
+                    return;
 
-                // This is a new account registration
                 OnPasswordCaptured(new PasswordCaptureEventArgs
                 {
                     Url = url,
@@ -68,12 +53,12 @@ namespace PhantomVault.Core.Services.Autofill
             }
             else if (formData.FormType == FormType.Login)
             {
-                // Check if we have an existing credential for this domain + username
+
                 var existing = await FindExistingCredentialAsync(domain, username);
 
                 if (existing != null && existing.Password != password)
                 {
-                    // Password has changed
+
                     OnPasswordChanged(new PasswordChangeEventArgs
                     {
                         ExistingCredential = existing,
@@ -84,7 +69,7 @@ namespace PhantomVault.Core.Services.Autofill
                 }
                 else if (existing == null)
                 {
-                    // New login captured
+
                     OnPasswordCaptured(new PasswordCaptureEventArgs
                     {
                         Url = url,
@@ -97,7 +82,7 @@ namespace PhantomVault.Core.Services.Autofill
             }
             else if (formData.FormType == FormType.PasswordChange)
             {
-                // Password change form detected
+
                 var existing = await FindExistingCredentialAsync(domain, username);
                 if (existing != null)
                 {
@@ -112,9 +97,6 @@ namespace PhantomVault.Core.Services.Autofill
             }
         }
 
-        /// <summary>
-        /// Saves a captured password to the vault.
-        /// </summary>
         public async Task<Credential> SaveCapturedPasswordAsync(PasswordCaptureEventArgs args, string? title = null)
         {
             var credential = new Credential
@@ -133,9 +115,6 @@ namespace PhantomVault.Core.Services.Autofill
             return credential;
         }
 
-        /// <summary>
-        /// Updates an existing credential with a new password.
-        /// </summary>
         public async Task UpdateCredentialPasswordAsync(Credential credential, string newPassword)
         {
             if (credential == null) throw new ArgumentNullException(nameof(credential));
@@ -148,12 +127,11 @@ namespace PhantomVault.Core.Services.Autofill
 
         private string ExtractUsername(LoginFormDetectionResult formData, Dictionary<string, string> fieldValues)
         {
-            // Try email fields first
+
             var emailField = formData.EmailFields.FirstOrDefault();
             if (emailField != null && fieldValues.TryGetValue(GetFieldKey(emailField), out var email))
                 return email;
 
-            // Try username fields
             var usernameField = formData.UsernameFields.FirstOrDefault();
             if (usernameField != null && fieldValues.TryGetValue(GetFieldKey(usernameField), out var username))
                 return username;
@@ -193,7 +171,7 @@ namespace PhantomVault.Core.Services.Autofill
             foreach (var cred in credentials)
             {
                 var credDomain = ExtractDomain(cred.Url);
-                if (credDomain == domain && 
+                if (credDomain == domain &&
                     string.Equals(cred.Username, username, StringComparison.OrdinalIgnoreCase))
                 {
                     return cred;
@@ -243,9 +221,6 @@ namespace PhantomVault.Core.Services.Autofill
         }
     }
 
-    /// <summary>
-    /// Event args for password capture.
-    /// </summary>
     public sealed class PasswordCaptureEventArgs : EventArgs
     {
         public string Url { get; set; } = string.Empty;
@@ -255,9 +230,6 @@ namespace PhantomVault.Core.Services.Autofill
         public CaptureType CaptureType { get; set; }
     }
 
-    /// <summary>
-    /// Event args for password change detection.
-    /// </summary>
     public sealed class PasswordChangeEventArgs : EventArgs
     {
         public Credential ExistingCredential { get; set; } = null!;
@@ -266,9 +238,6 @@ namespace PhantomVault.Core.Services.Autofill
         public string Domain { get; set; } = string.Empty;
     }
 
-    /// <summary>
-    /// Type of password capture.
-    /// </summary>
     public enum CaptureType
     {
         NewLogin,
@@ -276,3 +245,4 @@ namespace PhantomVault.Core.Services.Autofill
         PasswordChange
     }
 }
+

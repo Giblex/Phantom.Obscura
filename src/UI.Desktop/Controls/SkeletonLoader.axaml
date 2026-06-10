@@ -14,7 +14,6 @@
             </Setter>
         </Style>
 
-        <!-- Pulse animation -->
         <Style Selector="Border.skeleton">
             <Style.Animations>
                 <Animation Duration="0:0:1.5" IterationCount="Infinite" PlaybackDirection="Alternate">
@@ -28,7 +27,6 @@
             </Style.Animations>
         </Style>
 
-        <!-- Skeleton types -->
         <Style Selector="Border.skeleton.text">
             <Setter Property="Height" Value="16"/>
             <Setter Property="CornerRadius" Value="4"/>
@@ -55,3 +53,4 @@
             Height="{Binding $parent[UserControl].Height}"/>
 
 </UserControl>
+

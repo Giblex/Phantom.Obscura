@@ -14,9 +14,7 @@ using PhantomVault.UI.Services;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// ViewModel for exporting credentials to external formats (CSV, KeePass XML, JSON).
-    /// </summary>
+
     public sealed class ExportViewModel : ReactiveObject
     {
         private readonly ImportExportService _importExportService;
@@ -43,7 +41,6 @@ namespace PhantomVault.UI.ViewModels
 
             Formats = new ObservableCollection<string> { "CSV", "KeePass XML", "JSON" };
 
-            // Get unique groups
             var groups = new List<string> { "All Groups" };
             groups.AddRange(_credentials.Select(c => c.Group).Where(g => !string.IsNullOrEmpty(g)).Distinct().OrderBy(g => g));
             Groups = new ObservableCollection<string>(groups);
@@ -125,7 +122,7 @@ namespace PhantomVault.UI.ViewModels
 
             if (!IncludePasswords)
             {
-                // Create copies without passwords
+
                 return filtered.Select(c => new Credential
                 {
                     Title = c.Title,
@@ -185,7 +182,6 @@ namespace PhantomVault.UI.ViewModels
         {
             if (string.IsNullOrEmpty(DestinationFile)) return;
 
-            // Check export guard
             if (_exportGuard != null && !_exportGuard.CanExport(SelectedFormat))
             {
                 await _dialogService.ShowWarningAsync(
@@ -197,7 +193,6 @@ namespace PhantomVault.UI.ViewModels
                 return;
             }
 
-            // Security confirmation for password export
             if (IncludePasswords)
             {
                 var confirm = await _dialogService.ShowConfirmationAsync(
@@ -234,7 +229,6 @@ namespace PhantomVault.UI.ViewModels
                         throw new NotSupportedException($"Format '{SelectedFormat}' is not supported");
                 }
 
-                // Register export with guard
                 _exportGuard?.RegisterExport(SelectedFormat);
 
                 await _dialogService.ShowSuccessAsync(
@@ -268,3 +262,4 @@ namespace PhantomVault.UI.ViewModels
         }
     }
 }
+

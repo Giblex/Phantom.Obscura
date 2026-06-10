@@ -8,3 +8,4 @@ public partial class IconDownloaderView : UserControl
     public IconDownloaderView() => InitializeComponent();
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
 }
+

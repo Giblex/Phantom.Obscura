@@ -26,7 +26,7 @@ public sealed partial class IconDownloaderViewModel : ObservableObject
         HasResults = false;
         Candidates.Clear();
 
-        await Task.Delay(450); // placeholder — real fetch lands once HttpClient + favicon parser wired
+        await Task.Delay(450);
 
         var host = Url.Replace("https://", "").Replace("http://", "").TrimEnd('/');
         Candidates.Add(new() { Label = $"favicon.ico @ {host}" });
@@ -43,3 +43,4 @@ public sealed partial class IconCandidateViewModel : ObservableObject
 {
     [ObservableProperty] private string _label = "";
 }
+

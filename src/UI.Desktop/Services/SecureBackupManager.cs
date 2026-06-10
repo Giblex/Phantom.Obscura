@@ -6,10 +6,7 @@ using PhantomVault.Core.Services;
 
 namespace PhantomVault.UI.Services
 {
-    /// <summary>
-    /// Creates and restores encrypted vault backups that bundle the manifest, policy, and root certificate.
-    /// Uses Argon2id (via EncryptionService) to derive a key from passphrase/keyfile+PIN and AES-GCM for confidentiality.
-    /// </summary>
+
     public sealed class SecureBackupManager
     {
         private readonly EncryptionService _encryptionService;
@@ -33,7 +30,6 @@ namespace PhantomVault.UI.Services
             byte[] policyBytes = File.ReadAllBytes(policyPath);
             byte[] rootCertBytes = File.ReadAllBytes(rootCertPath);
 
-            // Build clear payload
             var payload = new
             {
                 version = "1.0",
@@ -49,7 +45,6 @@ namespace PhantomVault.UI.Services
             string payloadJson = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = false });
             byte[] payloadBytes = Encoding.UTF8.GetBytes(payloadJson);
 
-            // Derive key from passphrase + optional keyfile + PIN
             var salt = _encryptionService.GenerateSalt();
             var combinedSecret = CombineSecrets(passphrase, keyfilePath, pin);
             byte[] key = _encryptionService.DeriveKey(combinedSecret.AsSpan(), salt, keyLength: 32);
@@ -140,3 +135,4 @@ namespace PhantomVault.UI.Services
         }
     }
 }
+

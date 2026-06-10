@@ -5,9 +5,7 @@ using System.Linq;
 
 namespace PhantomVault.UI.Services
 {
-    /// <summary>
-    /// Resolves sibling Phantom suite applications from the current workspace/build output.
-    /// </summary>
+
     public sealed class SuiteWorkspaceService
     {
         public string SuiteRoot => ResolveSuiteRoot();
@@ -75,3 +73,4 @@ namespace PhantomVault.UI.Services
         }
     }
 }
+

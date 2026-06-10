@@ -12,15 +12,12 @@ using GiblexVault.Security.ZK.Container;
 using GiblexVault.Security.ZK.Models;
 using GiblexVault.Security.ZK.Primitives;
 using GiblexVault.Security.ZK.Util;
+using PhantomVault.Core.Security;
 using PhantomVault.Core.Utils;
 
 namespace PhantomVault.Core.Services.ZeroKnowledge
 {
-    /// <summary>
-    /// Zero-knowledge vault service implementation. Manages master key lifecycle,
-    /// provides secure file access, and ensures proper cleanup of sensitive data.
-    /// All plaintext is wiped from memory after use.
-    /// </summary>
+
     public sealed class ZkVaultService : IZkVaultService, IDisposable
     {
         private byte[]? _masterKey;
@@ -42,30 +39,87 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "PhantomVault"
             );
-            _pepperPath = Path.Combine(appDataDir, DerivePepperFileName());
+            Directory.CreateDirectory(appDataDir);
+            _pepperPath = ResolvePepperPath(appDataDir);
             _verifierPath = Path.Combine(appDataDir, "master.verifier.json");
         }
 
-        /// <summary>
-        /// Derives a machine- and user-specific pepper file name so that the file
-        /// is not trivially locatable by name on a compromised filesystem.
-        /// </summary>
-        private static string DerivePepperFileName()
+        // The pepper filename is randomised on first run and stored in a tiny
+        // pointer file (`pepper.ref`). This prevents an attacker browsing the
+        // AppData folder from identifying the pepper by a predictable name
+        // derived from MachineName|UserName. The pointer file itself is named
+        // generically; the random target file is named like a cache blob.
+        private static string ResolvePepperPath(string appDataDir)
+        {
+            var pointerPath = Path.Combine(appDataDir, "pepper.ref");
+            string fileName;
+
+            if (File.Exists(pointerPath))
+            {
+                try
+                {
+                    var raw = File.ReadAllText(pointerPath).Trim();
+                    if (IsSafePepperFileName(raw))
+                    {
+                        return Path.Combine(appDataDir, raw);
+                    }
+                }
+                catch { /* fall through to regenerate */ }
+            }
+
+            fileName = GenerateRandomPepperName();
+            var newPath = Path.Combine(appDataDir, fileName);
+
+            var legacyDeterministic = Path.Combine(appDataDir, LegacyDerivedPepperFileName());
+            var legacyOriginal = Path.Combine(appDataDir, "pepper.dpapi");
+            string? sourceLegacy = File.Exists(legacyDeterministic) ? legacyDeterministic
+                                 : File.Exists(legacyOriginal) ? legacyOriginal
+                                 : null;
+            try
+            {
+                if (sourceLegacy != null && !File.Exists(newPath))
+                {
+                    File.Move(sourceLegacy, newPath);
+                }
+                File.WriteAllText(pointerPath, fileName);
+            }
+            catch
+            {
+                // If pointer write fails, LoadOrCreatePepperAsync will create a
+                // fresh pepper at the chosen path. The user re-enters credentials.
+            }
+
+            return newPath;
+        }
+
+        private static string GenerateRandomPepperName()
+        {
+            Span<byte> rnd = stackalloc byte[16];
+            RandomNumberGenerator.Fill(rnd);
+            return Convert.ToHexString(rnd).ToLowerInvariant() + ".dat";
+        }
+
+        private static bool IsSafePepperFileName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return false;
+            if (name.Length > 64) return false;
+            if (name.IndexOfAny(new[] { '/', '\\', ':' }) >= 0) return false;
+            if (name.Contains("..")) return false;
+            return true;
+        }
+
+        private static string LegacyDerivedPepperFileName()
         {
             var key = $"{Environment.MachineName}|{Environment.UserName}|PhantomVault.Pepper";
             var hash = System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(key));
             return $"{Convert.ToHexString(hash[..8]).ToLowerInvariant()}.dpapi";
         }
 
-        /// <summary>
-        /// Unlocks the master key using password + optional keyfile + optional device binding.
-        /// Pepper is loaded from DPAPI-protected storage for additional entropy.
-        /// </summary>
         public async Task<bool> UnlockMasterKeyAsync(string password, string? keyfilePath = null, string? deviceId = null)
         {
+            KeyfileGuard.Require(keyfilePath, nameof(keyfilePath));
             await _lock.WaitAsync();
 
-            // Declare sensitive buffers outside try so finally can always zero them.
             byte[]? pwdBytes = null;
             byte[]? pepper = null;
             byte[]? keyfileBytes = null;
@@ -78,11 +132,9 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                     await LockAndWipeKeysAsync();
                 }
 
-                // Load or create pepper
                 bool createdPepper;
                 (pepper, createdPepper) = await LoadOrCreatePepperAsync();
 
-                // Build combined secret: password + pepper + keyfile
                 pwdBytes = Encoding.UTF8.GetBytes(password);
                 keyfileBytes = !string.IsNullOrEmpty(keyfilePath)
                     ? await CompositeKeyfilePath.ReadCombinedBytesAsync(keyfilePath, required: true).ConfigureAwait(false)
@@ -97,14 +149,12 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                     Buffer.BlockCopy(keyfileBytes, 0, combined, pwdBytes.Length + pepper.Length, kfLen);
                 }
 
-                // Apply device binding if provided
                 var (salt, createdSalt) = LoadOrCreateSalt();
                 if (!string.IsNullOrEmpty(deviceId))
                 {
                     salt = DeviceBinding.DeviceSalt(deviceId, salt);
                 }
 
-                // Derive master key using Argon2id
                 var kdfParams = new KdfParams
                 {
                     Kdf = "argon2id",
@@ -136,7 +186,7 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
             }
             finally
             {
-                // Always zero sensitive key material regardless of success, failure, or exception.
+
                 if (pwdBytes != null) CryptographicOperations.ZeroMemory(pwdBytes);
                 if (pepper != null) CryptographicOperations.ZeroMemory(pepper);
                 if (keyfileBytes != null) CryptographicOperations.ZeroMemory(keyfileBytes);
@@ -145,10 +195,6 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
             }
         }
 
-        /// <summary>
-        /// Unlocks the vault using a pre-computed hybrid DEK for Phase 2 post-quantum encryption.
-        /// The hybrid DEK is derived from KEK ⊕ ML-KEM shared secret.
-        /// </summary>
         public async Task<bool> UnlockWithHybridKeyAsync(byte[] hybridDek)
         {
             if (hybridDek == null)
@@ -164,7 +210,6 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                     await LockAndWipeKeysAsync();
                 }
 
-                // Copy the hybrid DEK to our internal master key
                 _masterKey = new byte[32];
                 Buffer.BlockCopy(hybridDek, 0, _masterKey, 0, 32);
 
@@ -185,10 +230,6 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
             }
         }
 
-        /// <summary>
-        /// Opens a file for viewing in-memory. Returns a read-only MemoryStream.
-        /// Caller must dispose the stream when done.
-        /// </summary>
         public async Task<Stream> OpenFileStreamForViewingAsync(string vaultPath, string? fileRelativePath = null, CancellationToken ct = default)
         {
             if (!IsUnlocked)
@@ -199,25 +240,21 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
             {
                 byte[] decryptedBytes;
 
-                // Check if this is a container or single encrypted file
                 if (string.IsNullOrEmpty(fileRelativePath))
                 {
-                    // Single encrypted file (.zkf) - decrypt directly to memory to avoid temp files
+
                     decryptedBytes = await VaultFileZk.DecryptToArrayAsync(vaultPath, _masterKey!, _opts).ConfigureAwait(false);
                 }
                 else
                 {
-                    // Container with multiple files
+
                     decryptedBytes = GvContainerZk.Extract(vaultPath, _masterKey!, _opts, fileRelativePath);
                 }
 
-                // Create a new MemoryStream and copy the decrypted data
-                // We can't just wrap the array because we need to zero it for security
                 var ms = new MemoryStream();
                 ms.Write(decryptedBytes, 0, decryptedBytes.Length);
-                ms.Position = 0; // Reset to beginning for reading
+                ms.Position = 0;
 
-                // Zero the temporary buffer now that we've copied to the stream
                 CryptographicOperations.ZeroMemory(decryptedBytes);
 
                 return ms;
@@ -228,10 +265,6 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
             }
         }
 
-        /// <summary>
-        /// Opens encrypted vault content from an existing stream and decrypts it fully in memory.
-        /// This avoids materializing wrapped vault payloads on the host filesystem.
-        /// </summary>
         public async Task<Stream> OpenEncryptedStreamForViewingAsync(Stream encryptedVaultStream, CancellationToken ct = default)
         {
             if (!IsUnlocked)
@@ -253,10 +286,6 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
             }
         }
 
-        /// <summary>
-        /// Extracts file to secure temporary directory with automatic cleanup after TTL.
-        /// Directory is restricted to current user and files are securely wiped on deletion.
-        /// </summary>
         public async Task<string> ExtractFileToSecureTempAsync(string containerPath, string fileRelativePath, TimeSpan ttl)
         {
             if (!IsUnlocked)
@@ -267,7 +296,6 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
             {
                 var bytes = GvContainerZk.Extract(containerPath, _masterKey!, _opts, fileRelativePath);
 
-                // Create secure session-specific temp directory with restricted permissions
                 var appDataTemp = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                     "PhantomVault",
@@ -276,16 +304,14 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
 
                 Directory.CreateDirectory(appDataTemp);
 
-                // Restrict permissions to current user only
                 if (OperatingSystem.IsWindows())
                 {
                     try
                     {
                         var dirInfo = new DirectoryInfo(appDataTemp);
                         var acl = dirInfo.GetAccessControl();
-                        acl.SetAccessRuleProtection(true, false); // Disable inheritance, don't preserve existing
+                        acl.SetAccessRuleProtection(true, false);
 
-                        // Add full control for current user only
                         var currentUser = System.Security.Principal.WindowsIdentity.GetCurrent();
                         var rule = new System.Security.AccessControl.FileSystemAccessRule(
                             currentUser.User!,
@@ -298,38 +324,34 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                     }
                     catch (Exception ex)
                     {
-                        // If ACL fails, clean up and throw - don't proceed with insecure temp file
+
                         try { Directory.Delete(appDataTemp, true); } catch { }
                         throw new SecurityException($"Failed to set secure ACL on temp directory: {ex.Message}", ex);
                     }
                 }
                 else
                 {
-                    // Unix-like: set permissions to 700 (owner only)
+
                     try
                     {
                         File.SetUnixFileMode(appDataTemp, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
                     }
                     catch
                     {
-                        // Non-Unix or permission error
+
                     }
                 }
 
                 var tempFile = Path.Combine(appDataTemp, Path.GetFileName(fileRelativePath));
                 await File.WriteAllBytesAsync(tempFile, bytes);
 
-                // Zero plaintext from memory
                 CryptographicOperations.ZeroMemory(bytes);
 
-                // Track for guaranteed cleanup
                 var secureTempFile = new SecureTempFile(tempFile, appDataTemp, DateTimeOffset.UtcNow.Add(ttl));
                 _tempFiles.Add(secureTempFile);
 
-                // Track reference count to prevent deletion while in use
                 _tempFileRefCounts[tempFile] = _tempFileRefCounts.GetValueOrDefault(tempFile, 0) + 1;
 
-                // Schedule secure deletion after TTL
                 _ = Task.Run(async () =>
                 {
                     await Task.Delay(ttl);
@@ -337,7 +359,7 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                     await _lock.WaitAsync();
                     try
                     {
-                        // Decrement ref count
+
                         if (_tempFileRefCounts.ContainsKey(tempFile))
                         {
                             _tempFileRefCounts[tempFile]--;
@@ -345,7 +367,6 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                             {
                                 _tempFileRefCounts.Remove(tempFile);
 
-                                // Securely delete file and directory
                                 try
                                 {
                                     SecureDeleteFile(tempFile);
@@ -357,7 +378,7 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                                 }
                                 catch
                                 {
-                                    // Cleanup failed, will be handled by CleanupOrphanedTempFilesAsync or Dispose
+
                                 }
                             }
                         }
@@ -376,9 +397,6 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
             }
         }
 
-        /// <summary>
-        /// Lists all entries in a container.
-        /// </summary>
         public async Task<IEnumerable<string>> ListContainerEntriesAsync(string containerPath)
         {
             if (!IsUnlocked)
@@ -390,9 +408,6 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
             });
         }
 
-        /// <summary>
-        /// Encrypts a plaintext file using zero-knowledge encryption (VaultFileZk).
-        /// </summary>
         public async Task EncryptFileAsync(string plaintextPath, string encryptedOutputPath, CancellationToken ct = default)
         {
             if (!IsUnlocked)
@@ -404,10 +419,6 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
             await VaultFileZk.EncryptAsync(plaintextPath, encryptedOutputPath, _masterKey!, _opts);
         }
 
-        /// <summary>
-        /// Encrypts plaintext from a stream using zero-knowledge encryption and writes the
-        /// encrypted output to the specified path. This avoids creating plaintext files on disk.
-        /// </summary>
         public async Task EncryptStreamAsync(Stream plaintextStream, string encryptedOutputPath, CancellationToken ct = default)
         {
             if (!IsUnlocked)
@@ -419,9 +430,6 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
             await VaultFileZk.EncryptAsync(plaintextStream, encryptedOutputPath, _masterKey!, _opts).ConfigureAwait(false);
         }
 
-        /// <summary>
-        /// Encrypts plaintext from one stream into another encrypted stream.
-        /// </summary>
         public async Task EncryptStreamToStreamAsync(Stream plaintextStream, Stream encryptedOutputStream, CancellationToken ct = default)
         {
             if (!IsUnlocked)
@@ -438,9 +446,6 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
             }
         }
 
-        /// <summary>
-        /// Locks vault and wipes all sensitive key material from memory.
-        /// </summary>
         public async Task LockAndWipeKeysAsync()
         {
             await _lock.WaitAsync();
@@ -458,10 +463,6 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
             }
         }
 
-        /// <summary>
-        /// Cleans up orphaned temp files from previous sessions or crashes.
-        /// Should be called on application startup.
-        /// </summary>
         public async Task CleanupOrphanedTempFilesAsync(TimeSpan maxAge)
         {
             await Task.Run(() =>
@@ -478,7 +479,7 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                         var dirInfo = new DirectoryInfo(sessionDir);
                         if (now - dirInfo.CreationTimeUtc > maxAge)
                         {
-                            // Securely delete all files
+
                             foreach (var file in dirInfo.GetFiles())
                             {
                                 SecureDeleteFile(file.FullName);
@@ -488,18 +489,12 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                     }
                     catch
                     {
-                        // Skip directories we can't access
+
                     }
                 }
             });
         }
 
-        /// <summary>
-        /// Securely deletes a file by overwriting with zeros before deletion.
-        /// Defense-in-depth measure to prevent casual recovery from disk/swap.
-        /// Note: On modern SSDs with wear-leveling, this doesn't guarantee
-        /// physical deletion, but still useful for defense-in-depth.
-        /// </summary>
         private void SecureDeleteFile(string path)
         {
             try
@@ -513,41 +508,35 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                     var zeros = new byte[stream.Length];
                     stream.Position = 0;
                     stream.Write(zeros, 0, zeros.Length);
-                    stream.Flush(true); // Force OS flush
+                    stream.Flush(true);
                 }
 
                 File.Delete(path);
             }
             catch
             {
-                // If secure delete fails, try regular delete
+
                 try
                 {
                     File.Delete(path);
                 }
                 catch
                 {
-                    // If even that fails, file will be cleaned up on next startup
+
                 }
             }
         }
 
-        /// <summary>
-        /// Loads existing pepper or creates new one with platform-appropriate protection.
-        /// On Windows: DPAPI (CurrentUser scope).
-        /// On macOS/Linux: AES-256-GCM with a 0600-restricted envelope key file.
-        /// </summary>
         private async Task<(byte[] Pepper, bool Created)> LoadOrCreatePepperAsync()
         {
             var appDataDir = Path.GetDirectoryName(_pepperPath)!;
             Directory.CreateDirectory(appDataDir);
 
-            // Migrate from legacy fixed pepper name to the derived name on first run.
             var legacyPepperPath = Path.Combine(appDataDir, "pepper.dpapi");
             if (!File.Exists(_pepperPath) && File.Exists(legacyPepperPath))
             {
                 try { File.Move(legacyPepperPath, _pepperPath); }
-                catch { /* Non-fatal: will fall through to load from legacy path */ }
+                catch {  }
             }
 
             if (File.Exists(_pepperPath))
@@ -559,7 +548,7 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                 }
                 catch
                 {
-                    // Pepper unsealing failed (different user / rotated key?), create new one.
+
                 }
             }
 
@@ -568,9 +557,6 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
             return (SecurityTuning.UnsealPepper(protectedPepper), true);
         }
 
-        /// <summary>
-        /// Loads or creates the master salt for key derivation.
-        /// </summary>
         private (byte[] Salt, bool Created) LoadOrCreateSalt()
         {
             var saltPath = Path.Combine(
@@ -586,11 +572,10 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                 }
                 catch
                 {
-                    // Salt loading failed
+
                 }
             }
 
-            // Create new salt
             var salt = RandomNumberGenerator.GetBytes(32);
             File.WriteAllBytes(saltPath, salt);
             return (salt, true);
@@ -605,8 +590,7 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
 
             if (!allowBootstrap)
             {
-                // Legacy install with no verifier yet. Preserve compatibility without
-                // inventing trust state from an unknown password attempt.
+
                 return true;
             }
 
@@ -674,7 +658,7 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
 
         public void Dispose()
         {
-            // Clean up all remaining temp files
+
             foreach (var tempFile in _tempFiles.ToArray())
             {
                 try
@@ -690,21 +674,18 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                 }
                 catch
                 {
-                    // Best effort cleanup
+
                 }
             }
             _tempFiles.Clear();
             _tempFileRefCounts.Clear();
 
-            // Dispose is synchronous - use GetAwaiter().GetResult() instead of .Wait() to avoid deadlocks
             LockAndWipeKeysAsync().GetAwaiter().GetResult();
             _lock?.Dispose();
         }
     }
 
-    /// <summary>
-    /// Represents a secure temporary file with expiration tracking
-    /// </summary>
     internal sealed record SecureTempFile(string FilePath, string DirectoryPath, DateTimeOffset ExpiresAt);
     internal sealed record MasterKeyVerifierRecord(string Nonce, string Ciphertext);
 }
+

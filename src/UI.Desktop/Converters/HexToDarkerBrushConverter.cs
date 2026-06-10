@@ -5,11 +5,7 @@ using Avalonia.Media;
 
 namespace PhantomVault.UI.Converters
 {
-    /// <summary>
-    /// Converts a hex color string to a slightly darker SolidColorBrush.
-    /// If input is null/invalid, returns Transparent.
-    /// DarkenFactor can be provided via parameter as a double (0..1), default 0.85.
-    /// </summary>
+
     public sealed class HexToDarkerBrushConverter : IValueConverter
     {
         public static readonly HexToDarkerBrushConverter Instance = new HexToDarkerBrushConverter();
@@ -21,7 +17,7 @@ namespace PhantomVault.UI.Converters
                 try
                 {
                     var color = Color.Parse(s.Trim());
-                    double factor = 0.85; // default
+                    double factor = 0.85;
                     if (parameter is string ps && double.TryParse(ps, NumberStyles.Float, CultureInfo.InvariantCulture, out var f))
                         factor = Math.Clamp(f, 0.0, 1.0);
                     byte dr = (byte)Math.Round(color.R * factor);

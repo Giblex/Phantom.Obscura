@@ -1,1 +1,2 @@
 namespace GiblexVault.Security.ZK.Models; public enum EncryptionProfile { Basic, Advanced, Paranoid }
+

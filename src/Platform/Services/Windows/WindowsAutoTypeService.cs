@@ -5,9 +5,7 @@ using System.Threading.Tasks;
 
 namespace PhantomVault.Core.Services.Platform.Windows
 {
-    /// <summary>
-    /// Windows implementation using SendInput API for realistic keyboard simulation
-    /// </summary>
+
     public class WindowsAutoTypeService : IAutoTypeService
     {
         #region Win32 Interop
@@ -66,7 +64,6 @@ namespace PhantomVault.Core.Services.Platform.Windows
         private const uint KEYEVENTF_KEYUP = 0x0002;
         private const uint KEYEVENTF_UNICODE = 0x0004;
 
-        // Virtual key codes
         private const ushort VK_TAB = 0x09;
         private const ushort VK_RETURN = 0x0D;
         private const ushort VK_ESCAPE = 0x1B;
@@ -84,14 +81,13 @@ namespace PhantomVault.Core.Services.Platform.Windows
             if (string.IsNullOrEmpty(username) && string.IsNullOrEmpty(password))
                 return;
 
-            // Standard sequence: username → tab → password → (optional enter)
             if (!string.IsNullOrEmpty(username))
             {
                 await TypeTextAsync(username);
             }
 
             await PressKeyAsync(SpecialKey.Tab);
-            await Task.Delay(100); // Wait for tab to process
+            await Task.Delay(100);
 
             if (!string.IsNullOrEmpty(password))
             {
@@ -100,29 +96,27 @@ namespace PhantomVault.Core.Services.Platform.Windows
 
             if (submit)
             {
-                await Task.Delay(200); // Brief pause before submit
+                await Task.Delay(200);
                 await PressKeyAsync(SpecialKey.Enter);
             }
         }
 
         public async Task TypeCustomSequenceAsync(string sequence, string username, string password)
         {
-            // Parse and execute custom sequence
-            // Supports: {username}, {password}, {tab}, {enter}, {delay:ms}
+
             var pattern = @"\{([^}]+)\}";
             var matches = Regex.Matches(sequence, pattern);
 
             int lastIndex = 0;
             foreach (Match match in matches)
             {
-                // Type literal text before this command
+
                 if (match.Index > lastIndex)
                 {
                     var literal = sequence.Substring(lastIndex, match.Index - lastIndex);
                     await TypeTextAsync(literal);
                 }
 
-                // Execute command
                 var command = match.Groups[1].Value.ToLowerInvariant();
 
                 if (command == "username")
@@ -152,7 +146,6 @@ namespace PhantomVault.Core.Services.Platform.Windows
                 lastIndex = match.Index + match.Length;
             }
 
-            // Type any remaining literal text
             if (lastIndex < sequence.Length)
             {
                 var remaining = sequence.Substring(lastIndex);
@@ -168,7 +161,7 @@ namespace PhantomVault.Core.Services.Platform.Windows
             foreach (char c in text)
             {
                 SendChar(c);
-                await Task.Delay(delayMs); // Realistic typing speed
+                await Task.Delay(delayMs);
             }
         }
 
@@ -194,10 +187,9 @@ namespace PhantomVault.Core.Services.Platform.Windows
 
         private void SendChar(char character)
         {
-            // Use Unicode input for international character support
+
             INPUT[] inputs = new INPUT[2];
 
-            // Key down
             inputs[0] = new INPUT
             {
                 Type = INPUT_KEYBOARD,
@@ -214,7 +206,6 @@ namespace PhantomVault.Core.Services.Platform.Windows
                 }
             };
 
-            // Key up
             inputs[1] = new INPUT
             {
                 Type = INPUT_KEYBOARD,
@@ -238,7 +229,6 @@ namespace PhantomVault.Core.Services.Platform.Windows
         {
             INPUT[] inputs = new INPUT[2];
 
-            // Key down
             inputs[0] = new INPUT
             {
                 Type = INPUT_KEYBOARD,
@@ -255,7 +245,6 @@ namespace PhantomVault.Core.Services.Platform.Windows
                 }
             };
 
-            // Key up
             inputs[1] = new INPUT
             {
                 Type = INPUT_KEYBOARD,
@@ -276,3 +265,4 @@ namespace PhantomVault.Core.Services.Platform.Windows
         }
     }
 }
+

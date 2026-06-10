@@ -6,6 +6,7 @@
     <UserControl.Resources>
 
         <conv:StringEqualsConverter x:Key="SettingsTabEqualsConverter"/>
+        <conv:SettingsTabSearchConverter x:Key="SettingsTabSearchConverter"/>
     </UserControl.Resources>
 
     <UserControl.Styles>
@@ -14,13 +15,47 @@
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
         </Style>
+
+        <Style Selector="Border#SettingsSlideHost Border.fade-in">
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        </Style>
+        <Style Selector="Border#SettingsSlideHost Border.fade-in TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
         <Style Selector="Button.settings-tab.active Border.tab-accent">
             <Setter Property="IsVisible" Value="True"/>
         </Style>
 
-        <Style Selector="Button.settings-save-primary.dirty /template/ ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
-            <Setter Property="TextBlock.Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+        <!-- Save button — always painted in the live accent colour so theme changes are
+             reflected immediately (the dirty-vs-clean distinction is conveyed by the orange
+             unsaved-changes ellipse next to it instead of the button colour). -->
+        <Style Selector="Button.settings-save-primary /template/ Border#BaseBorder">
+            <Setter Property="Background" Value="{DynamicResource UserAccentBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource UserAccentBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="Button.settings-save-primary /template/ ContentPresenter">
+            <Setter Property="TextBlock.Foreground" Value="#FFFFFFFF"/>
+        </Style>
+        <Style Selector="Button.settings-save-primary /template/ Border#Sheen">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+        <!-- Hover/pressed: nudge opacity instead of recolouring, so accent stays consistent. -->
+        <Style Selector="Button.settings-save-primary:pointerover /template/ Border#BaseBorder">
+            <Setter Property="Background" Value="{DynamicResource UserAccentBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource UserAccentBrush}"/>
+            <Setter Property="Opacity" Value="0.88"/>
+        </Style>
+        <Style Selector="Button.settings-save-primary:pressed /template/ Border#BaseBorder">
+            <Setter Property="Background" Value="{DynamicResource UserAccentBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource UserAccentBrush}"/>
+            <Setter Property="Opacity" Value="0.75"/>
+        </Style>
+        <!-- Dirty: slight elevation via opacity bump so the "you have changes" state still reads. -->
+        <Style Selector="Button.settings-save-primary.dirty /template/ Border#BaseBorder">
+            <Setter Property="Effect">
+                <DropShadowEffect Color="Black" BlurRadius="14" Opacity="0.35" OffsetX="0" OffsetY="2"/>
+            </Setter>
         </Style>
 
         <Style Selector="Border#SettingsSlideHost Button.liquid-glass">
@@ -135,7 +170,7 @@
                     </Transitions>
                 </Border.Transitions>
 
-                <Grid RowDefinitions="Auto,*">
+                <Grid RowDefinitions="Auto,Auto,*">
 
                     <Border Grid.Row="0"
                             Classes="header-surface"
@@ -168,7 +203,45 @@
                         </Grid>
                     </Border>
 
-                    <Grid Grid.Row="1" ColumnDefinitions="220,*" VerticalAlignment="Stretch">
+                    <!-- Master "Go Offline" switch: surfaces PrivacyShield.PrivacyModeEnabled
+                         (wired to the internet gateway) prominently above every settings tab.
+                         When ON the app refuses all network consent and revokes active grants. -->
+                    <Border Grid.Row="1"
+                            Background="{DynamicResource CategoryPanelBackgroundBrush}"
+                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                            BorderThickness="0,0,0,1"
+                            Padding="25,14"
+                            ZIndex="1">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Border Grid.Column="0"
+                                    Width="34" Height="34"
+                                    CornerRadius="17"
+                                    VerticalAlignment="Center"
+                                    Background="{DynamicResource ControlBackgroundBrush}"
+                                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                                    BorderThickness="1">
+                                <TextBlock Text="🛡"
+                                           FontSize="16"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" Spacing="2" Margin="14,0,12,0" VerticalAlignment="Center">
+                                <TextBlock Text="Offline mode"
+                                           FontWeight="SemiBold"
+                                           FontSize="{StaticResource Type.Body.Size}"/>
+                                <TextBlock Text="Block all network access. Revokes active grants and refuses new connection requests until turned off."
+                                           FontSize="{StaticResource Type.Label.Size}"
+                                           Classes="header-muted"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <ToggleSwitch Grid.Column="2"
+                                          VerticalAlignment="Center"
+                                          IsChecked="{Binding PrivacyModeEnabled, Mode=TwoWay}"
+                                          ToolTip.Tip="Master offline switch"/>
+                        </Grid>
+                    </Border>
+
+                    <Grid Grid.Row="2" ColumnDefinitions="220,*" VerticalAlignment="Stretch">
 
                         <Border Grid.Column="0"
                                 VerticalAlignment="Stretch"
@@ -176,12 +249,28 @@
                                 Background="{DynamicResource CategoryPanelBackgroundBrush}"
                                 BorderBrush="{DynamicResource ControlBorderBrush}"
                                 BorderThickness="0,0,1,0">
-                            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          <Grid RowDefinitions="Auto,*">
+                            <TextBox Grid.Row="0"
+                                     Margin="15,18,15,8"
+                                     Watermark="Search settings…"
+                                     Text="{Binding SettingsSearchQuery, Mode=TwoWay}"
+                                     VerticalAlignment="Top"/>
+                            <ScrollViewer Grid.Row="1"
+                                          VerticalScrollBarVisibility="Auto"
                                           HorizontalScrollBarVisibility="Disabled"
                                           VerticalAlignment="Stretch"
                                           MinHeight="0">
-                            <StackPanel Spacing="6" Margin="15,20">
+                                <ScrollViewer.OpacityMask>
+                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                        <GradientStop Offset="0.00" Color="#80FFFFFF"/>
+                                        <GradientStop Offset="0.04" Color="#FFFFFFFF"/>
+                                        <GradientStop Offset="0.82" Color="#FFFFFFFF"/>
+                                        <GradientStop Offset="1.00" Color="#80FFFFFF"/>
+                                    </LinearGradientBrush>
+                                </ScrollViewer.OpacityMask>
+                            <StackPanel Spacing="6" Margin="15,20,15,90">
                                 <Button Command="{Binding ShowGeneralSettingsCommand}"
+                                        IsVisible="{Binding SettingsSearchQuery, Converter={StaticResource SettingsTabSearchConverter}, ConverterParameter='general basics startup dashboard language clipboard'}"
                                         Classes="liquid-glass settings-tab"
                                         Classes.active="{Binding SelectedSettingsTab, Converter={StaticResource SettingsTabEqualsConverter}, ConverterParameter=general}"
                                         HorizontalAlignment="Stretch"
@@ -202,6 +291,7 @@
                                 </Button>
 
                                 <Button Command="{Binding ShowSecuritySettingsCommand}"
+                                        IsVisible="{Binding SettingsSearchQuery, Converter={StaticResource SettingsTabSearchConverter}, ConverterParameter='security auto-lock pin password unlock biometric windows hello passkey usb'}"
                                         Classes="liquid-glass settings-tab"
                                         Classes.active="{Binding SelectedSettingsTab, Converter={StaticResource SettingsTabEqualsConverter}, ConverterParameter=security}"
                                         HorizontalAlignment="Stretch"
@@ -222,6 +312,7 @@
                                 </Button>
 
                                 <Button Command="{Binding ShowThemeSettingsCommand}"
+                                        IsVisible="{Binding SettingsSearchQuery, Converter={StaticResource SettingsTabSearchConverter}, ConverterParameter='theme appearance dark light accent color font skin animation transparency'}"
                                         Classes="liquid-glass settings-tab"
                                         Classes.active="{Binding SelectedSettingsTab, Converter={StaticResource SettingsTabEqualsConverter}, ConverterParameter=theme}"
                                         HorizontalAlignment="Stretch"
@@ -242,6 +333,7 @@
                                 </Button>
 
                                 <Button Command="{Binding ShowImportExportSettingsCommand}"
+                                        IsVisible="{Binding SettingsSearchQuery, Converter={StaticResource SettingsTabSearchConverter}, ConverterParameter='import export csv json migrate transfer data'}"
                                         Classes="liquid-glass settings-tab"
                                         Classes.active="{Binding SelectedSettingsTab, Converter={StaticResource SettingsTabEqualsConverter}, ConverterParameter=importexport}"
                                         HorizontalAlignment="Stretch"
@@ -262,6 +354,7 @@
                                 </Button>
 
                                 <Button Command="{Binding ShowAutoFillSettingsCommand}"
+                                        IsVisible="{Binding SettingsSearchQuery, Converter={StaticResource SettingsTabSearchConverter}, ConverterParameter='auto-fill autofill browser extension domains origins fill'}"
                                         Classes="liquid-glass settings-tab"
                                         Classes.active="{Binding SelectedSettingsTab, Converter={StaticResource SettingsTabEqualsConverter}, ConverterParameter=autofill}"
                                         HorizontalAlignment="Stretch"
@@ -282,6 +375,7 @@
                                 </Button>
 
                                 <Button Command="{Binding ShowBackupSettingsCommand}"
+                                        IsVisible="{Binding SettingsSearchQuery, Converter={StaticResource SettingsTabSearchConverter}, ConverterParameter='recovery backup restore schedule encryption dpapi snapshot'}"
                                         Classes="liquid-glass settings-tab"
                                         Classes.active="{Binding SelectedSettingsTab, Converter={StaticResource SettingsTabEqualsConverter}, ConverterParameter=backup}"
                                         HorizontalAlignment="Stretch"
@@ -295,13 +389,14 @@
                                                 Margin="2,6"
                                                 IsVisible="False"/>
                                         <TextBlock Grid.Column="1" Classes="tab-label"
-                                                   Text="Backup"
+                                                   Text="Recovery &amp; Backup"
                                                    VerticalAlignment="Center"
                                                    Margin="12,0,0,0"/>
                                     </Grid>
                                 </Button>
 
                                 <Button Command="{Binding ShowAccessibilitySettingsCommand}"
+                                        IsVisible="{Binding SettingsSearchQuery, Converter={StaticResource SettingsTabSearchConverter}, ConverterParameter='accessibility screen reader high contrast tooltip animation motion keyboard shortcuts'}"
                                         Classes="liquid-glass settings-tab"
                                         Classes.active="{Binding SelectedSettingsTab, Converter={StaticResource SettingsTabEqualsConverter}, ConverterParameter=accessibility}"
                                         HorizontalAlignment="Stretch"
@@ -322,6 +417,7 @@
                                 </Button>
 
                                 <Button Command="{Binding ShowAdvancedSettingsCommand}"
+                                        IsVisible="{Binding SettingsSearchQuery, Converter={StaticResource SettingsTabSearchConverter}, ConverterParameter='advanced developer diagnostics logging experimental debug'}"
                                         Classes="liquid-glass settings-tab"
                                         Classes.active="{Binding SelectedSettingsTab, Converter={StaticResource SettingsTabEqualsConverter}, ConverterParameter=advanced}"
                                         HorizontalAlignment="Stretch"
@@ -342,6 +438,7 @@
                                 </Button>
 
                                 <Button Command="{Binding ShowRubbishBinSettingsCommand}"
+                                        IsVisible="{Binding SettingsSearchQuery, Converter={StaticResource SettingsTabSearchConverter}, ConverterParameter='rubbish bin trash recycle delete purge secure'}"
                                         Classes="liquid-glass settings-tab"
                                         Classes.active="{Binding SelectedSettingsTab, Converter={StaticResource SettingsTabEqualsConverter}, ConverterParameter=rubbishbin}"
                                         HorizontalAlignment="Stretch"
@@ -361,7 +458,29 @@
                                     </Grid>
                                 </Button>
 
+                                <Button Command="{Binding ShowRecentIssuesCommand}"
+                                        IsVisible="{Binding SettingsSearchQuery, Converter={StaticResource SettingsTabSearchConverter}, ConverterParameter='recent issues errors warnings activity diagnostics log problems'}"
+                                        Classes="liquid-glass settings-tab"
+                                        Classes.active="{Binding SelectedSettingsTab, Converter={StaticResource SettingsTabEqualsConverter}, ConverterParameter=recentissues}"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Stretch"
+                                        Height="40"
+                                        Padding="0">
+                                    <Grid ColumnDefinitions="3,*">
+                                        <Border Grid.Column="0" Classes="tab-accent"
+                                                Background="{DynamicResource AccentBrush}"
+                                                CornerRadius="2"
+                                                Margin="2,6"
+                                                IsVisible="False"/>
+                                        <TextBlock Grid.Column="1" Classes="tab-label"
+                                                   Text="Recent Issues"
+                                                   VerticalAlignment="Center"
+                                                   Margin="12,0,0,0"/>
+                                    </Grid>
+                                </Button>
+
                                 <Button Command="{Binding OpenSecurityDashboardWindowCommand}"
+                                        IsVisible="{Binding SettingsSearchQuery, Converter={StaticResource SettingsTabSearchConverter}, ConverterParameter='password health weak reused breach strength score dashboard'}"
                                         Classes="liquid-glass settings-tab"
                                         HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Stretch"
@@ -381,6 +500,7 @@
                                 </Button>
 
                                 <Button Command="{Binding ShowSyncSettingsCommand}"
+                                        IsVisible="{Binding SettingsSearchQuery, Converter={StaticResource SettingsTabSearchConverter}, ConverterParameter='sync integration extension cross-app totp issuers bridge'}"
                                         Classes="liquid-glass settings-tab"
                                         Classes.active="{Binding SelectedSettingsTab, Converter={StaticResource SettingsTabEqualsConverter}, ConverterParameter=sync}"
                                         HorizontalAlignment="Stretch"
@@ -401,6 +521,21 @@
                                 </Button>
                             </StackPanel>
                             </ScrollViewer>
+
+                            <Border Grid.Row="1"
+                                    VerticalAlignment="Bottom"
+                                    Height="90"
+                                    IsHitTestVisible="False"
+                                    Background="{DynamicResource CategoryPanelBackgroundBrush}">
+                                <Border.OpacityMask>
+                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                        <GradientStop Offset="0.00" Color="#40FFFFFF"/>
+                                        <GradientStop Offset="0.45" Color="#DFFFFFFF"/>
+                                        <GradientStop Offset="1.00" Color="#FFFFFFFF"/>
+                                    </LinearGradientBrush>
+                                </Border.OpacityMask>
+                            </Border>
+                          </Grid>
                         </Border>
 
                         <Grid Grid.Column="1" RowDefinitions="*,Auto">
@@ -410,10 +545,12 @@
                                          HorizontalScrollBarVisibility="Disabled"
                                          VerticalAlignment="Stretch"
                                          MinHeight="0"
-                                         Padding="28,20,4,30">
+                                         Padding="0,20,0,30">
                                 <ContentControl Content="{Binding SelectedSettingsContent}"
-                                              HorizontalAlignment="Stretch"
-                                              Margin="0,0,32,40"/>
+                                              HorizontalAlignment="Center"
+                                              HorizontalContentAlignment="Stretch"
+                                              Width="640"
+                                              Margin="0,0,0,40"/>
                             </ScrollViewer>
 
                             <Border Grid.Row="0"
@@ -431,15 +568,17 @@
                                     RenderTransformOrigin="0.5,1"
                                     BoxShadow="{DynamicResource SlideOutPanelShadow}">
                                 <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <!-- Use AccentBrush so the save confirmation tracks the
+                                         user's chosen accent colour instead of a fixed green. -->
                                     <Border Width="18" Height="18"
                                             CornerRadius="9"
-                                            Background="{DynamicResource SuccessBrush}">
+                                            Background="{DynamicResource UserAccentBrush}">
                                         <TextBlock Text="✓"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"
                                                    FontSize="{StaticResource Type.Micro.Size}"
                                                    FontWeight="Bold"
-                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                   Foreground="#FFFFFFFF"/>
                                     </Border>
                                     <TextBlock Text="{Binding SettingsSaveNotification}"
                                                VerticalAlignment="Center"

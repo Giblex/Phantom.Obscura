@@ -1,9 +1,5 @@
 namespace PhantomVault.UI.ViewModels;
 
-/// <summary>
-/// Wrapper that can represent either a credential item or a category banner header.
-/// Used for displaying grouped credential lists with category separators.
-/// </summary>
 public class ListItemWrapper
 {
     public bool IsCategoryHeader { get; }
@@ -21,19 +17,14 @@ public class ListItemWrapper
         Credential = credential;
     }
 
-    /// <summary>
-    /// Creates a category header item.
-    /// </summary>
     public static ListItemWrapper CreateCategoryHeader(string categoryName, string? categoryColor, int itemCount)
     {
         return new ListItemWrapper(true, categoryName, categoryColor, itemCount, null);
     }
 
-    /// <summary>
-    /// Creates a credential item.
-    /// </summary>
     public static ListItemWrapper CreateCredential(CredentialViewModel credential)
     {
         return new ListItemWrapper(false, null, null, 0, credential);
     }
 }
+

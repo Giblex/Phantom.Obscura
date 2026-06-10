@@ -6,27 +6,25 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:Class="PhantomVault.UI.Views.CategoryLandingView"
              x:DataType="vm:CategoryLandingViewModel">
-    
+
     <UserControl.Resources>
         <SolidColorBrush x:Key="TileBackgroundBrush" Color="{DynamicResource ControlBackgroundColor}" Opacity="0.6"/>
         <SolidColorBrush x:Key="TileHoverBrush" Color="{DynamicResource ControlBackgroundColor}" Opacity="0.8"/>
     </UserControl.Resources>
-    
+
     <Grid>
         <ScrollViewer VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled">
             <StackPanel Margin="40,30,40,40"
                         HorizontalAlignment="Center">
-                
-                <!-- Page Title -->
+
                 <TextBlock Text="Passwords"
                            FontSize="{StaticResource Type.Banner.Size}"
                            FontWeight="Bold"
                            Foreground="{DynamicResource PrimaryTextBrush}"
                            HorizontalAlignment="Center"
                            Margin="0,0,0,30"/>
-                
-                <!-- Category Tiles Grid -->
+
                 <ItemsControl ItemsSource="{Binding CategoryTiles}"
                               Width="860"
                               HorizontalAlignment="Center">
@@ -35,7 +33,7 @@
                             <UniformGrid Columns="2"/>
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
-                
+
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:CategoryTileViewModel">
                         <Button Command="{Binding $parent[UserControl].DataContext.NavigateToCategoryCommand}"
@@ -50,29 +48,27 @@
                                 HorizontalAlignment="Center"
                                 HorizontalContentAlignment="Stretch"
                                 Cursor="Hand">
-                                
+
                                 <Grid Margin="20">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    
-                                    <!-- Icon Circle -->
+
                                     <Border Grid.Column="0"
                                             Width="50"
                                             Height="50"
                                             CornerRadius="25"
                                             VerticalAlignment="Center"
                                             Background="{Binding Color}">
-                                        
+
                                         <TextBlock Text="{Binding Icon}"
                                                    FontSize="{StaticResource Type.H2.Size}"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"/>
                                     </Border>
-                                    
-                                    <!-- Category Name -->
+
                                     <TextBlock Grid.Column="1"
                                                Text="{Binding Name}"
                                                FontSize="{StaticResource Type.H3.Size}"
@@ -80,8 +76,7 @@
                                                Foreground="{DynamicResource PrimaryTextBrush}"
                                                VerticalAlignment="Center"
                                                Margin="16,0,0,0"/>
-                                    
-                                    <!-- Count -->
+
                                     <TextBlock Grid.Column="2"
                                                Text="{Binding Count}"
                                                FontSize="{StaticResource Type.XL.Size}"
@@ -94,9 +89,10 @@
                         </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
-            
+
             </StackPanel>
         </ScrollViewer>
     </Grid>
-    
+
 </UserControl>
+

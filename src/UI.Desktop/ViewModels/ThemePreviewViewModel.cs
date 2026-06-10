@@ -9,10 +9,7 @@ using PhantomVault.UI.Services;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// View model for the theme preview/showcase window.
-    /// Displays all available themes with live previews and allows one-click theme switching.
-    /// </summary>
+
     public sealed class ThemePreviewViewModel : ReactiveObject
     {
         private readonly ThemeManagerService _themeManager;
@@ -26,7 +23,6 @@ namespace PhantomVault.UI.ViewModels
             _themeManager = themeManager ?? GetServiceOrDefault<ThemeManagerService>() ?? new ThemeManagerService();
             _runtimeThemeService = runtimeThemeService ?? GetServiceOrNull<IRuntimeThemeService>();
 
-            // Load current theme name
             LoadCurrentThemeName();
 
             ApplyThemeCommand = ReactiveCommand.Create<string>(ApplyTheme);
@@ -60,7 +56,6 @@ namespace PhantomVault.UI.ViewModels
                     }
                 }
 
-                // Fallback to light/dark theme
                 CurrentThemeName = "Phantom Light";
             }
             catch
@@ -76,7 +71,7 @@ namespace PhantomVault.UI.ViewModels
 
             try
             {
-                // Map simple theme IDs to actual theme application
+
                 switch (themeId.ToLowerInvariant())
                 {
                     case "phantom-dark":
@@ -119,7 +114,7 @@ namespace PhantomVault.UI.ViewModels
                         break;
 
                     default:
-                        // Try as runtime theme ID
+
                         if (_runtimeThemeService != null)
                         {
                             var theme = _runtimeThemeService.GetThemes()
@@ -137,7 +132,7 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                // Log error but don't crash
+
                 System.Diagnostics.Debug.WriteLine($"Failed to apply theme '{themeId}': {ex.Message}");
             }
         }
@@ -153,7 +148,7 @@ namespace PhantomVault.UI.ViewModels
             }
             catch
             {
-                // Best-effort save
+
             }
         }
 
@@ -179,7 +174,7 @@ namespace PhantomVault.UI.ViewModels
             }
             catch
             {
-                // Fallback to new instance
+
             }
 
             return new T();
@@ -196,10 +191,11 @@ namespace PhantomVault.UI.ViewModels
             }
             catch
             {
-                // Return null if service not found
+
             }
 
             return null;
         }
     }
 }
+

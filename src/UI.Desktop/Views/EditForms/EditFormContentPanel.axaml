@@ -3,9 +3,9 @@
              xmlns:converters="clr-namespace:PhantomVault.UI.Converters"
              xmlns:editforms="clr-namespace:PhantomVault.UI.Views.EditForms"
              x:Class="PhantomVault.UI.Views.EditForms.EditFormContentPanel">
-    
+
     <UserControl.Styles>
-        <!-- Shared TextBox hover/focus highlight — theme-adaptive via token -->
+
         <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
             <Setter Property="Background" Value="{DynamicResource InputHighlightBrush}"/>
         </Style>
@@ -13,13 +13,12 @@
             <Setter Property="Background" Value="{DynamicResource InputHighlightBrush}"/>
         </Style>
     </UserControl.Styles>
-    
+
     <StackPanel x:Name="EditFormStack" Spacing="20">
-        
-        <!-- Title Field -->
+
         <StackPanel Spacing="8">
-            <TextBlock Text="Title *" 
-                       FontSize="{StaticResource Type.Label.Size}" 
+            <TextBlock Text="Title *"
+                       FontSize="{StaticResource Type.Label.Size}"
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource SecondaryTextBrush}"/>
             <TextBox Text="{Binding Title}"
@@ -27,16 +26,15 @@
                      Height="40"
                      FontSize="{StaticResource Type.Body.Size}"
                      Background="{DynamicResource ReadOnlyFieldBackgroundBrush}"/>
-            <TextBlock Text="{Binding TitleError}" 
-                       FontSize="{StaticResource Type.Tiny.Size}" 
+            <TextBlock Text="{Binding TitleError}"
+                       FontSize="{StaticResource Type.Tiny.Size}"
                        Foreground="{DynamicResource ErrorBrush}"
                        IsVisible="{Binding HasTitleError}"/>
         </StackPanel>
-        
-        <!-- Username/Email Field -->
+
         <StackPanel Spacing="8">
-            <TextBlock Text="Username / Email *" 
-                       FontSize="{StaticResource Type.Label.Size}" 
+            <TextBlock Text="Username / Email *"
+                       FontSize="{StaticResource Type.Label.Size}"
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource SecondaryTextBrush}"/>
             <TextBox Text="{Binding Username}"
@@ -44,18 +42,17 @@
                      Height="40"
                      FontSize="{StaticResource Type.Body.Size}"
                      Background="{DynamicResource ReadOnlyFieldBackgroundBrush}"/>
-            <TextBlock Text="{Binding UsernameError}" 
-                       FontSize="{StaticResource Type.Tiny.Size}" 
+            <TextBlock Text="{Binding UsernameError}"
+                       FontSize="{StaticResource Type.Tiny.Size}"
                        Foreground="{DynamicResource ErrorBrush}"
                        IsVisible="{Binding HasUsernameError}"/>
         </StackPanel>
-        
-        <!-- Password Field -->
+
         <StackPanel Spacing="8">
             <Grid ColumnDefinitions="*,Auto,4,Auto">
                 <TextBlock Grid.Column="0"
-                           Text="Password *" 
-                           FontSize="{StaticResource Type.Label.Size}" 
+                           Text="Password *"
+                           FontSize="{StaticResource Type.Label.Size}"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource SecondaryTextBrush}"/>
                 <Button Grid.Column="1"
@@ -100,15 +97,14 @@
                 </Button>
             </Grid>
 
-            <!-- Password Strength Meter -->
             <Border Background="{DynamicResource ControlBackgroundBrush}"
                     CornerRadius="4"
                     Padding="10,8"
                     IsVisible="{Binding HasPassword}">
                 <Grid ColumnDefinitions="Auto,*,Auto">
                     <TextBlock Grid.Column="0"
-                               Text="Strength:" 
-                               FontSize="{StaticResource Type.Tiny.Size}" 
+                               Text="Strength:"
+                               FontSize="{StaticResource Type.Tiny.Size}"
                                Foreground="{DynamicResource MutedTextBrush}"
                                VerticalAlignment="Center"
                                Margin="0,0,10,0"/>
@@ -119,8 +115,8 @@
                                  VerticalAlignment="Center"
                                  Foreground="{Binding PasswordStrengthColor}"/>
                     <TextBlock Grid.Column="2"
-                               Text="{Binding PasswordStrengthText}" 
-                               FontSize="{StaticResource Type.Tiny.Size}" 
+                               Text="{Binding PasswordStrengthText}"
+                               FontSize="{StaticResource Type.Tiny.Size}"
                                FontWeight="SemiBold"
                                Foreground="{Binding PasswordStrengthColor}"
                                VerticalAlignment="Center"
@@ -128,16 +124,15 @@
                 </Grid>
             </Border>
 
-            <TextBlock Text="{Binding PasswordError}" 
-                       FontSize="{StaticResource Type.Tiny.Size}" 
+            <TextBlock Text="{Binding PasswordError}"
+                       FontSize="{StaticResource Type.Tiny.Size}"
                        Foreground="{DynamicResource ErrorBrush}"
                        IsVisible="{Binding HasPasswordError}"/>
         </StackPanel>
-        
-        <!-- URL Field -->
+
         <StackPanel Spacing="8">
-            <TextBlock Text="Website URL" 
-                       FontSize="{StaticResource Type.Label.Size}" 
+            <TextBlock Text="Website URL"
+                       FontSize="{StaticResource Type.Label.Size}"
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource SecondaryTextBrush}"/>
             <TextBox Text="{Binding Url}"
@@ -145,15 +140,14 @@
                      Height="40"
                      FontSize="{StaticResource Type.Body.Size}"
                      Background="{DynamicResource ReadOnlyFieldBackgroundBrush}"/>
-            <TextBlock Text="Optional - Used for auto-fill and quick access" 
-                       FontSize="{StaticResource Type.Tiny.Size}" 
+            <TextBlock Text="Optional - Used for auto-fill and quick access"
+                       FontSize="{StaticResource Type.Tiny.Size}"
                        Foreground="{DynamicResource MutedTextBrush}"/>
         </StackPanel>
-        
-        <!-- Category Selection -->
+
         <StackPanel Spacing="8">
-            <TextBlock Text="Category" 
-                       FontSize="{StaticResource Type.Label.Size}" 
+            <TextBlock Text="Category"
+                       FontSize="{StaticResource Type.Label.Size}"
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource SecondaryTextBrush}"/>
             <ComboBox SelectedItem="{Binding SelectedCategory}"
@@ -169,11 +163,10 @@
                 </ComboBox.ItemTemplate>
             </ComboBox>
         </StackPanel>
-        
-        <!-- Icon/Logo Selection -->
+
         <StackPanel Spacing="8">
-            <TextBlock Text="Icon / Logo" 
-                       FontSize="{StaticResource Type.Label.Size}" 
+            <TextBlock Text="Icon / Logo"
+                       FontSize="{StaticResource Type.Label.Size}"
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource SecondaryTextBrush}"/>
             <Border Background="{DynamicResource ReadOnlyFieldBackgroundBrush}"
@@ -188,7 +181,7 @@
                     </Style>
                 </Border.Styles>
                 <Grid ColumnDefinitions="Auto,*,Auto">
-                    <!-- Current Icon Display -->
+
                     <Border Grid.Column="0"
                             Width="70"
                             Height="70"
@@ -203,22 +196,21 @@
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"/>
                     </Border>
-                    <!-- Icon Info -->
+
                     <StackPanel Grid.Column="1"
                                 Margin="15,0,0,0"
                                 VerticalAlignment="Center"
                                 Spacing="4">
-                        <TextBlock Text="Custom icon for this credential" 
-                                   FontSize="{StaticResource Type.Label.Size}" 
+                        <TextBlock Text="Custom icon for this credential"
+                                   FontSize="{StaticResource Type.Label.Size}"
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
-                        <TextBlock Text="Click 'Change Icon' to select from library or upload custom" 
-                                   FontSize="{StaticResource Type.Tiny.Size}" 
+                        <TextBlock Text="Click 'Change Icon' to select from library or upload custom"
+                                   FontSize="{StaticResource Type.Tiny.Size}"
                                    Foreground="{DynamicResource MutedTextBrush}"
                                    TextWrapping="Wrap"/>
                     </StackPanel>
-                    
-                    <!-- Change Icon Button -->
+
                     <Button Grid.Column="2"
                             Command="{Binding PickIconCommand}"
                             Classes="secondary"
@@ -231,8 +223,7 @@
                 </Grid>
             </Border>
         </StackPanel>
-        
-        <!-- Type-Specific Forms -->
+
         <editforms:CreditCardEditForm/>
         <editforms:BankAccountEditForm/>
         <editforms:IdentityEditForm/>
@@ -240,11 +231,10 @@
         <editforms:ApiKeyEditForm/>
         <editforms:ContactEditForm/>
         <editforms:PinCodeEditForm/>
-        
-        <!-- Notes Field -->
+
         <StackPanel Spacing="8">
-            <TextBlock Text="Notes" 
-                       FontSize="{StaticResource Type.Label.Size}" 
+            <TextBlock Text="Notes"
+                       FontSize="{StaticResource Type.Label.Size}"
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource SecondaryTextBrush}"/>
             <TextBox Text="{Binding Notes}"
@@ -255,6 +245,7 @@
                      FontSize="{StaticResource Type.Label.Size}"
                      Background="{DynamicResource ReadOnlyFieldBackgroundBrush}"/>
         </StackPanel>
-        
+
     </StackPanel>
 </UserControl>
+

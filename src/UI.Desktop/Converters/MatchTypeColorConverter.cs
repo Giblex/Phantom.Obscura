@@ -7,9 +7,7 @@ using MatchType = PhantomVault.Core.Services.Autofill.MatchType;
 
 namespace PhantomVault.UI.Converters
 {
-    /// <summary>
-    /// Converts MatchType to a color brush for visual indication.
-    /// </summary>
+
     public sealed class MatchTypeColorConverter : IValueConverter
     {
         public static readonly MatchTypeColorConverter Instance = new();
@@ -21,9 +19,9 @@ namespace PhantomVault.UI.Converters
 
             return matchType switch
             {
-                MatchType.Exact => new SolidColorBrush(Color.Parse("#4CAF50")), // Green
-                MatchType.Subdomain => new SolidColorBrush(Color.Parse("#2196F3")), // Blue
-                MatchType.BaseDomain => new SolidColorBrush(Color.Parse("#808080")), // Gray
+                MatchType.Exact => new SolidColorBrush(Color.Parse("#4CAF50")),
+                MatchType.Subdomain => new SolidColorBrush(Color.Parse("#2196F3")),
+                MatchType.BaseDomain => new SolidColorBrush(Color.Parse("#808080")),
                 _ => Brushes.Gray
             };
         }
@@ -34,3 +32,4 @@ namespace PhantomVault.UI.Converters
         }
     }
 }
+

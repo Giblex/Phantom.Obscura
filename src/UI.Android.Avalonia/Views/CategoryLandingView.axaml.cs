@@ -8,3 +8,4 @@ public partial class CategoryLandingView : UserControl
     public CategoryLandingView() => InitializeComponent();
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
 }
+

@@ -15,9 +15,7 @@ using ReactiveUI;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// ViewModel for the welcome/landing page shown to first-time users.
-    /// </summary>
+
     public sealed class WelcomePageViewModel : ReactiveObject
     {
         private readonly DialogService _dialogService;
@@ -265,10 +263,7 @@ namespace PhantomVault.UI.ViewModels
 
                 if (discoveredVaults.Count == 0)
                 {
-                    // No vault on the USB itself — but the user may still have local
-                    // vaults registered in settings (e.g. %AppData%\PhantomVault\vault).
-                    // Surface those so "Access your vault" can open them even while an
-                    // empty/unrelated USB drive is plugged in.
+
                     var localFallback = DiscoverKnownLocalVaults();
                     if (localFallback.Count > 0)
                     {
@@ -466,8 +461,6 @@ namespace PhantomVault.UI.ViewModels
                 if (!Directory.Exists(vaultPath))
                     continue;
 
-                // Packed-volume transport (e.g. StealthSecure tier) emits a single
-                // obscura.vol concealed container instead of separate .pvault files.
                 var packedVolume = Path.Combine(vaultPath, "obscura.vol");
                 if (File.Exists(packedVolume))
                 {
@@ -482,7 +475,6 @@ namespace PhantomVault.UI.ViewModels
                     continue;
                 }
 
-                // Direct canonical container layout — look for root/*.pvault.
                 var rootPath = Path.Combine(vaultPath, "root");
                 if (!Directory.Exists(rootPath))
                     continue;
@@ -742,3 +734,4 @@ namespace PhantomVault.UI.ViewModels
         }
     }
 }
+

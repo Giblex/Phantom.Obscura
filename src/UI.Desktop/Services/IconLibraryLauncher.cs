@@ -14,9 +14,7 @@ using PhantomVault.UI.Views;
 
 namespace PhantomVault.UI.Services
 {
-    /// <summary>
-    /// Central helper that launches the icon library window from any view model.
-    /// </summary>
+
     public static class IconLibraryLauncher
     {
         private static readonly DialogService DialogService = new();
@@ -34,7 +32,6 @@ namespace PhantomVault.UI.Services
                     iconManager = app.Services.GetService(typeof(IconManager)) as IconManager;
                 }
 
-                // Default to the root Assets/Visuals so the manager can search subfolders (App Icons, Entry Logos, etc.)
                 iconManager ??= new IconManager(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Visuals"));
 
                 Window? ownerToUse = owner;
@@ -51,10 +48,8 @@ namespace PhantomVault.UI.Services
                     DataContext = managerViewModel
                 };
 
-                // Set owner window for file pickers and dialogs and the caller owner (category manager window if provided)
                 managerViewModel.SetOwnerWindow(window, ownerToUse);
 
-                // If an owner is available, set the window owner and show non-modally
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     try
@@ -62,7 +57,7 @@ namespace PhantomVault.UI.Services
                         Console.WriteLine("[ICON-LAUNCHER] Showing IconManagerWindow (non-modal)");
                     }
                     catch { }
-                    // Preserve the original owner for the view model via managerViewModel.SetOwnerWindow(...)
+
                     window.Show();
                     return true;
                 });
@@ -121,7 +116,7 @@ namespace PhantomVault.UI.Services
                 }
                 catch
                 {
-                    // ignore
+
                 }
             }).GetTask();
         }
@@ -176,3 +171,4 @@ namespace PhantomVault.UI.Services
         }
     }
 }
+

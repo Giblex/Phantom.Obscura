@@ -7,25 +7,17 @@ using System.Runtime.Versioning;
 
 namespace PhantomVault.Core.Services.Security;
 
-/// <summary>
-/// Detects if the application is running inside a virtual machine.
-/// SECURITY: Some policies may restrict execution in virtual environments to prevent analysis.
-/// </summary>
 public static class VirtualMachineDetection
 {
-    /// <summary>
-    /// Performs comprehensive VM detection using multiple heuristics.
-    /// </summary>
-    /// <returns>True if running in a VM, false otherwise</returns>
+
     public static bool IsRunningInVirtualMachine()
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            // For non-Windows platforms, use basic checks
+
             return CheckLinuxVMIndicators();
         }
 
-        // Multiple detection methods for Windows
         if (CheckHypervisorPresent())
             return true;
 
@@ -50,16 +42,12 @@ public static class VirtualMachineDetection
         return false;
     }
 
-    /// <summary>
-    /// Checks if a hypervisor is present using CPUID instruction.
-    /// This is the most reliable method on modern systems.
-    /// </summary>
     [SupportedOSPlatform("windows")]
     private static bool CheckHypervisorPresent()
     {
         try
         {
-            // Use WMI to check for hypervisor
+
             using var searcher = new ManagementObjectSearcher("SELECT * FROM Win32_ComputerSystem");
             using var collection = searcher.Get();
 
@@ -77,15 +65,12 @@ public static class VirtualMachineDetection
         }
         catch
         {
-            // Continue with other checks
+
         }
 
         return false;
     }
 
-    /// <summary>
-    /// Checks Windows Registry for VMware indicators.
-    /// </summary>
     [SupportedOSPlatform("windows")]
     private static bool CheckVMWareRegistry()
     {
@@ -102,26 +87,23 @@ public static class VirtualMachineDetection
                 using var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(keyPath);
                 if (key != null)
                 {
-                    // Check for VMware-specific values
+
                     var identifier = key.GetValue("Identifier")?.ToString()?.ToLowerInvariant() ?? string.Empty;
                     if (identifier.Contains("vmware"))
                         return true;
 
-                    return true; // Key exists
+                    return true;
                 }
             }
         }
         catch
         {
-            // Continue with other checks
+
         }
 
         return false;
     }
 
-    /// <summary>
-    /// Checks Windows Registry for VirtualBox indicators.
-    /// </summary>
     [SupportedOSPlatform("windows")]
     private static bool CheckVirtualBoxRegistry()
     {
@@ -142,21 +124,18 @@ public static class VirtualMachineDetection
         }
         catch
         {
-            // Continue with other checks
+
         }
 
         return false;
     }
 
-    /// <summary>
-    /// Checks for Hyper-V indicators.
-    /// </summary>
     [SupportedOSPlatform("windows")]
     private static bool CheckHyperVIndicators()
     {
         try
         {
-            // Check for Hyper-V services
+
             using var searcher = new ManagementObjectSearcher("SELECT * FROM Win32_Service WHERE Name LIKE '%vmbus%' OR Name LIKE '%hyperkbd%'");
             using var collection = searcher.Get();
 
@@ -165,15 +144,12 @@ public static class VirtualMachineDetection
         }
         catch
         {
-            // Continue with other checks
+
         }
 
         return false;
     }
 
-    /// <summary>
-    /// Checks BIOS information for VM indicators.
-    /// </summary>
     [SupportedOSPlatform("windows")]
     private static bool CheckBIOSInfo()
     {
@@ -199,15 +175,12 @@ public static class VirtualMachineDetection
         }
         catch
         {
-            // Continue with other checks
+
         }
 
         return false;
     }
 
-    /// <summary>
-    /// Checks MAC addresses for known VM vendor prefixes.
-    /// </summary>
     [SupportedOSPlatform("windows")]
     private static bool CheckMACAddress()
     {
@@ -216,17 +189,16 @@ public static class VirtualMachineDetection
             using var searcher = new ManagementObjectSearcher("SELECT * FROM Win32_NetworkAdapter WHERE MACAddress IS NOT NULL");
             using var collection = searcher.Get();
 
-            // Known VM MAC address prefixes
             string[] vmMacPrefixes = new[]
             {
-                "00:05:69", // VMware
-                "00:0C:29", // VMware
-                "00:1C:14", // VMware
-                "00:50:56", // VMware
-                "08:00:27", // VirtualBox
-                "00:15:5D", // Hyper-V
-                "00:16:3E", // Xen
-                "00:1C:42"  // Parallels
+                "00:05:69",
+                "00:0C:29",
+                "00:1C:14",
+                "00:50:56",
+                "08:00:27",
+                "00:15:5D",
+                "00:16:3E",
+                "00:1C:42"
             };
 
             foreach (ManagementObject obj in collection)
@@ -242,15 +214,12 @@ public static class VirtualMachineDetection
         }
         catch
         {
-            // Continue with other checks
+
         }
 
         return false;
     }
 
-    /// <summary>
-    /// Checks for VM-specific processes running.
-    /// </summary>
     [SupportedOSPlatform("windows")]
     private static bool CheckVMProcesses()
     {
@@ -258,13 +227,13 @@ public static class VirtualMachineDetection
         {
             string[] vmProcesses = new[]
             {
-                "vmtoolsd",      // VMware Tools
-                "vmwaretray",    // VMware Tray
-                "vmwareuser",    // VMware User
-                "vboxservice",   // VirtualBox Service
-                "vboxtray",      // VirtualBox Tray
-                "xenservice",    // Xen Service
-                "qemu-ga"        // QEMU Guest Agent
+                "vmtoolsd",
+                "vmwaretray",
+                "vmwareuser",
+                "vboxservice",
+                "vboxtray",
+                "xenservice",
+                "qemu-ga"
             };
 
             var runningProcesses = System.Diagnostics.Process.GetProcesses()
@@ -279,20 +248,17 @@ public static class VirtualMachineDetection
         }
         catch
         {
-            // Continue with other checks
+
         }
 
         return false;
     }
 
-    /// <summary>
-    /// Checks for VM indicators on Linux systems.
-    /// </summary>
     private static bool CheckLinuxVMIndicators()
     {
         try
         {
-            // Check for common VM device files
+
             string[] vmDevices = new[]
             {
                 "/dev/vboxguest",
@@ -307,7 +273,6 @@ public static class VirtualMachineDetection
                     return true;
             }
 
-            // Check DMI information
             if (File.Exists("/sys/class/dmi/id/product_name"))
             {
                 var productName = File.ReadAllText("/sys/class/dmi/id/product_name").ToLowerInvariant();
@@ -319,22 +284,17 @@ public static class VirtualMachineDetection
         }
         catch
         {
-            // Fail closed - if we can't check, assume not in VM
+
         }
 
         return false;
     }
 
-    /// <summary>
-    /// Gets a detailed VM detection report.
-    /// </summary>
-    /// <returns>String describing detected VM environment or "Physical Machine"</returns>
     public static string GetVirtualMachineType()
     {
         if (!IsRunningInVirtualMachine())
             return "Physical Machine";
 
-        // Try to determine specific VM type
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             if (CheckVMWareRegistry())
@@ -348,3 +308,4 @@ public static class VirtualMachineDetection
         return "Virtual Machine (Unknown Type)";
     }
 }
+

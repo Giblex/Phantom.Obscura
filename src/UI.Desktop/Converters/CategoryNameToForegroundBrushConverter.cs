@@ -7,10 +7,7 @@ using PhantomVault.UI.ViewModels;
 
 namespace PhantomVault.UI.Converters
 {
-    /// <summary>
-    /// Given a category name and a categories collection, returns a contrasting
-    /// foreground brush (white/black) for the category's TileColor.
-    /// </summary>
+
     public sealed class CategoryNameToForegroundBrushConverter : IMultiValueConverter
     {
         public static readonly CategoryNameToForegroundBrushConverter Instance = new CategoryNameToForegroundBrushConverter();

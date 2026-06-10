@@ -11,21 +11,15 @@ using Serilog;
 
 namespace PhantomVault.Core.Services
 {
-    /// <summary>
-    /// Manages icon loading from the Assets/Visuals folder and provides
-    /// automatic icon matching based on credential names and URLs.
-    /// Optimized with caching and lazy directory indexing.
-    /// </summary>
+
     public sealed class IconManager
     {
         private static readonly string[] SupportedExtensions = { ".png", ".jpg", ".jpeg", ".svg", ".ico" };
         private readonly string _iconsDirectory;
-        
-        // Caching for icon path lookups
+
         private static readonly ConcurrentDictionary<string, string?> _iconPathCache = new();
         private static readonly SemaphoreSlim _cacheLock = new(1, 1);
-        
-        // Lazy directory index: built once, reused for all lookups
+
         private readonly Lazy<Dictionary<string, string>> _iconIndex;
 
         public IconManager(string iconsDirectory)
@@ -33,11 +27,9 @@ namespace PhantomVault.Core.Services
             try
             {
                 _iconsDirectory = iconsDirectory;
-                
-                // Initialize lazy icon index builder
+
                 _iconIndex = new Lazy<Dictionary<string, string>>(BuildIconIndex, LazyThreadSafetyMode.ExecutionAndPublication);
-                
-                // Diagnostic logging
+
                 Log.Debug("IconManager constructor - iconsDirectory: {IconsDirectory} (optimized with caching)", _iconsDirectory);
 
                 EnsureIconsDirectoryExists();
@@ -48,16 +40,12 @@ namespace PhantomVault.Core.Services
                 throw;
             }
         }
-        
-        /// <summary>
-        /// Builds an in-memory index of all icon files (filename -> full path).
-        /// This is called lazily on first icon lookup and cached for subsequent calls.
-        /// </summary>
+
         private Dictionary<string, string> BuildIconIndex()
         {
             var index = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             var sw = Stopwatch.StartNew();
-            
+
             try
             {
                 if (!Directory.Exists(_iconsDirectory))
@@ -80,7 +68,6 @@ namespace PhantomVault.Core.Services
                             if (string.IsNullOrWhiteSpace(nameWithoutExt))
                                 continue;
 
-                            // Store first match only (priority to earlier search paths)
                             if (!index.ContainsKey(nameWithoutExt))
                             {
                                 index[nameWithoutExt] = file;
@@ -120,26 +107,23 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Gets the root directory where icon assets are stored.
-        /// </summary>
         public string IconsDirectory => _iconsDirectory;
 
-        /// <summary>
-        /// Returns the list of supported icon file extensions.
-        /// </summary>
         public static IReadOnlyList<string> SupportedFileExtensions => Array.AsReadOnly(SupportedExtensions);
 
         private IEnumerable<string> EnumerateSearchPaths()
         {
-            // Search paths for the Assets/Visuals folder structure
+
             var candidates = new[]
             {
                 Path.Combine(_iconsDirectory, "Entry Logos"),
                 Path.Combine(_iconsDirectory, "App Icons"),
                 Path.Combine(_iconsDirectory, "Cat Icons"),
-                Path.Combine(_iconsDirectory, "Giblex Icons"),
-                _iconsDirectory
+                _iconsDirectory,
+                Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    "PhantomVault",
+                    "IconCache")
             };
 
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -194,12 +178,11 @@ namespace PhantomVault.Core.Services
             }
             catch { }
 
-            // Use the cached icon index for lookups
             var index = _iconIndex.Value;
-            
+
             foreach (var term in termArray)
             {
-                // Check cache first
+
                 var cacheKey = term.ToLowerInvariant();
                 if (_iconPathCache.TryGetValue(cacheKey, out var cachedPath))
                 {
@@ -209,8 +192,7 @@ namespace PhantomVault.Core.Services
                         return (cachedPath, term);
                     }
                 }
-                
-                // Check index
+
                 if (index.TryGetValue(term, out var matchedPath))
                 {
                     _iconPathCache[cacheKey] = matchedPath;
@@ -219,7 +201,6 @@ namespace PhantomVault.Core.Services
                 }
             }
 
-            // Cache negative result for first term to avoid repeated lookups
             if (termArray.Length > 0)
             {
                 _iconPathCache[termArray[0].ToLowerInvariant()] = null;
@@ -228,28 +209,22 @@ namespace PhantomVault.Core.Services
             return (null, null);
         }
 
-        /// <summary>
-        /// Attempts to find an icon file matching the credential's title or URL domain
-        /// Returns the icon filename (without extension) if found, null otherwise
-        /// </summary>
         public string? FindIconForCredential(Credential credential)
         {
             if (string.IsNullOrWhiteSpace(credential.Title) && string.IsNullOrWhiteSpace(credential.Url))
                 return null;
 
-            // Try to extract domain from URL
             string? domain = null;
             if (!string.IsNullOrWhiteSpace(credential.Url))
             {
                 domain = ExtractDomainFromUrl(credential.Url);
             }
 
-            // Search for icon files matching title or domain
             var searchTerms = new[]
             {
                 credential.Title?.ToLowerInvariant()?.Trim(),
                 domain?.ToLowerInvariant()?.Trim(),
-                // Also try first word of title (e.g., "Netflix Account" -> "netflix")
+
                 credential.Title?.Split(' ').FirstOrDefault()?.ToLowerInvariant()?.Trim()
             }.Where(t => !string.IsNullOrWhiteSpace(t)).Distinct();
 
@@ -259,10 +234,6 @@ namespace PhantomVault.Core.Services
                 : null;
         }
 
-        /// <summary>
-        /// Finds the actual file path for an icon matching the credential
-        /// Returns the full path to the icon file if found, null otherwise
-        /// </summary>
         public string? FindIconPathForCredential(Credential credential)
         {
             Debug.WriteLine($"[ICON-MGR] FindIconPathForCredential - Title: '{credential.Title}', Url: '{credential.Url}'");
@@ -274,7 +245,6 @@ namespace PhantomVault.Core.Services
                 return null;
             }
 
-            // Try to extract domain from URL
             string? domain = null;
             if (!string.IsNullOrWhiteSpace(credential.Url))
             {
@@ -282,12 +252,11 @@ namespace PhantomVault.Core.Services
                 Debug.WriteLine($"[ICON-MGR] Extracted domain from URL: '{domain}'");
             }
 
-            // Search for icon files matching title or domain
             var searchTerms = new[]
             {
                 credential.Title?.ToLowerInvariant()?.Trim(),
                 domain?.ToLowerInvariant()?.Trim(),
-                // Also try first word of title (e.g., "Netflix Account" -> "netflix")
+
                 credential.Title?.Split(' ').FirstOrDefault()?.ToLowerInvariant()?.Trim()
             }.Where(t => !string.IsNullOrWhiteSpace(t)).Distinct().ToArray();
 
@@ -305,10 +274,6 @@ namespace PhantomVault.Core.Services
             return null;
         }
 
-        /// <summary>
-        /// Extracts the domain name from a URL
-        /// Example: "https://www.netflix.com/browse" -> "netflix"
-        /// </summary>
         private string? ExtractDomainFromUrl(string url)
         {
             try
@@ -322,17 +287,15 @@ namespace PhantomVault.Core.Services
                 var uri = new Uri(url);
                 var host = uri.Host.ToLowerInvariant();
 
-                // Remove www. prefix
                 if (host.StartsWith("www."))
                 {
                     host = host.Substring(4);
                 }
 
-                // Extract main domain (remove TLD)
                 var parts = host.Split('.');
                 if (parts.Length > 0)
                 {
-                    return parts[0]; // Return the main domain part (e.g., "netflix" from "netflix.com")
+                    return parts[0];
                 }
 
                 return host;
@@ -343,15 +306,11 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Gets an emoji representation for common services
-        /// This is a fallback - in the future, this could load actual image files
-        /// </summary>
         private string GetIconEmoji(string name)
         {
             var iconMap = new System.Collections.Generic.Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                // Social Media
+
                 { "facebook", "📘" },
                 { "twitter", "🐦" },
                 { "instagram", "📷" },
@@ -360,8 +319,7 @@ namespace PhantomVault.Core.Services
                 { "tiktok", "🎵" },
                 { "snapchat", "👻" },
                 { "youtube", "▶️" },
-                
-                // Tech/Cloud
+
                 { "google", "🔍" },
                 { "gmail", "📧" },
                 { "microsoft", "🪟" },
@@ -370,40 +328,33 @@ namespace PhantomVault.Core.Services
                 { "github", "🐙" },
                 { "dropbox", "📦" },
                 { "onedrive", "☁️" },
-                
-                // Entertainment
+
                 { "netflix", "🎬" },
                 { "spotify", "🎵" },
                 { "hulu", "📺" },
                 { "disney", "🏰" },
                 { "twitch", "🎮" },
                 { "steam", "🎮" },
-                
-                // Finance
+
                 { "paypal", "💰" },
                 { "bank", "🏦" },
                 { "venmo", "💵" },
                 { "stripe", "💳" },
-                
-                // Communication
+
                 { "slack", "💬" },
                 { "discord", "💬" },
                 { "zoom", "📹" },
                 { "teams", "👥" },
-                
-                // Default
+
                 { "default", "🔑" }
             };
 
             return iconMap.TryGetValue(name, out var emoji) ? emoji : iconMap["default"];
         }
 
-        /// <summary>
-        /// Generates a search query for the icon downloader based on credential info
-        /// </summary>
         public string GenerateSearchQuery(Credential credential)
         {
-            // Priority 1: Use domain from URL
+
             if (!string.IsNullOrWhiteSpace(credential.Url))
             {
                 var domain = ExtractDomainFromUrl(credential.Url);
@@ -413,7 +364,6 @@ namespace PhantomVault.Core.Services
                 }
             }
 
-            // Priority 2: Use title (first word)
             if (!string.IsNullOrWhiteSpace(credential.Title))
             {
                 var firstWord = credential.Title.Split(' ').FirstOrDefault()?.Trim();
@@ -423,16 +373,12 @@ namespace PhantomVault.Core.Services
                 }
             }
 
-            // Fallback
             return "generic account icon";
         }
 
-        /// <summary>
-        /// Gets the suggested filename for saving an icon for this credential
-        /// </summary>
         public string GetSuggestedIconFilename(Credential credential)
         {
-            // Try domain first
+
             if (!string.IsNullOrWhiteSpace(credential.Url))
             {
                 var domain = ExtractDomainFromUrl(credential.Url);
@@ -442,7 +388,6 @@ namespace PhantomVault.Core.Services
                 }
             }
 
-            // Fall back to title
             if (!string.IsNullOrWhiteSpace(credential.Title))
             {
                 var firstWord = credential.Title.Split(' ').FirstOrDefault()?.Trim();
@@ -463,17 +408,11 @@ namespace PhantomVault.Core.Services
                          .Trim();
         }
 
-        /// <summary>
-        /// Checks if an icon exists for the given credential
-        /// </summary>
         public bool HasIconForCredential(Credential credential)
         {
             return FindIconForCredential(credential) != null;
         }
 
-        /// <summary>
-        /// Lists all available icon files in the Icons directory.
-        /// </summary>
         public string[] GetAvailableIcons()
         {
             if (!Directory.Exists(_iconsDirectory))
@@ -488,9 +427,6 @@ namespace PhantomVault.Core.Services
             return files;
         }
 
-        /// <summary>
-        /// Returns detailed metadata for all icon files.
-        /// </summary>
         public IconFileInfo[] GetIconFiles()
         {
             try
@@ -544,10 +480,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Returns information about sub-folders that contain icon files.
-        /// Scans two levels deep (category → subfolder) for fast section discovery.
-        /// </summary>
         public IconFolderInfo[] GetIconFolders()
         {
             try
@@ -572,7 +504,7 @@ namespace PhantomVault.Core.Services
                             count = Directory.EnumerateFiles(subDir, "*.*", SearchOption.AllDirectories)
                                              .Count(IsSupportedExtension);
                         }
-                        catch { /* skip inaccessible folders */ }
+                        catch {  }
 
                         if (count > 0)
                         {
@@ -584,7 +516,6 @@ namespace PhantomVault.Core.Services
                         }
                     }
 
-                    // Count files directly in the top-level category folder (not in subfolders)
                     int directCount = 0;
                     try
                     {
@@ -612,10 +543,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Returns icon file metadata for files within a specific folder (recursively).
-        /// Used for lazy-loading a single section of the icon library.
-        /// </summary>
         public IconFileInfo[] GetIconFilesInFolder(string folderFullPath)
         {
             try
@@ -653,10 +580,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Returns top-level icon categories (e.g. Cat Icons, Entry Logos).
-        /// Each category reports its total file count and whether it contains variant subfolders.
-        /// </summary>
         public IconCategoryInfo[] GetIconCategories()
         {
             try
@@ -680,7 +603,6 @@ namespace PhantomVault.Core.Services
 
                     if (fileCount == 0) continue;
 
-                    // Heuristic: variant category has many subfolders each with a small number of files
                     bool isVariantCategory = false;
                     if (subDirs.Length > 10)
                     {
@@ -710,10 +632,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Returns subfolders within a category path, with file counts.
-        /// Used for variant-mode categories to enumerate icon groups.
-        /// </summary>
         public IconSubfolderInfo[] GetCategorySubfolders(string categoryPath)
         {
             try
@@ -757,3 +675,4 @@ namespace PhantomVault.Core.Services
     public sealed record IconCategoryInfo(string Name, string RelativePath, string FullPath, int FileCount, int SubfolderCount, bool IsVariantCategory);
     public sealed record IconSubfolderInfo(string Name, string FullPath, int FileCount);
 }
+

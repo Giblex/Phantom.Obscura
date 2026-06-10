@@ -19,6 +19,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PhantomVault.Core.Models;
 using PhantomVault.Core.Services;
+using PhantomVault.Core.Services.DomainKeys;
 using PhantomVault.Core.Services.Security;
 using PhantomVault.Core.Utils;
 using PhantomVault.UI.Services;
@@ -26,10 +27,7 @@ using Serilog;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// ViewModel for the first-run setup wizard that guides new users through
-    /// initial configuration of Phantom Obscura.
-    /// </summary>
+
     public partial class SetupWizardViewModel : ObservableObject
     {
         private const int GeneratedKeyfileSizeBytes = 256 * 1024;
@@ -40,6 +38,20 @@ namespace PhantomVault.UI.ViewModels
         private readonly UsbBindingService _usbBindingService;
         private readonly PhantomContainerService _containerService;
         private readonly UsbArtifactProtectionService _usbArtifactProtectionService;
+        private readonly KeyfileRecoveryBundleService _keyfileRecoveryBundleService;
+
+        /// <summary>
+        /// Recovery codes produced during the most recent provisioning run. Surfaced once to the user
+        /// during the forced-export step, then cleared. Each code can reopen the exported recovery file.
+        /// </summary>
+        private string[]? _stagedRecoveryCodes;
+
+        /// <summary>
+        /// The exportable recovery file (a self-describing <see cref="RecoveryStoreEnvelope"/>) produced
+        /// during the most recent provisioning run. The user MUST save this OFF the USB; any recovery
+        /// code reopens it to rebuild the keyfile onto a new USB if the original is lost.
+        /// </summary>
+        private byte[]? _stagedRecoveryFileBytes;
         private readonly BlackSecureRawVolumeService _blackSecureRawVolumeService;
         private EntropyKeyfileGenerator? _entropyKeyfileGenerator;
         private byte[]? _stagedGeneratedKeyfileBytes;
@@ -63,21 +75,18 @@ namespace PhantomVault.UI.ViewModels
         [ObservableProperty]
         private string _nextButtonText = "Next";
 
-        // Step 1: Welcome
         [ObservableProperty]
         private string _vaultName = "My Vault";
 
         [ObservableProperty]
         private bool _acceptedTerms;
 
-        // Step 2: Security Level
         [ObservableProperty]
         private string _selectedSecurityLevel = "Ghost Secured";
 
         [ObservableProperty]
         private string _securityDescription = "Recommended for most users. Packs the vault into a single concealed master volume while preserving reversible migration.";
 
-        // Step 3: Storage Location
         [ObservableProperty]
         private string _selectedStorageLocation = "USB";
 
@@ -90,13 +99,8 @@ namespace PhantomVault.UI.ViewModels
         [ObservableProperty]
         private ObservableCollection<string> _availableUsbDrives = new();
 
-        /// <summary>
-        /// Maps display string to (driveLetter, volumeLabel, deviceId, sizeGb).
-        /// Used to validate USB device immutability and prevent device swapping.
-        /// </summary>
         private Dictionary<string, (string driveLetter, string volumeLabel, string deviceId, long sizeGb)> _usbDeviceMap = new();
 
-        // Step 4: Keyfile & Password
         [ObservableProperty]
         private string _masterPassword = string.Empty;
 
@@ -145,7 +149,6 @@ namespace PhantomVault.UI.ViewModels
         [ObservableProperty]
         private bool _revealConfirmPassword;
 
-        // USB Binding
         [ObservableProperty]
         private string? _usbSerialNumber;
 
@@ -158,25 +161,21 @@ namespace PhantomVault.UI.ViewModels
         [ObservableProperty]
         private bool _enableUsbBinding = true;
 
-        // GUUID Binding (hardware UUID)
         [ObservableProperty]
         private bool _enableGuuidBinding;
 
         [ObservableProperty]
         private string? _guuidValue;
 
-        // Phantom Key Integration (from Security step)
         [ObservableProperty]
         private bool _enablePhantomKey;
 
-        // Encrypted Container Option
         [ObservableProperty]
         private bool _enableEncryptedContainer;
 
         [ObservableProperty]
         private string _encryptedContainerSize = "1 GB";
 
-        // USB Remnant Detection
         [ObservableProperty]
         private ObservableCollection<DetectedRemnant> _detectedRemnants = new();
 
@@ -189,26 +188,20 @@ namespace PhantomVault.UI.ViewModels
         [ObservableProperty]
         private string _remainingUsbSpaceDisplay = string.Empty;
 
-        /// <summary>True when CurrentStep is the additional authentication step.</summary>
         public bool IsAuthenticationStep => CurrentStep == 6;
 
-        /// <summary>True when CurrentStep is the dynamically-positioned remnant step (step 7, only when HasRemnants).</summary>
         public bool IsRemnantStep => HasRemnants && CurrentStep == 7;
 
-        /// <summary>True when CurrentStep is the final review/summary step (always TotalSteps).</summary>
         public bool IsReviewStep => CurrentStep == TotalSteps;
 
-        /// <summary>True when the wizard inserts a dedicated remnant review step before completion.</summary>
         public bool UsesExtendedProgress => HasRemnants;
 
-        /// <summary>Two-way helper for the "Wipe remnants" radio button.</summary>
         public bool WipeRemnantsSelected
         {
             get => SelectedRemnantAction == "WipeRemnants";
             set { if (value) SelectedRemnantAction = "WipeRemnants"; }
         }
 
-        /// <summary>Two-way helper for the "Ignore remnants" radio button.</summary>
         public bool IgnoreRemnantsSelected
         {
             get => SelectedRemnantAction == "IgnoreRemnants";
@@ -221,7 +214,6 @@ namespace PhantomVault.UI.ViewModels
             OnPropertyChanged(nameof(IgnoreRemnantsSelected));
         }
 
-        // Step 5: Windows Hello
         [ObservableProperty]
         private bool _enableWindowsHello;
 
@@ -231,7 +223,6 @@ namespace PhantomVault.UI.ViewModels
         [ObservableProperty]
         private string? _windowsHelloStatus;
 
-        // Step 6: Passkeys & TOTP
         [ObservableProperty]
         private bool _enablePasskeys;
 
@@ -253,7 +244,6 @@ namespace PhantomVault.UI.ViewModels
         [ObservableProperty]
         private bool _enablePin;
 
-        // Step 7: Summary
         [ObservableProperty]
         private string _setupSummary = string.Empty;
 
@@ -368,12 +358,15 @@ namespace PhantomVault.UI.ViewModels
 
         public SetupWizardViewModel()
         {
-            // Initialize services
+
             _encryptionService = new EncryptionService();
             _containerService = new PhantomContainerService(_encryptionService);
             _manifestService = new ManifestService(_encryptionService, _containerService);
             _usbBindingService = new UsbBindingService();
             _usbArtifactProtectionService = new UsbArtifactProtectionService(_encryptionService);
+            _keyfileRecoveryBundleService = new KeyfileRecoveryBundleService(
+                new RecoveryStoreFactory(new ScopedRecoveryService(_encryptionService)),
+                new RecoveryCodeService());
             _blackSecureRawVolumeService = new BlackSecureRawVolumeService();
             WindowsHelloOnboarding = new WindowsHelloSettingsViewModel();
             PasskeyOnboarding = new PasskeySettingsViewModel();
@@ -399,9 +392,6 @@ namespace PhantomVault.UI.ViewModels
             EnableEncryptedContainer = true;
         }
 
-        /// <summary>
-        /// Sets the owner window for file dialogs.
-        /// </summary>
         public void SetOwnerWindow(Window owner)
         {
             _ownerWindow = owner;
@@ -481,16 +471,13 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Navigates directly to a specific step (only allowed for completed steps).
-        /// </summary>
         [RelayCommand]
         private void GoToStep(object? stepParameter)
         {
-            // Parse step from XAML CommandParameter (passed as string)
+
             if (stepParameter is string stepStr && int.TryParse(stepStr, out int targetStep))
             {
-                // Can only go back to completed steps (steps before current)
+
                 if (targetStep >= 1 && targetStep < CurrentStep)
                 {
                     CurrentStep = targetStep;
@@ -499,7 +486,7 @@ namespace PhantomVault.UI.ViewModels
             }
             else if (stepParameter is int targetStepInt)
             {
-                // Also handle direct int parameter
+
                 if (targetStepInt >= 1 && targetStepInt < CurrentStep)
                 {
                     CurrentStep = targetStepInt;
@@ -508,9 +495,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Checks if a specific step can be navigated to (only completed steps).
-        /// </summary>
         public bool CanGoToStep(int targetStep) => targetStep >= 1 && targetStep < CurrentStep;
 
         [RelayCommand]
@@ -518,28 +502,28 @@ namespace PhantomVault.UI.ViewModels
         {
             switch (CurrentStep)
             {
-                case 3: // PhantomKey Setup
+                case 3:
                     OnPropertyChanged(nameof(IsBlackSecureSelected));
                     break;
 
-                case 4: // Storage Location
+                case 4:
                     await DetectUsbDrivesAsync();
-                    // Detect USB serial when USB is selected
+
                     await DetectUsbSerialAsync();
                     break;
 
-                case 5: // Keyfile & Password
+                case 5:
                     PrepareGeneratedKeyfileFlow();
                     break;
 
-                case 6: // Additional authentication
+                case 6:
                     TotpOnboarding.VaultName = EffectiveVaultName;
                     await DetectWindowsHelloAsync();
                     await DetectPasskeysAsync();
                     break;
 
                 default:
-                    // Summary is always the last step (7 or 8 depending on remnants)
+
                     if (CurrentStep == TotalSteps)
                         GenerateSummary();
                     break;
@@ -550,7 +534,7 @@ namespace PhantomVault.UI.ViewModels
         {
             switch (CurrentStep)
             {
-                case 1: // Welcome
+                case 1:
                     if (string.IsNullOrWhiteSpace(VaultName))
                     {
                         StatusMessage = "Please enter a vault name to continue.";
@@ -564,7 +548,7 @@ namespace PhantomVault.UI.ViewModels
                     }
                     break;
 
-                case 2: // Security Level
+                case 2:
                     if (string.IsNullOrEmpty(SelectedSecurityLevel))
                     {
                         StatusMessage = "Please select a security level.";
@@ -572,7 +556,7 @@ namespace PhantomVault.UI.ViewModels
                     }
                     break;
 
-                case 4: // Storage Location (USB-only)
+                case 4:
                     if (string.IsNullOrEmpty(SelectedUsbPath))
                     {
                         StatusMessage = "Please select a USB drive for your vault.";
@@ -580,7 +564,7 @@ namespace PhantomVault.UI.ViewModels
                     }
                     break;
 
-                case 5: // Keyfile & Password
+                case 5:
                     if (SupportsExternalKeyfile && UseExistingKeyfile && !KeyfileSelected)
                     {
                         StatusMessage = "Please select an existing keyfile before continuing.";
@@ -618,7 +602,7 @@ namespace PhantomVault.UI.ViewModels
                     }
                     break;
 
-                case 6: // Additional authentication
+                case 6:
                     if (EnableWindowsHello && !WindowsHelloOnboarding.IsBiometricEnrolled)
                     {
                         StatusMessage = "Complete Windows Hello enrollment or switch it off before continuing.";
@@ -657,7 +641,6 @@ namespace PhantomVault.UI.ViewModels
                 _ => "Setup"
             };
 
-            // Notify computed step-visibility properties
             OnPropertyChanged(nameof(IsAuthenticationStep));
             OnPropertyChanged(nameof(IsRemnantStep));
             OnPropertyChanged(nameof(IsReviewStep));
@@ -683,10 +666,8 @@ namespace PhantomVault.UI.ViewModels
                         var volumeLabel = drive.VolumeLabel;
                         var sizeGb = drive.TotalSize / 1024 / 1024 / 1024;
 
-                        // Get physical device ID using WMI for device binding
                         var deviceId = GetPhysicalDeviceId(driveLetter);
 
-                        // Display format: "ID: xxxxxxxx (C:) VolumeLabel [123 GB]"
                         var displayName = $"ID: {deviceId[..8]} ({driveLetter}) {volumeLabel} [{sizeGb} GB]";
                         results.Add(displayName);
 
@@ -720,29 +701,22 @@ namespace PhantomVault.UI.ViewModels
                 }
             });
 
-            // Scan for remnants on detected USB drives
             if (UsbDetected && !string.IsNullOrEmpty(SelectedUsbPath))
             {
                 await ScanForRemnantsAsync();
             }
         }
 
-        /// <summary>
-        /// Gets the physical device ID for a USB drive using WMI.
-        /// Uses volume serial number as the primary identifier.
-        /// Falls back to a hash of drive properties if WMI fails.
-        /// </summary>
         [SupportedOSPlatform("windows")]
         private static string GetPhysicalDeviceId(string driveLetter)
         {
             try
             {
-                // Validate that driveLetter is a single alpha character before embedding in WQL
+
                 var letter = driveLetter.TrimEnd('\\', '/').TrimEnd(':');
                 if (letter.Length != 1 || !char.IsLetter(letter[0]))
                     throw new ArgumentException($"Unexpected drive letter value: {driveLetter}");
 
-                // Try using WMI to get volume serial number
                 var scope = new ManagementScope(@"\\.\root\cimv2");
                 scope.Connect();
 
@@ -763,7 +737,6 @@ namespace PhantomVault.UI.ViewModels
                 Log.Debug(ex, "WMI query failed for drive {Drive}, falling back to property hash", driveLetter);
             }
 
-            // Fallback: generate hash from drive properties
             try
             {
                 var drive = new DriveInfo(driveLetter);
@@ -932,17 +905,15 @@ namespace PhantomVault.UI.ViewModels
 
         partial void OnSelectedUsbPathChanged(string? value)
         {
-            // Validate USB device ID hasn't changed (prevents device swapping)
+
             if (!string.IsNullOrEmpty(value) && _usbDeviceMap.ContainsKey(value))
             {
                 var (_, _, deviceId, _) = _usbDeviceMap[value];
                 Log.Debug("USB device selected with physical ID: {DeviceId}", deviceId[..8]);
             }
 
-            // Re-detect USB serial when selection changes
             _ = DetectUsbSerialAsync();
 
-            // Also scan for remnants on the newly-selected drive
             if (!string.IsNullOrEmpty(value))
             {
                 _ = ScanForRemnantsAsync().ContinueWith(
@@ -985,13 +956,11 @@ namespace PhantomVault.UI.ViewModels
 
             int score = 0;
 
-            // Length scoring (more stringent)
             if (MasterPassword.Length >= 8) score += 1;
             if (MasterPassword.Length >= 12) score += 2;
             if (MasterPassword.Length >= 16) score += 2;
             if (MasterPassword.Length >= 20) score += 2;
 
-            // Character type diversity (increased weight)
             bool hasUpper = System.Text.RegularExpressions.Regex.IsMatch(MasterPassword, "[A-Z]");
             bool hasLower = System.Text.RegularExpressions.Regex.IsMatch(MasterPassword, "[a-z]");
             bool hasDigit = System.Text.RegularExpressions.Regex.IsMatch(MasterPassword, "[0-9]");
@@ -1000,7 +969,6 @@ namespace PhantomVault.UI.ViewModels
             int diversityScore = (hasUpper ? 1 : 0) + (hasLower ? 1 : 0) + (hasDigit ? 1 : 0) + (hasSpecial ? 1 : 0);
             score += diversityScore * 2;
 
-            // Penalty for sequential or repeated characters
             if (System.Text.RegularExpressions.Regex.IsMatch(MasterPassword, "(.)\\1{2,}"))
                 score -= 2;
 
@@ -1028,7 +996,6 @@ namespace PhantomVault.UI.ViewModels
                         return;
                     }
 
-                    // Fallback to OS version check for Windows Hello availability
                     var osVersion = Environment.OSVersion;
                     WindowsHelloAvailable = osVersion.Platform == PlatformID.Win32NT &&
                                            osVersion.Version.Major >= 10;
@@ -1052,15 +1019,13 @@ namespace PhantomVault.UI.ViewModels
             {
                 try
                 {
-                    // Check if passkeys/FIDO2 is supported
-                    // In production, this would check for FIDO2 authenticator availability
-                    PasskeysAvailable = true; // Most modern systems support software passkeys
+
+                    PasskeysAvailable = true;
                 PasskeysStatus = "Local Windows Hello-backed authentication is available.";
 
-                    // Generate TOTP secret if TOTP is enabled
                     if (EnableTotp && string.IsNullOrEmpty(TotpSecretKey))
                     {
-                        // Generate a random TOTP secret (base32 encoded)
+
                         const string base32Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
                         var secret = new char[32];
                         for (int i = 0; i < secret.Length; i++)
@@ -1132,19 +1097,15 @@ namespace PhantomVault.UI.ViewModels
             SetupSummary = summary;
         }
 
-        // ── Quick-Setup helpers (called from WelcomePage / QuickSetupWindow) ──
-
-        /// <summary>The display-ready vault name used by quick-setup callers.</summary>
         public string EffectiveVaultName => string.IsNullOrWhiteSpace(VaultName)
             ? "PhantomObscura"
             : VaultName.Trim();
 
-        /// <summary>Pre-configures the view-model for the quick-setup flow so the full wizard can be bypassed.</summary>
         public void ConfigureForQuickSetup()
         {
             AcceptedTerms = true;
             SelectedSecurityLevel = "Ghost Secured";
-            // Vault data always lives on the USB drive.
+
             SelectedStorageLocation = "USB";
             EnableUsbBinding = true;
             EnableGuuidBinding = true;
@@ -1154,7 +1115,6 @@ namespace PhantomVault.UI.ViewModels
             UseExistingKeyfile = false;
         }
 
-        /// <summary>Detects available USB drives and applies sensible defaults for the quick-setup path.</summary>
         public async Task InitializeQuickSetupAsync()
         {
             await DetectUsbDrivesAsync();
@@ -1163,7 +1123,6 @@ namespace PhantomVault.UI.ViewModels
                 SelectedUsbPath = AvailableUsbDrives[0];
         }
 
-        /// <summary>Validates that all required quick-setup inputs are present before provisioning.</summary>
         public Task<bool> ValidateQuickSetupAsync()
         {
             if (string.IsNullOrWhiteSpace(VaultName))
@@ -1193,18 +1152,12 @@ namespace PhantomVault.UI.ViewModels
             return Task.FromResult(true);
         }
 
-        /// <summary>Kicks off provisioning for the quick-setup flow, delegating to the existing creation pipeline.</summary>
         public async Task BeginProvisioningAsync()
         {
-            // Fire the VaultReadyForCreation event so the UI layer can open the
-            // VaultCreationLoadingWindow, which in turn calls ExecuteVaultCreationAsync
-            // through its RunCreationAsync. Calling ExecuteVaultCreationAsync directly
-            // here skips the loading window and leaves the QuickSetupWindow stranded
-            // (causing the app to appear to close after Create Vault is clicked).
+
             await CompleteSetupAsync();
         }
 
-        /// <summary>Raised when vault creation completes so the UI can transition to the loading window flow.</summary>
         public event EventHandler? VaultReadyForCreation;
 
         private async Task CompleteSetupAsync()
@@ -1220,8 +1173,7 @@ namespace PhantomVault.UI.ViewModels
 
             try
             {
-                // Signal the UI layer to open the loading window – actual creation
-                // is now driven by ExecuteVaultCreationAsync called from the loading window.
+
                 VaultReadyForCreation.Invoke(this, EventArgs.Empty);
                 Log.Information("VaultReadyForCreation event fired successfully");
             }
@@ -1232,10 +1184,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Performs the actual vault creation. Called by VaultCreationLoadingWindow
-        /// so the animated progress can wrap each phase.
-        /// </summary>
         public async Task ExecuteVaultCreationAsync()
         {
             if (IsCompleting)
@@ -1259,7 +1207,6 @@ namespace PhantomVault.UI.ViewModels
                 Log.Information("ExecuteVaultCreationAsync starting");
                 ReportProvisioningStage(0, 5, "Initializing secure provisioning...", "Validating selected protection tier and storage targets.");
 
-                // ─── Determine vault path ───
                 string? driveRoot = null;
                 var selectedTier = GetSelectedProtectionTier();
                 var effectiveTransport = GetEffectiveStorageTransport(selectedTier);
@@ -1298,10 +1245,7 @@ namespace PhantomVault.UI.ViewModels
                 }
                 else
                 {
-                    // Use %AppData%\PhantomVault\vault as the local vault root.
-                    // Documents (%MyDocuments%) is commonly redirected to OneDrive on Windows 11
-                    // which blocks creation of dot-folders like ".phantom" and causes a
-                    // FileNotFoundException at provisioning time.
+
                     vaultPath = Path.Combine(
                         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                         "PhantomVault",
@@ -1331,16 +1275,11 @@ namespace PhantomVault.UI.ViewModels
                 string phantomKeyAuditLogPath = Path.Combine(workingRoot, PhantomKeyBridgeContract.AuditLogRelativePath.Replace('/', Path.DirectorySeparatorChar));
                 string phantomKeyBridgeReceiptPath = Path.Combine(workingRoot, PhantomKeyBridgeContract.BridgeReceiptRelativePath.Replace('/', Path.DirectorySeparatorChar));
 
-                // ─── Wipe remnants FIRST (before creating directories) ───
-                // Must happen before directory creation because the cleanup will
-                // delete an empty .phantom dir — which is the one we're about to use.
                 if (HasRemnants && SelectedRemnantAction == "WipeRemnants" && DetectedRemnants.Count > 0)
                 {
                     ReportProvisioningStage(1, 14, "Securely wiping remnant files...", "Removing prior protected artifacts before provisioning the new vault.");
                     Log.Information("Wiping {Count} remnant file(s)", DetectedRemnants.Count);
 
-                    // Lift any OS-level write-protection left by the prior provisioning
-                    // before we attempt to delete files.
                     if (!string.IsNullOrEmpty(driveRoot))
                     {
                         try
@@ -1355,7 +1294,6 @@ namespace PhantomVault.UI.ViewModels
                         }
                     }
 
-                    // Collect parent .phantom directories so we can remove protections and clean up
                     var phantomDirsToClean = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                     var remnantFailures = new List<string>();
 
@@ -1365,15 +1303,14 @@ namespace PhantomVault.UI.ViewModels
                         {
                             if (File.Exists(remnant.FilePath))
                             {
-                                // Strip hardened attributes so secure-overwrite can open the file
+
                                 VaultFileProtection.StripFileProtection(remnant.FilePath);
 
-                                await SecureDeletionService.SecureDeleteFileAsync(
+                                await SecureDeletionService.BestEffortDeleteAsync(
                                     remnant.FilePath,
                                     SecureDeletionService.DeletionMethod.StandardSecure);
                                 Log.Information("Wiped remnant: {FilePath}", remnant.FilePath);
 
-                                // Track the .phantom ancestor for directory cleanup
                                 var phantomAncestor = VaultFileProtection.FindPhantomAncestor(remnant.FilePath);
                                 if (phantomAncestor != null)
                                     phantomDirsToClean.Add(phantomAncestor);
@@ -1386,13 +1323,12 @@ namespace PhantomVault.UI.ViewModels
                         }
                     }
 
-                    // Remove the hardened .phantom directories if they are now empty
                     foreach (var cleanDir in phantomDirsToClean)
                     {
                         try
                         {
                             VaultFileProtection.StripDirectoryProtection(cleanDir);
-                            // Delete empty subdirectories bottom-up
+
                             foreach (var sub in Directory.GetDirectories(cleanDir, "*", SearchOption.AllDirectories)
                                          .OrderByDescending(d => d.Length))
                             {
@@ -1423,11 +1359,8 @@ namespace PhantomVault.UI.ViewModels
                     StatusMessage = "Remnant files wiped.";
                 }
 
-                // ─── Create vault directories (after remnant wipe so they aren't deleted) ───
                 ReportProvisioningStage(1, 22, "Creating canonical vault structure...", "Preparing staged root, vault, object, and recovery paths.");
 
-                // If the vault path already exists from a failed prior run, reset all file
-                // attributes to Normal so we can overwrite/delete locked files freely.
                 if (Directory.Exists(vaultPath))
                 {
                     try
@@ -1467,7 +1400,6 @@ namespace PhantomVault.UI.ViewModels
                 }
                 cleanupDirectories.Add(vaultPath);
 
-                // Hide the .phantom folder so vault contents aren't visible in file explorers
                 var phantomDirInfo = new DirectoryInfo(vaultPath);
                 if (phantomDirInfo.Exists)
                     phantomDirInfo.Attributes = FileAttributes.Hidden | FileAttributes.System;
@@ -1475,13 +1407,11 @@ namespace PhantomVault.UI.ViewModels
                 StatusMessage = "Creating vault directory...";
                 Log.Information("Vault path: {VaultPath}", vaultPath);
 
-                // ─── Generate vault salt (shared across all crypto operations) ───
                 byte[] salt = _encryptionService.GenerateSalt(32);
                 string? passphrase = UsePassword ? MasterPassword : null;
                 string bindingId = Guid.NewGuid().ToString("N");
                 string bindingGuid = Guid.NewGuid().ToString("D");
 
-                // ─── Handle keyfile ───
                 string? keyfilePath = null;
                 bool usesExternalKeyfile = selectedTier != VaultProtectionTier.BlackSecure;
                 if (usesExternalKeyfile && UseExistingKeyfile && KeyfileSelected)
@@ -1512,7 +1442,6 @@ namespace PhantomVault.UI.ViewModels
                         cleanupDirectories.Add(Path.GetDirectoryName(hostCompanionLocatorPath)!);
                     }
 
-                    // Encrypt the USB-visible primary keyfile in-place while keeping the host companion raw.
                     await EncryptFileInPlaceAsync(primaryKeyfilePath, salt, passphrase);
 
                     keyfilePath = CompositeKeyfilePath.Compose(primaryKeyfilePath, hostCompanionKeyfilePath);
@@ -1527,7 +1456,6 @@ namespace PhantomVault.UI.ViewModels
                     StatusMessage = "Phantom Secured uses password plus device-bound factors without an external keyfile path.";
                 }
 
-                // ─── USB device binding ───
                 string? deviceId = null;
                 if (selectedTier == VaultProtectionTier.BlackSecure &&
                     SelectedStorageLocation == "USB" &&
@@ -1539,8 +1467,7 @@ namespace PhantomVault.UI.ViewModels
 
                 if (SelectedStorageLocation == "USB" && !string.IsNullOrEmpty(driveRoot) && EnableUsbBinding)
                 {
-                    // Pre-flight: verify the selected drive is actually writable before attempting binding.
-                    // If access is denied, attempt to lift any write-protection left by a prior provisioning.
+
                     if (!string.IsNullOrEmpty(driveRoot))
                     {
                         string probeFile = Path.Combine(driveRoot, $".phantom_probe_{Guid.NewGuid():N}");
@@ -1551,8 +1478,7 @@ namespace PhantomVault.UI.ViewModels
                         }
                         catch (UnauthorizedAccessException)
                         {
-                            // Drive may be write-protected from a prior Phantom provisioning.
-                            // Attempt to lift it before giving up.
+
                             Log.Warning("USB drive {DriveRoot} appears write-protected — attempting to lift protection before binding", driveRoot);
                             try
                             {
@@ -1585,7 +1511,7 @@ namespace PhantomVault.UI.ViewModels
                         if (EnablePhantomKey)
                         {
                             ReportProvisioningStage(3, 48, "Binding PhantomKey hardware context...", "Computing the high-assurance device binding record.");
-                            // PhantomKey: high-assurance binding with hidden device ID file
+
                             deviceId = _usbBindingService.InitializeHighAssuranceBinding(driveRoot, salt);
                             Log.Information("PhantomKey high-assurance binding established: {DeviceId}", deviceId);
                             StatusMessage = "PhantomKey high-assurance USB binding established...";
@@ -1593,7 +1519,7 @@ namespace PhantomVault.UI.ViewModels
                         else
                         {
                             ReportProvisioningStage(3, 48, "Binding USB device identity...", "Computing the device-bound identifier for this transport.");
-                            // Standard binding: compute device ID from drive properties
+
                             deviceId = _usbBindingService.ComputeDeviceId(
                                 selectedTier == VaultProtectionTier.BlackSecure && !string.IsNullOrWhiteSpace(blackSecurePhysicalDevicePath)
                                     ? blackSecurePhysicalDevicePath
@@ -1608,14 +1534,6 @@ namespace PhantomVault.UI.ViewModels
                             GuuidValue = DetectSystemGuuid();
                         }
 
-                        // ── Seed OS-suppression sentinels on the freshly-bound drive ──
-                        // Writes .metadata_never_index, .nomedia, .Trashes (file), and
-                        // .fseventsd/no_log at the root so OS indexers skip the volume.
-                        // RO is NOT set here — the manifest and vault container still
-                        // need to be written further down. The GPT ReadOnly bit (and
-                        // optional Layer B partition re-tag) is applied later by the
-                        // VaultUnlock close handler so RW stays available throughout
-                        // provisioning. Settings-gated.
                         if (!string.IsNullOrEmpty(driveRoot))
                         {
                             try
@@ -1651,7 +1569,6 @@ namespace PhantomVault.UI.ViewModels
                     }
                 }
 
-                // ─── GUUID binding (motherboard hardware UUID) ───
                 string? guuidValue = null;
                 if (EnableGuuidBinding || (SelectedStorageLocation == "USB" && !string.IsNullOrEmpty(driveRoot)))
                 {
@@ -1662,7 +1579,6 @@ namespace PhantomVault.UI.ViewModels
                         {
                             GuuidValue = guuidValue;
 
-                            // Combine device ID with GUUID for stronger multi-factor binding
                             if (!string.IsNullOrEmpty(deviceId))
                             {
                                 string combined = $"{deviceId}|GUUID:{guuidValue}";
@@ -1673,7 +1589,7 @@ namespace PhantomVault.UI.ViewModels
                             }
                             else
                             {
-                                // GUUID-only binding (no USB binding)
+
                                 byte[] hash = SHA256.HashData(System.Text.Encoding.UTF8.GetBytes($"GUUID:{guuidValue}"));
                                 deviceId = Convert.ToHexString(hash);
                             }
@@ -1688,7 +1604,6 @@ namespace PhantomVault.UI.ViewModels
                     }
                 }
 
-                // ─── Build manifest ───
                 var manifest = new VaultManifest
                 {
                     Version = 3,
@@ -1727,7 +1642,6 @@ namespace PhantomVault.UI.ViewModels
                     SupportsReversibleTierMigration = true
                 };
 
-                // TOTP secret generation
                 if (EnableTotp)
                 {
                     ReportProvisioningStage(4, 58, "Generating manifest authentication material...", "Adding TOTP metadata and sealing the root manifest.");
@@ -1746,7 +1660,6 @@ namespace PhantomVault.UI.ViewModels
                     (recoveryContainerPath, 64L * 1024 * 1024, null)
                 };
 
-                // ─── Create mandatory container layout ───
                 manifest.ContainerSizeBytes = containerSpecs[1].SizeBytes;
                 ReportProvisioningStage(4, 68, "Creating encrypted container set...", "Provisioning root, vault, object, and recovery containers.");
 
@@ -1831,6 +1744,39 @@ namespace PhantomVault.UI.ViewModels
                         passphrase,
                         keyfilePath,
                         "recovery-record");
+
+                    // Seal the mandatory keyfile material under a fresh set of recovery codes so a lost
+                    // or damaged USB can be reconstructed from an OFF-USB recovery file (see forced
+                    // export step). Failure here must not abort provisioning, but is surfaced loudly.
+                    if (!string.IsNullOrWhiteSpace(keyfilePath) && CompositeKeyfilePath.Exists(keyfilePath))
+                    {
+                        byte[]? keyfileMaterial = null;
+                        try
+                        {
+                            keyfileMaterial = CompositeKeyfilePath.ReadCombinedBytes(keyfilePath, required: true);
+                            var bundle = _keyfileRecoveryBundleService.Create(
+                                keyfileMaterial,
+                                deviceId: deviceId,
+                                appVersion: manifest.Version.ToString());
+
+                            _stagedRecoveryCodes = bundle.RecoveryCodes;
+                            _stagedRecoveryFileBytes = bundle.RecoveryFileBytes;
+                            Log.Information(
+                                "Keyfile recovery bundle sealed: {CodeCount} codes, {Bytes}-byte recovery file staged for off-USB export",
+                                bundle.RecoveryCodes.Length, bundle.RecoveryFileBytes.Length);
+                        }
+                        catch (Exception recoveryEx)
+                        {
+                            Log.Error(recoveryEx, "Failed to seal keyfile recovery bundle — vault created but recovery codes are unavailable");
+                            _stagedRecoveryCodes = null;
+                            _stagedRecoveryFileBytes = null;
+                        }
+                        finally
+                        {
+                            if (keyfileMaterial != null)
+                                CryptographicOperations.ZeroMemory(keyfileMaterial);
+                        }
+                    }
 
                     var bootstrapPendingDirectory = Path.Combine(
                         workingRoot,
@@ -2069,12 +2015,6 @@ namespace PhantomVault.UI.ViewModels
                     ReportProvisioningStage(5, 84, "Writing direct canonical container layout...", "Leaving the canonical container set directly on the selected transport.");
                 }
 
-                // Manifest is now embedded inside the container (v3 format) —
-                // no separate vault.manifest.encrypted file on disk.
-
-                // ─── Harden vault files against casual deletion ───
-                // Files can only be removed via the in-app remnant wipe which
-                // strips these protections first, then securely overwrites.
                 VaultFileProtection.HardenVaultFiles(vaultPath);
 
                 PhantomVault.UI.Services.SettingsService.Update(settings =>
@@ -2119,7 +2059,7 @@ namespace PhantomVault.UI.ViewModels
                     await _blackSecureRawVolumeService.InvalidateVolumeHeaderAsync(blackSecurePhysicalDevicePath).ConfigureAwait(false);
                 }
 
-                throw; // Re-throw so the loading window can show the error
+                throw;
             }
             finally
             {
@@ -2127,9 +2067,99 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
+        /// <summary>True when provisioning produced recovery codes + an exportable recovery file.</summary>
+        public bool HasStagedRecovery
+            => _stagedRecoveryCodes is { Length: > 0 } && _stagedRecoveryFileBytes is { Length: > 0 };
+
+        /// <summary>The recovery codes produced by the last provisioning run (shown once).</summary>
+        public IReadOnlyList<string> StagedRecoveryCodes
+            => _stagedRecoveryCodes ?? Array.Empty<string>();
+
+        /// <summary>The default filename suggested when exporting the recovery file.</summary>
+        public string SuggestedRecoveryFileName
+            => $"{SanitizeFileName(EffectiveVaultName)}.precovery";
+
         /// <summary>
-        /// Extracts the drive root path (e.g. "E:\") from a display string like "E:\ - My USB (16 GB)".
+        /// Write the staged recovery file to <paramref name="destinationPath"/>. The destination MUST
+        /// NOT live on the bound USB (defeats the purpose); callers should enforce this with
+        /// <see cref="IsOffUsbDestination"/>. Returns true on success.
         /// </summary>
+        public async Task<bool> SaveStagedRecoveryFileAsync(string destinationPath)
+        {
+            if (_stagedRecoveryFileBytes is not { Length: > 0 })
+            {
+                Log.Warning("SaveStagedRecoveryFileAsync called with no staged recovery file");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(destinationPath))
+                return false;
+
+            try
+            {
+                var directory = Path.GetDirectoryName(Path.GetFullPath(destinationPath));
+                if (!string.IsNullOrEmpty(directory))
+                    Directory.CreateDirectory(directory);
+
+                await File.WriteAllBytesAsync(destinationPath, _stagedRecoveryFileBytes).ConfigureAwait(false);
+                Log.Information("Recovery file exported to {Path}", destinationPath);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to export recovery file to {Path}", destinationPath);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// True when <paramref name="destinationPath"/> is NOT on the bound USB drive root. Used to keep
+        /// the recovery file off the device it is meant to recover.
+        /// </summary>
+        public bool IsOffUsbDestination(string? destinationPath)
+        {
+            if (string.IsNullOrWhiteSpace(destinationPath))
+                return false;
+
+            var usbRoot = ExtractDriveRoot(SelectedUsbPath);
+            if (string.IsNullOrWhiteSpace(usbRoot))
+                return true;
+
+            try
+            {
+                var destRoot = Path.GetPathRoot(Path.GetFullPath(destinationPath));
+                return !string.Equals(
+                    destRoot?.TrimEnd('\\', '/'),
+                    usbRoot.TrimEnd('\\', '/'),
+                    StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>Zeroize and clear staged recovery secrets after the user has saved/recorded them.</summary>
+        public void ClearStagedRecovery()
+        {
+            if (_stagedRecoveryFileBytes != null)
+            {
+                CryptographicOperations.ZeroMemory(_stagedRecoveryFileBytes);
+                _stagedRecoveryFileBytes = null;
+            }
+            _stagedRecoveryCodes = null;
+        }
+
+        private static string SanitizeFileName(string? name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return "phantom-vault";
+
+            var invalid = Path.GetInvalidFileNameChars();
+            var cleaned = new string(name.Select(c => invalid.Contains(c) ? '-' : c).ToArray()).Trim();
+            return string.IsNullOrWhiteSpace(cleaned) ? "phantom-vault" : cleaned;
+        }
+
         private static VaultDatabase BuildDecoyDatabase()
         {
             var generator = new DecoyCredentialGenerator();
@@ -2210,7 +2240,6 @@ namespace PhantomVault.UI.ViewModels
             if (string.IsNullOrWhiteSpace(usbPathDisplay))
                 return string.Empty;
 
-            // Parse format: "ID: xxxxxxxx (C:) VolumeLabel [123 GB]"
             var match = System.Text.RegularExpressions.Regex.Match(usbPathDisplay, @"\(([A-Za-z]:)\)");
             if (match.Success)
             {
@@ -2219,23 +2248,18 @@ namespace PhantomVault.UI.ViewModels
                 return driveLetter;
             }
 
-            // Fallback for legacy format (should not occur with new detection logic)
             string driveRoot = usbPathDisplay.Length >= 2 ? usbPathDisplay.Substring(0, 3) : usbPathDisplay;
             if (!driveRoot.EndsWith("\\")) driveRoot += "\\";
             return driveRoot;
         }
 
-        /// <summary>
-        /// Parses a human-readable container size string (e.g. "256 MB", "1 GB") into bytes.
-        /// </summary>
         private static long ParseContainerSize(string sizeString)
         {
             if (string.IsNullOrWhiteSpace(sizeString))
-                return 256L * 1024 * 1024; // Default 256 MB
+                return 256L * 1024 * 1024;
 
             var trimmed = sizeString.Trim().ToUpperInvariant();
 
-            // Try to split into number and unit
             var parts = trimmed.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length >= 2 && double.TryParse(parts[0], out double value))
             {
@@ -2244,21 +2268,16 @@ namespace PhantomVault.UI.ViewModels
                     "GB" => (long)(value * 1024 * 1024 * 1024),
                     "MB" => (long)(value * 1024 * 1024),
                     "KB" => (long)(value * 1024),
-                    _ => (long)(value * 1024 * 1024) // Default to MB
+                    _ => (long)(value * 1024 * 1024)
                 };
             }
 
-            // Try pure numeric (assume MB)
             if (double.TryParse(trimmed, out double numericValue))
                 return (long)(numericValue * 1024 * 1024);
 
-            return 256L * 1024 * 1024; // Fallback 256 MB
+            return 256L * 1024 * 1024;
         }
 
-        /// <summary>
-        /// Detects the system's motherboard hardware UUID via WMI (Win32_ComputerSystemProduct).
-        /// Returns null on non-Windows or if detection fails.
-        /// </summary>
         [SupportedOSPlatform("windows")]
         private static string? DetectSystemGuuid()
         {
@@ -2271,7 +2290,7 @@ namespace PhantomVault.UI.ViewModels
                 foreach (ManagementObject mo in searcher.Get())
                 {
                     var uuid = mo["UUID"]?.ToString();
-                    // Filter out dummy/empty UUIDs that some BIOSes report
+
                     if (!string.IsNullOrEmpty(uuid) &&
                         uuid != "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF" &&
                         uuid != "00000000-0000-0000-0000-000000000000")
@@ -2288,23 +2307,17 @@ namespace PhantomVault.UI.ViewModels
             return null;
         }
 
-        /// <summary>
-        /// Encrypts a file in-place using AES-256-GCM derived from the vault salt.
-        /// The result is written as: [12-byte nonce][16-byte tag][ciphertext].
-        /// </summary>
         private async Task EncryptFileInPlaceAsync(string filePath, byte[] salt, string? passphrase)
         {
             byte[] plainBytes = await File.ReadAllBytesAsync(filePath);
             try
             {
-                // Mix passphrase bytes into the IKM so the wrapping key is bound to both
-                // the vault salt and the master password (if set).
+
                 byte[] saltIkm = string.IsNullOrEmpty(passphrase)
                     ? salt
                     : SHA256.HashData(
                         salt.Concat(System.Text.Encoding.UTF8.GetBytes(passphrase)).ToArray());
 
-                // Derive an encryption key specifically for file wrapping
                 byte[] wrappingKey = HKDF.DeriveKey(
                     HashAlgorithmName.SHA256,
                     saltIkm,
@@ -2324,7 +2337,6 @@ namespace PhantomVault.UI.ViewModels
                         aes.Encrypt(nonce, plainBytes, ciphertext, tag);
                     }
 
-                    // Write encrypted envelope: nonce + tag + ciphertext
                     using var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None);
                     await fs.WriteAsync(nonce);
                     await fs.WriteAsync(tag);
@@ -2402,10 +2414,7 @@ namespace PhantomVault.UI.ViewModels
 
         private async Task GenerateKeyfileAsync(string keyfilePath)
         {
-            // If no entropy-staged bytes exist (e.g. quick setup skipped the ritual),
-            // fall back to a CSPRNG-generated key. This is cryptographically sound —
-            // the mouse-entropy ritual only adds extra mixing on top of CSPRNG for the
-            // full wizard UX; the underlying security is identical.
+
             if (_stagedGeneratedKeyfileBytes == null || _stagedGeneratedKeyfileBytes.Length == 0)
             {
                 _stagedGeneratedKeyfileBytes = new byte[GeneratedKeyfileSizeBytes > 0 ? GeneratedKeyfileSizeBytes : 64];
@@ -2482,7 +2491,7 @@ namespace PhantomVault.UI.ViewModels
                     return;
 
                 VaultFileProtection.StripFileProtection(filePath);
-                await SecureDeletionService.SecureDeleteFileAsync(filePath, SecureDeletionService.DeletionMethod.StandardSecure).ConfigureAwait(false);
+                await SecureDeletionService.BestEffortDeleteAsync(filePath, SecureDeletionService.DeletionMethod.StandardSecure).ConfigureAwait(false);
             }
             catch
             {
@@ -2496,7 +2505,7 @@ namespace PhantomVault.UI.ViewModels
                 }
                 catch
                 {
-                    // Best-effort cleanup only.
+
                 }
             }
         }
@@ -2536,7 +2545,7 @@ namespace PhantomVault.UI.ViewModels
             }
             catch
             {
-                // Best-effort cleanup only.
+
             }
         }
 
@@ -2922,21 +2931,13 @@ namespace PhantomVault.UI.ViewModels
         public string FileSize { get; set; } = string.Empty;
     }
 
-    // ───────────────────────────────────────────────────────
-    //  Vault‑file hardening / stripping helpers
-    // ───────────────────────────────────────────────────────
-
     public static partial class VaultFileProtection
     {
-        /// <summary>
-        /// Hardens every file and subdirectory beneath <paramref name="vaultPath"/>
-        /// and its <c>.phantom</c> ancestor with Hidden+System+ReadOnly attributes
-        /// and a DENY‑DELETE ACL for BUILTIN\Users on Windows.
-        /// </summary>
+
         [SupportedOSPlatform("windows")]
         public static void HardenVaultFiles(string vaultPath)
         {
-            // Harden individual files
+
             foreach (var file in Directory.EnumerateFiles(vaultPath, "*", SearchOption.AllDirectories))
             {
                 try
@@ -2950,7 +2951,6 @@ namespace PhantomVault.UI.ViewModels
                 }
             }
 
-            // Harden subdirectories (vaults, manifests, etc.)
             foreach (var dir in Directory.EnumerateDirectories(vaultPath, "*", SearchOption.AllDirectories))
             {
                 try
@@ -2965,7 +2965,6 @@ namespace PhantomVault.UI.ViewModels
                 }
             }
 
-            // Harden the vaults directory itself
             try
             {
                 var vaultsInfo = new DirectoryInfo(vaultPath);
@@ -2977,7 +2976,6 @@ namespace PhantomVault.UI.ViewModels
                 Log.Warning(ex, "Failed to harden vaults directory");
             }
 
-            // Apply DENY‑DELETE ACL on the .phantom folder to block casual deletion
             var phantomDirInfo = new DirectoryInfo(vaultPath);
             if (phantomDirInfo.Exists)
             {
@@ -2990,7 +2988,7 @@ namespace PhantomVault.UI.ViewModels
                     {
                         var acl = phantomDirInfo.GetAccessControl();
                         var users = new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null);
-                        // Deny delete of this folder and its children
+
                         acl.AddAccessRule(new FileSystemAccessRule(
                             users,
                             FileSystemRights.Delete | FileSystemRights.DeleteSubdirectoriesAndFiles,
@@ -3007,9 +3005,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Strips hardened attributes from a single file so it can be overwritten and deleted.
-        /// </summary>
         public static void StripFileProtection(string filePath)
         {
             try
@@ -3022,10 +3017,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Strips the DENY‑DELETE ACL and hardened attributes from a <c>.phantom</c> directory
-        /// tree so that the remnant wipe can remove it.
-        /// </summary>
         [SupportedOSPlatform("windows")]
         public static void StripDirectoryProtection(string phantomDirPath)
         {
@@ -3036,7 +3027,7 @@ namespace PhantomVault.UI.ViewModels
 
                 if (OperatingSystem.IsWindows())
                 {
-                    // Remove any DENY rules for BUILTIN\Users
+
                     var acl = dirInfo.GetAccessControl();
                     var users = new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null);
                     acl.RemoveAccessRuleAll(new FileSystemAccessRule(
@@ -3046,7 +3037,6 @@ namespace PhantomVault.UI.ViewModels
                     dirInfo.SetAccessControl(acl);
                 }
 
-                // Also strip attributes on all subdirectories
                 foreach (var sub in Directory.EnumerateDirectories(phantomDirPath, "*", SearchOption.AllDirectories))
                 {
                     try
@@ -3056,7 +3046,6 @@ namespace PhantomVault.UI.ViewModels
                     catch { }
                 }
 
-                // Strip attributes on remaining files
                 foreach (var file in Directory.EnumerateFiles(phantomDirPath, "*", SearchOption.AllDirectories))
                 {
                     try
@@ -3072,9 +3061,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Walks up from a file path looking for a <c>.phantom</c> ancestor directory.
-        /// </summary>
         public static string? FindPhantomAncestor(string filePath)
         {
             var dir = Path.GetDirectoryName(filePath);
@@ -3101,3 +3087,4 @@ namespace PhantomVault.UI.ViewModels
     }
 
 }
+

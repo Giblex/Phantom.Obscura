@@ -21,7 +21,7 @@
     </Design.DataContext>
 
     <views:ThemeAwareWindow.Styles>
-        <!-- Liquid glass section card -->
+
         <Style Selector="Border.totp-card">
             <Setter Property="CornerRadius" Value="{StaticResource Radius.Lg}"/>
             <Setter Property="Padding" Value="20,18"/>
@@ -49,7 +49,6 @@
             <Setter Property="BoxShadow" Value="0 4 14 0 #22000000"/>
         </Style>
 
-        <!-- Step number badge -->
         <Style Selector="Border.step-badge">
             <Setter Property="Width" Value="28"/>
             <Setter Property="Height" Value="28"/>
@@ -57,7 +56,6 @@
             <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
         </Style>
 
-        <!-- Danger card variant -->
         <Style Selector="Border.totp-card-danger">
             <Setter Property="CornerRadius" Value="{StaticResource Radius.Lg}"/>
             <Setter Property="Padding" Value="20,18"/>
@@ -84,7 +82,6 @@
 
     <Grid RowDefinitions="Auto,*,Auto">
 
-        <!-- ═══ Header ═══ -->
         <Border Grid.Row="0" Padding="28,22" ClipToBounds="True">
             <Border.Background>
                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
@@ -93,7 +90,7 @@
                 </LinearGradientBrush>
             </Border.Background>
             <Grid ColumnDefinitions="Auto,16,*">
-                <!-- TOTP icon in a circle -->
+
                 <Border Grid.Column="0"
                         Width="52" Height="52"
                         CornerRadius="26"
@@ -107,7 +104,6 @@
                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
 
-                <!-- Title + subtitle -->
                 <StackPanel Grid.Column="2" Spacing="4" VerticalAlignment="Center">
                     <TextBlock Text="TOTP Authenticator"
                                FontSize="{StaticResource Type.Icon.Size}"
@@ -120,14 +116,12 @@
             </Grid>
         </Border>
 
-        <!-- ═══ Content ═══ -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="28,18,28,48">
             <StackPanel Spacing="0" Margin="0,0,0,20">
 
-                <!-- ── 1. Enable Toggle ── -->
                 <Border Classes="totp-card mfa-card delay-0 show">
                     <Grid ColumnDefinitions="Auto,14,*,Auto">
-                        <!-- Icon -->
+
                         <Border Grid.Column="0"
                                 Width="38" Height="38"
                                 CornerRadius="10"
@@ -140,7 +134,7 @@
                                               IconColor="{DynamicResource AccentBrush}"
                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
-                        <!-- Text -->
+
                         <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
                             <TextBlock Text="Enable TOTP"
                                        FontSize="{StaticResource Type.H5.Size}"
@@ -150,7 +144,7 @@
                                        FontSize="{StaticResource Type.Small.Size}"
                                        Foreground="{DynamicResource MutedTextBrush}"/>
                         </StackPanel>
-                        <!-- Toggle -->
+
                         <ToggleSwitch Grid.Column="3"
                                       IsChecked="{Binding IsTotpEnabled, Mode=TwoWay}"
                                       IsEnabled="{Binding HasTotpSecret}"
@@ -158,7 +152,6 @@
                     </Grid>
                 </Border>
 
-                <!-- ── 2. Setup (no secret yet) ── -->
                 <Border Classes="totp-card mfa-card delay-1 show"
                         IsVisible="{Binding !HasTotpSecret}">
                     <StackPanel Spacing="14">
@@ -180,7 +173,6 @@
                             </StackPanel>
                         </Grid>
 
-                        <!-- Supported apps chips -->
                         <WrapPanel Orientation="Horizontal" Margin="0,2,0,0">
                             <Border Background="#10FFFFFF" CornerRadius="8" Padding="10,5" Margin="0,0,6,6">
                                 <TextBlock Text="Google Authenticator" FontSize="{StaticResource Type.Tiny.Size}" Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -209,7 +201,6 @@
                     </StackPanel>
                 </Border>
 
-                <!-- ── 3. Secret Display (has secret) ── -->
                 <Border Classes="totp-card mfa-card delay-1 show"
                         IsVisible="{Binding HasTotpSecret}">
                     <StackPanel Spacing="14">
@@ -231,7 +222,6 @@
                             </StackPanel>
                         </Grid>
 
-                        <!-- Secret key box -->
                         <Border CornerRadius="10"
                                 Padding="14,12"
                                 BorderThickness="1"
@@ -267,7 +257,6 @@
                     </StackPanel>
                 </Border>
 
-                <!-- ── 4. Verification (has secret) ── -->
                 <Border Classes="totp-card mfa-card delay-2 show"
                         IsVisible="{Binding HasTotpSecret}">
                     <StackPanel Spacing="14">
@@ -288,7 +277,6 @@
                             </StackPanel>
                         </Grid>
 
-                        <!-- Code input with visual framing -->
                         <Border CornerRadius="12"
                                 Padding="8"
                                 BorderThickness="1"
@@ -325,7 +313,6 @@
                             </StackPanel>
                         </Button>
 
-                        <!-- Inline verification result -->
                         <TextBlock Text="{Binding StatusMessage}"
                                    FontSize="{StaticResource Type.Label.Size}"
                                    TextWrapping="Wrap"
@@ -335,7 +322,6 @@
                     </StackPanel>
                 </Border>
 
-                <!-- ── 5. Remove TOTP (danger zone) ── -->
                 <Border Classes="totp-card-danger mfa-card delay-3 show"
                         IsVisible="{Binding HasTotpSecret}">
                     <StackPanel Spacing="14">
@@ -377,7 +363,6 @@
                     </StackPanel>
                 </Border>
 
-                <!-- ── Status Message ── -->
                 <Border CornerRadius="{StaticResource Radius.Lg}"
                         Padding="16,14"
                         Margin="0,4,0,0"
@@ -409,7 +394,6 @@
             </StackPanel>
         </ScrollViewer>
 
-        <!-- ═══ Footer ═══ -->
         <Border Grid.Row="2"
                 Padding="28,14"
                 BorderThickness="0,1,0,0"
@@ -430,14 +414,6 @@
             </StackPanel>
         </Border>
 
-        <!-- Loading Overlay - DISABLED: Causes stuck 'Processing...' screen -->
-        <!-- <Border Grid.RowSpan="3"
-                Background="{DynamicResource OverlayBackgroundBrush}"
-                IsVisible="{Binding IsBusy}">
-            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="16">
-                <ProgressBar IsIndeterminate="True" Width="200"/>
-                <TextBlock Text="Processing..." Foreground="{DynamicResource PrimaryTextBrush}" HorizontalAlignment="Center"/>
-            </StackPanel>
-        </Border> -->
     </Grid>
 </views:ThemeAwareWindow>
+

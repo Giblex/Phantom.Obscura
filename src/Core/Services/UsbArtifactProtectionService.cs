@@ -10,10 +10,7 @@ using PhantomVault.Core.Utils;
 
 namespace PhantomVault.Core.Services
 {
-    /// <summary>
-    /// Protects USB-side metadata artifacts with per-file encryption derived from
-    /// the vault manifest and the current authentication material.
-    /// </summary>
+
     public sealed class UsbArtifactProtectionService
     {
         private static readonly byte[] Magic = Encoding.ASCII.GetBytes("PMETA1");
@@ -195,3 +192,4 @@ namespace PhantomVault.Core.Services
         }
     }
 }
+

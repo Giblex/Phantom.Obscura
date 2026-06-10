@@ -5,15 +5,6 @@
              x:DataType="vm:DashboardViewModel"
              Background="{DynamicResource WindowBackgroundBrush}">
 
-  <!--
-    Android adapter of Views/DashboardView.axaml (desktop, 1287 LOC).
-    Mirrors the desktop section layout — Vault Status header, Categories
-    grid, Quick Actions grid — without the desktop's custom controls
-    (PhantomVault.UI.Desktop.Controls.*) or behaviors (PhantomVault.UI.Behaviors).
-    Those need separate porting (Phase 4) and would otherwise drag a wide
-    code-behind into this UserControl.
-  -->
-
   <UserControl.Styles>
     <Style Selector="Border.dashboard-section">
       <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
@@ -41,7 +32,6 @@
   <ScrollViewer>
     <StackPanel Spacing="16" Margin="20,18,20,28">
 
-      <!-- ─── Vault Status header ─────────────────────────────────────────── -->
       <Border Classes="dashboard-section">
         <Grid ColumnDefinitions="*,Auto">
           <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
@@ -64,7 +54,6 @@
         </Grid>
       </Border>
 
-      <!-- ─── Stats row ───────────────────────────────────────────────────── -->
       <UniformGrid Rows="1" Columns="3">
         <Border Classes="dashboard-section" Margin="0,0,6,0">
           <StackPanel Spacing="4" HorizontalAlignment="Center">
@@ -104,7 +93,6 @@
         </Border>
       </UniformGrid>
 
-      <!-- ─── Categories tile grid (same idea as desktop CategoryTiles) ──── -->
       <Border Classes="dashboard-section">
         <StackPanel Spacing="12">
           <Grid ColumnDefinitions="*,Auto">
@@ -155,7 +143,6 @@
         </StackPanel>
       </Border>
 
-      <!-- ─── Quick Actions tile grid ─────────────────────────────────────── -->
       <Border Classes="dashboard-section">
         <StackPanel Spacing="12">
           <TextBlock Text="Quick Actions"
@@ -215,7 +202,6 @@
         </StackPanel>
       </Border>
 
-      <!-- ─── Recently used ──────────────────────────────────────────────── -->
       <Border Classes="dashboard-section">
         <StackPanel Spacing="10">
           <TextBlock Text="Recently used"
@@ -259,3 +245,4 @@
     </StackPanel>
   </ScrollViewer>
 </UserControl>
+

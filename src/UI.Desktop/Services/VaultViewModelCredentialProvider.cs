@@ -7,10 +7,7 @@ using PhantomVault.UI.ViewModels;
 
 namespace PhantomVault.UI.Desktop.Services
 {
-    /// <summary>
-    /// Adapter that implements ICredentialProvider by wrapping VaultViewModel
-    /// Allows auto-inject system to access credentials from the vault
-    /// </summary>
+
     public class VaultViewModelCredentialProvider : ICredentialProvider
     {
         private readonly VaultViewModel _vaultViewModel;
@@ -22,8 +19,7 @@ namespace PhantomVault.UI.Desktop.Services
 
         public IEnumerable<Credential> GetCredentials()
         {
-            // Convert CredentialViewModel collection to Credential collection
-            // FilteredCredentials includes both regular credentials and passkeys
+
             return _vaultViewModel.FilteredCredentials
                 .Select(vm => vm.GetCredential())
                 .ToList();
@@ -42,8 +38,7 @@ namespace PhantomVault.UI.Desktop.Services
 
         public bool IsVaultUnlocked()
         {
-            // Vault is considered unlocked if it has been mounted
-            // _mountPath is set when vault is successfully mounted
+
             return _vaultViewModel.FilteredCredentials.Any();
         }
 
@@ -60,9 +55,8 @@ namespace PhantomVault.UI.Desktop.Services
                 var credential = credentialVm.GetCredential();
                 credential.LastUsedUtc = DateTime.UtcNow;
 
-                // Note: VaultViewModel will auto-save changes when credentials are modified
-                // The PropertyChanged event will trigger the save mechanism
             }
         }
     }
 }
+

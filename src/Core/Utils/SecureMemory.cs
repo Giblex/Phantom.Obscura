@@ -4,20 +4,10 @@ using System.Security.Cryptography;
 
 namespace PhantomVault.Core.Utils
 {
-    /// <summary>
-    /// Provides utilities for handling sensitive data in memory. On
-    /// supported platforms this includes locking pages to prevent
-    /// swapping and clearing buffers after use. These APIs are
-    /// best‑effort; if the underlying platform does not support
-    /// mlock/VirtualLock the calls will be no‑ops.
-    /// </summary>
+
     public static class SecureMemory
     {
-        /// <summary>
-        /// Locks the specified buffer into physical memory, preventing
-        /// it from being paged to disk. Returns true on success or
-        /// false if the platform does not support locking.
-        /// </summary>
+
         public static bool Lock(ReadOnlySpan<byte> data)
         {
             if (data.IsEmpty) return false;
@@ -37,9 +27,6 @@ namespace PhantomVault.Core.Utils
             }
         }
 
-        /// <summary>
-        /// Unlocks the specified buffer, allowing it to be paged out.
-        /// </summary>
         public static void Unlock(ReadOnlySpan<byte> data)
         {
             if (data.IsEmpty) return;
@@ -55,22 +42,16 @@ namespace PhantomVault.Core.Utils
             }
             catch
             {
-                // Ignore errors
+
             }
         }
 
-        /// <summary>
-        /// Securely zeros a byte array. Uses the built‑in
-        /// CryptographicOperations.ZeroMemory which is immune to
-        /// compiler optimisations that might skip clearing.
-        /// </summary>
         public static void SecureClear(byte[] buffer)
         {
             if (buffer == null) return;
             CryptographicOperations.ZeroMemory(buffer);
         }
 
-        // Platform interop declarations (declared for both; invoked conditionally at runtime)
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool VirtualLock(IntPtr lpAddress, UIntPtr dwSize);
 
@@ -109,3 +90,4 @@ namespace PhantomVault.Core.Utils
         }
     }
 }
+

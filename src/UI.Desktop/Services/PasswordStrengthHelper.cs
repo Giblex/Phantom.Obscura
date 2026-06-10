@@ -4,10 +4,7 @@ using Avalonia.Media;
 
 namespace PhantomVault.UI.Services
 {
-    /// <summary>
-    /// Centralizes password strength bucketing so generator and editors stay consistent.
-    /// Evaluates length, character diversity, and common patterns.
-    /// </summary>
+
     internal static class PasswordStrengthHelper
     {
         public const string PasswordFlagFieldKey = "pv_password_flag";
@@ -21,17 +18,14 @@ namespace PhantomVault.UI.Services
 
             int length = password.Length;
 
-            // Calculate character class diversity (0-4 points)
             int diversity = 0;
             if (password.Any(char.IsUpper)) diversity++;
             if (password.Any(char.IsLower)) diversity++;
             if (password.Any(char.IsDigit)) diversity++;
             if (password.Any(c => !char.IsLetterOrDigit(c))) diversity++;
 
-            // Check for common weak patterns
             bool hasCommonPattern = HasCommonPattern(password);
 
-            // Calculate effective score (length * diversity factor, penalized for patterns)
             double diversityMultiplier = diversity switch
             {
                 4 => 1.0,
@@ -44,10 +38,9 @@ namespace PhantomVault.UI.Services
             double effectiveScore = length * diversityMultiplier;
             if (hasCommonPattern)
             {
-                effectiveScore *= 0.5; // 50% penalty for common patterns
+                effectiveScore *= 0.5;
             }
 
-            // effectiveScore < 6 = Weak
             if (effectiveScore < 6)
             {
                 return PasswordStrengthInfo.Create(
@@ -57,7 +50,6 @@ namespace PhantomVault.UI.Services
                     shouldShowFlag: true);
             }
 
-            // effectiveScore 6-12 = OK
             if (effectiveScore < 12)
             {
                 return PasswordStrengthInfo.Create(
@@ -67,7 +59,6 @@ namespace PhantomVault.UI.Services
                     shouldShowFlag: true);
             }
 
-            // effectiveScore 12-20 = Good
             if (effectiveScore < 20)
             {
                 return PasswordStrengthInfo.Create(
@@ -76,7 +67,6 @@ namespace PhantomVault.UI.Services
                     colorHex: "#FF4EC9B0");
             }
 
-            // effectiveScore 20-32 = Great
             if (effectiveScore < 32)
             {
                 return PasswordStrengthInfo.Create(
@@ -85,21 +75,16 @@ namespace PhantomVault.UI.Services
                     colorHex: "#FF6B8CAE");
             }
 
-            // effectiveScore 32+ = Phantom Strength
             return PasswordStrengthInfo.Create(
                 label: "Phantom Strength",
                 progress: 100,
                 colorHex: "#FF8E44AD");
         }
 
-        /// <summary>
-        /// Detects common weak patterns like keyboard sequences, repeated chars, etc.
-        /// </summary>
         private static bool HasCommonPattern(string password)
         {
             var lower = password.ToLowerInvariant();
 
-            // Check for common keyboard patterns
             string[] keyboardPatterns = { "qwerty", "asdfgh", "zxcvbn", "123456", "654321", "abcdef", "password", "letmein", "admin", "welcome" };
             foreach (var pattern in keyboardPatterns)
             {
@@ -107,18 +92,16 @@ namespace PhantomVault.UI.Services
                     return true;
             }
 
-            // Check for 4+ consecutive repeated characters
             for (int i = 0; i < password.Length - 3; i++)
             {
-                if (password[i] == password[i + 1] && 
-                    password[i] == password[i + 2] && 
+                if (password[i] == password[i + 1] &&
+                    password[i] == password[i + 2] &&
                     password[i] == password[i + 3])
                 {
                     return true;
                 }
             }
 
-            // Check for sequential characters (e.g., "abcd" or "1234")
             for (int i = 0; i < password.Length - 3; i++)
             {
                 char c1 = password[i], c2 = password[i + 1], c3 = password[i + 2], c4 = password[i + 3];
@@ -132,10 +115,6 @@ namespace PhantomVault.UI.Services
             return false;
         }
 
-        /// <summary>
-        /// Attempts to create a <see cref="PasswordStrengthInfo"/> for a stored flag label so UI elements
-        /// can render consistent colors without recomputing strength.
-        /// </summary>
         internal static bool TryGetInfoForFlag(string? flagValue, out PasswordStrengthInfo info)
         {
             if (string.IsNullOrWhiteSpace(flagValue))
@@ -206,3 +185,4 @@ namespace PhantomVault.UI.Services
         }
     }
 }
+

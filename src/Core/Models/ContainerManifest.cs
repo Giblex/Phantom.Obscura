@@ -3,16 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace PhantomVault.Core.Models
 {
-    /// <summary>
-    /// Container-level metadata stored in cleartext between the static header
-    /// and the encrypted payload. Signed with HMAC-SHA256 derived from the
-    /// container key for integrity verification.
-    ///
-    /// This is distinct from <see cref="VaultManifest"/> which holds vault
-    /// configuration and is encrypted inside the payload.
-    ///
-    /// v4 format: [Static Header][ContainerManifest + HMAC][Encrypted Blocks][VaultManifest Footer]
-    /// </summary>
+
     public sealed class ContainerManifest
     {
         [JsonPropertyName("containerId")]
@@ -39,11 +30,6 @@ namespace PhantomVault.Core.Models
         [JsonPropertyName("payloadSize")]
         public long PayloadSize { get; set; }
 
-        /// <summary>
-        /// Base64-encoded SHA-256 hash of all encrypted data block bytes
-        /// (nonce + tag + ciphertext for each block). Verified before
-        /// decryption to detect payload corruption or tampering.
-        /// </summary>
         [JsonPropertyName("payloadHash")]
         public string PayloadHash { get; set; } = string.Empty;
 
@@ -57,3 +43,4 @@ namespace PhantomVault.Core.Models
         public string? DeviceAttestation { get; set; }
     }
 }
+

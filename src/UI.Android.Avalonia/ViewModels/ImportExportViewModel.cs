@@ -8,18 +8,6 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace PhantomVault.UI.ViewModels;
 
-/// <summary>
-/// Android port of the desktop ImportExportDialog (Phase 3g). The desktop
-/// dialog branches on file extension (KeePass kdbx, Bitwarden json, generic
-/// csv) and runs a full deduplicating import against the unlocked vault. The
-/// mobile equivalent uses Avalonia's <see cref="IStorageProvider"/> to obtain
-/// files through the Android Storage Access Framework, then defers parsing
-/// to the (forthcoming) shared importer service.
-///
-/// The view supplies an <see cref="IStorageProvider"/> through
-/// <see cref="ConfigureStorageProvider"/> from code-behind because mobile
-/// pickers must originate from the TopLevel.
-/// </summary>
 public sealed partial class ImportExportViewModel : ObservableObject
 {
     private IStorageProvider? _storageProvider;
@@ -80,8 +68,6 @@ public sealed partial class ImportExportViewModel : ObservableObject
                 _ => "Unknown"
             };
 
-            // Parsing is intentionally deferred to the shared importer service
-            // that will be wired in once the Android Core data path is live.
             Status = $"Selected {kind} export ({file.Name}). Import will run once vault binding is wired.";
         }
         catch (Exception ex)
@@ -144,3 +130,4 @@ public sealed partial class ImportExportViewModel : ObservableObject
     [RelayCommand]
     private void Back() => ShellViewModel.Current?.GoBackCommand.Execute(null);
 }
+

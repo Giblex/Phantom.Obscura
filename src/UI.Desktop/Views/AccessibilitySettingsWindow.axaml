@@ -21,8 +21,7 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <Border Padding="30,20,30,60">
             <StackPanel Spacing="25">
-                
-                <!-- Header -->
+
                 <StackPanel Spacing="8">
                     <TextBlock Text="♿ Accessibility Settings"
                                FontSize="{StaticResource Type.H2.Size}"
@@ -36,7 +35,6 @@
                                TextAlignment="Center"/>
                 </StackPanel>
 
-                <!-- Language Settings -->
                 <Border BorderBrush="{DynamicResource ControlBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="{DynamicResource Radius.Md}"
@@ -68,7 +66,6 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Theme Settings -->
                 <Border BorderBrush="{DynamicResource ControlBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="{DynamicResource Radius.Md}"
@@ -83,9 +80,6 @@
                                        VerticalAlignment="Center"/>
                         </StackPanel>
 
-
-
-                        <!-- Theme Skin Selection -->
                         <StackPanel Spacing="12" Margin="0,10,0,0">
                             <TextBlock Text="Theme Skin"
                                        FontSize="{StaticResource Type.Body.Size}"
@@ -101,7 +95,6 @@
                                       HorizontalAlignment="Left"/>
                         </StackPanel>
 
-                        <!-- High Contrast -->
                         <CheckBox Content="Use high contrast mode"
                                   IsChecked="{Binding UseHighContrast, Mode=TwoWay}"
                                   FontSize="{StaticResource Type.Label.Size}"
@@ -110,7 +103,6 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Display Scale Settings -->
                 <Border BorderBrush="{DynamicResource ControlBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="{StaticResource Radius.Md}"
@@ -128,7 +120,7 @@
                                    FontSize="{StaticResource Type.Small.Size}"
                                    Foreground="{DynamicResource MutedTextBrush}"
                                    TextWrapping="Wrap"/>
-                        
+
                         <ComboBox ItemsSource="{Binding UiScaleOptions}"
                                   SelectedItem="{Binding SelectedScaleOption, Mode=TwoWay}"
                                   Width="300"
@@ -141,7 +133,7 @@
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
-                        
+
                         <TextBlock Text="Changes take effect immediately"
                                    FontSize="{StaticResource Type.Tiny.Size}"
                                    Foreground="{DynamicResource SuccessBrush}"
@@ -149,7 +141,6 @@
                     </StackPanel>
                 </Border>
 
-                <!-- View Preferences -->
                 <Border BorderBrush="{DynamicResource ControlBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="{StaticResource Radius.Md}"
@@ -167,7 +158,7 @@
                                    FontSize="{StaticResource Type.Small.Size}"
                                    Foreground="{DynamicResource MutedTextBrush}"
                                    TextWrapping="Wrap"/>
-                        
+
                         <StackPanel Spacing="10">
                             <RadioButton Content="List View (Default)"
                                          IsChecked="{Binding IsListViewDefault, Mode=TwoWay}"
@@ -181,7 +172,6 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Autofill Preferences -->
                 <Border BorderBrush="{DynamicResource ControlBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="{StaticResource Radius.Md}"
@@ -199,7 +189,7 @@
                                    FontSize="{StaticResource Type.Small.Size}"
                                    Foreground="{DynamicResource MutedTextBrush}"
                                    TextWrapping="Wrap"/>
-                        
+
                         <StackPanel Spacing="10">
                             <TextBlock Text="Default Email/Username"
                                        FontSize="{StaticResource Type.Label.Size}"
@@ -215,7 +205,6 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Keyboard Shortcuts -->
                 <Border BorderBrush="{DynamicResource ControlBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="{StaticResource Radius.Md}"
@@ -229,12 +218,12 @@
                                        FontWeight="SemiBold"
                                        VerticalAlignment="Center"/>
                         </StackPanel>
-                        
+
                         <CheckBox Content="Show keyboard shortcut hints"
                                   IsChecked="{Binding ShowShortcutHints, Mode=TwoWay}"
                                   FontSize="{StaticResource Type.Label.Size}"
                                   ToolTip.Tip="Display keyboard shortcuts in tooltips and menus"/>
-                        
+
                         <Button Command="{Binding ViewShortcutsCommand}"
                                 Height="36"
                                 HorizontalAlignment="Stretch">
@@ -243,7 +232,7 @@
                                 <TextBlock Text="View &amp; Customize Shortcuts" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
-                        
+
                         <TextBlock Text="Common shortcuts: Ctrl+N (New), Ctrl+F (Search), Ctrl+C (Copy), Ctrl+L (Lock)"
                                    FontSize="{StaticResource Type.Tiny.Size}"
                                    Foreground="{DynamicResource MutedTextBrush}"
@@ -252,7 +241,6 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Additional Accessibility Features -->
                 <Border BorderBrush="{DynamicResource ControlBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="{StaticResource Radius.Md}"
@@ -266,17 +254,17 @@
                                        FontWeight="SemiBold"
                                        VerticalAlignment="Center"/>
                         </StackPanel>
-                        
+
                         <CheckBox Content="Reduce motion and animations"
                                   IsChecked="{Binding ReduceMotion, Mode=TwoWay}"
                                   FontSize="{StaticResource Type.Label.Size}"
                                   ToolTip.Tip="Minimize animations for users sensitive to motion"/>
-                        
+
                         <CheckBox Content="Use larger tooltips"
                                   IsChecked="{Binding LargeTooltips, Mode=TwoWay}"
                                   FontSize="{StaticResource Type.Label.Size}"
                                   ToolTip.Tip="Display tooltips with larger text for better readability"/>
-                        
+
                         <TextBlock Text="Screen reader support: Enabled"
                                    FontSize="{StaticResource Type.Small.Size}"
                                    Foreground="{DynamicResource SuccessBrush}"
@@ -284,7 +272,6 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Action Buttons -->
                 <Border BorderBrush="{DynamicResource ControlBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="{StaticResource Radius.Md}"
@@ -300,7 +287,7 @@
                                 <TextBlock Text="Reset All to Defaults" FontSize="{StaticResource Type.Body.Size}" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
-                        
+
                         <TextBlock Text="This will restore all accessibility settings to their default values"
                                    FontSize="{StaticResource Type.Tiny.Size}"
                                    Foreground="{DynamicResource MutedTextBrush}"
@@ -313,3 +300,4 @@
         </Border>
     </ScrollViewer>
 </Window>
+

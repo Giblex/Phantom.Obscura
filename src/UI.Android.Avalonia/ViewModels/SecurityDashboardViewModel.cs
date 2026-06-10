@@ -18,8 +18,7 @@ public sealed partial class SecurityDashboardViewModel : ObservableObject
 
     partial void OnTestPasswordChanged(string value)
     {
-        // Lightweight local strength heuristic — replaces the desktop's
-        // zxcvbn-based scorer until PasswordHealthService is wired on Android.
+
         if (string.IsNullOrEmpty(value))
         {
             TestPasswordScore = 0;
@@ -44,3 +43,4 @@ public sealed partial class SecurityDashboardViewModel : ObservableObject
         };
     }
 }
+

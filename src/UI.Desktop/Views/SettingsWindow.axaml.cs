@@ -18,8 +18,15 @@ namespace PhantomVault.UI.Views
 
             if (DataContext == null)
             {
-                var defenceSettings = (Avalonia.Application.Current as App)?.Services?.GetService(typeof(IDefenceSettingsService)) as IDefenceSettingsService;
-                DataContext = new SettingsViewModel(defenceSettings);
+                var sp = (Avalonia.Application.Current as App)?.Services;
+                var defenceSettings = sp?.GetService(typeof(IDefenceSettingsService)) as IDefenceSettingsService;
+                var recoveryActivationVm = sp?.GetService(typeof(PhantomVault.UI.ViewModels.Settings.RecoveryActivationSettingsViewModel))
+                    as PhantomVault.UI.ViewModels.Settings.RecoveryActivationSettingsViewModel;
+                var updateService = sp?.GetService(typeof(PhantomVault.Core.Services.Update.IUpdateService))
+                    as PhantomVault.Core.Services.Update.IUpdateService;
+                var updateSettings = sp?.GetService(typeof(PhantomVault.Core.Services.Update.UpdateChannelSettings))
+                    as PhantomVault.Core.Services.Update.UpdateChannelSettings;
+                DataContext = new SettingsViewModel(defenceSettings, recoveryActivationVm, updateService, updateSettings);
             }
         }
 
@@ -32,7 +39,7 @@ namespace PhantomVault.UI.Views
         {
             await HandleEventAsync(async () =>
             {
-                // Create Windows Hello settings window
+
                 var viewModel = new WindowsHelloSettingsViewModel();
                 var window = new WindowsHelloSettingsWindow
                 {
@@ -47,7 +54,7 @@ namespace PhantomVault.UI.Views
         {
             await HandleEventAsync(async () =>
             {
-                // Create device-authenticator settings window
+
                 var viewModel = new PasskeySettingsViewModel();
                 var window = new PasskeySettingsWindow
                 {
@@ -62,7 +69,7 @@ namespace PhantomVault.UI.Views
         {
             await HandleEventAsync(async () =>
             {
-                // Create TOTP settings window with service for code verification
+
                 var totpService = new PhantomVault.Core.Services.TotpService();
                 var viewModel = new TotpSettingsViewModel(totpService);
                 var window = new TotpSettingsWindow
@@ -78,7 +85,7 @@ namespace PhantomVault.UI.Views
         {
             await HandleEventAsync(async () =>
             {
-                // Create Accessibility settings window
+
                 var viewModel = new AccessibilitySettingsViewModel();
                 var window = new AccessibilitySettingsWindow
                 {
@@ -107,9 +114,6 @@ namespace PhantomVault.UI.Views
             });
         }
 
-        /// <summary>
-        /// Wrapper for async void event handlers to ensure exceptions are logged and displayed.
-        /// </summary>
         private async Task HandleEventAsync(Func<Task> action)
         {
             try
@@ -132,3 +136,4 @@ namespace PhantomVault.UI.Views
         }
     }
 }
+

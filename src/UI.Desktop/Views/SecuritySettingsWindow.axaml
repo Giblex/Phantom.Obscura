@@ -11,7 +11,7 @@
     <ScrollViewer>
         <Border Padding="20,20,20,60">
             <StackPanel Spacing="16" Name="ContentPanel">
-            <!-- Basic Security Settings -->
+
             <Border Background="{DynamicResource ContentBackgroundBrush}"
                     BorderBrush="{DynamicResource ControlBorderBrush}"
                     BorderThickness="1"
@@ -38,27 +38,25 @@
                     </Style>
                 </Border.Styles>
                 <StackPanel Spacing="12">
-                    <TextBlock Text="Basic Security" 
-                               FontSize="{StaticResource Type.H4.Size}" 
+                    <TextBlock Text="Basic Security"
+                               FontSize="{StaticResource Type.H4.Size}"
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                     <TextBlock Text="This standalone window covers the compact core policy set. Clipboard timing, screenshot protection, recovery, and richer authentication workflows live in the in-vault settings panel."
                                FontSize="{StaticResource Type.Small.Size}"
                                Foreground="{DynamicResource MutedTextBrush}"
                                TextWrapping="Wrap"/>
-                    <CheckBox Content="Require hardware-token presence check" 
+                    <CheckBox Content="Require hardware-token presence check"
                               IsChecked="{Binding RequireHardwareToken, Mode=TwoWay}"/>
-                    <CheckBox Content="Require keyfile" 
-                              IsChecked="{Binding RequireKeyfile, Mode=TwoWay}"/>
                     <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                        <TextBlock Text="Idle timeout (minutes):" 
-                                   VerticalAlignment="Center" 
+                        <TextBlock Text="Idle timeout (minutes):"
+                                   VerticalAlignment="Center"
                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
                         <TextBox Text="{Binding IdleTimeoutMinutes, Mode=TwoWay}" Width="60"/>
                     </StackPanel>
-                    <Button Content="{Binding SaveButtonText}" 
-                            Command="{Binding SaveCommand}" 
-                            Width="120" 
+                    <Button Content="{Binding SaveButtonText}"
+                            Command="{Binding SaveCommand}"
+                            Width="120"
                             Height="36"
                             IsEnabled="{Binding !IsBusy}"
                             HorizontalAlignment="Left">
@@ -80,7 +78,6 @@
                 </StackPanel>
             </Border>
 
-            <!-- Defence Automations -->
             <Border Background="{DynamicResource ContentBackgroundBrush}"
                     BorderBrush="{DynamicResource ControlBorderBrush}"
                     BorderThickness="1"
@@ -107,39 +104,38 @@
                     </Style>
                 </Border.Styles>
                 <StackPanel Spacing="12">
-                    <TextBlock Text="Defence Automations" 
-                               FontSize="{StaticResource Type.H4.Size}" 
+                    <TextBlock Text="Defence Automations"
+                               FontSize="{StaticResource Type.H4.Size}"
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
-                    <TextBlock Text="Configure automated defence responses to detected threats" 
+                    <TextBlock Text="Configure automated defence responses to detected threats"
                                FontSize="{StaticResource Type.Small.Size}"
                                Foreground="{DynamicResource MutedTextBrush}"
                                TextWrapping="Wrap"
                                Margin="0,0,0,6"/>
-                    
+
                     <CheckBox Content="Require Phantom Key / extra checks on new devices"
                               IsChecked="{Binding IsNewDeviceProtectionEnabled, Mode=TwoWay}"
                               ToolTip.Tip="When enabled, new device fingerprints trigger additional authentication requirements"/>
-                    
+
                     <CheckBox Content="Open in Safe (read-only) mode if tampering suspected"
                               IsChecked="{Binding IsIntegritySafeModeEnabled, Mode=TwoWay}"
                               ToolTip.Tip="When enabled, integrity mismatches force read-only mode to prevent data corruption"/>
-                    
+
                     <CheckBox Content="Limit rapid copy-to-clipboard of secrets"
                               IsChecked="{Binding IsClipboardGuardEnabled, Mode=TwoWay}"
                               ToolTip.Tip="When enabled, excessive clipboard operations trigger cooldowns and warnings"/>
-                    
+
                     <CheckBox Content="Limit repeated vault exports in short time"
                               IsChecked="{Binding IsExportGuardEnabled, Mode=TwoWay}"
                               ToolTip.Tip="When enabled, frequent export operations may trigger read-only mode"/>
-                    
+
                     <CheckBox Content="Detect and respond to abnormal session behaviour"
                               IsChecked="{Binding IsBehaviourDeviationProtectionEnabled, Mode=TwoWay}"
                               ToolTip.Tip="When enabled, unusual patterns trigger delays and data scrubbing"/>
                 </StackPanel>
             </Border>
 
-            <!-- Decoy Vault Protection -->
             <Border Background="{DynamicResource ContentBackgroundBrush}"
                     BorderBrush="{DynamicResource ControlBorderBrush}"
                     BorderThickness="1"
@@ -179,7 +175,6 @@
                         <Run Text="(debuggers, DLL injection, memory manipulation). This protects your real data while making the attack appear successful."/>
                     </TextBlock>
 
-                    <!-- Auto-activate toggle -->
                     <CheckBox IsChecked="{Binding AutoActivateDecoyOnTamper, Mode=TwoWay}"
                               FontWeight="SemiBold">
                         <TextBlock TextWrapping="Wrap">
@@ -188,7 +183,6 @@
                         </TextBlock>
                     </CheckBox>
 
-                    <!-- Credential count slider -->
                     <StackPanel Spacing="8" IsEnabled="{Binding AutoActivateDecoyOnTamper}" Opacity="{Binding AutoActivateDecoyOnTamper, Converter={StaticResource BoolToOpacityConverter}}">
                         <TextBlock Text="Number of decoy credentials:" FontSize="{StaticResource Type.Small.Size}" Foreground="{DynamicResource PrimaryTextBrush}"/>
                         <Slider Minimum="10" Maximum="50"
@@ -201,7 +195,6 @@
                                    Foreground="{DynamicResource MutedTextBrush}"/>
                     </StackPanel>
 
-                    <!-- Logging toggle -->
                     <CheckBox IsChecked="{Binding LogDecoyActivation, Mode=TwoWay}"
                               IsEnabled="{Binding AutoActivateDecoyOnTamper}"
                               Opacity="{Binding AutoActivateDecoyOnTamper, Converter={StaticResource BoolToOpacityConverter}}">
@@ -214,7 +207,6 @@
                         </StackPanel>
                     </CheckBox>
 
-                    <!-- Status indicator -->
                     <Border Background="{DynamicResource WarningBrush}"
                             Padding="12"
                             CornerRadius="6"
@@ -229,7 +221,6 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Action buttons -->
                     <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,4,0,0">
                         <Button Content="Preview Decoy Vault"
                                 Command="{Binding PreviewDecoyVaultCommand}"
@@ -254,3 +245,4 @@
         </Border>
     </ScrollViewer>
 </views:ThemeAwareWindow>
+

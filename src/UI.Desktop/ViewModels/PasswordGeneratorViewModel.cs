@@ -11,9 +11,7 @@ using PhantomVault.UI.Services;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// View model for standalone password generator window.
-    /// </summary>
+
     public sealed class PasswordGeneratorViewModel : ReactiveObject
     {
         private Window? _ownerWindow;
@@ -35,24 +33,19 @@ namespace PhantomVault.UI.ViewModels
         {
             LoadPreferences();
 
-            // Default color
             _passwordStrengthColor = new SolidColorBrush(Color.Parse("#6B8CAE"));
 
-            // Initialize commands
             GenerateCommand = ReactiveCommand.Create(GeneratePassword);
             CopyToClipboardCommand = ReactiveCommand.CreateFromTask(CopyToClipboardAsync);
             CloseCommand = ReactiveCommand.Create(Close);
 
-            // Add command - when used by a caller it signals the generator result should be used
             AddCommand = ReactiveCommand.Create(AddAndClose,
                 this.WhenAnyValue(x => x.GeneratedPassword, gp => !string.IsNullOrEmpty(gp) && !gp.StartsWith("Please select")));
 
-            // Preset commands
             ApplyWeakPresetCommand = ReactiveCommand.Create(ApplyWeakPreset);
             ApplyStrongPresetCommand = ReactiveCommand.Create(ApplyStrongPreset);
             ApplyMaxPresetCommand = ReactiveCommand.Create(ApplyMaxPreset);
 
-            // Subscribe to property changes to auto-generate
             this.WhenAnyValue(
                     x => x.PasswordLength,
                     x => x.IncludeUppercase,
@@ -67,11 +60,9 @@ namespace PhantomVault.UI.ViewModels
                     GeneratePassword();
                 });
 
-            // Generate initial password
             GeneratePassword();
         }
 
-        // Properties
         public string GeneratedPassword
         {
             get => _generatedPassword;
@@ -121,7 +112,7 @@ namespace PhantomVault.UI.ViewModels
             }
             catch
             {
-                // Best-effort only; generator has sensible defaults already.
+
             }
         }
 
@@ -139,7 +130,7 @@ namespace PhantomVault.UI.ViewModels
             }
             catch
             {
-                // Best-effort only; generation should still work if persistence fails.
+
             }
         }
 
@@ -179,17 +170,12 @@ namespace PhantomVault.UI.ViewModels
             set => this.RaiseAndSetIfChanged(ref _statusMessage, value);
         }
 
-        /// <summary>
-        /// Indicates that the user accepted the generated password (clicked Add).
-        /// Callers can inspect this after the dialog closes and, if true, read GeneratedPassword.
-        /// </summary>
         public bool Accepted
         {
             get => _accepted;
             private set => this.RaiseAndSetIfChanged(ref _accepted, value);
         }
 
-        // Commands
         public ReactiveCommand<Unit, Unit> GenerateCommand { get; }
         public ReactiveCommand<Unit, Unit> CopyToClipboardCommand { get; }
         public ReactiveCommand<Unit, Unit> CloseCommand { get; }
@@ -198,10 +184,9 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> ApplyStrongPresetCommand { get; }
         public ReactiveCommand<Unit, Unit> ApplyMaxPresetCommand { get; }
 
-        // Methods
         private void GeneratePassword()
         {
-            // Validate at least one character type is selected
+
             if (!IncludeUppercase && !IncludeLowercase && !IncludeNumbers && !IncludeSymbols)
             {
                 GeneratedPassword = "Please select at least one character type";
@@ -212,7 +197,6 @@ namespace PhantomVault.UI.ViewModels
                 return;
             }
 
-            // Build character set
             string upperChars = AvoidAmbiguous ? "ABCDEFGHJKLMNPQRSTUVWXYZ" : "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             string lowerChars = AvoidAmbiguous ? "abcdefghjkmnpqrstuvwxyz" : "abcdefghijklmnopqrstuvwxyz";
             string digitChars = AvoidAmbiguous ? "23456789" : "0123456789";
@@ -221,7 +205,6 @@ namespace PhantomVault.UI.ViewModels
             var charSet = new StringBuilder();
             var requiredChars = new StringBuilder();
 
-            // Add required character types using cryptographic RNG
             if (IncludeUppercase)
             {
                 charSet.Append(upperChars);
@@ -243,7 +226,6 @@ namespace PhantomVault.UI.ViewModels
                 requiredChars.Append(symbolChars[SecureRandomIndex(symbolChars.Length)]);
             }
 
-            // Fill remaining length with random characters
             var password = new StringBuilder(requiredChars.ToString());
             string allChars = charSet.ToString();
             for (int i = requiredChars.Length; i < PasswordLength; i++)
@@ -251,7 +233,6 @@ namespace PhantomVault.UI.ViewModels
                 password.Append(allChars[SecureRandomIndex(allChars.Length)]);
             }
 
-            // Shuffle the password using Fisher-Yates with cryptographic RNG
             var chars = password.ToString().ToCharArray();
             for (int i = chars.Length - 1; i > 0; i--)
             {
@@ -361,15 +342,11 @@ namespace PhantomVault.UI.ViewModels
 
         private void AddAndClose()
         {
-            // Mark accepted so caller can read the GeneratedPassword
+
             Accepted = true;
             _ownerWindow?.Close();
         }
 
-        /// <summary>
-        /// Returns a cryptographically secure random integer in [0, exclusiveMax).
-        /// Uses RandomNumberGenerator for unpredictable password generation.
-        /// </summary>
         private static int SecureRandomIndex(int exclusiveMax)
         {
             if (exclusiveMax <= 0)
@@ -377,7 +354,6 @@ namespace PhantomVault.UI.ViewModels
             if (exclusiveMax == 1)
                 return 0;
 
-            // Use rejection sampling to avoid modulo bias
             Span<byte> buffer = stackalloc byte[4];
             uint range = (uint)exclusiveMax;
             uint limit = uint.MaxValue - (uint.MaxValue % range);
@@ -394,3 +370,4 @@ namespace PhantomVault.UI.ViewModels
         }
     }
 }
+

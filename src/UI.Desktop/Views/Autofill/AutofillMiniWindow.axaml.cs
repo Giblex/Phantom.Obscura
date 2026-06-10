@@ -6,16 +6,13 @@ using PhantomVault.UI.ViewModels.Autofill;
 
 namespace PhantomVault.UI.Views.Autofill
 {
-    /// <summary>
-    /// Mini-window for autofill suggestions and password capture.
-    /// </summary>
+
     public partial class AutofillMiniWindow : Window
     {
         public AutofillMiniWindow()
         {
             InitializeComponent();
-            
-            // Handle keyboard shortcuts
+
             KeyDown += OnKeyDown;
         }
 
@@ -46,33 +43,26 @@ namespace PhantomVault.UI.Views.Autofill
             }
         }
 
-        /// <summary>
-        /// Positions the window near the specified field.
-        /// </summary>
         public void PositionNearField(double x, double y)
         {
-            // Adjust position to ensure window stays on screen
+
             var screen = Screens.Primary;
             if (screen != null)
             {
                 var workingArea = screen.WorkingArea;
-                
-                // Ensure window doesn't go off right edge
+
                 if (x + Width > workingArea.Width)
                 {
                     x = workingArea.Width - Width - 10;
                 }
-                
-                // Ensure window doesn't go off bottom edge
+
                 if (y + Height > workingArea.Height)
                 {
                     y = workingArea.Height - Height - 10;
                 }
-                
-                // Ensure window doesn't go off left edge
+
                 if (x < 0) x = 10;
-                
-                // Ensure window doesn't go off top edge
+
                 if (y < 0) y = 10;
             }
 
@@ -80,3 +70,4 @@ namespace PhantomVault.UI.Views.Autofill
         }
     }
 }
+

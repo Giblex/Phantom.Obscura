@@ -13,3 +13,4 @@ public partial class ThemeSettingsView : UserControl
     private void Close_Click(object? sender, RoutedEventArgs e)
         => ShellViewModel.Current?.GoBackCommand.Execute(null);
 }
+

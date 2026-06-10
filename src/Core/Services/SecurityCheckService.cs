@@ -8,14 +8,10 @@ using System.Linq;
 
 namespace PhantomVault.Core.Services
 {
-    /// <summary>
-    /// Service for performing security checks before vault access.
-    /// Validates integrity, detects hardware, and ensures vault health.
-    /// </summary>
+
     public class SecurityCheckService
     {
-        // Tightened again — UI feedback only; real work is near-instant.
-        // Total pre-vault security check time ~1.0s (was ~3.4s, originally ~13.4s).
+
         private static readonly TimeSpan ManifestCheckDelay = TimeSpan.FromMilliseconds(160);
         private static readonly TimeSpan UsbHealthCheckDelay = TimeSpan.FromMilliseconds(150);
         private static readonly TimeSpan HardwareTokenCheckDelay = TimeSpan.FromMilliseconds(140);
@@ -37,9 +33,6 @@ namespace PhantomVault.Core.Services
             _rawVolumeService = rawVolumeService;
         }
 
-        // Mirror of BlackSecureRawVolumeService.RawSelectionPrefix — duplicated as a literal
-        // because that constant lives on a [SupportedOSPlatform("windows")] type and we want
-        // the prefix check to work on all platforms (it just returns false off-Windows).
         private const string RawSelectionPrefix = "RAWUSB:";
 
         private static bool IsRawSelection(string? usbPath)
@@ -73,12 +66,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Run comprehensive security checks on vault.
-        /// </summary>
-        /// <param name="usbPath">Path to USB drive containing vault</param>
-        /// <param name="progress">Progress callback (0-100)</param>
-        /// <returns>Security check results</returns>
         public async Task<SecurityCheckResult> RunSecurityChecksAsync(
             string usbPath,
             string? preferredVaultPath = null,
@@ -147,7 +134,7 @@ namespace PhantomVault.Core.Services
 
             result.EndTime = DateTime.UtcNow;
             result.Duration = result.EndTime - result.StartTime;
-            result.OverallPassed = result.ChecksPassed >= 4; // Must pass at least 4/5 checks
+            result.OverallPassed = result.ChecksPassed >= 4;
 
             progress?.Report(new SecurityCheckProgress
             {
@@ -159,9 +146,6 @@ namespace PhantomVault.Core.Services
             return result;
         }
 
-        /// <summary>
-        /// Verify manifest file integrity and signature.
-        /// </summary>
         private async Task<bool> VerifyManifestIntegrityAsync(string usbPath, string? preferredVaultPath, SecurityCheckResult result)
         {
             await Task.Delay(ManifestCheckDelay).ConfigureAwait(false);
@@ -175,7 +159,6 @@ namespace PhantomVault.Core.Services
                 return ok;
             }
 
-            // Discover vault: prefer .pvault containers (v3), fall back to legacy .manifest
             ResolveVaultTargets(usbPath, preferredVaultPath, out var manifestPath, out var masterVolumePath);
             var vaultsPath = Path.Combine(usbPath, ".phantom", "vaults");
             var manifestsPath = Path.Combine(usbPath, ".phantom", "manifests");
@@ -228,10 +211,9 @@ namespace PhantomVault.Core.Services
                 var fileInfo = new FileInfo(manifestPath);
                 bool isContainer = manifestPath.EndsWith(".pvault", StringComparison.OrdinalIgnoreCase);
 
-                // For containers, verify minimum header size; for standalone manifests, check reasonable range
                 if (isContainer)
                 {
-                    if (fileInfo.Length < 64) // PHANTOM1 header minimum
+                    if (fileInfo.Length < 64)
                     {
                         result.ManifestValid = false;
                         result.Errors.Add("Container file is too small to be valid");
@@ -240,14 +222,13 @@ namespace PhantomVault.Core.Services
                 }
                 else
                 {
-                    if (fileInfo.Length < 100 || fileInfo.Length > 1024 * 1024) // 100 bytes to 1MB
+                    if (fileInfo.Length < 100 || fileInfo.Length > 1024 * 1024)
                     {
                         result.ManifestValid = false;
                         result.Errors.Add("Manifest file size is invalid");
                         return false;
                     }
 
-                    // Structural validation for standalone manifests
                     var content = await File.ReadAllTextAsync(manifestPath);
                     if (string.IsNullOrWhiteSpace(content))
                     {
@@ -268,9 +249,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Check USB drive health and accessibility.
-        /// </summary>
         private async Task<bool> CheckUsbHealthAsync(string usbPath, SecurityCheckResult result)
         {
             await Task.Delay(UsbHealthCheckDelay).ConfigureAwait(false);
@@ -286,7 +264,7 @@ namespace PhantomVault.Core.Services
 
             try
             {
-                // Check USB path is valid
+
                 if (!Directory.Exists(usbPath))
                 {
                     result.UsbHealthy = false;
@@ -294,7 +272,6 @@ namespace PhantomVault.Core.Services
                     return false;
                 }
 
-                // Check drive is writable
                 var testFilePath = Path.Combine(usbPath, $".phantom_test_{Guid.NewGuid()}");
                 try
                 {
@@ -308,7 +285,6 @@ namespace PhantomVault.Core.Services
                     return false;
                 }
 
-                // Check available space (at least 10MB)
                 var driveInfo = new DriveInfo(Path.GetPathRoot(usbPath)!);
                 if (driveInfo.AvailableFreeSpace < 10 * 1024 * 1024)
                 {
@@ -335,9 +311,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Detect connected hardware tokens (YubiKey, etc.).
-        /// </summary>
         private async Task<bool> DetectHardwareTokensAsync(SecurityCheckResult result)
         {
             await Task.Delay(HardwareTokenCheckDelay).ConfigureAwait(false);
@@ -366,26 +339,22 @@ namespace PhantomVault.Core.Services
                     }
                 }
 
-                // Hardware token detection is optional, so always pass
                 return true;
             }
             catch (Exception ex)
             {
                 result.Errors.Add($"Hardware token detection failed: {ex.Message}");
-                return true; // Non-critical, don't fail
+                return true;
             }
         }
 
-        /// <summary>
-        /// Check if biometric authentication is available on this device.
-        /// </summary>
         private async Task<bool> CheckBiometricAvailabilityAsync(SecurityCheckResult result)
         {
             await Task.Delay(BiometricCheckDelay).ConfigureAwait(false);
 
             try
             {
-                // Only check biometrics on supported platforms
+
                 if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041))
                 {
                     result.BiometricAvailable = await IsBiometricAvailableAsync();
@@ -403,20 +372,15 @@ namespace PhantomVault.Core.Services
                     }
                 }
 
-                // Biometric is optional, so always pass
                 return true;
             }
             catch (Exception ex)
             {
                 result.Errors.Add($"Biometric check failed: {ex.Message}");
-                return true; // Non-critical, don't fail
+                return true;
             }
         }
 
-        /// <summary>
-        /// Checks if biometric authentication is available on the current platform.
-        /// </summary>
-        /// <returns>True if biometric auth is available; false otherwise</returns>
         [SupportedOSPlatform("windows10.0.19041.0")]
         public async Task<bool> IsBiometricAvailableAsync()
         {
@@ -426,13 +390,12 @@ namespace PhantomVault.Core.Services
             }
             else if (OperatingSystem.IsMacOS())
             {
-                // Touch ID/Face ID requires LAContext via a native binding
-                // (e.g. a MAUI or ObjC-interop helper), which is not yet available.
+
                 return false;
             }
             else if (OperatingSystem.IsLinux())
             {
-                // Check whether the fprintd service (fingerprint daemon) is available.
+
                 return File.Exists("/usr/bin/fprintd-verify")
                     || File.Exists("/usr/lib/fprintd/fprintd");
             }
@@ -440,24 +403,20 @@ namespace PhantomVault.Core.Services
             return false;
         }
 
-        /// <summary>
-        /// Checks Windows Hello availability using reflection to avoid hard dependency.
-        /// </summary>
         private async Task<bool> CheckWindowsHelloAvailabilityAsync()
         {
             try
             {
-                // Use reflection to call Windows Hello API
+
                 var userConsentVerifierType = Type.GetType(
                     "Windows.Security.Credentials.UI.UserConsentVerifier, Windows, ContentType=WindowsRuntime");
 
                 if (userConsentVerifierType == null)
                 {
-                    // Windows Hello API not available on this system
+
                     return false;
                 }
 
-                // Call UserConsentVerifier.CheckAvailabilityAsync()
                 var checkAvailabilityMethod = userConsentVerifierType.GetMethod(
                     "CheckAvailabilityAsync",
                     BindingFlags.Public | BindingFlags.Static);
@@ -470,28 +429,17 @@ namespace PhantomVault.Core.Services
                 dynamic availabilityTask = checkAvailabilityMethod.Invoke(null, null)!;
                 dynamic availability = await availabilityTask;
 
-                // UserConsentVerifierAvailability enum values:
-                // 0 = Available
-                // 1 = DeviceNotPresent
-                // 2 = NotConfiguredForUser
-                // 3 = DisabledByPolicy
-                // 4 = DeviceBusy
-
                 int availabilityValue = (int)availability;
 
-                // Return true only if Available (0)
                 return availabilityValue == 0;
             }
             catch (Exception)
             {
-                // If Windows Hello detection fails, assume not available
+
                 return false;
             }
         }
 
-        /// <summary>
-        /// Check for signs of tampering with vault files.
-        /// </summary>
         private async Task<bool> CheckForTamperingAsync(string usbPath, string? preferredVaultPath, SecurityCheckResult result)
         {
             await Task.Delay(AntiTamperCheckDelay).ConfigureAwait(false);
@@ -535,7 +483,6 @@ namespace PhantomVault.Core.Services
                     return true;
                 }
 
-                // Check for required .phantom folder structure
                 var phantomPath = Path.Combine(usbPath, ".phantom");
                 var manifestsPath = Path.Combine(phantomPath, "manifests");
                 var vaultsPath = Path.Combine(phantomPath, "vaults");
@@ -558,7 +505,6 @@ namespace PhantomVault.Core.Services
                     return false;
                 }
 
-                // Vault files in either format count as present
                 int vaultFileCount = 0;
                 if (Directory.Exists(vaultsPath))
                     vaultFileCount += Directory.GetFiles(vaultsPath, "*.pvault").Length;
@@ -574,7 +520,6 @@ namespace PhantomVault.Core.Services
                     return false;
                 }
 
-                // Check for suspicious files in USB ROOT only (exclude .phantom folder)
                 var suspiciousExtensions = new[] { ".exe", ".dll", ".bat", ".cmd", ".ps1", ".vbs", ".scr", ".com" };
                 var rootFiles = Directory.GetFiles(usbPath, "*.*", SearchOption.TopDirectoryOnly)
                     .Where(f =>
@@ -601,9 +546,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Quick security check (fast version for returning users).
-        /// </summary>
         public async Task<bool> QuickSecurityCheckAsync(string usbPath, string? preferredVaultPath = null)
         {
             if (IsRawSelection(usbPath))
@@ -615,11 +557,10 @@ namespace PhantomVault.Core.Services
             ResolveVaultTargets(usbPath, preferredVaultPath, out var manifestPath, out var masterVolumePath);
             if (masterVolumePath is not null || manifestPath is not null)
             {
-                await Task.Delay(100); // Minimal delay
+                await Task.Delay(100);
                 return true;
             }
 
-            // Check for .phantom folder structure
             var phantomPath = Path.Combine(usbPath, ".phantom");
             if (!Directory.Exists(phantomPath))
                 return false;
@@ -630,7 +571,6 @@ namespace PhantomVault.Core.Services
             if (!Directory.Exists(manifestsPath) && !Directory.Exists(vaultsPath))
                 return false;
 
-            // Either format counts as a valid vault
             int count = 0;
             if (Directory.Exists(vaultsPath))
                 count += Directory.GetFiles(vaultsPath, "*.pvault").Length;
@@ -640,7 +580,7 @@ namespace PhantomVault.Core.Services
             if (count == 0)
                 return false;
 
-            await Task.Delay(100); // Minimal delay
+            await Task.Delay(100);
             return true;
         }
 
@@ -677,7 +617,7 @@ namespace PhantomVault.Core.Services
             }
             catch
             {
-                // Best effort only.
+
             }
 
             return candidates.FirstOrDefault(File.Exists);
@@ -746,9 +686,6 @@ namespace PhantomVault.Core.Services
         }
     }
 
-    /// <summary>
-    /// Progress update for security checks.
-    /// </summary>
     public class SecurityCheckProgress
     {
         public string CurrentCheck { get; set; } = string.Empty;
@@ -758,9 +695,6 @@ namespace PhantomVault.Core.Services
         public bool CheckFailed { get; set; } = false;
     }
 
-    /// <summary>
-    /// Results of security check operation.
-    /// </summary>
     public class SecurityCheckResult
     {
         public DateTime StartTime { get; set; }
@@ -782,9 +716,6 @@ namespace PhantomVault.Core.Services
         public UsbDriveInfo? UsbDriveInfo { get; set; }
     }
 
-    /// <summary>
-    /// Information about USB drive.
-    /// </summary>
     public class UsbDriveInfo
     {
         public long TotalSize { get; set; }
@@ -809,3 +740,4 @@ namespace PhantomVault.Core.Services
         }
     }
 }
+

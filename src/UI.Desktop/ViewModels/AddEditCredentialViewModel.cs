@@ -20,9 +20,7 @@ using PhantomVault.UI.Helpers;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// View model for adding or editing a credential.
-    /// </summary>
+
     public sealed class AddEditCredentialViewModel : ReactiveObject
     {
         private Window? _ownerWindow;
@@ -63,26 +61,24 @@ namespace PhantomVault.UI.ViewModels
             "Public Key"
         };
 
-        // Icon auto-detection properties
         private string? _autoDetectedIconPath;
         private bool _hasAutoDetectedIcon;
         private Bitmap? _autoDetectedIconBitmap;
-        private Color _selectedIconColor = Color.Parse("#FFB5E5FF"); // Default pastel blue
+        private Color _selectedIconColor = Color.Parse("#FFB5E5FF");
         private string _iconInitials = "?";
 
-        // Pastel color options for icons without images
         public Color[] AvailableColors { get; } = new[]
         {
-            Color.Parse("#FFB5E5FF"), // Pastel Blue
-            Color.Parse("#FFFFC1E3"), // Pastel Pink
-            Color.Parse("#FFFFDFBB"), // Pastel Peach
-            Color.Parse("#FFC7E5C7"), // Pastel Green
-            Color.Parse("#FFFFE5B4"), // Pastel Yellow
-            Color.Parse("#FFE5D4FF"), // Pastel Purple
-            Color.Parse("#FFFFC9C9"), // Pastel Red
-            Color.Parse("#FFD4F4FF"), // Pastel Cyan
-            Color.Parse("#FFFFE4F0"), // Pastel Rose
-            Color.Parse("#FFE8F5E9")  // Pastel Mint
+            Color.Parse("#FFB5E5FF"),
+            Color.Parse("#FFFFC1E3"),
+            Color.Parse("#FFFFDFBB"),
+            Color.Parse("#FFC7E5C7"),
+            Color.Parse("#FFFFE5B4"),
+            Color.Parse("#FFE5D4FF"),
+            Color.Parse("#FFFFC9C9"),
+            Color.Parse("#FFD4F4FF"),
+            Color.Parse("#FFFFE4F0"),
+            Color.Parse("#FFE8F5E9")
         };
 
         private string _titleError = string.Empty;
@@ -103,28 +99,27 @@ namespace PhantomVault.UI.ViewModels
         private string _passwordFlagValue = string.Empty;
         private bool _showQuickPicks = true;
 
-        // Predefined icon collections
         public static readonly List<string> PopularIcons = new()
         {
-            // Social Media & Communication
+
             "📱", "💬", "📧", "📮", "📬",
-            // Web & Tech
+
             "🌐", "💻", "🖥️", "⌨️", "🖱️", "🔌", "💾", "📀",
-            // Finance & Shopping
+
             "💳", "💰", "🏦", "🛒", "🛍️", "💵", "💴", "💶", "💷",
-            // Entertainment
+
             "🎮", "🎵", "🎬", "📺", "📻", "🎭", "🎪", "🎨",
-            // Social & Brands
+
             "📘", "📷", "📹", "🎥", "📸",
-            // Security & Privacy
+
             "🔐", "🔒", "🔓", "🔑", "🛡️", "⚠️",
-            // Work & Productivity
+
             "📁", "📂", "📄", "📊", "📈", "📉", "🗂️", "📋", "📌",
-            // Cloud & Storage
+
             "☁️", "🌥️", "💿", "📦",
-            // Communication Apps
+
             "✉️", "📩", "📨", "📤", "📥",
-            // Miscellaneous
+
             "⚙️", "🔧", "🔨", "🏠", "🏢", "🏪", "🏥", "✈️", "🚗", "🎓", "📚"
         };
 
@@ -133,7 +128,6 @@ namespace PhantomVault.UI.ViewModels
             _existingCredential = credential;
             _onSave = onSave;
 
-            // Initialize IconManager (root Assets/Icons so subfolders are searched)
             try
             {
                 var iconsDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Icons");
@@ -141,21 +135,21 @@ namespace PhantomVault.UI.ViewModels
             }
             catch
             {
-                // IconManager initialization failed, auto-detection won't work
+
             }
 
             InitializeCategories();
 
             if (credential != null)
             {
-                // Editing mode
+
                 _title = credential.Title;
                 _username = credential.Username;
                 _password = credential.Password;
                 _url = credential.Url;
                 _notes = credential.Notes;
                 _icon = credential.Icon;
-                // Load IconColor if present
+
                 try
                 {
                     if (!string.IsNullOrEmpty(credential.IconColor))
@@ -165,23 +159,20 @@ namespace PhantomVault.UI.ViewModels
                 }
                 catch
                 {
-                    // ignore parse errors
+
                 }
                 _tagsText = string.Join(", ", credential.Tags);
                 _hasExpiryDate = credential.ExpiryUtc.HasValue;
                 _expiryDate = credential.ExpiryUtc;
 
-                // Find matching category
                 _selectedCategory = _categories.FirstOrDefault(c => c.Name == credential.Group);
             }
             else
             {
-                // New credential - default to first category
+
                 _selectedCategory = _categories.FirstOrDefault();
             }
 
-            // Notify UI about entry type for conditional visibility
-            // Set backing fields based on entry type
             var entryType = _existingCredential?.EntryType ?? EntryType.Password;
             _isPasswordEntry = entryType == EntryType.Password;
             _isCreditCardEntry = entryType == EntryType.CreditCard;
@@ -193,7 +184,6 @@ namespace PhantomVault.UI.ViewModels
             _isTotpEntry = entryType == EntryType.TotpGenerator;
             _isPinCodeEntry = entryType == EntryType.PinCode;
 
-            // Initialize TOTP secret input from existing credential
             _totpSecretInput = _existingCredential?.TotpSecret ?? string.Empty;
 
             if (_isIdentityEntry && string.IsNullOrWhiteSpace(IdDocumentType))
@@ -210,7 +200,6 @@ namespace PhantomVault.UI.ViewModels
             Console.WriteLine($"[ADD/EDIT VM] Constructor: _existingCredential={_existingCredential?.Title ?? "NULL"}, EntryType={entryType}, IsCreditCardEntry={_isCreditCardEntry}");
             System.Diagnostics.Trace.WriteLine($"[ADD/EDIT VM] Constructor: _existingCredential={_existingCredential?.Title ?? "NULL"}, EntryType={entryType}, IsCreditCardEntry={_isCreditCardEntry}");
 
-            // Raise property changes immediately so bindings see the correct values
             this.RaisePropertyChanged(nameof(EntryType));
             this.RaisePropertyChanged(nameof(IsPasswordEntry));
             this.RaisePropertyChanged(nameof(IsCreditCardEntry));
@@ -233,7 +222,6 @@ namespace PhantomVault.UI.ViewModels
 
             Console.WriteLine($"[ADD/EDIT VM] After RaisePropertyChanged: IsCreditCardEntry={IsCreditCardEntry}, IsPasswordEntry={IsPasswordEntry}");
 
-            // Commands
             SaveCommand = ReactiveCommand.Create(Save);
             CancelCommand = ReactiveCommand.Create(Cancel);
             TogglePasswordVisibilityCommand = ReactiveCommand.Create(TogglePasswordVisibility);
@@ -262,18 +250,15 @@ namespace PhantomVault.UI.ViewModels
             ImportFromOtpAuthCommand = ReactiveCommand.CreateFromTask(ImportFromOtpAuthAsync);
             OpenTotpSettingsCommand = ReactiveCommand.CreateFromTask(OpenTotpSettingsAsync);
 
-            // Subscribe to password changes for strength calculation
             this.WhenAnyValue(x => x.Password)
                 .Subscribe(_ => UpdatePasswordStrength());
 
-            // Auto-detect icon when Title or Url changes
             this.WhenAnyValue(vm => vm.Title, vm => vm.Url)
                 .Throttle(TimeSpan.FromMilliseconds(300))
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(_ => UpdateAutoDetectedIcon());
         }
 
-        // Properties
         public string WindowTitle => _existingCredential != null ? "Edit Credential" : "Add Credential";
         public string SaveButtonText => _existingCredential != null ? "Update" : "Save";
 
@@ -406,46 +391,30 @@ namespace PhantomVault.UI.ViewModels
         public bool ShowPasswordVisibilityToggle => (IsPasswordEntry && !IsSecureNoteEntry) || IsWiFiEntry;
         public string PasswordLabelText => IsWiFiEntry ? "Network Password *" : "Password *";
 
-        /// <summary>
-        /// Path to auto-detected icon image file
-        /// </summary>
         public string? AutoDetectedIconPath
         {
             get => _autoDetectedIconPath;
             private set => this.RaiseAndSetIfChanged(ref _autoDetectedIconPath, value);
         }
 
-        /// <summary>
-        /// Bitmap to bind to an Image control when an icon file is detected.
-        /// This is created on the UI thread to ensure Avalonia can render it.
-        /// </summary>
         public Bitmap? AutoDetectedIconBitmap
         {
             get => _autoDetectedIconBitmap;
             private set => this.RaiseAndSetIfChanged(ref _autoDetectedIconBitmap, value);
         }
 
-        /// <summary>
-        /// Whether an icon was auto-detected
-        /// </summary>
         public bool HasAutoDetectedIcon
         {
             get => _hasAutoDetectedIcon;
             private set => this.RaiseAndSetIfChanged(ref _hasAutoDetectedIcon, value);
         }
 
-        /// <summary>
-        /// Selected background color for text-based icon
-        /// </summary>
         public Color SelectedIconColor
         {
             get => _selectedIconColor;
             set => this.RaiseAndSetIfChanged(ref _selectedIconColor, value);
         }
 
-        /// <summary>
-        /// Initials to display when no icon image is available
-        /// </summary>
         public string IconInitials
         {
             get => _iconInitials;
@@ -515,7 +484,6 @@ namespace PhantomVault.UI.ViewModels
         public bool ShowCategorySelector => !IsSecureNoteEntry;
         public bool ShowIconSelector => !IsSecureNoteEntry;
 
-        // Validation errors
         public string TitleError
         {
             get => _titleError;
@@ -550,7 +518,6 @@ namespace PhantomVault.UI.ViewModels
         public bool HasUsernameError => !string.IsNullOrEmpty(UsernameError);
         public bool HasPasswordError => !string.IsNullOrEmpty(PasswordError);
 
-        // Password visibility
         public bool IsPasswordVisible
         {
             get => _isPasswordVisible;
@@ -575,7 +542,6 @@ namespace PhantomVault.UI.ViewModels
             set => this.RaiseAndSetIfChanged(ref _passwordVisibilitySvgIcon, value);
         }
 
-        // Password strength
         public bool HasPassword => !string.IsNullOrEmpty(Password);
 
         public int PasswordStrength
@@ -614,7 +580,6 @@ namespace PhantomVault.UI.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _showPasswordFlag, value);
         }
 
-        // Credit Card properties
         public string CardNumber
         {
             get => _existingCredential?.CardNumber ?? string.Empty;
@@ -666,7 +631,6 @@ namespace PhantomVault.UI.ViewModels
             set { if (_existingCredential != null) { _existingCredential.CardBillingAddress = value; this.RaisePropertyChanged(); } }
         }
 
-        // Bank Account properties
         public string BankName
         {
             get => _existingCredential?.BankName ?? string.Empty;
@@ -708,7 +672,6 @@ namespace PhantomVault.UI.ViewModels
             set { if (_existingCredential != null) { _existingCredential.BankBranchAddress = value; this.RaisePropertyChanged(); } }
         }
 
-        // PIN Code properties
         public string PinLabel
         {
             get => _existingCredential?.PinLabel ?? string.Empty;
@@ -730,7 +693,6 @@ namespace PhantomVault.UI.ViewModels
             set { if (_existingCredential != null) { _existingCredential.PinIssuer = value; this.RaisePropertyChanged(); } }
         }
 
-        // Identity Document properties
         public string IdDocumentType
         {
             get => _existingCredential?.IdDocumentType ?? string.Empty;
@@ -847,7 +809,6 @@ namespace PhantomVault.UI.ViewModels
             _ => true
         };
 
-        // WiFi properties
         public string WiFiSSID
         {
             get => _existingCredential?.WiFiSSID ?? string.Empty;
@@ -870,7 +831,6 @@ namespace PhantomVault.UI.ViewModels
             set { if (_existingCredential != null) { _existingCredential.WiFiPassword = value; this.RaisePropertyChanged(); } }
         }
 
-        // API Key properties
         public string ApiKeyValue
         {
             get => _existingCredential?.ApiKeyValue ?? string.Empty;
@@ -897,7 +857,6 @@ namespace PhantomVault.UI.ViewModels
             set { if (_existingCredential != null) { _existingCredential.ApiDocumentationUrl = value; this.RaisePropertyChanged(); } }
         }
 
-        // Contact properties
         public string ContactFullName
         {
             get => _existingCredential?.ContactFullName ?? string.Empty;
@@ -929,7 +888,6 @@ namespace PhantomVault.UI.ViewModels
             set { if (_existingCredential != null) { _existingCredential.ContactJobTitle = value; this.RaisePropertyChanged(); } }
         }
 
-        // TOTP authenticator fields
         public string TotpSecretInput
         {
             get => _totpSecretInput;
@@ -973,7 +931,6 @@ namespace PhantomVault.UI.ViewModels
             set { if (_existingCredential != null) { _existingCredential.TotpAccountName = value; this.RaisePropertyChanged(); } }
         }
 
-        // Commands
         public ReactiveCommand<Unit, Unit> SaveCommand { get; }
         public ReactiveCommand<Unit, Unit> CancelCommand { get; }
         public ReactiveCommand<Unit, Unit> TogglePasswordVisibilityCommand { get; }
@@ -988,7 +945,6 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> ImportFromOtpAuthCommand { get; }
         public ReactiveCommand<Unit, Unit> OpenTotpSettingsCommand { get; }
 
-        // Methods
         private void InitializeCategories()
         {
             _categories.Add(new CategoryViewModel { Name = "Logins", Icon = IconPathMigrator.LoginsIcon });
@@ -1075,7 +1031,7 @@ namespace PhantomVault.UI.ViewModels
             credential.Url = Url.Trim();
             credential.Notes = Notes.Trim();
             credential.Icon = Icon.Trim();
-            // Save selected icon color as hex string on the model
+
             try
             {
                 credential.IconColor = SelectedIconColor.ToString();
@@ -1094,7 +1050,6 @@ namespace PhantomVault.UI.ViewModels
                 credential.Group = "Secure Notes";
             }
 
-            // Parse tags
             if (!string.IsNullOrWhiteSpace(TagsText))
             {
                 credential.Tags = TagsText
@@ -1118,18 +1073,13 @@ namespace PhantomVault.UI.ViewModels
                 credential.CustomFields.Remove(PasswordStrengthHelper.PasswordFlagFieldKey);
             }
 
-            // Set expiry
             credential.ExpiryUtc = HasExpiryDate ? ExpiryDate : null;
 
-            // Copy entry type from existing credential if present, or use the current EntryType
             credential.EntryType = _existingCredential?.EntryType ?? EntryType.Password;
 
-            // Copy type-specific fields if _existingCredential was provided and modified
-            // (These properties bind directly to _existingCredential, so they're already updated)
-            // However, for new credentials where _existingCredential starts null, we need to copy from it
             if (_existingCredential != null)
             {
-                // Credit Card fields
+
                 credential.CardNumber = _existingCredential.CardNumber;
                 credential.CardholderName = _existingCredential.CardholderName;
                 credential.CardType = _existingCredential.CardType;
@@ -1139,7 +1089,6 @@ namespace PhantomVault.UI.ViewModels
                 credential.CardPIN = _existingCredential.CardPIN;
                 credential.CardBillingAddress = _existingCredential.CardBillingAddress;
 
-                // Bank Account fields
                 credential.BankName = _existingCredential.BankName;
                 credential.BankAccountNumber = _existingCredential.BankAccountNumber;
                 credential.BankRoutingNumber = _existingCredential.BankRoutingNumber;
@@ -1149,7 +1098,6 @@ namespace PhantomVault.UI.ViewModels
                 credential.BankBranchCode = _existingCredential.BankBranchCode;
                 credential.BankBranchAddress = _existingCredential.BankBranchAddress;
 
-                // Identity fields
                 credential.IdDocumentType = _existingCredential.IdDocumentType;
                 credential.IdNumber = _existingCredential.IdNumber;
                 credential.IdCardNumber = _existingCredential.IdCardNumber;
@@ -1158,19 +1106,16 @@ namespace PhantomVault.UI.ViewModels
                 credential.IdIssueDate = _existingCredential.IdIssueDate;
                 credential.IdExpiryDate = _existingCredential.IdExpiryDate;
 
-                // WiFi fields
                 credential.WiFiSSID = _existingCredential.WiFiSSID;
                 credential.WiFiSecurityType = _existingCredential.WiFiSecurityType;
                 credential.WiFiBSSID = _existingCredential.WiFiBSSID;
 
-                // API Key fields
                 credential.ApiKeyValue = _existingCredential.ApiKeyValue;
                 credential.ApiKeyType = _existingCredential.ApiKeyType;
                 credential.ApiEndpoint = _existingCredential.ApiEndpoint;
                 credential.ApiEnvironment = _existingCredential.ApiEnvironment;
                 credential.ApiDocumentationUrl = _existingCredential.ApiDocumentationUrl;
 
-                // Contact fields
                 credential.ContactFullName = _existingCredential.ContactFullName;
                 credential.ContactEmail = _existingCredential.ContactEmail;
                 credential.ContactPhone = _existingCredential.ContactPhone;
@@ -1178,10 +1123,8 @@ namespace PhantomVault.UI.ViewModels
                 credential.ContactCompany = _existingCredential.ContactCompany;
                 credential.ContactJobTitle = _existingCredential.ContactJobTitle;
 
-                // Passkey flag
                 credential.IsPasskey = _existingCredential.IsPasskey;
 
-                // TOTP fields
                 credential.TotpSecret = _existingCredential.TotpSecret;
                 credential.TotpDigits = _existingCredential.TotpDigits;
                 credential.TotpTimeStep = _existingCredential.TotpTimeStep;
@@ -1189,25 +1132,22 @@ namespace PhantomVault.UI.ViewModels
                 credential.TotpIssuer = _existingCredential.TotpIssuer;
                 credential.TotpAccountName = _existingCredential.TotpAccountName;
 
-                // PIN Code fields
                 credential.PinLabel = _existingCredential.PinLabel;
                 credential.PinValue = _existingCredential.PinValue;
                 credential.PinCategory = _existingCredential.PinCategory;
                 credential.PinIssuer = _existingCredential.PinIssuer;
             }
 
-            // Apply TOTP secret from input field
             if (!string.IsNullOrWhiteSpace(TotpSecretInput))
             {
                 credential.TotpSecret = TotpSecretInput.Trim().ToUpperInvariant();
             }
             else
             {
-                // Clear TOTP if secret was removed
+
                 credential.TotpSecret = string.Empty;
             }
 
-            // Update timestamps
             if (_existingCredential == null)
             {
                 credential.CreatedUtc = DateTimeOffset.UtcNow;
@@ -1216,9 +1156,6 @@ namespace PhantomVault.UI.ViewModels
 
             _onSave?.Invoke(credential);
 
-            // Release the password string reference so GC can collect it sooner.
-            // Note: .NET strings cannot be zeroed from managed code; minimising the
-            // lifetime of the reference is the best mitigation available with MVVM binding.
             ClearSensitiveFields();
 
             _ownerWindow?.Close(true);
@@ -1230,11 +1167,6 @@ namespace PhantomVault.UI.ViewModels
             _ownerWindow?.Close(false);
         }
 
-        /// <summary>
-        /// Releases references to sensitive in-memory string fields.
-        /// Called after save or cancel to minimise the window during which
-        /// the password string lingers in the GC heap.
-        /// </summary>
         private void ClearSensitiveFields()
         {
             _password = string.Empty;
@@ -1251,27 +1183,24 @@ namespace PhantomVault.UI.ViewModels
 
         private void GeneratePassword()
         {
-            // Generate a strong random password
+
             const string upperChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             const string lowerChars = "abcdefghijklmnopqrstuvwxyz";
             const string digitChars = "0123456789";
             const string symbolChars = "!@#$%^&*()_+-=[]{}|;:,.<>?";
             var password = new System.Text.StringBuilder();
 
-            // Ensure at least one of each type
             password.Append(upperChars[RandomNumberGenerator.GetInt32(upperChars.Length)]);
             password.Append(lowerChars[RandomNumberGenerator.GetInt32(lowerChars.Length)]);
             password.Append(digitChars[RandomNumberGenerator.GetInt32(digitChars.Length)]);
             password.Append(symbolChars[RandomNumberGenerator.GetInt32(symbolChars.Length)]);
 
-            // Fill remaining with random characters
             string allChars = upperChars + lowerChars + digitChars + symbolChars;
             for (int i = 4; i < 16; i++)
             {
                 password.Append(allChars[RandomNumberGenerator.GetInt32(allChars.Length)]);
             }
 
-            // Shuffle the password
             var chars = password.ToString().ToCharArray();
             for (int i = chars.Length - 1; i > 0; i--)
             {
@@ -1321,7 +1250,6 @@ namespace PhantomVault.UI.ViewModels
 
             await window.ShowDialog(_ownerWindow);
 
-            // If a password was generated, use it
             if (!string.IsNullOrEmpty(viewModel.GeneratedPassword) &&
                 !viewModel.GeneratedPassword.StartsWith("Please select"))
             {
@@ -1332,7 +1260,7 @@ namespace PhantomVault.UI.ViewModels
         private void SetIcon(string icon)
         {
             Icon = icon;
-            ShowQuickPicks = false; // Hide quick picks once an icon is selected
+            ShowQuickPicks = false;
         }
 
         private static void LogIconPicker(string msg)
@@ -1346,7 +1274,7 @@ namespace PhantomVault.UI.ViewModels
                     System.IO.Directory.CreateDirectory(dir);
                 System.IO.File.AppendAllText(logPath, $"[{DateTime.Now:O}] [VM] {msg}\n");
             }
-            catch { /* logging must never crash UI */ }
+            catch {  }
         }
 
         private async System.Threading.Tasks.Task OpenIconPickerAsync()
@@ -1364,7 +1292,6 @@ namespace PhantomVault.UI.ViewModels
                 };
                 viewModel.SetOwnerWindow(window);
 
-                // Find the best owner window
                 Window? ownerToUse = _ownerWindow;
                 if (ownerToUse == null)
                 {
@@ -1422,9 +1349,6 @@ namespace PhantomVault.UI.ViewModels
             SelectedIconColor = color;
         }
 
-        /// <summary>
-        /// Attempts to auto-detect an icon based on the current Title and Url
-        /// </summary>
         private void UpdateAutoDetectedIcon()
         {
             Debug.WriteLine($"[AUTO-DETECT] UpdateAutoDetectedIcon called - Title: '{Title}', Url: '{Url}'");
@@ -1437,7 +1361,6 @@ namespace PhantomVault.UI.ViewModels
                 return;
             }
 
-            // Create a temporary credential for icon detection
             var tempCredential = new Credential
             {
                 Title = Title,
@@ -1461,8 +1384,6 @@ namespace PhantomVault.UI.ViewModels
                         HasAutoDetectedIcon = true;
                         Debug.WriteLine($"[AUTO-DETECT] ✅ Icon detected! Path: {iconPath}");
 
-                        // Create Bitmap on UI thread so Avalonia can render it.
-                        // Update: avoid blocking the UI thread (GetAwaiter().GetResult) which can deadlock
                         try
                         {
                             if (Dispatcher.UIThread.CheckAccess())
@@ -1480,7 +1401,7 @@ namespace PhantomVault.UI.ViewModels
                             }
                             else
                             {
-                                // Post the creation to the UI thread without blocking
+
                                 Dispatcher.UIThread.Post(() =>
                                 {
                                     try
@@ -1530,9 +1451,6 @@ namespace PhantomVault.UI.ViewModels
             Debug.WriteLine($"[AUTO-DETECT] Final state - HasAutoDetectedIcon: {HasAutoDetectedIcon}, IconInitials: '{IconInitials}'");
         }
 
-        /// <summary>
-        /// Updates the initials displayed when no icon image is available
-        /// </summary>
         private void UpdateIconInitials()
         {
             if (HasAutoDetectedIcon)
@@ -1541,7 +1459,6 @@ namespace PhantomVault.UI.ViewModels
                 return;
             }
 
-            // Generate initials from title
             if (!string.IsNullOrWhiteSpace(Title))
             {
                 var words = Title.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -1590,10 +1507,6 @@ namespace PhantomVault.UI.ViewModels
             this.RaisePropertyChanged(nameof(HasTotpSecret));
         }
 
-        /// <summary>
-        /// Opens the TOTP Scanner Dialog to configure advanced TOTP settings
-        /// (issuer, algorithm, digits, period) for this credential.
-        /// </summary>
         private async Task OpenTotpSettingsAsync()
         {
             try
@@ -1658,26 +1571,24 @@ namespace PhantomVault.UI.ViewModels
         {
             try
             {
-                // Get clipboard content
+
                 var clipboard = TopLevel.GetTopLevel(_ownerWindow)?.Clipboard;
                 if (clipboard == null) return;
 
-#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0618
                 var text = await clipboard.GetTextAsync();
 #pragma warning restore CS0618
                 if (string.IsNullOrWhiteSpace(text)) return;
 
-                // Parse otpauth:// URL
                 if (!text.StartsWith("otpauth://totp/", StringComparison.OrdinalIgnoreCase))
                 {
-                    // Show error message - invalid format
+
                     return;
                 }
 
                 var uri = new Uri(text);
                 var pathParts = uri.AbsolutePath.TrimStart('/').Split(':');
 
-                // Extract issuer and account name
                 if (pathParts.Length >= 2)
                 {
                     TotpIssuer = Uri.UnescapeDataString(pathParts[0]);
@@ -1688,7 +1599,6 @@ namespace PhantomVault.UI.ViewModels
                     TotpAccountName = Uri.UnescapeDataString(pathParts[0]);
                 }
 
-                // Parse query parameters
                 var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
 
                 var secret = query["secret"];
@@ -1721,7 +1631,6 @@ namespace PhantomVault.UI.ViewModels
                     TotpAlgorithm = algorithm.ToUpper();
                 }
 
-                // Set title if not already set
                 if (string.IsNullOrWhiteSpace(Title) && !string.IsNullOrWhiteSpace(TotpIssuer))
                 {
                     Title = TotpIssuer;
@@ -1742,3 +1651,4 @@ namespace PhantomVault.UI.ViewModels
         }
     }
 }
+

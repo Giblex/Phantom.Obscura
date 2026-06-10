@@ -3,7 +3,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace PhantomVault.UI.ViewModels;
 
-/// <summary>Phase 3g stub. Real desktop equivalent ties into ThemeManagerService.</summary>
 public sealed partial class ThemeSettingsViewModel : ObservableObject
 {
     [ObservableProperty] private bool _isDarkTheme = true;
@@ -27,3 +26,4 @@ public sealed partial class ThemeSettingsViewModel : ObservableObject
         "Sunset Ember",
     };
 }
+

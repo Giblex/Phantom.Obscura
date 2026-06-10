@@ -15,9 +15,7 @@ public class SyncSettingsViewModel : ReactiveObject
 
     public SyncSettingsViewModel(SettingsDraftTracker? draftTracker)
     {
-        // Issue #25/Sync: resolve shared tracker so the overlay-bottom Save
-        // button drives Sync settings too. Fallback for ctor calls outside
-        // the DI graph keeps the parameterless ctor working.
+
         _draft = draftTracker
             ?? ((Avalonia.Application.Current as App)?.Services?.GetService(typeof(SettingsDraftTracker)) as SettingsDraftTracker)
             ?? new SettingsDraftTracker();
@@ -93,3 +91,4 @@ public class SyncSettingsViewModel : ReactiveObject
             });
     }
 }
+

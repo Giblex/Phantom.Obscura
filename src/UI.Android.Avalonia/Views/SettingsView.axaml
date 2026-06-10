@@ -5,12 +5,8 @@
              x:DataType="vm:SettingsViewModel"
              Background="{DynamicResource WindowBackgroundBrush}">
 
-  <!-- Adapter of desktop Views/SettingsWindow.axaml — TabStripPlacement=Top on
-       mobile (Left would eat horizontal real estate). Tabs match desktop layout. -->
-
   <TabControl Margin="10" TabStripPlacement="Top">
 
-    <!-- Theme -->
     <TabItem Header="Theme">
       <ScrollViewer>
         <Border Padding="16">
@@ -36,7 +32,6 @@
       </ScrollViewer>
     </TabItem>
 
-    <!-- Defence -->
     <TabItem Header="Defence">
       <ScrollViewer>
         <Border Padding="16">
@@ -70,7 +65,6 @@
       </ScrollViewer>
     </TabItem>
 
-    <!-- Authentication -->
     <TabItem Header="Authentication">
       <ScrollViewer>
         <Border Padding="16">
@@ -129,7 +123,6 @@
       </ScrollViewer>
     </TabItem>
 
-    <!-- Accessibility -->
     <TabItem Header="Accessibility">
       <ScrollViewer>
         <Border Padding="16">
@@ -165,3 +158,4 @@
     </TabItem>
   </TabControl>
 </UserControl>
+

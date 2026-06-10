@@ -10,7 +10,7 @@ namespace PhantomVault.UI.Converters
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            // Disable Remove for trash categories (not removable)
+
             if (value is PhantomVault.UI.ViewModels.CategoryItem item)
             {
                 if (item.IsTrash) return false;
@@ -25,3 +25,4 @@ namespace PhantomVault.UI.Converters
             => throw new NotSupportedException();
     }
 }
+

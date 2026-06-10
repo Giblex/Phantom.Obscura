@@ -8,12 +8,7 @@ using PhantomVault.Core.Services.Autofill;
 
 namespace PhantomVault.UI.Services.AutoFill
 {
-    /// <summary>
-    /// <see cref="ICredentialRepository"/> implementation that delegates to the running
-    /// desktop app via <see cref="PipeNativeHostClient"/>. Used exclusively by the
-    /// <c>--native-messaging</c> subprocess so <see cref="NativeMessagingHostService"/>
-    /// can read vault credentials without duplicating vault state in-process.
-    /// </summary>
+
     public sealed class PipeBackedCredentialRepository : ICredentialRepository
     {
         private readonly PipeNativeHostClient _client;
@@ -97,3 +92,4 @@ namespace PhantomVault.UI.Services.AutoFill
         }
     }
 }
+

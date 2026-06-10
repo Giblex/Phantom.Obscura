@@ -13,7 +13,7 @@ namespace PhantomVault.UI.Views
     public partial class IconManagerView : UserControl
     {
         private Popup? _variantPopup;
-        /// <summary>Tracks the last Button clicked whose DataContext is an IconFileEntryViewModel.</summary>
+
         private Button? _lastClickedIconButton;
 
         public IconManagerView()
@@ -27,14 +27,11 @@ namespace PhantomVault.UI.Views
 
             _variantPopup = this.FindControl<Popup>("VariantPopup");
 
-            // Capture every Button.Click that bubbles through the control
             AddHandler(Button.ClickEvent, OnAnyButtonClick, RoutingStrategies.Bubble, handledEventsToo: true);
 
-            // Hook up DataContext changes
             this.DataContextChanged += OnDataContextChanged;
         }
 
-        /// <summary>Captures every button click so we can reliably anchor the popup.</summary>
         private void OnAnyButtonClick(object? sender, RoutedEventArgs e)
         {
             if (e.Source is Button btn && btn.DataContext is IconFileEntryViewModel)
@@ -71,7 +68,7 @@ namespace PhantomVault.UI.Views
             {
                 if (vm.IsVariantPopupOpen && vm.VariantOwnerIcon != null)
                 {
-                    // Use the button we captured from the Click event
+
                     if (_lastClickedIconButton != null && _lastClickedIconButton.DataContext == vm.VariantOwnerIcon)
                     {
                         _variantPopup.PlacementTarget = _lastClickedIconButton;
@@ -79,7 +76,7 @@ namespace PhantomVault.UI.Views
                     }
                     else
                     {
-                        // Fallback: search visual tree
+
                         var found = FindButtonByDataContext(this, vm.VariantOwnerIcon);
                         if (found != null)
                         {
@@ -117,3 +114,4 @@ namespace PhantomVault.UI.Views
         }
     }
 }
+

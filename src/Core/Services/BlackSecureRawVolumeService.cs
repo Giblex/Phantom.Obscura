@@ -13,11 +13,7 @@ using System.Threading.Tasks;
 
 namespace PhantomVault.Core.Services
 {
-    /// <summary>
-    /// Windows-only raw-device transport for Black Secure vaults.
-    /// This writes the canonical encrypted inner vault layout directly to the
-    /// removable device so the host OS cannot browse a normal filesystem.
-    /// </summary>
+
     [SupportedOSPlatform("windows")]
     public sealed class BlackSecureRawVolumeService
     {
@@ -202,11 +198,26 @@ namespace PhantomVault.Core.Services
             }
             catch
             {
-                // Best-effort invalidation only.
+
             }
         }
 
-        public async Task<string> ExtractVolumeAsync(string physicalDevicePath, string destinationRoot, CancellationToken cancellationToken = default)
+        public Task<string> ExtractVolumeAsync(string physicalDevicePath, string destinationRoot, CancellationToken cancellationToken = default)
+            => ExtractVolumeAsync(physicalDevicePath, destinationRoot, progress: null, verify: true, cancellationToken);
+
+        public Task<string> ExtractVolumeAsync(
+            string physicalDevicePath,
+            string destinationRoot,
+            IProgress<double>? progress,
+            CancellationToken cancellationToken = default)
+            => ExtractVolumeAsync(physicalDevicePath, destinationRoot, progress, verify: true, cancellationToken);
+
+        public async Task<string> ExtractVolumeAsync(
+            string physicalDevicePath,
+            string destinationRoot,
+            IProgress<double>? progress,
+            bool verify,
+            CancellationToken cancellationToken = default)
         {
             if (!OperatingSystem.IsWindows())
                 throw new PlatformNotSupportedException("Black Secure raw-device transport is currently implemented for Windows only.");
@@ -223,6 +234,17 @@ namespace PhantomVault.Core.Services
             long payloadStart = Magic.Length + sizeof(int) + headerLength;
             using var payloadHasher = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
 
+            long totalBytes = 0;
+            foreach (var entry in manifest.Entries) totalBytes += entry.Length;
+            long copied = 0;
+            long progressThreshold = Math.Max(1, totalBytes / 100);
+            long nextProgressAt = progressThreshold;
+
+            // 1 MiB buffer ≈ 12× the previous 80 KiB — far fewer IOCTLs on raw-device read paths
+            // where each call has high overhead.
+            const int IoBuffer = 1024 * 1024;
+            byte[] buffer = new byte[IoBuffer];
+
             foreach (var entry in manifest.Entries)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -231,32 +253,49 @@ namespace PhantomVault.Core.Services
                 Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
 
                 input.Position = payloadStart + entry.Offset;
-                await using var output = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None);
+                await using var output = new FileStream(
+                    outputPath, FileMode.Create, FileAccess.Write, FileShare.None,
+                    bufferSize: IoBuffer, useAsync: true);
 
                 long remaining = entry.Length;
-                byte[] buffer = new byte[81920];
-                using var entryHasher = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
-                while (remaining > 0)
+                IncrementalHash? entryHasher = verify ? IncrementalHash.CreateHash(HashAlgorithmName.SHA256) : null;
+                try
                 {
-                    int bytesToRead = (int)Math.Min(buffer.Length, remaining);
-                    int bytesRead = await input.ReadAsync(buffer.AsMemory(0, bytesToRead), cancellationToken).ConfigureAwait(false);
-                    if (bytesRead == 0)
-                        throw new EndOfStreamException($"Unexpected end of raw device while reading {entry.Path}");
+                    while (remaining > 0)
+                    {
+                        int bytesToRead = (int)Math.Min((long)buffer.Length, remaining);
+                        int bytesRead = await input.ReadAsync(buffer.AsMemory(0, bytesToRead), cancellationToken).ConfigureAwait(false);
+                        if (bytesRead == 0)
+                            throw new EndOfStreamException($"Unexpected end of raw device while reading {entry.Path}");
 
-                    await output.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken).ConfigureAwait(false);
-                    entryHasher.AppendData(buffer.AsSpan(0, bytesRead));
-                    remaining -= bytesRead;
+                        await output.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken).ConfigureAwait(false);
+                        entryHasher?.AppendData(buffer.AsSpan(0, bytesRead));
+                        remaining -= bytesRead;
+                        copied += bytesRead;
+
+                        if (progress != null && totalBytes > 0 && copied >= nextProgressAt)
+                        {
+                            progress.Report((double)copied / totalBytes);
+                            nextProgressAt = copied + progressThreshold;
+                        }
+                    }
+
+                    if (entryHasher != null)
+                    {
+                        byte[] computedEntryHash = entryHasher.GetHashAndReset();
+                        payloadHasher.AppendData(computedEntryHash);
+                    }
                 }
-
-                byte[] computedEntryHash = entryHasher.GetHashAndReset();
-                payloadHasher.AppendData(computedEntryHash);
-                if (!string.Equals(Convert.ToBase64String(computedEntryHash), entry.Sha256, StringComparison.Ordinal))
-                    throw new CryptographicException($"Black Secure entry integrity check failed for {entry.Path}");
+                finally
+                {
+                    entryHasher?.Dispose();
+                }
             }
 
-            if (!string.Equals(Convert.ToBase64String(payloadHasher.GetHashAndReset()), manifest.PayloadHash, StringComparison.Ordinal))
+            if (verify && !string.Equals(Convert.ToBase64String(payloadHasher.GetHashAndReset()), manifest.PayloadHash, StringComparison.Ordinal))
                 throw new CryptographicException("Black Secure payload integrity check failed.");
 
+            progress?.Report(1.0);
             return destinationRoot;
         }
 
@@ -303,7 +342,7 @@ namespace PhantomVault.Core.Services
             }
             catch
             {
-                // Best effort only.
+
             }
 
             return false;
@@ -400,3 +439,4 @@ namespace PhantomVault.Core.Services
         public string Sha256 { get; set; } = string.Empty;
     }
 }
+

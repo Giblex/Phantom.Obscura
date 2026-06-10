@@ -8,3 +8,4 @@ public partial class AppShell : UserControl
     public AppShell() => InitializeComponent();
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
 }
+

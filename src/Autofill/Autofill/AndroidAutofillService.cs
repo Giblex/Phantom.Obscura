@@ -16,11 +16,7 @@ using Android.Widget;
 namespace PhantomVault.Core.Services.Autofill
 {
 #if ANDROID
-    /// <summary>
-    /// Android Autofill Service implementation for PhantomVault.
-    /// Integrates with the Android Autofill Framework (API 26+) to provide
-    /// seamless password filling in apps and browsers.
-    /// </summary>
+
     [Service(
         Permission = "android.permission.BIND_AUTOFILL_SERVICE",
         Label = "PhantomVault Autofill",
@@ -51,7 +47,6 @@ namespace PhantomVault.Core.Services.Autofill
                     return;
                 }
 
-                // Parse the view structure to find username/password fields
                 var fields = ParseStructure(structure);
                 if (fields.Count == 0)
                 {
@@ -59,11 +54,9 @@ namespace PhantomVault.Core.Services.Autofill
                     return;
                 }
 
-                // Get the package name / domain
                 var packageName = structure.ActivityComponent?.PackageName ?? "";
                 var webDomain = ExtractWebDomain(structure);
 
-                // Query vault for matching credentials
                 var credentials = GetCredentialsForDomain(webDomain ?? packageName);
                 if (credentials.Count == 0)
                 {
@@ -71,28 +64,24 @@ namespace PhantomVault.Core.Services.Autofill
                     return;
                 }
 
-                // Build autofill response
                 var responseBuilder = new FillResponse.Builder();
-                
+
                 foreach (var credential in credentials)
                 {
                     var datasetBuilder = new Dataset.Builder();
-                    
-                    // Set presentation (what the user sees in the dropdown)
+
                     var presentation = CreatePresentation(credential.Username, credential.Title);
-                    
-                    // Fill username field
+
                     if (fields.TryGetValue("username", out var usernameId))
                     {
                         datasetBuilder.SetValue(usernameId, AutofillValue.ForText(credential.Username), presentation);
                     }
-                    
-                    // Fill password field
+
                     if (fields.TryGetValue("password", out var passwordId))
                     {
                         datasetBuilder.SetValue(passwordId, AutofillValue.ForText(credential.Password), presentation);
                     }
-                    
+
                     responseBuilder.AddDataset(datasetBuilder.Build());
                 }
 
@@ -106,7 +95,7 @@ namespace PhantomVault.Core.Services.Autofill
 
         public override void OnSaveRequest(SaveRequest request, SaveCallback callback)
         {
-            // Handle save requests (when user enters new credentials)
+
             try
             {
                 var context = request.FillContexts?.LastOrDefault();
@@ -116,15 +105,12 @@ namespace PhantomVault.Core.Services.Autofill
                     return;
                 }
 
-                // Extract credentials from the request
                 var structure = context.Structure;
                 var fields = ParseStructure(structure);
 
-                // Extract domain from package name or web domain
                 var packageName = structure.ActivityComponent?.PackageName ?? "unknown";
                 string domain = ExtractDomainFromStructure(structure) ?? packageName;
 
-                // Extract username and password from the parsed fields
                 string? username = null;
                 string? password = null;
 
@@ -141,7 +127,6 @@ namespace PhantomVault.Core.Services.Autofill
                     }
                 }
 
-                // Save to vault if we have at least a password
                 if (!string.IsNullOrEmpty(password) && _credentialRepository != null)
                 {
                     var credential = new Credential
@@ -155,7 +140,6 @@ namespace PhantomVault.Core.Services.Autofill
                         LastUpdatedUtc = DateTimeOffset.UtcNow
                     };
 
-                    // Save asynchronously but wait for completion
                     var saveTask = _credentialRepository.AddCredentialAsync(credential);
                     saveTask.Wait();
 
@@ -175,13 +159,13 @@ namespace PhantomVault.Core.Services.Autofill
         private Dictionary<string, AutofillId> ParseStructure(AssistStructure structure)
         {
             var fields = new Dictionary<string, AutofillId>();
-            
+
             for (int i = 0; i < structure.WindowNodeCount; i++)
             {
                 var windowNode = structure.GetWindowNodeAt(i);
                 ParseNode(windowNode.RootViewNode, fields);
             }
-            
+
             return fields;
         }
 
@@ -191,10 +175,10 @@ namespace PhantomVault.Core.Services.Autofill
 
             var autofillHints = node.AutofillHints;
             var autofillId = node.AutofillId;
-            
+
             if (autofillHints != null && autofillId != null)
             {
-                if (autofillHints.Contains(View.AutofillHintUsername) || 
+                if (autofillHints.Contains(View.AutofillHintUsername) ||
                     autofillHints.Contains(View.AutofillHintEmailAddress))
                 {
                     fields["username"] = autofillId;
@@ -206,16 +190,16 @@ namespace PhantomVault.Core.Services.Autofill
             }
             else
             {
-                // Fallback: Try to detect fields by input type or ID
+
                 var inputType = node.InputType;
                 var idEntry = node.IdEntry?.ToLower();
-                
+
                 if (inputType.HasFlag(Android.Text.InputTypes.TextVariationPassword))
                 {
                     if (!fields.ContainsKey("password") && autofillId != null)
                         fields["password"] = autofillId;
                 }
-                else if (idEntry != null && 
+                else if (idEntry != null &&
                          (idEntry.Contains("user") || idEntry.Contains("email")) &&
                          autofillId != null)
                 {
@@ -224,7 +208,6 @@ namespace PhantomVault.Core.Services.Autofill
                 }
             }
 
-            // Recursively parse child nodes
             for (int i = 0; i < node.ChildCount; i++)
             {
                 ParseNode(node.GetChildAt(i), fields);
@@ -233,7 +216,7 @@ namespace PhantomVault.Core.Services.Autofill
 
         private string? ExtractWebDomain(AssistStructure structure)
         {
-            // Try to extract the web domain if this is a browser
+
             for (int i = 0; i < structure.WindowNodeCount; i++)
             {
                 var windowNode = structure.GetWindowNodeAt(i);
@@ -246,18 +229,17 @@ namespace PhantomVault.Core.Services.Autofill
 
         private string? ExtractDomainFromStructure(AssistStructure structure)
         {
-            // Try web domain first (for browsers)
+
             var webDomain = ExtractWebDomain(structure);
             if (!string.IsNullOrEmpty(webDomain))
                 return webDomain;
 
-            // Fall back to package name for apps
             return structure.ActivityComponent?.PackageName;
         }
 
         private string? GetFieldValue(AssistStructure structure, AutofillId autofillId)
         {
-            // Search through the structure to find the field with the given AutofillId and return its value
+
             for (int i = 0; i < structure.WindowNodeCount; i++)
             {
                 var windowNode = structure.GetWindowNodeAt(i);
@@ -273,14 +255,12 @@ namespace PhantomVault.Core.Services.Autofill
             if (node == null)
                 return null;
 
-            // Check if this node has the target autofill ID
             if (node.AutofillId?.Equals(targetId) == true)
             {
-                // Return the text value
+
                 return node.Text?.ToString() ?? node.AutofillValue?.TextValue?.ToString();
             }
 
-            // Search children
             for (int i = 0; i < node.ChildCount; i++)
             {
                 var value = GetFieldValueFromNode(node.GetChildAt(i), targetId);
@@ -298,9 +278,9 @@ namespace PhantomVault.Core.Services.Autofill
 
             try
             {
-                // Get credentials from repository (synchronous call - Android framework expects sync)
+
                 var task = _credentialRepository.GetCredentialsByDomainAsync(domain);
-                task.Wait(); // Not ideal, but Android AutofillService callbacks are synchronous
+                task.Wait();
                 return task.Result;
             }
             catch
@@ -309,9 +289,6 @@ namespace PhantomVault.Core.Services.Autofill
             }
         }
 
-        /// <summary>
-        /// Initializes the credential repository. Should be called during service onCreate.
-        /// </summary>
         public void Initialize(ICredentialRepository credentialRepository)
         {
             _credentialRepository = credentialRepository;
@@ -327,15 +304,12 @@ namespace PhantomVault.Core.Services.Autofill
 
         public bool TryFill(string domain)
         {
-            // This is called from the app, not by the Android Autofill Framework
-            // For Android, autofill is handled by OnFillRequest
+
             return false;
         }
     }
 #else
-    /// <summary>
-    /// Placeholder for when Android-specific code is not being compiled.
-    /// </summary>
+
     public class AndroidAutofillService : IAutofillProvider
     {
         public bool IsSupported => false;
@@ -343,3 +317,4 @@ namespace PhantomVault.Core.Services.Autofill
     }
 #endif
 }
+

@@ -9,3 +9,4 @@ public partial class SmokeTestView : UserControl
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
 }
+

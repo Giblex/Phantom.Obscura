@@ -9,9 +9,7 @@ using PhantomVault.Core.Services;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// View model for secure Flaticon icon downloader window.
-    /// </summary>
+
     public sealed class IconDownloaderViewModel : ReactiveObject
     {
         private readonly SecureIconDownloaderService _iconService;
@@ -19,7 +17,7 @@ namespace PhantomVault.UI.ViewModels
 
         private bool _isInternetEnabled;
         private string _internetStatusText = "🔴 Internet Disconnected - API Key Required";
-        private string _internetStatusColor = "#DC3545"; // Red
+        private string _internetStatusColor = "#DC3545";
         private string _searchQuery = "";
         private string _statusMessage = "Flaticon API key required. Get your free key at: https://www.flaticon.com/api";
         private string _cacheInfo = "";
@@ -28,10 +26,15 @@ namespace PhantomVault.UI.ViewModels
 
         public IconDownloaderViewModel()
         {
-            _iconService = new SecureIconDownloaderService();
+            var gateway = (Avalonia.Application.Current as PhantomVault.UI.App)?
+                .Services?
+                .GetService(typeof(PhantomVault.Core.Services.Network.IInternetGateway))
+                as PhantomVault.Core.Services.Network.IInternetGateway
+                ?? throw new InvalidOperationException("InternetGateway is not registered.");
 
-            // Initialize commands
-            EnableInternetCommand = ReactiveCommand.Create(EnableInternet);
+            _iconService = new SecureIconDownloaderService(gateway);
+
+            EnableInternetCommand = ReactiveCommand.CreateFromTask(EnableInternetAsync);
             DisableInternetCommand = ReactiveCommand.Create(DisableInternet);
             SearchIconsCommand = ReactiveCommand.CreateFromTask(SearchIconsAsync);
             DownloadIconCommand = ReactiveCommand.CreateFromTask<IconSearchResult>(DownloadIconAsync);
@@ -43,7 +46,6 @@ namespace PhantomVault.UI.ViewModels
             CheckApiKeyStatus();
         }
 
-        // Properties
         public bool IsInternetEnabled
         {
             get => _isInternetEnabled;
@@ -94,7 +96,6 @@ namespace PhantomVault.UI.ViewModels
 
         public ObservableCollection<IconSearchResult> SearchResults { get; } = new();
 
-        // Commands
         public ReactiveCommand<Unit, Unit> EnableInternetCommand { get; }
         public ReactiveCommand<Unit, Unit> DisableInternetCommand { get; }
         public ReactiveCommand<Unit, Unit> SearchIconsCommand { get; }
@@ -103,22 +104,21 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> SaveApiKeyCommand { get; }
         public ReactiveCommand<Unit, Unit> CloseCommand { get; }
 
-        // Methods
         private void CheckApiKeyStatus()
         {
-            // Check if API key is already configured
+
             if (_iconService.HasApiKeyConfigured)
             {
                 IsApiKeyConfigured = true;
                 InternetStatusText = "🟡 API Key Configured - Ready to Connect";
-                InternetStatusColor = "#FFC107"; // Yellow
+                InternetStatusColor = "#FFC107";
                 StatusMessage = "API key configured. Click 'Enable Internet' to start searching.";
             }
             else
             {
                 IsApiKeyConfigured = false;
                 InternetStatusText = "🔴 API Key Required";
-                InternetStatusColor = "#DC3545"; // Red
+                InternetStatusColor = "#DC3545";
                 StatusMessage = "Flaticon API key required. Enter your API key below and click 'Save API Key'.";
             }
         }
@@ -136,9 +136,9 @@ namespace PhantomVault.UI.ViewModels
                 _iconService.SetApiKey(ApiKey);
                 IsApiKeyConfigured = true;
                 InternetStatusText = "🟡 API Key Saved - Ready to Connect";
-                InternetStatusColor = "#FFC107"; // Yellow
+                InternetStatusColor = "#FFC107";
                 StatusMessage = "API key saved successfully! You can now enable internet and search for icons.";
-                ApiKey = ""; // Clear the input for security
+                ApiKey = "";
             }
             catch (Exception ex)
             {
@@ -146,7 +146,7 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        private void EnableInternet()
+        private async System.Threading.Tasks.Task EnableInternetAsync()
         {
             if (!IsApiKeyConfigured)
             {
@@ -156,16 +156,24 @@ namespace PhantomVault.UI.ViewModels
 
             try
             {
-                _iconService.EnableInternet();
+                var granted = await _iconService.RequestInternetAccessAsync();
+                if (!granted)
+                {
+                    StatusMessage = "Internet access was denied.";
+                    InternetStatusText = "🔴 Internet Access Denied";
+                    InternetStatusColor = "#DC3545";
+                    IsInternetEnabled = false;
+                    return;
+                }
                 IsInternetEnabled = true;
-                InternetStatusText = "🟢 Connected to Flaticon API (Authenticated HTTPS)";
-                InternetStatusColor = "#28A745"; // Green
-                StatusMessage = "Secure connection established. You can now search for authentic Flaticon icons.";
+                InternetStatusText = "🟢 Connected to Flaticon API (Authenticated, Pinned HTTPS)";
+                InternetStatusColor = "#28A745";
+                StatusMessage = "Secure connection established. You can now search for icons.";
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Failed to enable internet: {ex.Message}";
-                IsApiKeyConfigured = false; // May need to reconfigure
+                StatusMessage = $"Failed to open internet access: {ex.Message}";
+                IsInternetEnabled = false;
             }
         }
 
@@ -176,7 +184,7 @@ namespace PhantomVault.UI.ViewModels
                 _iconService.DisableInternet();
                 IsInternetEnabled = false;
                 InternetStatusText = "🔴 Internet Disconnected";
-                InternetStatusColor = "#DC3545"; // Red
+                InternetStatusColor = "#DC3545";
                 StatusMessage = "Internet disabled. All connections closed.";
             }
             catch (Exception ex)
@@ -216,7 +224,7 @@ namespace PhantomVault.UI.ViewModels
             catch (Exception ex)
             {
                 StatusMessage = $"Search failed: {ex.Message}";
-                // Auto-disable internet on error
+
                 DisableInternet();
             }
         }
@@ -241,7 +249,7 @@ namespace PhantomVault.UI.ViewModels
             catch (Exception ex)
             {
                 StatusMessage = $"Download failed: {ex.Message}";
-                // Auto-disable internet on error
+
                 DisableInternet();
             }
         }
@@ -255,7 +263,6 @@ namespace PhantomVault.UI.ViewModels
                 UpdateCacheInfo();
                 StatusMessage = $"Cleared {cachedIcons.Count} cached icons";
 
-                // Show a simple message dialog (simulate for now)
                 await System.Threading.Tasks.Task.CompletedTask;
             }
             catch (Exception ex)
@@ -272,16 +279,11 @@ namespace PhantomVault.UI.ViewModels
                 : $"📦 Cache: {cachedIcons.Count} icons stored locally";
         }
 
-        /// <summary>
-        /// Sets the credential context for auto-generating search queries.
-        /// This will automatically populate the search box with relevant terms.
-        /// </summary>
         public void SetCredentialContext(PhantomVault.Core.Models.Credential credential)
         {
             if (credential == null)
                 return;
 
-            // Use IconManager to generate smart search query
             var iconsDir = System.IO.Path.Combine(
                 AppDomain.CurrentDomain.BaseDirectory,
                 "Assets", "Icons"
@@ -294,9 +296,6 @@ namespace PhantomVault.UI.ViewModels
             StatusMessage = $"💡 Auto-suggested search for '{credential.Title}': {suggestedQuery}";
         }
 
-        /// <summary>
-        /// Downloads an icon with a custom filename based on credential info.
-        /// </summary>
         public async System.Threading.Tasks.Task DownloadIconForCredentialAsync(
             IconSearchResult icon,
             PhantomVault.Core.Models.Credential credential)
@@ -311,7 +310,6 @@ namespace PhantomVault.UI.ViewModels
             {
                 StatusMessage = $"⬇ Downloading '{icon.Name}' for {credential.Title}...";
 
-                // Get suggested filename from IconManager
                 var iconsDir = System.IO.Path.Combine(
                     AppDomain.CurrentDomain.BaseDirectory,
                     "Assets", "Icons"
@@ -320,7 +318,6 @@ namespace PhantomVault.UI.ViewModels
                 var iconManager = new PhantomVault.Core.Services.IconManager(iconsDir);
                 var suggestedFilename = iconManager.GetSuggestedIconFilename(credential);
 
-                // Download with custom filename to Assets/Icons
                 var savedIcon = await _iconService.DownloadIconAsync(icon, suggestedFilename, iconsDir);
 
                 StatusMessage = $"Downloaded '{icon.Name}' as '{suggestedFilename}.png' - Icon: {savedIcon}";
@@ -329,14 +326,14 @@ namespace PhantomVault.UI.ViewModels
             catch (Exception ex)
             {
                 StatusMessage = $"Download failed: {ex.Message}";
-                // Auto-disable internet on error
+
                 DisableInternet();
             }
         }
 
         private void Close()
         {
-            // Ensure internet is disabled when closing
+
             if (IsInternetEnabled)
             {
                 DisableInternet();
@@ -352,3 +349,4 @@ namespace PhantomVault.UI.ViewModels
         }
     }
 }
+

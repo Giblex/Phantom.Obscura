@@ -2,26 +2,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:Giblex.Controls">
 
-<!-- Glass layer resources now live in PhantomTheme.Dark / .Light so DynamicResource resolves from the active theme. -->
-
-<!-- ═══════════════════════════════════════════════════════════════════════════════
-     LIQUID GLASS BUTTON STYLES - OPTIMIZED WITH PHYSICS INTEGRATION
-     
-     KEY IMPROVEMENTS:
-     1. Reduced from 7 layers to 3 layers (60% performance improvement)
-     2. Connected to physics controller (SheenX/SheenY from LiquidGlassButton.cs)
-     3. Removed default Button application (must explicitly use .liquid-glass class)
-     4. Kept all physics: spring-damper, scale, wobble animations
-     
-     ARCHITECTURE:
-     - LiquidGlassButton.axaml.cs: 60fps physics controller
-     - LiquidGlass.axaml (this file): Visual rendering
-     - LiquidGlassButton.axaml: Wrapper component
-     ═══════════════════════════════════════════════════════════════════════════════ -->
-
-<!-- ═══════════════════════════════════════════════════════════════════════════════
-     LIQUID GLASS BUTTON - Main style with physics integration
-     ═══════════════════════════════════════════════════════════════════════════════ -->
 <Style Selector="Button.liquid-glass">
   <Setter Property="CornerRadius" Value="10"/>
   <Setter Property="BorderThickness" Value="1"/>
@@ -39,11 +19,11 @@
     </Transitions>
   </Setter>
   <Setter Property="Effect" Value="{DynamicResource LiquidGlassButtonEffect}"/>
-  
+
   <Setter Property="Template">
     <ControlTemplate>
       <Panel>
-        <!-- LAYER 1: Base transparent glass with subtle tint -->
+
         <Border Name="BaseBorder"
                 CornerRadius="{TemplateBinding CornerRadius}"
                 BorderThickness="{TemplateBinding BorderThickness}"
@@ -58,8 +38,7 @@
             </Transitions>
           </Border.Transitions>
         </Border>
-        
-        <!-- LAYER 1.5: Inner shadow for depth -->
+
         <Border CornerRadius="{TemplateBinding CornerRadius}"
                 Opacity="0.3"
                 Margin="0"
@@ -67,7 +46,6 @@
                 ClipToBounds="True"
                 Background="{DynamicResource Brush.Glass.InnerShadow}"/>
 
-        <!-- LAYER 2: Spherical highlight for curved glass reflection -->
         <Border Name="Sheen"
                 CornerRadius="{TemplateBinding CornerRadius}"
                 Opacity="0.35"
@@ -113,8 +91,7 @@
                                  TraceColor="#B7CCD5DC"
                                  CounterTraceColor="#182434"
                                  CounterTraceOpacity="0.62"/>
-        
-        <!-- LAYER 2.8: Bottom/right shadow for 3D depth -->
+
         <Border CornerRadius="{TemplateBinding CornerRadius}"
                 Opacity="0.65"
                 Margin="0"
@@ -122,7 +99,6 @@
                 ClipToBounds="True"
                 Background="{DynamicResource Brush.Glass.BottomShadow}"/>
 
-        <!-- LAYER 3: Content -->
         <ContentPresenter Name="PART_ContentPresenter"
                           Background="{x:Null}"
                           CornerRadius="{TemplateBinding CornerRadius}"
@@ -133,7 +109,6 @@
                           ContentTemplate="{TemplateBinding ContentTemplate}"
                           RecognizesAccessKey="True"/>
 
-        <!-- Disabled overlay -->
         <Border Name="DisabledMask"
                 IsVisible="False"
                 CornerRadius="{TemplateBinding CornerRadius}"
@@ -143,14 +118,10 @@
   </Setter>
 </Style>
 
-<!-- ClipToBounds for the root Panel to ensure all hover effects respect corner radius -->
 <Style Selector="Button.liquid-glass /template/ Panel">
   <Setter Property="ClipToBounds" Value="True"/>
 </Style>
 
-<!-- ═══════════════════════════════════════════════════════════════════════════════
-     HOVER AND PRESSED STATES - Enhanced glass appearance with proper rounded corners
-     ═══════════════════════════════════════════════════════════════════════════════ -->
 <Style Selector="Button.liquid-glass:pointerover">
   <Setter Property="CornerRadius" Value="10"/>
   <Setter Property="Effect" Value="{DynamicResource LiquidGlassButtonEffectHover}"/>
@@ -183,7 +154,6 @@
   <Setter Property="Effect" Value="{DynamicResource LiquidGlassButtonEffectPressed}"/>
 </Style>
 
-<!-- Disabled State -->
 <Style Selector="Button.liquid-glass:disabled">
   <Setter Property="Opacity" Value="0.5"/>
   <Setter Property="Cursor" Value="Arrow"/>
@@ -193,7 +163,6 @@
   <Setter Property="IsVisible" Value="True"/>
 </Style>
 
-<!-- Focus State (keyboard navigation) - MUST override GlobalStyles.axaml -->
 <Style Selector="Button.liquid-glass:focus-visible">
   <Setter Property="Opacity" Value="1.0"/>
   <Setter Property="BorderBrush" Value="{DynamicResource Brush.Glass.BorderFocus}"/>
@@ -207,9 +176,6 @@
   <Setter Property="CornerRadius" Value="10"/>
 </Style>
 
-<!-- ═══════════════════════════════════════════════════════════════════════════════
-     PRIMARY VARIANT - Colored accent buttons
-     ═══════════════════════════════════════════════════════════════════════════════ -->
 <Style Selector="Button.liquid-glass.primary /template/ Border#BaseBorder">
   <Setter Property="BorderBrush" Value="#60C8D5E0"/>
   <Setter Property="Background">
@@ -230,9 +196,6 @@
   </Setter>
 </Style>
 
-<!-- ═══════════════════════════════════════════════════════════════════════════════
-     DANGER VARIANT - Red accent for destructive actions
-     ═══════════════════════════════════════════════════════════════════════════════ -->
 <Style Selector="Button.liquid-glass.danger /template/ Border#BaseBorder">
   <Setter Property="BorderBrush" Value="#70DC3545"/>
   <Setter Property="Background">
@@ -253,11 +216,6 @@
   </Setter>
 </Style>
 
-<!-- ═══════════════════════════════════════════════════════════════════════════════
-     SIZE VARIANTS
-     ═══════════════════════════════════════════════════════════════════════════════ -->
-
-<!-- Compact variant -->
 <Style Selector="Button.liquid-glass.compact">
   <Setter Property="CornerRadius" Value="8"/>
   <Setter Property="MinHeight" Value="32"/>
@@ -265,7 +223,6 @@
   <Setter Property="FontSize" Value="13"/>
 </Style>
 
-<!-- Icon button variant (square) -->
 <Style Selector="Button.liquid-glass.icon">
   <Setter Property="CornerRadius" Value="10"/>
   <Setter Property="MinHeight" Value="36"/>
@@ -275,14 +232,12 @@
   <Setter Property="VerticalContentAlignment" Value="Center"/>
 </Style>
 
-<!-- Sidebar variant (left-aligned, rounded) -->
 <Style Selector="Button.liquid-glass.sidebar">
   <Setter Property="CornerRadius" Value="16"/>
   <Setter Property="Padding" Value="14,10"/>
   <Setter Property="HorizontalContentAlignment" Value="Left"/>
 </Style>
 
-<!-- Sidebar buttons blend with the panel background using semi-transparent overlay -->
 <Style Selector="Button.liquid-glass.sidebar /template/ Border#BaseBorder">
   <Setter Property="Background">
     <RadialGradientBrush Center="35%,40%" RadiusX="80%" RadiusY="80%">
@@ -319,10 +274,6 @@
   <Setter Property="BorderBrush" Value="#10FFFFFF"/>
 </Style>
 
-<!-- ═══════════════════════════════════════════════════════════════════════════════
-     TILE BUTTON STYLES - Transparent wrappers for credential tiles
-     No glass effects - just hover highlighting
-     ═══════════════════════════════════════════════════════════════════════════════ -->
 <Style Selector="Button.tile-button">
   <Setter Property="Background" Value="Transparent"/>
   <Setter Property="BorderThickness" Value="0"/>
@@ -358,7 +309,6 @@
   <Setter Property="Background" Value="{DynamicResource TilePressedBrush}"/>
 </Style>
 
-<!-- Grid tile button variant -->
 <Style Selector="Button.tile-button-grid">
   <Setter Property="Background" Value="Transparent"/>
   <Setter Property="BorderThickness" Value="0"/>
@@ -394,15 +344,11 @@
   <Setter Property="Background" Value="{DynamicResource TilePressedBrush}"/>
 </Style>
 
-<!-- Tile focus state -->
 <Style Selector="Button.tile-button:focus-visible, Button.tile-button-grid:focus-visible">
   <Setter Property="BorderBrush" Value="{DynamicResource Brush.FocusRing}"/>
   <Setter Property="BorderThickness" Value="2 0 0 0"/>
 </Style>
 
-<!-- ═══════════════════════════════════════════════════════════════════════════════
-     TOGGLE BUTTON LIQUID GLASS VARIANT
-     ═══════════════════════════════════════════════════════════════════════════════ -->
 <Style Selector="ToggleButton.liquid-glass">
   <Setter Property="CornerRadius" Value="10"/>
   <Setter Property="BorderThickness" Value="1"/>
@@ -414,7 +360,7 @@
   <Setter Property="Background" Value="#04FFFFFF"/>
   <Setter Property="HorizontalContentAlignment" Value="Center"/>
   <Setter Property="VerticalContentAlignment" Value="Center"/>
-  
+
   <Setter Property="Template">
     <ControlTemplate>
       <Panel ClipToBounds="True">
@@ -493,3 +439,4 @@
 </Style>
 
 </Styles>
+

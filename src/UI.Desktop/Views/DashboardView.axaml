@@ -16,7 +16,7 @@
     </UserControl.Resources>
 
     <UserControl.Styles>
-        <!-- Phantom Liquid Glass Section Panels — theme-aware -->
+
         <Style Selector="Border.dashboard-section">
             <Setter Property="Background" Value="{DynamicResource DashboardSectionBg}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource DashboardSectionBorderBrush}"/>
@@ -41,7 +41,6 @@
             <Setter Property="BorderBrush" Value="{DynamicResource DashboardSectionHoverBorderBrush}"/>
         </Style>
 
-        <!-- Phantom Liquid Glass Quick Action Tiles — theme-aware -->
         <Style Selector="Button.dashboard-card">
             <Setter Property="Background" Value="{DynamicResource DashboardCardBg}"/>
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
@@ -114,7 +113,6 @@
             <Setter Property="RenderTransform" Value="scale(0.985)"/>
         </Style>
 
-        <!-- Dull-blue variant: ALWAYS flat solid navy, identical in every state. No border, no sheen, no scale, no shadow. Template overridden to bypass all theme chrome. -->
         <Style Selector="Button.dashboard-card.dull-blue">
             <Setter Property="Background" Value="#26385C"/>
             <Setter Property="BorderBrush" Value="#26385C"/>
@@ -152,7 +150,6 @@
             <Setter Property="RenderTransform" Value="none"/>
         </Style>
 
-        <!-- Override Avalonia's default Button template hover/pressed overlays (these are what paint the white border + transparent fill) -->
         <Style Selector="Button.dashboard-card.dull-blue /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="#26385C"/>
             <Setter Property="BorderBrush" Value="#26385C"/>
@@ -170,7 +167,6 @@
             <Setter Property="BorderThickness" Value="0"/>
         </Style>
 
-        <!-- Phantom Liquid Glass Navigation Tiles — theme-aware -->
         <Style Selector="Button.dashboard-nav">
             <Setter Property="Background" Value="{DynamicResource DashboardNavBg}"/>
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
@@ -250,7 +246,7 @@
     </UserControl.Styles>
 
     <Panel x:Name="RootPanel">
-        <!-- Grab handle — bottom of sheet (iPhone Control Center style) -->
+
         <Border x:Name="GrabHandle"
                 Height="40"
                 VerticalAlignment="Bottom"
@@ -271,9 +267,7 @@
                 </Border.Background>
             </Border>
         </Border>
-        <!-- Outer border owned by VaultWindow DashboardSheet (cyan top+sides + rainbow bottom).
-             Removed local border to avoid doubling. -->
-        <!-- Bottom sheen — darker navy fade with minimal cyan tint -->
+
         <Border IsHitTestVisible="False"
                 Height="60"
                 VerticalAlignment="Bottom"
@@ -288,7 +282,7 @@
                 </LinearGradientBrush>
             </Border.Background>
         </Border>
-        <!-- Radial reflection — subtle cyan bottom-left -->
+
         <Border IsHitTestVisible="False"
                 CornerRadius="24"
                 ClipToBounds="True"
@@ -300,7 +294,7 @@
                 </RadialGradientBrush>
             </Border.Background>
         </Border>
-        <!-- Top absorption — dark fade at top -->
+
         <Border IsHitTestVisible="False"
                 CornerRadius="24"
                 ClipToBounds="True"
@@ -313,7 +307,7 @@
                 </LinearGradientBrush>
             </Border.Background>
         </Border>
-        <!-- Specular bottom-edge micro highlight line -->
+
         <Border IsHitTestVisible="False"
                 Height="1"
                 VerticalAlignment="Bottom"
@@ -346,19 +340,18 @@
                        FontWeight="Bold"
                        Foreground="{DynamicResource PrimaryTextBrush}" />
 
-            <!-- Quick Access -->
             <Border Classes="dashboard-section stagger-2"
                     Padding="20"
                     IsVisible="{Binding HasQuickAccessCredentials}">
                 <StackPanel Spacing="14">
-                    <!-- Header row: title + copied feedback + pin-options toggle -->
+
                     <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
                         <TextBlock Grid.Column="0"
                                    Text="Quick Access"
                                    FontSize="{StaticResource Type.H2.Size}"
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
-                        <!-- Copied feedback -->
+
                         <TextBlock Grid.Column="1"
                                    Text="{Binding CopiedFeedback}"
                                    FontSize="{StaticResource Type.Small.Size}"
@@ -371,7 +364,7 @@
                                 </Transitions>
                             </TextBlock.Transitions>
                         </TextBlock>
-                        <!-- Pin options toggle button -->
+
                         <ToggleButton Grid.Column="2"
                                       IsChecked="{Binding IsCategoryPinOptionsOpen, Mode=TwoWay}"
                                       Classes="liquid-glass"
@@ -395,7 +388,6 @@
                                Foreground="{DynamicResource MutedTextBrush}"
                                Margin="0,-8,0,0"/>
 
-                    <!-- Collapsible pin-options panel -->
                     <Border IsVisible="{Binding IsCategoryPinOptionsOpen}"
                             CornerRadius="16"
                             Padding="14,10"
@@ -428,7 +420,6 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Row 1: Category shortcut tiles (using real vault categories) -->
                     <TextBlock Text="Categories"
                                FontSize="{StaticResource Type.Label.Size}"
                                FontWeight="SemiBold"
@@ -461,7 +452,7 @@
                                         </Style>
                                     </Button.Styles>
                                     <Grid Width="110" Height="100">
-                                    <!-- Very subtle frosted glass blur behind tile -->
+
                                     <ExperimentalAcrylicBorder IsHitTestVisible="False" CornerRadius="20">
                                         <ExperimentalAcrylicBorder.Material>
                                             <ExperimentalAcrylicMaterial
@@ -490,7 +481,7 @@
                                             </Transitions>
                                         </Border.Transitions>
                                         <Grid RowDefinitions="Auto,*">
-                                            <!-- Category colour bar at top (uses TileColor from category manager) -->
+
                                             <Border Height="4"
                                                     HorizontalAlignment="Stretch"
                                                     VerticalAlignment="Top"
@@ -502,9 +493,8 @@
                                                 </Border.Background>
                                             </Border>
 
-                                            <!-- Icon + label + count -->
                                             <StackPanel Grid.Row="1" Spacing="4" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                                <!-- Category icon from category manager -->
+
                                                 <Border Width="36" Height="36"
                                                         CornerRadius="18"
                                                         HorizontalAlignment="Center"
@@ -528,7 +518,7 @@
                                                                    IsVisible="{Binding Icon, Converter={StaticResource IconPathExistsConverter}, ConverterParameter=invert}"/>
                                                     </Grid>
                                                 </Border>
-                                                <!-- Name + count -->
+
                                                 <TextBlock Text="{Binding Name}"
                                                            FontSize="{StaticResource Type.Small.Size}"
                                                            FontWeight="SemiBold"
@@ -546,7 +536,7 @@
                                             </StackPanel>
                                         </Grid>
                                     </Border>
-                                    <!-- Liquid glass: top-left highlight bevel -->
+
                                     <Border CornerRadius="20" IsHitTestVisible="False"
                                             BorderThickness="1,0.8,0,0" ClipToBounds="True">
                                         <Border.BorderBrush>
@@ -557,7 +547,7 @@
                                             </LinearGradientBrush>
                                         </Border.BorderBrush>
                                     </Border>
-                                    <!-- Liquid glass: bottom-right shadow bevel -->
+
                                     <Border CornerRadius="20" IsHitTestVisible="False"
                                             BorderThickness="0,0,1,0.8" ClipToBounds="True">
                                         <Border.BorderBrush>
@@ -568,7 +558,7 @@
                                             </LinearGradientBrush>
                                         </Border.BorderBrush>
                                     </Border>
-                                    <!-- Liquid glass: top-edge micro-specular line -->
+
                                     <Border CornerRadius="20" IsHitTestVisible="False"
                                             BorderThickness="0,0.6,0,0" Opacity="0.45" ClipToBounds="True">
                                         <Border.BorderBrush>
@@ -587,7 +577,6 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
 
-                    <!-- Row 2: Most Used password tiles -->
                     <TextBlock Text="Most Used"
                                FontSize="{StaticResource Type.Label.Size}"
                                FontWeight="SemiBold"
@@ -618,9 +607,9 @@
                                             <Setter Property="RenderTransform" Value="scale(0.985)"/>
                                         </Style>
                                     </Button.Styles>
-                                    <!-- Outer wrapper for liquid glass layers -->
+
                                     <Grid Width="130" Height="100">
-                                        <!-- Very subtle frosted glass blur behind tile -->
+
                                         <ExperimentalAcrylicBorder IsHitTestVisible="False" CornerRadius="20">
                                             <ExperimentalAcrylicBorder.Material>
                                                 <ExperimentalAcrylicMaterial
@@ -631,7 +620,7 @@
                                                     FallbackColor="{DynamicResource DashboardAcrylicFallback}"/>
                                             </ExperimentalAcrylicBorder.Material>
                                         </ExperimentalAcrylicBorder>
-                                        <!-- Base tile -->
+
                                         <Border x:Name="QuickTileBorder"
                                                 CornerRadius="20"
                                                 Padding="12,10"
@@ -650,7 +639,7 @@
                                                 </Transitions>
                                             </Border.Transitions>
                                             <Grid RowDefinitions="Auto,*">
-                                                <!-- Category colour bar at top -->
+
                                                 <Border Height="4"
                                                         HorizontalAlignment="Stretch"
                                                         VerticalAlignment="Top"
@@ -666,9 +655,8 @@
                                                     </Border.Background>
                                                 </Border>
 
-                                                <!-- Icon + Title -->
                                                 <StackPanel Grid.Row="1" Spacing="8" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                                    <!-- Icon -->
+
                                                     <Border Width="36" Height="36"
                                                             CornerRadius="18"
                                                             Background="{Binding IconBackgroundBrush}"
@@ -688,7 +676,6 @@
                                                         </Grid>
                                                     </Border>
 
-                                                    <!-- Title only -->
                                                     <TextBlock Text="{Binding Title}"
                                                                FontSize="{StaticResource Type.Small.Size}"
                                                                FontWeight="SemiBold"
@@ -702,7 +689,6 @@
                                             </Grid>
                                         </Border>
 
-                                        <!-- Liquid glass: top-left highlight bevel -->
                                         <Border CornerRadius="20"
                                                 IsHitTestVisible="False"
                                                 BorderThickness="1,0.8,0,0"
@@ -716,7 +702,6 @@
                                             </Border.BorderBrush>
                                         </Border>
 
-                                        <!-- Liquid glass: bottom-right shadow bevel -->
                                         <Border CornerRadius="20"
                                                 IsHitTestVisible="False"
                                                 BorderThickness="0,0,1,0.8"
@@ -730,7 +715,6 @@
                                             </Border.BorderBrush>
                                         </Border>
 
-                                        <!-- Liquid glass: top-edge micro-specular line -->
                                         <Border CornerRadius="20"
                                                 IsHitTestVisible="False"
                                                 BorderThickness="0,0.6,0,0"
@@ -754,7 +738,6 @@
                 </StackPanel>
             </Border>
 
-            <!-- Quick Actions -->
             <Border Classes="dashboard-section stagger-3"
                     Padding="20,12"
                     HorizontalAlignment="Stretch">
@@ -799,16 +782,15 @@
                             <CheckBox Content="Backup" IsChecked="{Binding ShowQuickBackup, Mode=TwoWay}" Margin="0,0,8,6" FontSize="{StaticResource Type.Label.Size}"/>
                         </WrapPanel>
                     </Border>
-                    
-                    <!-- Compact Liquid Glass Quick Action Grid -->
+
                     <UniformGrid Columns="6" Rows="2" ColumnSpacing="8" RowSpacing="8">
-                        <!-- Row 1 -->
+
                         <Button Command="{Binding AddPasswordCommand}"
                                 Classes="dashboard-card"
                                 IsVisible="{Binding ShowQuickAddPassword}"
                                 ToolTip.Tip="Add a new password entry">
                             <Grid RowDefinitions="Auto,Auto">
-                                <!-- Liquid glass: top-edge micro-specular -->
+
                                 <Border Grid.RowSpan="2" CornerRadius="18" IsHitTestVisible="False"
                                         BorderThickness="0,0.5,0,0" Opacity="0.4">
                                     <Border.BorderBrush>
@@ -924,7 +906,6 @@
                             </Grid>
                         </Button>
 
-                        <!-- Row 2 -->
                         <Button Command="{Binding OpenFavoritesCommand}"
                                 Classes="dashboard-card"
                                 IsVisible="{Binding ShowQuickFavorites}"
@@ -1061,7 +1042,6 @@
                 </StackPanel>
             </Border>
 
-            <!-- Navigation Panel -->
                 <Border Classes="dashboard-section stagger-4"
                     Padding="20">
                 <StackPanel Spacing="12">
@@ -1121,16 +1101,13 @@
                 </StackPanel>
             </Border>
 
-            <!-- Security Dashboard -->
                 <Border Classes="dashboard-section"
                     Padding="20">
-                <controls:SecurityDashboard DataContext="{Binding SecurityDashboardViewModel}"/>
+                <controls:SecurityDashboard DataContext="{Binding $parent[Window].DataContext}"/>
             </Border>
 
-            <!-- Two Column Layout: Recent Activity + Statistics -->
             <Grid ColumnDefinitions="2*,1*" ColumnSpacing="16">
-                
-                <!-- Recent Activity -->
+
                 <Border Grid.Column="0"
                     Classes="dashboard-section"
                         Padding="20">
@@ -1151,7 +1128,6 @@
                                     Command="{Binding ViewAllActivityCommand}"/>
                         </Grid>
 
-                        <!-- Activity List -->
                         <ItemsControl ItemsSource="{Binding RecentActivities}" MaxHeight="400">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
@@ -1187,7 +1163,6 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
 
-                        <!-- Empty State -->
                         <Border IsVisible="{Binding !HasRecentActivity}"
                                 CornerRadius="{StaticResource Radius.Sm}"
                                 Padding="32,24"
@@ -1205,10 +1180,8 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Statistics Sidebar -->
                 <StackPanel Grid.Column="1" Spacing="12">
-                    
-                    <!-- Vault Statistics -->
+
                         <Border Classes="dashboard-section"
                             Padding="16">
                         <StackPanel Spacing="12">
@@ -1216,9 +1189,9 @@
                                        FontSize="{StaticResource Type.H4.Size}"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource PrimaryTextBrush}"/>
-                            
+
                             <StackPanel Spacing="8">
-                                <!-- Total Credentials -->
+
                                 <Grid ColumnDefinitions="*,Auto">
                                     <TextBlock Grid.Column="0"
                                                Text="Total Credentials"
@@ -1231,7 +1204,6 @@
                                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                                 </Grid>
 
-                                <!-- Categories -->
                                 <Grid ColumnDefinitions="*,Auto">
                                     <TextBlock Grid.Column="0"
                                                Text="Categories"
@@ -1244,7 +1216,6 @@
                                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                                 </Grid>
 
-                                <!-- 2FA Coverage -->
                                 <Grid ColumnDefinitions="*,Auto">
                                     <TextBlock Grid.Column="0"
                                                Text="2FA Coverage"
@@ -1260,7 +1231,6 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Favorites -->
                         <Border Classes="dashboard-section"
                             Padding="16">
                         <StackPanel Spacing="12">
@@ -1268,7 +1238,7 @@
                                        FontSize="{StaticResource Type.H4.Size}"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource PrimaryTextBrush}"/>
-                            
+
                             <ItemsControl ItemsSource="{Binding FavoriteCredentials}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -1303,7 +1273,6 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
 
-                            <!-- Empty State -->
                             <Border IsVisible="{Binding !HasFavorites}"
                                     CornerRadius="{StaticResource Radius.Sm}"
                                     Padding="16"
@@ -1327,3 +1296,4 @@
     </ScrollViewer>
     </Panel>
 </UserControl>
+

@@ -7,10 +7,7 @@ using ReactiveUI;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// ViewModel for the Add Category dialog that allows users to create new credential categories
-    /// and optionally move existing credentials from other categories.
-    /// </summary>
+
     public class AddCategoryDialogViewModel : ReactiveObject
     {
         private readonly VaultViewModel? _vaultViewModel;
@@ -21,18 +18,12 @@ namespace PhantomVault.UI.ViewModels
         private ObservableCollection<CredentialViewModel> _sourceEntries = new();
         private ObservableCollection<CredentialViewModel> _destinationEntries = new();
 
-        /// <summary>
-        /// Gets or sets the list of existing category names available for moving credentials.
-        /// </summary>
         public ObservableCollection<string> SourceCategories
         {
             get => _sourceCategories;
             set => this.RaiseAndSetIfChanged(ref _sourceCategories, value);
         }
 
-        /// <summary>
-        /// Gets or sets the currently selected source category. When set, loads credentials from that category.
-        /// </summary>
         public string? SelectedSourceCategory
         {
             get => _selectedSourceCategory;
@@ -43,16 +34,13 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Gets or sets the name for the new category to be created.
-        /// </summary>
         public string NewCategoryName
         {
             get => _newCategoryName;
             set
             {
                 this.RaiseAndSetIfChanged(ref _newCategoryName, value);
-                // Clear validation error when user types
+
                 if (!string.IsNullOrWhiteSpace(value) && !string.IsNullOrEmpty(ValidationError))
                 {
                     ValidationError = string.Empty;
@@ -60,9 +48,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Gets or sets the validation error message displayed when category name is invalid.
-        /// </summary>
         public string ValidationError
         {
             get => _validationError;
@@ -103,7 +88,7 @@ namespace PhantomVault.UI.ViewModels
 
         public void Initialize(VaultViewModel vaultViewModel, string newCategoryName)
         {
-            // Get all category names except "Deleted"
+
             SourceCategories = new ObservableCollection<string>(
                 vaultViewModel.Categories
                     .Where(c => !c.Name.Equals("Deleted", StringComparison.OrdinalIgnoreCase))
@@ -118,7 +103,6 @@ namespace PhantomVault.UI.ViewModels
             SourceEntries.Clear();
             if (SelectedSourceCategory == null || _vaultViewModel == null) return;
 
-            // Get all credentials in the selected category
             var allCredentials = _vaultViewModel.FilteredCredentials
                 .Where(c => c.Group?.Equals(SelectedSourceCategory, StringComparison.OrdinalIgnoreCase) == true);
 
@@ -171,3 +155,4 @@ namespace PhantomVault.UI.ViewModels
         }
     }
 }
+

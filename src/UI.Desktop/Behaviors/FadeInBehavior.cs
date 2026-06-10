@@ -8,10 +8,7 @@ using Avalonia.Xaml.Interactivity;
 
 namespace PhantomVault.UI.Behaviors
 {
-    /// <summary>
-    /// Behavior that fades in a control when it becomes visible.
-    /// Respects ReduceMotion accessibility settings.
-    /// </summary>
+
     public class FadeInBehavior : Behavior<Control>
     {
         public static readonly StyledProperty<double> DurationProperty =
@@ -20,18 +17,12 @@ namespace PhantomVault.UI.Behaviors
         public static readonly StyledProperty<double> DelayProperty =
             AvaloniaProperty.Register<FadeInBehavior, double>(nameof(Delay), 0.0);
 
-        /// <summary>
-        /// Animation duration in seconds (default: 0.3s)
-        /// </summary>
         public double Duration
         {
             get => GetValue(DurationProperty);
             set => SetValue(DurationProperty, value);
         }
 
-        /// <summary>
-        /// Animation delay in seconds (default: 0s)
-        /// </summary>
         public double Delay
         {
             get => GetValue(DelayProperty);
@@ -63,17 +54,14 @@ namespace PhantomVault.UI.Behaviors
         {
             if (AssociatedObject == null) return;
 
-            // Get duration based on ReduceMotion setting
             var duration = AnimationHelper.GetAnimationDuration();
             var easing = AnimationHelper.GetEasing();
 
-            // Apply delay if specified
             if (Delay > 0)
             {
                 await System.Threading.Tasks.Task.Delay(TimeSpan.FromSeconds(Delay));
             }
 
-            // Create fade-in animation
             var animation = new Avalonia.Animation.Animation
             {
                 Duration = TimeSpan.FromSeconds(duration),
@@ -103,3 +91,4 @@ namespace PhantomVault.UI.Behaviors
         }
     }
 }
+

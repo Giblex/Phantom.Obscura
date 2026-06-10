@@ -21,7 +21,6 @@
           <TranslateTransform />
         </Grid.RenderTransform>
 
-        <!-- Base gradient layer -->
         <Border CornerRadius="{Binding #RootControl.BarCornerRadius}"
                 Opacity="0.85">
           <Border.Background>
@@ -34,7 +33,6 @@
           </Border.Background>
         </Border>
 
-        <!-- Noise texture layer -->
         <Border CornerRadius="{Binding #RootControl.BarCornerRadius}"
                 Opacity="0.16">
           <Border.Background>
@@ -47,7 +45,6 @@
           </Border.Background>
         </Border>
 
-        <!-- Inner highlight with adjusted corner radius for margin -->
         <Border CornerRadius="{Binding #RootControl.BarCornerRadius}"
                 Margin="2"
                 Opacity="0.65">
@@ -61,7 +58,6 @@
           </Border.Background>
         </Border>
 
-        <!-- Sheen highlight layer -->
         <Border CornerRadius="{Binding #RootControl.BarCornerRadius}"
                 Margin="4,6,4,3"
                 Opacity="0.78">
@@ -82,12 +78,10 @@
           </Border.OpacityMask>
         </Border>
 
-        <!-- Outer border accent -->
         <Border CornerRadius="{Binding #RootControl.BarCornerRadius}"
                 BorderThickness="0.8"
                 BorderBrush="#1E80C0FF"/>
 
-        <!-- Shadow border -->
         <Border CornerRadius="{Binding #RootControl.BarCornerRadius}"
                 BorderThickness="1.4"
                 BorderBrush="#16203360"/>
@@ -99,3 +93,4 @@
                       Content="{Binding Content, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
   </Grid>
 </UserControl>
+

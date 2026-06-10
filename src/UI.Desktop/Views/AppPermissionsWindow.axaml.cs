@@ -28,11 +28,6 @@ namespace PhantomVault.UI.Views
         private void Close_Click(object? sender, RoutedEventArgs e) => Close();
     }
 
-    /// <summary>
-    /// Self-contained view model for the app auto-fill permissions editor.
-    /// Loads the persisted list, lets the user add/remove/toggle apps, and
-    /// writes the result back to <see cref="SettingsService"/> on Save.
-    /// </summary>
     public sealed class AppPermissionsViewModel : ReactiveObject
     {
         private string _newAppName = string.Empty;
@@ -64,7 +59,7 @@ namespace PhantomVault.UI.Views
                         Permissions.Add(new PermissionItem { AppName = p.AppName, Allowed = p.Allowed });
                 }
             }
-            catch { /* best-effort load */ }
+            catch {  }
 
             Permissions.CollectionChanged += (_, _) => this.RaisePropertyChanged(nameof(IsEmpty));
 
@@ -103,7 +98,7 @@ namespace PhantomVault.UI.Views
                         .ToList();
                 });
             }
-            catch { /* best-effort persist */ }
+            catch {  }
             CloseRequested?.Invoke(this, EventArgs.Empty);
         }
 
@@ -126,3 +121,4 @@ namespace PhantomVault.UI.Views
         }
     }
 }
+

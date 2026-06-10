@@ -5,13 +5,10 @@ using Org.BouncyCastle.Security;
 
 namespace PhantomVault.Core.Services
 {
-    /// <summary>
-    /// Production implementation of <see cref="IHybridEncryptionService"/> combining
-    /// AES-GCM with ML-KEM-768 (CRYSTALS-Kyber) for post-quantum security.
-    /// </summary>
+
     public sealed class HybridEncryptionService : IHybridEncryptionService
     {
-        // ML-KEM-768 (CRYSTALS-Kyber) key and ciphertext sizes
+
         private const int MLKEM768_PUBLIC_KEY_SIZE = 1184;
         private const int MLKEM768_PRIVATE_KEY_SIZE = 2400;
         private const int MLKEM768_CIPHERTEXT_SIZE = 1088;
@@ -26,13 +23,6 @@ namespace PhantomVault.Core.Services
             _secureRandom = new SecureRandom();
         }
 
-        /// <summary>
-        /// Generates a new ML-KEM-768 key pair for post-quantum encryption.
-        /// ML-KEM-768 provides security equivalent to AES-192 against quantum attacks.
-        /// The public key (<see cref="MLKEM768_PUBLIC_KEY_SIZE"/> bytes) should be stored in the manifest,
-        /// while the private key (<see cref="MLKEM768_PRIVATE_KEY_SIZE"/> bytes) must be stored inside the encrypted container.
-        /// </summary>
-        /// <returns>Tuple of (publicKey, privateKey) as byte arrays.</returns>
         public (byte[] publicKey, byte[] privateKey) GenerateKeyPair()
         {
             try
@@ -53,14 +43,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Encapsulates a shared secret using the recipient's ML-KEM public key.
-        /// This produces a ciphertext (<see cref="MLKEM768_CIPHERTEXT_SIZE"/> bytes for Kyber768) that can only be
-        /// decrypted by the holder of the corresponding private key.
-        /// The shared secret (<see cref="MLKEM768_SHARED_SECRET_SIZE"/> bytes) is used as the AES-GCM key for data encryption.
-        /// </summary>
-        /// <param name="publicKey">The recipient's ML-KEM-768 public key (<see cref="MLKEM768_PUBLIC_KEY_SIZE"/> bytes).</param>
-        /// <returns>Tuple of (ciphertext, sharedSecret).</returns>
         public (byte[] ciphertext, byte[] sharedSecret) EncapsulateSecret(byte[] publicKey)
         {
             if (publicKey == null) throw new ArgumentNullException(nameof(publicKey));
@@ -76,7 +58,6 @@ namespace PhantomVault.Core.Services
                 var ciphertext = encapsulation.GetEncapsulation();
                 var sharedSecret = encapsulation.GetSecret();
 
-                // Ensure we got the expected sizes
                 if (ciphertext.Length != MLKEM768_CIPHERTEXT_SIZE)
                     throw new InvalidOperationException($"Unexpected ciphertext size: {ciphertext.Length}, expected {MLKEM768_CIPHERTEXT_SIZE}");
                 if (sharedSecret.Length != MLKEM768_SHARED_SECRET_SIZE)
@@ -90,13 +71,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Decapsulates the shared secret from a KEM ciphertext using the private key.
-        /// This recovers the <see cref="MLKEM768_SHARED_SECRET_SIZE"/>-byte symmetric key needed to decrypt the data payload.
-        /// </summary>
-        /// <param name="ciphertext">The KEM ciphertext (<see cref="MLKEM768_CIPHERTEXT_SIZE"/> bytes) produced during encapsulation.</param>
-        /// <param name="privateKey">The ML-KEM-768 private key (<see cref="MLKEM768_PRIVATE_KEY_SIZE"/> bytes).</param>
-        /// <returns>The shared secret (<see cref="MLKEM768_SHARED_SECRET_SIZE"/> bytes).</returns>
         public byte[] DecapsulateSecret(byte[] ciphertext, byte[] privateKey)
         {
             if (ciphertext == null) throw new ArgumentNullException(nameof(ciphertext));
@@ -123,16 +97,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Encrypts arbitrary plaintext using post-quantum hybrid encryption.
-        /// A new shared secret is encapsulated with the provided public key and used
-        /// as the AES-256-GCM key. The caller must store both the KEM ciphertext and
-        /// the encrypted data together.
-        /// </summary>
-        /// <param name="plaintext">The data to encrypt.</param>
-        /// <param name="kemPublicKey">The recipient's ML-KEM-768 public key.</param>
-        /// <param name="aad">Optional associated authenticated data.</param>
-        /// <returns>Tuple of (kemCiphertext, encryptedData).</returns>
         public (byte[] kemCiphertext, EncryptionResult encryptedData) EncryptWithHybrid(
             byte[] plaintext,
             byte[] kemPublicKey,
@@ -144,11 +108,10 @@ namespace PhantomVault.Core.Services
             byte[]? symmetricKey = null;
             try
             {
-                // Encapsulate a new shared secret
+
                 var (kemCiphertext, sharedSecret) = EncapsulateSecret(kemPublicKey);
                 symmetricKey = sharedSecret;
 
-                // Encrypt data using AES-GCM
                 byte[] aadBytes = System.Text.Encoding.UTF8.GetBytes(aad ?? string.Empty);
                 var encryptedData = _encryptionService.Encrypt(plaintext, symmetricKey, aadBytes);
 
@@ -156,7 +119,7 @@ namespace PhantomVault.Core.Services
             }
             finally
             {
-                // Wipe the symmetric key from memory
+
                 if (symmetricKey != null)
                 {
                     CryptographicOperations.ZeroMemory(symmetricKey);
@@ -164,16 +127,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Decrypts hybrid-encrypted data using the private key.
-        /// The shared secret is first recovered via KEM decapsulation, then used
-        /// to decrypt the data payload with AES-256-GCM.
-        /// </summary>
-        /// <param name="kemCiphertext">The KEM ciphertext containing the encapsulated key.</param>
-        /// <param name="encryptedData">The AES-GCM encrypted data.</param>
-        /// <param name="kemPrivateKey">The ML-KEM-768 private key.</param>
-        /// <param name="aad">The associated authenticated data used during encryption.</param>
-        /// <returns>The decrypted plaintext.</returns>
         public byte[] DecryptWithHybrid(
             byte[] kemCiphertext,
             EncryptionResult encryptedData,
@@ -187,10 +140,9 @@ namespace PhantomVault.Core.Services
             byte[]? symmetricKey = null;
             try
             {
-                // Decapsulate the shared secret
+
                 symmetricKey = DecapsulateSecret(kemCiphertext, kemPrivateKey);
 
-                // Decrypt data using AES-GCM
                 byte[] aadBytes = System.Text.Encoding.UTF8.GetBytes(aad ?? string.Empty);
                 byte[] plaintext = _encryptionService.Decrypt(
                     encryptedData.Ciphertext,
@@ -203,7 +155,7 @@ namespace PhantomVault.Core.Services
             }
             finally
             {
-                // Wipe the symmetric key from memory
+
                 if (symmetricKey != null)
                 {
                     CryptographicOperations.ZeroMemory(symmetricKey);
@@ -212,3 +164,4 @@ namespace PhantomVault.Core.Services
         }
     }
 }
+

@@ -13,20 +13,17 @@ namespace PhantomVault.UI.Views.Controls
 {
     public partial class PinEntryControl : UserControl
     {
-        /// <summary>Current PIN string entered by the user.</summary>
+
         public static readonly StyledProperty<string> PinProperty =
             AvaloniaProperty.Register<PinEntryControl, string>(nameof(Pin), defaultValue: string.Empty,
                 defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
 
-        /// <summary>Maximum number of PIN digits.</summary>
         public static readonly StyledProperty<int> MaxLengthProperty =
             AvaloniaProperty.Register<PinEntryControl, int>(nameof(MaxLength), defaultValue: 6);
 
-        /// <summary>Minimum digits required before Unlock is enabled.</summary>
         public static readonly StyledProperty<int> MinLengthProperty =
             AvaloniaProperty.Register<PinEntryControl, int>(nameof(MinLength), defaultValue: 4);
 
-        /// <summary>Command executed when the user presses Unlock or Enter after reaching MinLength.</summary>
         public static readonly StyledProperty<ICommand?> UnlockCommandProperty =
             AvaloniaProperty.Register<PinEntryControl, ICommand?>(nameof(UnlockCommand));
 
@@ -60,11 +57,8 @@ namespace PhantomVault.UI.Views.Controls
             RefreshDots();
             UpdateUnlockEnabled();
 
-            // Forward keyboard input to the hidden TextBox
             this.KeyDown += OnControlKeyDown;
         }
-
-        // --- Dependency property change callbacks ---
 
         protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
         {
@@ -86,8 +80,6 @@ namespace PhantomVault.UI.Views.Controls
             }
         }
 
-        // --- Dot rendering ---
-
         private void RefreshDots()
         {
             var items = DotDisplay.Items as Avalonia.Controls.ItemCollection;
@@ -108,13 +100,13 @@ namespace PhantomVault.UI.Views.Controls
 
                 if (i < filled)
                 {
-                    // Filled dot
+
                     dot.Fill = TryFindBrush("AccentBrush", Brushes.DodgerBlue);
                     dot.Stroke = TryFindBrush("AccentBrush", Brushes.DodgerBlue);
                 }
                 else
                 {
-                    // Empty dot
+
                     dot.Fill = Brushes.Transparent;
                     dot.Stroke = TryFindBrush("ControlBorderBrush", Brushes.Gray);
                 }
@@ -136,8 +128,6 @@ namespace PhantomVault.UI.Views.Controls
             UnlockButton.IsEnabled = len >= MinLength;
         }
 
-        // --- Button handlers ---
-
         private void OnDigitClick(object? sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.Content is string digit && digit.Length == 1)
@@ -156,8 +146,6 @@ namespace PhantomVault.UI.Views.Controls
         {
             Pin = string.Empty;
         }
-
-        // --- Keyboard support ---
 
         private void OnControlKeyDown(object? sender, KeyEventArgs e)
         {
@@ -184,7 +172,6 @@ namespace PhantomVault.UI.Views.Controls
                 return;
             }
 
-            // Accept digit keys (top row and numpad)
             char? c = KeyToDigit(e.Key);
             if (c.HasValue)
             {
@@ -214,16 +201,15 @@ namespace PhantomVault.UI.Views.Controls
             _ => null,
         };
 
-        /// <summary>Focus the control so keyboard entry works immediately.</summary>
         public void FocusPinInput()
         {
             this.Focus();
         }
 
-        /// <summary>Reset the entered PIN.</summary>
         public void Clear()
         {
             Pin = string.Empty;
         }
     }
 }
+

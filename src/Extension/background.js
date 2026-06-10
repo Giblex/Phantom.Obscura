@@ -13,7 +13,6 @@ let port = null;
 let pendingRequests = new Map(); // requestId → { resolve, reject }
 let requestCounter = 0;
 
-// ── Port management ────────────────────────────────────────────────────────
 
 function getOrOpenPort() {
   if (port) return port;
@@ -22,8 +21,16 @@ function getOrOpenPort() {
     port = chrome.runtime.connectNative(NATIVE_HOST);
 
     port.onMessage.addListener((message) => {
-      // Messages arriving on the port come back with a requestId so we can
-      // route them to the correct pending promise.
+      // Unsolicited push messages from the native host (no _reqId) — currently
+      // the non-secret sync notification. Route these to the sync handler.
+      if (message && message._reqId === undefined) {
+        if (message.type === 'syncChanged') {
+          cacheSyncState(message.data);
+        }
+        return;
+      }
+
+      // Correlated responses route back to the pending promise by requestId.
       const { _reqId, ...payload } = message;
       const pending = pendingRequests.get(_reqId);
       if (pending) {
@@ -45,7 +52,37 @@ function getOrOpenPort() {
     port = null;
   }
 
+  // Warm the local cache of non-secret sync state whenever the port (re)opens.
+  if (port) {
+    refreshSyncState();
+  }
+
   return port;
+}
+
+// Credentials and TOTP secrets are NEVER cached here — only the cosmetic /
+// configuration layer mirrored from the desktop app.
+
+const SYNC_STORAGE_KEY = 'phantomSyncState';
+
+function cacheSyncState(state) {
+  if (!state) return;
+  try {
+    chrome.storage.local.set({ [SYNC_STORAGE_KEY]: state });
+  } catch {
+    /* storage may be unavailable in some contexts */
+  }
+}
+
+async function refreshSyncState() {
+  try {
+    const resp = await sendToNativeHost({ type: 'getSyncState' });
+    if (resp && resp.success && resp.data) {
+      cacheSyncState(resp.data);
+    }
+  } catch {
+    /* host not running yet; cache stays as-is */
+  }
 }
 
 /**
@@ -78,7 +115,6 @@ function sendToNativeHost(message) {
   });
 }
 
-// ── Message listener from content scripts ─────────────────────────────────
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (!message || !message.type) return false;
@@ -132,6 +168,30 @@ async function handleMessage(message, sender) {
     case 'submitForm': {
       try {
         const resp = await sendToNativeHost({ type: 'submitForm', data: message.data });
+        return resp;
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    }
+
+    case 'getSyncState': {
+      try {
+        const resp = await sendToNativeHost({ type: 'getSyncState' });
+        if (resp && resp.success && resp.data) cacheSyncState(resp.data);
+        return resp;
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    }
+
+    case 'pushSyncState': {
+      try {
+        // Strip any secret-bearing fields before they ever reach the host.
+        const safe = {
+          themeId: message.data?.themeId ?? null,
+          uiPrefs: message.data?.uiPrefs ?? {}
+        };
+        const resp = await sendToNativeHost({ type: 'pushSyncState', data: safe });
         return resp;
       } catch (err) {
         return { success: false, error: err.message };

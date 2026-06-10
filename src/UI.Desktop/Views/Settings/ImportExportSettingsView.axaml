@@ -1,7 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="PhantomVault.UI.Views.Settings.ImportExportSettingsView">
-    <StackPanel Spacing="20" Margin="0,0,30,60">
+    <StackPanel Spacing="20" Margin="0,0,0,60">
         <TextBlock Text="Import / Export"
                    FontSize="{StaticResource Type.H3.Size}"
                    FontWeight="SemiBold"

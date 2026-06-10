@@ -5,14 +5,7 @@ using System.Linq;
 
 namespace PhantomVault.Core.Services
 {
-    /// <summary>
-    /// Desktop implementation of USB drive detection for Windows, macOS, and Linux.
-    /// This service abstracts platform differences and exposes a simple enumeration API.
-    /// For Linux and macOS it scans common mount points; for Windows it
-    /// inspects <see cref="DriveInfo"/> entries. Consumers may subscribe to
-    /// the <see cref="RemovableDriveInserted"/> and <see cref="RemovableDriveRemoved"/>
-    /// events to be notified of changes.
-    /// </summary>
+
     public sealed class UsbDetector : IUsbDetector
     {
         private readonly FileSystemWatcher? _linuxWatcher;
@@ -21,12 +14,10 @@ namespace PhantomVault.Core.Services
 
         public UsbDetector()
         {
-            // On Unix-like systems, monitor common mount roots for newly
-            // attached drives. These watchers may not fire on all systems,
-            // but they provide a best effort without requiring polling.
+
             if (!OperatingSystem.IsWindows())
             {
-                // '/media' is used by most desktop distributions
+
                 if (Directory.Exists("/media"))
                 {
                     _linuxWatcher = new FileSystemWatcher("/media")
@@ -38,7 +29,7 @@ namespace PhantomVault.Core.Services
                     _linuxWatcher.Deleted += (_, e) => OnDriveRemoved(e.FullPath);
                     _linuxWatcher.EnableRaisingEvents = true;
                 }
-                // '/Volumes' is used by macOS for removable devices
+
                 if (Directory.Exists("/Volumes"))
                 {
                     _mediaWatcher = new FileSystemWatcher("/Volumes")
@@ -53,23 +44,10 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Raised when a new removable drive is detected. The argument
-        /// contains the root path of the drive (e.g. "E:\\" on Windows or
-        /// "/media/username/USB" on Linux).
-        /// </summary>
         public event Action<string>? RemovableDriveInserted;
 
-        /// <summary>
-        /// Raised when a removable drive is removed.
-        /// </summary>
         public event Action<string>? RemovableDriveRemoved;
 
-        /// <summary>
-        /// Enumerates all currently connected removable drives. This method
-        /// returns a snapshot and does not monitor for changes. Use the
-        /// events for real‑time updates.
-        /// </summary>
         public IEnumerable<string> GetRemovableDrives()
         {
             if (OperatingSystem.IsWindows())
@@ -114,9 +92,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Checks if a given path represents a valid, currently-mounted removable drive.
-        /// </summary>
         public bool IsValidRemovableDrive(string path)
         {
             if (string.IsNullOrWhiteSpace(path))
@@ -131,7 +106,7 @@ namespace PhantomVault.Core.Services
                 }
                 else
                 {
-                    // On Unix, check if the path exists and is in a known mount location
+
                     if (!Directory.Exists(path))
                         return false;
 
@@ -146,10 +121,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Gets detailed information about a removable drive.
-        /// Returns null if the drive is not accessible.
-        /// </summary>
         public RemovableDriveInfo? GetDriveInfo(string path)
         {
             if (!IsValidRemovableDrive(path))
@@ -181,17 +152,17 @@ namespace PhantomVault.Core.Services
 
         private string ComputeDeviceIdentifier(string path)
         {
-            // Use UsbBindingService logic for consistency
+
             if (OperatingSystem.IsWindows())
             {
-                // Try to get volume serial number
+
                 var drive = new DriveInfo(path);
-                // Note: DriveInfo doesn't expose serial directly, so we use a hash
+
                 return $"{drive.VolumeLabel}_{drive.TotalSize}";
             }
             else
             {
-                // Unix: use path-based identifier
+
                 return Path.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar));
             }
         }
@@ -203,3 +174,4 @@ namespace PhantomVault.Core.Services
         }
     }
 }
+

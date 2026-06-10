@@ -1,31 +1,30 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="PhantomVault.UI.Views.Details.MetadataDetailSection">
-    
-    <!-- Metadata -->
+
     <StackPanel Spacing="8">
-        <TextBlock Text="Information" 
-                   FontSize="{StaticResource Type.Label.Size}" 
+        <TextBlock Text="Information"
+                   FontSize="{StaticResource Type.Label.Size}"
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource MutedTextBrush}"/>
         <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto">
-            <TextBlock Grid.Row="0" Grid.Column="0" 
-                       Text="Created:" 
+            <TextBlock Grid.Row="0" Grid.Column="0"
+                       Text="Created:"
                        FontSize="{StaticResource Type.Small.Size}"
                        Foreground="{DynamicResource SecondaryTextBrush}"
                        Margin="0,0,12,0"/>
-            <TextBlock Grid.Row="0" Grid.Column="1" 
-                       Text="{Binding SelectedCredential.Created}" 
+            <TextBlock Grid.Row="0" Grid.Column="1"
+                       Text="{Binding SelectedCredential.Created}"
                        FontSize="{StaticResource Type.Small.Size}"
                        Foreground="{DynamicResource PrimaryTextBrush}"/>
-            
-            <TextBlock Grid.Row="1" Grid.Column="0" 
-                       Text="Modified:" 
+
+            <TextBlock Grid.Row="1" Grid.Column="0"
+                       Text="Modified:"
                        FontSize="{StaticResource Type.Small.Size}"
                        Foreground="{DynamicResource SecondaryTextBrush}"
                        Margin="0,8,12,0"/>
-            <TextBlock Grid.Row="1" Grid.Column="1" 
-                       Text="{Binding SelectedCredential.LastModified}" 
+            <TextBlock Grid.Row="1" Grid.Column="1"
+                       Text="{Binding SelectedCredential.LastModified}"
                        FontSize="{StaticResource Type.Small.Size}"
                        Foreground="{DynamicResource PrimaryTextBrush}"
                        Margin="0,8,0,0"/>

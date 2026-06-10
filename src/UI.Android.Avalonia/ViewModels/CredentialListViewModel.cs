@@ -6,16 +6,6 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace PhantomVault.UI.ViewModels;
 
-/// <summary>
-/// Android port of the desktop VaultWindow credential list (Phase 3d). The
-/// desktop equivalent (Views/VaultWindow.axaml, ~2032 LOC) blends a list, a
-/// detail pane, and a category sidebar; on mobile we surface the list only and
-/// push detail/edit onto the navigation stack via <see cref="ShellViewModel"/>.
-///
-/// This VM does not yet bind to a real unlocked vault — Android.Avalonia is
-/// currently a presentation shell. Wire it to the Core credential store as
-/// part of the Android data-binding milestone.
-/// </summary>
 public sealed partial class CredentialListViewModel : ObservableObject
 {
     [ObservableProperty] private string _filterText = string.Empty;
@@ -50,8 +40,7 @@ public sealed partial class CredentialListViewModel : ObservableObject
     private void OpenDetail(CredentialListItem? item)
     {
         if (item == null) return;
-        // Detail view re-uses the add/edit surface in read+edit mode. A
-        // dedicated detail pane will land alongside the real Core binding.
+
         ShellViewModel.Current?.NavigateAddEdit();
     }
 }
@@ -65,3 +54,4 @@ public sealed partial class CredentialListItem : ObservableObject
     [ObservableProperty] private string _glyph = "🔐";
     [ObservableProperty] private IBrush _accentBrush = Brushes.SteelBlue;
 }
+

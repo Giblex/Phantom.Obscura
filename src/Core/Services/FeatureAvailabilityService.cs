@@ -5,11 +5,7 @@ using System.Linq;
 
 namespace PhantomVault.Core.Services
 {
-    /// <summary>
-    /// Determines which features are available in the current build and environment.
-    /// This service provides graceful degradation for features that are not fully
-    /// implemented or require external dependencies.
-    /// </summary>
+
     public sealed class FeatureAvailabilityService
     {
         private readonly Dictionary<string, FeatureStatus> _featureStatus = new();
@@ -21,7 +17,7 @@ namespace PhantomVault.Core.Services
 
         private void InitializeFeatureStatus()
         {
-            // YubiKey Features
+
             _featureStatus["YubiKey.Detection"] = new FeatureStatus
             {
                 IsAvailable = true,
@@ -49,7 +45,6 @@ namespace PhantomVault.Core.Services
                 DocumentationUrl = "https://docs.yubico.com/yesdk/users-manual/sdk-programming-guide/oath.html"
             };
 
-            // Biometric Authentication
             var helloAvailable = CheckWindowsHelloAvailable();
             _featureStatus["Biometric.WindowsHello"] = new FeatureStatus
             {
@@ -84,10 +79,6 @@ namespace PhantomVault.Core.Services
                 RequiredDependencies = new[] { "LocalAuthentication framework" }
             };
 
-            // WebAuthn/FIDO2 (Platform Authenticators)
-            // On Windows, the platform authenticator path is served by WindowsPasskeyService
-            // (Windows Hello + Credential Manager). Other platforms have no platform
-            // authenticator wired yet; users should fall back to YubiKey FIDO2.
             _featureStatus["WebAuthn.Platform"] = new FeatureStatus
             {
                 IsAvailable = helloAvailable,
@@ -100,7 +91,6 @@ namespace PhantomVault.Core.Services
                 RequiredDependencies = new[] { "Platform-specific WebAuthn APIs" }
             };
 
-            // VeraCrypt Integration
             _featureStatus["VeraCrypt.Integration"] = new FeatureStatus
             {
                 IsAvailable = CheckVeraCryptAvailable(),
@@ -115,17 +105,11 @@ namespace PhantomVault.Core.Services
             };
         }
 
-        /// <summary>
-        /// Checks if a feature is available in the current environment.
-        /// </summary>
         public bool IsFeatureAvailable(string featureName)
         {
             return _featureStatus.TryGetValue(featureName, out var status) && status.IsAvailable;
         }
 
-        /// <summary>
-        /// Checks if a feature is fully implemented (not a stub).
-        /// </summary>
         public bool IsFeatureFullyImplemented(string featureName)
         {
             return _featureStatus.TryGetValue(featureName, out var status) &&
@@ -133,10 +117,6 @@ namespace PhantomVault.Core.Services
                    status.IsFullyImplemented;
         }
 
-        /// <summary>
-        /// Gets a user-friendly message explaining why a feature is not available.
-        /// Returns null if the feature is available.
-        /// </summary>
         public string? GetFeatureLimitationMessage(string featureName)
         {
             if (!_featureStatus.TryGetValue(featureName, out var status))
@@ -146,33 +126,22 @@ namespace PhantomVault.Core.Services
 
             if (status.IsAvailable && status.IsFullyImplemented)
             {
-                return null; // Feature is fully available
+                return null;
             }
 
             return status.LimitationMessage ?? $"{status.Description} is not available.";
         }
 
-        /// <summary>
-        /// Gets detailed status information for a feature.
-        /// </summary>
         public FeatureStatus? GetFeatureStatus(string featureName)
         {
             return _featureStatus.TryGetValue(featureName, out var status) ? status : null;
         }
 
-        /// <summary>
-        /// Gets all features and their availability status.
-        /// Useful for diagnostic/settings UI.
-        /// </summary>
         public IReadOnlyDictionary<string, FeatureStatus> GetAllFeatures()
         {
             return _featureStatus;
         }
 
-        /// <summary>
-        /// Throws an informative exception if a feature is not available.
-        /// Use this in service methods to provide clear error messages.
-        /// </summary>
         public void ThrowIfNotAvailable(string featureName)
         {
             if (!_featureStatus.TryGetValue(featureName, out var status))
@@ -248,46 +217,22 @@ namespace PhantomVault.Core.Services
         }
     }
 
-    /// <summary>
-    /// Describes the availability status of a feature.
-    /// </summary>
     public sealed class FeatureStatus
     {
-        /// <summary>
-        /// Whether the feature is available in the current environment.
-        /// </summary>
+
         public bool IsAvailable { get; init; }
 
-        /// <summary>
-        /// Whether the feature is fully implemented (not a stub).
-        /// </summary>
         public bool IsFullyImplemented { get; init; }
 
-        /// <summary>
-        /// Human-readable description of the feature.
-        /// </summary>
         public string Description { get; init; } = string.Empty;
 
-        /// <summary>
-        /// Message explaining why the feature is not available/implemented.
-        /// Null if feature is fully available.
-        /// </summary>
         public string? LimitationMessage { get; init; }
 
-        /// <summary>
-        /// External dependencies required for this feature.
-        /// </summary>
         public string[]? RequiredDependencies { get; init; }
 
-        /// <summary>
-        /// URL to documentation for implementing or using this feature.
-        /// </summary>
         public string? DocumentationUrl { get; init; }
     }
 
-    /// <summary>
-    /// Exception thrown when a feature is not available in the current environment.
-    /// </summary>
     public sealed class FeatureNotAvailableException : NotSupportedException
     {
         public string FeatureName { get; }
@@ -299,9 +244,6 @@ namespace PhantomVault.Core.Services
         }
     }
 
-    /// <summary>
-    /// Exception thrown when a feature is available but not fully implemented.
-    /// </summary>
     public sealed class FeatureNotImplementedException : NotImplementedException
     {
         public string FeatureName { get; }
@@ -313,3 +255,4 @@ namespace PhantomVault.Core.Services
         }
     }
 }
+

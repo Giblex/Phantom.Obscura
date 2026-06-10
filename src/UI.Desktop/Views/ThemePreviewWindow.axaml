@@ -12,7 +12,7 @@
         Classes="animated-window">
 
     <Grid RowDefinitions="Auto,*,Auto">
-        <!-- Header -->
+
         <Border Grid.Row="0"
                 Padding="30,25"
                 BorderThickness="0,0,0,1"
@@ -46,25 +46,22 @@
             </Grid>
         </Border>
 
-        <!-- Theme Previews ScrollViewer -->
         <ScrollViewer Grid.Row="1" Padding="30,25">
             <StackPanel Spacing="30">
 
-                <!-- Dark Themes Section -->
                 <StackPanel Spacing="20">
                     <TextBlock Text="🌙 Dark Themes"
                                FontSize="{StaticResource Type.H3.Size}"
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
 
-                    <!-- Phantom Dark Theme -->
                     <Border Background="{DynamicResource ContentBackgroundBrush}"
                             BorderBrush="{DynamicResource ControlBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="12"
                             Padding="0">
                         <Grid RowDefinitions="Auto,*,Auto">
-                            <!-- Theme Header -->
+
                             <Border Grid.Row="0"
                                     Background="#35475B"
                                     Padding="20,15"
@@ -98,9 +95,8 @@
                                 </Grid>
                             </Border>
 
-                            <!-- Theme Preview Content -->
                             <Grid Grid.Row="1" Margin="20" ColumnDefinitions="*,*,*" ColumnSpacing="15">
-                                <!-- Colors Column -->
+
                                 <StackPanel Grid.Column="0" Spacing="12">
                                     <TextBlock Text="Color Palette"
                                                FontSize="{StaticResource Type.Small.Size}"
@@ -119,7 +115,6 @@
                                     </StackPanel>
                                 </StackPanel>
 
-                                <!-- Typography Column -->
                                 <StackPanel Grid.Column="1" Spacing="12">
                                     <TextBlock Text="Typography"
                                                FontSize="{StaticResource Type.Small.Size}"
@@ -143,7 +138,6 @@
                                     </Border>
                                 </StackPanel>
 
-                                <!-- UI Components Column -->
                                 <StackPanel Grid.Column="2" Spacing="12">
                                     <TextBlock Text="Components"
                                                FontSize="{StaticResource Type.Small.Size}"
@@ -169,7 +163,6 @@
                                 </StackPanel>
                             </Grid>
 
-                            <!-- Theme Tags -->
                             <Border Grid.Row="2"
                                     BorderThickness="0,1,0,0"
                                     BorderBrush="#FFFFFF15"
@@ -189,7 +182,6 @@
                         </Grid>
                     </Border>
 
-                    <!-- Giblex Glass Navy Theme -->
                     <Border Background="{DynamicResource ContentBackgroundBrush}"
                             BorderBrush="{DynamicResource ControlBorderBrush}"
                             BorderThickness="1"
@@ -322,7 +314,6 @@
                         </Grid>
                     </Border>
 
-                    <!-- Classic Dark Theme -->
                     <Border Background="{DynamicResource ContentBackgroundBrush}"
                             BorderBrush="{DynamicResource ControlBorderBrush}"
                             BorderThickness="1"
@@ -449,14 +440,12 @@
                     </Border>
                 </StackPanel>
 
-                <!-- Light Themes Section -->
                 <StackPanel Spacing="20">
                     <TextBlock Text="☀️ Light Themes"
                                FontSize="{StaticResource Type.H3.Size}"
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
 
-                    <!-- Phantom Light Theme -->
                     <Border Background="{DynamicResource ContentBackgroundBrush}"
                             BorderBrush="{DynamicResource ControlBorderBrush}"
                             BorderThickness="1"
@@ -584,7 +573,6 @@
                         </Grid>
                     </Border>
 
-                    <!-- Classic Light Theme -->
                     <Border Background="{DynamicResource ContentBackgroundBrush}"
                             BorderBrush="{DynamicResource ControlBorderBrush}"
                             BorderThickness="1"
@@ -716,7 +704,6 @@
             </StackPanel>
         </ScrollViewer>
 
-        <!-- Footer -->
         <Border Grid.Row="2"
                 Padding="30,20"
                 BorderThickness="0,1,0,0"
@@ -739,3 +726,4 @@
         </Border>
     </Grid>
 </Window>
+

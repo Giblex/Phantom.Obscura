@@ -3,9 +3,7 @@ using PhantomVault.UI.ViewModels;
 
 namespace PhantomVault.UI.Views
 {
-    /// <summary>
-    /// Standalone password generator window.
-    /// </summary>
+
     public partial class PasswordGeneratorWindow : ThemeAwareWindow
     {
         public PasswordGeneratorWindow()
@@ -27,3 +25,4 @@ namespace PhantomVault.UI.Views
         }
     }
 }
+

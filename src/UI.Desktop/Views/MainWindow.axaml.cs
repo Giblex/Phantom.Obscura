@@ -14,17 +14,14 @@ namespace PhantomVault.UI.Views
         public MainWindow()
         {
             InitializeComponent();
-            
-            // Load and restore window state from settings
+
             var settings = SettingsService.Load();
             WindowStateManager.RestoreMainWindowState(this, settings);
-            
+
             this.Opened += OnOpened;
 
-            // Attach handlers to save state when window is moved/resized/closed
             WindowStateManager.AttachStateChangeHandlers(this, SaveWindowState);
 
-            // Initialize toast notification manager
             var toastContainer = this.FindControl<Panel>("ToastContainer");
             if (toastContainer != null)
             {
@@ -96,7 +93,6 @@ namespace PhantomVault.UI.Views
             }
         }
 
-        // Menu click handlers
         public void OpenFrontPage_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
         {
             var app = (App)Application.Current!;
@@ -114,7 +110,7 @@ namespace PhantomVault.UI.Views
             {
                 DataContext = app.Services!.GetRequiredService<ProvisionViewModel>()
             };
-            // Ensure MainWindow stays visible when opening other windows
+
             this.Show();
             window.Show();
         }
@@ -160,7 +156,7 @@ namespace PhantomVault.UI.Views
             }
             catch (InvalidOperationException)
             {
-                // AutoFill services are not yet registered in DI.
+
                 var dialog = new Window
                 {
                     Title = "Not Available",
@@ -221,7 +217,7 @@ namespace PhantomVault.UI.Views
 
         public void Exit_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
         {
-            // Close entire application
+
             if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
             {
                 desktop.Shutdown();
@@ -229,3 +225,4 @@ namespace PhantomVault.UI.Views
         }
     }
 }
+

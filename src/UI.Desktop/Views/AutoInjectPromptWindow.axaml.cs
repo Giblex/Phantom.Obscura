@@ -50,7 +50,6 @@ namespace PhantomVault.UI.Views
             {
                 listBox.ItemsSource = matches;
 
-                // Auto-select first match if only one
                 if (matches.Length == 1)
                 {
                     _selectedCredential = matches[0];
@@ -81,11 +80,10 @@ namespace PhantomVault.UI.Views
             var listBox = this.FindControl<ItemsControl>("CredentialsListBox");
             if (listBox != null)
             {
-                // Handle item clicks
+
                 listBox.PointerPressed += OnCredentialSelected;
             }
 
-            // Keyboard shortcuts
             this.KeyDown += OnKeyDown;
         }
 
@@ -93,7 +91,7 @@ namespace PhantomVault.UI.Views
         {
             if (e.Source is Control control)
             {
-                // Find the credential from the visual tree
+
                 var dataContext = control.DataContext;
                 if (dataContext is CredentialMatch match)
                 {
@@ -104,7 +102,7 @@ namespace PhantomVault.UI.Views
 
         private void OnYesClicked(object? sender, RoutedEventArgs e)
         {
-            // If no credential selected, use the first one
+
             if (_selectedCredential == null && _matches?.Length > 0)
             {
                 _selectedCredential = _matches[0];
@@ -168,3 +166,4 @@ namespace PhantomVault.UI.Views
         MoreOptions
     }
 }
+

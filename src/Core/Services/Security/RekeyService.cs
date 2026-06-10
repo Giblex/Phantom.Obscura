@@ -4,14 +4,11 @@ using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using PhantomVault.Core.Models;
+using PhantomVault.Core.Utils;
 
 namespace PhantomVault.Core.Services.Security
 {
-    /// <summary>
-    /// Handles cryptographic key rotation for vaults.
-    /// Generates a new keyfile, derives a new key, re-encrypts the vault database,
-    /// and updates the manifest metadata.
-    /// </summary>
+
     public sealed class RekeyService
     {
         private readonly EncryptionService _encryptionService;
@@ -57,13 +54,13 @@ namespace PhantomVault.Core.Services.Security
             try
             {
                 progress?.Report(new RekeyProgress("Reading current manifest...", 0));
-                var manifest = _manifestService.ReadManifest(manifestPath, currentPassphrase, currentKeyfilePath, usbSerial);
+                using var spCurrent = SecurePassword.FromString(currentPassphrase);
+                var manifest = _manifestService.ReadManifestSecure(manifestPath, spCurrent, currentKeyfilePath, usbSerial);
 
                 string newKeyfilePath = Path.Combine(Path.GetDirectoryName(currentKeyfilePath)!, "vault.key.new");
                 if (!string.IsNullOrEmpty(providedNewKeyfilePath) && File.Exists(providedNewKeyfilePath))
                 {
-                    // Use a caller-supplied external keyfile instead of generating
-                    // one. Copy it into the vault directory as the new keyfile.
+
                     progress?.Report(new RekeyProgress("Importing selected keyfile...", 10));
                     File.Copy(providedNewKeyfilePath, newKeyfilePath, overwrite: true);
                 }
@@ -75,18 +72,11 @@ namespace PhantomVault.Core.Services.Security
 
                 progress?.Report(new RekeyProgress("Deriving new encryption key...", 20));
                 byte[] oldSalt = Convert.FromBase64String(manifest.SaltBase64);
-                // Old key derivation must mirror how the vault was originally
-                // encrypted: passphrase + current keyfile content. Deriving from
-                // passphrase alone would fail to decrypt vaults that were sealed
-                // with the standard layered (passphrase+keyfile) scheme.
+
                 string currentKeyfileContent = await File.ReadAllTextAsync(currentKeyfilePath, cancellationToken);
                 string oldCombinedSecret = (currentPassphrase ?? string.Empty) + currentKeyfileContent;
                 byte[] oldKey = _encryptionService.DeriveKey(oldCombinedSecret.AsSpan(), oldSalt);
 
-                // The new key (and the re-written manifest) must use the NEW
-                // passphrase when one is supplied; otherwise we keep the current
-                // passphrase (pure keyfile/salt rotation). Without this the
-                // "change master password" path silently kept the old password.
                 string effectiveNewPassphrase = string.IsNullOrEmpty(newPassphrase)
                     ? (currentPassphrase ?? string.Empty)
                     : newPassphrase;
@@ -105,7 +95,8 @@ namespace PhantomVault.Core.Services.Security
                 manifest.KeyRotationCount += 1;
                 manifest.KeyRotationPending = false;
 
-                _manifestService.WriteManifest(manifest, manifestPath, effectiveNewPassphrase, newKeyfilePath, usbSerial);
+                using var spNew = SecurePassword.FromString(effectiveNewPassphrase);
+                _manifestService.WriteManifestSecure(manifest, manifestPath, spNew, newKeyfilePath, usbSerial);
 
                 progress?.Report(new RekeyProgress("Cleaning up...", 100));
 
@@ -129,14 +120,10 @@ namespace PhantomVault.Core.Services.Security
             IProgress<RekeyProgress>? progress,
             CancellationToken cancellationToken)
         {
-            // Re-encrypts the vault blob: parses [nonce(12)|tag(16)|ciphertext], decrypts with
-            // old key, re-encrypts with new key, and writes atomically via temp file + File.Move.
 
-            // Read vault ciphertext
             byte[] encryptedVault = await File.ReadAllBytesAsync(vaultPath, cancellationToken);
 
-            // Parse metadata: [nonce|tag|ciphertext] (simplified layout)
-            int metadataSize = 12 + 16; // nonce + tag for AES-GCM
+            int metadataSize = 12 + 16;
             byte[] nonce = new byte[12];
             byte[] tag = new byte[16];
             Array.Copy(encryptedVault, 0, nonce, 0, 12);
@@ -144,15 +131,12 @@ namespace PhantomVault.Core.Services.Security
             byte[] ciphertext = new byte[encryptedVault.Length - metadataSize];
             Array.Copy(encryptedVault, metadataSize, ciphertext, 0, ciphertext.Length);
 
-            // Decrypt with old key
             byte[] plainVault = _encryptionService.Decrypt(ciphertext, nonce, tag, oldKey);
 
             progress?.Report(new RekeyProgress("Encrypting with new key...", 70));
 
-            // Encrypt with new key
             var newEncResult = _encryptionService.Encrypt(plainVault, newKey);
 
-            // Write back atomically
             string tempPath = vaultPath + ".new";
             await using (var fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None))
             {
@@ -167,10 +151,6 @@ namespace PhantomVault.Core.Services.Security
             CryptographicOperations.ZeroMemory(plainVault);
         }
 
-        /// <summary>
-        /// Legacy synchronous rekey hook used by UI flows.
-        /// Delegates to <see cref="PerformRekeyAsync"/> on the thread-pool.
-        /// </summary>
         public bool RekeyVault(
             string manifestPath,
             string currentPassphrase,
@@ -184,8 +164,7 @@ namespace PhantomVault.Core.Services.Security
             var vaultPath = manifestPath.EndsWith(".pvault", StringComparison.OrdinalIgnoreCase)
                 ? manifestPath
                 : Path.ChangeExtension(manifestPath, ".vault");
-            // Honor an explicitly-provided new keyfile (use existing) when it
-            // differs from the current keyfile; otherwise a new one is generated.
+
             string? providedNewKeyfile =
                 !string.IsNullOrEmpty(newKeyfilePath) &&
                 !string.Equals(newKeyfilePath, currentKeyfilePath, StringComparison.OrdinalIgnoreCase)
@@ -223,3 +202,4 @@ namespace PhantomVault.Core.Services.Security
         }
     }
 }
+

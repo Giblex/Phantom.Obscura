@@ -7,9 +7,7 @@ using PhantomVault.Core.Services.Autofill;
 
 namespace PhantomVault.UI.Controls
 {
-    /// <summary>
-    /// Toast notification for password capture events.
-    /// </summary>
+
     public partial class PasswordCaptureToast : UserControl
     {
         private TextBlock? _titleText;
@@ -48,19 +46,10 @@ namespace PhantomVault.UI.Controls
                 _actionButton.Click += OnActionClicked;
         }
 
-        /// <summary>
-        /// Event raised when the user clicks the action button (Save or Update).
-        /// </summary>
         public event EventHandler? ActionClicked;
 
-        /// <summary>
-        /// Event raised when the user closes or ignores the toast.
-        /// </summary>
         public event EventHandler? Dismissed;
 
-        /// <summary>
-        /// Shows a toast for a new password capture.
-        /// </summary>
         public void ShowNewPasswordCapture(PasswordCaptureEventArgs args)
         {
             if (_titleText != null)
@@ -78,9 +67,6 @@ namespace PhantomVault.UI.Controls
             StartAutoHideTimer();
         }
 
-        /// <summary>
-        /// Shows a toast for a password change.
-        /// </summary>
         public void ShowPasswordChange(PasswordChangeEventArgs args)
         {
             if (_titleText != null)
@@ -96,9 +82,6 @@ namespace PhantomVault.UI.Controls
             StartAutoHideTimer();
         }
 
-        /// <summary>
-        /// Hides the toast.
-        /// </summary>
         public void Hide()
         {
             IsVisible = false;
@@ -151,3 +134,4 @@ namespace PhantomVault.UI.Controls
         }
     }
 }
+

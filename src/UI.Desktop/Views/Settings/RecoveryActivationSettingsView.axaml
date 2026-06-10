@@ -1,0 +1,117 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PhantomVault.UI.ViewModels.Settings"
+             x:Class="PhantomVault.UI.Views.Settings.RecoveryActivationSettingsView"
+             x:DataType="vm:RecoveryActivationSettingsViewModel"
+             x:CompileBindings="False">
+
+    <ScrollViewer>
+        <StackPanel Spacing="20" Margin="0,0,0,40">
+
+            <StackPanel Spacing="8">
+                <TextBlock Text="🛟 Recovery Activation"
+                           FontSize="{StaticResource Type.H2.Size}"
+                           FontWeight="Bold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+                <TextBlock TextWrapping="Wrap"
+                           FontSize="{StaticResource Type.Body.Size}"
+                           Foreground="{DynamicResource SecondaryTextBrush}">
+                    Require multiple authentication factors before the Recovery surface can be opened from this app.
+                    Phantom Recovery itself enforces its own authentication independently.
+                    Mandatory USB keyfile + optional password + optional device binding still apply at unlock time.
+                </TextBlock>
+            </StackPanel>
+
+            <Border Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                    BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    Padding="20">
+                <StackPanel Spacing="14">
+                    <TextBlock Text="Required minimums"
+                               FontWeight="SemiBold"
+                               FontSize="{StaticResource Type.H5.Size}"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" RowSpacing="10" ColumnSpacing="12">
+                        <TextBlock Grid.Row="0" Grid.Column="0"
+                                   Text="Possession factors required"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <NumericUpDown Grid.Row="0" Grid.Column="1"
+                                       Minimum="1" Maximum="3" Increment="1"
+                                       Width="100"
+                                       Value="{Binding RequiredPossession}"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0"
+                                   Text="Identity factors required"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <NumericUpDown Grid.Row="1" Grid.Column="1"
+                                       Minimum="1" Maximum="4" Increment="1"
+                                       Width="100"
+                                       Value="{Binding RequiredIdentity}"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Border Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                    BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    Padding="20">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Possession factors counted"
+                               FontWeight="SemiBold"
+                               FontSize="{StaticResource Type.H5.Size}"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <CheckBox Content="USB device binding (hardware ID match)" IsChecked="{Binding UsbBindingEnabled}"/>
+                    <CheckBox Content="Keyfile (linked to vault)" IsChecked="{Binding KeyfileEnabled}"/>
+                    <CheckBox Content="One-time recovery code" IsChecked="{Binding RecoveryCodeEnabled}"/>
+                </StackPanel>
+            </Border>
+
+            <Border Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                    BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    Padding="20">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Identity factors counted"
+                               FontWeight="SemiBold"
+                               FontSize="{StaticResource Type.H5.Size}"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <CheckBox Content="Phantom Key bridge" IsChecked="{Binding PhantomKeyEnabled}"/>
+                    <CheckBox Content="Passkey (WebAuthn / platform)" IsChecked="{Binding PasskeyEnabled}"/>
+                    <CheckBox Content="Password" IsChecked="{Binding PasswordEnabled}"/>
+                    <CheckBox Content="PIN" IsChecked="{Binding PinEnabled}"/>
+                </StackPanel>
+            </Border>
+
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <Button Content="💾 Save"
+                        Command="{Binding SaveCommand}"
+                        Padding="20,10"
+                        FontWeight="SemiBold"
+                        Background="{DynamicResource Brush.Accent}"
+                        Foreground="{DynamicResource ButtonAccentForegroundBrush}"
+                        BorderThickness="0"
+                        CornerRadius="6"/>
+                <Button Content="↺ Reset to defaults"
+                        Command="{Binding ResetCommand}"
+                        Padding="20,10"
+                        Background="Transparent"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="6"/>
+            </StackPanel>
+
+            <TextBlock Text="{Binding StatusMessage}"
+                       TextWrapping="Wrap"
+                       Foreground="{DynamicResource SecondaryTextBrush}"
+                       FontStyle="Italic"/>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

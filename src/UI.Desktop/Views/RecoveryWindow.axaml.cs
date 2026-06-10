@@ -6,9 +6,7 @@ using PhantomVault.UI.ViewModels;
 
 namespace PhantomVault.UI.Views
 {
-    /// <summary>
-    /// Recovery wizard window for secure domain recovery.
-    /// </summary>
+
     public partial class RecoveryWindow : Window
     {
         public RecoveryWindow()
@@ -50,7 +48,6 @@ namespace PhantomVault.UI.Views
 
             base.OnClosed(e);
 
-            // Dispose the ViewModel
             if (DataContext is IDisposable disposable)
             {
                 disposable.Dispose();
@@ -58,3 +55,4 @@ namespace PhantomVault.UI.Views
         }
     }
 }
+

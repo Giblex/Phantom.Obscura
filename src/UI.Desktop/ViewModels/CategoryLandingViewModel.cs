@@ -16,10 +16,9 @@ public class CategoryLandingViewModel : ReactiveObject
     public CategoryLandingViewModel(VaultService vaultService)
     {
         _vaultService = vaultService;
-        
+
         NavigateToCategoryCommand = ReactiveCommand.Create<string>(NavigateToCategory);
-        
-        // Initialize with sample counts - will be updated when vault loads
+
         LoadCategories();
     }
 
@@ -33,7 +32,7 @@ public class CategoryLandingViewModel : ReactiveObject
 
     private void LoadCategories()
     {
-        // Initialize tiles with zero counts - VaultViewModel can update these later
+
         CategoryTiles = new ObservableCollection<CategoryTileViewModel>
         {
             new CategoryTileViewModel
@@ -107,8 +106,8 @@ public class CategoryLandingViewModel : ReactiveObject
     {
         if (CategoryTiles.Count >= 8)
         {
-            // CategoryTiles[0] is Dashboard, no count needed
-            CategoryTiles[1].Count = total;  // All
+
+            CategoryTiles[1].Count = total;
             CategoryTiles[2].Count = passwords;
             CategoryTiles[3].Count = creditCards;
             CategoryTiles[4].Count = identities;
@@ -120,7 +119,7 @@ public class CategoryLandingViewModel : ReactiveObject
 
     private void NavigateToCategory(string filterType)
     {
-        // This will be handled by the main window to navigate to vault view with filter
+
         var message = new NavigateToVaultWithFilterMessage(filterType);
         MessageBus.Current.SendMessage(message);
     }
@@ -166,3 +165,4 @@ public class CategoryTileViewModel : ReactiveObject
 }
 
 public record NavigateToVaultWithFilterMessage(string FilterType);
+

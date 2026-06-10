@@ -24,6 +24,7 @@ TestResults/
 # Logs
 *.log
 errors.txt
+build_out.txt
 
 # NuGet
 *.nupkg
@@ -40,6 +41,12 @@ Thumbs.db
 # Local backups
 *.bak
 
+# Signing material — never commit; load from Windows Cert Store, KeyVault, or local secrets folder
+Tools/Obscura.Keysmith/certs/*.pfx
+Tools/Obscura.Keysmith/certs/*.crt
+Tools/Obscura.Keysmith/certs/*.key
+Tools/Obscura.Keysmith/keys/
+
 # Build output
 bin/
 obj/
@@ -47,4 +54,8 @@ obj/
 # Android sideload artifacts produced by Avalonia.Android build
 PhantomObscura-*.apk
 phantom_emulator_screenshot.png
+
+
+# Cleanup quarantine
+Legacy/
 

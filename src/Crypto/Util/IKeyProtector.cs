@@ -8,3 +8,4 @@ namespace GiblexVault.Security.ZK.Util
         byte[] Unprotect(byte[] protectedData);
     }
 }
+

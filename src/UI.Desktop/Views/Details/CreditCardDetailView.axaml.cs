@@ -10,3 +10,4 @@ public partial class CreditCardDetailView : UserControl
         AvaloniaXamlLoader.Load(this);
     }
 }
+

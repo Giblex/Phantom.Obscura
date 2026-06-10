@@ -11,9 +11,7 @@ using CoreSecurityCheckResult = PhantomVault.Core.Services.SecurityCheckResult;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// ViewModel for the security check screen that validates vault integrity.
-    /// </summary>
+
     public class SecurityCheckScreenViewModel : ReactiveObject
     {
         private static readonly IBrush ActiveProgressBrush = new SolidColorBrush(Color.Parse("#6F92C8"));
@@ -61,7 +59,6 @@ namespace PhantomVault.UI.ViewModels
 
             CancelCommand = ReactiveCommand.Create(OnCancel);
 
-            // Start checks automatically - but ensure property updates happen on UI thread
             _ = RunSecurityChecksAsync();
         }
 
@@ -163,7 +160,7 @@ namespace PhantomVault.UI.ViewModels
                 this.RaisePropertyChanged(nameof(HardwareGlyphBrush));
                 this.RaisePropertyChanged(nameof(BiometricGlyphBrush));
                 this.RaisePropertyChanged(nameof(AntiTamperGlyphBrush));
-                // Also notify computed helper properties used by XAML bindings
+
                 this.RaisePropertyChanged(nameof(HasErrors));
                 this.RaisePropertyChanged(nameof(HasWarnings));
                 this.RaisePropertyChanged(nameof(HasUsbDriveInfo));
@@ -173,7 +170,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        // Helper properties for safe XAML bindings
         public bool HasErrors => CheckResult?.Errors?.Count > 0;
 
         public bool HasWarnings => CheckResult?.Warnings?.Count > 0;
@@ -284,21 +280,18 @@ namespace PhantomVault.UI.ViewModels
 
             var results = new System.Text.StringBuilder();
 
-            // Manifest Integrity (CRITICAL)
             results.AppendLine(CheckResult.ManifestValid
                 ? "✓ Manifest Integrity: PASSED"
                 : "✗ Manifest Integrity: FAILED");
             if (!CheckResult.ManifestValid)
                 results.AppendLine("  → Fix: Ensure vault files exist in the .phantom folder, or create a new vault.");
 
-            // USB Health (CRITICAL)
             results.AppendLine(CheckResult.UsbHealthy
                 ? "✓ USB Health: PASSED"
                 : "✗ USB Health: FAILED");
             if (!CheckResult.UsbHealthy)
                 results.AppendLine("  → Fix: Check USB connection, ensure drive is writable, and has at least 10MB free space.");
 
-            // Hardware Tokens (OPTIONAL - always shows as info)
             if (CheckResult.YubiKeyDetected)
             {
                 results.AppendLine("✓ Hardware Token: YubiKey detected and ready");
@@ -309,7 +302,6 @@ namespace PhantomVault.UI.ViewModels
                 results.AppendLine("  → Info: YubiKey support is available but not required. Vault works without it.");
             }
 
-            // Biometric Availability (OPTIONAL - always shows as info)
             if (CheckResult.BiometricAvailable)
             {
                 results.AppendLine("✓ Biometric Auth: Available on this device");
@@ -320,7 +312,6 @@ namespace PhantomVault.UI.ViewModels
                 results.AppendLine("  → Info: Windows Hello/biometric auth not detected. Use password authentication.");
             }
 
-            // Anti-Tamper (CRITICAL)
             results.AppendLine(CheckResult.NoTampering
                 ? "✓ Anti-Tamper Check: PASSED"
                 : "✗ Anti-Tamper Check: FAILED");
@@ -426,12 +417,11 @@ namespace PhantomVault.UI.ViewModels
             {
                 var progress = new Progress<SecurityCheckProgress>(update =>
                 {
-                    // Marshal property updates to UI thread
+
                     Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
                         CurrentCheckName = update.CurrentCheck;
 
-                        // Format display with status
                         if (update.IsComplete)
                         {
                             PercentComplete = 100;
@@ -473,7 +463,6 @@ namespace PhantomVault.UI.ViewModels
 
                 CheckResult = await _securityCheckService.RunSecurityChecksAsync(_usbPath, _launchRequest.VaultPath, progress);
 
-                // Marshal property updates to UI thread - NO DIALOGS, just update state
                 await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     ChecksComplete = true;
@@ -491,17 +480,12 @@ namespace PhantomVault.UI.ViewModels
                     NotifyCheckVisuals();
                 });
 
-                // Auto-continue when everything passed. Brief pause so the user
-                // sees the "All checks complete!" green-tick frame before the
-                // window navigates away; if any check failed we stay on this
-                // screen and let the user review/retry.
                 if (CheckResult.OverallPassed)
                 {
                     await Task.Delay(150).ConfigureAwait(false);
                     await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                     {
-                        // Re-check in case the user managed to cancel during the
-                        // pause — don't navigate if state has shifted.
+
                         if (ChecksComplete && ChecksSuccessful)
                         {
                             OnContinue();
@@ -511,7 +495,7 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                // Marshal all property updates and dialog to UI thread
+
                 await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
                 {
                     ChecksComplete = true;
@@ -527,7 +511,7 @@ namespace PhantomVault.UI.ViewModels
             }
             finally
             {
-                // Marshal property update to UI thread
+
                 await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     IsRunningChecks = false;
@@ -540,7 +524,6 @@ namespace PhantomVault.UI.ViewModels
             Serilog.Log.Information("[SecurityCheck] OnContinue clicked — invoking NavigateToVault");
             StatusMessage = "Opening vault...";
 
-            // Invoke navigation event - the SecurityCheckScreen will handle opening the vault
             NavigateToVault?.Invoke(this, _launchRequest);
         }
 
@@ -548,7 +531,6 @@ namespace PhantomVault.UI.ViewModels
         {
             StatusMessage = "Cancelled";
 
-            // Close the window by invoking with empty string (signals cancel)
             NavigateToVault?.Invoke(this, new DetectedVaultLaunchRequest
             {
                 UsbPath = string.Empty,
@@ -558,12 +540,10 @@ namespace PhantomVault.UI.ViewModels
             });
         }
 
-        /// <summary>
-        /// Sets the owner window for dialog display.
-        /// </summary>
         public void SetOwnerWindow(Window window)
         {
             _ownerWindow = window;
         }
     }
 }
+

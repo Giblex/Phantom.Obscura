@@ -10,3 +10,4 @@ public partial class PinCodeEditForm : UserControl
         AvaloniaXamlLoader.Load(this);
     }
 }
+

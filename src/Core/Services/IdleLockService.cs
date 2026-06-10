@@ -3,12 +3,7 @@ using System.Timers;
 
 namespace PhantomVault.Core.Services
 {
-    /// <summary>
-    /// Tracks user inactivity and invokes a callback when the configured
-    /// timeout elapses. This implementation does not rely on OS‑specific
-    /// APIs; instead it requires the host UI to call <see cref="Reset"/>
-    /// whenever user interaction occurs (e.g. mouse/keyboard events).
-    /// </summary>
+
     public sealed class IdleLockService : IDisposable
     {
         private readonly Timer _timer;
@@ -24,18 +19,8 @@ namespace PhantomVault.Core.Services
             _timer.Elapsed += (_, __) => IdleElapsed?.Invoke();
         }
 
-        /// <summary>
-        /// Invoked when the user has been idle for the configured timeout.
-        /// Consumers typically handle this event by locking or dismounting the
-        /// vault.
-        /// </summary>
         public event Action? IdleElapsed;
 
-        /// <summary>
-        /// Resets the idle timer. Call this whenever the user performs an
-        /// action in the application. If the user stays inactive, the
-        /// <see cref="IdleElapsed"/> event will fire after the timeout.
-        /// </summary>
         public void Reset()
         {
             _timer.Stop();
@@ -49,3 +34,4 @@ namespace PhantomVault.Core.Services
         }
     }
 }
+

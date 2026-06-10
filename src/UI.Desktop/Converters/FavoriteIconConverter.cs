@@ -5,9 +5,7 @@ using Avalonia.Data.Converters;
 
 namespace PhantomVault.UI.Converters
 {
-    /// <summary>
-    /// Converts boolean IsFavorite value to SVG icon path
-    /// </summary>
+
     public class FavoriteIconConverter : IValueConverter
     {
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
@@ -24,3 +22,4 @@ namespace PhantomVault.UI.Converters
         }
     }
 }
+

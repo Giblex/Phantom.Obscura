@@ -3,10 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace PhantomVault.Core.Models
 {
-    /// <summary>
-    /// Persisted USB binding metadata authored during setup for the mandatory
-    /// three-container USB layout.
-    /// </summary>
+
     public sealed class UsbBindingRecord
     {
         [JsonPropertyName("bindingId")]
@@ -37,3 +34,4 @@ namespace PhantomVault.Core.Models
         public string ObjectContainerPath { get; set; } = string.Empty;
     }
 }
+

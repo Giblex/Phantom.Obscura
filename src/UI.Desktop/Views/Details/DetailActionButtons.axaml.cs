@@ -10,3 +10,4 @@ public partial class DetailActionButtons : UserControl
         AvaloniaXamlLoader.Load(this);
     }
 }
+

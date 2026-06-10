@@ -82,20 +82,19 @@ namespace PhantomVault.UI.Views
                 return;
             }
 
-            // Check if we've moved far enough to start drag
             var diff = point.Position - _dragStartPoint;
             if (Math.Abs(diff.X) < DragThreshold && Math.Abs(diff.Y) < DragThreshold)
                 return;
 
             if (DataContext is not AddCategoryDialogViewModel vm) return;
 
-#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0618
             var data = new DataObject();
             data.Set("entry", _draggedItem.DataContext!);
             data.Set("source", "source");
 
             await DragDrop.DoDragDrop(e, data, DragDropEffects.Move);
-#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning restore CS0618
             _draggedItem = null;
         }
 
@@ -111,20 +110,19 @@ namespace PhantomVault.UI.Views
                 return;
             }
 
-            // Check if we've moved far enough to start drag
             var diff = point.Position - _dragStartPoint;
             if (Math.Abs(diff.X) < DragThreshold && Math.Abs(diff.Y) < DragThreshold)
                 return;
 
             if (DataContext is not AddCategoryDialogViewModel vm) return;
 
-#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0618
             var data = new DataObject();
             data.Set("entry", _draggedItem.DataContext!);
             data.Set("source", "destination");
 
             await DragDrop.DoDragDrop(e, data, DragDropEffects.Move);
-#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning restore CS0618
             _draggedItem = null;
         }
 
@@ -142,10 +140,10 @@ namespace PhantomVault.UI.Views
         {
             if (DataContext is not AddCategoryDialogViewModel vm) return;
 
-#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0618
             var entry = e.Data.Get("entry");
             var source = e.Data.Get("source") as string;
-#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning restore CS0618
 
             if (entry == null || source == null) return;
 
@@ -191,3 +189,4 @@ namespace PhantomVault.UI.Views
         }
     }
 }
+

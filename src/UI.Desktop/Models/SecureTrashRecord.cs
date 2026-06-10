@@ -3,10 +3,7 @@ using PhantomVault.Core.Models;
 
 namespace PhantomVault.UI.Models
 {
-    /// <summary>
-    /// Represents a credential that has been moved to the secure rubbish bin.
-    /// Stores the original grouping and timestamps for retention/purge logic.
-    /// </summary>
+
     public sealed class SecureTrashRecord
     {
         public Guid Id { get; set; } = Guid.NewGuid();
@@ -21,3 +18,4 @@ namespace PhantomVault.UI.Models
             = null;
     }
 }
+

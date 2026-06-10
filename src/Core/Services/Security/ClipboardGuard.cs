@@ -5,10 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace PhantomVault.Core.Services.Security
 {
-    /// <summary>
-    /// Implements clipboard copy throttling with threat detection.
-    /// Tracks copy events in a 1-minute sliding window and enforces cooldown when threshold exceeded.
-    /// </summary>
+
     public sealed class ClipboardGuard : IClipboardGuard
     {
         private readonly IDefenceEngine? _defenceEngine;
@@ -28,9 +25,6 @@ namespace PhantomVault.Core.Services.Security
             _logger = logger;
         }
 
-        /// <summary>
-        /// Checks if copying is allowed (not in cooldown).
-        /// </summary>
         public bool CanCopy()
         {
             lock (_lock)
@@ -45,37 +39,30 @@ namespace PhantomVault.Core.Services.Security
             }
         }
 
-        /// <summary>
-        /// Registers a copy event and checks for excessive copying.
-        /// </summary>
         public void RegisterCopy(string entryId)
         {
             lock (_lock)
             {
                 var now = DateTimeOffset.UtcNow;
 
-                // Remove events outside sliding window
                 _copyEvents.RemoveAll(e => now - e.Timestamp > SlidingWindow);
 
-                // Add new event
                 _copyEvents.Add(new CopyEvent
                 {
                     EntryId = entryId,
                     Timestamp = now
                 });
 
-                _logger?.LogInformation("Clipboard copy registered for entry {EntryId}. Total in last minute: {Count}", 
+                _logger?.LogInformation("Clipboard copy registered for entry {EntryId}. Total in last minute: {Count}",
                     entryId, _copyEvents.Count);
 
-                // Check threshold
                 if (_copyEvents.Count > MaxCopiesPerMinute)
                 {
                     _cooldownUntil = now.Add(CooldownDuration);
 
-                    _logger?.LogWarning("Excessive clipboard copies detected ({Count} in 1 minute). Entering cooldown until {CooldownEnd}", 
+                    _logger?.LogWarning("Excessive clipboard copies detected ({Count} in 1 minute). Entering cooldown until {CooldownEnd}",
                         _copyEvents.Count, _cooldownUntil.Value);
 
-                    // Raise threat to Defence Engine
                     _defenceEngine?.RaiseThreat(new ThreatEvent(
                         ThreatType.HighRiskEntryFlood,
                         ThreatLevel.Warning,
@@ -92,3 +79,4 @@ namespace PhantomVault.Core.Services.Security
         }
     }
 }
+

@@ -10,12 +10,7 @@ using Avalonia.Media;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// View model for the window that adds a new password entry to the
-    /// vault. In a real application the password would be persisted to an
-    /// encrypted database. Here we simply expose the properties and
-    /// demonstrate how a random password generator might work.
-    /// </summary>
+
     public sealed class AddPasswordViewModel : ReactiveObject
     {
         private string _title = string.Empty;
@@ -28,29 +23,28 @@ namespace PhantomVault.UI.ViewModels
         private string? _autoDetectedIcon;
         private string? _autoDetectedIconPath;
         private bool _hasAutoDetectedIcon;
-        private Color _selectedIconColor = Color.Parse("#FFB5E5FF"); // Default pastel blue
+        private Color _selectedIconColor = Color.Parse("#FFB5E5FF");
         private bool _useNoColor = false;
         private string _iconInitials = "?";
         private readonly IconManager? _iconManager;
 
-        // Pastel color options for icons without images
         public Color[] AvailableColors { get; } = new[]
         {
-            Color.Parse("#FFB5E5FF"), // Pastel Blue
-            Color.Parse("#FFFFC1E3"), // Pastel Pink
-            Color.Parse("#FFFFDFBB"), // Pastel Peach
-            Color.Parse("#FFC7E5C7"), // Pastel Green
-            Color.Parse("#FFFFE5B4"), // Pastel Yellow
-            Color.Parse("#FFE5D4FF"), // Pastel Purple
-            Color.Parse("#FFFFC9C9"), // Pastel Red
-            Color.Parse("#FFD4F4FF"), // Pastel Cyan
-            Color.Parse("#FFFFE4F0"), // Pastel Rose
-            Color.Parse("#FFE8F5E9")  // Pastel Mint
+            Color.Parse("#FFB5E5FF"),
+            Color.Parse("#FFFFC1E3"),
+            Color.Parse("#FFFFDFBB"),
+            Color.Parse("#FFC7E5C7"),
+            Color.Parse("#FFFFE5B4"),
+            Color.Parse("#FFE5D4FF"),
+            Color.Parse("#FFFFC9C9"),
+            Color.Parse("#FFD4F4FF"),
+            Color.Parse("#FFFFE4F0"),
+            Color.Parse("#FFE8F5E9")
         };
 
         public AddPasswordViewModel()
         {
-            // Initialize IconManager
+
             try
             {
                 var iconsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Visuals");
@@ -58,7 +52,7 @@ namespace PhantomVault.UI.ViewModels
             }
             catch
             {
-                // IconManager initialization failed, auto-detection won't work
+
             }
 
             GeneratePasswordCommand = ReactiveCommand.Create(() =>
@@ -66,14 +60,12 @@ namespace PhantomVault.UI.ViewModels
                 Password = GenerateRandomPassword(16);
             });
 
-            // Save only enabled when not busy and Title is not empty
             SaveCommand = ReactiveCommand.Create(() =>
             {
-                // Persisting the entry is outside the scope of this example.
+
                 LastSaved = DateTimeOffset.UtcNow;
             }, this.WhenAnyValue(vm => vm.IsBusy, vm => vm.Title, (busy, title) => !busy && !string.IsNullOrWhiteSpace(title)));
 
-            // Command used by the UI to select a color or choose 'no color'.
             SelectIconColorCommand = ReactiveCommand.Create<Color?>(c =>
             {
                 if (c is null)
@@ -86,7 +78,6 @@ namespace PhantomVault.UI.ViewModels
                 }
             });
 
-            // Auto-detect icon when Title or Url changes
             this.WhenAnyValue(vm => vm.Title, vm => vm.Url)
                 .Throttle(TimeSpan.FromMilliseconds(300))
                 .ObserveOn(RxApp.MainThreadScheduler)
@@ -124,7 +115,7 @@ namespace PhantomVault.UI.ViewModels
             {
                 if (this.RaiseAndSetIfChanged(ref _generateRandom, value) && value)
                 {
-                    // Immediately generate a password when toggled on
+
                     Password = GenerateRandomPassword(16);
                 }
             }
@@ -142,60 +133,42 @@ namespace PhantomVault.UI.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _lastSaved, value);
         }
 
-        /// <summary>
-        /// Path to auto-detected icon image file
-        /// </summary>
         public string? AutoDetectedIconPath
         {
             get => _autoDetectedIconPath;
             private set => this.RaiseAndSetIfChanged(ref _autoDetectedIconPath, value);
         }
 
-        /// <summary>
-        /// Whether an icon was auto-detected
-        /// </summary>
         public bool HasAutoDetectedIcon
         {
             get => _hasAutoDetectedIcon;
             private set => this.RaiseAndSetIfChanged(ref _hasAutoDetectedIcon, value);
         }
 
-        /// <summary>
-        /// Selected background color for text-based icon
-        /// </summary>
         public Color SelectedIconColor
         {
             get => _selectedIconColor;
             set
             {
-                // Update value (ReactiveUI may return the value or a boolean from RaiseAndSetIfChanged)
+
                 this.RaiseAndSetIfChanged(ref _selectedIconColor, value);
-                // Selecting a concrete color disables the NoColor flag
+
                 UseNoColor = false;
             }
         }
 
-        /// <summary>
-        /// When true, indicates the user explicitly chose 'No color' for the icon background.
-        /// </summary>
         public bool UseNoColor
         {
             get => _useNoColor;
             set => this.RaiseAndSetIfChanged(ref _useNoColor, value);
         }
 
-        /// <summary>
-        /// Initials to display when no icon image is available
-        /// </summary>
         public string IconInitials
         {
             get => _iconInitials;
             private set => this.RaiseAndSetIfChanged(ref _iconInitials, value);
         }
 
-        /// <summary>
-        /// Internal detected icon name
-        /// </summary>
         public string? AutoDetectedIcon
         {
             get => _autoDetectedIcon;
@@ -222,9 +195,6 @@ namespace PhantomVault.UI.ViewModels
             return new string(chars);
         }
 
-        /// <summary>
-        /// Attempts to auto-detect an icon based on the current Title and Url
-        /// </summary>
         private void UpdateAutoDetectedIcon()
         {
             if (_iconManager == null)
@@ -234,7 +204,6 @@ namespace PhantomVault.UI.ViewModels
                 return;
             }
 
-            // Create a temporary credential for icon detection
             var tempCredential = new Credential
             {
                 Title = Title,
@@ -268,9 +237,6 @@ namespace PhantomVault.UI.ViewModels
             UpdateIconInitials();
         }
 
-        /// <summary>
-        /// Updates the initials displayed when no icon image is available
-        /// </summary>
         private void UpdateIconInitials()
         {
             if (HasAutoDetectedIcon)
@@ -279,7 +245,6 @@ namespace PhantomVault.UI.ViewModels
                 return;
             }
 
-            // Generate initials from title
             if (!string.IsNullOrWhiteSpace(Title))
             {
                 var words = Title.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -307,3 +272,4 @@ namespace PhantomVault.UI.ViewModels
         }
     }
 }
+

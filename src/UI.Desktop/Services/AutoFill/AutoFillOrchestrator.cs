@@ -7,8 +7,8 @@ using PhantomVault.Core.Models;
 using PhantomVault.Core.Models.AutoInject;
 using PhantomVault.Core.Services;
 using PhantomVault.Core.Services.AutoInject;
-using PhantomVault.Platform.Services;
 using CorePlatform = PhantomVault.Core.Services.Platform;
+using PhantomVault.Core.Services.Platform;
 using PhantomVault.UI.Services;
 using PhantomVault.UI.ViewModels.AutoFill;
 using PhantomVault.UI.Views.AutoFill;
@@ -17,19 +17,7 @@ using Serilog;
 
 namespace PhantomVault.UI.Services.AutoFill
 {
-    /// <summary>
-    /// Orchestrates the full USB-triggered auto-fill pipeline:
-    ///
-    ///   USB inserted
-    ///     → Guard checks (mode enabled, vault unlocked, policy not "never")
-    ///     → Detect login portal (browser via window-title heuristic / native via UI Automation)
-    ///     → Match credential (CredentialMatchingEngine, score ≥ 30)
-    ///     → Passkey branch: PasskeyService.AuthenticateAsync()
-    ///     → Password branch: fill username + password (UI Automation or AutoType fallback)
-    ///     → Wait for TOTP field (TotpFieldPoller)
-    ///     → Fill TOTP (TotpService.GenerateCode)
-    ///     → No-match branch: show NoMatchFoundWindow
-    /// </summary>
+
     public sealed class AutoFillOrchestrator : IAutoFillOrchestrator
     {
         private enum State
@@ -76,14 +64,12 @@ namespace PhantomVault.UI.Services.AutoFill
         _integratedAttestorService = integratedAttestorService;
     }
 
-        // Implement interface member SetVaultContext
         public void SetVaultContext(ICredentialProvider provider, VaultManifest manifest)
         {
             _credentialProvider = provider;
             _manifest = manifest;
         }
 
-        /// <inheritdoc/>
         public async Task RunAutoFillFlowAsync(string usbDrivePath, CancellationToken ct = default)
         {
             var state = State.GuardCheck;
@@ -99,7 +85,7 @@ namespace PhantomVault.UI.Services.AutoFill
             {
                 switch (state)
                 {
-                    // ── Guard Checks ──────────────────────────────────────────────────────
+
                     case State.GuardCheck:
                     {
                         var settings = SettingsService.Load();
@@ -128,7 +114,6 @@ namespace PhantomVault.UI.Services.AutoFill
                         break;
                     }
 
-                    // ── Detect Login Portal ───────────────────────────────────────────────
                     case State.DetectPortal:
                     {
                         context = _windowDetector.GetCurrentContext();
@@ -136,7 +121,7 @@ namespace PhantomVault.UI.Services.AutoFill
 
                         if (isBrowser)
                         {
-                            // Extract URL/domain from browser window title
+
                             var url = _windowDetector.TryGetBrowserUrl();
                             if (!string.IsNullOrEmpty(url))
                             {
@@ -150,7 +135,7 @@ namespace PhantomVault.UI.Services.AutoFill
                         }
                         else
                         {
-                            // Native app — detect login form via UI Automation
+
                             nativeContext = _windowDetector.DetectNativeLoginFields();
                             if (nativeContext is null)
                             {
@@ -159,7 +144,7 @@ namespace PhantomVault.UI.Services.AutoFill
                             }
                             else
                             {
-                                // Use window title as matching signal
+
                                 context.WindowTitle = nativeContext.WindowTitle;
                                 context.ProcessName = nativeContext.ProcessName;
                                 context.Metadata["WindowHandle"] = nativeContext.WindowHandle.ToString();
@@ -170,7 +155,6 @@ namespace PhantomVault.UI.Services.AutoFill
                         break;
                     }
 
-                    // ── Resolve Credential ────────────────────────────────────────────────
                     case State.ResolveCredential:
                     {
                         var credentials = _credentialProvider!.GetCredentials();
@@ -195,7 +179,6 @@ namespace PhantomVault.UI.Services.AutoFill
                         Log.Information("[AutoFill] Best match: {Title} (score={Score})",
                             bestMatch.CredentialId, bestMatch.ConfidenceScore);
 
-                        // Check policy
                         var policy = _policyEngine.GetPolicyForContext(context!);
                         if (!_policyEngine.IsAutoInjectAllowed(context!, policy))
                         {
@@ -204,12 +187,10 @@ namespace PhantomVault.UI.Services.AutoFill
                             break;
                         }
 
-                        // Passkey priority
                         if (!string.IsNullOrEmpty(credential.PasskeyId))
                         {
                             Log.Information("[AutoFill] Passkey credential — skipping password fill");
-                            // Passkey authentication is handled by the browser/OS natively;
-                            // signal the existing passkey flow via AutoType sequence if set.
+
                             if (!string.IsNullOrEmpty(credential.AutoTypeSequence))
                                 await _autoTypeService.TypeCustomSequenceAsync(
                                     credential.AutoTypeSequence,
@@ -221,11 +202,6 @@ namespace PhantomVault.UI.Services.AutoFill
                             break;
                         }
 
-                        // Prompt mode — auto-fill requires explicit user confirmation.
-                        // The orchestrator does not own a confirmation UI; the user-facing
-                        // prompt is raised by UsbAutoInjectService.PromptRequired. To honor
-                        // the policy fail-closed we abort the silent fill here and let the
-                        // user trigger fill manually via the tray / context menu.
                         if (policy.Behavior == AutoInjectBehavior.Prompt)
                         {
                             Log.Information(
@@ -239,7 +215,6 @@ namespace PhantomVault.UI.Services.AutoFill
                         break;
                     }
 
-                    // ── Fill Credential ───────────────────────────────────────────────────
                     case State.FillCredential:
                     {
                         var username = credential!.Username ?? string.Empty;
@@ -248,13 +223,13 @@ namespace PhantomVault.UI.Services.AutoFill
 
                         if (!isBrowser && nativeContext is not null)
                         {
-                            // Native app: try UI Automation first
+
                             filled = await _windowDetector.TryFillNativeLoginAsync(nativeContext, username, password);
                         }
 
                         if (!filled)
                         {
-                            // Browser OR UIA fallback: keyboard simulation
+
                             if (!string.IsNullOrEmpty(credential.AutoTypeSequence))
                                 await _autoTypeService.TypeCustomSequenceAsync(
                                     credential.AutoTypeSequence, username, password);
@@ -272,7 +247,6 @@ namespace PhantomVault.UI.Services.AutoFill
                         break;
                     }
 
-                    // ── Wait for TOTP Field ───────────────────────────────────────────────
                     case State.WaitForTotp:
                     {
                         var settings = SettingsService.Load();
@@ -293,14 +267,13 @@ namespace PhantomVault.UI.Services.AutoFill
                         else
                         {
                             state = State.FillTotp;
-                            // Attach descriptor info to context for fill step
+
                             if (!string.IsNullOrEmpty(totpField.NativeAutomationId) && nativeContext is not null)
                                 nativeContext.TotpAutomationId = totpField.NativeAutomationId;
                         }
                         break;
                     }
 
-                    // ── Fill TOTP ─────────────────────────────────────────────────────────
                     case State.FillTotp:
                     {
                         var code = _totpService.GenerateCode(credential!.TotpSecret!);
@@ -317,7 +290,6 @@ namespace PhantomVault.UI.Services.AutoFill
                         break;
                     }
 
-                    // ── No-Match Dialog ───────────────────────────────────────────────────
                     case State.ShowNoMatchDialog:
                     {
                         var settings = SettingsService.Load();
@@ -362,3 +334,4 @@ namespace PhantomVault.UI.Services.AutoFill
         }
     }
 }
+

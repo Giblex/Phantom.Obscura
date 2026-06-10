@@ -5,21 +5,7 @@ using PhantomVault.Core.Models.DomainStores;
 
 namespace PhantomVault.Core.Services.DomainKeys
 {
-    /// <summary>
-    /// Manages a recovery session with policy enforcement.
-    ///
-    /// Recovery session lifecycle:
-    /// 1. Enter recovery mode (logs RecoveryModeEntered)
-    /// 2. Validate recovery code (logs CodeValidationAttempt)
-    /// 3. Wait for recovery delay (policy-configurable)
-    /// 4. Select domain to recover (explicit selection required)
-    /// 5. Unseal domain recovery key (logs DomainRecovered)
-    /// 6. Trigger rekey (logs KeyRotationTriggered)
-    /// 7. Exit recovery mode (logs RecoveryModeExited)
-    ///
-    /// Session auto-expires after MaxSessionSeconds.
-    /// USB removal during recovery terminates session immediately.
-    /// </summary>
+
     public sealed class RecoverySession : IDisposable
     {
         private readonly ScopedRecoveryService _scopedRecoveryService;
@@ -33,6 +19,7 @@ namespace PhantomVault.Core.Services.DomainKeys
         private RecoveryCodeEntry? _validatedCode;
         private byte[]? _recoverySessionKey;
         private bool _disposed;
+        private bool _isEnvelopeSession;
         private RecoverySessionState _state;
 
         public RecoverySession(
@@ -52,24 +39,95 @@ namespace PhantomVault.Core.Services.DomainKeys
             _state = RecoverySessionState.NotStarted;
         }
 
-        /// <summary>
-        /// Current session state.
-        /// </summary>
         public RecoverySessionState State => _state;
 
         /// <summary>
-        /// Whether USB presence is required (from policy).
+        /// Open a recovery store envelope with a single recovery code and build a session ready to
+        /// recover, WITHOUT an unlocked vault. This is the canonical break of the historical recovery
+        /// Catch-22: validation is performed by <see cref="RecoveryStoreEnvelope.OpenWithCode"/> (the
+        /// code unwraps the RecoveryStoreKey), and the session key becomes the RSK-derived domain seal
+        /// KEK so that EVERY recovery code — not just the seed-time one — can unseal domain keys and
+        /// read the backed-up keyfile.
+        ///
+        /// Extends, and does not replace, the legacy <see cref="ValidateCode"/> + per-code
+        /// <see cref="ScopedRecoveryService.DeriveRecoverySessionKey"/> path.
         /// </summary>
+        public static RecoverySession OpenFromEnvelope(
+            byte[] envelopeBytes,
+            string recoveryCode,
+            ScopedRecoveryService scopedRecoveryService,
+            RecoveryAuditService auditService,
+            string? deviceFingerprint = null,
+            string? appVersion = null)
+        {
+            if (envelopeBytes == null) throw new ArgumentNullException(nameof(envelopeBytes));
+            if (string.IsNullOrWhiteSpace(recoveryCode)) throw new ArgumentException("A recovery code is required.", nameof(recoveryCode));
+            if (scopedRecoveryService == null) throw new ArgumentNullException(nameof(scopedRecoveryService));
+            if (auditService == null) throw new ArgumentNullException(nameof(auditService));
+
+            using var opened = RecoveryStoreEnvelope.OpenWithCode(envelopeBytes, recoveryCode);
+
+            var session = new RecoverySession(
+                scopedRecoveryService,
+                auditService,
+                opened.Store,
+                deviceFingerprint,
+                appVersion);
+
+            // Derive the same KEK the factory used to seal the domain keys (and that protects the
+            // keyfile body), from the RSK every code unwraps. Computed before the OpenedStore is
+            // disposed (which zeroizes the RSK); the derived key survives for the session lifetime.
+            session._recoverySessionKey = RecoveryStoreEnvelope.DeriveDomainSealKey(
+                opened.RecoveryStoreKey,
+                opened.Store.Salt);
+            session._isEnvelopeSession = true;
+            session._state = RecoverySessionState.AwaitingDomainSelection;
+
+            auditService.LogAuditEntry(
+                opened.Store,
+                RecoveryEventType.CodeValidationAttempt,
+                success: true,
+                deviceFingerprint: deviceFingerprint,
+                appVersion: appVersion);
+
+            _ = session.MonitorSessionTimeoutAsync();
+            return session;
+        }
+
+        /// <summary>
+        /// Return the backed-up keyfile material from an envelope-opened session. The caller owns
+        /// zeroization of the returned bytes after rewriting the keyfile onto a new USB.
+        /// </summary>
+        public byte[] RecoverKeyfile()
+        {
+            ThrowIfDisposed();
+
+            if (!_isEnvelopeSession)
+                throw new InvalidOperationException("Keyfile recovery is only available for envelope-opened sessions.");
+            if (_state != RecoverySessionState.AwaitingDomainSelection && _state != RecoverySessionState.DomainRecovered)
+                throw new InvalidOperationException($"Cannot recover keyfile from state {_state}");
+
+            var keyfile = _recoveryStore.ProtectedKeyfile;
+            if (keyfile == null || keyfile.Length == 0)
+                throw new InvalidOperationException("This recovery store does not contain a keyfile backup.");
+
+            _auditService.LogAuditEntry(
+                _recoveryStore,
+                RecoveryEventType.DomainRecovered,
+                success: true,
+                targetDomain: CryptoDomain.Obscura,
+                deviceFingerprint: _deviceFingerprint,
+                appVersion: _appVersion);
+
+            _state = RecoverySessionState.DomainRecovered;
+            return (byte[])keyfile.Clone();
+        }
+
+
         public bool RequiresUsbPresence => _recoveryStore.Policy.RequireUsbPresence;
 
-        /// <summary>
-        /// Recovery delay in seconds (from policy).
-        /// </summary>
         public int RecoveryDelaySeconds => _recoveryStore.Policy.RecoveryDelaySeconds;
 
-        /// <summary>
-        /// Time remaining in session (seconds).
-        /// </summary>
         public int SessionSecondsRemaining
         {
             get
@@ -80,15 +138,8 @@ namespace PhantomVault.Core.Services.DomainKeys
             }
         }
 
-        /// <summary>
-        /// Remaining unused recovery codes.
-        /// </summary>
         public int RemainingCodes => _auditService.GetRemainingCodeCount(_recoveryStore);
 
-        /// <summary>
-        /// Enters recovery mode. Must be called first.
-        /// </summary>
-        /// <returns>Device mismatch warning if applicable</returns>
         public string? EnterRecoveryMode()
         {
             ThrowIfDisposed();
@@ -96,13 +147,10 @@ namespace PhantomVault.Core.Services.DomainKeys
             if (_state != RecoverySessionState.NotStarted)
                 throw new InvalidOperationException($"Cannot enter recovery mode from state {_state}");
 
-            // Validate policy
             _auditService.ValidatePolicy(_recoveryStore, _deviceFingerprint, _appVersion);
 
-            // Check device match (warning only in Warn mode)
             _auditService.CheckDeviceMatch(_recoveryStore, _deviceFingerprint, out var warning);
 
-            // Log entry
             _auditService.LogAuditEntry(
                 _recoveryStore,
                 RecoveryEventType.RecoveryModeEntered,
@@ -112,19 +160,11 @@ namespace PhantomVault.Core.Services.DomainKeys
 
             _state = RecoverySessionState.AwaitingCodeValidation;
 
-            // Start session timeout
             _ = MonitorSessionTimeoutAsync();
 
             return warning;
         }
 
-        /// <summary>
-        /// Validates a recovery code.
-        /// </summary>
-        /// <param name="recoveryCode">Recovery code entered by user</param>
-        /// <param name="verifyHash">Function to verify Argon2id hash</param>
-        /// <param name="salt">Salt for session key derivation</param>
-        /// <returns>True if valid</returns>
         public bool ValidateCode(
             string recoveryCode,
             Func<string, string, bool> verifyHash,
@@ -139,7 +179,7 @@ namespace PhantomVault.Core.Services.DomainKeys
 
             if (codeEntry == null)
             {
-                // Log failed attempt
+
                 _auditService.LogAuditEntry(
                     _recoveryStore,
                     RecoveryEventType.CodeValidationAttempt,
@@ -151,13 +191,10 @@ namespace PhantomVault.Core.Services.DomainKeys
                 return false;
             }
 
-            // Code is valid
             _validatedCode = codeEntry;
 
-            // Derive session key
             _recoverySessionKey = _scopedRecoveryService.DeriveRecoverySessionKey(recoveryCode, salt);
 
-            // Log success
             _auditService.LogAuditEntry(
                 _recoveryStore,
                 RecoveryEventType.CodeValidationAttempt,
@@ -170,12 +207,6 @@ namespace PhantomVault.Core.Services.DomainKeys
             return true;
         }
 
-        /// <summary>
-        /// Waits for the policy-required delay before recovery can proceed.
-        /// This gives users time to abort if they're being coerced.
-        /// </summary>
-        /// <param name="progressCallback">Called with remaining seconds</param>
-        /// <param name="ct">Cancellation token</param>
         public async Task WaitForDelayAsync(
             Action<int>? progressCallback = null,
             CancellationToken ct = default)
@@ -199,11 +230,6 @@ namespace PhantomVault.Core.Services.DomainKeys
             _state = RecoverySessionState.AwaitingDomainSelection;
         }
 
-        /// <summary>
-        /// Recovers the specified domain.
-        /// </summary>
-        /// <param name="domain">Domain to recover (must be explicitly selected)</param>
-        /// <returns>Domain recovery key (caller must zero after use)</returns>
         public byte[] RecoverDomain(CryptoDomain domain)
         {
             ThrowIfDisposed();
@@ -214,7 +240,6 @@ namespace PhantomVault.Core.Services.DomainKeys
             if (_recoverySessionKey == null)
                 throw new InvalidOperationException("Session key not available");
 
-            // Get the sealed key for the requested domain
             SealedRecoveryKey? sealedKey = domain switch
             {
                 CryptoDomain.Obscura => _recoveryStore.ObscuraSealed,
@@ -235,7 +260,7 @@ namespace PhantomVault.Core.Services.DomainKeys
             }
             catch (Exception ex)
             {
-                // Log failure
+
                 _auditService.LogAuditEntry(
                     _recoveryStore,
                     RecoveryEventType.DomainRecovered,
@@ -249,14 +274,12 @@ namespace PhantomVault.Core.Services.DomainKeys
                 throw;
             }
 
-            // Mark code and sealed key as used
             if (_validatedCode != null)
             {
                 _auditService.MarkCodeUsed(_recoveryStore, _validatedCode, domain);
             }
             _auditService.MarkSealedKeyUsed(sealedKey);
 
-            // Log success (this triggers RekeyRequired event)
             _auditService.LogAuditEntry(
                 _recoveryStore,
                 RecoveryEventType.DomainRecovered,
@@ -270,9 +293,6 @@ namespace PhantomVault.Core.Services.DomainKeys
             return domainRecoveryKey;
         }
 
-        /// <summary>
-        /// Aborts the recovery session.
-        /// </summary>
         public void Abort()
         {
             ThrowIfDisposed();
@@ -288,9 +308,6 @@ namespace PhantomVault.Core.Services.DomainKeys
             _state = RecoverySessionState.Aborted;
         }
 
-        /// <summary>
-        /// Called when USB is removed during recovery.
-        /// </summary>
         public void OnUsbRemoved()
         {
             if (_disposed || _state == RecoverySessionState.Completed || _state == RecoverySessionState.Aborted)
@@ -308,9 +325,6 @@ namespace PhantomVault.Core.Services.DomainKeys
             _state = RecoverySessionState.Aborted;
         }
 
-        /// <summary>
-        /// Ends the recovery session normally.
-        /// </summary>
         public void Complete()
         {
             ThrowIfDisposed();
@@ -333,7 +347,6 @@ namespace PhantomVault.Core.Services.DomainKeys
                     TimeSpan.FromSeconds(_recoveryStore.Policy.MaxSessionSeconds),
                     _sessionCts.Token);
 
-                // Session timed out
                 if (!_disposed && _state != RecoverySessionState.Completed && _state != RecoverySessionState.Aborted)
                 {
                     _auditService.LogAuditEntry(
@@ -349,7 +362,7 @@ namespace PhantomVault.Core.Services.DomainKeys
             }
             catch (OperationCanceledException)
             {
-                // Session was cancelled normally
+
             }
         }
 
@@ -377,44 +390,22 @@ namespace PhantomVault.Core.Services.DomainKeys
         }
     }
 
-    /// <summary>
-    /// States of a recovery session.
-    /// </summary>
     public enum RecoverySessionState
     {
-        /// <summary>
-        /// Session not yet started.
-        /// </summary>
+
         NotStarted,
 
-        /// <summary>
-        /// Waiting for user to enter recovery code.
-        /// </summary>
         AwaitingCodeValidation,
 
-        /// <summary>
-        /// Waiting for policy-required delay.
-        /// </summary>
         AwaitingDelay,
 
-        /// <summary>
-        /// Waiting for user to select domain.
-        /// </summary>
         AwaitingDomainSelection,
 
-        /// <summary>
-        /// Domain has been recovered, awaiting completion.
-        /// </summary>
         DomainRecovered,
 
-        /// <summary>
-        /// Session completed normally.
-        /// </summary>
         Completed,
 
-        /// <summary>
-        /// Session was aborted.
-        /// </summary>
         Aborted
     }
 }
+

@@ -7,9 +7,6 @@ using Serilog;
 
 namespace PhantomVault.UI.Services;
 
-/// <summary>
-/// Shared sync data written by both Phantom.Obscura and Phantom.Attestor.
-/// </summary>
 public class PhantomSyncData
 {
     public string? SelectedThemeId { get; set; }
@@ -17,11 +14,6 @@ public class PhantomSyncData
     public DateTimeOffset? LastChangedAt { get; set; }
 }
 
-/// <summary>
-/// Cross-application sync service that keeps theme in sync
-/// between Phantom.Obscura and Phantom.Attestor via a shared JSON file.
-/// Monitors <c>%AppData%/PhantomVault/phantom-sync.json</c>.
-/// </summary>
 public sealed class CrossAppSyncService : IDisposable
 {
     private const string SyncFileName = "phantom-sync.json";
@@ -33,9 +25,6 @@ public sealed class CrossAppSyncService : IDisposable
     private bool _suppressNextWrite;
     private readonly object _lock = new();
 
-    /// <summary>
-    /// Raised when an incoming sync changes the theme.  Payload is the new theme ID.
-    /// </summary>
     public event EventHandler<string>? ThemeSynced;
 
     public CrossAppSyncService(IRuntimeThemeService runtimeThemeService)
@@ -49,13 +38,9 @@ public sealed class CrossAppSyncService : IDisposable
         _syncFilePath = Path.Combine(syncDir, SyncFileName);
     }
 
-    /// <summary>
-    /// Starts watching the shared sync file. Also subscribes to theme changes
-    /// so local changes are published automatically.
-    /// </summary>
     public void Start()
     {
-        // Publish current state if file doesn't exist
+
         if (!File.Exists(_syncFilePath))
         {
             WriteSyncFile(_runtimeThemeService.CurrentThemeId);
@@ -65,10 +50,8 @@ public sealed class CrossAppSyncService : IDisposable
             ApplyIncomingSync();
         }
 
-        // Subscribe to local theme changes
         _runtimeThemeService.ThemeChanged += OnLocalThemeChanged;
 
-        // Watch for external changes
         var dir = Path.GetDirectoryName(_syncFilePath)!;
         _watcher = new FileSystemWatcher(dir, SyncFileName)
         {
@@ -88,9 +71,6 @@ public sealed class CrossAppSyncService : IDisposable
         WriteSyncFile(themeId);
     }
 
-    /// <summary>
-    /// Manually publish a theme change (call in addition to the event if needed).
-    /// </summary>
     public void PublishThemeChange(string themeId)
     {
         var settings = SettingsService.Load();
@@ -154,7 +134,6 @@ public sealed class CrossAppSyncService : IDisposable
             var data = JsonSerializer.Deserialize<PhantomSyncData>(json);
             if (data == null) return;
 
-            // Only apply if another app changed it
             if (data.LastChangedBy == AppIdentity) return;
 
             if (!string.IsNullOrEmpty(data.SelectedThemeId) &&
@@ -165,7 +144,6 @@ public sealed class CrossAppSyncService : IDisposable
 
                 _runtimeThemeService.Apply(data.SelectedThemeId);
 
-                // Persist to local settings
                 settings.SelectedThemeId = data.SelectedThemeId;
                 settings.LastSyncTime = DateTimeOffset.UtcNow;
                 SettingsService.Save(settings);
@@ -192,3 +170,4 @@ public sealed class CrossAppSyncService : IDisposable
         }
     }
 }
+

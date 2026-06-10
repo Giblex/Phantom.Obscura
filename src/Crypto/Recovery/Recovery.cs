@@ -68,7 +68,7 @@ namespace GiblexVault.Security.ZK.Recovery
             }
             else
             {
-                // Legacy format: nonce|ct|tag with an implicit all-zero salt.
+
                 salt = new byte[SaltSize];
                 nonceOffset = 0;
                 ciphertextOffset = NonceSize;
@@ -100,3 +100,4 @@ namespace GiblexVault.Security.ZK.Recovery
         }
     }
 }
+

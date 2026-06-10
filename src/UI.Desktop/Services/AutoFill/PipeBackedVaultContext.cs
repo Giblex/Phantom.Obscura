@@ -6,11 +6,7 @@ using PhantomVault.Core.Services.Autofill;
 
 namespace PhantomVault.UI.Services.AutoFill
 {
-    /// <summary>
-    /// <see cref="IAutofillVaultContext"/> implementation that queries vault state
-    /// from the running desktop app via <see cref="PipeNativeHostClient"/>.
-    /// Results are cached for 500 ms to avoid a pipe round-trip per message.
-    /// </summary>
+
     public sealed class PipeBackedVaultContext : IAutofillVaultContext
     {
         private readonly PipeNativeHostClient _client;
@@ -63,7 +59,7 @@ namespace PhantomVault.UI.Services.AutoFill
                 }
                 catch
                 {
-                    // Keep stale cached values; desktop app may be busy
+
                 }
 
                 _cacheExpiry = DateTime.UtcNow.AddMilliseconds(500);
@@ -71,3 +67,4 @@ namespace PhantomVault.UI.Services.AutoFill
         }
     }
 }
+

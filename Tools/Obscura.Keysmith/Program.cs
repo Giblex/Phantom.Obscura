@@ -8,9 +8,15 @@ namespace Obscura.Keysmith;
 
 internal static class Program
 {
-    // Base folder for keys (relative to the Keysmith exe)
-    private static readonly string KeysBasePath = Path.Combine(AppContext.BaseDirectory, "keys");
-    private static readonly string CertsBasePath = Path.Combine(AppContext.BaseDirectory, "certs");
+    // Signing material is loaded from an operator-controlled location. Override via env vars
+    // to point at a HSM-extracted PFX, Key Vault download dir, or YubiKey-staged cert.
+    // The local ./keys/ and ./certs/ folders are operator-only and excluded from source control.
+    private static readonly string KeysBasePath =
+        Environment.GetEnvironmentVariable("OBSCURA_KEYSMITH_KEYS")
+        ?? Path.Combine(AppContext.BaseDirectory, "keys");
+    private static readonly string CertsBasePath =
+        Environment.GetEnvironmentVariable("OBSCURA_KEYSMITH_CERTS")
+        ?? Path.Combine(AppContext.BaseDirectory, "certs");
 
     private static int Main(string[] args)
     {

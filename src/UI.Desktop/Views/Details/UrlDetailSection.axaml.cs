@@ -10,3 +10,4 @@ public partial class UrlDetailSection : UserControl
         AvaloniaXamlLoader.Load(this);
     }
 }
+

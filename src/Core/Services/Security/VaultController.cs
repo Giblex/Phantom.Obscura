@@ -6,10 +6,7 @@ using PhantomVault.Core.Models;
 
 namespace PhantomVault.Core.Services.Security
 {
-    /// <summary>
-    /// Implementation of IVaultController for vault security controls.
-    /// Manages vault access modes including read-only and decoy vault activation.
-    /// </summary>
+
     public sealed class VaultController : IVaultController
     {
         private readonly ILogger<VaultController>? _logger;
@@ -26,22 +23,15 @@ namespace PhantomVault.Core.Services.Security
             _decoyService = new DecoyVaultService(decoyOptions, logger as ILogger<DecoyVaultService>);
         }
 
-        /// <summary>
-        /// Switches to a decoy vault containing fake credentials.
-        /// This is a critical security feature activated during suspected compromise.
-        /// The decoy vault contains realistic-looking but entirely fake data.
-        /// </summary>
         public async Task SwitchToDecoyVaultAsync()
         {
             _logger?.LogCritical("SWITCHING TO DECOY VAULT - Suspected security compromise");
 
             try
             {
-                // Activate decoy vault with fake credentials
+
                 var decoyDatabase = await _decoyService.ActivateDecoyVaultAsync();
 
-                // Enter read-only mode to prevent attacker from modifying decoy
-                // This makes the decoy more convincing (they can browse but not change)
                 EnterReadOnlyMode();
 
                 int totalCredentials = decoyDatabase.Groups?.Sum(g => g.Entries?.Count ?? 0) ?? 0;
@@ -70,3 +60,4 @@ namespace PhantomVault.Core.Services.Security
         }
     }
 }
+

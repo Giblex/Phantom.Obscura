@@ -9,15 +9,7 @@ using Serilog;
 
 namespace PhantomVault.UI.Services.AutoFill
 {
-    /// <summary>
-    /// Polls for a TOTP / 2FA input field to appear after the password fill step.
-    ///
-    /// Browser path: Listens for a <see cref="NativeMessagingHostService.FormDetected"/>
-    /// event that contains a field classified as <c>FormFieldType.TwoFactor</c>.
-    ///
-    /// Native-app path: Polls <see cref="WindowsNativeLoginDetector.DetectTotpField"/>
-    /// every <paramref name="pollIntervalMs"/> milliseconds.
-    /// </summary>
+
     public sealed class TotpFieldPoller : ITotpFieldPoller
     {
         private static readonly string[] TotpKeywords =
@@ -61,8 +53,6 @@ namespace PhantomVault.UI.Services.AutoFill
             }
         }
 
-        // --- Browser path ---
-
         private Task<TotpFieldDescriptor?> WaitForBrowserTotpFieldAsync(CancellationToken ct)
         {
             var tcs = new TaskCompletionSource<TotpFieldDescriptor?>(
@@ -100,8 +90,6 @@ namespace PhantomVault.UI.Services.AutoFill
             return tcs.Task;
         }
 
-        // --- Native-app path ---
-
         private async Task<TotpFieldDescriptor?> PollNativeAppTotpFieldAsync(
             AutoInjectContext context,
             int pollIntervalMs,
@@ -135,10 +123,10 @@ namespace PhantomVault.UI.Services.AutoFill
 
         private static int InferMaxLength(FormFieldInfo field)
         {
-            // Try to derive from autocomplete attribute or field name heuristics
-            // Common TOTP lengths are 6 (TOTP) or 8 (HOTP extended)
+
             var combined = $"{field.Id} {field.Name} {field.Label} {field.AutoComplete}".ToLowerInvariant();
             return combined.Contains("backup") || combined.Contains("recovery") ? 8 : 6;
         }
     }
 }
+

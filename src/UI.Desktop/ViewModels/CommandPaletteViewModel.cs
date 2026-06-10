@@ -8,18 +8,7 @@ using ReactiveUI;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// ViewModel for the global command palette (Ctrl+K). Pure UI state:
-    /// holds the source action list, the current search text, the filtered
-    /// projection, and a selection cursor.
-    /// </summary>
-    /// <remarks>
-    /// The View is responsible for raising <see cref="ActivateRequested"/>
-    /// when the user presses Enter / clicks a row. We deliberately do NOT
-    /// invoke the action on the ReactiveCommand thread here — closing the
-    /// window first lets the underlying VM command open its own dialog
-    /// without parent-window focus glitches.
-    /// </remarks>
+
     public sealed class CommandPaletteViewModel : ReactiveObject
     {
         private readonly IReadOnlyList<CommandPaletteAction> _allActions;
@@ -40,10 +29,8 @@ namespace PhantomVault.UI.ViewModels
             ActivateSelectedCommand = ReactiveCommand.Create(ActivateSelected);
         }
 
-        /// <summary>Filtered list bound to the palette ListBox.</summary>
         public ObservableCollection<CommandPaletteAction> FilteredActions { get; }
 
-        /// <summary>Search box text. Filtering re-runs on every change.</summary>
         public string SearchText
         {
             get => _searchText;
@@ -74,10 +61,6 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> MoveSelectionUpCommand { get; }
         public ReactiveCommand<Unit, Unit> ActivateSelectedCommand { get; }
 
-        /// <summary>
-        /// Raised when the user activates a row (Enter / double-click).
-        /// The View handles closing the palette and invoking the action.
-        /// </summary>
         public event EventHandler<CommandPaletteAction>? ActivateRequested;
 
         private void ApplyFilter()
@@ -94,9 +77,7 @@ namespace PhantomVault.UI.ViewModels
             }
             else
             {
-                // Lightweight substring match across Title / Subtitle / Category
-                // / SearchKeywords. Avoids pulling in a fuzzy matcher dependency;
-                // ranks "starts with" higher than "contains".
+
                 var matches = _allActions
                     .Select(a => new { Action = a, Score = ScoreMatch(a, query) })
                     .Where(x => x.Score > 0)
@@ -130,7 +111,7 @@ namespace PhantomVault.UI.ViewModels
             if (string.IsNullOrEmpty(value)) return 0;
             int idx = value.IndexOf(query, StringComparison.OrdinalIgnoreCase);
             if (idx < 0) return 0;
-            // Boost for prefix matches.
+
             return idx == 0 ? weight * 3 : weight;
         }
 
@@ -156,3 +137,4 @@ namespace PhantomVault.UI.ViewModels
         }
     }
 }
+

@@ -5,7 +5,6 @@
              x:DataType="vm:ThemeSettingsViewModel"
              Background="{DynamicResource WindowBackgroundBrush}">
 
-  <!-- Android adapter for desktop Views/ThemeSettingsWindow.axaml (Window→UserControl) -->
   <Grid Margin="16" RowDefinitions="Auto,*,Auto">
     <Border Grid.Row="0"
             Background="{DynamicResource HeaderBackgroundBrush}"
@@ -86,3 +85,4 @@
     </StackPanel>
   </Grid>
 </UserControl>
+

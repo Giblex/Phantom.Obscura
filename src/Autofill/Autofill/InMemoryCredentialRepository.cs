@@ -7,11 +7,7 @@ using PhantomVault.Core.Models;
 
 namespace PhantomVault.Core.Services.Autofill
 {
-    /// <summary>
-    /// In-memory credential repository for testing and development.
-    /// WARNING: This is NOT persistent and NOT encrypted. 
-    /// For production, use a KeePass-based or encrypted database implementation.
-    /// </summary>
+
     public class InMemoryCredentialRepository : ICredentialRepository
     {
         private readonly List<Credential> _credentials = new();
@@ -40,13 +36,13 @@ namespace PhantomVault.Core.Services.Autofill
 
             lock (_lock)
             {
-                // Check if credential already exists (by title)
+
                 var existing = _credentials.FirstOrDefault(c =>
                     c.Title.Equals(credential.Title, StringComparison.OrdinalIgnoreCase));
 
                 if (existing != null)
                 {
-                    // Update existing
+
                     existing.Username = credential.Username;
                     existing.Password = credential.Password;
                     existing.Url = credential.Url;
@@ -61,7 +57,7 @@ namespace PhantomVault.Core.Services.Autofill
                 }
                 else
                 {
-                    // Add new
+
                     _credentials.Add(credential);
                 }
             }
@@ -128,11 +124,10 @@ namespace PhantomVault.Core.Services.Autofill
             if (string.IsNullOrWhiteSpace(domain))
                 return string.Empty;
 
-            // Remove www. prefix
             domain = domain.Replace("www.", "", StringComparison.OrdinalIgnoreCase);
 
-            // Convert to lowercase for case-insensitive comparison
             return domain.ToLowerInvariant();
         }
     }
 }
+

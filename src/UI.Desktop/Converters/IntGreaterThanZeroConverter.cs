@@ -5,10 +5,7 @@ using Avalonia.Data.Converters;
 
 namespace PhantomVault.UI.Converters
 {
-    /// <summary>
-    /// Converts an integer to a boolean indicating if it's greater than zero.
-    /// Useful for showing/hiding elements based on count.
-    /// </summary>
+
     public class IntGreaterThanZeroConverter : IValueConverter
     {
         public static readonly IntGreaterThanZeroConverter Instance = new IntGreaterThanZeroConverter();
@@ -34,3 +31,4 @@ namespace PhantomVault.UI.Converters
         }
     }
 }
+

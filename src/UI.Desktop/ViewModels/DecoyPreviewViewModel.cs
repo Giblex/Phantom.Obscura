@@ -11,10 +11,7 @@ using PhantomVault.Core.Services.Security;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// View model for the decoy vault preview window.
-    /// Displays generated fake credentials for testing the decoy system.
-    /// </summary>
+
     public sealed class DecoyPreviewViewModel : ReactiveObject
     {
         private readonly DecoyVaultService _decoyVaultService;
@@ -23,7 +20,6 @@ namespace PhantomVault.UI.ViewModels
         {
             _decoyVaultService = decoyVaultService;
 
-            // Extract all credentials from decoy database
             if (decoyDatabase?.Groups != null)
             {
                 var allCredentials = decoyDatabase.Groups
@@ -49,7 +45,7 @@ namespace PhantomVault.UI.ViewModels
 
         private void CloseWindow()
         {
-            // Find and close the preview window
+
             if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 var window = desktop.Windows.FirstOrDefault(w => w is Views.DecoyPreviewWindow);
@@ -58,3 +54,4 @@ namespace PhantomVault.UI.ViewModels
         }
     }
 }
+

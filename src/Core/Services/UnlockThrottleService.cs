@@ -8,11 +8,7 @@ using System.Text.Json;
 
 namespace PhantomVault.Core.Services
 {
-    /// <summary>
-    /// Provides unlock attempt throttling that works independently of manifest decryption.
-    /// Stores failed attempts in a DPAPI-protected local file, keyed by manifest file hash.
-    /// This allows throttling even when the wrong password is entered.
-    /// </summary>
+
     [SupportedOSPlatform("windows")]
     public sealed class UnlockThrottleService
     {
@@ -24,17 +20,13 @@ namespace PhantomVault.Core.Services
 
         private readonly object _lock = new();
 
-        /// <summary>
-        /// Checks if unlock attempts are currently throttled for the given manifest.
-        /// Returns true if locked out, false if unlock can proceed.
-        /// </summary>
         public bool IsThrottled(string manifestPath, out TimeSpan remainingLockout)
         {
             remainingLockout = TimeSpan.Zero;
-            
+
             var manifestKey = ComputeManifestKey(manifestPath);
             var throttleData = LoadThrottleData();
-            
+
             if (!throttleData.TryGetValue(manifestKey, out var record))
             {
                 return false;
@@ -49,18 +41,14 @@ namespace PhantomVault.Core.Services
             return false;
         }
 
-        /// <summary>
-        /// Registers a failed unlock attempt for the given manifest.
-        /// May trigger or extend a lockout period.
-        /// </summary>
         public void RegisterFailedAttempt(string manifestPath)
         {
             var manifestKey = ComputeManifestKey(manifestPath);
-            
+
             lock (_lock)
             {
                 var throttleData = LoadThrottleData();
-                
+
                 if (!throttleData.TryGetValue(manifestKey, out var record))
                 {
                     record = new ThrottleRecord
@@ -71,7 +59,6 @@ namespace PhantomVault.Core.Services
                     };
                 }
 
-                // Reset counter if last attempt was more than 30 minutes ago
                 if (DateTimeOffset.UtcNow - record.LastAttemptUtc > TimeSpan.FromMinutes(30))
                 {
                     record.FailedAttempts = 0;
@@ -80,11 +67,9 @@ namespace PhantomVault.Core.Services
                 record.FailedAttempts++;
                 record.LastAttemptUtc = DateTimeOffset.UtcNow;
 
-                // Apply lockout if threshold reached
                 if (record.FailedAttempts >= MaxAttemptsBeforeLockout)
                 {
-                    // True exponential backoff: 10min, 20min, 40min, 60min (capped)
-                    // Formula: baseTime * 2^(attempts - threshold)
+
                     int excessAttempts = record.FailedAttempts - MaxAttemptsBeforeLockout + 1;
                     int lockoutMinutes = LockoutDurationMinutes * (int)Math.Pow(2, excessAttempts - 1);
                     lockoutMinutes = Math.Min(lockoutMinutes, MaxLockoutDurationMinutes);
@@ -97,17 +82,14 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Resets the failed attempt counter on successful unlock.
-        /// </summary>
         public void ResetAttempts(string manifestPath)
         {
             var manifestKey = ComputeManifestKey(manifestPath);
-            
+
             lock (_lock)
             {
                 var throttleData = LoadThrottleData();
-                
+
                 if (throttleData.ContainsKey(manifestKey))
                 {
                     throttleData.Remove(manifestKey);
@@ -116,26 +98,19 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Gets the current failed attempt count for a manifest.
-        /// </summary>
         public int GetFailedAttemptCount(string manifestPath)
         {
             var manifestKey = ComputeManifestKey(manifestPath);
             var throttleData = LoadThrottleData();
-            
+
             if (throttleData.TryGetValue(manifestKey, out var record))
             {
                 return record.FailedAttempts;
             }
-            
+
             return 0;
         }
 
-        /// <summary>
-        /// Computes a stable key for the manifest based on its full path.
-        /// Uses SHA256 hash of the normalized path.
-        /// </summary>
         private static string ComputeManifestKey(string manifestPath)
         {
             var normalizedPath = Path.GetFullPath(manifestPath).ToUpperInvariant();
@@ -153,7 +128,7 @@ namespace PhantomVault.Core.Services
         private Dictionary<string, ThrottleRecord> LoadThrottleData()
         {
             var path = GetThrottleDataPath();
-            
+
             if (!File.Exists(path))
             {
                 return new Dictionary<string, ThrottleRecord>();
@@ -166,14 +141,14 @@ namespace PhantomVault.Core.Services
                     protectedData,
                     Encoding.UTF8.GetBytes("PhantomVault.UnlockThrottle"),
                     DataProtectionScope.CurrentUser);
-                
+
                 var json = Encoding.UTF8.GetString(jsonBytes);
-                return JsonSerializer.Deserialize<Dictionary<string, ThrottleRecord>>(json) 
+                return JsonSerializer.Deserialize<Dictionary<string, ThrottleRecord>>(json)
                     ?? new Dictionary<string, ThrottleRecord>();
             }
             catch
             {
-                // If data is corrupted, start fresh
+
                 return new Dictionary<string, ThrottleRecord>();
             }
         }
@@ -182,7 +157,7 @@ namespace PhantomVault.Core.Services
         {
             var path = GetThrottleDataPath();
             var directory = Path.GetDirectoryName(path);
-            
+
             if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
@@ -194,7 +169,7 @@ namespace PhantomVault.Core.Services
                 jsonBytes,
                 Encoding.UTF8.GetBytes("PhantomVault.UnlockThrottle"),
                 DataProtectionScope.CurrentUser);
-            
+
             File.WriteAllBytes(path, protectedData);
         }
 
@@ -206,3 +181,4 @@ namespace PhantomVault.Core.Services
         }
     }
 }
+

@@ -4,7 +4,7 @@ using Avalonia.Data.Converters;
 
 namespace PhantomVault.UI.Converters
 {
-    // Returns true when the provided width (double) is less than the ConverterParameter (threshold)
+
     public sealed class IsWidthLessThanConverter : IValueConverter
     {
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
@@ -29,3 +29,4 @@ namespace PhantomVault.UI.Converters
         }
     }
 }
+

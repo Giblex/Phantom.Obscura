@@ -10,3 +10,4 @@ public partial class IdentityDetailView : UserControl
         AvaloniaXamlLoader.Load(this);
     }
 }
+

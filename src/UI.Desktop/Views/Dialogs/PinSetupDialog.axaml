@@ -11,7 +11,7 @@
         Background="{DynamicResource WindowBackgroundBrush}">
 
     <Grid Margin="24" RowDefinitions="Auto,*,Auto">
-        <!-- Header -->
+
         <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,20">
             <TextBlock Text="Set Up PIN Lock"
                        FontSize="{StaticResource Type.Icon.Size}"
@@ -23,9 +23,8 @@
                        TextWrapping="Wrap"/>
         </StackPanel>
 
-        <!-- PIN Input Fields -->
         <StackPanel Grid.Row="1" Spacing="16">
-            <!-- PIN Entry -->
+
             <StackPanel Spacing="8">
                 <TextBlock Text="Enter PIN"
                            FontSize="{StaticResource Type.Label.Size}"
@@ -42,7 +41,6 @@
                          FontSize="{StaticResource Type.H5.Size}"/>
             </StackPanel>
 
-            <!-- PIN Confirmation -->
             <StackPanel Spacing="8">
                 <TextBlock Text="Confirm PIN"
                            FontSize="{StaticResource Type.Label.Size}"
@@ -59,7 +57,6 @@
                          FontSize="{StaticResource Type.H5.Size}"/>
             </StackPanel>
 
-            <!-- Error Message -->
             <TextBlock Text="{Binding ErrorMessage}"
                        FontSize="{StaticResource Type.Small.Size}"
                        Foreground="{DynamicResource ErrorTextBrush}"
@@ -67,7 +64,6 @@
                        IsVisible="{Binding ErrorMessage, Converter={x:Static ObjectConverters.IsNotNull}}"/>
         </StackPanel>
 
-        <!-- Buttons -->
         <StackPanel Grid.Row="2"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"

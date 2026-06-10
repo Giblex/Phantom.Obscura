@@ -10,3 +10,4 @@ public partial class WiFiEditForm : UserControl
         AvaloniaXamlLoader.Load(this);
     }
 }
+

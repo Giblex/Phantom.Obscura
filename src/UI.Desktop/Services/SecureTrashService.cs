@@ -10,10 +10,7 @@ using PhantomVault.UI.Models;
 
 namespace PhantomVault.UI.Services
 {
-    /// <summary>
-    /// Manages the secure rubbish bin, including retention policy, persistence,
-    /// restores, and secure wiping of permanently deleted credentials.
-    /// </summary>
+
     public sealed class SecureTrashService
     {
         private readonly object _gate = new();
@@ -85,7 +82,7 @@ namespace PhantomVault.UI.Services
 
             if (!IsEnabled)
             {
-                // Immediately purge when secure trash is disabled.
+
                 SecurelyPurge(record.Id);
             }
 
@@ -260,7 +257,7 @@ namespace PhantomVault.UI.Services
             }
             catch
             {
-                // best effort
+
             }
         }
 
@@ -277,3 +274,4 @@ namespace PhantomVault.UI.Services
         }
     }
 }
+

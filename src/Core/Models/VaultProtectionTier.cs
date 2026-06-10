@@ -18,3 +18,4 @@ namespace PhantomVault.Core.Models
         RawDevice = 2
     }
 }
+

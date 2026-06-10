@@ -1,0 +1,65 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PhantomVault.UI.Views.Settings.RecentIssuesView">
+    <StackPanel Spacing="20" Margin="0,0,0,60">
+        <TextBlock Text="Recent Issues"
+                   FontSize="{StaticResource Type.H3.Size}"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+        <Border Classes="fade-in stagger-1" HorizontalAlignment="Stretch"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
+                Padding="20">
+            <StackPanel Spacing="15">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0"
+                               Text="Errors and warnings surfaced during this session. Cleared when you restart the app."
+                               FontSize="{StaticResource Type.Small.Size}"
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               TextWrapping="Wrap"
+                               VerticalAlignment="Center"/>
+                    <Button Grid.Column="1"
+                            x:Name="ClearButton"
+                            Content="Clear"
+                            Classes="liquid-glass"
+                            Width="100"
+                            VerticalAlignment="Top"/>
+                </Grid>
+
+                <TextBlock x:Name="EmptyText"
+                           Text="No issues recorded. 🎉"
+                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+
+                <ItemsControl x:Name="IssuesList">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{DynamicResource CardBackgroundBrush}"
+                                    CornerRadius="8"
+                                    Padding="12,8"
+                                    Margin="0,0,0,8">
+                                <StackPanel Spacing="2">
+                                    <Grid ColumnDefinitions="Auto,Auto,*">
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding SeverityText}"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource AccentBrush}"/>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding TimeText}"
+                                                   Margin="10,0,0,0"
+                                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                                    </Grid>
+                                    <TextBlock Text="{Binding Display}"
+                                               TextWrapping="Wrap"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

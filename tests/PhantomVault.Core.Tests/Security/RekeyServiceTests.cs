@@ -71,9 +71,9 @@ namespace PhantomVault.Core.Tests.Security
                 manifestPath,
                 oldKeyfilePath,
                 oldPassword,
-                newPassword,
-                newKeyfilePath,
-                usbSerial: null);
+                usbSerial: null,
+                newPassphrase: newPassword,
+                providedNewKeyfilePath: newKeyfilePath);
 
             Assert.True(result.Success, result.Error?.ToString());
             Assert.Equal(newKeyfilePath, result.NewKeyfilePath);

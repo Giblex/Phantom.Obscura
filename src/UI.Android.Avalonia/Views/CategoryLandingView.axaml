@@ -5,7 +5,6 @@
              x:DataType="vm:CategoryLandingViewModel"
              Background="{DynamicResource WindowBackgroundBrush}">
 
-  <!-- Direct port of desktop Views/CategoryLandingView.axaml (already a UserControl in desktop) -->
   <Grid>
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
       <StackPanel Margin="40,30,40,40" HorizontalAlignment="Center">
@@ -70,3 +69,4 @@
     </ScrollViewer>
   </Grid>
 </UserControl>
+

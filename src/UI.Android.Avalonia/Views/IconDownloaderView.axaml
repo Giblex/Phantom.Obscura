@@ -5,9 +5,6 @@
              x:DataType="vm:IconDownloaderViewModel"
              Background="{DynamicResource WindowBackgroundBrush}">
 
-  <!-- Adapter of Views/IconDownloaderWindow.axaml — URL input + Fetch +
-       result grid of candidate favicons to choose from. -->
-
   <ScrollViewer>
     <StackPanel Margin="20" Spacing="16">
       <TextBlock Text="Website Icon Downloader"
@@ -77,3 +74,4 @@
     </StackPanel>
   </ScrollViewer>
 </UserControl>
+

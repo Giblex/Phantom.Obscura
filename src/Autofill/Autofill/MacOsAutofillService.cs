@@ -5,14 +5,7 @@ using System.Threading.Tasks;
 
 namespace PhantomVault.Core.Services.Autofill
 {
-    /// <summary>
-    /// macOS autofill provider. Supports browser-based autofill via the
-    /// PhantomVault browser extension and native messaging host.
-    ///
-    /// Native OS autofill (ASCredentialProviderExtension) requires an
-    /// App Extension target — implement in a separate macOS App Extension
-    /// project referencing this provider for credential lookup.
-    /// </summary>
+
     public sealed class MacOsAutofillService : IAutofillProvider
     {
         private readonly ICredentialRepository _credentialRepository;
@@ -31,10 +24,6 @@ namespace PhantomVault.Core.Services.Autofill
             _nativeMessagingHost = nativeMessagingHost;
         }
 
-        /// <summary>
-        /// Verifies that credentials exist for the domain. Actual browser filling
-        /// is performed by the browser extension via the native messaging host.
-        /// </summary>
         public bool TryFill(string domain)
         {
             if (string.IsNullOrWhiteSpace(domain)) return false;
@@ -55,7 +44,6 @@ namespace PhantomVault.Core.Services.Autofill
             }
         }
 
-        /// <summary>Starts the native messaging host so the browser extension can connect.</summary>
         public async Task StartNativeMessagingHostAsync(CancellationToken cancellationToken = default)
         {
             if (_nativeMessagingHost == null)
@@ -64,7 +52,7 @@ namespace PhantomVault.Core.Services.Autofill
             await _nativeMessagingHost.StartAsync(cancellationToken);
         }
 
-        /// <summary>Gets whether the native messaging host is currently running.</summary>
         public bool IsNativeMessagingHostRunning => _nativeMessagingHost?.IsRunning ?? false;
     }
 }
+

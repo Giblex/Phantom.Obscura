@@ -16,7 +16,7 @@
     </UserControl.Resources>
 
     <DockPanel Margin="20" LastChildFill="True">
-        <!-- Header -->
+
         <Border DockPanel.Dock="Top"
                 Background="{DynamicResource HeaderBackgroundBrush}"
                 Padding="16"
@@ -49,7 +49,7 @@
                                 Width="110" Height="34">
                             <TextBlock Text="Refresh" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Button>
-                        <!-- Options dropdown placed as vertical three-dashes: ⋮ -->
+
                         <Button Name="OptionsButton" Classes="liquid-glass" Width="40" Height="34" ToolTip.Tip="Options">
                             <TextBlock Text="⋮" FontSize="{StaticResource Type.Icon.Size}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             <Button.ContextMenu>
@@ -67,7 +67,6 @@
             </StackPanel>
         </Border>
 
-        <!-- Status footer -->
         <Border DockPanel.Dock="Bottom"
                 Background="{DynamicResource ControlBackgroundBrush}"
                 Padding="8"
@@ -80,7 +79,7 @@
                                Foreground="{DynamicResource MutedTextBrush}"
                                TextWrapping="Wrap"/>
                 </StackPanel>
-                <!-- Pagination (only shown in list view) -->
+
                 <StackPanel Orientation="Horizontal" Grid.Column="1" HorizontalAlignment="Center" Spacing="8" VerticalAlignment="Center"
                             IsVisible="{Binding IsGridView, Converter={StaticResource InvertBoolConverter}}">
                     <Button Command="{Binding PrevPageCommand}" IsEnabled="{Binding IsFirstPage, Converter={StaticResource InvertBoolConverter}}" Classes="liquid-glass" Width="72" Height="30">Prev</Button>
@@ -97,7 +96,6 @@
             </Grid>
         </Border>
 
-        <!-- Variant popup anchored below the clicked icon -->
         <Popup Name="VariantPopup" IsOpen="{Binding IsVariantPopupOpen, Mode=TwoWay}" Placement="Bottom"
                IsLightDismissEnabled="True">
             <Border Margin="0,4,0,0" Background="Transparent" Padding="0" MaxWidth="350">
@@ -130,7 +128,6 @@
             </Border>
         </Popup>
 
-        <!-- Icon grid -->
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
@@ -188,14 +185,13 @@
                 </DataGrid.Columns>
             </DataGrid>
 
-            <!-- Section-based grid view. Each section is a collapsible category. -->
             <ScrollViewer Grid.Row="0" Padding="8" IsVisible="{Binding IsGridView}" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                 <ItemsControl ItemsSource="{Binding FilteredSections}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Border Margin="0,0,0,6" CornerRadius="6" ClipToBounds="True">
                                 <StackPanel>
-                                    <!-- Section header (click to expand/collapse) -->
+
                                     <Button Command="{Binding ToggleExpandedCommand}"
                                             HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Stretch"
@@ -204,31 +200,30 @@
                                             CornerRadius="6"
                                             Background="{DynamicResource ControlBackgroundBrush}">
                                         <Grid ColumnDefinitions="Auto,Auto,*,Auto">
-                                            <!-- Expand arrow -->
+
                                             <TextBlock Grid.Column="0" Text="▾" IsVisible="{Binding IsExpanded}"
                                                        FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center" Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,8,0"/>
                                             <TextBlock Grid.Column="0" Text="▸" IsVisible="{Binding IsExpanded, Converter={StaticResource InvertBoolConverter}}"
                                                        FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center" Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,8,0"/>
-                                            <!-- Section name -->
+
                                             <TextBlock Grid.Column="1" Text="{Binding Name}"
                                                        FontWeight="SemiBold" FontSize="{StaticResource Type.Label.Size}"
                                                        VerticalAlignment="Center"
                                                        Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                            <!-- Count badge -->
+
                                             <TextBlock Grid.Column="3" Text="{Binding CountDisplay}"
                                                        FontSize="{StaticResource Type.Tiny.Size}" VerticalAlignment="Center"
                                                        Foreground="{DynamicResource MutedTextBrush}" Margin="8,0,0,0"/>
                                         </Grid>
                                     </Button>
 
-                                    <!-- Section content (visible when expanded) -->
                                     <Border IsVisible="{Binding IsExpanded}"
                                             Background="{DynamicResource CardBackgroundBrush}"
                                             Padding="8"
                                             CornerRadius="0,0,6,6"
                                             MinHeight="32">
                                         <StackPanel>
-                                            <!-- Loading progress -->
+
                                             <StackPanel IsVisible="{Binding IsLoading}" Spacing="6" Margin="0,8,0,12">
                                                 <ProgressBar IsIndeterminate="True" Height="3" Foreground="{DynamicResource AccentBrush}" Margin="20,0"/>
                                                 <TextBlock Text="{Binding LoadingProgressText}"
@@ -236,7 +231,7 @@
                                                            Foreground="{DynamicResource MutedTextBrush}"
                                                            HorizontalAlignment="Center"
                                                            Opacity="0.7"/>
-                                                <!-- Skeleton placeholders -->
+
                                                 <WrapPanel HorizontalAlignment="Center" Margin="0,4,0,0">
                                                     <Border Width="68" Height="68" CornerRadius="8" Background="{DynamicResource ControlBackgroundBrush}" Margin="4" Opacity="0.4"/>
                                                     <Border Width="68" Height="68" CornerRadius="8" Background="{DynamicResource ControlBackgroundBrush}" Margin="4" Opacity="0.3"/>
@@ -246,7 +241,6 @@
                                                 </WrapPanel>
                                             </StackPanel>
 
-                                            <!-- Icons wrap panel -->
                                             <ItemsControl ItemsSource="{Binding DisplayIcons}" IsVisible="{Binding IsLoaded}">
                                                 <ItemsControl.Transitions>
                                                     <Transitions>
@@ -276,7 +270,6 @@
                                                 </ItemsControl.ItemTemplate>
                                             </ItemsControl>
 
-                                            <!-- Show More button (when section has more icons than displayed) -->
                                             <Button IsVisible="{Binding HasMore}"
                                                     Command="{Binding ShowAllCommand}"
                                                     HorizontalAlignment="Center"
@@ -313,6 +306,4 @@
         </Grid>
     </DockPanel>
 </UserControl>
-
-
 

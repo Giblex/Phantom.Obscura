@@ -1,19 +1,19 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <!-- Dark variant (copied from PhantomTheme.axaml) -->
+
     <Style>
         <Style.Resources>
-            <!-- Deep dark backgrounds for professional contrast -->
+
             <SolidColorBrush x:Key="WindowBackgroundBrush">#1E2A38</SolidColorBrush>
-            <!-- Header/footer backgrounds with clear hierarchy -->
+
             <SolidColorBrush x:Key="HeaderBackgroundBrush">#1A2535</SolidColorBrush>
             <SolidColorBrush x:Key="HeaderBorderBrush">Transparent</SolidColorBrush>
             <SolidColorBrush x:Key="FooterBackgroundBrush">#141C28</SolidColorBrush>
             <SolidColorBrush x:Key="ContentBackgroundBrush">#151D2A</SolidColorBrush>
-            <!-- Dark acrylic-style tile base and overlay used by list/grid entries -->
+
             <SolidColorBrush x:Key="TileGlassBrush">#AA1F2937</SolidColorBrush>
             <SolidColorBrush x:Key="TileGapBrush">#1E2A38</SolidColorBrush>
-            <!-- Micro-highlight reflection edges: slightly offset shades of the window background -->
+
             <Color x:Key="TileReflectHighlightColor">#4A6278</Color>
             <Color x:Key="TileReflectMidColor">#3D5267</Color>
             <Color x:Key="TileReflectShadowColor">#232F3E</Color>
@@ -21,19 +21,18 @@
                 <GradientStop Color="#33FFFFFF" Offset="0" />
                 <GradientStop Color="#00FFFFFF" Offset="1" />
             </LinearGradientBrush>
-            <!-- Card background - lighter for better content visibility -->
+
             <SolidColorBrush x:Key="CardBackgroundBrush">#263344</SolidColorBrush>
-            <!-- Surface brush for dashboard/card buttons -->
+
             <SolidColorBrush x:Key="SurfaceBrush">#1A2434</SolidColorBrush>
-            <!-- Slightly duller blues for buttons (subtler, less saturated) -->
-            <!-- FIXED: Enhanced accent color hierarchy with 25% brightness increase on hover -->
+
             <SolidColorBrush x:Key="AccentBrush">#6B8CAE</SolidColorBrush>
             <SolidColorBrush x:Key="AccentHoverBrush">#8FB5DF</SolidColorBrush>
             <SolidColorBrush x:Key="SecondaryAccentBrush">#6FA89F</SolidColorBrush>
-            <!-- Canonical primary text color used across brushes -->
+
             <Color x:Key="PrimaryTextColor">#FFFFFF</Color>
             <SolidColorBrush x:Key="PrimaryTextBrush" Color="{DynamicResource PrimaryTextColor}" />
-            <!-- Control foreground reuses the same canonical color to avoid duplication -->
+
             <SolidColorBrush x:Key="ControlForegroundBrush" Color="{DynamicResource PrimaryTextColor}" />
             <SolidColorBrush x:Key="HeaderTextBrush">#FFFFFFFF</SolidColorBrush>
             <SolidColorBrush x:Key="HeaderMutedTextBrush">#FFB9C7D6</SolidColorBrush>
@@ -45,25 +44,20 @@
             <SolidColorBrush x:Key="HeaderButtonForegroundBrush">#F5F7FA</SolidColorBrush>
             <SolidColorBrush x:Key="HeaderButtonBorderBrush">#551C2C3A</SolidColorBrush>
             <SolidColorBrush x:Key="SecondaryTextBrush">#E0E6ED</SolidColorBrush>
-            <!-- Boosted muted text contrast for professional readability -->
+
             <SolidColorBrush x:Key="MutedTextBrush">#D0D8E0</SolidColorBrush>
             <SolidColorBrush x:Key="DisabledTextBrush">#909AA4</SolidColorBrush>
-            <!-- Deep control background for professional depth -->
+
             <SolidColorBrush x:Key="ControlBackgroundBrush">#1A2434</SolidColorBrush>
-            <!-- FIXED: Visible borders for depth perception -->
+
             <SolidColorBrush x:Key="ControlBorderBrush">#FFFFFF15</SolidColorBrush>
-            
-            <!-- Settings panel/tile background for dark theme -->
+
             <SolidColorBrush x:Key="SettingsPanelBackgroundBrush">#1E2A38</SolidColorBrush>
             <SolidColorBrush x:Key="SettingsPanelBorderBrush">#2A3A4E</SolidColorBrush>
-            
-            <!-- Liquid glass button foreground for dark theme (light text) -->
+
             <SolidColorBrush x:Key="LiquidGlassButtonForeground">#EAF1FA</SolidColorBrush>
             <SolidColorBrush x:Key="HeaderSvgIconColor">#EAF1FA</SolidColorBrush>
 
-            <!-- ═══ Liquid Glass Token Colors ═══
-                 Theme-aware tint colors used by LiquidGlass.axaml gradient brushes.
-                 Override these in other themes for different glass tints. -->
             <Color x:Key="Glass.Tint.Light">#D8E8F8</Color>
             <Color x:Key="Glass.Tint.Mid">#8FB5DF</Color>
             <Color x:Key="Glass.Tint.Dark">#6B8CAE</Color>
@@ -79,7 +73,6 @@
             <SolidColorBrush x:Key="Brush.Glass.EdgeHighlight.Mid">#30B8D5EF</SolidColorBrush>
             <SolidColorBrush x:Key="Brush.Glass.EdgeHighlight.End">#008FB5DF</SolidColorBrush>
 
-            <!-- Glass layer fill defaults (dark) -->
             <RadialGradientBrush x:Key="Brush.Glass.BaseFill" Center="35%,40%" RadiusX="80%" RadiusY="80%">
                 <GradientStop Color="#0ED8E8F8" Offset="0"/>
                 <GradientStop Color="#0C8FB5DF" Offset="0.5"/>
@@ -142,16 +135,14 @@
             <SolidColorBrush x:Key="ReadOnlyFieldForegroundBrush">#E0E6ED</SolidColorBrush>
             <SolidColorBrush x:Key="ButtonWhiteBackgroundBrush">#FFFFFF</SolidColorBrush>
             <SolidColorBrush x:Key="SeparatorBrush">#30FFFFFF</SolidColorBrush>
-            
-            <!-- Glass-like transparent highlight brushes for sidebar category filters -->
+
             <SolidColorBrush x:Key="QuickFilterGlassBrush">#00FFFFFF</SolidColorBrush>
             <SolidColorBrush x:Key="QuickFilterGlassHoverBrush">#20FFFFFF</SolidColorBrush>
             <SolidColorBrush x:Key="QuickFilterGlassActiveBrush">#40FFFFFF</SolidColorBrush>
             <SolidColorBrush x:Key="QuickFilterGlassActiveHoverBrush">#50FFFFFF</SolidColorBrush>
             <SolidColorBrush x:Key="QuickFilterGlassBorderBrush">#30FFFFFF</SolidColorBrush>
             <SolidColorBrush x:Key="QuickFilterGlassActiveBorderBrush">#45FFFFFF</SolidColorBrush>
-            
-            <!-- Use a muted pastel green to reduce brightness while keeping meaning -->
+
             <SolidColorBrush x:Key="SuccessBrush">#B8E6C8</SolidColorBrush>
             <SolidColorBrush x:Key="WarningBrush">#FFC107</SolidColorBrush>
             <SolidColorBrush x:Key="WarningBrushDark">#E65100</SolidColorBrush>
@@ -167,13 +158,11 @@
             <SolidColorBrush x:Key="InfoBackgroundBrush">#1A2A38</SolidColorBrush>
             <FontFamily x:Key="MainFontFamily">Segoe UI Variable, Segoe UI</FontFamily>
             <FontFamily x:Key="MonoFontFamily">Consolas</FontFamily>
-            
-            <!-- Overlay & Utility Tokens (P9: Overlays) -->
+
             <SolidColorBrush x:Key="OverlayBackgroundLightBrush">#40000000</SolidColorBrush>
             <SolidColorBrush x:Key="ErrorTextBrush">#CC5555</SolidColorBrush>
             <SolidColorBrush x:Key="SuccessTextBrush">#4CAF50</SolidColorBrush>
-            
-            <!-- Autofill & Keyboard Tokens (P12: Autofill color standardization) -->
+
             <SolidColorBrush x:Key="AutofillBackgroundBrush">#2B2B2B</SolidColorBrush>
             <SolidColorBrush x:Key="AutofillHeaderBackgroundBrush">#1E1E1E</SolidColorBrush>
             <SolidColorBrush x:Key="AutofillBorderBrush">#404040</SolidColorBrush>
@@ -184,46 +173,41 @@
             <SolidColorBrush x:Key="AutofillSuccessBackgroundBrush">#2B3A2E</SolidColorBrush>
             <SolidColorBrush x:Key="KeyboardBackgroundBrush">#2B2B2B</SolidColorBrush>
             <SolidColorBrush x:Key="KeyboardKeyBackgroundBrush">#1E1E1E</SolidColorBrush>
-            
-            <!-- Spacing Tokens (P10: Spacing standardization) -->
+
             <x:Double x:Key="Space.Xs">4</x:Double>
             <x:Double x:Key="Space.Sm">8</x:Double>
             <x:Double x:Key="Space.Md">12</x:Double>
             <x:Double x:Key="Space.Lg">16</x:Double>
             <x:Double x:Key="Space.Xl">20</x:Double>
             <x:Double x:Key="Space.Xxl">24</x:Double>
-            
-            <!-- Border Radius Tokens (P7: Standardization) -->
+
             <CornerRadius x:Key="Radius.Xs">2</CornerRadius>
             <CornerRadius x:Key="Radius.Sm">4</CornerRadius>
             <CornerRadius x:Key="Radius.Md">6</CornerRadius>
             <CornerRadius x:Key="Radius.Lg">8</CornerRadius>
             <CornerRadius x:Key="Radius.Xl">12</CornerRadius>
             <CornerRadius x:Key="Radius.Pill">999</CornerRadius>
-            
-            <!-- Border & Accent Brushes (P4-P6: Border consistency & accent application) -->
+
             <SolidColorBrush x:Key="Brush.BorderSoft">#FFFFFF15</SolidColorBrush>
             <SolidColorBrush x:Key="Brush.BorderMedium">#FFFFFF25</SolidColorBrush>
             <SolidColorBrush x:Key="Brush.BorderStrong">#FFFFFF35</SolidColorBrush>
-            <!-- FIXED: Match updated accent colors -->
+
             <SolidColorBrush x:Key="Brush.Accent">#6B8CAE</SolidColorBrush>
             <SolidColorBrush x:Key="Brush.AccentHover">#8FB5DF</SolidColorBrush>
             <SolidColorBrush x:Key="Brush.FocusRing">#8FB5D6</SolidColorBrush>
             <SolidColorBrush x:Key="Brush.DangerHover">#DC2626</SolidColorBrush>
 
-            <!-- Thickness Tokens -->
             <Thickness x:Key="Thickness.CardPadding">16,12,16,12</Thickness>
             <Thickness x:Key="Thickness.ButtonPadding">16,10,16,10</Thickness>
             <SolidColorBrush x:Key="Brush.AccentPressed">#556C83</SolidColorBrush>
             <SolidColorBrush x:Key="Brush.Card">#1E2A38</SolidColorBrush>
             <SolidColorBrush x:Key="Brush.CardHover">#263344</SolidColorBrush>
             <SolidColorBrush x:Key="Brush.TextPrimary">#FFFFFF</SolidColorBrush>
-            <!-- Boosted muted text contrast for professional readability -->
+
             <SolidColorBrush x:Key="Brush.TextMuted">#D0D8E0</SolidColorBrush>
             <SolidColorBrush x:Key="Brush.TextOnDark">#FFFFFF</SolidColorBrush>
             <SolidColorBrush x:Key="Brush.Navy900">#1F2937</SolidColorBrush>
-            
-            <!-- Typography Tokens (bumped +1px for sharper Skia rendering) -->
+
             <x:Double x:Key="Type.Display.Size">48</x:Double>
             <x:Double x:Key="Type.H1.Size">32</x:Double>
             <x:Double x:Key="Type.H2.Size">24</x:Double>
@@ -236,7 +220,7 @@
             <x:Double x:Key="Type.Tiny.Size">12</x:Double>
             <x:Double x:Key="Type.Micro.Size">11</x:Double>
             <x:Double x:Key="Type.Mini.Size">10</x:Double>
-            <!-- Specialty sizes for icons, headings, and empty-state decorations -->
+
             <x:Double x:Key="Type.EmptyState.Size">80</x:Double>
             <x:Double x:Key="Type.EmptyState.Lg.Size">64</x:Double>
             <x:Double x:Key="Type.IconLg.Size">48</x:Double>
@@ -251,23 +235,19 @@
             <FontWeight x:Key="Type.Weight.Medium">Medium</FontWeight>
             <FontWeight x:Key="Type.Weight.SemiBold">SemiBold</FontWeight>
             <FontWeight x:Key="Type.Weight.Bold">Bold</FontWeight>
-            
-            <!-- Text Selection Colors -->
-            <!-- Light grey selection for dark mode -->
+
             <SolidColorBrush x:Key="TextSelectionBrush">#60A0A0A0</SolidColorBrush>
             <SolidColorBrush x:Key="TextCaretBrush">#FFFFFF</SolidColorBrush>
 
-            <!-- Input surface (dark-adapted for dark theme) -->
             <SolidColorBrush x:Key="InputBackgroundBrush">#1E2530</SolidColorBrush>
             <SolidColorBrush x:Key="InputForegroundBrush">#E8ECF1</SolidColorBrush>
-            <!-- Lighter placeholder for better hierarchy (PRIORITY 13) -->
+
             <SolidColorBrush x:Key="InputPlaceholderBrush">#8A9AAA</SolidColorBrush>
-            <!-- Subtle highlight for TextBox/Border hover & focus states (theme-adaptive) -->
+
             <SolidColorBrush x:Key="InputHighlightBrush">#33FFFFFF</SolidColorBrush>
-            <!-- Icon tile background for IconManager (theme-adaptive) -->
+
             <SolidColorBrush x:Key="IconTileBackgroundBrush">#3D4F61</SolidColorBrush>
 
-            <!-- Popup/Flyout/Dropdown Brushes (force off-white dropdowns + dark text) -->
             <SolidColorBrush x:Key="FlyoutPresenterBackground">#F5F7FA</SolidColorBrush>
             <SolidColorBrush x:Key="MenuFlyoutPresenterBackground">#F5F7FA</SolidColorBrush>
             <SolidColorBrush x:Key="ComboBoxDropDownBackground">#F5F7FA</SolidColorBrush>
@@ -277,28 +257,11 @@
             <SolidColorBrush x:Key="ComboBoxItemForeground">#1F2937</SolidColorBrush>
             <SolidColorBrush x:Key="ComboBoxItemForegroundPointerOver">#1F2937</SolidColorBrush>
             <SolidColorBrush x:Key="ComboBoxItemForegroundSelected">#1F2937</SolidColorBrush>
-            <!-- Shadow effects to increase perceived depth on dark theme -->
-            <!-- Slightly stronger base shadow so controls read higher on dark surfaces but not overpowering -->
-                        <!-- Use a dark-grey shadow color instead of pure black for a softer appearance -->
+
                         <Color x:Key="GlobalShadowColor">#2B2F33</Color>
-                        <!-- Add a header accent color used for the front-page centered tile shadow tint -->
+
                         <Color x:Key="HeaderAccentColor">#3D4F61</Color>
 
-                        <!-- TEMPORARILY DISABLED: Shadow effects cause RenderTransform animator errors -->
-                        <!-- <DropShadowEffect x:Key="DarkSubtleDropShadow" Color="{DynamicResource GlobalShadowColor}" Opacity="0.08" BlurRadius="22" />
-                        <DropShadowEffect x:Key="SubtleDropShadow" Color="{DynamicResource GlobalShadowColor}" Opacity="0.12" BlurRadius="22" />
-                        <DropShadowEffect x:Key="DarkButtonShadow" Color="{DynamicResource GlobalShadowColor}" Opacity="0.18" BlurRadius="16" />
-                        <DropShadowEffect x:Key="DarkButtonShadowHover" Color="{DynamicResource GlobalShadowColor}" Opacity="0.24" BlurRadius="20" />
-                        <DropShadowEffect x:Key="DarkButtonShadowPressed" Color="{DynamicResource GlobalShadowColor}" Opacity="0.12" BlurRadius="10" />
-                        <DropShadowEffect x:Key="HoverMenuDropShadow" Color="{DynamicResource GlobalShadowColor}" Opacity="0.16" BlurRadius="14" />
-                        <DropShadowEffect x:Key="TileActiveShadow" Color="{DynamicResource GlobalShadowColor}" Opacity="0.20" BlurRadius="32" />
-                        <DropShadowEffect x:Key="TileActiveShadowPressed" Color="{DynamicResource GlobalShadowColor}" Opacity="0.14" BlurRadius="16" />
-                        <DropShadowEffect x:Key="FrontPageTileBaseShadow" Color="{DynamicResource GlobalShadowColor}" Opacity="0.15" BlurRadius="20" />
-                        <DropShadowEffect x:Key="FooterGroundedShadow" Color="{DynamicResource GlobalShadowColor}" Opacity="0.18" BlurRadius="10" />
-                        <BoxShadows x:Key="SlideOutPanelShadow">-10 0 30 0 #40000000</BoxShadows>
-                        <BoxShadows x:Key="FlaggedPanelShadow">-8 0 32 0 #40000000</BoxShadows> -->
-        
-            <!-- ═══ Dashboard sheet overlay ═══ -->
             <LinearGradientBrush x:Key="DashboardSheetOverlayBrush" StartPoint="0%,0%" EndPoint="0%,100%">
                 <GradientStop Color="#40182E48" Offset="0"/>
                 <GradientStop Color="#38152840" Offset="0.5"/>
@@ -307,7 +270,6 @@
             <Color x:Key="DashboardSheetAcrylicTint">#1E2A38</Color>
             <Color x:Key="DashboardSheetAcrylicFallback">#18182838</Color>
 
-            <!-- ═══ Dashboard glass panel resources ═══ -->
             <LinearGradientBrush x:Key="DashboardSectionBg" StartPoint="0%,0%" EndPoint="100%,100%">
                 <GradientStop Color="#6E243A56" Offset="0"/>
                 <GradientStop Color="#60182C44" Offset="0.5"/>
@@ -393,7 +355,6 @@
 </Style.Resources>
     </Style>
 
-    <!-- Keep other styles consistent with dark theme -->
     <Style Selector="TextBlock">
         <Setter Property="FontFamily" Value="{DynamicResource MainFontFamily}" />
         <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
@@ -427,20 +388,18 @@
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="MinHeight" Value="36" />
         <Setter Property="MinWidth" Value="90" />
-        <!-- TEMPORARILY DISABLED: Shadow effects cause RenderTransform animator errors -->
-        <!-- <Setter Property="Effect" Value="{DynamicResource DarkButtonShadow}" /> -->
+
     </Style>
 
     <Style Selector="Button:pointerover">
         <Setter Property="Background" Value="{DynamicResource AccentHoverBrush}" />
     </Style>
 
-    <!-- Prioritised vault access button style (dull navy) -->
     <Style Selector="Button.primary-vault">
         <Setter Property="FontFamily" Value="{DynamicResource MainFontFamily}" />
         <Setter Property="Background" Value="#1F3A56" />
         <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
-        <!-- <Setter Property="Effect" Value="{DynamicResource DarkButtonShadow}" /> -->
+
         <Setter Property="CornerRadius" Value="6" />
         <Setter Property="Padding" Value="12,6" />
         <Setter Property="MinHeight" Value="36" />
@@ -450,49 +409,42 @@
         <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}" />
     </Style>
 
-    <!-- Provide a base shadow for secondary buttons so they have subtle elevation by default -->
     <Style Selector="Button.secondary">
         <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}" />
-        <!-- <Setter Property="Effect" Value="{DynamicResource DarkButtonShadow}" /> -->
+
     </Style>
 
     <Style Selector="Button.secondary:pointerover">
         <Setter Property="Background" Value="{DynamicResource ControlBorderBrush}" />
-        <!-- <Setter Property="Effect" Value="{DynamicResource HoverMenuDropShadow}" /> -->
+
     </Style>
 
-    <!-- Make list and grid rows show a subtle elevation on hover in dark theme -->
     <Style Selector="ListBoxItem:pointerover, ListBoxItem:focused">
-        <!-- <Setter Property="Effect" Value="{DynamicResource HoverMenuDropShadow}" /> -->
+
         <Setter Property="Background" Value="{DynamicResource ControlBorderBrush}" />
     </Style>
 
-    <!-- Base elevation for list/grid rows so they appear layered even when not hovered -->
     <Style Selector="ListBoxItem">
-        <!-- <Setter Property="Effect" Value="{DynamicResource DarkSubtleDropShadow}" /> -->
+
     </Style>
 
     <Style Selector="DataGridRow:pointerover, DataGridRow:focused">
-        <!-- <Setter Property="Effect" Value="{DynamicResource HoverMenuDropShadow}" /> -->
+
         <Setter Property="Background" Value="{DynamicResource ControlBorderBrush}" />
     </Style>
 
-    <!-- Base elevation for data grid rows -->
     <Style Selector="DataGridRow">
-        <!-- <Setter Property="Effect" Value="{DynamicResource DarkSubtleDropShadow}" /> -->
+
     </Style>
 
-    <!-- Ensure standalone Borders (tiles and cards) lift slightly on hover in dark theme -->
     <Style Selector="Border:pointerover">
-        <!-- <Setter Property="Effect" Value="{DynamicResource HoverMenuDropShadow}" /> -->
+
     </Style>
 
-    <!-- Apply a subtle base shadow to Borders so cards/tiles have depth by default -->
     <Style Selector="Border">
-        <!-- <Setter Property="Effect" Value="{DynamicResource DarkSubtleDropShadow}" /> -->
+
     </Style>
 
-    <!-- MenuFlyout Rounded Corners -->
     <Style Selector="MenuFlyoutPresenter">
         <Setter Property="CornerRadius" Value="8" />
         <Setter Property="Background" Value="#3A4551" />
@@ -501,7 +453,7 @@
     </Style>
 
     <Style Selector="Button.secondary:pressed">
-        <!-- <Setter Property="Effect" Value="{DynamicResource DarkButtonShadowPressed}" /> -->
+
     </Style>
 
     <Style Selector="TextBox">
@@ -526,3 +478,4 @@
     </Style>
 
 </Styles>
+

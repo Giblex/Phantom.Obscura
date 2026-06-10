@@ -8,3 +8,4 @@ public partial class VaultUnlockView : UserControl
     public VaultUnlockView() => InitializeComponent();
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
 }
+

@@ -10,3 +10,4 @@ public partial class ExpiryDetailSection : UserControl
         AvaloniaXamlLoader.Load(this);
     }
 }
+

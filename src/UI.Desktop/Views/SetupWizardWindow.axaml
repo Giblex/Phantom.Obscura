@@ -26,7 +26,6 @@
         </ResourceDictionary>
     </views:ThemeAwareWindow.Resources>
 
-    <!-- Strip default button chrome from step progress buttons -->
     <views:ThemeAwareWindow.Styles>
         <Style Selector="Button.step-btn">
             <Setter Property="Background" Value="Transparent"/>
@@ -109,7 +108,6 @@
             <Setter Property="BorderBrush" Value="Transparent"/>
         </Style>
 
-        <!-- Stronger control contrast -->
         <Style Selector="RadioButton:checked /template/ Ellipse#CheckGlyph">
             <Setter Property="Fill" Value="#ECF7FB"/>
         </Style>
@@ -126,7 +124,6 @@
             <Setter Property="BorderBrush" Value="#7FA1B8"/>
         </Style>
 
-        <!-- Override CheckBox styling for dark background visibility -->
         <Style Selector="CheckBox /template/ Border#NormalRectangle">
             <Setter Property="BorderBrush" Value="#738897"/>
             <Setter Property="Background" Value="#0A1420"/>
@@ -147,7 +144,6 @@
             <Setter Property="Fill" Value="#EAF3F8"/>
         </Style>
 
-        <!-- Accent navigation button -->
         <Style Selector="Button.solid-primary">
             <Setter Property="Background" Value="#173042"/>
             <Setter Property="Foreground" Value="White"/>
@@ -181,13 +177,10 @@
     </Design.DataContext>
 
     <Grid RowDefinitions="Auto,*,Auto">
-        
-        <!-- ═══════════════════════════════════════════════════════════════════════
-             HEADER - Progress indicator and step title
-             ═══════════════════════════════════════════════════════════════════════ -->
+
         <Border Grid.Row="0" Background="{DynamicResource HeaderBackgroundBrush}" Padding="24,20,24,18">
             <Grid RowDefinitions="Auto,Auto,Auto">
-                <!-- App Title and Logo -->
+
                 <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="14" Margin="0,0,0,18">
                     <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
                            Width="74" Height="74" Stretch="Uniform" VerticalAlignment="Center"/>
@@ -199,7 +192,6 @@
                                VerticalAlignment="Center"/>
                 </StackPanel>
 
-                <!-- Step Progress Bar -->
                 <Grid Grid.Row="1" Margin="8,0,8,14">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -212,7 +204,6 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- Step 1: Welcome -->
                     <Button Grid.Column="0" Classes="step-btn"
                             Command="{Binding GoToStepCommand}" CommandParameter="1"
                             IsEnabled="{Binding CurrentStep, Converter={x:Static views:StepClickableConverter.Instance}, ConverterParameter=1}"
@@ -227,13 +218,12 @@
                                                   Width="20" Height="20"
                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
-                            <TextBlock Text="Welcome" FontSize="{StaticResource Type.Mini.Size}" 
+                            <TextBlock Text="Welcome" FontSize="{StaticResource Type.Mini.Size}"
                                        Foreground="{DynamicResource SecondaryTextBrush}"
                                        HorizontalAlignment="Center"/>
                         </StackPanel>
                     </Button>
 
-                    <!-- Step 2: Security -->
                     <Button Grid.Column="1" Classes="step-btn"
                             Command="{Binding GoToStepCommand}" CommandParameter="2"
                             IsEnabled="{Binding CurrentStep, Converter={x:Static views:StepClickableConverter.Instance}, ConverterParameter=2}"
@@ -254,7 +244,6 @@
                         </StackPanel>
                     </Button>
 
-                    <!-- Step 3: PhantomKey -->
                     <Button Grid.Column="2" Classes="step-btn"
                             Command="{Binding GoToStepCommand}" CommandParameter="3"
                             IsEnabled="{Binding CurrentStep, Converter={x:Static views:StepClickableConverter.Instance}, ConverterParameter=3}"
@@ -275,7 +264,6 @@
                         </StackPanel>
                     </Button>
 
-                    <!-- Step 4: Storage -->
                     <Button Grid.Column="3" Classes="step-btn"
                             Command="{Binding GoToStepCommand}" CommandParameter="4"
                             IsEnabled="{Binding CurrentStep, Converter={x:Static views:StepClickableConverter.Instance}, ConverterParameter=4}"
@@ -296,7 +284,6 @@
                         </StackPanel>
                     </Button>
 
-                    <!-- Step 5: Keyfile -->
                     <Button Grid.Column="4" Classes="step-btn"
                             Command="{Binding GoToStepCommand}" CommandParameter="5"
                             IsEnabled="{Binding CurrentStep, Converter={x:Static views:StepClickableConverter.Instance}, ConverterParameter=5}"
@@ -317,7 +304,6 @@
                         </StackPanel>
                     </Button>
 
-                    <!-- Step 6: Authentication -->
                     <Button Grid.Column="5" Classes="step-btn"
                             Command="{Binding GoToStepCommand}" CommandParameter="6"
                             IsEnabled="{Binding CurrentStep, Converter={x:Static views:StepClickableConverter.Instance}, ConverterParameter=6}"
@@ -338,7 +324,6 @@
                         </StackPanel>
                     </Button>
 
-                    <!-- Step 7: Remnants or Complete -->
                     <StackPanel Grid.Column="6" HorizontalAlignment="Center" Spacing="8"
                                 IsVisible="{Binding UsesExtendedProgress}">
                         <Border Width="44" Height="44" CornerRadius="22"
@@ -367,7 +352,6 @@
                                    HorizontalAlignment="Center"/>
                     </StackPanel>
 
-                    <!-- Step 8: Final review/complete when remnants are present -->
                     <StackPanel Grid.Column="7" HorizontalAlignment="Center" Spacing="8"
                                 IsVisible="{Binding UsesExtendedProgress}">
                         <Border Width="44" Height="44" CornerRadius="22"
@@ -383,8 +367,7 @@
                     </StackPanel>
                 </Grid>
 
-                <!-- Current Step Title -->
-                <TextBlock Grid.Row="2" 
+                <TextBlock Grid.Row="2"
                            Text="{Binding CurrentStepTitle}"
                            FontSize="{StaticResource Type.H3.Size}"
                            FontFamily="{DynamicResource TitleFontFamily}"
@@ -394,25 +377,22 @@
             </Grid>
         </Border>
 
-        <!-- ═══════════════════════════════════════════════════════════════════════
-             MAIN CONTENT - Step-specific content with animations
-             ═══════════════════════════════════════════════════════════════════════ -->
         <Border Grid.Row="1" ClipToBounds="True">
             <ScrollViewer Name="MainScrollViewer"
                           VerticalScrollBarVisibility="Visible"
                           HorizontalScrollBarVisibility="Disabled">
                 <StackPanel Margin="40,24,40,120">
-                <!-- Step 1: Welcome -->
+
                 <Border IsVisible="{Binding CurrentStep, Converter={x:Static views:StepVisibilityConverter.Instance}, ConverterParameter=1}"
                         Classes="fade-in">
                     <StackPanel Spacing="24" MaxWidth="700" HorizontalAlignment="Center" Margin="0,0,0,40">
-                        <!-- Welcome Card -->
+
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 CornerRadius="{StaticResource Radius.Xl}"
                                 Padding="28,22"
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="16">
-                                <!-- Animated Icon -->
+
                                 <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
                                        Width="124"
                                        Height="124"
@@ -435,7 +415,6 @@
                                     Phantom Obscura uses military-grade post-quantum encryption to protect your credentials.
                                 </TextBlock>
 
-                                <!-- Feature Highlights -->
                                 <Border Background="#162235"
                                         CornerRadius="{StaticResource Radius.Lg}"
                                         Padding="20,16"
@@ -447,7 +426,7 @@
                                                    FontSize="{StaticResource Type.Body.Size}"
                                                    FontWeight="Normal"
                                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                        
+
                                         <StackPanel Spacing="8">
                                             <StackPanel Orientation="Horizontal" Spacing="10">
                                                 <controls:SvgIcon Preset="Settings" IconColor="White" IconSize="22" Width="22" Height="22" VerticalAlignment="Center"/>
@@ -507,7 +486,6 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Terms Acceptance -->
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 CornerRadius="{StaticResource Radius.Xl}"
                                 Padding="24,20"
@@ -517,7 +495,7 @@
                                            FontSize="{StaticResource Type.H4.Size}"
                                            FontWeight="Normal"
                                            Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                
+
                                 <TextBlock TextWrapping="Wrap"
                                            FontSize="{StaticResource Type.Small.Size}"
                                            Foreground="{DynamicResource MutedTextBrush}"
@@ -538,11 +516,10 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Step 2: Security Level -->
                 <Border IsVisible="{Binding CurrentStep, Converter={x:Static views:StepVisibilityConverter.Instance}, ConverterParameter=2}"
                         Classes="fade-in">
                     <StackPanel Spacing="20" MaxWidth="750" HorizontalAlignment="Center">
-                        <!-- Explanation Card -->
+
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 CornerRadius="{StaticResource Radius.Xl}"
                                 Padding="24,20"
@@ -568,7 +545,6 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Security Options -->
                         <ItemsControl ItemsSource="{Binding SecurityLevels}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
@@ -625,7 +601,7 @@
                                                                    VerticalAlignment="Center"/>
                                                     </Border>
                                                 </Grid>
-                                                
+
                                                 <TextBlock Text="{Binding Description}"
                                                            FontSize="{StaticResource Type.Body.Size}"
                                                            Foreground="{DynamicResource SecondaryTextBrush}"
@@ -645,7 +621,7 @@
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate>
                                                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,2">
-                                                                <TextBlock Text="✓" FontSize="{StaticResource Type.Small.Size}" 
+                                                                <TextBlock Text="✓" FontSize="{StaticResource Type.Small.Size}"
                                                                            Foreground="White"/>
                                                                 <TextBlock Text="{Binding}"
                                                                            FontSize="{StaticResource Type.Small.Size}"
@@ -664,11 +640,10 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Step 3: PhantomKey Setup -->
                 <Border IsVisible="{Binding CurrentStep, Converter={x:Static views:StepVisibilityConverter.Instance}, ConverterParameter=3}"
                         Classes="fade-in">
                     <StackPanel Spacing="20" MaxWidth="700" HorizontalAlignment="Center">
-                        <!-- Enable PhantomKey -->
+
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 CornerRadius="{StaticResource Radius.Xl}"
                                 Padding="24,20"
@@ -700,7 +675,6 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- What is PhantomKey -->
                         <Border Background="#162235" CornerRadius="12" Padding="20,16"
                                 IsVisible="{Binding EnablePhantomKey}"
                                 BorderThickness="0"
@@ -745,7 +719,6 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- How it works -->
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 CornerRadius="{StaticResource Radius.Xl}"
                                 Padding="24,20"
@@ -800,7 +773,6 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Note -->
                         <Border Background="#162235" CornerRadius="8" Padding="14,10"
                                 IsVisible="{Binding EnablePhantomKey}"
                                 BorderThickness="0"
@@ -821,11 +793,10 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Step 4: USB Storage -->
                 <Border IsVisible="{Binding CurrentStep, Converter={x:Static views:StepVisibilityConverter.Instance}, ConverterParameter=4}"
                         Classes="fade-in">
                     <StackPanel Spacing="20" MaxWidth="700" HorizontalAlignment="Center">
-                        <!-- Explanation -->
+
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 CornerRadius="{StaticResource Radius.Xl}"
                                 Padding="24,20"
@@ -854,14 +825,29 @@
                                            Foreground="{DynamicResource SecondaryTextBrush}"
                                            LineHeight="22"
                                            Margin="0,8,0,0">
-                                    Your encrypted vault will be stored on a USB drive for maximum physical security. 
-                                    The vault is only accessible when the drive is connected and cannot be decrypted 
+                                    Your encrypted vault will be stored on a USB drive for maximum physical security.
+                                    The vault is only accessible when the drive is connected and cannot be decrypted
                                     from another device.
                                 </TextBlock>
+
+                                <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                        CornerRadius="8"
+                                        Padding="12"
+                                        Margin="0,10,0,0">
+                                    <TextBlock TextWrapping="Wrap"
+                                               FontSize="{StaticResource Type.Small.Size}"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               LineHeight="20">
+                                        Why two things are required: the USB is your vault — it must be connected to unlock.
+                                        Because a USB can be lost, broken, or stolen, the final setup step asks you to save a
+                                        recovery kit somewhere safe and off the USB. Without that kit, a lost USB means your data
+                                        is gone for good. They are not alternatives — you need the USB to use the vault and the
+                                        recovery kit to survive losing it.
+                                    </TextBlock>
+                                </Border>
                             </StackPanel>
                         </Border>
 
-                        <!-- USB Drive Selection -->
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 CornerRadius="{StaticResource Radius.Xl}"
                                 Padding="20,16"
@@ -882,7 +868,7 @@
                                                FontSize="{StaticResource Type.Small.Size}"
                                                TextWrapping="Wrap"
                                                Foreground="{DynamicResource MutedTextBrush}"/>
-                                    
+
                                     <Border Background="{DynamicResource ControlBackgroundBrush}"
                                             CornerRadius="{StaticResource Radius.Md}"
                                             Padding="12,8"
@@ -894,7 +880,7 @@
                                                   HorizontalAlignment="Stretch"
                                                   MinWidth="280"/>
                                     </Border>
-                                    
+
                                     <StackPanel Orientation="Horizontal" Spacing="8"
                                                 IsVisible="{Binding !UsbDetected}"
                                                 Margin="0,8,0,0">
@@ -905,7 +891,6 @@
                                                    Foreground="{DynamicResource WarningBrush}"/>
                                     </StackPanel>
 
-                                    <!-- Remaining USB Space -->
                                     <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0"
                                                 IsVisible="{Binding RemainingUsbSpaceDisplay, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                                         <controls:SvgIcon Preset="Database" IconColor="White" IconSize="20"
@@ -925,7 +910,6 @@
                             </Grid>
                         </Border>
 
-                        <!-- USB Device Binding -->
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 CornerRadius="{StaticResource Radius.Xl}"
                                 Padding="20,16"
@@ -939,12 +923,12 @@
                                                FontWeight="Normal"
                                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                                 </StackPanel>
-                                
+
                                 <TextBlock TextWrapping="Wrap"
                                            FontSize="{StaticResource Type.Small.Size}"
                                            Foreground="{DynamicResource SecondaryTextBrush}"
                                            LineHeight="20">
-                                    Device binding cryptographically ties your vault to this specific USB drive. 
+                                    Device binding cryptographically ties your vault to this specific USB drive.
                                     The vault cannot be decrypted if copied to another device.
                                 </TextBlock>
 
@@ -982,7 +966,6 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- GUUID Binding -->
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 CornerRadius="{StaticResource Radius.Xl}"
                                 Padding="20,16"
@@ -1027,7 +1010,6 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Encrypted Container -->
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 CornerRadius="{StaticResource Radius.Xl}"
                                 Padding="20,16"
@@ -1077,11 +1059,10 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Step 5: Keyfile & Password -->
                 <Border IsVisible="{Binding CurrentStep, Converter={x:Static views:StepVisibilityConverter.Instance}, ConverterParameter=5}"
                         Classes="fade-in">
                     <StackPanel Spacing="20" MaxWidth="700" HorizontalAlignment="Center">
-                        <!-- Keyfile Section (Required) -->
+
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 CornerRadius="{StaticResource Radius.Xl}"
                                 Padding="28,24"
@@ -1113,14 +1094,13 @@
                                            LineHeight="22"
                                            Margin="0,8,0,0"/>
 
-                                <!-- Keyfile Option Selection -->
                                 <Border Background="{DynamicResource ControlBackgroundBrush}"
                                         CornerRadius="{StaticResource Radius.Md}"
                                         Padding="16,12"
                                         Margin="0,8,0,0"
                                         IsVisible="{Binding SupportsExternalKeyfile}">
                                     <StackPanel Spacing="12">
-                                        <!-- Generate New Keyfile Option -->
+
                                         <RadioButton IsChecked="{Binding !UseExistingKeyfile}" GroupName="KeyfileOption">
                                             <StackPanel Orientation="Horizontal" Spacing="10">
                                                 <controls:SvgIcon Preset="Plus" IconColor="White" IconSize="20"
@@ -1132,8 +1112,7 @@
                                                            VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </RadioButton>
-                                        
-                                        <!-- Use Existing Keyfile Option -->
+
                                         <RadioButton IsChecked="{Binding UseExistingKeyfile}" GroupName="KeyfileOption">
                                             <StackPanel Orientation="Horizontal" Spacing="10">
                                                 <controls:SvgIcon Preset="Folder" IconColor="White" IconSize="20"
@@ -1146,7 +1125,6 @@
                                             </StackPanel>
                                         </RadioButton>
 
-                                        <!-- Browse for Keyfile (shown when Use Existing is selected) -->
                                         <Border IsVisible="{Binding UseExistingKeyfile}"
                                                 Background="{DynamicResource SurfaceBrush}"
                                                 CornerRadius="{StaticResource Radius.Sm}"
@@ -1171,7 +1149,7 @@
                                                         <TextBlock Text="✕" FontSize="{StaticResource Type.Body.Size}" Foreground="{DynamicResource MutedTextBrush}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                                     </Button>
                                                 </StackPanel>
-                                                
+
                                                 <TextBlock Text="{Binding KeyfileStatus}"
                                                            FontSize="{StaticResource Type.Small.Size}"
                                                            Foreground="{DynamicResource SecondaryTextBrush}"
@@ -1187,7 +1165,6 @@
                                     </StackPanel>
                                 </Border>
 
-                                <!-- Keyfile Generation Info (shown when Generate is selected) -->
                                 <Border IsVisible="{Binding ShowGeneratedKeyfileInfo}"
                                         Background="{DynamicResource ControlBackgroundBrush}"
                                         CornerRadius="{StaticResource Radius.Md}"
@@ -1346,7 +1323,6 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Optional Password Section -->
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 CornerRadius="{StaticResource Radius.Xl}"
                                 Padding="24,20"
@@ -1367,7 +1343,6 @@
                                     </StackPanel>
                                 </StackPanel>
 
-                                <!-- Enable Password Checkbox -->
                                 <CheckBox IsChecked="{Binding UsePassword}" Margin="0,8,0,0"
                                           IsVisible="{Binding ShowPasswordToggle}">
                                     <TextBlock Text="{Binding PasswordToggleText}"
@@ -1375,9 +1350,8 @@
                                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                                 </CheckBox>
 
-                                <!-- Password Fields (shown when enabled) -->
                                 <StackPanel Spacing="12" IsVisible="{Binding UsePassword}">
-                                    <!-- Master Password -->
+
                                     <StackPanel Spacing="8">
                                         <TextBlock Text="Master Password"
                                                    FontSize="{StaticResource Type.Body.Size}"
@@ -1403,8 +1377,7 @@
                                                 <TextBlock Text="{Binding MasterPasswordRevealGlyph}"/>
                                             </Button>
                                         </Grid>
-                                        
-                                        <!-- Strength Indicator -->
+
                                         <Grid ColumnDefinitions="*,Auto">
                                             <ProgressBar Grid.Column="0"
                                                          Value="{Binding PasswordStrength, Converter={x:Static views:PasswordStrengthValueConverter.Instance}}"
@@ -1420,7 +1393,6 @@
                                         </Grid>
                                     </StackPanel>
 
-                                    <!-- Confirm Password -->
                                     <StackPanel Spacing="8">
                                         <TextBlock Text="Confirm Password"
                                                    FontSize="{StaticResource Type.Body.Size}"
@@ -1446,8 +1418,7 @@
                                                 <TextBlock Text="{Binding ConfirmPasswordRevealGlyph}"/>
                                             </Button>
                                         </Grid>
-                                        
-                                        <!-- Match Indicator -->
+
                                         <StackPanel Orientation="Horizontal" Spacing="8"
                                                     IsVisible="{Binding ConfirmPassword, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                                             <TextBlock Text="{Binding PasswordsMatch, Converter={x:Static views:PasswordMatchIconConverter.Instance}}"
@@ -1458,7 +1429,6 @@
                                         </StackPanel>
                                     </StackPanel>
 
-                                    <!-- Generate Button -->
                                     <Button Command="{Binding GenerateStrongPasswordCommand}"
                                             Classes="liquid-glass"
                                             Height="40"
@@ -1476,7 +1446,6 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Step 6: Additional Authentication -->
                 <Border IsVisible="{Binding IsAuthenticationStep}"
                         Classes="fade-in">
                     <StackPanel Spacing="20" MaxWidth="760" HorizontalAlignment="Center">
@@ -1695,11 +1664,10 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Step 7 (conditional): Remnant Actions — only shown when remnants are detected on the USB drive -->
                 <Border IsVisible="{Binding IsRemnantStep}"
                         Classes="fade-in">
                     <StackPanel Spacing="20" MaxWidth="700" HorizontalAlignment="Center">
-                        <!-- Remnant Detection Header -->
+
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 CornerRadius="{StaticResource Radius.Xl}"
                                 Padding="24,20"
@@ -1725,7 +1693,6 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Detected Remnants List -->
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 CornerRadius="{StaticResource Radius.Xl}"
                                 Padding="24,20"
@@ -1766,7 +1733,6 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Remnant Action Selection -->
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 CornerRadius="{StaticResource Radius.Xl}"
                                 Padding="24,20"
@@ -1808,11 +1774,10 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Review and Completion (final step — step 6 or 7 depending on remnant detection) -->
                 <Border IsVisible="{Binding IsReviewStep}"
                         Classes="fade-in">
                     <StackPanel Spacing="20" MaxWidth="700" HorizontalAlignment="Center">
-                        <!-- Summary Header -->
+
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 CornerRadius="{StaticResource Radius.Xl}"
                                 Padding="24,20"
@@ -1840,7 +1805,6 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Configuration Summary -->
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 CornerRadius="{StaticResource Radius.Xl}"
                                 Padding="24,20"
@@ -1950,7 +1914,6 @@
                                         </StackPanel>
                                     </Grid>
 
-                                    <!-- PhantomKey Hardware Binding -->
                                     <Grid ColumnDefinitions="Auto,*">
                                         <controls:SvgIcon Grid.Column="0" Preset="Shield" IconColor="White" IconSize="32"
                                                           Width="32" Height="32" Margin="0,0,12,0" VerticalAlignment="Center"/>
@@ -1970,7 +1933,6 @@
                                         </StackPanel>
                                     </Grid>
 
-                                    <!-- GUUID Binding -->
                                     <Grid ColumnDefinitions="Auto,*">
                                         <controls:SvgIcon Grid.Column="0" IconName="Assets/Visuals/App Icons/SVG/Link.svg" IconColor="White" IconSize="32"
                                                           Width="32" Height="32" Margin="0,0,12,0" VerticalAlignment="Center"/>
@@ -1985,7 +1947,6 @@
                                         </StackPanel>
                                     </Grid>
 
-                                    <!-- Encrypted Container -->
                                     <Grid ColumnDefinitions="Auto,*">
                                         <controls:SvgIcon Grid.Column="0" IconName="Assets/Visuals/App Icons/SVG/Encrypted Container.svg" IconColor="White" IconSize="32"
                                                           Width="32" Height="32" Margin="0,0,12,0" VerticalAlignment="Center"/>
@@ -2000,7 +1961,6 @@
                                         </StackPanel>
                                     </Grid>
 
-                                    <!-- Remnant Detection (only when remnants were detected) -->
                                     <Grid ColumnDefinitions="Auto,*"
                                           IsVisible="{Binding HasRemnants}">
                                         <controls:SvgIcon Grid.Column="0" Preset="AlertTriangle" IconColor="#AE8B6B" IconSize="32"
@@ -2019,7 +1979,6 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Completion Progress -->
                         <Border Background="{DynamicResource CardBackgroundBrush}"
                                 CornerRadius="{StaticResource Radius.Xl}"
                                 Padding="24,20"
@@ -2043,16 +2002,13 @@
         </ScrollViewer>
         </Border>
 
-        <!-- ═══════════════════════════════════════════════════════════════════════
-             FOOTER - Navigation buttons and status
-             ═══════════════════════════════════════════════════════════════════════ -->
         <Border Grid.Row="2"
                 Background="{DynamicResource FooterBackgroundBrush}"
                 Padding="24,20,24,32"
                 BorderBrush="{DynamicResource ControlBorderBrush}"
                 BorderThickness="0,1,0,0">
             <Grid ColumnDefinitions="Auto,*,Auto">
-                <!-- Status Message -->
+
                 <TextBlock Grid.Column="0"
                            Text="{Binding StatusMessage}"
                            FontSize="{StaticResource Type.Small.Size}"
@@ -2061,13 +2017,12 @@
                            MaxWidth="300"
                            TextWrapping="Wrap"/>
 
-                <!-- Navigation Buttons -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="12">
                     <Button Command="{Binding PreviousStepCommand}"
                             Content="← Back"
                             Classes="liquid-glass nav-button"
                             IsVisible="{Binding CanGoBack}"/>
-                    
+
                     <Button Command="{Binding NextStepCommand}"
                             Content="{Binding NextButtonText}"
                             Classes="liquid-glass nav-button"
@@ -2078,3 +2033,4 @@
     </Grid>
 
 </views:ThemeAwareWindow>
+

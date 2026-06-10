@@ -9,8 +9,7 @@
             CornerRadius="{StaticResource Radius.Md}"
             Padding="12,8">
         <Grid ColumnDefinitions="Auto,*,Auto,Auto">
-            
-            <!-- Search Icon -->
+
             <controls:SvgIcon Grid.Column="0"
                               Preset="Search"
                               Width="20" Height="20"
@@ -18,7 +17,6 @@
                               Margin="0,0,8,0"
                               VerticalAlignment="Center"/>
 
-            <!-- Search TextBox -->
             <TextBox Grid.Column="1"
                      x:Name="SearchTextBox"
                      Text="{Binding SearchText, Mode=TwoWay}"
@@ -36,7 +34,6 @@
                 </TextBox.KeyBindings>
             </TextBox>
 
-            <!-- Clear Button -->
             <Button Grid.Column="3"
                     Command="{Binding ClearSearchCommand}"
                     IsVisible="{Binding HasSearchText}"
@@ -50,3 +47,4 @@
         </Grid>
     </Border>
 </UserControl>
+

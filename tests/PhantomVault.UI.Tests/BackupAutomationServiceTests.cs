@@ -106,13 +106,18 @@ public sealed class BackupAutomationServiceTests : IDisposable
             BackupRetentionCount = 2
         });
 
+        // A USB keyfile is mandatory for any operation that touches the master key
+        // (enforced by KeyfileGuard.Require), so the automated backup must be handed one.
+        var keyfilePath = Path.Combine(_tempDirectory, "vault.keyfile");
+        File.WriteAllBytes(keyfilePath, new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
+
         var backupService = new BackupService(new EncryptionService());
 
         var backupPath = await BackupAutomationService.RunAutomatedBackupIfDueAsync(
             backupService,
             _manifestPath,
             "test-passphrase",
-            null,
+            keyfilePath,
             backupDirectory);
 
         Assert.False(string.IsNullOrWhiteSpace(backupPath));

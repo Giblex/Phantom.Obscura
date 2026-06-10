@@ -7,7 +7,7 @@ namespace PhantomVault.UI.Converters
 {
     public class PathToBitmapConverter : IValueConverter
     {
-        // Simple cache to avoid reloading bitmaps repeatedly
+
         private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, WeakReference<Bitmap?>> _cache = new();
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
@@ -33,7 +33,7 @@ namespace PhantomVault.UI.Converters
             }
             catch
             {
-                // If bitmap creation fails, return null to allow placeholder visuals
+
                 return null;
             }
         }
@@ -44,3 +44,4 @@ namespace PhantomVault.UI.Converters
         }
     }
 }
+

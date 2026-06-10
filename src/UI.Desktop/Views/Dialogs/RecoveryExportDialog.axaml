@@ -1,0 +1,82 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PhantomVault.UI.Views.Dialogs.RecoveryExportDialog"
+        Width="560" Height="620"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        SystemDecorations="None"
+        Title="Save Your Recovery Kit">
+  <Window.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://PhantomVault.UI/Assets/Themes/PreVaultTheme.axaml"/>
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </Window.Resources>
+  <Border Background="{DynamicResource WindowBackgroundBrush}"
+          BorderBrush="{DynamicResource AccentBrush}"
+          BorderThickness="1"
+          CornerRadius="12">
+    <Grid Margin="24" RowDefinitions="Auto,Auto,*,Auto,Auto,Auto">
+
+      <StackPanel Grid.Row="0" Spacing="6">
+        <TextBlock Text="Save Your Recovery Kit"
+                   FontSize="{StaticResource Type.H3.Size}"
+                   FontWeight="Bold"
+                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+        <TextBlock TextWrapping="Wrap"
+                   Foreground="{DynamicResource SecondaryTextBrush}"
+                   Text="If your USB is ever lost or damaged, this is the ONLY way to rebuild your keyfile and regain access. Save the recovery file somewhere safe and OFF this USB, and write down the codes below."/>
+      </StackPanel>
+
+      <Border Grid.Row="1" Margin="0,16,0,0" Padding="12"
+              Background="{DynamicResource CardBackgroundBrush}"
+              CornerRadius="8">
+        <StackPanel Spacing="6">
+          <TextBlock Text="Recovery codes (any one can open the recovery file)"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource SecondaryTextBrush}"/>
+        </StackPanel>
+      </Border>
+
+      <ScrollViewer Grid.Row="2" Margin="0,8,0,0">
+        <ItemsControl x:Name="CodesList">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding}"
+                         FontFamily="Cascadia Mono, Consolas, monospace"
+                         FontSize="16"
+                         Margin="4,3"
+                         Foreground="{DynamicResource PrimaryTextBrush}"/>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+
+      <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="10" Margin="0,12,0,0">
+        <Button x:Name="SaveFileButton" Content="Save recovery file…"
+                Classes="liquid-glass" Width="180"/>
+        <Button x:Name="SavePdfButton" Content="Save as PDF…"
+                Classes="liquid-glass" Width="130"/>
+        <Button x:Name="CopyCodesButton" Content="Copy codes"
+                Classes="liquid-glass" Width="120"/>
+      </StackPanel>
+
+      <TextBlock x:Name="StatusText" Grid.Row="4" Margin="0,10,0,0"
+                 TextWrapping="Wrap"
+                 Foreground="{DynamicResource SecondaryTextBrush}"
+                 Text="No recovery file saved yet."/>
+
+      <StackPanel Grid.Row="5" Spacing="12" Margin="0,12,0,0">
+        <CheckBox x:Name="ConfirmCheck"
+                  Content="I have saved my recovery file off the USB and recorded my codes."
+                  Foreground="{DynamicResource PrimaryTextBrush}"/>
+        <Button x:Name="ContinueButton" Content="Continue"
+                Classes="liquid-glass"
+                HorizontalAlignment="Right" Width="140"
+                IsEnabled="False"/>
+      </StackPanel>
+
+    </Grid>
+  </Border>
+</Window>

@@ -8,7 +8,7 @@ namespace PhantomVault.Core.Services;
 
 public static class PolicyVerifier
 {
-    // Call this at startup with the content of root_public.json
+
     public static ECDsa CreateRootVerifier(string rootPublicJson)
     {
         var doc = JsonDocument.Parse(rootPublicJson);
@@ -26,14 +26,12 @@ public static class PolicyVerifier
         return ecdsa;
     }
 
-    // Verifies a signed policy JSON string. Throws if invalid.
     public static void VerifyPolicy(string signedPolicyJson, ECDsa rootVerifier)
     {
         JsonNode? node = JsonNode.Parse(signedPolicyJson);
         if (node is null || node is not JsonObject obj)
             throw new InvalidOperationException("Policy JSON must be an object.");
 
-        // Extract signature block
         if (!obj.TryGetPropertyValue("signature", out JsonNode? sigNode) || sigNode is not JsonObject sigObj)
             throw new InvalidOperationException("Policy is missing 'signature' block.");
 
@@ -47,7 +45,6 @@ public static class PolicyVerifier
 
         byte[] signatureBytes = Convert.FromBase64String(value);
 
-        // Remove signature field for hashing
         obj.Remove("signature");
 
         string unsignedJson = obj.ToJsonString(new JsonSerializerOptions
@@ -68,3 +65,4 @@ public static class PolicyVerifier
             throw new CryptographicException("Policy signature verification failed.");
     }
 }
+

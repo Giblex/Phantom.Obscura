@@ -1,7 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="PhantomVault.UI.Views.EditForms.ApiKeyEditForm">
-    
+
     <Border x:Name="ApiKeyPanelBorder" Background="Transparent" IsVisible="{Binding IsApiKeyEntry}">
         <StackPanel x:Name="ApiKeyPanel" Spacing="12">
         <TextBlock Text="API Credential" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -31,3 +31,4 @@
         </StackPanel>
     </Border>
 </UserControl>
+

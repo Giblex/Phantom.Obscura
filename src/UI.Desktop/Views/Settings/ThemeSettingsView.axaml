@@ -3,24 +3,31 @@
              xmlns:vm="using:PhantomVault.UI.ViewModels.Settings"
              x:Class="PhantomVault.UI.Views.Settings.ThemeSettingsView"
              x:DataType="vm:ThemeSettingsViewModel">
-    <StackPanel Spacing="20" Margin="0,0,30,60">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://PhantomVault.UI/Resources/Converters/ConverterResources.axaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <StackPanel Spacing="20" Margin="0,0,0,60">
         <TextBlock Text="Theme Settings"
                    FontSize="{StaticResource Type.H3.Size}"
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource PrimaryTextBrush}"/>
 
-        <Border Classes="fade-in stagger-1"
+        <Border Classes="fade-in stagger-1" HorizontalAlignment="Stretch"
                 Background="{DynamicResource SettingsPanelBackgroundBrush}"
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="16"
                 Padding="20">
             <StackPanel Spacing="15">
-                <TextBlock Text="App Theme"
+                <TextBlock Text="Theme &amp; Appearance"
                            FontSize="{StaticResource Type.Body.Size}"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
-                <TextBlock Text="Choose a color scheme for the main vault windows."
+                <TextBlock Text="Choose a color scheme, font, and accent for the main vault windows."
                            FontSize="{StaticResource Type.Small.Size}"
                            Foreground="{DynamicResource MutedTextBrush}"/>
                 <ComboBox
@@ -122,116 +129,163 @@
                         </StackPanel>
                     </StackPanel>
                 </Border>
+
+                <Border Background="{DynamicResource ControlBorderBrush}" Height="1" Opacity="0.5" Margin="0,4"/>
+
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Display scale:"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <ComboBox Width="150"
+                              HorizontalAlignment="Left"
+                              SelectedIndex="{Binding SelectedDisplayScale}">
+                        <ComboBoxItem Content="80%"/>
+                        <ComboBoxItem Content="90%"/>
+                        <ComboBoxItem Content="100% (Default)"/>
+                        <ComboBoxItem Content="110%"/>
+                        <ComboBoxItem Content="125%"/>
+                        <ComboBoxItem Content="150%"/>
+                    </ComboBox>
+                </StackPanel>
+
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Font:"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <ComboBox Width="220"
+                              HorizontalAlignment="Left"
+                              ItemsSource="{Binding FontFamilyOptions}"
+                              SelectedItem="{Binding AppFontFamily, Mode=TwoWay}"/>
+                </StackPanel>
+
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Font size:"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <ComboBox Width="220"
+                              HorizontalAlignment="Left"
+                              ItemsSource="{Binding FontSizeOptions}"
+                              SelectedIndex="{Binding SelectedFontSizeIndex, Mode=TwoWay}"/>
+                </StackPanel>
+
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Accent colour:"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <ComboBox Width="220"
+                              HorizontalAlignment="Left"
+                              ItemsSource="{Binding AccentColorOptions}"
+                              SelectedItem="{Binding AccentColorHex, Mode=TwoWay}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Border Width="20" Height="20" CornerRadius="4"
+                                            Background="{Binding}"
+                                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                                            BorderThickness="1"/>
+                                    <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+
+                <CheckBox Content="Use flat buttons (disable liquid-glass chrome)"
+                          IsChecked="{Binding UseFlatButtons, Mode=TwoWay}"
+                          ToolTip.Tip="Replace liquid-glass button styling with a solid accent-colored flat button across the app."/>
+
+                <CheckBox Content="Use flat button borders (keep glass body, flatten border)"
+                          IsChecked="{Binding UseFlatButtonBorders, Mode=TwoWay}"
+                          ToolTip.Tip="Replaces the liquid-glass gradient border with a plain 1px border. Hover accents the border. Independent of Use flat buttons — only the border changes, not the body fill."/>
             </StackPanel>
         </Border>
 
-        <Border Classes="fade-in stagger-2"
+        <Border Classes="fade-in stagger-2" HorizontalAlignment="Stretch"
                 Background="{DynamicResource SettingsPanelBackgroundBrush}"
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="16"
                 Padding="20">
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="20">
-                <StackPanel Grid.Column="0" Spacing="15">
-                        <TextBlock Text="Appearance"
-                               FontSize="{StaticResource Type.Body.Size}"
-                               FontWeight="SemiBold"
-                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+            <StackPanel Spacing="12">
+                <TextBlock Text="Preview"
+                           FontSize="{StaticResource Type.Body.Size}"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <TextBlock Text="Live preview of theme, accent, font and button styling. Changes apply across the app on save."
+                           FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource MutedTextBrush}"/>
 
-                        <StackPanel Spacing="8">
-                            <TextBlock Text="Display scale:"
-                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
-                            <ComboBox Width="150"
-                                      HorizontalAlignment="Left"
-                                      SelectedIndex="{Binding SelectedDisplayScale}">
-                                <ComboBoxItem Content="80%"/>
-                                <ComboBoxItem Content="90%"/>
-                                <ComboBoxItem Content="100% (Default)"/>
-                                <ComboBoxItem Content="110%"/>
-                                <ComboBoxItem Content="125%"/>
-                                <ComboBoxItem Content="150%"/>
-                            </ComboBox>
-                        </StackPanel>
-
-                        <StackPanel Spacing="8">
-                            <TextBlock Text="Font:"
-                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
-                            <ComboBox Width="220"
-                                      HorizontalAlignment="Left"
-                                      ItemsSource="{Binding FontFamilyOptions}"
-                                      SelectedItem="{Binding AppFontFamily, Mode=TwoWay}"/>
-                        </StackPanel>
-
-                        <StackPanel Spacing="8">
-                            <TextBlock Text="Font size:"
-                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
-                            <ComboBox Width="220"
-                                      HorizontalAlignment="Left"
-                                      ItemsSource="{Binding FontSizeOptions}"
-                                      SelectedIndex="{Binding SelectedFontSizeIndex, Mode=TwoWay}"/>
-                        </StackPanel>
-
-                        <StackPanel Spacing="8">
-                            <TextBlock Text="Accent colour:"
-                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
-                            <ComboBox Width="220"
-                                      HorizontalAlignment="Left"
-                                      ItemsSource="{Binding AccentColorOptions}"
-                                      SelectedItem="{Binding AccentColorHex, Mode=TwoWay}">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" Spacing="10">
-                                            <Border Width="20" Height="20" CornerRadius="4"
-                                                    Background="{Binding}"
-                                                    BorderBrush="{DynamicResource ControlBorderBrush}"
-                                                    BorderThickness="1"/>
-                                            <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
-                        </StackPanel>
-                </StackPanel>
-
-                <Border Grid.Column="1"
-                        Background="{DynamicResource SettingsPanelBackgroundBrush}"
-                        BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                <Border Background="{DynamicResource WindowBackgroundBrush}"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
                         BorderThickness="1"
-                        CornerRadius="16"
-                        Padding="20"
-                        Width="320"
-                        VerticalAlignment="Top">
-                    <StackPanel Spacing="12">
-                        <TextBlock Text="Preview"
-                                   FontSize="{StaticResource Type.Small.Size}"
-                                   Foreground="{DynamicResource MutedTextBrush}"/>
-                        <Border Background="{DynamicResource ContentBackgroundBrush}"
-                                CornerRadius="{StaticResource Radius.Md}"
-                                Padding="12">
-                            <StackPanel Spacing="8">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <Border Background="{DynamicResource AccentBrush}"
-                                            Width="20"
-                                            Height="20"
-                                            CornerRadius="4"/>
-                                    <TextBlock Text="Accent"
-                                               Foreground="{DynamicResource PrimaryTextBrush}"
-                                               VerticalAlignment="Center"/>
-                                </StackPanel>
-                                <TextBlock Text="Primary text"
-                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                <TextBlock Text="Secondary text"
-                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                <TextBlock Text="Muted text"
-                                           Foreground="{DynamicResource MutedTextBrush}"/>
-                            </StackPanel>
+                        CornerRadius="10"
+                        ClipToBounds="True"
+                        Height="260">
+                    <Grid RowDefinitions="38,*">
+
+                        <Border Grid.Row="0"
+                                Background="{DynamicResource HeaderBackgroundBrush}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="0,0,0,1">
+                            <TextBlock Text="Header"
+                                       FontFamily="{Binding AppFontFamily}"
+                                       FontSize="{Binding AppFontSize}"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center"
+                                       Margin="14,0"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
                         </Border>
-                    </StackPanel>
+
+                        <Grid Grid.Row="1" ColumnDefinitions="72,*">
+
+                            <Border Grid.Column="0"
+                                    Background="{DynamicResource CategoryPanelBackgroundBrush}"
+                                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                                    BorderThickness="0,0,1,0">
+                                <StackPanel Margin="10,12" Spacing="7">
+                                    <Border Width="24" Height="24" CornerRadius="5"
+                                            Background="{Binding AccentColorHex, Converter={StaticResource HexToBrushConverter}}"/>
+                                    <Border Height="6" CornerRadius="3"
+                                            Background="{DynamicResource MutedTextBrush}" Opacity="0.4"/>
+                                    <Border Height="6" CornerRadius="3"
+                                            Background="{DynamicResource MutedTextBrush}" Opacity="0.25"/>
+                                    <Border Height="6" CornerRadius="3"
+                                            Background="{DynamicResource MutedTextBrush}" Opacity="0.25"/>
+                                </StackPanel>
+                            </Border>
+
+                            <StackPanel Grid.Column="1" Margin="14,12" Spacing="10">
+                                <TextBlock Text="Sample heading"
+                                           FontFamily="{Binding AppFontFamily}"
+                                           FontSize="{Binding AppFontSize}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                <TextBlock Text="The quick brown fox jumps over the lazy dog."
+                                           FontFamily="{Binding AppFontFamily}"
+                                           FontSize="{Binding AppFontSize}"
+                                           TextWrapping="Wrap"
+                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+
+                                <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,4,0,0">
+                                    <Border Padding="14,7"
+                                            CornerRadius="6"
+                                            Background="{Binding AccentColorHex, Converter={StaticResource HexToBrushConverter}}">
+                                        <TextBlock Text="Accent"
+                                                   FontFamily="{Binding AppFontFamily}"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#FFFFFFFF"/>
+                                    </Border>
+                                    <Button Content="Glass"
+                                            Classes="liquid-glass"
+                                            FontFamily="{Binding AppFontFamily}"
+                                            FontSize="12"
+                                            Padding="14,6"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
                 </Border>
-            </Grid>
+            </StackPanel>
         </Border>
 
-        <Border Classes="fade-in stagger-3"
+        <Border Classes="fade-in stagger-3" HorizontalAlignment="Stretch"
                 Background="{DynamicResource SettingsPanelBackgroundBrush}"
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
                 BorderThickness="1"

@@ -4,62 +4,35 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using PhantomVault.Core.Models;
-// VaultManifest dependency removed — scrub history is returned to the caller
-// who decides how/where to persist it.
 
 namespace PhantomVault.Core.Services
 {
-    /// <summary>
-    /// Removes OS-injected indexing/system folders and files from the root of
-    /// a Phantom Obscura USB drive. Whitelist-driven — never recurses into
-    /// arbitrary user data; only touches a known list of paths created by
-    /// Windows / macOS / Android indexers.
-    ///
-    /// The list of <see cref="ScrubEvent"/>s removed is returned to the caller
-    /// for logging or persistence. By default, removed items are moved into
-    /// <c>.phantom_quarantine/</c> on the drive and retained for a configurable
-    /// window before hard-delete.
-    /// </summary>
+
     public sealed class UsbJunkScrubber
     {
         private const string QuarantineFolderName = ".phantom_quarantine";
         private const int MaxScrubHistory = 200;
 
-        /// <summary>
-        /// Root-relative paths that are safe to remove. Each entry tagged with
-        /// (path, isDirectory, reason).
-        /// </summary>
         private static readonly IReadOnlyList<JunkTarget> Targets = new[]
         {
-            // Android
+
             new JunkTarget("LOST.DIR",                    true,  "android-lost-dir"),
             new JunkTarget(".android_secure",             true,  "android-secure"),
             new JunkTarget(".thumbnails",                 true,  "android-thumbs"),
-            // macOS
+
             new JunkTarget(".Spotlight-V100",             true,  "macos-spotlight"),
             new JunkTarget(".TemporaryItems",             true,  "macos-temp"),
-            // Windows
+
             new JunkTarget("System Volume Information",   true,  "windows-svi"),
             new JunkTarget("$RECYCLE.BIN",                true,  "windows-recycle"),
             new JunkTarget("Thumbs.db",                   false, "windows-thumbs"),
             new JunkTarget("desktop.ini",                 false, "windows-desktop-ini"),
             new JunkTarget("IndexerVolumeGuid",           false, "windows-indexer-guid"),
             new JunkTarget("WPSettings.dat",              false, "windows-wp-settings"),
-            // macOS Finder
+
             new JunkTarget(".DS_Store",                   false, "macos-ds-store"),
         };
 
-        /// <summary>
-        /// Runs the scrubber. Caller must have already verified that
-        /// <paramref name="driveRoot"/> belongs to a Phantom Obscura-bound vault
-        /// (device-id check passed). Returns the list of events removed; when
-        /// <paramref name="manifest"/> is supplied, the same events are also
-        /// appended to its <see cref="VaultManifest.ScrubHistory"/> (capped).
-        /// </summary>
-        /// <param name="driveRoot">Root path of the bound USB drive.</param>
-        /// <param name="quarantineDays">Days to retain quarantined items. Set to 0 to hard-delete immediately.</param>
-        /// <param name="dryRun">When true, scans but does not delete. Returned events have <c>Quarantined=false</c> and no real file system change is made.</param>
-        /// <param name="manifest">Optional manifest whose ScrubHistory will be appended to. Caller is responsible for persisting the manifest afterwards.</param>
         public IReadOnlyList<ScrubEvent> Scrub(
             string driveRoot,
             int quarantineDays = 7,
@@ -131,7 +104,6 @@ namespace PhantomVault.Core.Services
                 events.Add(evt);
             }
 
-            // AppleDouble files: ._* at root only (non-recursive).
             try
             {
                 foreach (var path in Directory.EnumerateFiles(driveRoot, "._*", SearchOption.TopDirectoryOnly))
@@ -172,7 +144,6 @@ namespace PhantomVault.Core.Services
                 System.Diagnostics.Debug.WriteLine($"[UsbJunkScrubber] AppleDouble scan failed: {ex.Message}");
             }
 
-            // Purge any quarantine entries older than retention window.
             if (!dryRun && quarantineDays > 0)
             {
                 PurgeExpiredQuarantine(driveRoot, quarantineDays);
@@ -191,10 +162,6 @@ namespace PhantomVault.Core.Services
             return events;
         }
 
-        /// <summary>
-        /// Returns true if any of the whitelisted junk targets are present at
-        /// <paramref name="driveRoot"/>. Cheap scan — does not enumerate sizes.
-        /// </summary>
         public bool HasJunk(string driveRoot)
         {
             if (string.IsNullOrEmpty(driveRoot)) return false;
@@ -301,3 +268,4 @@ namespace PhantomVault.Core.Services
         private sealed record JunkTarget(string RelativePath, bool IsDirectory, string Reason);
     }
 }
+

@@ -6,9 +6,7 @@ using PhantomVault.Core.Models.AutoInject;
 
 namespace PhantomVault.Core.Services.AutoInject
 {
-    /// <summary>
-    /// Implementation of credential matching with fuzzy logic and scoring
-    /// </summary>
+
     public class CredentialMatchingEngine : ICredentialMatchingEngine
     {
         private const int MinimumConfidenceScore = 30;
@@ -38,7 +36,6 @@ namespace PhantomVault.Core.Services.AutoInject
                 }
             }
 
-            // Sort by confidence score (highest first), then by last used
             return matches
                 .OrderByDescending(m => m.ConfidenceScore)
                 .ThenByDescending(m => m.LastUsed ?? DateTime.MinValue)
@@ -57,17 +54,15 @@ namespace PhantomVault.Core.Services.AutoInject
         {
             int score = 0;
 
-            // URL/Domain matching (highest priority)
             if (!string.IsNullOrEmpty(context.Domain) && !string.IsNullOrEmpty(credential.Url))
             {
                 var credDomain = ExtractDomain(credential.Url);
 
-                // Exact domain match
                 if (context.Domain.Equals(credDomain, StringComparison.OrdinalIgnoreCase))
                 {
                     score += 50;
                 }
-                // Subdomain match (e.g., "mail.google.com" matches "google.com")
+
                 else if (context.Domain.Contains(credDomain, StringComparison.OrdinalIgnoreCase) ||
                          credDomain.Contains(context.Domain, StringComparison.OrdinalIgnoreCase))
                 {
@@ -75,7 +70,6 @@ namespace PhantomVault.Core.Services.AutoInject
                 }
             }
 
-            // Window title matching
             if (!string.IsNullOrEmpty(context.WindowTitle) && !string.IsNullOrEmpty(credential.Title))
             {
                 if (context.WindowTitle.Contains(credential.Title, StringComparison.OrdinalIgnoreCase))
@@ -84,23 +78,20 @@ namespace PhantomVault.Core.Services.AutoInject
                 }
             }
 
-            // Process name matching (for desktop apps)
             if (!string.IsNullOrEmpty(context.ProcessName))
             {
-                // Check if credential name mentions the process
+
                 if (credential.Title?.Contains(context.ProcessName, StringComparison.OrdinalIgnoreCase) == true)
                 {
                     score += 15;
                 }
 
-                // Check tags
                 if (credential.Tags?.Any(t => t.Contains(context.ProcessName, StringComparison.OrdinalIgnoreCase)) == true)
                 {
                     score += 15;
                 }
             }
 
-            // Recency boost (recently used credentials are more likely to be correct)
             if (credential.LastUsedUtc.HasValue)
             {
                 var daysSinceUse = (DateTime.UtcNow - credential.LastUsedUtc.Value).TotalDays;
@@ -110,13 +101,12 @@ namespace PhantomVault.Core.Services.AutoInject
                     score += 5;
             }
 
-            // Passkey boost (passkeys are often more specific to sites)
             if (!string.IsNullOrEmpty(credential.PasskeyId))
             {
                 score += 5;
             }
 
-            return Math.Min(score, 100); // Cap at 100
+            return Math.Min(score, 100);
         }
 
         private string GetDisplayName(Credential credential)
@@ -139,10 +129,9 @@ namespace PhantomVault.Core.Services.AutoInject
 
             try
             {
-                // Remove protocol if present
+
                 url = url.Replace("https://", "").Replace("http://", "");
 
-                // Extract domain (before first slash)
                 var slashIndex = url.IndexOf('/');
                 if (slashIndex > 0)
                 {
@@ -158,3 +147,4 @@ namespace PhantomVault.Core.Services.AutoInject
         }
     }
 }
+

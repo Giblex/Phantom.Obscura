@@ -332,3 +332,4 @@ public sealed class BorderEnergyTrace : Control
         return Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 }
+

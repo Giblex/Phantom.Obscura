@@ -31,8 +31,6 @@ namespace PhantomVault.UI.Views
             viewModel.SetOwnerWindow(this);
             Serilog.Log.Information("[VaultUnlockWindow] wiring Opened event");
 
-            // Start vault unlock process when window opens
-            // (Will auto-unlock with keyfile if available, otherwise prompt for password)
             Opened += async (s, e) =>
             {
                 try
@@ -50,3 +48,4 @@ namespace PhantomVault.UI.Views
         }
     }
 }
+

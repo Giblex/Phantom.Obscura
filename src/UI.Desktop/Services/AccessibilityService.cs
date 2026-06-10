@@ -2,10 +2,7 @@ using System;
 
 namespace PhantomVault.UI.Services
 {
-    /// <summary>
-    /// Global service for managing accessibility settings across the application.
-    /// Provides a centralized source of truth for motion reduction, contrast, and other accessibility preferences.
-    /// </summary>
+
     public sealed class AccessibilityService
     {
         private static readonly Lazy<AccessibilityService> _instance = new Lazy<AccessibilityService>(() => new AccessibilityService());
@@ -13,31 +10,22 @@ namespace PhantomVault.UI.Services
         private bool _reduceMotion;
         private bool _useHighContrast;
         private bool _largeTooltips;
+        private bool _screenReaderOptimizations;
 
-        /// <summary>
-        /// Gets the singleton instance of the AccessibilityService.
-        /// </summary>
         public static AccessibilityService Instance => _instance.Value;
 
-        /// <summary>
-        /// Event raised when accessibility settings change.
-        /// </summary>
         public event EventHandler? SettingsChanged;
 
         private AccessibilityService()
         {
-            // Default values
+
             _reduceMotion = false;
             _useHighContrast = false;
             _largeTooltips = false;
 
-            // Try to detect OS-level reduce motion preference
             TryDetectOsPreferences();
         }
 
-        /// <summary>
-        /// Gets or sets whether motion and animations should be reduced for accessibility.
-        /// </summary>
         public bool ReduceMotion
         {
             get => _reduceMotion;
@@ -51,9 +39,6 @@ namespace PhantomVault.UI.Services
             }
         }
 
-        /// <summary>
-        /// Gets or sets whether high contrast mode is enabled.
-        /// </summary>
         public bool UseHighContrast
         {
             get => _useHighContrast;
@@ -67,9 +52,6 @@ namespace PhantomVault.UI.Services
             }
         }
 
-        /// <summary>
-        /// Gets or sets whether large tooltips should be shown.
-        /// </summary>
         public bool LargeTooltips
         {
             get => _largeTooltips;
@@ -83,18 +65,26 @@ namespace PhantomVault.UI.Services
             }
         }
 
-        /// <summary>
-        /// Attempts to detect OS-level accessibility preferences.
-        /// Currently supports Windows 10+ motion reduction detection.
-        /// </summary>
+        public bool ScreenReaderOptimizations
+        {
+            get => _screenReaderOptimizations;
+            set
+            {
+                if (_screenReaderOptimizations != value)
+                {
+                    _screenReaderOptimizations = value;
+                    OnSettingsChanged();
+                }
+            }
+        }
+
         private void TryDetectOsPreferences()
         {
             try
             {
                 if (OperatingSystem.IsWindows())
                 {
-                    // Check Windows Registry for motion reduction setting
-                    // HKEY_CURRENT_USER\Control Panel\Accessibility\ReduceMotion
+
                     using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
                         @"Control Panel\Accessibility", false);
 
@@ -127,7 +117,7 @@ namespace PhantomVault.UI.Services
                     }
                     catch
                     {
-                        // defaults command may fail if preference doesn't exist
+
                     }
                 }
                 else if (OperatingSystem.IsLinux())
@@ -145,28 +135,22 @@ namespace PhantomVault.UI.Services
                         {
                             var output = proc.StandardOutput.ReadToEnd().Trim();
                             proc.WaitForExit(2000);
-                            // enable-animations=false means reduce motion is ON
+
                             _reduceMotion = string.Equals(output, "false", StringComparison.OrdinalIgnoreCase);
                         }
                     }
                     catch
                     {
-                        // gsettings may not be available on non-GNOME desktops
+
                     }
                 }
             }
             catch
             {
-                // If detection fails, use default (false)
+
             }
         }
 
-        /// <summary>
-        /// Updates all accessibility settings at once.
-        /// </summary>
-        /// <param name="reduceMotion">Reduce motion and animations</param>
-        /// <param name="useHighContrast">Use high contrast theme</param>
-        /// <param name="largeTooltips">Show larger tooltips</param>
         public void UpdateSettings(bool reduceMotion, bool useHighContrast, bool largeTooltips)
         {
             bool changed = false;
@@ -201,3 +185,4 @@ namespace PhantomVault.UI.Services
         }
     }
 }
+

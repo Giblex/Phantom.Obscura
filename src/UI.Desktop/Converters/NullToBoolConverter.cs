@@ -4,9 +4,7 @@ using Avalonia.Data.Converters;
 
 namespace PhantomVault.UI.Converters
 {
-    /// <summary>
-    /// Converts null values to boolean. Returns true when value is not null by default.
-    /// </summary>
+
     public sealed class NullToBoolConverter : IValueConverter
     {
         public bool Invert { get; set; }
@@ -23,3 +21,4 @@ namespace PhantomVault.UI.Converters
         }
     }
 }
+

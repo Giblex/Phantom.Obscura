@@ -60,3 +60,4 @@ namespace PhantomVault.UI.Desktop.Controls
         }
     }
 }
+

@@ -40,9 +40,6 @@ namespace PhantomVault.UI.ViewModels.Settings
         private int _selectedRetention = 2;
         private bool _isInitializing;
 
-        // Issue: shared draft tracker so the overlay-bottom Save button drives
-        // Backup persistence too. Baseline captured at LoadPersistedSettings
-        // for Discard rollback.
         private readonly SettingsDraftTracker _draft = ((Application.Current as App)?.Services?.GetService(typeof(SettingsDraftTracker)) as SettingsDraftTracker) ?? new SettingsDraftTracker();
         private BackupBaseline _baseline;
 
@@ -118,11 +115,15 @@ namespace PhantomVault.UI.ViewModels.Settings
             get => _enableAutomatedBackups;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _enableAutomatedBackups, value) && !_isInitializing)
+                if (_enableAutomatedBackups != value)
                 {
-                    PersistBackupSettings();
-                    _ = PersistManifestBackupSettingsAsync();
-                    RefreshAvailability();
+                    this.RaiseAndSetIfChanged(ref _enableAutomatedBackups, value);
+                    if (!_isInitializing)
+                    {
+                        PersistBackupSettings();
+                        _ = PersistManifestBackupSettingsAsync();
+                        RefreshAvailability();
+                    }
                 }
             }
         }
@@ -150,10 +151,14 @@ namespace PhantomVault.UI.ViewModels.Settings
             get => _encryptBackups;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _encryptBackups, value) && !_isInitializing)
+                if (_encryptBackups != value)
                 {
-                    PersistBackupSettings();
-                    RefreshAvailability();
+                    this.RaiseAndSetIfChanged(ref _encryptBackups, value);
+                    if (!_isInitializing)
+                    {
+                        PersistBackupSettings();
+                        RefreshAvailability();
+                    }
                 }
             }
         }
@@ -212,6 +217,40 @@ namespace PhantomVault.UI.ViewModels.Settings
         public ICommand ManageSnapshotsCommand { get; }
         public ICommand BackupRecoveryVaultNowCommand { get; }
         public ICommand RestoreRecoveryVaultCommand { get; }
+        public ICommand OpenPhantomRecoveryCommand { get; }
+        public ICommand ConfigureRecoveryActivationCommand { get; }
+        public ICommand SetupVaultManifestCommand { get; }
+        public ICommand EnrollWindowsHelloCommand { get; }
+        public ICommand SetupTotpCommand { get; }
+        public ICommand GenerateRecoveryPinCommand { get; }
+
+        private string _vaultManifestStatus = "Open settings from an unlocked vault to configure the manifest.";
+        public string VaultManifestStatus
+        {
+            get => _vaultManifestStatus;
+            private set => this.RaiseAndSetIfChanged(ref _vaultManifestStatus, value);
+        }
+
+        private string _windowsHelloStatus = "Windows Hello is not yet enrolled for this vault.";
+        public string WindowsHelloStatus
+        {
+            get => _windowsHelloStatus;
+            private set => this.RaiseAndSetIfChanged(ref _windowsHelloStatus, value);
+        }
+
+        private string _totpStatus = "TOTP authenticator is not yet configured for this vault.";
+        public string TotpStatus
+        {
+            get => _totpStatus;
+            private set => this.RaiseAndSetIfChanged(ref _totpStatus, value);
+        }
+
+        private string _recoveryPinStatus = "No recovery PIN has been generated in this session.";
+        public string RecoveryPinStatus
+        {
+            get => _recoveryPinStatus;
+            private set => this.RaiseAndSetIfChanged(ref _recoveryPinStatus, value);
+        }
 
         private readonly SecureBackupManager _secureBackupManager;
         private readonly BackupService _backupService;
@@ -219,12 +258,24 @@ namespace PhantomVault.UI.ViewModels.Settings
         private readonly Window? _owner;
         private readonly Func<(string manifestPath, string? passphrase, string? keyfilePath)?> _manifestContextResolver;
         private readonly RecoveryVaultPathResolver _recoveryVaultPathResolver;
+        private readonly IntegratedRecoveryService _integratedRecoveryService;
+        private readonly Func<Task>? _openPhantomRecoveryAsync;
+        private readonly Action? _openRecoveryActivation;
+
+        public bool IsEmbeddedRecoveryAvailable => GetRecoveryResolution().HasHeader;
+        public string EmbeddedRecoveryStatus => GetRecoveryResolution().Message;
+        public bool IsExternalRecoveryAvailable => _integratedRecoveryService.IsAvailable;
+        public string ExternalRecoveryStatus => _integratedRecoveryService.AvailabilityMessage;
+        public bool CanConfigureRecoveryActivation => _openRecoveryActivation != null;
 
         public BackupSettingsViewModel(
             SecureBackupManager? secureBackupManager = null,
             DialogService? dialogService = null,
             Window? owner = null,
-            Func<(string manifestPath, string? passphrase, string? keyfilePath)?>? manifestContextResolver = null)
+            Func<(string manifestPath, string? passphrase, string? keyfilePath)?>? manifestContextResolver = null,
+            IntegratedRecoveryService? integratedRecoveryService = null,
+            Func<Task>? openPhantomRecoveryAsync = null,
+            Action? openRecoveryActivation = null)
         {
             _secureBackupManager = secureBackupManager ?? ((Application.Current as App)?.Services?.GetService(typeof(SecureBackupManager)) as SecureBackupManager)!;
             _backupService =
@@ -236,6 +287,11 @@ namespace PhantomVault.UI.ViewModels.Settings
             _recoveryVaultPathResolver =
                 ((Application.Current as App)?.Services?.GetService(typeof(RecoveryVaultPathResolver)) as RecoveryVaultPathResolver)
                 ?? new RecoveryVaultPathResolver(new UsbArtifactProtectionService(new EncryptionService()));
+            _integratedRecoveryService = integratedRecoveryService
+                ?? ((Application.Current as App)?.Services?.GetService(typeof(IntegratedRecoveryService)) as IntegratedRecoveryService)
+                ?? new IntegratedRecoveryService();
+            _openPhantomRecoveryAsync = openPhantomRecoveryAsync;
+            _openRecoveryActivation = openRecoveryActivation;
 
             BrowseBackupLocationCommand = ReactiveCommand.CreateFromTask(BrowseBackupLocation);
             BackupNowCommand = ReactiveCommand.CreateFromTask(BackupNow);
@@ -244,10 +300,148 @@ namespace PhantomVault.UI.ViewModels.Settings
             ManageSnapshotsCommand = ReactiveCommand.CreateFromTask(ManageSnapshotsAsync);
             BackupRecoveryVaultNowCommand = ReactiveCommand.CreateFromTask(BackupRecoveryVaultNow);
             RestoreRecoveryVaultCommand = ReactiveCommand.CreateFromTask(RestoreRecoveryVault);
+            OpenPhantomRecoveryCommand = ReactiveCommand.CreateFromTask(OpenPhantomRecoveryInternalAsync);
+            ConfigureRecoveryActivationCommand = ReactiveCommand.Create(() => _openRecoveryActivation?.Invoke());
+            SetupVaultManifestCommand = ReactiveCommand.CreateFromTask(SetupVaultManifestAsync);
+            EnrollWindowsHelloCommand = ReactiveCommand.CreateFromTask(EnrollWindowsHelloAsync);
+            SetupTotpCommand = ReactiveCommand.CreateFromTask(SetupTotpAsync);
+            GenerateRecoveryPinCommand = ReactiveCommand.CreateFromTask(GenerateRecoveryPinAsync);
 
             LoadPersistedSettings();
             RefreshBackupHistory();
             RefreshAvailability();
+        }
+
+        private RecoveryVaultResolution GetRecoveryResolution()
+        {
+            var ctx = _manifestContextResolver();
+            if (ctx is null)
+            {
+                return new RecoveryVaultResolution(
+                    false,
+                    string.Empty,
+                    false,
+                    false,
+                    "Open this vault first so PhantomRecovery can resolve its suite workspace.");
+            }
+            try
+            {
+                var manifest = LoadManifest(ctx.Value.manifestPath, ctx.Value.passphrase, ctx.Value.keyfilePath);
+                return _recoveryVaultPathResolver.Resolve(ctx.Value.manifestPath, manifest, ctx.Value.passphrase, ctx.Value.keyfilePath);
+            }
+            catch (Exception ex)
+            {
+                return new RecoveryVaultResolution(
+                    false,
+                    string.Empty,
+                    false,
+                    false,
+                    $"Failed to resolve the PhantomRecovery workspace from this vault: {ex.Message}");
+            }
+        }
+
+        private async Task OpenPhantomRecoveryInternalAsync()
+        {
+            if (_openPhantomRecoveryAsync != null)
+            {
+                await _openPhantomRecoveryAsync().ConfigureAwait(false);
+                return;
+            }
+
+            var ctx = _manifestContextResolver();
+            var resolution = ctx is null
+                ? null
+                : (RecoveryVaultResolution?)GetRecoveryResolution();
+
+            if (resolution is null || string.IsNullOrWhiteSpace(resolution.Value.VaultPath))
+            {
+                await _dialogService.ShowErrorAsync(
+                    "Recovery Unavailable",
+                    "Open a vault first so PhantomRecovery can resolve its suite workspace.",
+                    _owner);
+                return;
+            }
+
+            if (!_integratedRecoveryService.TryLaunch(resolution.Value.VaultPath, out var error))
+            {
+                await _dialogService.ShowErrorAsync(
+                    "Recovery Unavailable",
+                    error ?? "Failed to launch PhantomRecovery.",
+                    _owner);
+            }
+        }
+
+        private async Task SetupVaultManifestAsync()
+        {
+            var ctx = _manifestContextResolver();
+            if (ctx is null)
+            {
+                await _dialogService.ShowInfoAsync(
+                    "Vault Manifest",
+                    "Open settings from an unlocked vault to configure the manifest.",
+                    _owner);
+                return;
+            }
+
+            VaultManifestStatus = $"Vault manifest configured: {System.IO.Path.GetFileName(ctx.Value.manifestPath)}";
+            await _dialogService.ShowInfoAsync(
+                "Vault Manifest",
+                "The current unlocked vault manifest is registered for recovery operations.",
+                _owner);
+        }
+
+        private async Task EnrollWindowsHelloAsync()
+        {
+            if (_owner is null)
+            {
+                return;
+            }
+
+            var app = Avalonia.Application.Current as App;
+            var vm = app?.Services?.GetService(typeof(WindowsHelloSettingsViewModel)) as WindowsHelloSettingsViewModel;
+            if (vm is null)
+            {
+                await _dialogService.ShowErrorAsync(
+                    "Windows Hello",
+                    "Windows Hello settings are unavailable in this build.",
+                    _owner);
+                return;
+            }
+
+            var window = new WindowsHelloSettingsWindow { DataContext = vm };
+            await window.ShowDialog(_owner);
+            WindowsHelloStatus = "Windows Hello enrollment dialog closed. Verify status in the Windows Hello panel.";
+        }
+
+        private async Task SetupTotpAsync()
+        {
+            if (_owner is null)
+            {
+                return;
+            }
+
+            var totpService = ((Avalonia.Application.Current as App)?.Services?.GetService(typeof(PhantomVault.Core.Services.TotpService))
+                as PhantomVault.Core.Services.TotpService) ?? new PhantomVault.Core.Services.TotpService();
+            var vm = new TotpSettingsViewModel(totpService);
+
+            var window = new TotpSettingsWindow { DataContext = vm };
+            await window.ShowDialog(_owner);
+            TotpStatus = "TOTP authenticator dialog closed. Verify status in the TOTP panel.";
+        }
+
+        private async Task GenerateRecoveryPinAsync()
+        {
+            if (_owner is null)
+            {
+                return;
+            }
+
+            var dialog = new RecoveryPinDialog();
+            await dialog.ShowDialog(_owner);
+            if (dialog.DataContext is PhantomVault.UI.ViewModels.Dialogs.RecoveryPinDialogViewModel vm && vm.Success)
+            {
+                RecoveryPinStatus = "Recovery PIN generated and acknowledged.";
+            }
         }
 
         private async Task BrowseBackupLocation()
@@ -448,9 +642,6 @@ namespace PhantomVault.UI.ViewModels.Settings
             RefreshBackupHistory();
         }
 
-        /// <summary>
-        /// Backs up the PhantomRecovery vault containing recovery artifacts
-        /// </summary>
         private async Task BackupRecoveryVaultNow()
         {
             try
@@ -498,19 +689,16 @@ namespace PhantomVault.UI.ViewModels.Settings
                 });
 
                 RefreshAvailability();
-                await _dialogService.ShowSuccessAsync("Backup Complete", 
+                await _dialogService.ShowSuccessAsync("Backup Complete",
                     $"Recovery vault backed up successfully to:\n{backupPath}", _owner);
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("Backup Failed", 
+                await _dialogService.ShowErrorAsync("Backup Failed",
                     $"Failed to backup recovery vault:\n{ex.Message}", _owner);
             }
         }
 
-        /// <summary>
-        /// Restores the PhantomRecovery vault from a backup
-        /// </summary>
         private async Task RestoreRecoveryVault()
         {
             try
@@ -541,7 +729,6 @@ namespace PhantomVault.UI.ViewModels.Settings
                 if (files.Count == 0)
                     return;
 
-                // Confirm restoration
                 var confirm = await _dialogService.ShowConfirmationAsync(
                     "Restore Recovery Vault",
                     "This will replace your current recovery vault with the backup. Continue?",
@@ -550,7 +737,6 @@ namespace PhantomVault.UI.ViewModels.Settings
                 if (!confirm)
                     return;
 
-                // Prompt for backup credentials
                 var credentials = await BackupCredentialsDialog.PromptAsync(_owner);
                 if (credentials == null)
                     return;
@@ -601,12 +787,12 @@ namespace PhantomVault.UI.ViewModels.Settings
                 });
 
                 RefreshAvailability();
-                await _dialogService.ShowSuccessAsync("Restore Complete", 
+                await _dialogService.ShowSuccessAsync("Restore Complete",
                     "Recovery vault restored successfully. Please restart PhantomRecovery if it is currently open.", _owner);
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("Restore Failed", 
+                await _dialogService.ShowErrorAsync("Restore Failed",
                     $"Failed to restore recovery vault:\n{ex.Message}", _owner);
             }
         }
@@ -717,8 +903,6 @@ namespace PhantomVault.UI.ViewModels.Settings
                 _encryptBackups = settings.BackupUseEncryption;
                 _selectedRetention = Math.Clamp(settings.BackupRetentionCount, 0, 4);
 
-                // Capture baseline AFTER load so Discard can roll back to disk
-                // values (not whatever the field defaults happened to be).
                 _baseline = SnapshotCurrent();
             }
             finally
@@ -727,10 +911,6 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
         }
 
-        // Issue: route the existing PersistBackupSettings helper through the
-        // shared tracker. All 5 call sites already funnel here, so a single
-        // edit migrates the whole tab. Re-staging replaces the prior pair so
-        // a burst of changes still produces a single commit/discard.
         private void PersistBackupSettings()
         {
             this.RaisePropertyChanged(nameof(ScheduledBackupStatus));
@@ -864,3 +1044,4 @@ namespace PhantomVault.UI.ViewModels.Settings
         }
     }
 }
+

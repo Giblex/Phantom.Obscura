@@ -4,9 +4,7 @@ using Avalonia.Data.Converters;
 
 namespace PhantomVault.UI.Converters
 {
-    /// <summary>
-    /// Returns true when two bound objects reference the same instance.
-    /// </summary>
+
     public sealed class ObjectReferenceEqualsConverter : IMultiValueConverter
     {
         public object? Convert(IList<object?> values, Type targetType, object? parameter, CultureInfo culture)
@@ -22,3 +20,4 @@ namespace PhantomVault.UI.Converters
         }
     }
 }
+

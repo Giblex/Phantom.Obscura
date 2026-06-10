@@ -6,10 +6,7 @@ using PhantomVault.UI.Models;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// View model that wraps a secure trash record so the UI can present
-    /// credential details alongside trash metadata and selection state.
-    /// </summary>
+
     public sealed class SecureTrashItemViewModel : ReactiveObject
     {
         private readonly CredentialViewModel _payload;
@@ -21,14 +18,8 @@ namespace PhantomVault.UI.ViewModels
             _payload = new CredentialViewModel(CloneCredential(record.Payload ?? new Credential()));
         }
 
-        /// <summary>
-        /// Underlying secure trash record that contains retention metadata.
-        /// </summary>
         public SecureTrashRecord Record { get; }
 
-        /// <summary>
-        /// Snapshot of the credential payload for display purposes.
-        /// </summary>
         public CredentialViewModel Payload => _payload;
 
         public string Title => _payload.Title;
@@ -77,3 +68,4 @@ namespace PhantomVault.UI.ViewModels
         }
     }
 }
+

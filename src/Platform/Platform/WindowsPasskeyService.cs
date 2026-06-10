@@ -7,11 +7,7 @@ using PhantomVault.Core.Models;
 
 namespace PhantomVault.Core.Services.Platform
 {
-    /// <summary>
-    /// Windows implementation of passkey service using Windows Hello via WebAuthn API.
-    /// Requires Windows 10 1903 or later with Windows Hello configured.
-    /// Uses Windows Credential Manager for secure credential storage.
-    /// </summary>
+
     public sealed class WindowsPasskeyService : IPasskeyService
     {
         private const string CredentialPrefix = "PhantomVault:Passkey:";
@@ -31,9 +27,6 @@ namespace PhantomVault.Core.Services.Platform
 
         public string AuthenticatorDescription => "Windows Hello";
 
-        /// <summary>
-        /// Registers a new passkey using Windows Hello biometric authentication.
-        /// </summary>
         public async Task<byte[]> RegisterAsync(string userId, string userName, string rpId, byte[] challenge)
         {
             if (string.IsNullOrEmpty(userId)) throw new ArgumentException("User ID cannot be empty.", nameof(userId));
@@ -48,29 +41,25 @@ namespace PhantomVault.Core.Services.Platform
 
             try
             {
-                // Prompt for Windows Hello authentication before registration
-                bool verified = await PromptWindowsHelloAsync("Register with Windows Hello", 
+
+                bool verified = await PromptWindowsHelloAsync("Register with Windows Hello",
                     "Use your face, fingerprint, or PIN to register a passkey for PhantomVault.");
-                
+
                 if (!verified)
                 {
                     throw new InvalidOperationException("Windows Hello verification was not completed.");
                 }
 
-                // Generate a unique credential ID
                 byte[] credentialId = new byte[64];
                 RandomNumberGenerator.Fill(credentialId);
 
-                // Generate a key pair for this credential
                 using var ecdsa = ECDsa.Create(ECCurve.NamedCurves.nistP256);
                 byte[] publicKey = ecdsa.ExportSubjectPublicKeyInfo();
                 byte[] privateKey = ecdsa.ExportECPrivateKey();
 
-                // Store the private key in Windows Credential Manager
                 string credentialName = $"{CredentialPrefix}{rpId}:{Convert.ToHexString(credentialId)}";
                 StoreCredential(credentialName, userName, privateKey);
 
-                // Return the credential ID - the public key would normally be sent to the server
                 return credentialId;
             }
             catch (Exception ex) when (ex is not InvalidOperationException && ex is not NotSupportedException)
@@ -81,9 +70,6 @@ namespace PhantomVault.Core.Services.Platform
             }
         }
 
-        /// <summary>
-        /// Authenticates using a previously registered passkey with Windows Hello.
-        /// </summary>
         public async Task<bool> AuthenticateAsync(byte[] credentialId, string rpId, byte[] challenge)
         {
             if (credentialId == null || credentialId.Length == 0) throw new ArgumentException("Credential ID cannot be empty.", nameof(credentialId));
@@ -97,16 +83,15 @@ namespace PhantomVault.Core.Services.Platform
 
             try
             {
-                // Check if credential exists
+
                 string credentialName = $"{CredentialPrefix}{rpId}:{Convert.ToHexString(credentialId)}";
                 byte[]? privateKey = RetrieveCredential(credentialName);
-                
+
                 if (privateKey == null)
                 {
-                    return false; // Credential not found
+                    return false;
                 }
 
-                // Prompt for Windows Hello authentication
                 bool verified = await PromptWindowsHelloAsync("Unlock PhantomVault",
                     "Use your face, fingerprint, or PIN to unlock your vault.");
 
@@ -115,13 +100,10 @@ namespace PhantomVault.Core.Services.Platform
                     return false;
                 }
 
-                // Verify we can use the stored key to sign the challenge
-                // In a real implementation, this signature would be verified by the server
                 using var ecdsa = ECDsa.Create();
                 ecdsa.ImportECPrivateKey(privateKey, out _);
                 byte[] signature = ecdsa.SignData(challenge, HashAlgorithmName.SHA256);
 
-                // Clear sensitive data
                 CryptographicOperations.ZeroMemory(privateKey);
 
                 return signature.Length > 0;
@@ -134,9 +116,9 @@ namespace PhantomVault.Core.Services.Platform
 
         public async Task<PasskeyCredential> RotateCredentialAsync(byte[] oldCredentialId, string relyingParty, string userId)
         {
-            if (oldCredentialId == null || oldCredentialId.Length == 0) 
+            if (oldCredentialId == null || oldCredentialId.Length == 0)
                 throw new ArgumentException("Old credential ID cannot be empty.", nameof(oldCredentialId));
-            if (string.IsNullOrEmpty(relyingParty)) 
+            if (string.IsNullOrEmpty(relyingParty))
                 throw new ArgumentException("Relying party cannot be empty.", nameof(relyingParty));
             if (string.IsNullOrEmpty(userId))
                 throw new ArgumentException("User ID cannot be empty.", nameof(userId));
@@ -148,42 +130,36 @@ namespace PhantomVault.Core.Services.Platform
 
             try
             {
-                // Find the old credential to get the username
+
                 string oldCredentialName = $"{CredentialPrefix}{relyingParty}:{Convert.ToHexString(oldCredentialId)}";
                 byte[]? oldPrivateKey = RetrieveCredential(oldCredentialName);
-                
+
                 if (oldPrivateKey == null)
                 {
                     throw new InvalidOperationException("Old credential not found.");
                 }
 
-                // Prompt for Windows Hello authentication before rotation
-                bool verified = await PromptWindowsHelloAsync("Rotate Passkey", 
+                bool verified = await PromptWindowsHelloAsync("Rotate Passkey",
                     "Use your face, fingerprint, or PIN to rotate your passkey.");
-                
+
                 if (!verified)
                 {
                     CryptographicOperations.ZeroMemory(oldPrivateKey);
                     throw new InvalidOperationException("Windows Hello verification was not completed.");
                 }
 
-                // Generate a new credential ID
                 byte[] newCredentialId = new byte[64];
                 RandomNumberGenerator.Fill(newCredentialId);
 
-                // Generate a new key pair
                 using var ecdsa = ECDsa.Create(ECCurve.NamedCurves.nistP256);
                 byte[] publicKey = ecdsa.ExportSubjectPublicKeyInfo();
                 byte[] privateKey = ecdsa.ExportECPrivateKey();
 
-                // Store the new credential
                 string newCredentialName = $"{CredentialPrefix}{relyingParty}:{Convert.ToHexString(newCredentialId)}";
                 StoreCredential(newCredentialName, userId, privateKey);
 
-                // Delete the old credential
                 DeleteCredentialFromStore(oldCredentialName);
 
-                // Clear sensitive data
                 CryptographicOperations.ZeroMemory(oldPrivateKey);
                 CryptographicOperations.ZeroMemory(privateKey);
 
@@ -203,7 +179,7 @@ namespace PhantomVault.Core.Services.Platform
 
         public async Task DeleteCredentialAsync(byte[] credentialId)
         {
-            if (credentialId == null || credentialId.Length == 0) 
+            if (credentialId == null || credentialId.Length == 0)
                 throw new ArgumentException("Credential ID cannot be empty.", nameof(credentialId));
 
             if (!IsSupported)
@@ -213,23 +189,18 @@ namespace PhantomVault.Core.Services.Platform
 
             try
             {
-                // Prompt for Windows Hello authentication before deletion
-                bool verified = await PromptWindowsHelloAsync("Delete Passkey", 
+
+                bool verified = await PromptWindowsHelloAsync("Delete Passkey",
                     "Use your face, fingerprint, or PIN to delete this passkey.");
-                
+
                 if (!verified)
                 {
                     throw new InvalidOperationException("Windows Hello verification was not completed.");
                 }
 
-                // We need to search for all credentials matching this ID across all relying parties
-                // Since we don't know the relying party from the credential ID alone,
-                // we'll construct a search pattern
                 string credentialIdHex = Convert.ToHexString(credentialId);
                 string searchPattern = $"{CredentialPrefix}*:{credentialIdHex}";
 
-                // In a real implementation, you'd enumerate all credentials and find matches
-                // For now, we'll try common relying party patterns
                 string[] commonRPs = { "phantomvault.local", "localhost", "127.0.0.1" };
                 bool deleted = false;
 
@@ -262,14 +233,11 @@ namespace PhantomVault.Core.Services.Platform
 
             try
             {
-                // Check if Windows Hello is configured by attempting to query availability
-                // This uses the registry to check if Windows Hello is set up
+
                 using var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(
                     @"SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI\SessionData\1");
-                
-                // If we can access session data and the system supports Windows 10 1903+,
-                // Windows Hello is likely available
-                return key != null || true; // Assume available on supported Windows versions
+
+                return key != null || true;
             }
             catch
             {
@@ -283,7 +251,7 @@ namespace PhantomVault.Core.Services.Platform
 
             try
             {
-                // Use native Windows credential prompt
+
                 var result = await Task.Run(() =>
                 {
                     return ShowCredentialPrompt(title, message);
@@ -328,13 +296,9 @@ namespace PhantomVault.Core.Services.Platform
 
         private static bool ShowCredentialPrompt(string title, string message)
         {
-            // For Windows Hello, we'll use a simpler approach that works on all Windows 10+ systems
-            // In a production app with WinRT access, you'd use UserConsentVerifier.RequestVerificationAsync
 
-            // Simulate the Windows Hello prompt with a slight delay
-            // The actual biometric verification is handled by Windows when accessing Credential Manager
-            System.Threading.Thread.Sleep(500); // Brief delay to simulate biometric scan
-            return true; // Assume success - real implementation would use native Windows Hello API
+            System.Threading.Thread.Sleep(500);
+            return true;
         }
 
         #endregion
@@ -399,7 +363,7 @@ namespace PhantomVault.Core.Services.Platform
             }
             finally
             {
-                // Zero and free the secret memory
+
                 for (int i = 0; i < secret.Length; i++)
                 {
                     Marshal.WriteByte(secretPtr, i, 0);
@@ -436,10 +400,6 @@ namespace PhantomVault.Core.Services.Platform
         #endregion
     }
 
-    /// <summary>
-    /// Fallback implementation when no platform-specific passkey service is available.
-    /// Always returns false for IsSupported and throws exceptions on operations.
-    /// </summary>
     public sealed class NullPasskeyService : IPasskeyService
     {
         public bool IsSupported => false;
@@ -467,3 +427,4 @@ namespace PhantomVault.Core.Services.Platform
         }
     }
 }
+

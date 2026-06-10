@@ -54,7 +54,7 @@ namespace PhantomVault.UI.Services
                 : settings.BackupLocation;
 
             Directory.CreateDirectory(backupDirectory);
-            var backupPath = await backupService.CreateBackupAsync(manifestPath, passphrase, keyfilePath, backupDirectory).ConfigureAwait(false);
+            var backupPath = await backupService.CreateBackupAsync(manifestPath, passphrase, keyfilePath, backupDirectory, settings.BackupUseEncryption).ConfigureAwait(false);
             PruneBackupCount(backupDirectory, settings.BackupRetentionCount);
 
             SettingsService.Update(current =>
@@ -107,9 +107,10 @@ namespace PhantomVault.UI.Services
                 }
                 catch
                 {
-                    // Best effort pruning.
+
                 }
             }
         }
     }
 }
+

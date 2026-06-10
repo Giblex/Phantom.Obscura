@@ -2,17 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="PhantomVault.UI.Views.SmokeTestView">
 
-    <!--
-        Phase 1 smoke test. Proves three things:
-          1. Avalonia.Android renders on the AVD.
-          2. The linked desktop theme dictionary (PhantomTheme.Dark) resolved.
-          3. Brand assets bundled via avares:// URIs are reachable.
-
-        Subsequent turns replace this with the real desktop Welcome → Unlock → Dashboard
-        flow. Until then, this view shows the desktop's actual brand chrome at the
-        tablet form factor.
-    -->
-
     <Grid Background="{DynamicResource WindowBackgroundBrush}" RowDefinitions="*,Auto,*">
 
         <StackPanel Grid.Row="0"
@@ -62,3 +51,4 @@
                    Text="Phase 1 of desktop-to-Android port" />
     </Grid>
 </UserControl>
+

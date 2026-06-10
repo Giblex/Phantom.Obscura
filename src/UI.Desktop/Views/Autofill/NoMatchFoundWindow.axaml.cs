@@ -27,9 +27,6 @@ namespace PhantomVault.UI.Views.AutoFill
             }
         }
 
-        /// <summary>
-        /// Shows the dialog and awaits the user's choice.
-        /// </summary>
         public Task<NoMatchResult> ShowAsync()
         {
             Show();
@@ -37,3 +34,4 @@ namespace PhantomVault.UI.Views.AutoFill
         }
     }
 }
+

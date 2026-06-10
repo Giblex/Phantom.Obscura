@@ -4,9 +4,7 @@ using System.IO;
 
 namespace PhantomVault.UI.Services
 {
-    /// <summary>
-    /// Developer helpers for suite-local PhantomRecovery integration.
-    /// </summary>
+
     public static class RecoveryDeveloperMode
     {
         public static bool IsAvailable => !string.IsNullOrWhiteSpace(DeveloperVaultPath);
@@ -32,3 +30,4 @@ namespace PhantomVault.UI.Services
         }
     }
 }
+

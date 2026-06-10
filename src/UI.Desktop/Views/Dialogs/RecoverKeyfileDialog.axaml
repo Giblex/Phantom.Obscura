@@ -1,0 +1,94 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PhantomVault.UI.Views.Dialogs.RecoverKeyfileDialog"
+        Width="560" Height="600"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        SystemDecorations="None"
+        Title="Recover Keyfile">
+  <Window.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://PhantomVault.UI/Assets/Themes/PreVaultTheme.axaml"/>
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </Window.Resources>
+  <Border Background="{DynamicResource WindowBackgroundBrush}"
+          BorderBrush="{DynamicResource AccentBrush}"
+          BorderThickness="1"
+          CornerRadius="12">
+    <Grid Margin="24" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto,Auto">
+
+      <StackPanel Grid.Row="0" Spacing="6">
+        <TextBlock Text="Recover Your Keyfile"
+                   FontSize="{StaticResource Type.H3.Size}"
+                   FontWeight="Bold"
+                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+        <TextBlock TextWrapping="Wrap"
+                   Foreground="{DynamicResource SecondaryTextBrush}"
+                   Text="Use your recovery file and one recovery code to rebuild the keyfile onto a USB drive. The keyfile is the only mandatory credential for this USB-bound vault."/>
+      </StackPanel>
+
+      <!-- USB presence gate -->
+      <Border Grid.Row="1" x:Name="UsbWarning" Margin="0,14,0,0" Padding="12"
+              Background="{DynamicResource CardBackgroundBrush}"
+              CornerRadius="8" IsVisible="False">
+        <TextBlock x:Name="UsbWarningText" TextWrapping="Wrap"
+                   Foreground="{DynamicResource WarningBrush}"
+                   Text="Insert a USB drive to recover onto. This vault is USB-bound."/>
+      </Border>
+
+      <!-- Step 1: recovery file -->
+      <StackPanel Grid.Row="2" Spacing="6" Margin="0,16,0,0">
+        <TextBlock Text="1. Recovery file (.precovery)"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <TextBox x:Name="FileBox" Width="360" IsReadOnly="True"
+                   Watermark="No recovery file selected"/>
+          <Button x:Name="BrowseButton" Content="Browse…" Classes="liquid-glass" Width="110"/>
+        </StackPanel>
+      </StackPanel>
+
+      <!-- Step 2: recovery code -->
+      <StackPanel Grid.Row="3" Spacing="6" Margin="0,14,0,0">
+        <TextBlock Text="2. Recovery code"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+        <TextBox x:Name="CodeBox"
+                 FontFamily="Cascadia Mono, Consolas, monospace"
+                 Watermark="XXXX-XXXX-XXXX-XXXX"/>
+      </StackPanel>
+
+      <Button Grid.Row="4" x:Name="RecoverButton" Content="Recover keyfile"
+              Classes="liquid-glass" Width="180"
+              HorizontalAlignment="Left" Margin="0,16,0,0" IsEnabled="False"/>
+
+      <!-- Pairing guidance -->
+      <ScrollViewer Grid.Row="5" Margin="0,14,0,0">
+        <Border Padding="12"
+                Background="{DynamicResource CardBackgroundBrush}"
+                CornerRadius="8">
+          <StackPanel Spacing="6">
+            <TextBlock Text="Important: keyfile vs. data"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+            <TextBlock TextWrapping="Wrap"
+                       Foreground="{DynamicResource SecondaryTextBrush}"
+                       Text="Recovering the keyfile restores your CREDENTIAL. If the original USB is gone, your encrypted vault containers are gone too — you also need your encrypted vault backup to restore the DATA. Use this recovered keyfile together with that backup, or to repair a lost/corrupted keyfile while the vault containers are intact."/>
+          </StackPanel>
+        </Border>
+      </ScrollViewer>
+
+      <TextBlock x:Name="StatusText" Grid.Row="6" Margin="0,12,0,0"
+                 TextWrapping="Wrap"
+                 Foreground="{DynamicResource SecondaryTextBrush}"/>
+
+      <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Right"
+                  Spacing="10" Margin="0,12,0,0">
+        <Button x:Name="CloseButton" Content="Close" Classes="liquid-glass" Width="110"/>
+      </StackPanel>
+
+    </Grid>
+  </Border>
+</Window>

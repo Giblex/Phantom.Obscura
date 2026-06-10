@@ -23,12 +23,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- Generate XML documentation file for IntelliSense and API docs -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <!-- CS1591: Missing XML comment for publicly visible type or member - Temporarily suppressed -->
-    <!-- CS0618: Obsolete method usage - Some internal uses of deprecated methods are intentional -->
-    <!-- CS1573, CS1574, CS1571: XML documentation parameter mismatches - Fix in future refactor -->
-    <!-- TODO: Add XML documentation comments for all public APIs -->
-    <!-- TODO: Fix XML documentation parameter mismatches -->
-    <NoWarn>$(NoWarn);1591;CS0618;CS1573;CS1574;CS1571</NoWarn>
+    <!-- CS1591: Missing XML comment for publicly visible type or member - tracked separately, too many to fix in one pass -->
+    <!-- TODO (A-5/A-6): drive CS1591 to zero by adding XML docs to public APIs. Other suppressions removed; CS0618 obsolete-usage and CS1573/74/71 XML param mismatches are now hard errors. -->
+    <NoWarn>$(NoWarn);1591</NoWarn>
     <!-- SECURITY: Embed build metadata for integrity verification -->
     <VersionPrefix>1.0.0</VersionPrefix>
     <InformationalVersion>$(VersionPrefix)+$(SourceRevisionId)</InformationalVersion>
@@ -73,7 +70,7 @@
   <ItemGroup>
     <!-- Argon2 implementation used for memory‑hard password derivation. Using
       Isopoh.Cryptography.Argon2 which supports modern .NET and is actively maintained -->
-    <PackageReference Include="Avalonia" Version="11.3.9" />
+    <PackageReference Include="Avalonia" Version="11.3.11" />
     <PackageReference Include="Isopoh.Cryptography.Argon2" Version="2.0.0" />
     <!-- BouncyCastle for post-quantum cryptography (ML-KEM/Kyber) -->
     <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />

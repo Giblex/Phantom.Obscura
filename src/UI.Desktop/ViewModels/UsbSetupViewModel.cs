@@ -12,12 +12,7 @@ using PhantomVault.UI.Services;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// View model for the USB setup window. Lists removable drives and
-    /// allows the user to select one for vault operations. Supports
-    /// refreshing the list on demand. Real‑time updates are handled
-    /// internally by <see cref="UsbDetector"/>.
-    /// </summary>
+
     public sealed class UsbSetupViewModel : ReactiveObject, PhantomVault.UI.Services.IResettableOnError
     {
         private readonly UsbDetector _usbDetector;
@@ -44,7 +39,6 @@ namespace PhantomVault.UI.ViewModels
             RefreshCommand = ReactiveCommand.Create(Refresh);
             BrowseCommand = ReactiveCommand.CreateFromTask(BrowseForDriveAsync);
 
-            // Disable Continue button when there's a drive selected AND no error/warning message
             var canContinue = this.WhenAnyValue(
                 x => x.SelectedDrive,
                 x => x.StatusMessage,
@@ -55,7 +49,6 @@ namespace PhantomVault.UI.ViewModels
             ContinueCommand = ReactiveCommand.CreateFromTask(ContinueAsync, canContinue);
             GoBackCommand = ReactiveCommand.Create(GoBack);
 
-            // Update drive info when selection changes
             this.WhenAnyValue(x => x.SelectedDrive)
                 .Subscribe(_ => UpdateSelectedDriveInfo());
         }
@@ -68,7 +61,6 @@ namespace PhantomVault.UI.ViewModels
                 _drives.Add(drive);
             }
 
-            // Auto-select first drive if none selected
             if (_selectedDrive == null && _drives.Count > 0)
             {
                 SelectedDrive = _drives[0];
@@ -95,8 +87,7 @@ namespace PhantomVault.UI.ViewModels
                     SelectedDriveFreeSpace = FormatBytes(driveInfo.AvailableFreeSpace);
                     SelectedDriveFormat = driveInfo.DriveFormat;
 
-                    // Validate free space
-                    if (driveInfo.AvailableFreeSpace < 100 * 1024 * 1024) // 100 MB
+                    if (driveInfo.AvailableFreeSpace < 100 * 1024 * 1024)
                     {
                         StatusMessage = "Warning: Less than 100 MB free space available";
                     }
@@ -139,7 +130,7 @@ namespace PhantomVault.UI.ViewModels
         {
             try
             {
-                // Use the owner window set by SetOwnerWindow()
+
                 var topLevel = _ownerWindow;
 
                 if (topLevel == null) return;
@@ -157,28 +148,26 @@ namespace PhantomVault.UI.ViewModels
                 {
                     var selectedPath = folders[0].Path.LocalPath;
 
-                    // Check if this is a valid folder
                     if (Directory.Exists(selectedPath))
                     {
-                        // Try to find matching drive in the list
+
                         var matchingDrive = _drives.FirstOrDefault(d =>
                             selectedPath.StartsWith(d, StringComparison.OrdinalIgnoreCase));
 
                         if (matchingDrive != null)
                         {
-                            // It's one of the detected removable drives
+
                             SelectedDrive = matchingDrive;
                             var driveInfo = new DriveInfo(matchingDrive);
                             StatusMessage = $"Selected: {driveInfo.VolumeLabel} ({matchingDrive})";
                         }
                         else
                         {
-                            // Allow any folder, not just removable drives
+
                             SelectedDrive = selectedPath;
                             StatusMessage = $"Selected folder: {selectedPath}";
                         }
 
-                        // Clear status after 3 seconds
                         await Task.Delay(3000);
                         StatusMessage = string.Empty;
                     }
@@ -216,7 +205,6 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Check if vault already exists
                 var pvaultPath = Path.Combine(_selectedDrive, "vault.pvault");
                 var manifestPath = Path.Combine(_selectedDrive, "vault.manifest");
                 if (File.Exists(pvaultPath) || File.Exists(manifestPath))
@@ -240,7 +228,7 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                // Log full exception details for diagnosis
+
                 try
                 {
                     Console.WriteLine(ex.ToString());
@@ -249,7 +237,7 @@ namespace PhantomVault.UI.ViewModels
                     var logPath = Path.Combine(logDir, "usb-setup-errors.log");
                     File.AppendAllText(logPath, $"[{DateTime.UtcNow:O}] {ex}\n\n");
                 }
-                catch { /* best effort logging */ }
+                catch {  }
 
                 await _dialogService.ShowErrorAsync(
                     "Drive Validation Error",
@@ -297,27 +285,19 @@ namespace PhantomVault.UI.ViewModels
             set => this.RaiseAndSetIfChanged(ref _selectedDriveFormat, value);
         }
 
-        /// <summary>
-        /// Sets the owner window for dialog display.
-        /// </summary>
         public void SetOwnerWindow(Window window)
         {
             _ownerWindow = window;
         }
 
-        /// <summary>
-        /// Reset the viewmodel state after an error dialog is dismissed so the USB detection
-        /// flow can continue. This clears transient status messages and re-runs a refresh.
-        /// </summary>
         public async Task ResetAfterErrorAsync()
         {
             try
             {
-                // Clear transient status and refresh drives
+
                 StatusMessage = string.Empty;
                 await Task.Run(() => Refresh());
 
-                // If a drive appears after an error, auto-select the first drive to ease flow.
                 if (_selectedDrive == null && _drives.Count > 0)
                 {
                     SelectedDrive = _drives[0];
@@ -325,7 +305,7 @@ namespace PhantomVault.UI.ViewModels
             }
             catch
             {
-                // Best effort - swallow exceptions
+
             }
         }
 
@@ -335,3 +315,4 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> GoBackCommand { get; }
     }
 }
+

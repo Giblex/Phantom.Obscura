@@ -5,10 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace PhantomVault.Core.Services.Security
 {
-    /// <summary>
-    /// Implements export throttling with threat detection.
-    /// Tracks export events in a 1-hour sliding window and enforces cooldown when threshold exceeded.
-    /// </summary>
+
     public sealed class ExportGuard : IExportGuard
     {
         private readonly IDefenceEngine? _defenceEngine;
@@ -28,16 +25,13 @@ namespace PhantomVault.Core.Services.Security
             _logger = logger;
         }
 
-        /// <summary>
-        /// Checks if export is allowed (not in cooldown).
-        /// </summary>
         public bool CanExport(string exportType)
         {
             lock (_lock)
             {
                 if (_cooldownUntil.HasValue && DateTimeOffset.UtcNow < _cooldownUntil.Value)
                 {
-                    _logger?.LogWarning("Export ({ExportType}) blocked - cooldown active until {CooldownEnd}", 
+                    _logger?.LogWarning("Export ({ExportType}) blocked - cooldown active until {CooldownEnd}",
                         exportType, _cooldownUntil.Value);
                     return false;
                 }
@@ -46,37 +40,30 @@ namespace PhantomVault.Core.Services.Security
             }
         }
 
-        /// <summary>
-        /// Registers an export event and checks for excessive exporting.
-        /// </summary>
         public void RegisterExport(string exportType)
         {
             lock (_lock)
             {
                 var now = DateTimeOffset.UtcNow;
 
-                // Remove events outside sliding window
                 _exportEvents.RemoveAll(e => now - e.Timestamp > SlidingWindow);
 
-                // Add new event
                 _exportEvents.Add(new ExportEvent
                 {
                     ExportType = exportType,
                     Timestamp = now
                 });
 
-                _logger?.LogInformation("Export registered ({ExportType}). Total in last hour: {Count}", 
+                _logger?.LogInformation("Export registered ({ExportType}). Total in last hour: {Count}",
                     exportType, _exportEvents.Count);
 
-                // Check threshold
                 if (_exportEvents.Count > MaxExportsPerHour)
                 {
                     _cooldownUntil = now.Add(CooldownDuration);
 
-                    _logger?.LogWarning("Excessive exports detected ({Count} in 1 hour). Entering cooldown until {CooldownEnd}", 
+                    _logger?.LogWarning("Excessive exports detected ({Count} in 1 hour). Entering cooldown until {CooldownEnd}",
                         _exportEvents.Count, _cooldownUntil.Value);
 
-                    // Raise threat to Defence Engine
                     _defenceEngine?.RaiseThreat(new ThreatEvent(
                         ThreatType.ExcessiveExports,
                         ThreatLevel.Warning,
@@ -93,3 +80,4 @@ namespace PhantomVault.Core.Services.Security
         }
     }
 }
+

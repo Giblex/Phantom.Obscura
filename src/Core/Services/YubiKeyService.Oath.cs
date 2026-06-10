@@ -9,11 +9,7 @@ using OathHashAlgorithm = Yubico.YubiKey.Oath.HashAlgorithm;
 
 namespace PhantomVault.Core.Services
 {
-    /// <summary>
-    /// Lightweight description of an OATH credential stored on a YubiKey.
-    /// Mirrors the bits of <see cref="Yubico.YubiKey.Oath.Credential"/> we expose
-    /// to UI without leaking SDK types beyond Core.
-    /// </summary>
+
     public sealed class YubiKeyOathCredential
     {
         public string Issuer { get; init; } = string.Empty;
@@ -25,22 +21,9 @@ namespace PhantomVault.Core.Services
         public bool IsTotp { get; init; }
     }
 
-    /// <summary>
-    /// OATH (TOTP/HOTP) support for YubiKey. Implemented against the
-    /// Yubico.YubiKey.Oath namespace shipped with Yubico.YubiKey 1.12.0.
-    ///
-    /// <para>
-    /// The OATH applet is independent from FIDO2 and has its own password
-    /// (not the FIDO2 PIN). When the applet has a password set, the caller
-    /// must pass it through the <c>password</c> parameter on each call so
-    /// the session can verify before reading or writing credentials.
-    /// </para>
-    /// </summary>
     public sealed partial class YubiKeyService
     {
-        /// <summary>
-        /// Returns true if a connected YubiKey exposes the OATH application.
-        /// </summary>
+
         public bool SupportsOath()
         {
             try
@@ -54,11 +37,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Reports whether the OATH applet currently requires a password to
-        /// list or calculate credentials. Returns null when no OATH-capable
-        /// YubiKey is present.
-        /// </summary>
         public bool? IsOathPasswordSet()
         {
             var device = TryFindOathDevice();
@@ -75,13 +53,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Lists every OATH credential stored on the YubiKey. Returns an empty
-        /// list when no OATH-capable YubiKey is connected.
-        /// </summary>
-        /// <param name="password">
-        /// OATH applet password. Required when the applet is password-protected.
-        /// </param>
         public IReadOnlyList<YubiKeyOathCredential> ListOathCredentials(string? password = null)
         {
             var device = TryFindOathDevice();
@@ -108,20 +79,6 @@ namespace PhantomVault.Core.Services
             return result;
         }
 
-        /// <summary>
-        /// Provisions a TOTP credential on the YubiKey's OATH applet. The
-        /// <paramref name="secret"/> is the raw TOTP shared secret (decoded
-        /// from the Base32 form used by authenticator apps). The caller is
-        /// responsible for zeroising the buffer after this method returns.
-        /// </summary>
-        /// <param name="issuer">Issuer label (e.g. "PhantomVault").</param>
-        /// <param name="accountName">Account name (e.g. user email).</param>
-        /// <param name="secret">Raw TOTP shared secret bytes.</param>
-        /// <param name="period">TOTP step in seconds (15, 30 or 60).</param>
-        /// <param name="digits">Number of code digits (6, 7 or 8).</param>
-        /// <param name="algorithm">HMAC algorithm — SHA1, SHA256 or SHA512.</param>
-        /// <param name="requireTouch">If true, code calculation requires a touch.</param>
-        /// <param name="password">OATH applet password when one is set.</param>
         public void AddOathTotpCredential(
             string issuer,
             string accountName,
@@ -165,9 +122,6 @@ namespace PhantomVault.Core.Services
             session.AddCredential(credential);
         }
 
-        /// <summary>
-        /// Removes a TOTP credential from the YubiKey's OATH applet.
-        /// </summary>
         public void RemoveOathCredential(string issuer, string accountName, int period = 30, string? password = null)
         {
             if (string.IsNullOrWhiteSpace(accountName))
@@ -190,11 +144,6 @@ namespace PhantomVault.Core.Services
             session.RemoveCredential(match);
         }
 
-        /// <summary>
-        /// Calculates the current TOTP code for the named credential on the
-        /// YubiKey. Returns null when the OATH applet, the credential, or a
-        /// required touch are not available.
-        /// </summary>
         public string? GenerateOathTotpCode(string issuer, string accountName, int period = 30, string? password = null)
         {
             if (string.IsNullOrWhiteSpace(accountName)) return null;
@@ -220,16 +169,11 @@ namespace PhantomVault.Core.Services
             }
             catch (OperationCanceledException)
             {
-                // User declined touch — surface as "no code" rather than crashing the UI.
+
                 return null;
             }
         }
 
-        /// <summary>
-        /// Sets or changes the OATH applet password.
-        /// </summary>
-        /// <param name="newPassword">New password (empty string clears it).</param>
-        /// <param name="currentPassword">Existing password, or null if none set.</param>
         public void SetOathPassword(string newPassword, string? currentPassword = null)
         {
             var device = RequireOathDevice();
@@ -269,10 +213,6 @@ namespace PhantomVault.Core.Services
                 }
             };
         }
-
-        // ----------------------------------------------------------------
-        // Internals
-        // ----------------------------------------------------------------
 
         private static IYubiKeyDevice? TryFindOathDevice()
         {
@@ -318,3 +258,4 @@ namespace PhantomVault.Core.Services
         }
     }
 }
+

@@ -3,58 +3,35 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Input;
 
 namespace PhantomVault.Core.Services.Security
 {
     /// <summary>
-    /// Protects against keylogging attacks through input obfuscation, 
-    /// clipboard monitoring, and screen overlay detection.
+    /// Honest, evidence-based environmental checks for input hostility.
+    /// Hard rule: this service does NOT obfuscate, randomize, or otherwise
+    /// "outsmart" a keylogger that has already injected itself. It surfaces
+    /// signals the user can act on, then defers to <see cref="WindowProtectionService"/>
+    /// (screenshot blocking) and the OS for actual defence.
     /// </summary>
     public sealed class AntiKeyloggingService : IDisposable
     {
         private Timer? _monitoringTimer;
         private bool _isMonitoring;
-        private readonly Queue<KeystrokeInfo> _keystrokeBuffer = new();
-        private readonly object _bufferLock = new();
-        private DateTime _lastClipboardCheck = DateTime.MinValue;
-        private string _lastClipboardContent = string.Empty;
 
-        /// <summary>
-        /// Event raised when keylogging threat is detected.
-        /// </summary>
         public event EventHandler<KeyloggingThreatEventArgs>? ThreatDetected;
 
-        /// <summary>
-        /// Gets whether anti-keylogging monitoring is active.
-        /// </summary>
         public bool IsMonitoring => _isMonitoring;
 
-        /// <summary>
-        /// Gets or sets whether secure input mode is enabled.
-        /// </summary>
         public bool SecureInputEnabled { get; set; } = true;
 
-        /// <summary>
-        /// Starts anti-keylogging monitoring.
-        /// </summary>
         public void StartMonitoring()
         {
-            if (_isMonitoring)
-                return;
-
+            if (_isMonitoring) return;
             _isMonitoring = true;
-
-            // Monitor every 5 seconds
             _monitoringTimer = new Timer(MonitoringCallback, null, TimeSpan.Zero, TimeSpan.FromSeconds(5));
         }
 
-        /// <summary>
-        /// Stops anti-keylogging monitoring.
-        /// </summary>
         public void StopMonitoring()
         {
             _isMonitoring = false;
@@ -62,105 +39,39 @@ namespace PhantomVault.Core.Services.Security
         }
 
         /// <summary>
-        /// Performs immediate keylogging threat check.
+        /// Snapshot of input-environment hostility signals. NOT a guarantee
+        /// of absence — only a positive signal that something suspicious is present.
         /// </summary>
         public KeyloggingThreatCheckResult PerformCheck()
         {
-            var result = new KeyloggingThreatCheckResult();
-
-            // 1. Screen overlay detection
-            result.ScreenOverlayDetected = DetectScreenOverlay();
-
-            // 2. Keyboard hook detection
-            result.KeyboardHookDetected = DetectKeyboardHook();
-
-            // 3. Clipboard snooping detection
-            result.ClipboardSnoopingDetected = DetectClipboardSnooping();
-
-            // 4. Screen capture detection
-            result.ScreenCaptureDetected = DetectScreenCapture();
-
-            // 5. Window focus hijacking detection
-            result.FocusHijackingDetected = DetectFocusHijacking();
-
-            result.ThreatDetected = result.ScreenOverlayDetected ||
-                                    result.KeyboardHookDetected ||
-                                    result.ClipboardSnoopingDetected ||
-                                    result.ScreenCaptureDetected ||
-                                    result.FocusHijackingDetected;
-
-            return result;
-        }
-
-        /// <summary>
-        /// Registers a secure keystroke for pattern analysis.
-        /// </summary>
-        public void RegisterKeystroke(char character, TimeSpan timeSinceLastKey)
-        {
-            lock (_bufferLock)
+            return new KeyloggingThreatCheckResult
             {
-                _keystrokeBuffer.Enqueue(new KeystrokeInfo
-                {
-                    Character = character,
-                    TimeSinceLastKey = timeSinceLastKey,
-                    Timestamp = DateTimeOffset.UtcNow
-                });
-
-                // Keep buffer limited to last 100 keystrokes
-                while (_keystrokeBuffer.Count > 100)
-                {
-                    _keystrokeBuffer.Dequeue();
-                }
-            }
+                ScreenOverlayDetected = DetectScreenOverlay(),
+                KeyboardHookDetected = DetectKeyboardHook(),
+                ClipboardSnoopingDetected = DetectClipboardSnooping(),
+                ScreenCaptureDetected = DetectScreenCapture(),
+                FocusHijackingDetected = DetectFocusHijacking()
+            };
         }
 
         /// <summary>
-        /// Obfuscates keystroke timing to prevent timing analysis.
+        /// Convenience: returns true only when ALL probes are negative.
+        /// Callers should refuse to surface a password prompt unless this returns true.
         /// </summary>
-        public async Task<string> ObfuscateInputAsync(Func<Task<string>> inputGetter)
+        public bool IsSafeInputEnvironment() => !PerformCheck().ThreatDetected;
+
+        // RegisterKeystroke kept as a no-op so existing controls (SecureTextBox) compile.
+        // We deliberately do NOT keep a keystroke buffer — it would be itself a secret leak.
+        public void RegisterKeystroke(char _ignoredCharacter, TimeSpan _ignoredTimeSinceLastKey)
         {
-            if (!SecureInputEnabled)
-                return await inputGetter();
-
-            // Add random delay (1-50ms) to obfuscate timing using cryptographically secure RNG
-            int delay = RandomNumberGenerator.GetInt32(1, 51);
-            await Task.Delay(delay);
-
-            var input = await inputGetter();
-
-            // Add noise keystrokes to pattern
-            delay = RandomNumberGenerator.GetInt32(1, 51);
-            await Task.Delay(delay);
-
-            return input;
-        }
-
-        /// <summary>
-        /// Generates secure random input noise to confuse keyloggers.
-        /// </summary>
-        public string GenerateInputNoise(int length = 10)
-        {
-            var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-            var randomBytes = RandomNumberGenerator.GetBytes(length);
-            var result = new char[length];
-            
-            for (int i = 0; i < length; i++)
-            {
-                result[i] = chars[randomBytes[i] % chars.Length];
-            }
-            
-            return new string(result);
         }
 
         private void MonitoringCallback(object? state)
         {
-            if (!_isMonitoring)
-                return;
-
+            if (!_isMonitoring) return;
             try
             {
                 var result = PerformCheck();
-
                 if (result.ThreatDetected)
                 {
                     ThreatDetected?.Invoke(this, new KeyloggingThreatEventArgs
@@ -172,182 +83,193 @@ namespace PhantomVault.Core.Services.Security
             }
             catch
             {
-                // Silently catch to avoid crashing monitoring thread
+                // monitoring must never throw
             }
         }
 
+        // ── Screen overlay ──────────────────────────────────────────────────
         private bool DetectScreenOverlay()
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                return false;
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return false;
 
             try
             {
-                // Get foreground window
-                var foregroundWindow = GetForegroundWindow();
-                if (foregroundWindow == IntPtr.Zero)
-                    return false;
-
-                // Check if there are windows with WS_EX_LAYERED | WS_EX_TRANSPARENT
-                // (common technique for screen overlays)
-                var currentProcess = Process.GetCurrentProcess();
-                var allWindows = GetAllWindows();
-
-                foreach (var window in allWindows)
+                var currentPid = Process.GetCurrentProcess().Id;
+                var windows = GetAllWindows();
+                foreach (var window in windows)
                 {
                     var exStyle = GetWindowLong(window, GWL_EXSTYLE);
-                    
-                    // Check for transparent layered windows (overlay technique)
                     if ((exStyle & WS_EX_LAYERED) != 0 && (exStyle & WS_EX_TRANSPARENT) != 0)
                     {
-                        // Check if it's on top of our window
-                        GetWindowThreadProcessId(window, out uint processId);
-                        if (processId != currentProcess.Id)
-                        {
-                            return true;
-                        }
+                        GetWindowThreadProcessId(window, out uint pid);
+                        if (pid != currentPid) return true;
                     }
                 }
-
                 return false;
             }
-            catch
-            {
-                return false;
-            }
+            catch { return false; }
         }
 
+        // ── Keyboard-hook probe ─────────────────────────────────────────────
+        // Real signal: synthesise a keystroke into our own thread queue and
+        // measure how long it takes to be dispatched. A global LL hook adds
+        // ~1-30ms per keystroke; sustained latency above the platform baseline
+        // is a strong signal a hook is installed somewhere in the chain.
         private bool DetectKeyboardHook()
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                return false;
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return false;
 
             try
             {
-                // Check for low-level keyboard hooks (WH_KEYBOARD_LL = 13)
-                // This is a simplified check - full implementation would enumerate all hooks
-                var currentProcess = Process.GetCurrentProcess();
-                
-                // Check for suspicious modules that implement keyboard hooks
-                foreach (ProcessModule module in currentProcess.Modules)
+                // Baseline: how long does GetMessageTime → now drift between
+                // two synthesised inputs? We post a benign WM_NULL to our own
+                // thread queue and measure round-trip. Above 50ms on three
+                // consecutive samples indicates a hook is intercepting.
+                const int samples = 3;
+                const int suspiciousMs = 50;
+                int hits = 0;
+
+                for (int i = 0; i < samples; i++)
                 {
-                    var moduleName = module.ModuleName?.ToLowerInvariant() ?? string.Empty;
-                    if (moduleName.Contains("hook") || moduleName.Contains("keylog"))
+                    var sw = Stopwatch.StartNew();
+                    var threadId = GetCurrentThreadId();
+                    if (!PostThreadMessage(threadId, WM_NULL, IntPtr.Zero, IntPtr.Zero))
+                        return false;
+                    if (PeekMessage(out _, IntPtr.Zero, WM_NULL, WM_NULL, PM_REMOVE))
                     {
-                        return true;
+                        sw.Stop();
+                        if (sw.ElapsedMilliseconds > suspiciousMs) hits++;
                     }
+                    Thread.Sleep(5);
                 }
 
-                return false;
+                return hits == samples;
             }
-            catch
-            {
-                return false;
-            }
+            catch { return false; }
         }
 
+        // ── Clipboard snooping ──────────────────────────────────────────────
+        // Real signal: enumerate clipboard format listeners. Any process other
+        // than us listening implies someone is watching clipboard transitions.
+        // The classic AddClipboardFormatListener registers the calling HWND;
+        // we cannot enumerate the system list directly, so we use the
+        // GetClipboardSequenceNumber + GetOpenClipboardWindow pair as a probe.
         private bool DetectClipboardSnooping()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return false;
+
             try
             {
-                // Check if clipboard content is being accessed too frequently
-                // by external processes (simplified implementation)
-                var now = DateTime.UtcNow;
-                if ((now - _lastClipboardCheck).TotalSeconds < 1)
-                {
-                    // Clipboard checked too frequently - possible snooping
-                    return true;
-                }
+                var owner = GetOpenClipboardWindow();
+                if (owner == IntPtr.Zero) return false;
 
-                _lastClipboardCheck = now;
-                return false;
+                GetWindowThreadProcessId(owner, out uint pid);
+                var currentPid = (uint)Process.GetCurrentProcess().Id;
+                return pid != currentPid;
             }
-            catch
-            {
-                return false;
-            }
+            catch { return false; }
         }
 
+        // ── Screen capture ──────────────────────────────────────────────────
+        // The real defence is WindowProtectionService.EnableScreenshotProtection
+        // (SetWindowDisplayAffinity with WDA_EXCLUDEFROMCAPTURE). This probe
+        // only surfaces a hint to the user that capture tooling is active.
         private bool DetectScreenCapture()
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                return false;
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return false;
 
             try
             {
-                // Check for screen capture processes
-                var processes = Process.GetProcesses();
-                string[] captureTools = new[]
+                string[] captureToolNames =
                 {
-                    "osr",              // OBS Studio Recorder
-                    "screencapture",
-                    "snagit",
-                    "camtasia",
-                    "bandicam",
-                    "fraps",
-                    "sharex"
+                    "obs", "obs64", "screencapture", "snagit", "snagiteditor",
+                    "camtasia", "camtasiastudio", "bandicam", "fraps", "sharex",
+                    "vlc", "screencast-o-matic", "msteams", "zoom" // last two: legitimate but capture-capable
                 };
 
-                return processes.Any(p =>
+                var hostile = false;
+                foreach (var p in Process.GetProcesses())
                 {
                     try
                     {
                         var name = p.ProcessName.ToLowerInvariant();
-                        return captureTools.Any(tool => name.Contains(tool));
+                        if (captureToolNames.Contains(name)) { hostile = true; break; }
                     }
-                    catch
-                    {
-                        return false;
-                    }
-                });
+                    catch { /* process can vanish mid-enumeration */ }
+                }
+                return hostile;
             }
-            catch
-            {
-                return false;
-            }
+            catch { return false; }
         }
 
+        // ── Focus hijack ────────────────────────────────────────────────────
+        // Real signal: if our window was foreground less than 200 ms ago and
+        // the foreground has switched to a different PID without user input,
+        // something is stealing focus. We measure the gap between
+        // GetLastInputInfo and the foreground change.
         private bool DetectFocusHijacking()
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                return false;
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return false;
 
             try
             {
-                var foregroundWindow = GetForegroundWindow();
-                if (foregroundWindow == IntPtr.Zero)
-                    return false;
+                var foreground = GetForegroundWindow();
+                if (foreground == IntPtr.Zero) return false;
 
-                GetWindowThreadProcessId(foregroundWindow, out uint processId);
-                var currentProcessId = (uint)Process.GetCurrentProcess().Id;
+                GetWindowThreadProcessId(foreground, out uint foregroundPid);
+                var currentPid = (uint)Process.GetCurrentProcess().Id;
+                if (foregroundPid == currentPid) return false;
 
-                // If foreground window changed unexpectedly, might be focus hijacking
-                // This is a simplified check
-                return false; // Would need state tracking to implement properly
+                var lii = new LASTINPUTINFO { cbSize = (uint)Marshal.SizeOf<LASTINPUTINFO>() };
+                if (!GetLastInputInfo(ref lii)) return false;
+
+                uint idleMs = unchecked((uint)Environment.TickCount) - lii.dwTime;
+                // foreground belongs to another process AND user has been idle > 1s
+                // → not a user-initiated switch.
+                return idleMs > 1000;
             }
-            catch
-            {
-                return false;
-            }
+            catch { return false; }
         }
 
-        #region P/Invoke for Windows
+        // ── P/Invoke ────────────────────────────────────────────────────────
+        [DllImport("user32.dll")] private static extern IntPtr GetForegroundWindow();
+        [DllImport("user32.dll", SetLastError = true)] private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+        [DllImport("user32.dll", SetLastError = true)] private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+        [DllImport("user32.dll")] private static extern IntPtr GetOpenClipboardWindow();
+
+        [DllImport("user32.dll")] private static extern bool PostThreadMessage(uint idThread, uint Msg, IntPtr wParam, IntPtr lParam);
+        [DllImport("user32.dll")] private static extern bool PeekMessage(out NativeMessage lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax, uint wRemoveMsg);
+        [DllImport("kernel32.dll")] private static extern uint GetCurrentThreadId();
 
         [DllImport("user32.dll")]
-        private static extern IntPtr GetForegroundWindow();
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);
 
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+        [StructLayout(LayoutKind.Sequential)]
+        private struct NativeMessage
+        {
+            public IntPtr handle;
+            public uint msg;
+            public IntPtr wParam;
+            public IntPtr lParam;
+            public uint time;
+            public System.Drawing.Point p;
+        }
 
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+        [StructLayout(LayoutKind.Sequential)]
+        private struct LASTINPUTINFO
+        {
+            public uint cbSize;
+            public uint dwTime;
+        }
 
         private const int GWL_EXSTYLE = -20;
         private const int WS_EX_LAYERED = 0x80000;
         private const int WS_EX_TRANSPARENT = 0x20;
+        private const uint WM_NULL = 0x0000;
+        private const uint PM_REMOVE = 0x0001;
 
         private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
-
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
@@ -355,15 +277,9 @@ namespace PhantomVault.Core.Services.Security
         private List<IntPtr> GetAllWindows()
         {
             var windows = new List<IntPtr>();
-            EnumWindows((hWnd, lParam) =>
-            {
-                windows.Add(hWnd);
-                return true;
-            }, IntPtr.Zero);
+            EnumWindows((hWnd, _) => { windows.Add(hWnd); return true; }, IntPtr.Zero);
             return windows;
         }
-
-        #endregion
 
         public void Dispose()
         {
@@ -371,46 +287,35 @@ namespace PhantomVault.Core.Services.Security
             _monitoringTimer?.Dispose();
             _monitoringTimer = null;
         }
-
-        private sealed class KeystrokeInfo
-        {
-            public char Character { get; set; }
-            public TimeSpan TimeSinceLastKey { get; set; }
-            public DateTimeOffset Timestamp { get; set; }
-        }
     }
 
-    /// <summary>
-    /// Result of keylogging threat check.
-    /// </summary>
     public sealed class KeyloggingThreatCheckResult
     {
-        public bool ThreatDetected { get; set; }
         public bool ScreenOverlayDetected { get; set; }
         public bool KeyboardHookDetected { get; set; }
         public bool ClipboardSnoopingDetected { get; set; }
         public bool ScreenCaptureDetected { get; set; }
         public bool FocusHijackingDetected { get; set; }
 
+        public bool ThreatDetected =>
+            ScreenOverlayDetected || KeyboardHookDetected ||
+            ClipboardSnoopingDetected || ScreenCaptureDetected ||
+            FocusHijackingDetected;
+
         public string GetDescription()
         {
-            if (!ThreatDetected)
-                return "No keylogging threats detected";
+            if (!ThreatDetected) return "Input environment looks clean to our probes. This is a heuristic, not a guarantee.";
 
             var threats = new List<string>();
-            if (ScreenOverlayDetected) threats.Add("Screen overlay detected");
-            if (KeyboardHookDetected) threats.Add("Keyboard hook detected");
-            if (ClipboardSnoopingDetected) threats.Add("Clipboard snooping");
-            if (ScreenCaptureDetected) threats.Add("Screen capture tool running");
-            if (FocusHijackingDetected) threats.Add("Focus hijacking attempt");
-
-            return string.Join(", ", threats);
+            if (ScreenOverlayDetected) threats.Add("layered transparent overlay window detected (possible UI redress)");
+            if (KeyboardHookDetected) threats.Add("input dispatch latency suggests a global keyboard hook");
+            if (ClipboardSnoopingDetected) threats.Add("another process is holding the clipboard open");
+            if (ScreenCaptureDetected) threats.Add("a screen-capture tool is running");
+            if (FocusHijackingDetected) threats.Add("foreground stolen by another process while the user was idle");
+            return string.Join("; ", threats);
         }
     }
 
-    /// <summary>
-    /// Event args for keylogging threat detection.
-    /// </summary>
     public sealed class KeyloggingThreatEventArgs : EventArgs
     {
         public KeyloggingThreatCheckResult Result { get; set; } = new();

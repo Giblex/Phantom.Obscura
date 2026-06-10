@@ -5,10 +5,7 @@ using System.Text.RegularExpressions;
 
 namespace PhantomVault.Core.Services.Autofill
 {
-    /// <summary>
-    /// Detects and classifies form input fields based on HTML attributes, labels, and patterns.
-    /// Identifies email, username, password, confirmation password, passkey, and 2FA fields.
-    /// </summary>
+
     public sealed class FormFieldDetector
     {
         private static readonly string[] EmailPatterns = new[]
@@ -41,37 +38,30 @@ namespace PhantomVault.Core.Services.Autofill
             "2fa", "mfa", "otp", "token", "code", "verification-code", "auth-code", "totp"
         };
 
-        /// <summary>
-        /// Detects the type of a form field based on its attributes.
-        /// </summary>
         public FormFieldType DetectFieldType(FormFieldInfo field)
         {
             if (field == null) throw new ArgumentNullException(nameof(field));
 
             var combinedText = $"{field.Id} {field.Name} {field.Type} {field.Placeholder} {field.Label} {field.AutoComplete}".ToLowerInvariant();
 
-            // Check for email field
             if (field.Type == "email" || EmailPatterns.Any(p => combinedText.Contains(p)))
             {
                 return FormFieldType.Email;
             }
 
-            // Check for passkey/WebAuthn
             if (PasskeyPatterns.Any(p => combinedText.Contains(p)))
             {
                 return FormFieldType.Passkey;
             }
 
-            // Check for 2FA/OTP
             if (TwoFactorPatterns.Any(p => combinedText.Contains(p)))
             {
                 return FormFieldType.TwoFactor;
             }
 
-            // Check for password fields
             if (field.Type == "password" || PasswordPatterns.Any(p => combinedText.Contains(p)))
             {
-                // Check if it's a confirmation password
+
                 if (ConfirmPasswordPatterns.Any(p => combinedText.Contains(p)))
                 {
                     return FormFieldType.PasswordConfirm;
@@ -79,7 +69,6 @@ namespace PhantomVault.Core.Services.Autofill
                 return FormFieldType.Password;
             }
 
-            // Check for username
             if (UsernamePatterns.Any(p => combinedText.Contains(p)))
             {
                 return FormFieldType.Username;
@@ -88,9 +77,6 @@ namespace PhantomVault.Core.Services.Autofill
             return FormFieldType.Unknown;
         }
 
-        /// <summary>
-        /// Detects all login-related fields in a form.
-        /// </summary>
         public LoginFormDetectionResult DetectLoginForm(IEnumerable<FormFieldInfo> fields)
         {
             var result = new LoginFormDetectionResult();
@@ -99,7 +85,7 @@ namespace PhantomVault.Core.Services.Autofill
             foreach (var field in fieldList)
             {
                 var fieldType = DetectFieldType(field);
-                
+
                 switch (fieldType)
                 {
                     case FormFieldType.Email:
@@ -123,7 +109,6 @@ namespace PhantomVault.Core.Services.Autofill
                 }
             }
 
-            // Determine form type
             result.FormType = DetermineFormType(result);
 
             return result;
@@ -166,9 +151,6 @@ namespace PhantomVault.Core.Services.Autofill
         }
     }
 
-    /// <summary>
-    /// Information about a detected form field.
-    /// </summary>
     public sealed class FormFieldInfo
     {
         public string Id { get; set; } = string.Empty;
@@ -182,9 +164,6 @@ namespace PhantomVault.Core.Services.Autofill
         public BoundingBox BoundingBox { get; set; } = new();
     }
 
-    /// <summary>
-    /// Bounding box coordinates for positioning the autofill UI.
-    /// </summary>
     public sealed class BoundingBox
     {
         public double X { get; set; }
@@ -193,9 +172,6 @@ namespace PhantomVault.Core.Services.Autofill
         public double Height { get; set; }
     }
 
-    /// <summary>
-    /// Type of form field detected.
-    /// </summary>
     public enum FormFieldType
     {
         Unknown,
@@ -207,9 +183,6 @@ namespace PhantomVault.Core.Services.Autofill
         TwoFactor
     }
 
-    /// <summary>
-    /// Type of form detected.
-    /// </summary>
     public enum FormType
     {
         Unknown,
@@ -220,9 +193,6 @@ namespace PhantomVault.Core.Services.Autofill
         Passkey
     }
 
-    /// <summary>
-    /// Result of login form detection.
-    /// </summary>
     public sealed class LoginFormDetectionResult
     {
         public List<FormFieldInfo> EmailFields { get; } = new();
@@ -233,12 +203,13 @@ namespace PhantomVault.Core.Services.Autofill
         public List<FormFieldInfo> TwoFactorFields { get; } = new();
         public FormType FormType { get; set; }
 
-        public bool HasLoginFields => 
+        public bool HasLoginFields =>
             (EmailFields.Any() || UsernameFields.Any()) && PasswordFields.Any();
 
-        public bool HasRegistrationFields => 
+        public bool HasRegistrationFields =>
             PasswordFields.Any() && PasswordConfirmFields.Any();
 
         public bool Has2FAFields => TwoFactorFields.Any();
     }
 }
+

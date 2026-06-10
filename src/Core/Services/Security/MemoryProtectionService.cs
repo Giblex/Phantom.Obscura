@@ -6,39 +6,30 @@ using System.Text;
 
 namespace PhantomVault.Core.Services.Security
 {
-    /// <summary>
-    /// Protects sensitive data in memory through authenticated encryption and secure allocation.
-    /// SECURITY: Uses AES-256-GCM (AEAD) to prevent tampering and ensure integrity.
-    /// Prevents memory dumps and data leakage.
-    /// </summary>
+
     public sealed class MemoryProtectionService : IDisposable
     {
         private readonly byte[] _memoryKey;
         private bool _isDisposed;
 
-        // AES-GCM parameters
-        private const int NonceSize = 12; // 96 bits (recommended for AES-GCM)
-        private const int TagSize = 16;   // 128 bits authentication tag
+        private const int NonceSize = 12;
+        private const int TagSize = 16;
 
         public MemoryProtectionService()
         {
-            // Generate random key for memory encryption (256 bits for AES-256)
+
             _memoryKey = new byte[32];
             using (var rng = RandomNumberGenerator.Create())
             {
                 rng.GetBytes(_memoryKey);
             }
 
-            // Lock memory pages if supported
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 LockWorkingSet();
             }
         }
 
-        /// <summary>
-        /// Encrypts sensitive string data in memory.
-        /// </summary>
         public byte[] ProtectString(string sensitiveData)
         {
             if (string.IsNullOrEmpty(sensitiveData))
@@ -51,14 +42,11 @@ namespace PhantomVault.Core.Services.Security
             }
             finally
             {
-                // Clear the string from memory (best effort)
+
                 ClearString(sensitiveData);
             }
         }
 
-        /// <summary>
-        /// Decrypts protected string data.
-        /// </summary>
         public string UnprotectString(byte[] protectedData)
         {
             if (protectedData == null || protectedData.Length == 0)
@@ -75,10 +63,6 @@ namespace PhantomVault.Core.Services.Security
             }
         }
 
-        /// <summary>
-        /// Encrypts sensitive byte array in memory using AES-256-GCM (authenticated encryption).
-        /// SECURITY: Provides both confidentiality and integrity protection.
-        /// </summary>
         public byte[] ProtectBytes(byte[] sensitiveData)
         {
             if (sensitiveData == null || sensitiveData.Length == 0)
@@ -86,22 +70,19 @@ namespace PhantomVault.Core.Services.Security
 
             try
             {
-                // Generate random nonce (96 bits)
+
                 var nonce = new byte[NonceSize];
                 using (var rng = RandomNumberGenerator.Create())
                 {
                     rng.GetBytes(nonce);
                 }
 
-                // Prepare output buffer: nonce + ciphertext + tag
                 var ciphertext = new byte[sensitiveData.Length];
                 var tag = new byte[TagSize];
 
-                // Encrypt using AES-GCM
                 using var aesGcm = new AesGcm(_memoryKey, TagSize);
                 aesGcm.Encrypt(nonce, sensitiveData, ciphertext, tag, null);
 
-                // Combine: nonce || ciphertext || tag
                 var result = new byte[NonceSize + ciphertext.Length + TagSize];
                 Buffer.BlockCopy(nonce, 0, result, 0, NonceSize);
                 Buffer.BlockCopy(ciphertext, 0, result, NonceSize, ciphertext.Length);
@@ -111,15 +92,11 @@ namespace PhantomVault.Core.Services.Security
             }
             finally
             {
-                // Clear original data
+
                 CryptographicOperations.ZeroMemory(sensitiveData);
             }
         }
 
-        /// <summary>
-        /// Decrypts protected byte array using AES-256-GCM.
-        /// SECURITY: Verifies authentication tag before returning plaintext.
-        /// </summary>
         public byte[] UnprotectBytes(byte[] protectedData)
         {
             if (protectedData == null || protectedData.Length < NonceSize + TagSize)
@@ -127,7 +104,7 @@ namespace PhantomVault.Core.Services.Security
 
             try
             {
-                // Extract components: nonce || ciphertext || tag
+
                 var nonce = new byte[NonceSize];
                 Buffer.BlockCopy(protectedData, 0, nonce, 0, NonceSize);
 
@@ -138,7 +115,6 @@ namespace PhantomVault.Core.Services.Security
                 var tag = new byte[TagSize];
                 Buffer.BlockCopy(protectedData, NonceSize + ciphertextLength, tag, 0, TagSize);
 
-                // Decrypt and verify
                 var plaintext = new byte[ciphertextLength];
                 using var aesGcm = new AesGcm(_memoryKey, TagSize);
                 aesGcm.Decrypt(nonce, ciphertext, tag, plaintext, null);
@@ -147,7 +123,7 @@ namespace PhantomVault.Core.Services.Security
             }
             catch (CryptographicException)
             {
-                // Authentication failed - data was tampered with
+
                 return Array.Empty<byte>();
             }
             catch
@@ -156,9 +132,6 @@ namespace PhantomVault.Core.Services.Security
             }
         }
 
-        /// <summary>
-        /// Creates a SecureString from a regular string and clears the original.
-        /// </summary>
         public SecureString CreateSecureString(string value)
         {
             if (string.IsNullOrEmpty(value))
@@ -171,15 +144,11 @@ namespace PhantomVault.Core.Services.Security
             }
             secure.MakeReadOnly();
 
-            // Clear the original string (best effort)
             ClearString(value);
 
             return secure;
         }
 
-        /// <summary>
-        /// Converts SecureString to plain string (use sparingly).
-        /// </summary>
         public string SecureStringToString(SecureString secureString)
         {
             if (secureString == null || secureString.Length == 0)
@@ -200,34 +169,24 @@ namespace PhantomVault.Core.Services.Security
             }
         }
 
-        /// <summary>
-        /// Securely clears a byte array.
-        /// </summary>
         public void SecureClear(byte[] data)
         {
             if (data == null)
                 return;
 
-            // Overwrite with random data first
             using (var rng = RandomNumberGenerator.Create())
             {
                 rng.GetBytes(data);
             }
 
-            // Then zero out
             Array.Clear(data, 0, data.Length);
         }
 
-        /// <summary>
-        /// Securely clears a string (best effort).
-        /// </summary>
         public void ClearString(string value)
         {
             if (string.IsNullOrEmpty(value))
                 return;
 
-            // This is a best-effort attempt as strings are immutable in C#
-            // The actual string data will be garbage collected eventually
             unsafe
             {
                 fixed (char* ptr = value)
@@ -240,9 +199,6 @@ namespace PhantomVault.Core.Services.Security
             }
         }
 
-        /// <summary>
-        /// Prevents the process from being swapped to disk (Windows only).
-        /// </summary>
         private void LockWorkingSet()
         {
             try
@@ -252,13 +208,10 @@ namespace PhantomVault.Core.Services.Security
             }
             catch
             {
-                // Ignore if not supported
+
             }
         }
 
-        /// <summary>
-        /// Protects a region of memory from being read by other processes.
-        /// </summary>
         public bool ProtectMemoryRegion(IntPtr address, int size)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -274,9 +227,6 @@ namespace PhantomVault.Core.Services.Security
             }
         }
 
-        /// <summary>
-        /// Allocates secure memory that won't be paged to disk.
-        /// </summary>
         public IntPtr AllocateSecureMemory(int size)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -286,12 +236,12 @@ namespace PhantomVault.Core.Services.Security
 
             try
             {
-                var ptr = VirtualAlloc(IntPtr.Zero, (UIntPtr)size, 
+                var ptr = VirtualAlloc(IntPtr.Zero, (UIntPtr)size,
                     MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-                
+
                 if (ptr != IntPtr.Zero)
                 {
-                    // Lock the pages in memory
+
                     VirtualLock(ptr, (UIntPtr)size);
                 }
 
@@ -303,9 +253,6 @@ namespace PhantomVault.Core.Services.Security
             }
         }
 
-        /// <summary>
-        /// Frees secure memory.
-        /// </summary>
         public void FreeSecureMemory(IntPtr ptr, int size)
         {
             if (ptr == IntPtr.Zero)
@@ -313,7 +260,7 @@ namespace PhantomVault.Core.Services.Security
 
             try
             {
-                // Overwrite with random data first
+
                 var random = new byte[size];
                 using (var rng = RandomNumberGenerator.Create())
                 {
@@ -376,8 +323,8 @@ namespace PhantomVault.Core.Services.Security
 
             _isDisposed = true;
 
-            // SECURITY: Securely clear encryption key from memory
             CryptographicOperations.ZeroMemory(_memoryKey);
         }
     }
 }
+

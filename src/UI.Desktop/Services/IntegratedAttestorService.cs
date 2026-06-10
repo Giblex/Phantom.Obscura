@@ -4,9 +4,7 @@ using System.IO;
 
 namespace PhantomVault.UI.Services
 {
-    /// <summary>
-    /// Locates and launches the suite-bundled PhantomAttestor application.
-    /// </summary>
+
     public sealed class IntegratedAttestorService
     {
         private readonly SuiteWorkspaceService _workspaceService;
@@ -58,3 +56,4 @@ namespace PhantomVault.UI.Services
         }
     }
 }
+

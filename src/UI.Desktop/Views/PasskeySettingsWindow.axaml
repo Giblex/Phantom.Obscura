@@ -20,9 +20,9 @@
     </Design.DataContext>
 
     <Grid RowDefinitions="Auto,*,Auto">
-        <!-- Header -->
-        <Border Grid.Row="0" 
-                Background="{DynamicResource HeaderBackgroundBrush}" 
+
+        <Border Grid.Row="0"
+                Background="{DynamicResource HeaderBackgroundBrush}"
                 Padding="24,20">
             <StackPanel Spacing="{StaticResource Space.Xs}">
                 <TextBlock Text="Device Authenticator"
@@ -34,32 +34,29 @@
                            Foreground="{DynamicResource HeaderMutedTextBrush}"/>
             </StackPanel>
         </Border>
-        
-        <!-- Content -->
+
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="30,20,30,30">
             <StackPanel Spacing="0" Margin="0,0,30,60">
-                
-                <!-- Status Row -->
+
                 <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,20">
                     <StackPanel Grid.Column="0" Spacing="{StaticResource Space.Xs}">
                         <TextBlock Text="Status" FontSize="{StaticResource Type.Small.Size}" Foreground="{DynamicResource MutedTextBrush}"/>
                         <TextBlock Text="{Binding RegistrationStatus}" FontSize="{StaticResource Type.Body.Size}" FontWeight="Medium"/>
                     </StackPanel>
-                    <Border Grid.Column="1" 
-                            Background="{DynamicResource ControlBackgroundBrush}" 
-                            CornerRadius="{DynamicResource Radius.Sm}" 
+                    <Border Grid.Column="1"
+                            Background="{DynamicResource ControlBackgroundBrush}"
+                            CornerRadius="{DynamicResource Radius.Sm}"
                             Padding="10,6"
                             VerticalAlignment="Center">
                         <TextBlock Text="{Binding IsPasskeyAvailable}" FontSize="{StaticResource Type.Small.Size}"/>
                     </Border>
                 </Grid>
-                
-                <!-- Enable Toggle -->
+
                 <Border Background="{DynamicResource CardBackgroundBrush}"
                         BorderBrush="{DynamicResource ControlBorderBrush}"
                         BorderThickness="1"
-                        CornerRadius="{DynamicResource Radius.Lg}" 
-                        Padding="16" 
+                        CornerRadius="{DynamicResource Radius.Lg}"
+                        Padding="16"
                         Margin="0,0,0,16">
                     <Grid ColumnDefinitions="*,Auto">
                         <StackPanel Grid.Column="0" Spacing="{StaticResource Space.Xs}">
@@ -69,19 +66,18 @@
                                        Foreground="{DynamicResource MutedTextBrush}"
                                        TextWrapping="Wrap"/>
                         </StackPanel>
-                        <ToggleSwitch Grid.Column="1" 
+                        <ToggleSwitch Grid.Column="1"
                                       IsChecked="{Binding IsPasskeyEnabled, Mode=TwoWay}"
                                       IsEnabled="{Binding IsPasskeyAvailable}"
                                       VerticalAlignment="Center"/>
                     </Grid>
                 </Border>
-                
-                <!-- Device Name -->
+
                 <Border Background="{DynamicResource CardBackgroundBrush}"
                         BorderBrush="{DynamicResource ControlBorderBrush}"
                         BorderThickness="1"
-                        CornerRadius="{DynamicResource Radius.Lg}" 
-                        Padding="16" 
+                        CornerRadius="{DynamicResource Radius.Lg}"
+                        Padding="16"
                         Margin="0,0,0,16">
                     <StackPanel Spacing="10">
                         <TextBlock Text="Device Name" FontSize="{StaticResource Type.Body.Size}" FontWeight="Medium" Foreground="{DynamicResource PrimaryTextBrush}"/>
@@ -90,13 +86,12 @@
                                  Height="40"/>
                     </StackPanel>
                 </Border>
-                
-                <!-- Actions -->
+
                 <Border Background="{DynamicResource CardBackgroundBrush}"
                         BorderBrush="{DynamicResource ControlBorderBrush}"
                         BorderThickness="1"
-                        CornerRadius="{DynamicResource Radius.Lg}" 
-                        Padding="16" 
+                        CornerRadius="{DynamicResource Radius.Lg}"
+                        Padding="16"
                         Margin="0,0,0,16">
                     <StackPanel Spacing="{StaticResource Space.Md}">
                         <TextBlock Text="Registration" FontSize="{StaticResource Type.Body.Size}" FontWeight="Medium" Foreground="{DynamicResource PrimaryTextBrush}"/>
@@ -104,7 +99,7 @@
                                    FontSize="{StaticResource Type.Small.Size}"
                                    Foreground="{DynamicResource MutedTextBrush}"
                                    TextWrapping="Wrap"/>
-                        
+
                         <Button Command="{Binding RegisterPasskeyCommand}"
                                 IsEnabled="{Binding !HasRegisteredPasskey}"
                                 IsVisible="{Binding IsPasskeyAvailable}"
@@ -112,7 +107,7 @@
                                 Height="42">
                                 <TextBlock Text="Register on This Device" FontSize="{StaticResource Type.Body.Size}"/>
                         </Button>
-                        
+
                         <StackPanel Spacing="{StaticResource Space.Sm}" IsVisible="{Binding HasRegisteredPasskey}">
                             <Button Command="{Binding TestPasskeyCommand}"
                                     Classes="liquid-glass"
@@ -129,12 +124,11 @@
                         </StackPanel>
                     </StackPanel>
                 </Border>
-                
-                <!-- Supported Authenticators -->
+
                 <Border Background="{DynamicResource CardBackgroundBrush}"
                         BorderBrush="{DynamicResource ControlBorderBrush}"
                         BorderThickness="1"
-                        CornerRadius="{DynamicResource Radius.Lg}" 
+                        CornerRadius="{DynamicResource Radius.Lg}"
                         Padding="16"
                         Margin="0,0,0,16">
                     <StackPanel Spacing="10">
@@ -146,8 +140,7 @@
                         </StackPanel>
                     </StackPanel>
                 </Border>
-                
-                <!-- Status Message -->
+
                 <Border Background="{DynamicResource InfoBackgroundBrush}"
                         CornerRadius="{DynamicResource Radius.Lg}"
                         Padding="16"
@@ -160,20 +153,18 @@
                 </Border>
             </StackPanel>
         </ScrollViewer>
-        
-        <!-- Footer -->
-        <Border Grid.Row="2" 
-                Background="{DynamicResource CardBackgroundBrush}" 
+
+        <Border Grid.Row="2"
+                Background="{DynamicResource CardBackgroundBrush}"
                 Padding="24,16">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="{StaticResource Space.Md}">
-                <Button Content="Close" 
+                <Button Content="Close"
                         Classes="liquid-glass"
                         Width="100"
                         Click="CloseButton_Click"/>
             </StackPanel>
         </Border>
-        
-        <!-- Loading Overlay -->
+
         <Border Grid.RowSpan="3"
                 Background="{DynamicResource OverlayBackgroundBrush}"
                 IsVisible="{Binding IsBusy}">
@@ -184,10 +175,4 @@
         </Border>
     </Grid>
 </views:ThemeAwareWindow>
-
-
-
-
-
-
 

@@ -11,18 +11,13 @@ using PhantomVault.Core.Models;
 
 namespace PhantomVault.Core.Services
 {
-    /// <summary>
-    /// Provides platform authenticator support for registering and validating passkeys.
-    /// On Windows this bridges to Windows Hello via the UserConsentVerifier API. 
-    /// Uses ECDSA P-256 for cryptographic key generation and signature verification.
-    /// Other platforms currently surface as unsupported placeholders.
-    /// </summary>
+
     [SupportedOSPlatform("windows")]
     public sealed class PasskeyService : IPasskeyService
     {
         private const string CredentialStorageFolder = "PhantomVault";
         private const string CredentialStorageFile = "passkey_keys.bin";
-        
+
         private readonly Lazy<WindowsHelloBridge?> _windowsHelloLazy;
 
         public PasskeyService()
@@ -81,31 +76,20 @@ namespace PhantomVault.Core.Services
                 throw new InvalidOperationException("Windows Hello verification was declined or failed.");
             }
 
-            // Generate a unique credential ID
             var credentialId = new byte[32];
             RandomNumberGenerator.Fill(credentialId);
-            
-            // Generate an ECDSA P-256 key pair for this credential
+
             using var ecdsa = ECDsa.Create(ECCurve.NamedCurves.nistP256);
             var publicKey = ecdsa.ExportSubjectPublicKeyInfo();
             var privateKey = ecdsa.ExportECPrivateKey();
-            
-            // Store the key pair securely using DPAPI
+
             await StoreCredentialKeyAsync(credentialId, rpId, userId, publicKey, privateKey).ConfigureAwait(false);
-            
+
             return credentialId;
         }
 
-        /// <summary>
-        /// Relying party allowlist. Empty = deny all (secure default).
-        /// Must be explicitly populated to allow passkey authentication.
-        /// </summary>
         private readonly System.Collections.Generic.HashSet<string> _rpAllowlist = new(StringComparer.OrdinalIgnoreCase);
 
-        /// <summary>
-        /// Adds a relying party to the allowlist.
-        /// Passkey authentication will be rejected for RPs not in this list.
-        /// </summary>
         public void AddToRpAllowlist(string rpId)
         {
             if (!string.IsNullOrWhiteSpace(rpId))
@@ -117,9 +101,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Removes a relying party from the allowlist.
-        /// </summary>
         public void RemoveFromRpAllowlist(string rpId)
         {
             if (!string.IsNullOrWhiteSpace(rpId))
@@ -131,9 +112,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Clears the entire RP allowlist.
-        /// </summary>
         public void ClearRpAllowlist()
         {
             lock (_rpAllowlist)
@@ -142,9 +120,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Checks if an RP is in the allowlist.
-        /// </summary>
         public bool IsRpAllowed(string rpId)
         {
             if (string.IsNullOrWhiteSpace(rpId))
@@ -173,8 +148,6 @@ namespace PhantomVault.Core.Services
                 throw new ArgumentException("Challenge cannot be empty", nameof(challenge));
             }
 
-            // SECURITY: Validate RP is in allowlist BEFORE any crypto operations
-            // Empty allowlist = deny all (secure default, prevents phishing)
             lock (_rpAllowlist)
             {
                 if (_rpAllowlist.Count == 0)
@@ -195,8 +168,6 @@ namespace PhantomVault.Core.Services
             var bridge = WindowsHello ?? throw new PlatformNotSupportedException("Windows Hello is not available on this device.");
             await bridge.EnsureAvailableAsync().ConfigureAwait(false);
 
-            // First verify the user with Windows Hello
-            // SECURITY: Display the RP ID to the user so they can verify it's legitimate
             var userVerified = await bridge.PromptForVerificationAsync(
                 $"Sign in to: {rpId}\n\nVerify this is the site you intended to sign in to.").ConfigureAwait(false);
 
@@ -205,7 +176,6 @@ namespace PhantomVault.Core.Services
                 return false;
             }
 
-            // Load the stored credential and verify it matches
             var storedCredential = await LoadCredentialKeyAsync(credentialId).ConfigureAwait(false);
             if (storedCredential == null)
             {
@@ -214,9 +184,6 @@ namespace PhantomVault.Core.Services
                     "The credential may have been deleted or never registered.");
             }
 
-            // SECURITY: Verify the relying party ID matches EXACTLY
-            // This prevents credential substitution attacks
-            // Use ordinal comparison for security (no locale-dependent matching)
             if (!string.Equals(storedCredential.Value.RpId, rpId, StringComparison.OrdinalIgnoreCase))
             {
                 throw new UnauthorizedAccessException(
@@ -224,30 +191,25 @@ namespace PhantomVault.Core.Services
                     $"Credential was registered for '{storedCredential.Value.RpId}' but request is for '{rpId}'. " +
                     "This may be a credential substitution attack. Authentication denied.");
             }
-            
-            // Generate a signature over the challenge using the stored private key
-            // This proves we have the private key that corresponds to the registered credential
+
             using var ecdsa = ECDsa.Create();
             ecdsa.ImportECPrivateKey(storedCredential.Value.PrivateKey, out _);
-            
-            // Create authenticator data (simplified - in real WebAuthn this would include more fields)
+
             var rpIdHash = SHA256.HashData(Encoding.UTF8.GetBytes(rpId));
-            var authenticatorData = new byte[rpIdHash.Length + 1 + 4]; // rpIdHash + flags + counter
+            var authenticatorData = new byte[rpIdHash.Length + 1 + 4];
             rpIdHash.CopyTo(authenticatorData, 0);
-            authenticatorData[rpIdHash.Length] = 0x01; // User present flag
-            
-            // Sign the authenticator data + challenge hash
+            authenticatorData[rpIdHash.Length] = 0x01;
+
             var clientDataHash = SHA256.HashData(challenge);
             var signedData = new byte[authenticatorData.Length + clientDataHash.Length];
             authenticatorData.CopyTo(signedData, 0);
             clientDataHash.CopyTo(signedData, authenticatorData.Length);
-            
+
             var signature = ecdsa.SignData(signedData, HashAlgorithmName.SHA256);
-            
-            // Verify the signature (in a real implementation, the verifier would be separate)
+
             using var verifier = ECDsa.Create();
             verifier.ImportSubjectPublicKeyInfo(storedCredential.Value.PublicKey, out _);
-            
+
             return verifier.VerifyData(signedData, signature, HashAlgorithmName.SHA256);
         }
 
@@ -274,9 +236,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Stores credential key material securely using DPAPI.
-        /// </summary>
         private static Task StoreCredentialKeyAsync(byte[] credentialId, string rpId, string userId, byte[] publicKey, byte[] privateKey)
         {
             var storagePath = GetCredentialStoragePath();
@@ -285,31 +244,25 @@ namespace PhantomVault.Core.Services
             {
                 System.IO.Directory.CreateDirectory(directory);
             }
-            
-            // Serialize credential data
+
             var credentialIdB64 = Convert.ToBase64String(credentialId);
             var publicKeyB64 = Convert.ToBase64String(publicKey);
             var privateKeyB64 = Convert.ToBase64String(privateKey);
             var data = $"{credentialIdB64}|{rpId}|{userId}|{publicKeyB64}|{privateKeyB64}";
             var plainBytes = Encoding.UTF8.GetBytes(data);
-            
-            // Protect with DPAPI
+
             var protectedData = System.Security.Cryptography.ProtectedData.Protect(
                 plainBytes,
                 Encoding.UTF8.GetBytes("PhantomVault.Passkey.Entropy"),
                 System.Security.Cryptography.DataProtectionScope.CurrentUser);
-            
+
             System.IO.File.WriteAllBytes(storagePath, protectedData);
-            
-            // Zero out sensitive data
+
             Array.Clear(plainBytes, 0, plainBytes.Length);
-            
+
             return Task.CompletedTask;
         }
 
-        /// <summary>
-        /// Loads stored credential key material.
-        /// </summary>
         private static Task<StoredCredential?> LoadCredentialKeyAsync(byte[] credentialId)
         {
             var storagePath = GetCredentialStoragePath();
@@ -325,23 +278,22 @@ namespace PhantomVault.Core.Services
                     protectedData,
                     Encoding.UTF8.GetBytes("PhantomVault.Passkey.Entropy"),
                     System.Security.Cryptography.DataProtectionScope.CurrentUser);
-                
+
                 var data = Encoding.UTF8.GetString(plainBytes);
                 var parts = data.Split('|');
-                
+
                 if (parts.Length != 5)
                 {
                     return Task.FromResult<StoredCredential?>(null);
                 }
-                
+
                 var storedCredentialId = Convert.FromBase64String(parts[0]);
-                
-                // Verify credential ID matches using constant-time comparison
+
                 if (!CryptographicOperations.FixedTimeEquals(credentialId, storedCredentialId))
                 {
                     return Task.FromResult<StoredCredential?>(null);
                 }
-                
+
                 var credential = new StoredCredential
                 {
                     CredentialId = storedCredentialId,
@@ -350,10 +302,9 @@ namespace PhantomVault.Core.Services
                     PublicKey = Convert.FromBase64String(parts[3]),
                     PrivateKey = Convert.FromBase64String(parts[4])
                 };
-                
-                // Zero out sensitive data
+
                 Array.Clear(plainBytes, 0, plainBytes.Length);
-                
+
                 return Task.FromResult<StoredCredential?>(credential);
             }
             catch
@@ -362,9 +313,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Generates a cryptographic challenge for authentication.
-        /// </summary>
         private static byte[] GenerateChallenge()
         {
             var challenge = new byte[32];
@@ -372,24 +320,18 @@ namespace PhantomVault.Core.Services
             return challenge;
         }
 
-        /// <summary>
-        /// Creates a new passkey credential with the given parameters.
-        /// </summary>
         private async Task<PasskeyCredential> CreateCredentialAsync(string relyingParty, string userId)
         {
-            // Generate a unique credential ID
+
             var credentialId = new byte[32];
             RandomNumberGenerator.Fill(credentialId);
 
-            // Generate an ECDSA P-256 key pair
             using var ecdsa = ECDsa.Create(ECCurve.NamedCurves.nistP256);
             var publicKey = ecdsa!.ExportSubjectPublicKeyInfo();
             var privateKey = ecdsa.ExportECPrivateKey();
 
-            // Store the credential
             await StoreCredentialKeyAsync(credentialId, relyingParty, userId, publicKey, privateKey).ConfigureAwait(false);
 
-            // Zero out the private key from memory
             Array.Clear(privateKey, 0, privateKey.Length);
 
             return new PasskeyCredential
@@ -401,9 +343,6 @@ namespace PhantomVault.Core.Services
             };
         }
 
-        /// <summary>
-        /// Signs a challenge using the specified credential.
-        /// </summary>
         private async Task<byte[]?> SignChallengeAsync(byte[] credentialId, byte[] challenge)
         {
             try
@@ -423,27 +362,17 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Rotates a passkey credential by creating a new one and securely deleting the old.
-        /// This improves security by ensuring compromised credentials are invalidated.
-        /// </summary>
-        /// <param name="oldCredentialId">The credential ID to rotate</param>
-        /// <param name="relyingParty">Relying party ID (e.g., "phantomvault.local")</param>
-        /// <param name="userId">User identifier</param>
-        /// <returns>New credential information</returns>
         public async Task<PasskeyCredential> RotateCredentialAsync(byte[] oldCredentialId, string relyingParty, string userId)
         {
-            // Step 1: Backup existing credential file
+
             var storagePath = GetCredentialStoragePath();
             if (System.IO.File.Exists(storagePath))
             {
                 BackupCredentialFile(storagePath);
             }
 
-            // Step 2: Create new credential
             var newCredential = await CreateCredentialAsync(relyingParty, userId);
 
-            // Step 3: Verify new credential works by performing a test signature
             var testChallenge = GenerateChallenge();
             var testSignature = await SignChallengeAsync(newCredential.CredentialId, testChallenge);
 
@@ -452,43 +381,34 @@ namespace PhantomVault.Core.Services
                 throw new InvalidOperationException("New credential verification failed - unable to generate signature");
             }
 
-            // Step 4: Verify the signature
             if (!VerifySignature(newCredential.PublicKey, testChallenge, testSignature))
             {
-                // Restore backup if verification fails
+
                 RestoreCredentialBackup(storagePath);
                 throw new InvalidOperationException("New credential verification failed - signature validation failed");
             }
 
-            // Step 5: Cleanup old backups (keep last 5)
             CleanupOldBackups();
 
-            // Step 6: Return new credential for manifest update
             return newCredential;
         }
 
-        /// <summary>
-        /// Deletes a credential by ID. Used for credential rotation.
-        /// </summary>
         public Task DeleteCredentialAsync(byte[] credentialId)
         {
             var storagePath = GetCredentialStoragePath();
             if (System.IO.File.Exists(storagePath))
             {
-                // Verify this is the correct credential before deleting
+
                 var credential = LoadCredentialKeyAsync(credentialId).Result;
                 if (credential != null)
                 {
-                    // Securely delete the file
+
                     SecureFileDelete(storagePath);
                 }
             }
             return Task.CompletedTask;
         }
 
-        /// <summary>
-        /// Backs up credential file with timestamp for recovery.
-        /// </summary>
         private static void BackupCredentialFile(string sourcePath)
         {
             var timestamp = DateTimeOffset.UtcNow.ToString("yyyyMMddHHmmss");
@@ -504,9 +424,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Restores credential from most recent backup.
-        /// </summary>
         private static void RestoreCredentialBackup(string targetPath)
         {
             var directory = System.IO.Path.GetDirectoryName(targetPath);
@@ -524,9 +441,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Cleans up old backup files, keeping only the most recent 5.
-        /// </summary>
         private static void CleanupOldBackups()
         {
             var storagePath = GetCredentialStoragePath();
@@ -547,14 +461,11 @@ namespace PhantomVault.Core.Services
                 }
                 catch
                 {
-                    // Best effort - continue even if deletion fails
+
                 }
             }
         }
 
-        /// <summary>
-        /// Securely deletes a file by overwriting with random data before deletion.
-        /// </summary>
         private static void SecureFileDelete(string filePath)
         {
             try
@@ -562,7 +473,6 @@ namespace PhantomVault.Core.Services
                 var fileInfo = new System.IO.FileInfo(filePath);
                 var fileLength = fileInfo.Length;
 
-                // Overwrite file with random data
                 using (var fs = System.IO.File.OpenWrite(filePath))
                 {
                     var buffer = new byte[4096];
@@ -577,26 +487,22 @@ namespace PhantomVault.Core.Services
                     fs.Flush();
                 }
 
-                // Delete the file
                 System.IO.File.Delete(filePath);
             }
             catch
             {
-                // If secure deletion fails, fall back to regular deletion
+
                 try
                 {
                     System.IO.File.Delete(filePath);
                 }
                 catch
                 {
-                    // Best effort
+
                 }
             }
         }
 
-        /// <summary>
-        /// Verifies a signature against a public key and challenge.
-        /// </summary>
         private static bool VerifySignature(byte[] publicKey, byte[] challenge, byte[] signature)
         {
             try
@@ -805,3 +711,4 @@ namespace PhantomVault.Core.Services
         }
     }
 }
+

@@ -1,0 +1,170 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        x:Class="PhantomVault.UI.Views.EntropyKeyfileGeneratorWindow"
+        Width="760"
+        Height="560"
+        MinWidth="680"
+        MinHeight="480"
+        WindowStartupLocation="CenterOwner"
+        Title="Entropy Keyfile Generator"
+        Background="{DynamicResource PrimaryBackgroundBrush}">
+
+  <Grid RowDefinitions="Auto,*,Auto">
+    <Border Padding="28,24"
+            Background="{DynamicResource ContentBackgroundBrush}"
+            BorderThickness="0,0,0,1"
+            BorderBrush="{DynamicResource ControlBorderBrush}">
+      <StackPanel Spacing="8">
+        <TextBlock Text="Entropy Keyfile Generator"
+                   FontSize="26"
+                   FontWeight="Bold"
+                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+        <TextBlock Text="Move your mouse across the collection surface to add user-controlled entropy. Phantom Obscura mixes your movement timing and direction with operating-system CSPRNG output before deriving the final keyfile bytes."
+                   TextWrapping="Wrap"
+                   FontSize="13"
+                   Foreground="{DynamicResource MutedTextBrush}"/>
+      </StackPanel>
+    </Border>
+
+    <Grid Grid.Row="1" RowDefinitions="Auto,*,Auto" Margin="28,24,28,20">
+      <Border Padding="18,16"
+              CornerRadius="14"
+              Background="{DynamicResource CardBackgroundBrush}"
+              BorderBrush="{DynamicResource ControlBorderBrush}"
+              BorderThickness="1">
+        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="16">
+          <StackPanel Spacing="8">
+            <TextBlock Name="StatusText"
+                       Text="Collecting entropy..."
+                       FontSize="15"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+            <ProgressBar Name="EntropyProgress"
+                         Minimum="0"
+                         Maximum="100"
+                         Height="10"/>
+            <TextBlock Name="EntropyDetailText"
+                       Text="0 bits collected"
+                       FontSize="12"
+                       Foreground="{DynamicResource MutedTextBrush}"/>
+          </StackPanel>
+
+          <StackPanel Grid.Column="1" Spacing="4" HorizontalAlignment="Center">
+            <TextBlock Text="Samples"
+                       FontSize="11"
+                       Foreground="{DynamicResource MutedTextBrush}"
+                       HorizontalAlignment="Center"/>
+            <TextBlock Name="SampleCountText"
+                       Text="0"
+                       FontSize="20"
+                       FontWeight="Bold"
+                       Foreground="{DynamicResource PrimaryTextBrush}"
+                       HorizontalAlignment="Center"/>
+          </StackPanel>
+
+          <StackPanel Grid.Column="2" Spacing="4" HorizontalAlignment="Center">
+            <TextBlock Text="Output"
+                       FontSize="11"
+                       Foreground="{DynamicResource MutedTextBrush}"
+                       HorizontalAlignment="Center"/>
+            <TextBlock Name="OutputSizeText"
+                       Text="64 KB"
+                       FontSize="20"
+                       FontWeight="Bold"
+                       Foreground="{DynamicResource PrimaryTextBrush}"
+                       HorizontalAlignment="Center"/>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <Border Grid.Row="1"
+              Name="EntropySurface"
+              Margin="0,20,0,20"
+              Padding="24"
+              CornerRadius="20"
+              Background="#0B1320"
+              BorderBrush="#465969"
+              BorderThickness="2"
+              ClipToBounds="True"
+              PointerMoved="EntropySurface_PointerMoved"
+              PointerPressed="EntropySurface_PointerPressed"
+              PointerReleased="EntropySurface_PointerReleased">
+        <Grid>
+          <StackPanel HorizontalAlignment="Center"
+                      VerticalAlignment="Center"
+                      Spacing="10"
+                      IsHitTestVisible="False">
+            <TextBlock Text="Move your mouse here as unpredictably as possible"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       HorizontalAlignment="Center"
+                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+            <TextBlock Text="Fast direction changes, varying speed, pauses, and long sweeps all contribute additional timing and path variance."
+                       TextWrapping="Wrap"
+                       MaxWidth="460"
+                       HorizontalAlignment="Center"
+                       TextAlignment="Center"
+                       FontSize="13"
+                       Foreground="{DynamicResource MutedTextBrush}"/>
+            <Border Width="120"
+                    Height="120"
+                    CornerRadius="60"
+                    Background="{DynamicResource CardBackgroundBrush}"
+                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                    BorderThickness="1"
+                    HorizontalAlignment="Center"
+                    Margin="0,12,0,0">
+              <TextBlock Name="EntropyBadge"
+                         Text="🌀"
+                         FontSize="46"
+                         HorizontalAlignment="Center"
+                         VerticalAlignment="Center"/>
+            </Border>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <Border Grid.Row="2"
+              Padding="16,14"
+              CornerRadius="12"
+              Background="{DynamicResource CardBackgroundBrush}"
+              BorderBrush="{DynamicResource ControlBorderBrush}"
+              BorderThickness="1">
+        <TextBlock Text="Generation stays disabled until the minimum entropy threshold is reached. You can keep moving after that to improve the final pool before saving."
+                   TextWrapping="Wrap"
+                   FontSize="12"
+                   Foreground="{DynamicResource MutedTextBrush}"/>
+      </Border>
+    </Grid>
+
+    <Border Grid.Row="2"
+            Padding="20,14"
+            Background="{DynamicResource ContentBackgroundBrush}"
+            BorderThickness="0,1,0,0"
+            BorderBrush="{DynamicResource ControlBorderBrush}">
+      <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+        <TextBlock Name="FooterStatusText"
+                   Text="Awaiting sufficient entropy"
+                   VerticalAlignment="Center"
+                   FontSize="12"
+                   Foreground="{DynamicResource MutedTextBrush}"/>
+        <Button Grid.Column="1"
+                Content="Cancel"
+                Classes="liquid-glass"
+                Padding="16,10"
+                Click="Cancel_Click"/>
+        <Button Grid.Column="2"
+                Name="DoneButton"
+                Content="Generate Keyfile"
+                Classes="liquid-glass"
+                Padding="16,10"
+                IsEnabled="False"
+                Click="Done_Click"/>
+      </Grid>
+    </Border>
+  </Grid>
+</Window>
+

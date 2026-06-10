@@ -14,9 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace PhantomVault.UI.Services
 {
-    /// <summary>
-    /// Manages application theme switching and system theme detection
-    /// </summary>
+
     public enum AppTheme
     {
         Light,
@@ -42,9 +40,6 @@ namespace PhantomVault.UI.Services
 
         public event EventHandler<AppTheme>? ThemeChanged;
 
-        /// <summary>
-        /// Set the application theme
-        /// </summary>
         public void SetTheme(AppTheme theme)
         {
             if (theme == AppTheme.System)
@@ -59,7 +54,7 @@ namespace PhantomVault.UI.Services
 
         public void SetRenderScale(double scale)
         {
-            // Clamp to sane bounds then try to apply to every open window.
+
             scale = Math.Clamp(scale, 0.8, 1.5);
             if (Application.Current != null)
             {
@@ -79,7 +74,7 @@ namespace PhantomVault.UI.Services
         {
             try
             {
-                // Prefer explicit render scaling override if the platform exposes it.
+
                 var prop = window.GetType().GetProperty("RenderScalingOverride", BindingFlags.Instance | BindingFlags.Public);
                 prop ??= window.GetType().GetProperty("RenderScaling", BindingFlags.Instance | BindingFlags.Public);
                 if (prop?.CanWrite == true)
@@ -95,7 +90,6 @@ namespace PhantomVault.UI.Services
                     return;
                 }
 
-                // Fallback: scale window content to give the user visible feedback even if platform scaling is unavailable.
                 if (window.Content is Control control)
                 {
                     control.RenderTransform = new ScaleTransform(scale, scale);
@@ -135,13 +129,14 @@ namespace PhantomVault.UI.Services
             if (Application.Current == null) return;
             Application.Current.Resources["ReduceAnimations"] = reduceAnimations;
             Application.Current.Resources["ReduceTransparency"] = reduceTransparency;
+
+            // Bridge the persisted "Reduce Animations" setting into the runtime
+            // AccessibilityService, which is the single source the animation behaviors
+            // (Hover/Scale/LiquidGlass/SmoothScroll/LoadingSpinner) actually read. Without
+            // this, the toggle only flipped a resource flag and animations kept running.
+            AccessibilityService.Instance.ReduceMotion = reduceAnimations;
         }
 
-        /// <summary>
-        /// Apply an app-wide font family. FontFamily inherits down the visual
-        /// tree, so setting it on each open window propagates to all controls
-        /// that don't override it explicitly.
-        /// </summary>
         public void SetAppFont(string family)
         {
             if (Application.Current == null || string.IsNullOrWhiteSpace(family)) return;
@@ -158,10 +153,6 @@ namespace PhantomVault.UI.Services
             catch (Exception ex) { Log($"SetAppFont failed: {ex.Message}"); }
         }
 
-        /// <summary>
-        /// Apply an app-wide base font size. Inherits down the visual tree like
-        /// FontFamily.
-        /// </summary>
         public void SetAppFontSize(double size)
         {
             if (Application.Current == null) return;
@@ -174,10 +165,6 @@ namespace PhantomVault.UI.Services
             }
         }
 
-        /// <summary>
-        /// Override the accent colour app-wide. XAML binds the accent via
-        /// DynamicResource, so replacing the app-level resource propagates.
-        /// </summary>
         public void SetAccentColor(string hex)
         {
             if (Application.Current == null || string.IsNullOrWhiteSpace(hex)) return;
@@ -188,24 +175,76 @@ namespace PhantomVault.UI.Services
                 Application.Current.Resources["AccentColor"] = color;
                 Application.Current.Resources["AccentBrush"] = brush;
                 Application.Current.Resources["Brush.Accent"] = brush;
+
+                // Dedicated user-accent resources for surfaces that MUST track the user's
+                // picked colour even when a runtime theme overlay defines its own AccentBrush
+                // (theme overlays' Style.Resources override Application.Resources for
+                // AccentBrush, which silently undoes the user's choice — these keys aren't
+                // defined by any theme file so they always reflect SetAccentColor's input).
+                Application.Current.Resources["UserAccentColor"] = color;
+                Application.Current.Resources["UserAccentBrush"] = brush;
+
+                // Also stamp the brush onto every open Window's Resources so any control
+                // binding to AccentBrush via DynamicResource still resolves to the user's
+                // choice (Window.Resources beats Style.Resources from app-level themes).
+                if (Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                {
+                    foreach (var window in desktop.Windows.ToList())
+                    {
+                        window.Resources["AccentBrush"] = brush;
+                        window.Resources["AccentColor"] = color;
+                        window.Resources["UserAccentBrush"] = brush;
+                        window.Resources["UserAccentColor"] = color;
+                    }
+                }
             }
             catch (Exception ex) { Log($"SetAccentColor failed: {ex.Message}"); }
         }
 
-        /// <summary>
-        /// Propagate the "show only colour bar on categories" preference into
-        /// the app-wide resource dictionary so XAML can DynamicResource-bind to
-        /// it. The sidebar consumes this via VaultViewModel.ShowCategoryColorBarOnly.
-        /// </summary>
         public void SetShowCategoryColorBarOnly(bool value)
         {
             if (Application.Current == null) return;
             Application.Current.Resources["ShowCategoryColorBarOnly"] = value;
         }
 
-        /// <summary>
-        /// Apply the specified theme to the application
-        /// </summary>
+        public void SetFlatButtons(bool enabled)
+        {
+            if (Application.Current == null) return;
+            Application.Current.Resources["UseFlatButtons"] = enabled;
+            if (Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                foreach (var window in desktop.Windows.ToList())
+                {
+                    ApplyWindowClass(window, "flat-buttons", enabled);
+                }
+            }
+        }
+
+        public void SetFlatButtonBorders(bool enabled)
+        {
+            if (Application.Current == null) return;
+            Application.Current.Resources["UseFlatButtonBorders"] = enabled;
+            if (Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                foreach (var window in desktop.Windows.ToList())
+                {
+                    ApplyWindowClass(window, "flat-button-borders", enabled);
+                }
+            }
+        }
+
+        private static void ApplyWindowClass(Window window, string cls, bool enabled)
+        {
+            if (enabled)
+            {
+                if (!window.Classes.Contains(cls)) window.Classes.Add(cls);
+            }
+            else
+            {
+                window.Classes.Remove(cls);
+            }
+        }
+
         private void ApplyTheme(AppTheme theme)
         {
             var app = Application.Current;
@@ -220,7 +259,7 @@ namespace PhantomVault.UI.Services
 
             try
             {
-                // Remove existing PhantomTheme and HighContrast overlays
+
                 var toRemove = app.Styles
                     .OfType<StyleInclude>()
                     .Where(s => s.Source?.OriginalString?.Contains("PhantomTheme") == true ||
@@ -235,22 +274,19 @@ namespace PhantomVault.UI.Services
 
                 Log($"Removed {toRemove.Count} theme overlay(s)");
 
-                // Get the RuntimeThemeService to coordinate window-level theme dictionaries
                 IRuntimeThemeService? runtimeThemeService = null;
                 if (app is App phantomApp && phantomApp.Services != null)
                 {
                     runtimeThemeService = phantomApp.Services.GetService(typeof(IRuntimeThemeService)) as IRuntimeThemeService;
                 }
 
-                // Avalonia 11.0+ uses RequestedThemeVariant property
                 string? phantomThemeUri = null;
 
                 switch (theme)
                 {
                     case AppTheme.Light:
                         app.RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Light;
-                        // Load the light theme for base Style selectors.
-                        // Runtime theme (per-window) provides the actual color tokens.
+
                         phantomThemeUri = PHANTOM_THEME_LIGHT;
                         Log($"Set RequestedThemeVariant to Light — runtime theme stays active");
                         break;
@@ -262,7 +298,7 @@ namespace PhantomVault.UI.Services
                         break;
 
                     case AppTheme.HighContrast:
-                        // Use Dark as base with both dark PhantomTheme and high contrast overlay
+
                         app.RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Dark;
                         phantomThemeUri = PHANTOM_THEME_DARK;
                         Log($"Set RequestedThemeVariant to Dark/HighContrast — runtime theme stays active");
@@ -275,7 +311,6 @@ namespace PhantomVault.UI.Services
                         break;
                 }
 
-                // Add the appropriate PhantomTheme overlay
                 if (phantomThemeUri != null)
                 {
                     try
@@ -301,7 +336,6 @@ namespace PhantomVault.UI.Services
                     }
                 }
 
-                // Add HighContrast overlay if needed
                 if (theme == AppTheme.HighContrast)
                 {
                     try
@@ -320,7 +354,6 @@ namespace PhantomVault.UI.Services
                     }
                 }
 
-                // Force UI refresh by invalidating all windows
                 if (app.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 {
                     foreach (var window in desktop.Windows)
@@ -330,7 +363,6 @@ namespace PhantomVault.UI.Services
                     Log("Forced UI refresh on all windows");
                 }
 
-                // Log active theme variant and key brushes for debugging
                 Log($"ActualThemeVariant: {app.ActualThemeVariant}");
                 DumpActiveBrushes();
             }
@@ -346,9 +378,6 @@ namespace PhantomVault.UI.Services
             }
         }
 
-        /// <summary>
-        /// Detect the system's preferred theme
-        /// </summary>
         private AppTheme DetectSystemTheme()
         {
             if (OperatingSystem.IsWindows())
@@ -364,12 +393,9 @@ namespace PhantomVault.UI.Services
                 return DetectLinuxTheme();
             }
 
-            return AppTheme.Dark; // Default fallback
+            return AppTheme.Dark;
         }
 
-        /// <summary>
-        /// Detect Windows theme preference from registry
-        /// </summary>
         private AppTheme DetectWindowsTheme()
         {
             try
@@ -387,35 +413,24 @@ namespace PhantomVault.UI.Services
             }
             catch
             {
-                // Ignore errors, fall back to default
+
             }
 
             return AppTheme.Dark;
         }
 
-        /// <summary>
-        /// Detect macOS theme preference (simplified)
-        /// </summary>
         private AppTheme DetectMacOSTheme()
         {
-            // In a full implementation, this would use NSUserDefaults or AppleScript
-            // For now, default to dark theme
+
             return AppTheme.Dark;
         }
 
-        /// <summary>
-        /// Detect Linux theme preference (simplified)
-        /// </summary>
         private AppTheme DetectLinuxTheme()
         {
-            // In a full implementation, this would check GTK settings or desktop environment
-            // For now, default to dark theme
+
             return AppTheme.Dark;
         }
 
-        /// <summary>
-        /// Check if high contrast mode is enabled in the OS
-        /// </summary>
         public bool IsSystemHighContrastEnabled()
         {
             if (OperatingSystem.IsWindows())
@@ -432,7 +447,7 @@ namespace PhantomVault.UI.Services
                 }
                 catch
                 {
-                    // Ignore errors
+
                 }
             }
 
@@ -450,7 +465,7 @@ namespace PhantomVault.UI.Services
             }
             catch
             {
-                // ignore file I/O errors for logging
+
             }
         }
 
@@ -493,7 +508,6 @@ namespace PhantomVault.UI.Services
             DumpBrush("LiquidGlassButtonForeground", tv);
             DumpBrush("InputForegroundBrush", tv);
 
-            // Also try locating these keys inside loaded StyleIncludes (e.g., PhantomTheme.* files)
             foreach (var include in app.Styles.OfType<StyleInclude>())
             {
                 var src = include.Source?.OriginalString ?? "<null>";
@@ -595,3 +609,4 @@ namespace PhantomVault.UI.Services
         }
     }
 }
+

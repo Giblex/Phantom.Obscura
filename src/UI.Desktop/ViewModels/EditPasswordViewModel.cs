@@ -136,7 +136,6 @@ namespace PhantomVault.UI.ViewModels
             CancelCommand = ReactiveCommand.Create(Cancel);
             DeleteCommand = ReactiveCommand.Create(Delete);
 
-            // Initial calculation
             UpdatePasswordTestResults();
         }
 
@@ -178,7 +177,6 @@ namespace PhantomVault.UI.ViewModels
             if (string.IsNullOrEmpty(original))
                 return 0;
 
-            // Simple similarity: count matching characters
             int matches = 0;
             for (int i = 0; i < Math.Min(original.Length, suggested.Length); i++)
             {
@@ -207,13 +205,13 @@ namespace PhantomVault.UI.ViewModels
                 {
                     System.Windows.Forms.Clipboard.SetText(SuggestedPassword);
                 }
-                catch { /* Ignore clipboard errors */ }
+                catch {  }
             }
         }
 
         private void Save()
         {
-            // Update credential with new values
+
             _credential.Password = CurrentPassword;
             _credential.Title = CredentialTitle;
             _credential.Username = CredentialUsername;
@@ -223,13 +221,12 @@ namespace PhantomVault.UI.ViewModels
                 _credential.TotpSecret = TotpSecret;
             }
 
-            // Update vault - if we have the CredentialViewModel, we can update it directly
             if (_credentialVM != null)
             {
-                // Refresh the credential from the core model
+
                 _credentialVM.Refresh();
             }
-            
+
             RequestClose?.Invoke(true);
         }
 
@@ -248,3 +245,4 @@ namespace PhantomVault.UI.ViewModels
         }
     }
 }
+

@@ -5,7 +5,6 @@
              x:DataType="vm:VaultUnlockViewModel"
              Background="{DynamicResource WindowBackgroundBrush}">
 
-  <!-- Android adapter for desktop Views/VaultUnlockWindow.axaml (verbatim layout, Window→UserControl) -->
   <UserControl.Resources>
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
@@ -84,3 +83,4 @@
                Margin="0,30,0,0"/>
   </Grid>
 </UserControl>
+

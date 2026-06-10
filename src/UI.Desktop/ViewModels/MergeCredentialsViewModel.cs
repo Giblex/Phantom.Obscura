@@ -10,9 +10,7 @@ using PhantomVault.Core.Services;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// ViewModel for individual merge item in the merge window.
-    /// </summary>
+
     public class MergeItemViewModel : INotifyPropertyChanged
     {
         private bool _keepNew;
@@ -121,11 +119,6 @@ namespace PhantomVault.UI.ViewModels
         }
     }
 
-    /// <summary>
-    /// ViewModel for the Merge Credentials Window.
-    /// Displays duplicates side-by-side and allows user to select which to keep.
-    /// Default: Keep most recently created credential.
-    /// </summary>
     public class MergeCredentialsViewModel : INotifyPropertyChanged
     {
         private readonly List<DuplicateInfo> _originalDuplicates;
@@ -170,7 +163,6 @@ namespace PhantomVault.UI.ViewModels
                     MatchType = duplicate.MatchType
                 };
 
-                // Default: Select most recently created
                 var newCreated = duplicate.NewCredential.CreatedUtc;
                 var existingCreated = duplicate.ExistingCredential?.CreatedUtc ?? DateTimeOffset.MinValue;
 
@@ -183,7 +175,6 @@ namespace PhantomVault.UI.ViewModels
                     item.KeepExisting = true;
                 }
 
-                // Subscribe to property changes to update selected count
                 item.PropertyChanged += (s, e) =>
                 {
                     if (e.PropertyName == nameof(MergeItemViewModel.KeepNew) ||
@@ -235,9 +226,9 @@ namespace PhantomVault.UI.ViewModels
 
                 if (item.KeepBoth)
                 {
-                    // Keep both - don't add to resolved (both will be imported)
+
                     originalDuplicate.KeepNew = true;
-                    // ExistingCredential stays in vault
+
                 }
                 else if (item.KeepNew)
                 {
@@ -263,7 +254,7 @@ namespace PhantomVault.UI.ViewModels
 
         private void CloseWindow()
         {
-            // Window will be closed by caller
+
             OnPropertyChanged(nameof(IsMerged));
         }
 
@@ -273,9 +264,6 @@ namespace PhantomVault.UI.ViewModels
         }
     }
 
-    /// <summary>
-    /// Simple RelayCommand implementation for commands.
-    /// </summary>
     public class RelayCommand : ICommand
     {
         private readonly Action _execute;
@@ -296,3 +284,4 @@ namespace PhantomVault.UI.ViewModels
         public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
     }
 }
+

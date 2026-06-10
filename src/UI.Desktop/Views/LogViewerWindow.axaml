@@ -12,7 +12,7 @@
         Background="{DynamicResource ObscuraCanvasBrush}"
         Classes="animated-window">
   <Grid RowDefinitions="Auto,Auto,*,Auto">
-    <!-- Header -->
+
     <Border Grid.Row="0"
             Background="{DynamicResource ObscuraSurfaceAltBrush}"
             BorderBrush="{DynamicResource ObscuraBorderBrush}"
@@ -41,7 +41,6 @@
       </Grid>
     </Border>
 
-    <!-- Toolbar -->
     <Border Grid.Row="1"
             Background="{DynamicResource ObscuraSurfaceBrush}"
             BorderBrush="{DynamicResource ObscuraBorderBrush}"
@@ -79,7 +78,6 @@
       </Grid>
     </Border>
 
-    <!-- Log Content -->
     <Border Grid.Row="2"
             Margin="20"
             Background="{DynamicResource ObscuraSurfaceBrush}"
@@ -101,7 +99,6 @@
       </ScrollViewer>
     </Border>
 
-    <!-- Footer -->
     <Border Grid.Row="3"
             Background="{DynamicResource ObscuraSurfaceAltBrush}"
             BorderBrush="{DynamicResource ObscuraBorderBrush}"
@@ -127,3 +124,4 @@
     </Border>
   </Grid>
 </Window>
+

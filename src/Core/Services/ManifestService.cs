@@ -10,16 +10,7 @@ using PhantomVault.Core.Utils;
 
 namespace PhantomVault.Core.Services
 {
-    /// <summary>
-    /// Handles persisting and retrieving encrypted manifest files. A manifest
-    /// stores metadata about the vault (for example the container size and
-    /// configuration) without revealing any secrets. The manifest is
-    /// authenticated and encrypted with a passphrase‑derived key (KEK).
-    /// 
-    /// Phase 2: The manifest itself remains encrypted with traditional Argon2id.
-    /// However, it now stores the encrypted ML-KEM private key and KEM ciphertext
-    /// for post-quantum vault data encryption.
-    /// </summary>
+
     public sealed class ManifestService
     {
         private const int CurrentStandaloneManifestFormatVersion = 2;
@@ -33,33 +24,18 @@ namespace PhantomVault.Core.Services
             _containerService = containerService;
         }
 
-        /// <summary>
-        /// Returns true when the given path points to a .pvault container
-        /// (manifest embedded inside the container rather than a standalone file).
-        /// </summary>
         private static bool IsContainerPath(string path)
             => path.EndsWith(".pvault", StringComparison.OrdinalIgnoreCase);
 
-        /// <summary>
-        /// Writes an encrypted manifest to disk. The manifest itself is
-        /// serialized to JSON and then encrypted using a key derived from
-        /// the provided passphrase and the generated salt. If a keyfile
-        /// path is provided, its contents are concatenated with the
-        /// passphrase prior to derivation.
-        /// </summary>
-        /// <param name="manifest">The manifest to persist.</param>
-        /// <param name="filePath">The target file path.</param>
-        /// <param name="passphrase">The user passphrase.</param>
-        /// <param name="keyfilePath">Optional path to a keyfile.</param>
-        /// <param name="usbSerial">Optional USB serial number for additional AAD binding.</param>
-        /// <param name="requireDualFactor">When true, both passphrase AND keyfile are required (dual-factor authentication).</param>
         [Obsolete("Use WriteManifestSecure overload with SecurePassword for better memory security")]
         public void WriteManifest(VaultManifest manifest, string filePath, string? passphrase, string? keyfilePath = null, string? usbSerial = null, bool requireDualFactor = false)
+            => WriteManifest(manifest, filePath, passphrase, keyfilePath, usbSerial, requireDualFactor, overrideKdfParams: null);
+
+        public void WriteManifest(VaultManifest manifest, string filePath, string? passphrase, string? keyfilePath, string? usbSerial, bool requireDualFactor, ManifestKdfParams? overrideKdfParams)
         {
             if (manifest == null) throw new ArgumentNullException(nameof(manifest));
             if (string.IsNullOrEmpty(filePath)) throw new ArgumentException("File path must be provided", nameof(filePath));
 
-            // Route .pvault paths to the container service (v3 embedded manifest)
             if (IsContainerPath(filePath))
             {
                 if (_containerService == null)
@@ -68,7 +44,6 @@ namespace PhantomVault.Core.Services
                 return;
             }
 
-            // Dual-factor authentication: BOTH passphrase AND keyfile required
             if (requireDualFactor)
             {
                 if (string.IsNullOrEmpty(passphrase) || string.IsNullOrEmpty(keyfilePath))
@@ -78,18 +53,13 @@ namespace PhantomVault.Core.Services
             }
             else
             {
-                // Legacy mode: at least one authentication method (passphrase OR keyfile) must be provided
+
                 if (string.IsNullOrEmpty(passphrase) && string.IsNullOrEmpty(keyfilePath))
                 {
                     throw new ArgumentException("Either a passphrase or keyfile must be provided");
                 }
             }
 
-            // Generate or reuse the salt for this manifest. If the caller already
-            // populated <see cref="VaultManifest.SaltBase64"/> we respect that so
-            // additional data (such as the encrypted KEM private key) can reuse the
-            // same KEK. This is critical for Phase 2 hybrid encryption where the
-            // manifest salt must match the salt used to encrypt the ML-KEM secret.
             byte[] salt;
             if (!string.IsNullOrEmpty(manifest.SaltBase64))
             {
@@ -108,22 +78,22 @@ namespace PhantomVault.Core.Services
                 manifest.SaltBase64 = Convert.ToBase64String(salt);
             }
 
-            // Combine passphrase with keyfile contents if provided. This
-            // increases entropy and allows multi‑factor authentication.
-            // If no passphrase, use empty string as base.
             bool requireKeyfileMaterial = requireDualFactor || !string.IsNullOrEmpty(keyfilePath);
             string combinedSecret = CombineSecret(passphrase, keyfilePath, requireKeyfileMaterial);
 
-            // Derive the encryption key (KEK). This operation is intentionally
-            // expensive to thwart brute force attacks.
-            // Phase 2 Note: Manifest itself always uses traditional KEK, not hybrid.
-            byte[] key = _encryptionService.DeriveKey(combinedSecret.AsSpan(), salt);
+            // Resolve KDF parameters for this write:
+            //   1) explicit override (re-key flow)
+            //   2) whatever the manifest was last read at (preserve params on routine writes)
+            //   3) Standard (back-compat for new vaults)
+            var effectiveKdf = overrideKdfParams ?? manifest.RuntimeKdfParams ?? ManifestKdfParams.Standard;
+            byte[] key = _encryptionService.DeriveKey(
+                combinedSecret.AsSpan(), salt,
+                memoryCostKb: effectiveKdf.MemoryKb,
+                iterations: effectiveKdf.Iterations,
+                parallelism: effectiveKdf.Parallelism);
 
-            // Sign the manifest before serialization for integrity verification
             SignManifest(manifest, key);
 
-            // Serialize the manifest to JSON. We use UTF8 because it is the
-            // de‑facto encoding for JSON and ensures deterministic byte output.
             string json = JsonSerializer.Serialize(manifest, new JsonSerializerOptions
             {
                 WriteIndented = false
@@ -137,9 +107,6 @@ namespace PhantomVault.Core.Services
             byte[] aad = BuildStandaloneManifestAad(filePath, usbSerial);
             var encResult = _encryptionService.Encrypt(plainBytes, key, aad);
 
-            // Persist only the minimum public header material required to bootstrap
-            // key derivation and detect the payload format. All binding metadata stays
-            // inside the encrypted manifest body.
             var payload = new
             {
                 formatVersion = CurrentStandaloneManifestFormatVersion,
@@ -147,34 +114,34 @@ namespace PhantomVault.Core.Services
                 salt = manifest.SaltBase64,
                 nonce = Convert.ToBase64String(encResult.Nonce),
                 tag = Convert.ToBase64String(encResult.Tag),
-                ciphertext = Convert.ToBase64String(encResult.Ciphertext)
+                ciphertext = Convert.ToBase64String(encResult.Ciphertext),
+                kdfParams = new
+                {
+                    memoryKb = effectiveKdf.MemoryKb,
+                    iterations = effectiveKdf.Iterations,
+                    parallelism = effectiveKdf.Parallelism
+                }
             };
             string payloadJson = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(filePath, payloadJson);
 
-            // Wipe sensitive material from memory as best we can.
+            // Record the params we just persisted so subsequent in-memory uses (e.g. the
+            // VaultViewModel's cached runtime manifest) reflect the new state.
+            manifest.RuntimeKdfParams = effectiveKdf;
+
             Array.Clear(key, 0, key.Length);
             Array.Clear(plainBytes, 0, plainBytes.Length);
         }
 
-        /// <summary>
-        /// Writes an encrypted manifest to disk using secure password handling.
-        /// This method ensures that passwords are properly zeroed from memory after use.
-        /// RECOMMENDED: Use this method instead of the string-based overload for better security.
-        /// </summary>
-        /// <param name="manifest">The manifest to persist.</param>
-        /// <param name="filePath">The target file path.</param>
-        /// <param name="passphrase">The user passphrase (will be securely zeroed after use).</param>
-        /// <param name="keyfilePath">Optional path to a keyfile.</param>
-        /// <param name="usbSerial">Optional USB serial number for additional AAD binding.</param>
-        /// <param name="requireDualFactor">When true, both passphrase AND keyfile are required (dual-factor authentication).</param>
         public void WriteManifestSecure(VaultManifest manifest, string filePath, SecurePassword passphrase, string? keyfilePath = null, string? usbSerial = null, bool requireDualFactor = false)
+            => WriteManifestSecure(manifest, filePath, passphrase, keyfilePath, usbSerial, requireDualFactor, overrideKdfParams: null);
+
+        public void WriteManifestSecure(VaultManifest manifest, string filePath, SecurePassword passphrase, string? keyfilePath, string? usbSerial, bool requireDualFactor, ManifestKdfParams? overrideKdfParams)
         {
             if (manifest == null) throw new ArgumentNullException(nameof(manifest));
             if (string.IsNullOrEmpty(filePath)) throw new ArgumentException("File path must be provided", nameof(filePath));
             if (passphrase == null) throw new ArgumentNullException(nameof(passphrase));
 
-            // Dual-factor authentication: BOTH passphrase AND keyfile required
             if (requireDualFactor)
             {
                 if (passphrase.IsEmpty || string.IsNullOrEmpty(keyfilePath))
@@ -184,14 +151,13 @@ namespace PhantomVault.Core.Services
             }
             else
             {
-                // Legacy mode: at least one authentication method (passphrase OR keyfile) must be provided
+
                 if (passphrase.IsEmpty && string.IsNullOrEmpty(keyfilePath))
                 {
                     throw new ArgumentException("Either a passphrase or keyfile must be provided");
                 }
             }
 
-            // Generate or reuse the salt for this manifest
             byte[] salt;
             if (!string.IsNullOrEmpty(manifest.SaltBase64))
             {
@@ -210,18 +176,20 @@ namespace PhantomVault.Core.Services
                 manifest.SaltBase64 = Convert.ToBase64String(salt);
             }
 
-            // Securely combine passphrase with keyfile contents
             bool requireKeyfileMaterial = requireDualFactor || !string.IsNullOrEmpty(keyfilePath);
             using var combinedSecret = SecurePasswordCombiner.Combine(passphrase, keyfilePath, requireKeyfileMaterial);
 
-            // Derive the encryption key (KEK)
-            byte[] key = _encryptionService.DeriveKey(combinedSecret.AsSpan(), salt);
+            var effectiveKdf = overrideKdfParams ?? manifest.RuntimeKdfParams ?? ManifestKdfParams.Standard;
+            byte[] key = _encryptionService.DeriveKey(
+                combinedSecret.AsSpan(), salt,
+                memoryCostKb: effectiveKdf.MemoryKb,
+                iterations: effectiveKdf.Iterations,
+                parallelism: effectiveKdf.Parallelism);
             try
             {
-                // Sign the manifest before serialization
+
                 SignManifest(manifest, key);
 
-                // Serialize the manifest to JSON
                 string json = JsonSerializer.Serialize(manifest, new JsonSerializerOptions
                 {
                     WriteIndented = false
@@ -237,8 +205,6 @@ namespace PhantomVault.Core.Services
 
                     var encResult = _encryptionService.Encrypt(plainBytes, key, aad);
 
-                    // Persist only the minimum public header material required to
-                    // bootstrap key derivation and payload format detection.
                     var payload = new
                     {
                         formatVersion = CurrentStandaloneManifestFormatVersion,
@@ -246,10 +212,18 @@ namespace PhantomVault.Core.Services
                         salt = manifest.SaltBase64,
                         nonce = Convert.ToBase64String(encResult.Nonce),
                         tag = Convert.ToBase64String(encResult.Tag),
-                        ciphertext = Convert.ToBase64String(encResult.Ciphertext)
+                        ciphertext = Convert.ToBase64String(encResult.Ciphertext),
+                        kdfParams = new
+                        {
+                            memoryKb = effectiveKdf.MemoryKb,
+                            iterations = effectiveKdf.Iterations,
+                            parallelism = effectiveKdf.Parallelism
+                        }
                     };
                     string payloadJson = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
                     File.WriteAllText(filePath, payloadJson);
+
+                    manifest.RuntimeKdfParams = effectiveKdf;
                 }
                 finally
                 {
@@ -262,21 +236,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Reads an encrypted manifest from disk and returns the
-        /// deserialized <see cref="VaultManifest"/>. The caller must supply
-        /// the correct passphrase and optional keyfile path. If the file is
-        /// corrupted or the authentication fails, an exception is thrown.
-        /// 
-        /// Phase 2: Manifest is always decrypted with traditional KEK, not hybrid.
-        /// The manifest contains encrypted KEM private key and KEM ciphertext
-        /// that are used for vault data encryption.
-        /// </summary>
-        /// <param name="filePath">Path to the manifest on disk.</param>
-        /// <param name="passphrase">User passphrase.</param>
-        /// <param name="keyfilePath">Optional path to a keyfile.</param>
-        /// <param name="usbSerial">Optional USB serial number for AAD validation.</param>
-        /// <param name="requireDualFactor">When true, both passphrase AND keyfile are required (dual-factor authentication).</param>
         [Obsolete("Use ReadManifestSecure overload with SecurePassword for better memory security")]
         public VaultManifest ReadManifest(string filePath, string? passphrase, string? keyfilePath = null, string? usbSerial = null, bool requireDualFactor = false)
         {
@@ -286,16 +245,11 @@ namespace PhantomVault.Core.Services
             return ReadManifestSecure(filePath, securePassphrase, keyfilePath, usbSerial, requireDualFactor);
         }
 
-        /// <summary>
-        /// Reads an encrypted manifest from disk using secure password handling.
-        /// This method ensures password buffers can be wiped after key derivation.
-        /// </summary>
         public VaultManifest ReadManifestSecure(string filePath, SecurePassword passphrase, string? keyfilePath = null, string? usbSerial = null, bool requireDualFactor = false)
         {
             if (string.IsNullOrEmpty(filePath)) throw new ArgumentException("File path must be provided", nameof(filePath));
             if (passphrase == null) throw new ArgumentNullException(nameof(passphrase));
 
-            // Route .pvault paths to the container service (v3 embedded manifest)
             if (IsContainerPath(filePath))
             {
                 if (_containerService == null)
@@ -303,7 +257,6 @@ namespace PhantomVault.Core.Services
                 if (!File.Exists(filePath))
                     throw new FileNotFoundException("Container not found", filePath);
 
-                // Container service still accepts string credentials today.
                 string? containerPassphrase = passphrase.IsEmpty ? null : new string(passphrase.AsSpan());
                 try
                 {
@@ -321,7 +274,6 @@ namespace PhantomVault.Core.Services
 
             if (!File.Exists(filePath)) throw new FileNotFoundException("Manifest file not found", filePath);
 
-            // Dual-factor authentication: BOTH passphrase AND keyfile required
             if (requireDualFactor)
             {
                 if (passphrase.IsEmpty || string.IsNullOrEmpty(keyfilePath))
@@ -331,7 +283,7 @@ namespace PhantomVault.Core.Services
             }
             else
             {
-                // Legacy mode: at least one authentication method (passphrase OR keyfile) must be provided
+
                 if (passphrase.IsEmpty && string.IsNullOrEmpty(keyfilePath))
                 {
                     throw new ArgumentException("Either a passphrase or keyfile must be provided");
@@ -340,7 +292,6 @@ namespace PhantomVault.Core.Services
 
             string payloadJson = File.ReadAllText(filePath);
 
-            // Defensive: remove common BOM and whitespace issues
             payloadJson = payloadJson.Trim();
             if (payloadJson.Length > 0 && payloadJson[0] == '\uFEFF')
             {
@@ -408,7 +359,6 @@ namespace PhantomVault.Core.Services
                     }
                 }
 
-                // Validate USB serial format if stored in manifest
                 if (!string.IsNullOrEmpty(storedUsbSerial))
                 {
                     if (!System.Text.RegularExpressions.Regex.IsMatch(storedUsbSerial, @"^[A-Za-z0-9\-_]+$"))
@@ -417,7 +367,6 @@ namespace PhantomVault.Core.Services
                     }
                 }
 
-                // Validate USB serial if provided
                 if (!string.IsNullOrEmpty(usbSerial))
                 {
                     if (!System.Text.RegularExpressions.Regex.IsMatch(usbSerial, @"^[A-Za-z0-9\-_]+$"))
@@ -431,8 +380,6 @@ namespace PhantomVault.Core.Services
                     }
                 }
 
-                // If manifest was bound to a USB device, require USB serial on read
-                // This prevents reading a USB-bound manifest without the USB device present
                 if (!string.IsNullOrEmpty(storedUsbSerial) && string.IsNullOrEmpty(usbSerial))
                 {
                     throw new SecurityException($"Manifest is bound to USB device (serial: {storedUsbSerial}). USB device must be connected to read this manifest.");
@@ -443,30 +390,44 @@ namespace PhantomVault.Core.Services
                 byte[] tag = Convert.FromBase64String(tagBase64);
                 byte[] ciphertext = Convert.FromBase64String(ciphertextBase64);
 
+                // Parse KDF parameters from the outer envelope. Manifests written before this
+                // field existed default to the historical Standard parameters (256 MiB / 6 / 0)
+                // so they continue to unlock correctly.
+                ManifestKdfParams envelopeKdf = ManifestKdfParams.Standard;
+                if (root.TryGetProperty("kdfParams", out var kdfElement) && kdfElement.ValueKind == JsonValueKind.Object)
+                {
+                    int mem = kdfElement.TryGetProperty("memoryKb", out var mEl) && mEl.ValueKind == JsonValueKind.Number ? mEl.GetInt32() : ManifestKdfParams.Standard.MemoryKb;
+                    int iters = kdfElement.TryGetProperty("iterations", out var iEl) && iEl.ValueKind == JsonValueKind.Number ? iEl.GetInt32() : ManifestKdfParams.Standard.Iterations;
+                    int par = kdfElement.TryGetProperty("parallelism", out var pEl) && pEl.ValueKind == JsonValueKind.Number ? pEl.GetInt32() : ManifestKdfParams.Standard.Parallelism;
+                    envelopeKdf = new ManifestKdfParams(mem, iters, par);
+                }
+
                 bool requireKeyfileMaterial = requireDualFactor || !string.IsNullOrEmpty(keyfilePath);
                 using var combinedSecret = SecurePasswordCombiner.Combine(passphrase, keyfilePath, requireKeyfileMaterial);
-                byte[] key = _encryptionService.DeriveKey(combinedSecret.AsSpan(), salt);
+                byte[] key = _encryptionService.DeriveKey(
+                    combinedSecret.AsSpan(), salt,
+                    memoryCostKb: envelopeKdf.MemoryKb,
+                    iterations: envelopeKdf.Iterations,
+                    parallelism: envelopeKdf.Parallelism);
                 try
                 {
-                    // Validate timestamp to detect replay attacks and clock skew
+
                     if (!usesMinimalHeader && storedTimestamp > 0)
                     {
                         var currentTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                         var ageSeconds = currentTimestamp - storedTimestamp;
 
-                        // Check for future timestamps (clock skew or tampering)
-                        const long MaxClockSkewSeconds = 300; // 5 minutes tolerance
+                        const long MaxClockSkewSeconds = 300;
                         if (ageSeconds < -MaxClockSkewSeconds)
                         {
                             throw new SecurityException($"Manifest timestamp is in the future by {Math.Abs(ageSeconds)} seconds. Possible clock skew or replay attack.");
                         }
 
-                        // Warn on old timestamps but allow (for legitimate old manifests)
-                        const long MaxAgeSeconds = 31536000; // 1 year
+                        const long MaxAgeSeconds = 31536000;
                         if (ageSeconds > MaxAgeSeconds)
                         {
                             System.Diagnostics.Debug.WriteLine($"WARNING: Manifest timestamp is {ageSeconds / 86400} days old. Possible replay attack or very old manifest.");
-                            // Don't throw - allow old manifests, but log for auditing
+
                         }
                     }
 
@@ -486,8 +447,8 @@ namespace PhantomVault.Core.Services
                         string json = Encoding.UTF8.GetString(plaintext);
                         var manifest = JsonSerializer.Deserialize<VaultManifest>(json) ?? throw new FormatException("Failed to parse manifest");
                         manifest.ContainerPath = NormalizeContainerObjectId(manifest.ContainerPath);
+                        manifest.RuntimeKdfParams = envelopeKdf;
 
-                        // Verify integrity signature if present (defense-in-depth)
                         VerifyIntegritySignature(manifest, key, requireSignature: false);
 
                         if (!usesMinimalHeader &&
@@ -540,25 +501,19 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Non-throwing variant of ReadManifest. Attempts to read and decrypt
-        /// the manifest. On failure returns false and a human-friendly error
-        /// message suitable for UI display.
-        /// 
-        /// Phase 2: Manifest is always decrypted with traditional KEK.
-        /// </summary>
         public bool TryReadManifest(string filePath, string? passphrase, string? keyfilePath, out VaultManifest? manifest, out string? error, string? usbSerial = null, bool requireDualFactor = false)
         {
             manifest = null;
             error = null;
             try
             {
-                manifest = ReadManifest(filePath, passphrase, keyfilePath, usbSerial, requireDualFactor);
+                using var sp = SecurePassword.FromString(passphrase);
+                manifest = ReadManifestSecure(filePath, sp, keyfilePath, usbSerial, requireDualFactor);
                 return true;
             }
             catch (Exception ex)
             {
-                // Convert common errors into user-friendly messages
+
                 if (ex is FileNotFoundException)
                 {
                     error = "Manifest file not found. Ensure the USB drive contains the .phantom folder with a valid manifest.";
@@ -579,19 +534,11 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Computes an HMAC-SHA256 signature over critical manifest fields.
-        /// The signature provides defense-in-depth integrity verification.
-        /// </summary>
-        /// <param name="manifest">The manifest to sign.</param>
-        /// <param name="key">The KEK-derived signing key (32 bytes).</param>
-        /// <returns>Base64-encoded HMAC signature.</returns>
         public static string ComputeIntegritySignature(VaultManifest manifest, byte[] key)
         {
             if (manifest == null) throw new ArgumentNullException(nameof(manifest));
             if (key == null || key.Length < 32) throw new ArgumentException("Signing key must be at least 32 bytes", nameof(key));
 
-            // Canonical representation of critical fields including anti-rollback counter and policy hash
             var canonicalData = new StringBuilder();
             canonicalData.Append(manifest.ContainerPath ?? string.Empty);
             canonicalData.Append('|');
@@ -626,20 +573,11 @@ namespace PhantomVault.Core.Services
             return Convert.ToBase64String(hmac);
         }
 
-        /// <summary>
-        /// Verifies the integrity signature of a manifest. Returns true if the signature
-        /// is valid or if no signature is present (for backwards compatibility).
-        /// </summary>
-        /// <param name="manifest">The manifest to verify.</param>
-        /// <param name="key">The KEK-derived signing key.</param>
-        /// <param name="requireSignature">When true, throws if no signature is present.</param>
-        /// <returns>True if signature is valid or absent; throws SecurityException otherwise.</returns>
         public static bool VerifyIntegritySignature(VaultManifest manifest, byte[] key, bool requireSignature = false)
         {
             if (manifest == null) throw new ArgumentNullException(nameof(manifest));
             if (key == null || key.Length < 32) throw new ArgumentException("Signing key must be at least 32 bytes", nameof(key));
 
-            // No signature present - allow for backwards compatibility unless required
             if (string.IsNullOrEmpty(manifest.IntegritySignatureBase64))
             {
                 if (requireSignature)
@@ -660,31 +598,17 @@ namespace PhantomVault.Core.Services
             return true;
         }
 
-        /// <summary>
-        /// Signs the manifest by computing and storing an HMAC-SHA256 signature
-        /// over critical fields. Call this before serializing the manifest.
-        /// </summary>
-        /// <param name="manifest">The manifest to sign.</param>
-        /// <param name="key">The KEK-derived signing key.</param>
         public static void SignManifest(VaultManifest manifest, byte[] key)
         {
             if (manifest == null) throw new ArgumentNullException(nameof(manifest));
             if (key == null || key.Length < 32) throw new ArgumentException("Signing key must be at least 32 bytes", nameof(key));
 
-            // Increment monotonic counter on every write to prevent rollback attacks
             manifest.ManifestSequence++;
 
             manifest.IntegritySignatureBase64 = ComputeIntegritySignature(manifest, key);
             manifest.SignatureTimestamp = DateTimeOffset.UtcNow;
         }
 
-        /// <summary>
-        /// Verifies that the manifest sequence counter has not been rolled back.
-        /// Call this after decrypting a manifest and before trusting its contents.
-        /// </summary>
-        /// <param name="manifest">The decrypted manifest.</param>
-        /// <param name="lastKnownSequence">The last known sequence number (from previous session or stored locally).</param>
-        /// <exception cref="SecurityException">Thrown when rollback is detected.</exception>
         public static void VerifyAntiRollback(VaultManifest manifest, long lastKnownSequence)
         {
             if (manifest == null) throw new ArgumentNullException(nameof(manifest));
@@ -697,10 +621,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Validates and canonicalizes the container object identifier used inside
-        /// the encrypted manifest. Object IDs must be relative and portable.
-        /// </summary>
         private static string NormalizeContainerObjectId(string? containerPath)
         {
             if (string.IsNullOrWhiteSpace(containerPath))
@@ -760,14 +680,10 @@ namespace PhantomVault.Core.Services
             return Encoding.UTF8.GetBytes(aadString);
         }
 
-        /// <summary>
-        /// Validates USB serial number format.
-        /// </summary>
         private static void ValidateUsbSerial(string? usbSerial)
         {
             if (string.IsNullOrEmpty(usbSerial)) return;
 
-            // USB serial should be alphanumeric with limited special chars
             if (!System.Text.RegularExpressions.Regex.IsMatch(usbSerial, @"^[A-Za-z0-9\-_]+$"))
             {
                 throw new ArgumentException(
@@ -782,3 +698,4 @@ namespace PhantomVault.Core.Services
         }
     }
 }
+

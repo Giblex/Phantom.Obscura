@@ -10,22 +10,10 @@ using PhantomVault.UI.Services;
 
 namespace PhantomVault.UI.ViewModels;
 
-/// <summary>
-/// Welcome / USB-gate ViewModel for the Avalonia.Android port.
-///
-/// Live-bound to <see cref="UsbDriveMonitor"/>. Whenever a removable drive
-/// mounts / unmounts (or the emulator's simulated drive comes online in
-/// DEBUG), the visible state — headline, detail copy, status pill, picker
-/// list, "open vault" button enablement — flips accordingly.
-///
-/// Surface still mirrors the desktop <c>WelcomePageViewModel</c> so the AXAML
-/// from <c>Views/WelcomePage.axaml</c> can bind against it unchanged.
-/// </summary>
 public sealed partial class WelcomePageViewModel : ObservableObject
 {
     private readonly UsbDriveMonitor _monitor;
 
-    // Navigation requests — handled by WelcomePage.xaml.cs which bridges them to the ShellViewModel.
     public event System.Action? RequestUnlock;
     public event System.Action? RequestDashboard;
     public event System.Action? RequestDefaultSetup;
@@ -45,23 +33,20 @@ public sealed partial class WelcomePageViewModel : ObservableObject
         GetStartedCommand        = new RelayCommand(() => { IsLandingVisible = false; IsSetupChoiceVisible = true; });
         OpenExistingVaultCommand = new RelayCommand(() =>
         {
-            // If we've already detected a vault on USB, route to unlock; otherwise
-            // fall back to the legacy "open existing" navigation request.
+
             if (HasRecognizedVaults) RequestUnlock?.Invoke();
             else                     RequestOpenExistingVault?.Invoke();
         });
         BackToWelcomeCommand     = new RelayCommand(() => { IsLandingVisible = true; IsSetupChoiceVisible = false; });
         DeveloperBypassCommand   = new RelayCommand(() => RequestDashboard?.Invoke());
 
-        // Subscribe + seed.
         _monitor.DrivesChanged += OnDrivesChanged;
         OnDrivesChanged(_monitor.CurrentDrives);
     }
 
     private void OnDrivesChanged(IReadOnlyList<UsbDriveInfo> drives)
     {
-        // Always marshal to the UI thread — the BroadcastReceiver fires on a
-        // pool thread and ObservableCollection isn't safe for cross-thread mutation.
+
         if (Dispatcher.UIThread.CheckAccess()) Apply(drives);
         else                                   Dispatcher.UIThread.Post(() => Apply(drives));
     }
@@ -77,7 +62,6 @@ public sealed partial class WelcomePageViewModel : ObservableObject
         IsDeviceDetectionActive = !anyDrive;
         DetectedVaultPathDisplay = withVault.FirstOrDefault()?.MountPath ?? string.Empty;
 
-        // Refresh the picker list when there's more than one vault on the connected drives.
         DetectedVaults.Clear();
         foreach (var d in withVault)
         {
@@ -88,7 +72,6 @@ public sealed partial class WelcomePageViewModel : ObservableObject
             });
         }
 
-        // Headline / detail / status copy — three distinct visible states.
         if (HasRecognizedVaults)
         {
             DeviceLinkHeadline = withVault.Count == 1
@@ -115,12 +98,10 @@ public sealed partial class WelcomePageViewModel : ObservableObject
         }
     }
 
-    // ── Header / branding ────────────────────────────────────────────────────
     [ObservableProperty] private string _appName        = "Phantom Obscura";
     [ObservableProperty] private string _welcomeMessage = "Plug in your Phantom USB drive to begin.";
     [ObservableProperty] private string _appVersion     = "v1.0";
 
-    // ── Status / USB detection (mutated by Apply()) ─────────────────────────
     [ObservableProperty] private string _statusMessage             = "Waiting for USB drive…";
     [ObservableProperty] private bool   _isDeviceDetectionActive   = true;
     [ObservableProperty] private string _deviceLinkHeadline        = "Searching for a Phantom USB drive";
@@ -131,15 +112,12 @@ public sealed partial class WelcomePageViewModel : ObservableObject
     [ObservableProperty] private bool   _hasSelectedVault;
     [ObservableProperty] private string _openVaultButtonText;
 
-    // ── Visibility gates ────────────────────────────────────────────────────
     [ObservableProperty] private bool _isLandingVisible      = true;
     [ObservableProperty] private bool _isSetupChoiceVisible  = false;
     [ObservableProperty] private bool _isDeveloperBypassVisible = false;
 
-    // ── Collections ─────────────────────────────────────────────────────────
     public ObservableCollection<DetectedVaultLaunchRequest> DetectedVaults { get; }
 
-    // ── Commands ────────────────────────────────────────────────────────────
     public ICommand ShowDefaultSetupCommand  { get; }
     public ICommand ShowAdvancedSetupCommand { get; }
     public ICommand GetStartedCommand        { get; }
@@ -147,3 +125,4 @@ public sealed partial class WelcomePageViewModel : ObservableObject
     public ICommand BackToWelcomeCommand     { get; }
     public ICommand DeveloperBypassCommand   { get; }
 }
+

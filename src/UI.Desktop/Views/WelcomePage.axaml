@@ -84,8 +84,7 @@
         <Grid RowDefinitions="Auto,*,Auto"
             Margin="0"
             Background="{DynamicResource WindowBackgroundBrush}">
-        
-        <!-- Header Section - slightly taller and more prominent -->
+
         <Border Grid.Row="0" Background="{DynamicResource HeaderBackgroundBrush}" Padding="14,12">
             <StackPanel HorizontalAlignment="Center" Spacing="8">
                 <TextBlock Text="{Binding AppName}"
@@ -102,15 +101,14 @@
             </StackPanel>
         </Border>
 
-        <!-- Main Content Section - Center large transparent icon -->
         <ScrollViewer x:Name="MainScrollViewer"
-                      Grid.Row="1" 
+                      Grid.Row="1"
                       Background="{DynamicResource WindowBackgroundBrush}"
                       Padding="20,20,20,28"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled">
             <StackPanel Spacing="18" HorizontalAlignment="Center" VerticalAlignment="Center" MinHeight="300" Margin="0,0,0,112">
-                <!-- Centered tile with logo in the middle (high-res) -->
+
                 <Border Classes="liquid-glass-tile"
                         CornerRadius="16"
                         ClipToBounds="True"
@@ -138,7 +136,6 @@
                            HorizontalAlignment="Center"
                            Margin="0,6,0,0"/>
 
-                <!-- Status and vault discovery -->
                 <Border x:Name="DetectionStatusCard"
                         Background="{DynamicResource ControlBackgroundBrush}"
                         CornerRadius="20"
@@ -403,7 +400,6 @@
             </StackPanel>
         </ScrollViewer>
 
-        <!-- Action Buttons Section -->
         <Border x:Name="ActionFooterCard"
                 Grid.Row="2"
                 Background="{DynamicResource HeaderBackgroundBrush}"
@@ -426,19 +422,21 @@
                     <TextBlock Text="{Binding OpenVaultButtonText}" Foreground="{DynamicResource ButtonTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Button>
 
-                <!-- Placeholder dialog buttons - match sizes to primary actions -->
                 <Button Click="About_Click" Classes="liquid-glass" CornerRadius="10" Height="40" Width="140" FontFamily="{DynamicResource MainFontFamily}" FontSize="{StaticResource Type.Body.Size}" ToolTip.Tip="About this app" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" IsVisible="{Binding IsLandingVisible}">
                     <TextBlock Text="About" Foreground="{DynamicResource ButtonTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Button>
                 <Button Click="Import_Click" Classes="liquid-glass" CornerRadius="10" Height="40" Width="140" FontFamily="{DynamicResource MainFontFamily}" FontSize="{StaticResource Type.Body.Size}" ToolTip.Tip="Import data" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" IsVisible="{Binding IsLandingVisible}">
                     <TextBlock Text="Import" Foreground="{DynamicResource ButtonTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Button>
+                <Button Click="Recover_Click" Classes="liquid-glass" CornerRadius="10" Height="40" Width="140" FontFamily="{DynamicResource MainFontFamily}" FontSize="{StaticResource Type.Body.Size}" ToolTip.Tip="Recover your keyfile from a recovery file and code" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" IsVisible="{Binding IsLandingVisible}">
+                    <TextBlock Text="Recover" Foreground="{DynamicResource ButtonTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Button>
                 <Button Command="{Binding BackToWelcomeCommand}" Classes="liquid-glass" CornerRadius="10" Height="40" Width="140" FontFamily="{DynamicResource MainFontFamily}" FontSize="{StaticResource Type.Body.Size}" IsVisible="{Binding IsSetupChoiceVisible}">
                     <TextBlock Text="Back" Foreground="{DynamicResource ButtonTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Button>
-                <!-- Settings button removed per request -->
-                <!-- Export button removed per request -->
+
             </WrapPanel>
         </Border>
     </Grid>
 </views:ThemeAwareWindow>
+

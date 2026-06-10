@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:converters="clr-namespace:PhantomVault.UI.Converters"
              x:Class="PhantomVault.UI.Views.Details.WiFiDetailView">
-    
+
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -10,8 +10,7 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
-    
-    <!-- Wi-Fi Details -->
+
     <StackPanel Spacing="12"
                 IsVisible="{Binding SelectedCredential.IsWiFiEntry}">
         <TextBlock Text="Wi-Fi Network"
@@ -68,3 +67,4 @@
         </StackPanel>
     </StackPanel>
 </UserControl>
+

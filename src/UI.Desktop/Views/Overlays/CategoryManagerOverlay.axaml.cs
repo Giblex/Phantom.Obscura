@@ -19,7 +19,7 @@ namespace PhantomVault.UI.Views.Overlays
 
         private void OnBackgroundClicked(object? sender, PointerPressedEventArgs e)
         {
-            // Dismiss the category manager panel when clicking outside
+
             if (DataContext is VaultViewModel vm)
             {
                 vm.DismissCategoryManagerPanel();
@@ -27,3 +27,4 @@ namespace PhantomVault.UI.Views.Overlays
         }
     }
 }
+

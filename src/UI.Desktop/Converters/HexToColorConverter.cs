@@ -37,3 +37,4 @@ namespace PhantomVault.UI.Converters
         }
     }
 }
+

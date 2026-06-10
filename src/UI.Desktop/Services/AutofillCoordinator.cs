@@ -10,16 +10,14 @@ using PhantomVault.UI.Controls;
 
 namespace PhantomVault.UI.Services
 {
-    /// <summary>
-    /// Service that coordinates autofill operations between browser, detection services, and UI.
-    /// </summary>
+
     public sealed class AutofillCoordinator : IDisposable
     {
         private readonly FormFieldDetector _fieldDetector;
         private readonly AutofillSuggestionProvider _suggestionProvider;
         private readonly PasswordCaptureService _captureService;
         private readonly ICredentialRepository _credentialRepository;
-        
+
         private AutofillMiniWindow? _miniWindow;
         private AutofillMiniWindowViewModel? _miniWindowViewModel;
         private PasswordCaptureToast? _captureToast;
@@ -36,28 +34,18 @@ namespace PhantomVault.UI.Services
             _captureService = captureService ?? throw new ArgumentNullException(nameof(captureService));
             _credentialRepository = credentialRepository ?? throw new ArgumentNullException(nameof(credentialRepository));
 
-            // Subscribe to password capture events
             _captureService.PasswordCaptured += OnPasswordCaptured;
             _captureService.PasswordChanged += OnPasswordChanged;
         }
 
-        /// <summary>
-        /// Gets or sets whether autofill is enabled.
-        /// </summary>
         public bool IsEnabled
         {
             get => _isEnabled;
             set => _isEnabled = value;
         }
 
-        /// <summary>
-        /// Event raised when a credential is selected for autofill.
-        /// </summary>
         public event EventHandler<AutofillRequestedEventArgs>? AutofillRequested;
 
-        /// <summary>
-        /// Handles form field detection from browser.
-        /// </summary>
         public async Task HandleFormDetectionAsync(string url, List<FormFieldInfo> fields)
         {
             if (!IsEnabled || fields.Count == 0)
@@ -65,14 +53,13 @@ namespace PhantomVault.UI.Services
 
             var result = _fieldDetector.DetectLoginForm(fields);
 
-            // Show UI for detected login forms
-            if (result.FormType == FormType.Login || 
+            if (result.FormType == FormType.Login ||
                 result.FormType == FormType.Registration ||
                 result.FormType == FormType.PasswordChange)
             {
-                // For now, show mini-window for the first username/email/password field
-                var targetField = result.UsernameFields.FirstOrDefault() 
-                    ?? result.EmailFields.FirstOrDefault() 
+
+                var targetField = result.UsernameFields.FirstOrDefault()
+                    ?? result.EmailFields.FirstOrDefault()
                     ?? result.PasswordFields.FirstOrDefault();
 
                 if (targetField != null)
@@ -82,9 +69,6 @@ namespace PhantomVault.UI.Services
             }
         }
 
-        /// <summary>
-        /// Handles form submission for password capture.
-        /// </summary>
         public async Task HandleFormSubmissionAsync(string url, List<FormFieldInfo> fields, Dictionary<string, string> fieldValues)
         {
             if (!IsEnabled)
@@ -94,9 +78,6 @@ namespace PhantomVault.UI.Services
             await _captureService.DetectPasswordSubmissionAsync(url, result, fieldValues);
         }
 
-        /// <summary>
-        /// Shows the autofill mini-window near a specific field.
-        /// </summary>
         public async Task ShowMiniWindowForFieldAsync(string url, FormFieldInfo field)
         {
             if (!IsEnabled)
@@ -113,26 +94,17 @@ namespace PhantomVault.UI.Services
             }
         }
 
-        /// <summary>
-        /// Hides the autofill mini-window.
-        /// </summary>
         public void HideMiniWindow()
         {
             _miniWindow?.Hide();
             _miniWindowViewModel?.Hide();
         }
 
-        /// <summary>
-        /// Gets suggestions for a specific URL.
-        /// </summary>
         public async Task<List<CredentialSuggestion>> GetSuggestionsForUrlAsync(string url)
         {
             return await _suggestionProvider.GetSuggestionsForDomainAsync(url);
         }
 
-        /// <summary>
-        /// Performs autofill with the specified credential.
-        /// </summary>
         public void FillCredential(Credential credential, FormFieldInfo? targetField)
         {
             AutofillRequested?.Invoke(this, new AutofillRequestedEventArgs
@@ -166,7 +138,6 @@ namespace PhantomVault.UI.Services
             if (!IsEnabled)
                 return;
 
-            // Show toast notification
             EnsureCaptureToastCreated();
 
             if (_captureToast != null)
@@ -180,7 +151,6 @@ namespace PhantomVault.UI.Services
             if (!IsEnabled)
                 return;
 
-            // Show toast notification
             EnsureCaptureToastCreated();
 
             if (_captureToast != null)
@@ -196,7 +166,7 @@ namespace PhantomVault.UI.Services
                 _captureToast = new PasswordCaptureToast();
                 _captureToast.ActionClicked += async (s, e) =>
                 {
-                    // Handle save or update based on pending capture
+
                     if (_miniWindowViewModel?.PendingCapture != null)
                     {
                         await _captureService.SaveCapturedPasswordAsync(_miniWindowViewModel.PendingCapture);
@@ -228,12 +198,10 @@ namespace PhantomVault.UI.Services
         }
     }
 
-    /// <summary>
-    /// Event args for autofill requests.
-    /// </summary>
     public sealed class AutofillRequestedEventArgs : EventArgs
     {
         public Credential Credential { get; set; } = null!;
         public FormFieldInfo? TargetField { get; set; }
     }
 }
+

@@ -6,9 +6,7 @@ using System.Linq;
 
 namespace PhantomVault.UI.Controls
 {
-    /// <summary>
-    /// Virtual on-screen keyboard for secure password entry without physical keyboard.
-    /// </summary>
+
     public partial class VirtualKeyboard : UserControl
     {
         private Button? _closeButton;
@@ -45,51 +43,34 @@ namespace PhantomVault.UI.Controls
             if (_backspaceButton != null)
                 _backspaceButton.Click += OnBackspaceClicked;
 
-            // Attach click handlers to all key buttons
             AttachKeyHandlers(this);
         }
 
-        /// <summary>
-        /// Event raised when a key is clicked.
-        /// </summary>
         public event EventHandler<KeyClickedEventArgs>? KeyClicked;
 
-        /// <summary>
-        /// Event raised when the keyboard is closed.
-        /// </summary>
         public event EventHandler? Closed;
 
-        /// <summary>
-        /// Gets the current input buffer.
-        /// </summary>
         public string InputBuffer => _inputBuffer;
 
-        /// <summary>
-        /// Clears the input buffer.
-        /// </summary>
         public void ClearBuffer()
         {
             _inputBuffer = string.Empty;
             UpdateStatus();
         }
 
-        /// <summary>
-        /// Gets whether shift is currently pressed.
-        /// </summary>
         public bool IsShiftPressed => _isShiftPressed;
 
         private void AttachKeyHandlers(Control control)
         {
             if (control is Button button && button.Classes.Contains("key-btn"))
             {
-                // Skip special buttons that have their own handlers
+
                 if (button == _shiftButton || button == _backspaceButton || button == _closeButton)
                     return;
 
                 button.Click += OnKeyButtonClicked;
             }
 
-            // Recursively attach to children
             if (control is Panel panel)
             {
                 foreach (var child in panel.Children)
@@ -113,7 +94,6 @@ namespace PhantomVault.UI.Controls
             if (string.IsNullOrEmpty(key))
                 return;
 
-            // Apply shift modifier
             if (_isShiftPressed && key.Length == 1 && char.IsLetter(key[0]))
             {
                 key = key.ToUpperInvariant();
@@ -125,7 +105,6 @@ namespace PhantomVault.UI.Controls
 
             _inputBuffer += key;
 
-            // Reset shift after key press
             if (_isShiftPressed)
             {
                 _isShiftPressed = false;
@@ -134,7 +113,6 @@ namespace PhantomVault.UI.Controls
 
             UpdateStatus();
 
-            // Raise event
             KeyClicked?.Invoke(this, new KeyClickedEventArgs { Key = key });
         }
 
@@ -151,7 +129,6 @@ namespace PhantomVault.UI.Controls
                 _inputBuffer = _inputBuffer.Substring(0, _inputBuffer.Length - 1);
                 UpdateStatus();
 
-                // Raise backspace event
                 KeyClicked?.Invoke(this, new KeyClickedEventArgs { Key = "\b" });
             }
         }
@@ -182,21 +159,15 @@ namespace PhantomVault.UI.Controls
             }
         }
 
-        /// <summary>
-        /// Randomizes key positions for additional security.
-        /// </summary>
         public void RandomizeLayout()
         {
-            // This would shuffle the key positions
-            // Implementation left as exercise - would require rebuilding the layout
+
         }
     }
 
-    /// <summary>
-    /// Event args for key click events.
-    /// </summary>
     public sealed class KeyClickedEventArgs : EventArgs
     {
         public string Key { get; set; } = string.Empty;
     }
 }
+

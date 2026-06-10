@@ -317,3 +317,4 @@ namespace PhantomVault.UI.Helpers
         bool NeedsSuggestion,
         int Severity);
 }
+

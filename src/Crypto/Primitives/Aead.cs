@@ -11,16 +11,8 @@ namespace GiblexVault.Security.ZK.Primitives
 
         public static Suite GetSuite(M.CipherSuite s) => s == M.CipherSuite.XChaCha20Poly1305 ? new Suite(24, 16) : new Suite(12, 16);
 
-        /// <summary>
-        /// Creates an AesGcm instance for reuse across multiple encrypt/decrypt calls.
-        /// Caller is responsible for disposing the instance.
-        /// </summary>
         public static AesGcm CreateAesGcm(byte[] key) => new AesGcm(key.AsSpan(), 16);
 
-        /// <summary>
-        /// Creates an NSec Key instance for reuse across multiple XChaCha20 calls.
-        /// Caller is responsible for disposing the instance.
-        /// </summary>
         public static Key CreateXChaChaKey(byte[] key) => Key.Import(AeadAlgorithm.XChaCha20Poly1305, key, KeyBlobFormat.RawSymmetricKey);
 
         public static byte[] Encrypt(M.CipherSuite s, byte[] key, byte[] nonce, byte[] aad, byte[] plain)
@@ -37,9 +29,6 @@ namespace GiblexVault.Security.ZK.Primitives
             }
         }
 
-        /// <summary>
-        /// Encrypts using a pre-created AesGcm instance (for AES-256-GCM).
-        /// </summary>
         public static byte[] EncryptWithAesGcm(AesGcm aes, byte[] nonce, byte[] aad, byte[] plain)
         {
             var tag = new byte[16];
@@ -51,9 +40,6 @@ namespace GiblexVault.Security.ZK.Primitives
             return result;
         }
 
-        /// <summary>
-        /// Encrypts using a pre-created NSec Key instance (for XChaCha20-Poly1305).
-        /// </summary>
         public static byte[] EncryptWithKey(Key k, byte[] nonce, byte[] aad, byte[] plain)
         {
             var alg = AeadAlgorithm.XChaCha20Poly1305;
@@ -76,9 +62,6 @@ namespace GiblexVault.Security.ZK.Primitives
             }
         }
 
-        /// <summary>
-        /// Decrypts using a pre-created AesGcm instance (for AES-256-GCM).
-        /// </summary>
         public static byte[] DecryptWithAesGcm(AesGcm aes, byte[] nonce, byte[] aad, byte[] ct)
         {
             var tag = new byte[16];
@@ -91,9 +74,6 @@ namespace GiblexVault.Security.ZK.Primitives
             return plain;
         }
 
-        /// <summary>
-        /// Decrypts using a pre-created NSec Key instance (for XChaCha20-Poly1305).
-        /// </summary>
         public static byte[] DecryptWithKey(Key k, byte[] nonce, byte[] aad, byte[] ct)
         {
             var alg = AeadAlgorithm.XChaCha20Poly1305;
@@ -104,3 +84,4 @@ namespace GiblexVault.Security.ZK.Primitives
         }
     }
 }
+

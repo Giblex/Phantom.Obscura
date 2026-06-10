@@ -84,7 +84,6 @@
   <Border Classes="palette-root" Padding="0" Margin="6">
     <Grid RowDefinitions="Auto,Auto,*,Auto">
 
-      <!-- Search box -->
       <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Margin="14,12,14,10">
         <TextBlock Grid.Column="0"
                    Text="🔍"
@@ -101,7 +100,6 @@
 
       <Border Grid.Row="1" Height="1" Background="#22FFFFFF" Margin="10,0"/>
 
-      <!-- Filtered actions -->
       <ListBox Grid.Row="2"
                Name="ActionList"
                Classes="palette-list"
@@ -150,7 +148,6 @@
         </ListBox.ItemTemplate>
       </ListBox>
 
-      <!-- Footer hint -->
       <Border Grid.Row="3" Background="#11FFFFFF" Padding="14,8" CornerRadius="0,0,12,12">
         <StackPanel Orientation="Horizontal" Spacing="14">
           <TextBlock Foreground="#99FFFFFF" FontSize="11" Text="↑ ↓  navigate"/>
@@ -162,3 +159,4 @@
     </Grid>
   </Border>
 </Window>
+

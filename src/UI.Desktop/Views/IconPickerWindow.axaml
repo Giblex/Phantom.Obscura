@@ -24,7 +24,7 @@
     </Design.DataContext>
 
     <views:ThemeAwareWindow.Styles>
-        <!-- Scoped styles for icon grid buttons (make them smaller, squarer, darker on hover, and better active coloring) -->
+
         <Style Selector="Button.secondary">
             <Setter Property="Width" Value="40"/>
             <Setter Property="Height" Value="40"/>
@@ -37,14 +37,12 @@
             <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
 
-        <!-- Hover: darker background for hover menu buttons; use theme HoverMenuDropShadow so both light and dark themes apply shadows -->
         <Style Selector="Button.secondary:pointerover">
             <Setter Property="Background" Value="{DynamicResource HeaderBackgroundBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
             <Setter Property="Effect" Value="{DynamicResource HoverMenuDropShadow}"/>
         </Style>
 
-        <!-- Pressed / active: accent coloring and shadow -->
         <Style Selector="Button.secondary:pressed">
             <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
             <Setter Property="Foreground" Value="White"/>
@@ -52,17 +50,15 @@
             <Setter Property="Effect" Value="{DynamicResource HoverMenuDropShadow}"/>
         </Style>
 
-        <!-- Focused (keyboard) appearance similar to active -->
         <Style Selector="Button.secondary:focus">
             <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
         </Style>
     </views:ThemeAwareWindow.Styles>
 
     <Grid RowDefinitions="Auto,Auto,*,Auto">
-        
-        <!-- Header -->
-        <Border Grid.Row="0" 
-                Background="{DynamicResource HeaderBackgroundBrush}" 
+
+        <Border Grid.Row="0"
+                Background="{DynamicResource HeaderBackgroundBrush}"
                 Padding="20,15">
             <StackPanel Spacing="5">
                 <TextBlock Text="Icon Picker"
@@ -75,7 +71,6 @@
             </StackPanel>
         </Border>
 
-        <!-- Search Box -->
     <Border Grid.Row="1"
                 Background="{DynamicResource ControlBackgroundBrush}"
                 BorderBrush="{DynamicResource ControlBorderBrush}"
@@ -98,11 +93,9 @@
             </Grid>
         </Border>
 
-        <!-- Icon Grid -->
         <ScrollViewer Grid.Row="2" Padding="20" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <StackPanel Spacing="20">
-                
-                <!-- Current Selection -->
+
                 <Border Background="{DynamicResource ControlBackgroundBrush}"
                         BorderBrush="{DynamicResource ControlBorderBrush}"
                         BorderThickness="1"
@@ -114,8 +107,7 @@
                                    FontSize="{StaticResource Type.Label.Size}"
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
-                        
-                        <!-- Icon Preview -->
+
                         <Border Width="64"
                                 Height="64"
                                 CornerRadius="8"
@@ -123,7 +115,7 @@
                                 Background="{DynamicResource ControlBackgroundBrush}"
                                 BorderBrush="{DynamicResource ControlBorderBrush}"
                                 BorderThickness="1">
-                            <Image Source="{Binding SelectedIcon}" 
+                            <Image Source="{Binding SelectedIcon}"
                                    Width="48"
                                    Height="48"
                                    Stretch="Uniform"
@@ -133,13 +125,12 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Available Icons Grid -->
                 <StackPanel Spacing="10">
                     <TextBlock Text="Category Icons"
                                FontSize="{StaticResource Type.Body.Size}"
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
-                    
+
                     <ItemsControl ItemsSource="{Binding AvailableIconPaths}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -150,15 +141,15 @@
                             <DataTemplate>
                                 <Button Command="{Binding Path=DataContext.SelectIconCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                         CommandParameter="{Binding}"
-                                        Classes="liquid-glass" 
-                                        Width="56" 
-                                        Height="56" 
-                                        Margin="4" 
+                                        Classes="liquid-glass"
+                                        Width="56"
+                                        Height="56"
+                                        Margin="4"
                                         Padding="4"
                                         ToolTip.Tip="{Binding}">
-                                    <Image Source="{Binding Converter={StaticResource IconPathToBitmapConverter}}" 
-                                           Width="40" 
-                                           Height="40" 
+                                    <Image Source="{Binding Converter={StaticResource IconPathToBitmapConverter}}"
+                                           Width="40"
+                                           Height="40"
                                            Stretch="Uniform"/>
                                 </Button>
                             </DataTemplate>
@@ -166,7 +157,6 @@
                     </ItemsControl>
                 </StackPanel>
 
-                <!-- Entry Logos Grid -->
                 <StackPanel Spacing="10">
                     <TextBlock Text="Entry Logos"
                                FontSize="{StaticResource Type.Body.Size}"
@@ -176,7 +166,7 @@
                                FontSize="{StaticResource Type.Tiny.Size}"
                                Foreground="{DynamicResource MutedTextBrush}"
                                Margin="0,0,0,4"/>
-                    
+
                     <ItemsControl ItemsSource="{Binding EntryLogoPaths}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -187,14 +177,14 @@
                             <DataTemplate>
                                 <Button Command="{Binding Path=DataContext.SelectIconCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                         CommandParameter="{Binding}"
-                                        Classes="liquid-glass" 
-                                        Width="48" 
-                                        Height="48" 
-                                        Margin="3" 
+                                        Classes="liquid-glass"
+                                        Width="48"
+                                        Height="48"
+                                        Margin="3"
                                         Padding="3">
-                                    <Image Source="{Binding Converter={StaticResource IconPathToBitmapConverter}}" 
-                                           Width="36" 
-                                           Height="36" 
+                                    <Image Source="{Binding Converter={StaticResource IconPathToBitmapConverter}}"
+                                           Width="36"
+                                           Height="36"
                                            Stretch="Uniform"/>
                                 </Button>
                             </DataTemplate>
@@ -205,8 +195,7 @@
             </StackPanel>
         </ScrollViewer>
 
-        <!-- Footer Actions -->
-        <Border Grid.Row="3" 
+        <Border Grid.Row="3"
                 Background="{DynamicResource HeaderBackgroundBrush}"
                 BorderBrush="{DynamicResource ControlBorderBrush}"
                 BorderThickness="0,1,0,0"
@@ -217,14 +206,14 @@
                            FontSize="{StaticResource Type.Small.Size}"
                            Foreground="{DynamicResource MutedTextBrush}"
                            VerticalAlignment="Center"/>
-                
+
                 <Button Grid.Column="1"
                         Command="{Binding ConfirmCommand}"
                         Content="✓ Use This Icon"
                         Classes="accent"
                         Width="140"
                         Margin="0,0,8,0"/>
-                
+
                 <Button Grid.Column="2"
                         Command="{Binding CancelCommand}"
                         Content="Cancel"
@@ -235,5 +224,4 @@
 
     </Grid>
 </views:ThemeAwareWindow>
-
 

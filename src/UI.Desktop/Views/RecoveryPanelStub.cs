@@ -6,14 +6,7 @@ using PhantomVault.UI.Services;
 
 namespace PhantomVault.UI.Views
 {
-    /// <summary>
-    /// In-window panel that surfaces the external PhantomRecovery launcher.
-    /// PhantomRecovery runs as a separate process for isolation; this panel
-    /// shows availability and offers explicit Launch / Close affordances.
-    /// Launch is delegated through <see cref="LaunchRequested"/> so the host
-    /// (VaultWindow / VaultViewModel) can resolve the recovery vault path
-    /// before invoking <see cref="IntegratedRecoveryService.TryLaunch"/>.
-    /// </summary>
+
     public partial class RecoveryPanel : UserControl
     {
         public event EventHandler? CloseRequested;
@@ -80,3 +73,4 @@ namespace PhantomVault.UI.Views
         }
     }
 }
+

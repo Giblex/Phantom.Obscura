@@ -34,7 +34,7 @@ namespace PhantomVault.UI.Views
 
         public WelcomePage()
         {
-            // Fixed dark navy — pre-vault screens never follow user theme
+
             ThemeScope.SetIsThemed(this, false);
 
             InitializeComponent();
@@ -50,7 +50,6 @@ namespace PhantomVault.UI.Views
             _traceBottomEdge = this.FindControl<Border>("TraceBottomEdge");
             _traceRightEdge = this.FindControl<Border>("TraceRightEdge");
 
-            // Set up navigation only when DataContext is assigned
             this.DataContextChanged += OnDataContextChanged;
         }
 
@@ -68,10 +67,9 @@ namespace PhantomVault.UI.Views
 
             if (DataContext is WelcomePageViewModel viewModel)
             {
-                // Set owner window for dialogs
+
                 viewModel.SetOwnerWindow(this);
 
-                // Wire up navigation events
                 viewModel.NavigateToUsbSetup += OnNavigateToUsbSetup;
                 viewModel.NavigateToSecurityCheck += OnNavigateToSecurityCheck;
                 viewModel.NavigateToSetupWizard += OnNavigateToSetupWizard;
@@ -310,14 +308,13 @@ namespace PhantomVault.UI.Views
                 var setupWizard = new SetupWizardWindow();
                 var wizardVm = setupWizard.DataContext as SetupWizardViewModel;
 
-                // When the ViewModel signals vault is ready to create, open the loading window
                 if (wizardVm != null)
                 {
                     wizardVm.VaultReadyForCreation += async (s, _) =>
                     {
                         try
                         {
-                            // Already on UI thread (fired from button click) — no Dispatcher wrapping needed
+
                             var loadingWindow = new VaultCreationLoadingWindow();
                             if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime dt)
                                 dt.MainWindow = loadingWindow;
@@ -365,21 +362,18 @@ namespace PhantomVault.UI.Views
                     };
                 }
 
-                // Track whether vault creation was initiated so we know if wizard
-                // was closed by user (X button) vs closed after successful creation.
                 bool vaultCreationStarted = false;
 
                 if (wizardVm != null)
                     wizardVm.VaultReadyForCreation += (_, __) => vaultCreationStarted = true;
 
-                // When wizard closes without vault creation, show welcome page again
                 setupWizard.Closed += (s, args) =>
                 {
                     if (!vaultCreationStarted)
                     {
                         this.Show();
                     }
-                    // Otherwise, vault creation flow will handle window transitions
+
                 };
 
                 setupWizard.Show();
@@ -485,7 +479,6 @@ namespace PhantomVault.UI.Views
 
                 var services = app.Services;
 
-                // Open VaultWindow (same pattern as developer bypass)
                 var vaultViewModel = services.GetRequiredService<VaultViewModel>();
                 var vaultWindow = new VaultWindow { DataContext = vaultViewModel };
 
@@ -495,18 +488,16 @@ namespace PhantomVault.UI.Views
                 vaultViewModel.SetOwnerWindow(vaultWindow);
                 vaultWindow.Show();
 
-                // Transfer MainWindow before hiding so app doesn't shut down
                 if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime dt)
                     dt.MainWindow = vaultWindow;
 
                 this.Hide();
 
-                // Check if this is first time (no unlock preference set yet)
                 var settings = SettingsService.Load();
 
                 if (string.IsNullOrEmpty(settings.VaultUnlockPreference))
                 {
-                    // Short delay so the vault window is fully rendered
+
                     await Task.Delay(600);
 
                     var preferenceDialog = new VaultUnlockPreferenceDialog();
@@ -519,7 +510,7 @@ namespace PhantomVault.UI.Views
                         switch (result)
                         {
                             case "Pin":
-                                // Don't set EnablePinLock until PIN is actually created
+
                                 settings.DefaultUsePasskey = false;
                                 break;
                             case "WindowsHello":
@@ -534,8 +525,6 @@ namespace PhantomVault.UI.Views
 
                         SettingsService.Save(settings);
 
-                        // For "Pin" preference, immediately walk the user through PIN setup.
-                        // EnablePinLock is only set to true after a PIN hash is actually created.
                         if (result == "Pin")
                         {
                             var pinDialog = new PhantomVault.UI.Views.Dialogs.PinSetupDialog();
@@ -563,9 +552,6 @@ namespace PhantomVault.UI.Views
             if (string.IsNullOrWhiteSpace(usbPathDisplay))
                 return string.Empty;
 
-            // Display format from SetupWizardViewModel.DetectUsbDrivesAsync:
-            //   "ID: xxxxxxxx (D:) VolumeLabel [32 GB]"
-            // Pull the drive letter from "(D:)".
             var match = System.Text.RegularExpressions.Regex.Match(
                 usbPathDisplay, @"\(([A-Za-z]:)\)");
             if (match.Success)
@@ -576,7 +562,6 @@ namespace PhantomVault.UI.Views
                 return driveLetter;
             }
 
-            // Legacy " - " separated format: "D:\ - 32 GB"
             if (usbPathDisplay.Contains(" - ", StringComparison.Ordinal))
             {
                 var legacyRoot = usbPathDisplay.Split(" - ")[0].Trim();
@@ -585,7 +570,6 @@ namespace PhantomVault.UI.Views
                 return legacyRoot;
             }
 
-            // Fallback: assume the first three characters are the drive root ("D:\").
             var fallback = usbPathDisplay.Length >= 2 ? usbPathDisplay.Substring(0, 3) : usbPathDisplay;
             if (!fallback.EndsWith("\\", StringComparison.Ordinal))
                 fallback += "\\";
@@ -594,14 +578,13 @@ namespace PhantomVault.UI.Views
 
         private void OnNavigateToUsbSetup(object? sender, EventArgs e)
         {
-            // Create USB detector and show USB setup window
+
             var usbDetector = new UsbDetector();
             var usbSetupViewModel = new UsbSetupViewModel(usbDetector);
 
-            // Wire up navigation from USB setup
             usbSetupViewModel.NavigateBack += (s, args) =>
             {
-                // Re-show the original WelcomePage instead of creating a new one
+
                 this.Show();
                 if (s is UsbSetupViewModel vm && Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
                 {
@@ -618,18 +601,16 @@ namespace PhantomVault.UI.Views
 
             usbSetupViewModel.NavigateToContinue += (s, usbPath) =>
             {
-                // SKIP old installer flow - Go directly to ProvisionWindow with pre-selected USB
 
                 var app = (App)Application.Current!;
                 var provisionViewModel = ActivatorUtilities.CreateInstance<ProvisionViewModel>(app.Services!, usbPath);
 
-                // Wire up navigation to vault window after vault creation
                 provisionViewModel.NavigateToVault += (s, usbDrivePath) =>
                 {
-                    // Ensure we're on the UI thread
+
                     Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
-                        // Navigate to security check which will open the vault
+
                         OnNavigateToSecurityCheck(s, new DetectedVaultLaunchRequest
                         {
                             UsbPath = usbDrivePath,
@@ -638,7 +619,6 @@ namespace PhantomVault.UI.Views
                             DisplayName = "Provisioned vault"
                         });
 
-                        // Close provision window
                         foreach (var window in Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop2 ? desktop2.Windows : Array.Empty<Window>())
                         {
                             if (window is ProvisionWindow)
@@ -658,7 +638,6 @@ namespace PhantomVault.UI.Views
                 provisionViewModel.SetOwnerWindow(provisionWindow);
                 provisionWindow.Show();
 
-                // Close USB setup window
                 if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
                 {
                     foreach (var window in desktop.Windows)
@@ -677,22 +656,19 @@ namespace PhantomVault.UI.Views
                 DataContext = usbSetupViewModel
             };
 
-            // Set owner window for dialogs (Browse button)
             usbSetupViewModel.SetOwnerWindow(usbSetupWindow);
 
             usbSetupWindow.Show();
-            this.Hide(); // Hide (not Close) — WelcomePage is MainWindow; closing it triggers app shutdown
+            this.Hide();
         }
 
         private void OnNavigateToSecurityCheck(object? sender, DetectedVaultLaunchRequest request)
         {
-            // Create services for security check
+
             var encryptionService = new EncryptionService();
             var containerService = new PhantomContainerService(encryptionService);
             var manifestService = new ManifestService(encryptionService, containerService);
 
-            // Pull the singleton raw-volume service from DI so raw USB selections (RAWUSB:*) can
-            // be validated via the BlackSecure header instead of failing the filesystem checks.
             BlackSecureRawVolumeService? rawVolumeService = null;
             if (Application.Current is App app && app.Services != null)
                 rawVolumeService = app.Services.GetService<BlackSecureRawVolumeService>();
@@ -703,7 +679,7 @@ namespace PhantomVault.UI.Views
             if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime dt)
                 dt.MainWindow = securityCheckScreen;
             securityCheckScreen.Show();
-            this.Hide(); // Hide (not Close) — WelcomePage is MainWindow; closing it triggers app shutdown
+            this.Hide();
         }
 
         private void InitializeComponent()
@@ -808,9 +784,15 @@ namespace PhantomVault.UI.Views
             });
         }
 
-        /// <summary>
-        /// Wrapper for async void event handlers to ensure exceptions are logged and displayed.
-        /// </summary>
+        private async void Recover_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            await HandleEventAsync(async () =>
+            {
+                var recover = new Dialogs.RecoverKeyfileDialog();
+                await recover.ShowDialog(this);
+            });
+        }
+
         private async Task HandleEventAsync(Func<Task> action)
         {
             try
@@ -833,3 +815,4 @@ namespace PhantomVault.UI.Views
         }
     }
 }
+

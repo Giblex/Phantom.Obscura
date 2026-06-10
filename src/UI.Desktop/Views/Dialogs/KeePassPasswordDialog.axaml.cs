@@ -64,11 +64,11 @@ namespace PhantomVault.UI.Views.Dialogs
         {
             if (ShowPasswordCheckBox.IsChecked == true)
             {
-                PasswordTextBox.PasswordChar = '\0'; // Show password
+                PasswordTextBox.PasswordChar = '\0';
             }
             else
             {
-                PasswordTextBox.PasswordChar = '•'; // Hide password
+                PasswordTextBox.PasswordChar = '•';
             }
         }
 
@@ -93,3 +93,4 @@ namespace PhantomVault.UI.Views.Dialogs
         }
     }
 }
+

@@ -5,10 +5,6 @@ using PhantomVault.Core;
 
 namespace PhantomVault.Core.Services;
 
-/// <summary>
-/// Enforces signed security policies at runtime.
-/// Uses ObscuraPolicy + PolicyEngine + PolicySynchronizer for enforcement.
-/// </summary>
 public class PolicyService : IDisposable
 {
     private readonly ObscuraPolicy _policy;
@@ -16,27 +12,17 @@ public class PolicyService : IDisposable
     private readonly PolicySynchronizer _synchronizer;
     private readonly bool _signatureVerified;
 
-    /// <summary>Gets the current security policy.</summary>
     public ObscuraPolicy Policy => _policy;
 
-    /// <summary>True when a signature block was present and verified.</summary>
     public bool SignatureVerified => _signatureVerified;
 
-    /// <summary>
-    /// Initializes PolicyService by verifying (when present) the policy signature with the root verifier.
-    /// </summary>
-    /// <param name="rootVerifier">ECDsa instance for signature verification (from certificate). Required if policy contains signature.</param>
-    /// <param name="policyJson">Policy JSON content (signed or unsigned)</param>
-    /// <param name="requireSignature">If true, throws when signature is missing or invalid</param>
-    /// <exception cref="ArgumentNullException">When rootVerifier is null but policy contains signature</exception>
-    /// <exception cref="CryptographicException">When signature verification fails or is required but missing</exception>
     public PolicyService(ECDsa? rootVerifier, string policyJson, bool requireSignature = true)
     {
         var hasSignature = HasSignature(policyJson);
 
         if (hasSignature)
         {
-            // SECURITY: If policy has signature, verifier MUST be provided
+
             if (rootVerifier == null)
             {
                 throw new ArgumentNullException(nameof(rootVerifier),
@@ -65,13 +51,12 @@ public class PolicyService : IDisposable
         }
         catch (JsonException)
         {
-            // Invalid JSON means no valid signature
+
             return false;
         }
         catch (Exception ex)
         {
-            // SECURITY: Log unexpected exceptions for debugging
-            // Note: This shouldn't happen with valid policy JSON
+
             System.Diagnostics.Debug.WriteLine($"Unexpected error checking for policy signature: {ex.Message}");
             return false;
         }
@@ -93,7 +78,7 @@ public class PolicyService : IDisposable
 
     public void EnforceVirtualMachinePolicy()
     {
-        // SECURITY: BlockVirtualMachines = true means VMs are NOT allowed
+
         if (_policy.Desktop.BlockVirtualMachines)
         {
             bool isVM = Security.VirtualMachineDetection.IsRunningInVirtualMachine();
@@ -129,6 +114,7 @@ public class PolicyService : IDisposable
 
     public void Dispose()
     {
-        // Currently stateless; future: hook disposal if engine allocates resources.
+
     }
 }
+

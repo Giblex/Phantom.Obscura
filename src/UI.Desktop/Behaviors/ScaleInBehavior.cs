@@ -9,10 +9,7 @@ using Avalonia.Xaml.Interactivity;
 
 namespace PhantomVault.UI.Behaviors
 {
-    /// <summary>
-    /// Behavior that scales in a control with optional bounce effect.
-    /// Respects ReduceMotion accessibility settings.
-    /// </summary>
+
     public class ScaleInBehavior : Behavior<Control>
     {
         public static readonly StyledProperty<double> FromScaleProperty =
@@ -27,36 +24,24 @@ namespace PhantomVault.UI.Behaviors
         public static readonly StyledProperty<double> DelayProperty =
             AvaloniaProperty.Register<ScaleInBehavior, double>(nameof(Delay), 0.0);
 
-        /// <summary>
-        /// Starting scale (default: 0.95)
-        /// </summary>
         public double FromScale
         {
             get => GetValue(FromScaleProperty);
             set => SetValue(FromScaleProperty, value);
         }
 
-        /// <summary>
-        /// Use bounce effect (BackEaseOut) instead of smooth ease
-        /// </summary>
         public bool UseBounce
         {
             get => GetValue(UseBounceProperty);
             set => SetValue(UseBounceProperty, value);
         }
 
-        /// <summary>
-        /// Animation duration in seconds (default: 0.3s)
-        /// </summary>
         public double Duration
         {
             get => GetValue(DurationProperty);
             set => SetValue(DurationProperty, value);
         }
 
-        /// <summary>
-        /// Animation delay in seconds (default: 0s)
-        /// </summary>
         public double Delay
         {
             get => GetValue(DelayProperty);
@@ -90,11 +75,9 @@ namespace PhantomVault.UI.Behaviors
         {
             if (AssociatedObject == null) return;
 
-            // Get duration and easing based on ReduceMotion setting
             var reduceMotion = Services.AccessibilityService.Instance.ReduceMotion;
             var duration = AnimationHelper.GetDuration(AnimationTiming.Normal);
 
-            // Choose easing: bounce disabled in ReduceMotion mode
             Easing easing;
             if (reduceMotion)
             {
@@ -105,20 +88,17 @@ namespace PhantomVault.UI.Behaviors
                 easing = UseBounce ? new BackEaseOut() : new CubicEaseOut();
             }
 
-            // Apply delay if specified
             if (Delay > 0)
             {
                 await System.Threading.Tasks.Task.Delay(TimeSpan.FromSeconds(Delay));
             }
 
-            // Set initial scale
             if (AssociatedObject.RenderTransform is ScaleTransform scaleTransform)
             {
                 scaleTransform.ScaleX = FromScale;
                 scaleTransform.ScaleY = FromScale;
             }
 
-            // Create scale + fade animation
             var animation = new Avalonia.Animation.Animation
             {
                 Duration = TimeSpan.FromSeconds(duration),
@@ -152,3 +132,4 @@ namespace PhantomVault.UI.Behaviors
         }
     }
 }
+

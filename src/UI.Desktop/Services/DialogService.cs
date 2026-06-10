@@ -15,16 +15,12 @@ using PhantomVault.UI.Models;
 
 namespace PhantomVault.UI.Services
 {
-    /// <summary>
-    /// Service for displaying dialogs and messages to the user.
-    /// </summary>
+
     public class DialogService
     {
-        // Dull Navy Blue color for all dialog backgrounds (except error/success which stay red/green)
+
         private static readonly SolidColorBrush DullNavyBrush = new SolidColorBrush(Color.Parse("#3D4F61"));
-        /// <summary>
-        /// Shows an informational message dialog.
-        /// </summary>
+
         public async Task ShowInfoAsync(string title, string message, Window? owner = null)
         {
             var dialog = new Window
@@ -62,7 +58,7 @@ namespace PhantomVault.UI.Services
                 Width = 100,
                 Height = 35,
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
-                Background = new SolidColorBrush(Color.Parse("#6B8CAE")), // Pastel blue
+                Background = new SolidColorBrush(Color.Parse("#6B8CAE")),
                 Foreground = Avalonia.Media.Brushes.White
             };
             okButton.Content = new TextBlock { Text = "OK" };
@@ -78,9 +74,6 @@ namespace PhantomVault.UI.Services
                 dialog.Show();
         }
 
-        /// <summary>
-        /// Shows a warning message dialog.
-        /// </summary>
         public async Task ShowWarningAsync(string title, string message, Window? owner = null)
         {
             var dialog = new Window
@@ -118,7 +111,7 @@ namespace PhantomVault.UI.Services
                 Width = 100,
                 Height = 35,
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
-                Background = new SolidColorBrush(Color.Parse("#6B8CAE")), // Pastel blue
+                Background = new SolidColorBrush(Color.Parse("#6B8CAE")),
                 Foreground = Avalonia.Media.Brushes.White
             };
             okButton.Content = new TextBlock { Text = "OK" };
@@ -134,9 +127,6 @@ namespace PhantomVault.UI.Services
                 dialog.Show();
         }
 
-        /// <summary>
-        /// Shows an error message dialog.
-        /// </summary>
         public async Task ShowErrorAsync(string title, string message, Window? owner = null)
         {
             await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
@@ -183,7 +173,6 @@ namespace PhantomVault.UI.Services
                     FontWeight = Avalonia.Media.FontWeight.Normal
                 };
 
-                // Create TextBlock for button content instead of using Content property directly
                 var buttonText = new TextBlock
                 {
                     Text = "OK",
@@ -204,7 +193,6 @@ namespace PhantomVault.UI.Services
                     {
                         await dialog.ShowDialog(owner);
 
-                        // After the dialog closes, attempt to reset the owner viewmodel if it supports it.
                         try
                         {
                             if (owner.DataContext is PhantomVault.UI.Services.IResettableOnError resettable)
@@ -214,20 +202,17 @@ namespace PhantomVault.UI.Services
                         }
                         catch
                         {
-                            // Best-effort: do not crash the dialog pathway if reset fails.
+
                         }
                     }
                     catch (System.InvalidCastException)
                     {
-                        // Defensive: some callers in rare cases may pass an unexpected object
-                        // as the owner (for example when wiring errors occur). Fall back to
-                        // showing a non-modal dialog so the user still sees the error instead
-                        // of crashing the app. Do not rethrow.
+
                         dialog.Show();
                     }
                     catch (System.Exception)
                     {
-                        // Any other dialog show failure - fall back to non-modal display.
+
                         dialog.Show();
                     }
                 }
@@ -238,10 +223,10 @@ namespace PhantomVault.UI.Services
             }
             catch (Exception ex)
             {
-                // Last resort: Log to console and show a simple message box
+
                 Console.WriteLine($"CRITICAL ERROR in ShowErrorAsync: {ex.Message}");
                 Console.WriteLine($"Original error was - Title: {title}, Message: {message}");
-                // Try to show something to the user
+
                 try
                 {
                     var fallbackDialog = new Window
@@ -255,15 +240,12 @@ namespace PhantomVault.UI.Services
                 }
                 catch
                 {
-                    // Complete failure - at least we logged to console
+
                 }
             }
             });
         }
 
-        /// <summary>
-        /// Shows a confirmation dialog and returns true when the user accepts.
-        /// </summary>
         public async Task<bool> ShowConfirmationAsync(
             string title,
             string message,
@@ -371,25 +353,22 @@ namespace PhantomVault.UI.Services
             return result;
         }
 
-        /// <summary>
-        /// Shows a success message dialog.
-        /// </summary>
         public async Task ShowSuccessAsync(string title, string message, Window? owner = null)
         {
-            // If an owner is provided, scale the success dialog to a large portion of the owner
+
             double desiredWidth = 900;
             double desiredHeight = 600;
             if (owner != null)
             {
                 try
                 {
-                    // Use 90% of owner's width and 65% of owner's height, but keep minima
+
                     desiredWidth = System.Math.Max(800, owner.Width * 0.9);
                     desiredHeight = System.Math.Max(520, owner.Height * 0.65);
                 }
                 catch
                 {
-                    // ignore if owner dimensions not available
+
                 }
             }
 
@@ -405,7 +384,6 @@ namespace PhantomVault.UI.Services
                 Background = DullNavyBrush
             };
 
-            // generous padding so content has breathing room and can expand
             var padding = new Avalonia.Thickness(32);
             var panel = new StackPanel { Margin = padding };
 
@@ -427,7 +405,6 @@ namespace PhantomVault.UI.Services
                 Margin = new Avalonia.Thickness(0, 0, 0, 24)
             };
 
-            // Allow the message to use most of the dialog width
             try
             {
                 messageBlock.MaxWidth = dialog.Width - (padding.Left + padding.Right) - 20;
@@ -490,7 +467,7 @@ namespace PhantomVault.UI.Services
                 }
                 catch
                 {
-                    // owner size may not be initialised yet
+
                 }
             }
 
@@ -805,16 +782,13 @@ namespace PhantomVault.UI.Services
 
         private static IImage LoadIconAsset(string relativePath)
         {
-            // URL encode all spaces in the path for avares:// URI
+
             var encodedPath = relativePath.Replace(" ", "%20").Replace("\\", "/");
             var uri = new Uri($"avares://PhantomVault.UI/{encodedPath}");
             using var stream = AssetLoader.Open(uri);
             return new Bitmap(stream);
         }
 
-        /// <summary>
-        /// Shows a confirmation dialog with Yes/No buttons.
-        /// </summary>
         public async Task<bool> ShowConfirmationAsync(string title, string message, Window? owner = null)
         {
             var result = false;
@@ -859,7 +833,7 @@ namespace PhantomVault.UI.Services
             {
                 Width = 100,
                 Height = 35,
-                Background = new SolidColorBrush(Color.Parse("#6B8CAE")), // Pastel blue
+                Background = new SolidColorBrush(Color.Parse("#6B8CAE")),
                 Foreground = Avalonia.Media.Brushes.White
             };
             yesButton.Content = new TextBlock { Text = "Yes" };
@@ -874,7 +848,7 @@ namespace PhantomVault.UI.Services
             {
                 Width = 100,
                 Height = 35,
-                Background = new SolidColorBrush(Color.Parse("#5A6C7E")), // Darker navy
+                Background = new SolidColorBrush(Color.Parse("#5A6C7E")),
                 Foreground = Avalonia.Media.Brushes.White
             };
             noButton.Content = new TextBlock { Text = "No" };
@@ -910,10 +884,6 @@ namespace PhantomVault.UI.Services
             return result;
         }
 
-        /// <summary>
-        /// Options when deleting a category: move credentials to another category, delete them, or move to Trash.
-        /// Returns a tuple of the chosen action and an optional target category name when action == Move.
-        /// </summary>
         public enum CategoryDeleteAction
         {
             Cancel,
@@ -976,7 +946,7 @@ namespace PhantomVault.UI.Services
                 var target = combo.SelectedItem as string;
                 if (string.IsNullOrEmpty(target))
                 {
-                    // ignore - keep dialog open
+
                     return;
                 }
                 result = (CategoryDeleteAction.Move, target);
@@ -1049,10 +1019,6 @@ namespace PhantomVault.UI.Services
             Move
         }
 
-        /// <summary>
-        /// Shows a Trash manager dialog listing trashed credentials and allows restoring selected items or emptying the trash.
-        /// Returns the chosen action and the list of selected credentials (if any).
-        /// </summary>
         public async Task<(TrashManagerAction Action, List<SecureTrashRecord> Selected)> ShowTrashManagerAsync(List<SecureTrashRecord> trashedRecords, Window? owner = null)
         {
             var dialog = new Window
@@ -1103,16 +1069,34 @@ namespace PhantomVault.UI.Services
                 }
                 if (selected.Count == 0)
                 {
-                    // no-op; keep dialog open
+
                     return;
                 }
                 result = (TrashManagerAction.Restore, selected);
                 dialog.Close();
             };
 
-            emptyBtn.Click += (s, e) =>
+            emptyBtn.Click += async (s, e) =>
             {
-                result = (TrashManagerAction.Empty, new List<SecureTrashRecord>(checkboxMap.Keys));
+                var selected = new List<SecureTrashRecord>();
+                foreach (var kv in checkboxMap)
+                {
+                    if (kv.Value.IsChecked == true) selected.Add(kv.Key);
+                }
+                // Purge selected items if any are checked; otherwise the whole trash.
+                var target = selected.Count > 0 ? selected : new List<SecureTrashRecord>(checkboxMap.Keys);
+                if (target.Count == 0) return;
+
+                var scope = selected.Count > 0
+                    ? $"the {target.Count} selected item{(target.Count == 1 ? string.Empty : "s")}"
+                    : $"all {target.Count} item{(target.Count == 1 ? string.Empty : "s")} in the trash";
+                var confirmed = await ShowConfirmationAsync(
+                    "Permanently Delete?",
+                    $"This will securely and permanently delete {scope}. This cannot be undone.",
+                    dialog);
+                if (!confirmed) return;
+
+                result = (TrashManagerAction.Empty, target);
                 dialog.Close();
             };
 
@@ -1151,9 +1135,6 @@ namespace PhantomVault.UI.Services
             return result;
         }
 
-        /// <summary>
-        /// Dialog to choose a bulk action for selected categories' items: move to a target category or move to Deleted.
-        /// </summary>
         public async Task<(BulkCategoriesAction Action, string? TargetCategory)> ShowBulkCategoryActionAsync(List<string> availableTargetCategories, Window? owner = null)
         {
             var dialog = new Window
@@ -1210,10 +1191,6 @@ namespace PhantomVault.UI.Services
             return result;
         }
 
-        /// <summary>
-        /// Shows a dialog to multi-select items in a category and choose a target category to move them to.
-        /// Returns the chosen action, selected credentials, and the target category (if any).
-        /// </summary>
         public async Task<(CategoryItemsAction Action, List<Credential> Selected, string? TargetCategory)> ShowCategoryItemsManagerAsync(
             string categoryName,
             List<Credential> credentialsInCategory,
@@ -1283,13 +1260,13 @@ namespace PhantomVault.UI.Services
             moveBtn.Click += (s, e) =>
             {
                 var target = targetCombo.SelectedItem as string;
-                if (string.IsNullOrEmpty(target)) return; // keep open
+                if (string.IsNullOrEmpty(target)) return;
                 var selected = new List<Credential>();
                 foreach (var kv in checkboxMap)
                 {
                     if (kv.Value.IsChecked == true) selected.Add(kv.Key);
                 }
-                if (selected.Count == 0) return; // keep open
+                if (selected.Count == 0) return;
                 result = (CategoryItemsAction.Move, selected, target);
                 dialog.Close();
             };
@@ -1310,9 +1287,6 @@ namespace PhantomVault.UI.Services
             return result;
         }
 
-        /// <summary>
-        /// Simple select-a-category dialog returning the selected category name or null if cancelled.
-        /// </summary>
         public async Task<string?> ShowSelectCategoryAsync(List<string> categories, string prompt, Window? owner = null)
         {
             var dialog = new Window
@@ -1353,11 +1327,6 @@ namespace PhantomVault.UI.Services
             return result;
         }
 
-        /// <summary>
-        /// Shows a dialog to select entries from a source category to migrate to a new category.
-        /// Returns a tuple: (sourceCategory, selectedEntryKeys) or (null, null) if cancelled.
-        /// Keys are composite strings in format "Title|Username".
-        /// </summary>
         public async Task<(string? SourceCategory, List<string>? SelectedKeys)> ShowMigrateEntriesDialogAsync(
             List<string> sourceCategories,
             Func<string, List<(string Key, string Title, string Username)>> getEntriesForCategory,
@@ -1376,7 +1345,6 @@ namespace PhantomVault.UI.Services
 
             var mainPanel = new StackPanel { Margin = new Avalonia.Thickness(16), Spacing = 12 };
 
-            // Header text
             mainPanel.Children.Add(new TextBlock
             {
                 Text = $"Select entries to move into '{newCategoryName}'",
@@ -1385,7 +1353,6 @@ namespace PhantomVault.UI.Services
                 Foreground = Avalonia.Media.Brushes.White
             });
 
-            // Source category selector
             var categoryPanel = new StackPanel { Spacing = 4 };
             categoryPanel.Children.Add(new TextBlock
             {
@@ -1403,7 +1370,6 @@ namespace PhantomVault.UI.Services
             categoryPanel.Children.Add(categoryCombo);
             mainPanel.Children.Add(categoryPanel);
 
-            // Entries list
             var entriesPanel = new StackPanel { Spacing = 4 };
             entriesPanel.Children.Add(new TextBlock
             {
@@ -1480,7 +1446,6 @@ namespace PhantomVault.UI.Services
             categoryCombo.SelectionChanged += (s, e) => updateEntriesList();
             updateEntriesList();
 
-            // Select All / Deselect All buttons
             var selectionButtonPanel = new StackPanel
             {
                 Orientation = Orientation.Horizontal,
@@ -1518,7 +1483,6 @@ namespace PhantomVault.UI.Services
             selectionButtonPanel.Children.Add(deselectAllBtn);
             mainPanel.Children.Add(selectionButtonPanel);
 
-            // Action buttons
             var buttonPanel = new StackPanel
             {
                 Orientation = Orientation.Horizontal,
@@ -1576,9 +1540,6 @@ namespace PhantomVault.UI.Services
             return (resultCategory, resultKeys);
         }
 
-        /// <summary>
-        /// Shows a destructive action confirmation dialog that requires the user to type a specific confirmation text.
-        /// </summary>
         public async Task<bool> ShowDestructiveConfirmationAsync(
             string title,
             string message,
@@ -1593,7 +1554,7 @@ namespace PhantomVault.UI.Services
                 Height = 320,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 CanResize = false,
-                Background = new SolidColorBrush(Color.Parse("#2B1F20")) // Dark red tint
+                Background = new SolidColorBrush(Color.Parse("#2B1F20"))
             };
 
             var panel = new StackPanel { Margin = new Avalonia.Thickness(24), Spacing = 12 };
@@ -1603,7 +1564,7 @@ namespace PhantomVault.UI.Services
                 Text = title,
                 FontSize = 20,
                 FontWeight = Avalonia.Media.FontWeight.Bold,
-                Foreground = new SolidColorBrush(Color.Parse("#FF7A6A")), // Warning red
+                Foreground = new SolidColorBrush(Color.Parse("#FF7A6A")),
                 Margin = new Avalonia.Thickness(0, 0, 0, 8)
             });
 
@@ -1651,7 +1612,7 @@ namespace PhantomVault.UI.Services
             {
                 Width = 140,
                 Height = 42,
-                Background = new SolidColorBrush(Color.Parse("#A85A5A")), // Muted red
+                Background = new SolidColorBrush(Color.Parse("#A85A5A")),
                 Foreground = Avalonia.Media.Brushes.White,
                 FontWeight = FontWeight.SemiBold,
                 IsEnabled = false
@@ -1667,7 +1628,6 @@ namespace PhantomVault.UI.Services
             };
             cancelButton.Content = new TextBlock { Text = "Cancel" };
 
-            // Enable confirm button only when text matches
             confirmationTextBox.TextChanged += (s, e) =>
             {
                 confirmButton.IsEnabled = confirmationTextBox.Text == confirmationText;
@@ -1714,3 +1674,4 @@ namespace PhantomVault.UI.Services
         }
     }
 }
+

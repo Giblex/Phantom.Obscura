@@ -15,20 +15,10 @@ using KeePassLib.Security;
 
 namespace PhantomVault.Core.Services
 {
-    /// <summary>
-    /// Service for importing credentials from KeePass 2.x KDBX database files.
-    /// Supports KDBX v3 and v4 formats (KeePass 2.x, KeePassXC).
-    /// </summary>
+
     public class KeePassImportService
     {
-        /// <summary>
-        /// Imports credentials from a KeePass KDBX file.
-        /// </summary>
-        /// <param name="kdbxPath">Path to the .kdbx file.</param>
-        /// <param name="password">Master password for the database.</param>
-        /// <param name="keyfilePath">Optional keyfile path.</param>
-        /// <param name="progress">Optional progress reporter (0-100).</param>
-        /// <returns>Result containing success status, list of imported credentials, and message.</returns>
+
         public async Task<KeePassImportResult> ImportAsync(
             string kdbxPath,
             string password,
@@ -39,7 +29,6 @@ namespace PhantomVault.Core.Services
             {
                 progress?.Report(0);
 
-                // Validate inputs
                 if (!File.Exists(kdbxPath))
                     return KeePassImportResult.Failure("KeePass database file not found.");
 
@@ -48,7 +37,6 @@ namespace PhantomVault.Core.Services
 
                 progress?.Report(10);
 
-                // Read KDBX file
                 byte[] kdbxData;
                 try
                 {
@@ -61,7 +49,6 @@ namespace PhantomVault.Core.Services
 
                 progress?.Report(20);
 
-                // Parse KDBX header and determine version
                 var parseResult = await Task.Run(() => ParseKdbx(kdbxData, password, keyfilePath, progress));
 
                 progress?.Report(100);
@@ -74,9 +61,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Validates a KeePass database without importing (checks password).
-        /// </summary>
         public async Task<(bool IsValid, string Message)> ValidateAsync(
             string kdbxPath,
             string password,
@@ -108,7 +92,6 @@ namespace PhantomVault.Core.Services
             {
                 progress?.Report(30);
 
-                // Create composite key (password + optional keyfile)
                 var compositeKey = new CompositeKey();
                 compositeKey.AddUserKey(new KcpPassword(password));
 
@@ -119,10 +102,8 @@ namespace PhantomVault.Core.Services
 
                 progress?.Report(40);
 
-                // Create PwDatabase instance
                 var database = new PwDatabase();
 
-                // Create temporary file to load from (KeePassLib requires file path)
                 string tempPath = Path.GetTempFileName();
                 try
                 {
@@ -130,15 +111,12 @@ namespace PhantomVault.Core.Services
 
                     progress?.Report(50);
 
-                    // Create IOConnectionInfo
                     var ioConnInfo = new IOConnectionInfo { Path = tempPath };
 
-                    // Open database
                     database.Open(ioConnInfo, compositeKey, null);
 
                     progress?.Report(70);
 
-                    // Extract credentials
                     var credentials = new List<Credential>();
                     if (database.RootGroup != null)
                     {
@@ -147,7 +125,6 @@ namespace PhantomVault.Core.Services
 
                     progress?.Report(90);
 
-                    // Close database
                     database.Close();
 
                     return KeePassImportResult.Success(
@@ -156,7 +133,7 @@ namespace PhantomVault.Core.Services
                 }
                 finally
                 {
-                    // Clean up temporary file
+
                     try
                     {
                         if (File.Exists(tempPath))
@@ -164,7 +141,7 @@ namespace PhantomVault.Core.Services
                     }
                     catch
                     {
-                        // Best effort cleanup
+
                     }
                 }
             }
@@ -178,24 +155,19 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Recursively extracts entries from KeePass groups.
-        /// </summary>
         private void ExtractEntries(PwGroup group, List<Credential> credentials, string groupPath)
         {
-            // Build current group path
+
             string currentPath = string.IsNullOrEmpty(groupPath)
                 ? group.Name
                 : $"{groupPath}/{group.Name}";
 
-            // Extract entries from this group
             foreach (var entry in group.Entries)
             {
                 try
                 {
                     string title = GetProtectedString(entry, PwDefs.TitleField);
 
-                    // Skip entries without titles (likely meta entries)
                     if (string.IsNullOrWhiteSpace(title))
                         continue;
 
@@ -214,10 +186,9 @@ namespace PhantomVault.Core.Services
                         Tags = new List<string>()
                     };
 
-                    // Extract custom fields
                     foreach (var kvp in entry.Strings)
                     {
-                        // Skip standard fields
+
                         if (kvp.Key == PwDefs.TitleField ||
                             kvp.Key == PwDefs.UserNameField ||
                             kvp.Key == PwDefs.PasswordField ||
@@ -230,7 +201,6 @@ namespace PhantomVault.Core.Services
                         credential.CustomFields[kvp.Key] = kvp.Value.ReadString();
                     }
 
-                    // Extract tags
                     if (entry.Tags != null && entry.Tags.Count > 0)
                     {
                         credential.Tags = entry.Tags.ToList();
@@ -240,21 +210,17 @@ namespace PhantomVault.Core.Services
                 }
                 catch (Exception ex)
                 {
-                    // Log and continue with other entries
+
                     System.Diagnostics.Debug.WriteLine($"Failed to extract entry: {ex.Message}");
                 }
             }
 
-            // Recursively process subgroups
             foreach (var subgroup in group.Groups)
             {
                 ExtractEntries(subgroup, credentials, currentPath);
             }
         }
 
-        /// <summary>
-        /// Safely reads a protected string from a KeePass entry.
-        /// </summary>
         private string GetProtectedString(PwEntry entry, string key)
         {
             if (entry.Strings.Exists(key))
@@ -267,9 +233,6 @@ namespace PhantomVault.Core.Services
         #endregion
     }
 
-    /// <summary>
-    /// Result of a KeePass import operation.
-    /// </summary>
     public class KeePassImportResult
     {
         public bool IsSuccess { get; set; }
@@ -301,3 +264,4 @@ namespace PhantomVault.Core.Services
         }
     }
 }
+

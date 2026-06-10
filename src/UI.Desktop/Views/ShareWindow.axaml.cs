@@ -2,10 +2,7 @@ using Avalonia.Markup.Xaml;
 
 namespace PhantomVault.UI.Views
 {
-    /// <summary>
-    /// Interaction logic for ShareWindow.axaml. All business logic
-    /// resides in the associated <see cref="PhantomVault.UI.ViewModels.ShareViewModel"/>.
-    /// </summary>
+
     public partial class ShareWindow : ThemeAwareWindow
     {
         public ShareWindow()
@@ -19,3 +16,4 @@ namespace PhantomVault.UI.Views
         }
     }
 }
+

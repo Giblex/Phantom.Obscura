@@ -20,26 +20,26 @@
     </Design.DataContext>
 
     <Grid RowDefinitions="Auto,*,Auto">
-        <!-- Header -->
-        <Border Grid.Row="0" 
-                Background="{DynamicResource HeaderBackgroundBrush}" 
+
+        <Border Grid.Row="0"
+                Background="{DynamicResource HeaderBackgroundBrush}"
                 Padding="24,20">
             <Grid ColumnDefinitions="Auto,*,Auto">
-                <Border Grid.Column="0" 
-                        Width="48" Height="48" 
+                <Border Grid.Column="0"
+                        Width="48" Height="48"
                         CornerRadius="{DynamicResource Radius.Xl}"
                         Background="{DynamicResource AccentBrush}"
                         Margin="0,0,16,0">
-                    <TextBlock Text="👁️" FontSize="{StaticResource Type.H2.Size}" 
-                               HorizontalAlignment="Center" 
+                    <TextBlock Text="👁️" FontSize="{StaticResource Type.H2.Size}"
+                               HorizontalAlignment="Center"
                                VerticalAlignment="Center"/>
                 </Border>
                 <StackPanel Grid.Column="1" Spacing="{StaticResource Space.Xs}" VerticalAlignment="Center">
-                    <TextBlock Text="Windows Hello" 
-                               FontSize="{StaticResource Type.H3.Size}" 
+                    <TextBlock Text="Windows Hello"
+                               FontSize="{StaticResource Type.H3.Size}"
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource HeaderTextBrush}"/>
-                    <TextBlock Text="Local authenticator settings" 
+                    <TextBlock Text="Local authenticator settings"
                                FontSize="{StaticResource Type.Small.Size}"
                                Foreground="{DynamicResource HeaderMutedTextBrush}"/>
                 </StackPanel>
@@ -51,29 +51,27 @@
             </Grid>
         </Border>
 
-        <!-- Content -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="30,20,30,30">
             <StackPanel Spacing="0" Margin="0,0,30,60">
-                
-                <!-- Status Card -->
+
                 <Border Background="{DynamicResource CardBackgroundBrush}"
                         BorderBrush="{DynamicResource ControlBorderBrush}"
                         BorderThickness="1"
-                        CornerRadius="{DynamicResource Radius.Lg}" 
+                        CornerRadius="{DynamicResource Radius.Lg}"
                         Padding="16"
                         Margin="0,0,0,16">
                     <Grid ColumnDefinitions="Auto,*">
-                        <Border Grid.Column="0" 
-                                Width="10" Height="10" 
+                        <Border Grid.Column="0"
+                                Width="10" Height="10"
                                 CornerRadius="{DynamicResource Radius.Sm}"
                                 Background="{Binding StatusColor}"
                                 VerticalAlignment="Center"
                                 Margin="0,0,12,0"/>
                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="{StaticResource Space.Xs}">
-                            <TextBlock Text="{Binding EnrollmentStatus}" 
-                                       FontSize="{StaticResource Type.Body.Size}" 
+                            <TextBlock Text="{Binding EnrollmentStatus}"
+                                       FontSize="{StaticResource Type.Body.Size}"
                                        FontWeight="Medium"/>
-                            <TextBlock Text="{Binding StatusMessage}" 
+                            <TextBlock Text="{Binding StatusMessage}"
                                        FontSize="{StaticResource Type.Small.Size}"
                                        Foreground="{DynamicResource MutedTextBrush}"
                                        TextWrapping="Wrap"
@@ -82,54 +80,53 @@
                     </Grid>
                 </Border>
 
-                <!-- Authentication Methods Card -->
                 <Border Background="{DynamicResource CardBackgroundBrush}"
                         BorderBrush="{DynamicResource ControlBorderBrush}"
                         BorderThickness="1"
-                        CornerRadius="{DynamicResource Radius.Lg}" 
+                        CornerRadius="{DynamicResource Radius.Lg}"
                         Padding="16"
                         Margin="0,0,0,16">
                     <StackPanel Spacing="{StaticResource Space.Md}">
-                        <TextBlock Text="Authentication Methods" 
-                                   FontSize="{StaticResource Type.Body.Size}" 
+                        <TextBlock Text="Authentication Methods"
+                                   FontSize="{StaticResource Type.Body.Size}"
                                    FontWeight="Medium"/>
-                        
-                        <Border Background="{DynamicResource ControlBackgroundBrush}" 
-                                CornerRadius="{DynamicResource Radius.Md}" 
+
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
                                 Padding="14">
                             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
                                 <TextBlock Grid.Column="0" Text="☝" FontSize="{StaticResource Type.H2.Size}" VerticalAlignment="Center"/>
                                 <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
                                     <TextBlock Text="Fingerprint" FontSize="{StaticResource Type.Label.Size}" FontWeight="Medium"/>
-                                    <TextBlock Text="Use your fingerprint reader when supported by Windows Hello" 
+                                    <TextBlock Text="Use your fingerprint reader when supported by Windows Hello"
                                                FontSize="{StaticResource Type.Tiny.Size}"
                                                Foreground="{DynamicResource MutedTextBrush}"/>
                                 </StackPanel>
                             </Grid>
                         </Border>
-                        
-                        <Border Background="{DynamicResource ControlBackgroundBrush}" 
-                                CornerRadius="{DynamicResource Radius.Md}" 
+
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
                                 Padding="14">
                             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
                                 <TextBlock Grid.Column="0" Text="😊" FontSize="{StaticResource Type.H2.Size}" VerticalAlignment="Center"/>
                                 <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
                                     <TextBlock Text="Face Recognition" FontSize="{StaticResource Type.Label.Size}" FontWeight="Medium"/>
-                                    <TextBlock Text="Use your camera for face verification when supported by Windows Hello" 
+                                    <TextBlock Text="Use your camera for face verification when supported by Windows Hello"
                                                FontSize="{StaticResource Type.Tiny.Size}"
                                                Foreground="{DynamicResource MutedTextBrush}"/>
                                 </StackPanel>
                             </Grid>
                         </Border>
-                        
-                        <Border Background="{DynamicResource ControlBackgroundBrush}" 
-                                CornerRadius="{DynamicResource Radius.Md}" 
+
+                        <Border Background="{DynamicResource ControlBackgroundBrush}"
+                                CornerRadius="{DynamicResource Radius.Md}"
                                 Padding="14">
                             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
                                 <TextBlock Grid.Column="0" Text="🔢" FontSize="{StaticResource Type.H2.Size}" VerticalAlignment="Center"/>
                                 <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
                                     <TextBlock Text="PIN" FontSize="{StaticResource Type.Label.Size}" FontWeight="Medium"/>
-                                    <TextBlock Text="Use your Windows Hello PIN as the fallback local verification method" 
+                                    <TextBlock Text="Use your Windows Hello PIN as the fallback local verification method"
                                                FontSize="{StaticResource Type.Tiny.Size}"
                                                Foreground="{DynamicResource MutedTextBrush}"/>
                                 </StackPanel>
@@ -138,16 +135,15 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Actions Card -->
                 <Border Background="{DynamicResource CardBackgroundBrush}"
                         BorderBrush="{DynamicResource ControlBorderBrush}"
                         BorderThickness="1"
-                        CornerRadius="{DynamicResource Radius.Lg}" 
+                        CornerRadius="{DynamicResource Radius.Lg}"
                         Padding="16"
                         Margin="0,0,0,16">
                     <StackPanel Spacing="{StaticResource Space.Md}">
                         <TextBlock Text="Actions" FontSize="{StaticResource Type.Body.Size}" FontWeight="Medium"/>
-                        
+
                         <Button Command="{Binding EnrollBiometricCommand}"
                                 IsEnabled="{Binding !IsBiometricEnrolled}"
                                 Classes="liquid-glass"
@@ -156,7 +152,7 @@
                                 IsVisible="{Binding IsWindowsHelloAvailable}">
                             <TextBlock Text="Set Up Windows Hello" FontSize="{StaticResource Type.Body.Size}"/>
                         </Button>
-                        
+
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="10"
                               IsVisible="{Binding IsBiometricEnrolled}">
                             <Button Grid.Column="0"
@@ -177,16 +173,15 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Info Card -->
                 <Border Background="{DynamicResource CardBackgroundBrush}"
                         BorderBrush="{DynamicResource ControlBorderBrush}"
                         BorderThickness="1"
-                        CornerRadius="{DynamicResource Radius.Lg}" 
+                        CornerRadius="{DynamicResource Radius.Lg}"
                         Padding="16"
                         Margin="0,0,0,16">
                     <StackPanel Spacing="{StaticResource Space.Sm}">
-                        <TextBlock Text="About Windows Hello" 
-                                   FontSize="{StaticResource Type.Body.Size}" 
+                        <TextBlock Text="About Windows Hello"
+                                   FontSize="{StaticResource Type.Body.Size}"
                                    FontWeight="Medium"/>
                         <TextBlock FontSize="{StaticResource Type.Small.Size}"
                                    Foreground="{DynamicResource MutedTextBrush}"
@@ -199,19 +194,17 @@ Windows Hello handles local verification on supported Windows devices. Depending
             </StackPanel>
         </ScrollViewer>
 
-        <!-- Footer -->
-        <Border Grid.Row="2" 
+        <Border Grid.Row="2"
                 Background="{DynamicResource CardBackgroundBrush}"
                 Padding="24,16">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="{StaticResource Space.Md}">
-                <Button Content="Close" 
+                <Button Content="Close"
                         Classes="liquid-glass"
                         Width="100"
                         Click="CloseButton_Click"/>
             </StackPanel>
         </Border>
-        
-        <!-- Loading Overlay -->
+
         <Border Grid.RowSpan="3"
                 Background="{DynamicResource OverlayBackgroundBrush}"
                 IsVisible="{Binding IsBusy}">
@@ -228,3 +221,4 @@ Windows Hello handles local verification on supported Windows devices. Depending
         </Border>
     </Grid>
 </views:ThemeAwareWindow>
+

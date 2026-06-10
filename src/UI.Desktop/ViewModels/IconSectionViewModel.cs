@@ -13,11 +13,7 @@ using ReactiveUI;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// Represents a collapsible section (category) in the icon library.
-    /// In variant mode (Cat Icons), shows 1 representative per subfolder; clicking shows color variants.
-    /// In normal mode (Entry Logos), shows all icons with a display limit.
-    /// </summary>
+
     public sealed class IconSectionViewModel : ReactiveObject
     {
         private const int DefaultDisplayLimit = 120;
@@ -25,7 +21,7 @@ namespace PhantomVault.UI.ViewModels
         private readonly IconManager _iconManager;
         private readonly Func<IconFileEntryViewModel, bool> _isExcluded;
         private readonly List<IconFileEntryViewModel> _allSectionIcons = new();
-        // Variant mode: maps subfolder full path → all variant icons in that subfolder
+
         private readonly Dictionary<string, List<IconFileEntryViewModel>> _variantGroups = new(StringComparer.OrdinalIgnoreCase);
 
         private bool _isExpanded;
@@ -61,33 +57,24 @@ namespace PhantomVault.UI.ViewModels
             IconClickedCommand = ReactiveCommand.Create<IconFileEntryViewModel>(OnIconClicked);
         }
 
-        /// <summary>Display name, e.g. "Cat Icons" or "Entry Logos".</summary>
         public string Name { get; }
 
-        /// <summary>Absolute path to the folder on disk.</summary>
         public string FolderFullPath { get; }
 
-        /// <summary>Path relative to the icons root directory.</summary>
         public string FolderRelativePath { get; }
 
-        /// <summary>Total number of supported icon files in this category.</summary>
         public int TotalCount { get; }
 
-        /// <summary>Number of subfolders in this category.</summary>
         public int SubfolderCount { get; }
 
-        /// <summary>True for categories like Cat Icons where subfolders are color-variant groups.</summary>
         public bool IsVariantMode { get; }
 
-        /// <summary>Short count label for the header.</summary>
         public string CountDisplay => IsVariantMode
             ? $"({SubfolderCount} icons, {TotalCount} variants)"
             : $"({TotalCount})";
 
-        /// <summary>Icons currently shown in the UI.</summary>
         public ObservableCollection<IconFileEntryViewModel> DisplayIcons { get; }
 
-        /// <summary>All loaded (deduplicated) icons in this section (representatives in variant mode).</summary>
         public IReadOnlyList<IconFileEntryViewModel> AllIcons => _allSectionIcons;
 
         public bool IsExpanded
@@ -119,7 +106,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>Loading progress text, e.g. "Loading 42/180..."</summary>
         public string LoadingProgressText
         {
             get
@@ -129,38 +115,21 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>True when there are more icons than currently displayed.</summary>
         public bool HasMore => !_showAll && _allSectionIcons.Count > DefaultDisplayLimit;
 
-        /// <summary>Label for the "Show all" button.</summary>
         public string ShowMoreText => $"Show all {_allSectionIcons.Count} icons";
 
         public ReactiveCommand<Unit, Unit> ToggleExpandedCommand { get; }
         public ReactiveCommand<Unit, Unit> ShowAllCommand { get; }
 
-        /// <summary>Command invoked when an icon tile is clicked inside this section.</summary>
         public ReactiveCommand<IconFileEntryViewModel, Unit> IconClickedCommand { get; }
 
-        /// <summary>
-        /// Callback invoked on the UI thread after icons finish loading.
-        /// Used by <see cref="IconManagerViewModel"/> to rebuild the flat icon list.
-        /// </summary>
         public Action<IconSectionViewModel>? OnLoaded { get; set; }
 
-        /// <summary>
-        /// Callback invoked when user clicks a variant-mode icon.
-        /// Parameters: representative icon, list of all variants in that group.
-        /// </summary>
         public Action<IconFileEntryViewModel, IReadOnlyList<IconFileEntryViewModel>>? OnVariantClicked { get; set; }
 
-        /// <summary>
-        /// Callback invoked when user clicks a normal-mode icon (select it).
-        /// </summary>
         public Action<IconFileEntryViewModel>? OnIconSelected { get; set; }
 
-        // ----- public helpers -----
-
-        /// <summary>Expand and load icons (called programmatically for auto-expand).</summary>
         public async Task ExpandAsync()
         {
             IsExpanded = true;
@@ -168,12 +137,10 @@ namespace PhantomVault.UI.ViewModels
                 await LoadIconsAsync();
         }
 
-        /// <summary>Get variants for a representative icon in variant mode.</summary>
         public IReadOnlyList<IconFileEntryViewModel> GetVariantsFor(IconFileEntryViewModel representative)
         {
             if (representative == null) return Array.Empty<IconFileEntryViewModel>();
 
-            // Primary lookup: by the icon's parent folder path
             var parentDir = Path.GetDirectoryName(representative.FullPath);
             if (parentDir != null && _variantGroups.TryGetValue(parentDir, out var list))
             {
@@ -184,8 +151,6 @@ namespace PhantomVault.UI.ViewModels
             Debug.WriteLine($"[IconSection] GetVariantsFor: NO variants found for '{representative.Name}' (parentDir='{parentDir}', groups={_variantGroups.Count})");
             return new List<IconFileEntryViewModel> { representative };
         }
-
-        // ----- private -----
 
         private void OnIconClicked(IconFileEntryViewModel? icon)
         {
@@ -241,10 +206,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Variant mode: enumerate subfolders, pick 1 representative per subfolder,
-        /// store full variant lists for popup.
-        /// </summary>
         private async Task LoadVariantModeAsync()
         {
             var subfolders = await Task.Run(() => _iconManager.GetCategorySubfolders(FolderFullPath));
@@ -255,7 +216,6 @@ namespace PhantomVault.UI.ViewModels
             var representatives = new List<IconFileEntryViewModel>();
             var variantMap = new Dictionary<string, List<IconFileEntryViewModel>>(StringComparer.OrdinalIgnoreCase);
 
-            // Process subfolders in batches for responsive loading
             const int batchSize = 30;
             for (int i = 0; i < subfolders.Length; i += batchSize)
             {
@@ -275,10 +235,9 @@ namespace PhantomVault.UI.ViewModels
 
                         if (vms.Count == 0) continue;
 
-                        // Pick the largest file as representative (best quality)
                         var representative = vms.OrderByDescending(v => v.SizeBytes).First();
                         representatives.Add(representative);
-                        // Key by subfolder path (not representative file path) for robust lookup
+
                         variantMap[sf.FullPath] = vms;
                         Debug.WriteLine($"[IconSection] Loaded subfolder '{sf.Name}': {vms.Count} variants, rep='{representative.Name}'");
                     }
@@ -296,9 +255,6 @@ namespace PhantomVault.UI.ViewModels
                 _variantGroups[kvp.Key] = kvp.Value;
         }
 
-        /// <summary>
-        /// Normal mode: load all icons from the folder, deduplicate by name.
-        /// </summary>
         private async Task LoadNormalModeAsync()
         {
             var files = await Task.Run(() => _iconManager.GetIconFilesInFolder(FolderFullPath));
@@ -354,3 +310,4 @@ namespace PhantomVault.UI.ViewModels
         }
     }
 }
+

@@ -43,29 +43,25 @@
     <Border Classes="empty-state">
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="0">
 
-            <!-- Illustration (SVG or simple shapes) -->
             <Panel Width="200" Height="200" Margin="0,0,0,8">
-                <!-- Vault illustration -->
+
                 <Canvas x:Name="IllustrationCanvas">
-                    <!-- Background circle -->
+
                     <Ellipse Width="180" Height="180"
                              Canvas.Left="10" Canvas.Top="10"
                              Fill="#10000000"
                              Opacity="0.4"/>
 
-                    <!-- Vault icon - simplified representation -->
                     <Path Fill="{DynamicResource AccentBrush}"
                           Opacity="0.7"
                           Canvas.Left="60" Canvas.Top="50"
                           Data="M40,0 L40,10 L0,10 L0,80 L80,80 L80,10 L40,10 L40,0 Z M40,30 A15,15 0 1,1 40,60 A15,15 0 1,1 40,30 Z M40,38 L40,52 M32,45 L48,45"/>
 
-                    <!-- Lock icon overlay -->
                     <Path Fill="{DynamicResource AccentBrush}"
                           Opacity="0.5"
                           Canvas.Left="100" Canvas.Top="120"
                           Data="M24,17 L24,11 A11,11 0 0,0 2,11 L2,17 M0,17 L26,17 L26,40 L0,40 Z"/>
 
-                    <!-- Sparkles for empty state charm -->
                     <Ellipse Width="6" Height="6"
                              Canvas.Left="30" Canvas.Top="30"
                              Fill="{DynamicResource SuccessBrush}"
@@ -118,17 +114,14 @@
                 </Canvas>
             </Panel>
 
-            <!-- Title -->
             <TextBlock x:Name="TitleText"
                        Classes="empty-title"
                        Text="No credentials yet"/>
 
-            <!-- Description -->
             <TextBlock x:Name="DescriptionText"
                        Classes="empty-description"
                        Text="Get started by adding your first credential. Click the button below to create one."/>
 
-            <!-- Action Button -->
             <Button x:Name="ActionButton"
                     Classes="empty-action"
                     Content="Add Your First Credential"
@@ -138,3 +131,4 @@
     </Border>
 
 </UserControl>
+

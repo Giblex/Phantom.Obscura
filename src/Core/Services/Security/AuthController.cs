@@ -4,10 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace PhantomVault.Core.Services.Security
 {
-    /// <summary>
-    /// Controls authentication flow and enforces security measures
-    /// (lockouts, key requirements, forced re-auth) on behalf of the DefenceEngine.
-    /// </summary>
+
     public sealed class AuthController : IAuthController
     {
         private readonly ILogger<AuthController>? _logger;
@@ -20,7 +17,6 @@ namespace PhantomVault.Core.Services.Security
             _logger = logger;
         }
 
-        /// <inheritdoc />
         public bool IsLockedOut
         {
             get
@@ -32,7 +28,6 @@ namespace PhantomVault.Core.Services.Security
             }
         }
 
-        /// <inheritdoc />
         public DateTimeOffset? LockoutEndUtc
         {
             get
@@ -44,7 +39,6 @@ namespace PhantomVault.Core.Services.Security
             }
         }
 
-        /// <inheritdoc />
         public event EventHandler<string>? ReauthenticationRequired;
 
         public async Task AddAuthenticationDelayAsync(TimeSpan delay)
@@ -69,7 +63,6 @@ namespace PhantomVault.Core.Services.Security
             _requirePhantomKeyNextUnlock = true;
         }
 
-        /// <inheritdoc />
         public bool CheckAndResetPhantomKeyRequirement()
         {
             var wasRequired = _requirePhantomKeyNextUnlock;
@@ -84,3 +77,4 @@ namespace PhantomVault.Core.Services.Security
         }
     }
 }
+

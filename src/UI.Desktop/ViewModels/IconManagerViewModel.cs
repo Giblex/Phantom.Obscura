@@ -18,13 +18,13 @@ using ReactiveUI;
 
 namespace PhantomVault.UI.ViewModels
 {
-    // A tiny LRU cache for Bitmaps to avoid keeping thousands of Bitmaps in memory at once.
+
     internal static class IconBitmapCache
     {
         private static readonly object _sync = new object();
         private static readonly Dictionary<string, Avalonia.Media.Imaging.Bitmap> _cache = new();
         private static readonly LinkedList<string> _lru = new();
-        private static int _capacity = 200; // tuneable; limits number of in-memory bitmaps
+        private static int _capacity = 200;
 
         private static readonly HashSet<string> _svgExtensions = new(StringComparer.OrdinalIgnoreCase) { ".svg" };
 
@@ -49,7 +49,7 @@ namespace PhantomVault.UI.ViewModels
             {
                 if (_cache.TryGetValue(path, out var bmp))
                 {
-                    // mark used
+
                     _lru.Remove(path);
                     _lru.AddFirst(path);
                     return bmp;
@@ -88,9 +88,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Loads an SVG file and rasterizes it to an Avalonia Bitmap using SkiaSharp.
-        /// </summary>
         private static Avalonia.Media.Imaging.Bitmap? LoadSvgAsBitmap(string path)
         {
             try
@@ -103,7 +100,6 @@ namespace PhantomVault.UI.ViewModels
                 int width = Math.Max(1, (int)bounds.Width);
                 int height = Math.Max(1, (int)bounds.Height);
 
-                // Clamp to a reasonable size for thumbnails
                 if (width > 256 || height > 256)
                 {
                     float scale = 256f / Math.Max(width, height);
@@ -114,7 +110,7 @@ namespace PhantomVault.UI.ViewModels
                 using var skBitmap = new SkiaSharp.SKBitmap(width, height);
                 using var canvas = new SkiaSharp.SKCanvas(skBitmap);
                 canvas.Clear(SkiaSharp.SKColors.Transparent);
-                // Scale to fit
+
                 float scaleX = width / bounds.Width;
                 float scaleY = height / bounds.Height;
                 float s = Math.Min(scaleX, scaleY);
@@ -144,7 +140,7 @@ namespace PhantomVault.UI.ViewModels
                 _lru.RemoveLast();
                 if (_cache.TryGetValue(last, out var bmp))
                 {
-                    // Remove from cache but avoid disposing since UI may still be using it
+
                     _cache.Remove(last);
                 }
             }
@@ -165,19 +161,18 @@ namespace PhantomVault.UI.ViewModels
     }
     public sealed class IconManagerViewModel : ReactiveObject
     {
-        // Simple blacklist of keywords for icons to hide (case-insensitive substring match).
-        // This is a quick filter to hide bank/payment logos and generic 'logo' assets.
+
         private static readonly string[] _excludedKeywords = new[]
         {
             "visa","master","mastercard","amex","americanexpress","american express","discover","paypal",
             "citi","hsbc","bank","credit","debit","card","cards","logo","logos","brand","branding","pay",
-            "westernunion","maestro","cirrus","stripe","visa" // add more if needed
+            "westernunion","maestro","cirrus","stripe","visa"
         };
         private readonly IconManager _iconManager;
         private readonly DialogService _dialogService = new();
         private readonly List<IconFileEntryViewModel> _allIcons = new();
         private Window? _ownerWindow;
-        private Window? _callingOwnerWindow; // the window that launched the Icon Manager, e.g., CategoryManagerWindow
+        private Window? _callingOwnerWindow;
         private bool _isBusy;
         private string _statusMessage = "Ready";
         private string _searchText = string.Empty;
@@ -214,7 +209,6 @@ namespace PhantomVault.UI.ViewModels
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(_ => ApplyFilter());
 
-            // Execute refresh asynchronously with error handling
             RefreshCommand.Execute().Subscribe(
                 _ => { },
                 ex =>
@@ -247,10 +241,6 @@ namespace PhantomVault.UI.ViewModels
             set => this.RaiseAndSetIfChanged(ref _selectedIcon, value);
         }
 
-        /// <summary>
-        /// When Icon Library is used as a dialog for selecting an icon,
-        /// this property will contain the full path of the confirmed icon.
-        /// </summary>
         public string? ConfirmedIconPath
         {
             get => _confirmedIconPath;
@@ -303,13 +293,12 @@ namespace PhantomVault.UI.ViewModels
 #endif
         }
 
-        // Indicate whether SetOwnerWindow has already been called with a non-null owner.
         public bool HasOwnerWindow => _ownerWindow != null;
 
         private void SelectIcon(IconFileEntryViewModel? icon)
         {
             SelectedIcon = icon;
-            // When in dialog mode (callingOwnerWindow set), double-click confirms and closes
+
             if (icon != null && _callingOwnerWindow != null)
             {
                 ConfirmedIconPath = icon.FullPath;
@@ -386,7 +375,6 @@ namespace PhantomVault.UI.ViewModels
                     }
                 }
 
-                // Fast scan: enumerate top-level categories (not individual subfolders)
                 IconCategoryInfo[] categories;
                 try
                 {
@@ -437,7 +425,6 @@ namespace PhantomVault.UI.ViewModels
                         : $"Found {totalFiles:N0} icon(s) in {Sections.Count} categories. Loading...";
                 });
 
-                // Auto-expand all sections so icons are visible immediately
                 foreach (var section in Sections)
                 {
                     await section.ExpandAsync();
@@ -456,10 +443,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Called when a section finishes loading its icons.
-        /// Rebuilds the flat _allIcons list from all loaded sections and re-applies the filter.
-        /// </summary>
         private void OnSectionLoaded(IconSectionViewModel section)
         {
             Dispatcher.UIThread.InvokeAsync(() =>
@@ -476,10 +459,6 @@ namespace PhantomVault.UI.ViewModels
             });
         }
 
-        /// <summary>
-        /// Called when user clicks a variant-mode icon (Cat Icons).
-        /// Shows the variant popup with all color variants.
-        /// </summary>
         private void HandleVariantClicked(IconFileEntryViewModel representative, IReadOnlyList<IconFileEntryViewModel> variants)
         {
             VariantIcons.Clear();
@@ -490,26 +469,17 @@ namespace PhantomVault.UI.ViewModels
             IsVariantPopupOpen = true;
         }
 
-        /// <summary>
-        /// Called when user clicks an icon in normal mode (Entry Logos).
-        /// Selects the icon (and in dialog mode, confirms and closes).
-        /// </summary>
         private void HandleIconSelected(IconFileEntryViewModel icon)
         {
             SelectIcon(icon);
         }
 
-        /// <summary>
-        /// Unified icon click handler used by the grid view.
-        /// Finds which section owns the icon and shows variants or selects it.
-        /// </summary>
         private void HandleIconClick(IconFileEntryViewModel? icon)
         {
             if (icon == null) return;
 
             Debug.WriteLine($"[IconManager] HandleIconClick: '{icon.Name}' path='{icon.FullPath}'");
 
-            // Find which section owns this icon
             foreach (var section in Sections)
             {
                 if (!section.IsLoaded) continue;
@@ -530,7 +500,6 @@ namespace PhantomVault.UI.ViewModels
                 return;
             }
 
-            // Fallback: just select it
             Debug.WriteLine($"[IconManager] HandleIconClick: no owning section found, selecting directly");
             SelectIcon(icon);
         }
@@ -653,7 +622,7 @@ namespace PhantomVault.UI.ViewModels
                 }
                 catch
                 {
-                    // ignore delete failures; overwrite will throw in caller
+
                 }
                 return destinationPath;
             }
@@ -751,7 +720,7 @@ namespace PhantomVault.UI.ViewModels
 
         private void Close()
         {
-            // When closing with a selected icon, confirm it
+
             if (SelectedIcon != null && _callingOwnerWindow != null)
             {
                 ConfirmedIconPath = SelectedIcon.FullPath;
@@ -763,7 +732,6 @@ namespace PhantomVault.UI.ViewModels
         {
             var search = SearchText?.Trim();
 
-            // Update FilteredSections for the section-based grid view
             FilteredSections.Clear();
             foreach (var section in Sections)
             {
@@ -781,7 +749,6 @@ namespace PhantomVault.UI.ViewModels
                 }
             }
 
-            // Update flat Icons list (used by DataGrid / list view)
             IEnumerable<IconFileEntryViewModel> filtered = _allIcons;
 
             if (!string.IsNullOrEmpty(search))
@@ -793,11 +760,9 @@ namespace PhantomVault.UI.ViewModels
             }
 
             Icons.Clear();
-            // Exclude bank/payment/logo icons from the result set
+
             filtered = filtered.Where(i => !IsExcluded(i));
 
-            // Collapse visually-similar duplicates by normalized base name.
-            // For each base name group, keep the largest file (heuristic: prefer larger resolution variant).
             try
             {
                 var unique = filtered
@@ -812,20 +777,16 @@ namespace PhantomVault.UI.ViewModels
             }
             catch
             {
-                // Fallback to previous behavior if grouping fails
+
                 foreach (var icon in filtered) Icons.Add(icon);
             }
 
             this.RaisePropertyChanged(nameof(FilteredIconCount));
 
-            // Update TopIcons preview to match filter (limit to 60 items)
-            // Show one representative per folder (group by folder key) so the top preview
-            // doesn't show duplicate symbols from the same folder. This keeps color
-            // variants accessible via the variant popup.
             TopIcons.Clear();
             try
             {
-                // Build folder-based TopIcons but avoid duplicate visual content
+
                 var seen = new HashSet<string>(StringComparer.Ordinal);
                 var grouped = filtered
                     .GroupBy(a => GetFolderKey(a), StringComparer.OrdinalIgnoreCase)
@@ -843,7 +804,7 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                // Fallback: if grouping fails for any reason, fall back to the previous behavior
+
                 TopIcons.Clear();
                 foreach (var i in filtered.Take(60)) TopIcons.Add(i);
                 Debug.WriteLine($"[ICON-MANAGER] TopIcons grouping failed: {ex.Message}");
@@ -857,13 +818,13 @@ namespace PhantomVault.UI.ViewModels
             using var stream = File.OpenRead(path);
             using var sha = SHA256.Create();
             var hash = sha.ComputeHash(stream);
-            // Convert to hex string
+
             return BitConverter.ToString(hash).Replace("-", string.Empty).ToLowerInvariant();
         }
 
         private void UpdatePagedIcons()
         {
-            // Clamp page index
+
             if (PageIndex < 0) PageIndex = 0;
             var total = Icons.Count;
             if (total == 0)
@@ -903,12 +864,12 @@ namespace PhantomVault.UI.ViewModels
         private static string NormalizeBaseName(string name)
         {
             if (string.IsNullOrWhiteSpace(name)) return name ?? string.Empty;
-            // If the name contains underscores and the last token looks like a color suffix, drop it
+
             var idx = name.LastIndexOf('_');
             if (idx > 0 && idx < name.Length - 1)
             {
                 var suffix = name.Substring(idx + 1);
-                // a heuristic: if suffix only contains alphabetic characters or digits, treat as color
+
                 if (System.Text.RegularExpressions.Regex.IsMatch(suffix, "^[a-z0-9-]+$", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
                 {
                     return name.Substring(0, idx);
@@ -936,7 +897,6 @@ namespace PhantomVault.UI.ViewModels
             VariantIcons.Clear();
             VariantOwnerIcon = icon;
 
-            // First, try to find variants from the section's variant groups (most reliable)
             foreach (var section in Sections.Where(s => s.IsLoaded && s.IsVariantMode))
             {
                 var sectionVariants = section.GetVariantsFor(icon);
@@ -951,7 +911,6 @@ namespace PhantomVault.UI.ViewModels
                 }
             }
 
-            // Fallback: search _allIcons by folder key (for non-variant sections or unmatched icons)
             var folderKey = GetFolderKey(icon);
             var variants = _allIcons.Where(a => string.Equals(GetFolderKey(a), folderKey, StringComparison.OrdinalIgnoreCase)).ToList();
             if (!variants.Any()) variants.Add(icon);
@@ -962,7 +921,6 @@ namespace PhantomVault.UI.ViewModels
             IsVariantPopupOpen = true;
         }
 
-        // Apply the currently selected variant (used by keyboard/enter navigation)
         public async Task ApplySelectedVariantAsync()
         {
             var variant = SelectedVariant;
@@ -989,7 +947,7 @@ namespace PhantomVault.UI.ViewModels
             {
                 var dir = Path.GetDirectoryName(icon.RelativePath);
                 if (string.IsNullOrEmpty(dir)) return string.Empty;
-                // Normalize path separators
+
                 return dir.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar).TrimEnd(Path.DirectorySeparatorChar);
             }
             catch
@@ -1006,14 +964,12 @@ namespace PhantomVault.UI.ViewModels
 #if DEBUG
                 System.Diagnostics.Debug.WriteLine($"[ICON-MGR] ApplyVariant: variant={variant.Name}, path={variant.FullPath}");
 #endif
-                // Close the variant popup
+
                 IsVariantPopupOpen = false;
 
-                // Set the confirmed icon path so the caller receives the selection
                 SelectedIcon = variant;
                 ConfirmedIconPath = variant.FullPath;
 
-                // Close the icon manager window
                 _ownerWindow?.Close();
             }
             catch (Exception ex)
@@ -1061,7 +1017,6 @@ namespace PhantomVault.UI.ViewModels
 #pragma warning restore CS8625
                 }
 
-                // Refresh icon list after download window closes
                 await RefreshAsync();
             }
             catch (Exception ex)
@@ -1120,7 +1075,7 @@ namespace PhantomVault.UI.ViewModels
                 }
                 catch
                 {
-                    // ignore bitmap load failures and return null
+
                 }
 
                 return _iconBitmap;
@@ -1147,3 +1102,4 @@ namespace PhantomVault.UI.ViewModels
         }
     }
 }
+

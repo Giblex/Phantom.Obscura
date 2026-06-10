@@ -8,10 +8,7 @@ using PhantomVault.Core.Services;
 
 namespace PhantomVault.UI.Services
 {
-    /// <summary>
-    /// Stages non-sensitive Obscura recovery metadata into the PhantomRecovery workspace
-    /// so the sibling app can ingest it into its encrypted artifact vault on first open.
-    /// </summary>
+
     public sealed class RecoverySuiteBootstrapService
     {
         private readonly UsbArtifactProtectionService _usbArtifactProtectionService;
@@ -53,7 +50,7 @@ namespace PhantomVault.UI.Services
                 }
                 catch
                 {
-                    // Best effort: bootstrap should still proceed with manifest-level metadata.
+
                 }
             }
 
@@ -135,3 +132,4 @@ namespace PhantomVault.UI.Services
         }
     }
 }
+

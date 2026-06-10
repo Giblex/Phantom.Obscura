@@ -1,11 +1,8 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    
-    <!-- Category Item Template (Sidebar) -->
+
     <DataTemplate x:Key="CategoryItemTemplate">
-        <!-- Sidebar refinement: list items are borderless; only the parent
-             CATEGORIES drop-menu toggle keeps a border. Corners + left text
-             inset match the ENTRY TYPES list items for full consistency. -->
+
         <ToggleButton Command="{Binding $parent[Window].DataContext.SelectCategoryCommand}"
                       CommandParameter="{Binding Name}"
                       Classes="sidebar-filter-item-toggle category-filter"
@@ -21,8 +18,9 @@
                       AutomationProperties.Name="{Binding Name, StringFormat='Category: {0} ({1} items)'}"
                       Margin="6,2">
             <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
-                <!-- Category color bar (slightly inset) -->
-                <Border Width="8" Height="22" CornerRadius="4" VerticalAlignment="Center">
+
+                <Border Width="8" Height="22" CornerRadius="4" VerticalAlignment="Center"
+                        IsVisible="{Binding $parent[Window].DataContext.ShowCategoryColors}">
                     <Border.Background>
                         <Binding Path="TileColor" Converter="{StaticResource HexToBrushConverter}"/>
                     </Border.Background>
@@ -37,5 +35,6 @@
             </StackPanel>
         </ToggleButton>
     </DataTemplate>
-    
+
 </ResourceDictionary>
+

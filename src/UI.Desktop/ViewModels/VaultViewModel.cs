@@ -73,6 +73,17 @@ namespace PhantomVault.UI.ViewModels
         private string? _vaultFilePath;
         private string? _vaultPassword;
         private string? _vaultKeyfilePath;
+        // Cached runtime manifest from the unlock flow — lets SetManifestContext + LoadAsync skip
+        // their own ReadManifest calls (each one runs a fresh Argon2id KDF ≈ 0.5–2s).
+        private VaultManifest? _cachedRuntimeManifest;
+        // True while LoadAsync is running in the background after the vault window has been
+        // shown. The UI can bind a loading overlay to this.
+        private bool _isLoadingCredentials;
+        public bool IsLoadingCredentials
+        {
+            get => _isLoadingCredentials;
+            set => this.RaiseAndSetIfChanged(ref _isLoadingCredentials, value);
+        }
         private bool _isPersistingCredentialIndex;
         private ObservableCollection<string> _items = new();
         private ObservableCollection<CredentialViewModel> _credentials = new();
@@ -101,6 +112,8 @@ namespace PhantomVault.UI.ViewModels
         private bool _isShowingExpiringSoon = false;
         private bool _isShowingDashboard = false;
         private bool _isDashboardEnabled = true;
+        private bool _startWithWindows;
+        private bool _globalHotkeyEnabled;
         private bool _isSettingsSaveNotificationVisible;
         private bool _isInitializing = true;
         private bool _privacyModeEnabled;
@@ -124,6 +137,8 @@ namespace PhantomVault.UI.ViewModels
         private bool _isSidebarAutoCollapsed = false;
 
         private bool _showCategoryColorBarOnly;
+        private bool _showEntryIcons = true;
+        private bool _showCategoryColors = true;
 
         private bool _isLockscreenVisible;
         private bool _isSoftLocked;
@@ -325,6 +340,17 @@ namespace PhantomVault.UI.ViewModels
             CloseFlaggedPasswordsCommand = ReactiveCommand.Create(CloseFlaggedPasswordsPanel);
             OpenPhantomRecoveryCommand = ReactiveCommand.CreateFromTask(OpenPhantomRecoveryAsync);
             ToggleRecoveryPanelCommand = ReactiveCommand.Create(ToggleRecoveryPanel);
+            // Surface silently-swallowed ReactiveCommand exceptions so the user sees why a Recovery click did nothing.
+            OpenPhantomRecoveryCommand.ThrownExceptions.Subscribe(ex =>
+            {
+                Debug.WriteLine($"[Recovery] OpenPhantomRecoveryCommand threw: {ex}");
+                StatusMessage = $"Phantom Recovery failed: {ex.Message}";
+            });
+            ToggleRecoveryPanelCommand.ThrownExceptions.Subscribe(ex =>
+            {
+                Debug.WriteLine($"[Recovery] ToggleRecoveryPanelCommand threw: {ex}");
+                StatusMessage = $"Recovery panel failed: {ex.Message}";
+            });
             OpenSecurityOptionsCommand = ReactiveCommand.Create(OpenSecurityOptions);
             OpenPasswordHealthPanelCommand = ReactiveCommand.Create(OpenPasswordHealthPanel);
             ClosePasswordHealthPanelCommand = ReactiveCommand.Create(ClosePasswordHealthPanel);
@@ -381,6 +407,7 @@ namespace PhantomVault.UI.ViewModels
             ShowAccessibilitySettingsCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowAccessibilitySettings));
             ShowAdvancedSettingsCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowAdvancedSettings));
             ShowRubbishBinSettingsCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowRubbishBinSettings));
+            ShowRecentIssuesCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowRecentIssues));
             ShowPasswordHealthCommand = ReactiveCommand.Create(ShowPasswordHealth);
             ShowSyncSettingsCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowSyncSettings));
             OpenIconManagerCommand = ReactiveCommand.Create(OpenIconManager);
@@ -400,7 +427,14 @@ namespace PhantomVault.UI.ViewModels
             PrivacyModeEnabled = PrivacyShield.PrivacyModeEnabled;
             PrivacyShield.PrivacyModeChanged += OnPrivacyModeChanged;
 
-            try { _showCategoryColorBarOnly = SettingsService.Load().ShowCategoryColorBarOnly; } catch { _showCategoryColorBarOnly = false; }
+            try
+            {
+                var s = SettingsService.Load();
+                _showCategoryColorBarOnly = s.ShowCategoryColorBarOnly;
+                _showEntryIcons = s.ShowEntryIcons;
+                _showCategoryColors = s.ShowCategoryColors;
+            }
+            catch { _showCategoryColorBarOnly = false; }
             SettingsService.SettingsChanged += OnUserSettingsChanged;
 
             if (_secureTrashService.AutoPurgeEnabled)
@@ -450,6 +484,8 @@ namespace PhantomVault.UI.ViewModels
             {
                 var userSettings = SettingsService.Load();
                 _isDashboardEnabled = userSettings.DashboardEnabled;
+                _startWithWindows = WindowsStartupRegistration.IsEnabled();
+                _globalHotkeyEnabled = userSettings.GlobalHotkeyEnabled;
                 _isGridView = userSettings.PreferGridView;
                 _gridViewIconPath = _isGridView ? "Assets/SVG/Current/List.svg" : "Assets/SVG/Current/Grid.svg";
             }
@@ -1148,41 +1184,45 @@ namespace PhantomVault.UI.ViewModels
             get => _isDashboardEnabled;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _isDashboardEnabled, value))
+                if (_isDashboardEnabled == value)
                 {
+                    return;
+                }
 
-                    var previousPersisted = SafeLoadDashboardEnabled();
-                    if (value == previousPersisted)
-                    {
+                this.RaiseAndSetIfChanged(ref _isDashboardEnabled, value);
 
-                        _settingsDraftTracker.ClearKey("General.DashboardEnabled");
-                    }
-                    else
-                    {
-                        _settingsDraftTracker.Stage(
-                            key: "General.DashboardEnabled",
-                            commit: () =>
+                var previousPersisted = SafeLoadDashboardEnabled();
+                if (value == previousPersisted)
+                {
+                    _settingsDraftTracker.ClearKey("General.DashboardEnabled");
+                }
+                else
+                {
+                    _settingsDraftTracker.Stage(
+                        key: "General.DashboardEnabled",
+                        commit: () =>
+                        {
+                            try
                             {
-                                try
-                                {
-                                    var s = SettingsService.Load();
-                                    s.DashboardEnabled = value;
-                                    SettingsService.Save(s);
-                                }
-                                catch {  }
-                            },
-                            discard: () =>
+                                var s = SettingsService.Load();
+                                s.DashboardEnabled = value;
+                                SettingsService.Save(s);
+                            }
+                            catch (Exception ex)
                             {
+                                System.Diagnostics.Debug.WriteLine($"[Settings] DashboardEnabled commit failed: {ex}");
+                                RecentIssuesLog.Instance.Record(IssueSeverity.Warning, "Couldn't save setting", $"Dashboard preference may not persist: {ex.Message}");
+                            }
+                        },
+                        discard: () =>
+                        {
+                            this.RaiseAndSetIfChanged(ref _isDashboardEnabled, previousPersisted, nameof(IsDashboardEnabled));
+                        });
+                }
 
-                                this.RaiseAndSetIfChanged(ref _isDashboardEnabled, previousPersisted, nameof(IsDashboardEnabled));
-                            });
-                    }
-
-                    if (!value && IsShowingDashboard)
-                    {
-
-                        ShowPasswords();
-                    }
+                if (!value && IsShowingDashboard)
+                {
+                    ShowPasswords();
                 }
             }
         }
@@ -1191,6 +1231,65 @@ namespace PhantomVault.UI.ViewModels
         {
             try { return SettingsService.Load().DashboardEnabled; }
             catch { return true; }
+        }
+
+        public bool GlobalHotkeyEnabled
+        {
+            get => _globalHotkeyEnabled;
+            set
+            {
+                if (_globalHotkeyEnabled == value)
+                {
+                    return;
+                }
+
+                this.RaiseAndSetIfChanged(ref _globalHotkeyEnabled, value);
+
+                try
+                {
+                    var s = SettingsService.Load();
+                    s.GlobalHotkeyEnabled = value;
+                    SettingsService.Save(s);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Settings] GlobalHotkeyEnabled persist failed: {ex}");
+                    RecentIssuesLog.Instance.Record(IssueSeverity.Warning, "Couldn't save setting", $"Global hotkey preference may not persist: {ex.Message}");
+                }
+            }
+        }
+
+        public bool StartWithWindows
+        {
+            get => _startWithWindows;
+            set
+            {
+                if (_startWithWindows == value)
+                {
+                    return;
+                }
+
+                var applied = WindowsStartupRegistration.Apply(value);
+                if (!applied)
+                {
+                    this.RaisePropertyChanged(nameof(StartWithWindows));
+                    return;
+                }
+
+                this.RaiseAndSetIfChanged(ref _startWithWindows, value);
+
+                try
+                {
+                    var s = SettingsService.Load();
+                    s.StartWithWindows = value;
+                    SettingsService.Save(s);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Settings] StartWithWindows persist failed: {ex}");
+                    RecentIssuesLog.Instance.Record(IssueSeverity.Warning, "Couldn't save setting", $"Start-with-Windows preference may not persist: {ex.Message}");
+                }
+            }
         }
 
         public bool IsSidebarCollapsed
@@ -1217,6 +1316,18 @@ namespace PhantomVault.UI.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _showCategoryColorBarOnly, value);
         }
 
+        public bool ShowEntryIcons
+        {
+            get => _showEntryIcons;
+            private set => this.RaiseAndSetIfChanged(ref _showEntryIcons, value);
+        }
+
+        public bool ShowCategoryColors
+        {
+            get => _showCategoryColors;
+            private set => this.RaiseAndSetIfChanged(ref _showCategoryColors, value);
+        }
+
         private void OnUserSettingsChanged(object? sender, UserSettingsChangedEventArgs e)
         {
             try
@@ -1225,6 +1336,8 @@ namespace PhantomVault.UI.ViewModels
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
                     ShowCategoryColorBarOnly = e.Settings.ShowCategoryColorBarOnly;
+                    ShowEntryIcons = e.Settings.ShowEntryIcons;
+                    ShowCategoryColors = e.Settings.ShowCategoryColors;
                 });
             }
             catch {  }
@@ -1581,7 +1694,31 @@ namespace PhantomVault.UI.ViewModels
         public bool PrivacyModeEnabled
         {
             get => _privacyModeEnabled;
-            private set => this.RaiseAndSetIfChanged(ref _privacyModeEnabled, value);
+            set
+            {
+                if (_privacyModeEnabled == value)
+                {
+                    return;
+                }
+
+                this.RaiseAndSetIfChanged(ref _privacyModeEnabled, value);
+
+                // Master "go offline" switch. Drives the process-wide PrivacyShield,
+                // which is wired to the internet gateway (revokes grants, refuses new
+                // network consent) and persist the choice so it survives restarts.
+                if (PrivacyShield.PrivacyModeEnabled != value)
+                {
+                    PrivacyShield.PrivacyModeEnabled = value;
+                    try
+                    {
+                        SettingsService.Update(s => s.PrivacyModeEnabled = value);
+                    }
+                    catch
+                    {
+                        // Persistence is best-effort; the runtime switch already applied.
+                    }
+                }
+            }
         }
 
         public ObservableCollection<CredentialViewModel> FilteredCredentials
@@ -1732,8 +1869,11 @@ namespace PhantomVault.UI.ViewModels
             get => _showAllFilter;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _showAllFilter, value))
+                if (_showAllFilter != value)
+                {
+                    this.RaiseAndSetIfChanged(ref _showAllFilter, value);
                     ApplySecurityFilters();
+                }
             }
         }
 
@@ -1743,8 +1883,11 @@ namespace PhantomVault.UI.ViewModels
             get => _showCriticalFilter;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _showCriticalFilter, value))
+                if (_showCriticalFilter != value)
+                {
+                    this.RaiseAndSetIfChanged(ref _showCriticalFilter, value);
                     ApplySecurityFilters();
+                }
             }
         }
 
@@ -1754,8 +1897,11 @@ namespace PhantomVault.UI.ViewModels
             get => _showLowFilter;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _showLowFilter, value))
+                if (_showLowFilter != value)
+                {
+                    this.RaiseAndSetIfChanged(ref _showLowFilter, value);
                     ApplySecurityFilters();
+                }
             }
         }
 
@@ -1765,8 +1911,11 @@ namespace PhantomVault.UI.ViewModels
             get => _showMediumFilter;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _showMediumFilter, value))
+                if (_showMediumFilter != value)
+                {
+                    this.RaiseAndSetIfChanged(ref _showMediumFilter, value);
                     ApplySecurityFilters();
+                }
             }
         }
 
@@ -1776,8 +1925,11 @@ namespace PhantomVault.UI.ViewModels
             get => _showGoodFilter;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref _showGoodFilter, value))
+                if (_showGoodFilter != value)
+                {
+                    this.RaiseAndSetIfChanged(ref _showGoodFilter, value);
                     ApplySecurityFilters();
+                }
             }
         }
 
@@ -1815,6 +1967,31 @@ namespace PhantomVault.UI.ViewModels
             get => _twoFactorEnabledCount;
             private set => this.RaiseAndSetIfChanged(ref _twoFactorEnabledCount, value);
         }
+
+        private double _averageEntropy = 0;
+        public double AverageEntropy
+        {
+            get => _averageEntropy;
+            private set
+            {
+                this.RaiseAndSetIfChanged(ref _averageEntropy, value);
+                this.RaisePropertyChanged(nameof(AverageEntropyDisplay));
+                this.RaisePropertyChanged(nameof(AverageEntropyLabel));
+            }
+        }
+
+        // Rounded bits-of-entropy figure for the dashboard stat tile.
+        public int AverageEntropyDisplay => (int)Math.Round(_averageEntropy);
+
+        // Human-readable banding for the average entropy stat.
+        public string AverageEntropyLabel => _averageEntropy switch
+        {
+            <= 0 => "—",
+            < 40 => "Weak",
+            < 60 => "Fair",
+            < 80 => "Strong",
+            _ => "Excellent"
+        };
 
         private DateTime? _lastBreachCheckTime;
         public DateTime? LastBreachCheckTime
@@ -1965,6 +2142,13 @@ namespace PhantomVault.UI.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _selectedSettingsTab, value);
         }
 
+        private string _settingsSearchQuery = string.Empty;
+        public string SettingsSearchQuery
+        {
+            get => _settingsSearchQuery;
+            set => this.RaiseAndSetIfChanged(ref _settingsSearchQuery, value ?? string.Empty);
+        }
+
         public ReactiveCommand<string, Unit> OpenItemCommand { get; }
         public ReactiveCommand<Unit, Unit> LockCommand { get; }
         public ReactiveCommand<Unit, Unit> UnlockWithPasswordCommand { get; }
@@ -2076,6 +2260,7 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> ShowAccessibilitySettingsCommand { get; }
         public ReactiveCommand<Unit, Unit> ShowAdvancedSettingsCommand { get; }
         public ReactiveCommand<Unit, Unit> ShowRubbishBinSettingsCommand { get; }
+        public ReactiveCommand<Unit, Unit> ShowRecentIssuesCommand { get; }
         public ReactiveCommand<Unit, Unit> ShowPasswordHealthCommand { get; }
         public ReactiveCommand<Unit, Unit> ShowSyncSettingsCommand { get; }
         public ReactiveCommand<Unit, Unit> OpenIconManagerCommand { get; }
@@ -3263,6 +3448,7 @@ namespace PhantomVault.UI.ViewModels
             catch (Exception ex)
             {
                 Debug.WriteLine($"[VaultViewModel] Failed to persist Obscura credential index: {ex.Message}");
+                RecentIssuesLog.Instance.Record(IssueSeverity.Warning, "Credential index not updated", $"Browser auto-fill data may be stale: {ex.Message}");
             }
             finally
             {
@@ -4326,6 +4512,9 @@ namespace PhantomVault.UI.ViewModels
         }
 
         internal void SetManifestContext(string manifestPath, string? password, string? keyfilePath)
+            => SetManifestContext(manifestPath, password, keyfilePath, preloadedManifest: null);
+
+        internal void SetManifestContext(string manifestPath, string? password, string? keyfilePath, VaultManifest? preloadedManifest)
         {
 
             _vaultPassword = password;
@@ -4347,7 +4536,11 @@ namespace PhantomVault.UI.ViewModels
 
             try
             {
-                var manifest = _manifestService.ReadManifest(manifestPath, _vaultPassword, keyfilePath);
+                // Reuse the manifest the unlock flow already validated (and the Argon2id KDF that
+                // produced it) instead of running ReadManifest a second time.
+                var manifest = preloadedManifest
+                    ?? _manifestService.ReadManifest(manifestPath, _vaultPassword, keyfilePath);
+                _cachedRuntimeManifest = manifest;
                 ApplyManifestTransportState(manifest, manifestPath);
             }
             catch
@@ -4709,6 +4902,7 @@ namespace PhantomVault.UI.ViewModels
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"PIN setup failed: {ex.Message}");
+                RecentIssuesLog.Instance.Record(IssueSeverity.Error, "PIN setup failed", $"Your PIN may not have been saved: {ex.Message}");
             }
         }
 
@@ -5102,6 +5296,7 @@ namespace PhantomVault.UI.ViewModels
 
         public async Task LoadAsync(string mountPath, string password, string? keyfilePath = null, CancellationToken cancellationToken = default)
         {
+            IsLoadingCredentials = true;
             try
             {
                 _mountPath = mountPath;
@@ -5112,7 +5307,10 @@ namespace PhantomVault.UI.ViewModels
                 {
                     try
                     {
-                        var runtimeManifest = _manifestService.ReadManifest(_manifestPath, password, keyfilePath);
+                        // Reuse the cached manifest (already decrypted in SetManifestContext / unlock flow)
+                        // instead of running another Argon2id-backed ReadManifest.
+                        var runtimeManifest = _cachedRuntimeManifest
+                            ?? _manifestService.ReadManifest(_manifestPath, password, keyfilePath);
                         ApplyManifestTransportState(runtimeManifest, _manifestPath);
                     }
                     catch
@@ -5279,6 +5477,10 @@ namespace PhantomVault.UI.ViewModels
                     _ownerWindow);
                 StatusMessage = "Failed to load vault";
             }
+            finally
+            {
+                IsLoadingCredentials = false;
+            }
         }
 
         public void Load(string mountPath)
@@ -5395,6 +5597,7 @@ namespace PhantomVault.UI.ViewModels
 
         private async Task OpenPhantomRecoveryAsync()
         {
+            Debug.WriteLine($"[Recovery] OpenPhantomRecoveryAsync entered. IsExternalRecoveryAvailable={IsExternalRecoveryAvailable}");
             await Task.CompletedTask;
 
             if (!_integratedRecoveryService.IsAvailable)
@@ -5467,17 +5670,14 @@ namespace PhantomVault.UI.ViewModels
 
         private void ToggleRecoveryPanel()
         {
+            Debug.WriteLine($"[Recovery] ToggleRecoveryPanel entered. IsEmbeddedRecoveryAvailable={IsEmbeddedRecoveryAvailable} IsExternalRecoveryAvailable={IsExternalRecoveryAvailable}");
             if (!IsEmbeddedRecoveryAvailable)
             {
-                if (IsExternalRecoveryAvailable)
-                {
-                    _ = OpenPhantomRecoveryAsync();
-                }
-                else
-                {
-                    StatusMessage = EmbeddedRecoveryStatus;
-                    IsRecoveryPanelVisible = false;
-                }
+                // No embedded recovery vault yet — route the user into the consolidated
+                // Recovery & Backup settings tab so they always have a setup path forward,
+                // instead of silently no-oping or launching an external app behind their back.
+                ShowBackupSettings();
+                IsRecoveryPanelVisible = false;
                 return;
             }
 
@@ -5848,6 +6048,7 @@ namespace PhantomVault.UI.ViewModels
                     ReusedPasswordCount = 0;
                     ExpiringCredentialCount = 0;
                     TwoFactorEnabledCount = 0;
+                    AverageEntropy = 0;
                     LastBreachCheckTime = null;
                     IsRefreshingDashboard = false;
                     FilteredCredentialsForDashboard.Clear();
@@ -5899,6 +6100,12 @@ namespace PhantomVault.UI.ViewModels
                 int breachedCount = _breachedPasswordCount;
                 score -= (breachedCount * 10);
 
+                var entropyValues = _credentials
+                    .Where(c => !string.IsNullOrEmpty(c.Password))
+                    .Select(c => PhantomVault.Core.Services.PasswordHealthService.ComputeEntropy(c.Password))
+                    .ToList();
+                AverageEntropy = entropyValues.Count > 0 ? entropyValues.Average() : 0;
+
                 SecurityScore = Math.Clamp(score, 0, 100);
 
                 LastBreachCheckTime = DateTime.UtcNow;
@@ -5914,6 +6121,12 @@ namespace PhantomVault.UI.ViewModels
         }
 
         private HaveIBeenPwnedService? _hibpService;
+
+        private static HaveIBeenPwnedService? ResolveHibpService()
+        {
+            var app = Avalonia.Application.Current as PhantomVault.UI.App;
+            return app?.Services?.GetService(typeof(HaveIBeenPwnedService)) as HaveIBeenPwnedService;
+        }
 
         private int _breachCheckRunning;
 
@@ -5941,13 +6154,26 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                var hibp = _hibpService ??= new HaveIBeenPwnedService();
-                int breached = 0;
-                foreach (var pw in passwords)
+                var hibp = _hibpService ??= ResolveHibpService();
+                if (hibp is null) return;
+                if (!await hibp.RequestInternetAccessAsync().ConfigureAwait(false))
                 {
-                    int hits = await hibp.CheckPasswordBreachAsync(pw).ConfigureAwait(false);
-                    if (hits > 0) breached++;
+                    Debug.WriteLine("[VaultViewModel] HIBP background refresh skipped: internet access denied.");
+                    return;
+                }
 
+                int breached = 0;
+                try
+                {
+                    foreach (var pw in passwords)
+                    {
+                        int hits = await hibp.CheckPasswordBreachAsync(pw).ConfigureAwait(false);
+                        if (hits > 0) breached++;
+                    }
+                }
+                finally
+                {
+                    hibp.DisableInternet();
                 }
 
                 int finalBreached = breached;
@@ -6176,11 +6402,20 @@ namespace PhantomVault.UI.ViewModels
             SelectedSettingsContent = new Views.Settings.GeneralSettingsView();
         }
 
+        private void ShowRecentIssues()
+        {
+            EnsureSettingsPanelOpen("recentissues");
+            SelectedSettingsContent = new Views.Settings.RecentIssuesView();
+        }
+
         private void ShowSecuritySettings()
         {
             EnsureSettingsPanelOpen("security");
             var view = new Views.Settings.SecuritySettingsView();
-            view.DataContext = new SecuritySettingsViewModel(null, _manifestPath);
+            view.DataContext = new SecuritySettingsViewModel(
+                defenceSettingsService: null,
+                manifestPath: _manifestPath,
+                hostViewModel: this);
             SelectedSettingsContent = view;
         }
 
@@ -6320,7 +6555,16 @@ namespace PhantomVault.UI.ViewModels
                 secureBackupManager: ((App)Application.Current!).Services?.GetService(typeof(UI.Services.SecureBackupManager)) as UI.Services.SecureBackupManager,
                 dialogService: new UI.Services.DialogService(),
                 owner: _ownerWindow,
-                manifestContextResolver: resolver);
+                manifestContextResolver: resolver,
+                integratedRecoveryService: _integratedRecoveryService,
+                openPhantomRecoveryAsync: OpenPhantomRecoveryAsync,
+                openRecoveryActivation: () =>
+                {
+                    EnsureSettingsPanelOpen("recoveryactivation");
+                    var raVm = ((App)Application.Current!).Services?.GetService(typeof(UI.ViewModels.Settings.RecoveryActivationSettingsViewModel))
+                        as UI.ViewModels.Settings.RecoveryActivationSettingsViewModel;
+                    SelectedSettingsContent = new Views.Settings.RecoveryActivationSettingsView { DataContext = raVm };
+                });
 
             view.DataContext = backupVm;
             SelectedSettingsContent = view;
@@ -6489,6 +6733,84 @@ namespace PhantomVault.UI.ViewModels
         private void DismissRotationBanner()
         {
             IsRotationBannerDismissed = true;
+        }
+
+        /// <summary>
+        /// Returns a short label for the currently-active manifest KDF tier so the Security
+        /// settings panel can show "Current: Standard (256 MiB / 6 iter)" vs "Current: Fast".
+        /// </summary>
+        public string CurrentManifestKdfDisplay
+        {
+            get
+            {
+                var p = _cachedRuntimeManifest?.RuntimeKdfParams;
+                if (p == null) return "Unknown";
+                if (p == PhantomVault.Core.Models.ManifestKdfParams.Fast) return $"Fast ({p.MemoryKb / 1024} MiB / {p.Iterations} iter)";
+                if (p == PhantomVault.Core.Models.ManifestKdfParams.Standard) return $"Standard ({p.MemoryKb / 1024} MiB / {p.Iterations} iter)";
+                return $"Custom ({p.MemoryKb / 1024} MiB / {p.Iterations} iter)";
+            }
+        }
+
+        public bool IsManifestKdfFast
+            => _cachedRuntimeManifest?.RuntimeKdfParams?.Equals(PhantomVault.Core.Models.ManifestKdfParams.Fast) == true;
+
+        /// <summary>
+        /// Re-encrypt the live manifest under the requested KDF tier. Touches only the manifest
+        /// envelope — the vault database's encryption key is derived separately at fixed
+        /// parameters and is left intact, so this is safe to run on a populated vault.
+        /// </summary>
+        public async Task<bool> RekeyManifestForFastUnlockAsync(bool useFast)
+        {
+            if (string.IsNullOrWhiteSpace(_manifestPath))
+            {
+                StatusMessage = "Re-key failed: no manifest path";
+                return false;
+            }
+            if (_cachedRuntimeManifest == null)
+            {
+                StatusMessage = "Re-key failed: manifest not loaded";
+                return false;
+            }
+
+            var target = useFast
+                ? PhantomVault.Core.Models.ManifestKdfParams.Fast
+                : PhantomVault.Core.Models.ManifestKdfParams.Standard;
+
+            try
+            {
+                IsBusy = true;
+                StatusMessage = useFast ? "Re-keying manifest for Fast Unlock…" : "Re-keying manifest for Standard security…";
+
+                await Task.Run(() =>
+                {
+                    _manifestService.WriteManifest(
+                        _cachedRuntimeManifest,
+                        _manifestPath,
+                        _vaultPassword,
+                        _vaultKeyfilePath,
+                        usbSerial: null,
+                        requireDualFactor: false,
+                        overrideKdfParams: target);
+                }).ConfigureAwait(false);
+
+                this.RaisePropertyChanged(nameof(CurrentManifestKdfDisplay));
+                this.RaisePropertyChanged(nameof(IsManifestKdfFast));
+                StatusMessage = useFast
+                    ? "Fast Unlock applied — next unlock will be faster"
+                    : "Standard security restored";
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Error(ex, "[VaultViewModel] RekeyManifestForFastUnlockAsync failed");
+                await _dialogService.ShowErrorAsync("Re-key Failed", $"Failed to re-key the vault manifest: {ex.Message}", _ownerWindow);
+                StatusMessage = "Re-key failed";
+                return false;
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         public string CurrentKeyfileDisplay
@@ -6853,6 +7175,7 @@ namespace PhantomVault.UI.ViewModels
                         catch (Exception ex)
                         {
                             Debug.WriteLine($"[Security] Failed to lock vault: {ex.Message}");
+                            RecentIssuesLog.Instance.Record(IssueSeverity.Error, "Vault did not lock", $"A security threat was detected but the vault failed to lock automatically: {ex.Message}");
                         }
                     }
                 });
@@ -6860,12 +7183,6 @@ namespace PhantomVault.UI.ViewModels
 
             if (action.ShouldExitApplication)
             {
-                if (_isDeveloperBypassMode)
-                {
-                    Debug.WriteLine("[Security] Exit suppressed in developer bypass mode.");
-                    return;
-                }
-
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     Environment.Exit(1);
@@ -6924,6 +7241,7 @@ namespace PhantomVault.UI.ViewModels
             catch (Exception ex)
             {
                 Debug.WriteLine($"[VaultViewModel] Failed to initialize auto-inject: {ex.Message}");
+                RecentIssuesLog.Instance.Record(IssueSeverity.Warning, "Auto-fill unavailable", $"USB auto-inject could not start; browser auto-fill may not work this session: {ex.Message}");
             }
         }
 
@@ -7108,6 +7426,7 @@ namespace PhantomVault.UI.ViewModels
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Failed to sync TOTP entries: {ex.Message}");
+                RecentIssuesLog.Instance.Record(IssueSeverity.Warning, "TOTP sync failed", $"Incoming authenticator codes could not be applied: {ex.Message}");
             }
         }
 

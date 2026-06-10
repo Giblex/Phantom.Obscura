@@ -20,7 +20,7 @@
     </Window.Resources>
 
     <DockPanel Margin="20" LastChildFill="True">
-        <!-- Header -->
+
         <Border DockPanel.Dock="Top"
                 Background="{DynamicResource HeaderBackgroundBrush}"
                 Padding="16"
@@ -53,7 +53,7 @@
                                 Width="110" Height="34">
                             <TextBlock Text="Refresh" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Button>
-                        <!-- Options dropdown placed as vertical three-dashes: ⋮ -->
+
                         <Button Name="OptionsButton" Classes="liquid-glass" Width="40" Height="34" ToolTip.Tip="Options">
                             <TextBlock Text="⋮" FontSize="{StaticResource Type.Icon.Size}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             <Button.ContextMenu>
@@ -71,7 +71,6 @@
             </StackPanel>
         </Border>
 
-        <!-- Status footer -->
         <Border DockPanel.Dock="Bottom"
                 Background="{DynamicResource ControlBackgroundBrush}"
                 Padding="8"
@@ -105,7 +104,6 @@
             </Grid>
         </Border>
 
-        <!-- Thumbnail preview (top icons) -->
     <Border Margin="0,0,0,8" CornerRadius="6" Background="{DynamicResource HeaderBackgroundBrush}" Padding="8" DockPanel.Dock="Top">
             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Height="100" Padding="0,0,0,8">
                 <ItemsControl Name="TopIconsList" ItemsSource="{Binding TopIcons}">
@@ -127,7 +125,6 @@
             </ScrollViewer>
         </Border>
 
-        <!-- Variant popup anchored below the clicked icon -->
         <Popup Name="VariantPopup" IsOpen="{Binding IsVariantPopupOpen, Mode=TwoWay}" Placement="Bottom"
                IsLightDismissEnabled="True">
             <Border Margin="0,4,0,0" Background="Transparent" Padding="0" MaxWidth="350">
@@ -160,7 +157,6 @@
             </Border>
         </Popup>
 
-        <!-- Icon grid -->
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
@@ -218,7 +214,6 @@
                 </DataGrid.Columns>
             </DataGrid>
 
-            <!-- Grid view of icons (wrap panel). Visible when IsGridView is true -->
             <ScrollViewer Grid.Row="0" Padding="20" IsVisible="{Binding IsGridView}" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                 <ItemsControl ItemsSource="{Binding GridIcons}">
                     <ItemsControl.ItemsPanel>
@@ -239,10 +234,6 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </ScrollViewer>
-            
-            <!-- Pagination controls for the grid view -->
-            <!-- Pagination controls are now in the combined footer below -->
-            <!-- Removed limited-grid preview warning; grid shows all (deduped) icons now -->
 
                 <Border Grid.Row="0"
                     Background="{DynamicResource OverlayBackgroundBrush}"
@@ -263,9 +254,4 @@
         </Grid>
     </DockPanel>
 </views:ThemeAwareWindow>
-
-
-
-
-
 

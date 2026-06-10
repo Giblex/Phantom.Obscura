@@ -13,7 +13,7 @@
                         SystemDecorations="BorderOnly">
 
     <Window.Styles>
-        <!-- Option card hover effect -->
+
         <Style Selector="Border.option-card">
             <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
@@ -40,7 +40,6 @@
             <Setter Property="Background" Value="#156BB3AE"/>
         </Style>
 
-        <!-- Confirm button -->
         <Style Selector="Button.confirm-btn">
             <Setter Property="Transitions">
                 <Transitions>
@@ -53,7 +52,7 @@
     <Grid RowDefinitions="*,Auto" Margin="32,28">
 
         <StackPanel Spacing="24">
-            <!-- Header -->
+
             <StackPanel Spacing="8" HorizontalAlignment="Center">
                 <TextBlock Text="How would you like to unlock your vault?"
                            FontSize="22"
@@ -68,10 +67,8 @@
                            TextAlignment="Center"/>
             </StackPanel>
 
-            <!-- Option Cards -->
             <StackPanel Spacing="10">
 
-                <!-- PIN Option -->
                 <Border x:Name="PinCard" Classes="option-card" PointerPressed="PinCard_PointerPressed">
                     <Grid ColumnDefinitions="Auto,*,Auto">
                         <Border Grid.Column="0" Width="44" Height="44" CornerRadius="22"
@@ -99,7 +96,6 @@
                     </Grid>
                 </Border>
 
-                <!-- Windows Hello Option -->
                 <Border x:Name="HelloCard" Classes="option-card" PointerPressed="HelloCard_PointerPressed">
                     <Grid ColumnDefinitions="Auto,*,Auto">
                         <Border Grid.Column="0" Width="44" Height="44" CornerRadius="22"
@@ -127,7 +123,6 @@
                     </Grid>
                 </Border>
 
-                <!-- Automatic Option -->
                 <Border x:Name="AutoCard" Classes="option-card" PointerPressed="AutoCard_PointerPressed">
                     <Grid ColumnDefinitions="Auto,*,Auto">
                         <Border Grid.Column="0" Width="44" Height="44" CornerRadius="22"
@@ -158,7 +153,6 @@
             </StackPanel>
         </StackPanel>
 
-        <!-- Confirm Button -->
         <Button x:Name="ConfirmButton"
                 Grid.Row="1"
                 Content="Confirm"
@@ -172,3 +166,4 @@
     </Grid>
 
 </views:ThemeAwareWindow>
+

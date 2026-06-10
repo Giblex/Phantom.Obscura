@@ -10,10 +10,7 @@ using PhantomVault.Core.Options;
 
 namespace PhantomVault.Core.Services.Security
 {
-    /// <summary>
-    /// Detects tampering attempts including debuggers, DLL injection, memory manipulation,
-    /// and code integrity violations. Automatically activates decoy vault when tampering is detected.
-    /// </summary>
+
     public sealed class TamperDetectionService : IDisposable
     {
         private Timer? _monitoringTimer;
@@ -36,24 +33,12 @@ namespace PhantomVault.Core.Services.Security
             _securityOptions = securityOptions ?? new SecurityOptions();
         }
 
-        /// <summary>
-        /// Event raised when tampering is detected.
-        /// </summary>
         public event EventHandler<TamperDetectedEventArgs>? TamperDetected;
 
-        /// <summary>
-        /// Gets whether monitoring is active.
-        /// </summary>
         public bool IsMonitoring => _isMonitoring;
 
-        /// <summary>
-        /// Gets whether decoy vault is currently active.
-        /// </summary>
         public bool IsDecoyActive => _decoyActivated;
 
-        /// <summary>
-        /// Starts continuous tamper detection monitoring.
-        /// </summary>
         public void StartMonitoring()
         {
             if (_isMonitoring)
@@ -61,54 +46,40 @@ namespace PhantomVault.Core.Services.Security
 
             _isMonitoring = true;
 
-            // Calculate initial executable hash
             CalculateExecutableHash();
 
-            // Start monitoring timer (check every 10 seconds)
             _monitoringTimer = new Timer(MonitoringCallback, null, TimeSpan.Zero, TimeSpan.FromSeconds(10));
         }
 
-        /// <summary>
-        /// Stops tamper detection monitoring.
-        /// </summary>
         public void StopMonitoring()
         {
             _isMonitoring = false;
             _monitoringTimer?.Change(Timeout.Infinite, Timeout.Infinite);
         }
 
-        /// <summary>
-        /// Performs immediate tamper detection check.
-        /// </summary>
         public TamperCheckResult PerformCheck()
         {
             var result = new TamperCheckResult();
 
-            // 1. Enhanced debugger detection (multiple techniques)
             result.DebuggerDetected = AdvancedDebuggerDetection.IsDebuggerAttached() ||
                                       AdvancedDebuggerDetection.DetectDebuggerDLLs() ||
                                       AdvancedDebuggerDetection.CheckHardwareBreakpoints();
 
-            // 2. Remote debugger detection (Windows only)
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 result.RemoteDebuggerDetected = IsRemoteDebuggerPresent();
             }
 
-            // 3. DLL injection detection
             result.UnknownModulesDetected = DetectUnknownModules();
 
-            // 4. Code integrity check
             if ((DateTime.UtcNow - _lastIntegrityCheck) >= _integrityCheckInterval)
             {
                 result.IntegrityViolated = !VerifyExecutableIntegrity();
                 _lastIntegrityCheck = DateTime.UtcNow;
             }
 
-            // 5. Memory manipulation detection
             result.MemoryManipulationDetected = DetectMemoryManipulation();
 
-            // 6. Timing attack detection (anti-analysis)
             result.TimingAnomalyDetected = DetectTimingAnomaly();
 
             result.IsTampered = result.DebuggerDetected ||
@@ -132,7 +103,7 @@ namespace PhantomVault.Core.Services.Security
 
                 if (result.IsTampered)
                 {
-                    // CRITICAL: Activate decoy vault BEFORE raising event
+
                     if (_securityOptions.AutoActivateDecoyOnTamper &&
                         !_decoyActivated &&
                         _decoyService != null)
@@ -150,24 +121,18 @@ namespace PhantomVault.Core.Services.Security
             }
             catch
             {
-                // Silently catch to avoid crashing monitoring thread
+
             }
         }
 
-        /// <summary>
-        /// Activates the decoy vault in response to detected tampering.
-        /// This method runs asynchronously but does not block the monitoring thread.
-        /// </summary>
         private async void ActivateDecoyVault(TamperCheckResult tamperResult)
         {
             try
             {
                 _decoyActivated = true;
 
-                // Generate and activate decoy vault
                 await _decoyService!.ActivateDecoyVaultAsync();
 
-                // Create silent alert file for forensic analysis (if configured)
                 if (!string.IsNullOrEmpty(_securityOptions.DecoyAlertFilePath))
                 {
                     try
@@ -181,7 +146,6 @@ namespace PhantomVault.Core.Services.Security
 
                         await File.WriteAllTextAsync(_securityOptions.DecoyAlertFilePath, alertMessage);
 
-                        // Set hidden attribute on Windows
                         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                         {
                             File.SetAttributes(_securityOptions.DecoyAlertFilePath,
@@ -190,14 +154,13 @@ namespace PhantomVault.Core.Services.Security
                     }
                     catch
                     {
-                        // Silently fail - don't alert attacker
+
                     }
                 }
             }
             catch (Exception ex)
             {
-                // CRITICAL: Don't let decoy activation failure crash the app or alert attacker
-                // Only log to debug output (not visible to attacker)
+
                 Debug.WriteLine($"[INTERNAL] Decoy activation failed: {ex.Message}");
                 _decoyActivated = false;
             }
@@ -225,7 +188,7 @@ namespace PhantomVault.Core.Services.Security
             try
             {
                 if (_executableHash == null || string.IsNullOrEmpty(_executablePath))
-                    return true; // Can't verify, assume OK
+                    return true;
 
                 if (!File.Exists(_executablePath))
                     return false;
@@ -238,7 +201,7 @@ namespace PhantomVault.Core.Services.Security
             }
             catch
             {
-                return true; // Can't verify, assume OK to avoid false positives
+                return true;
             }
         }
 
@@ -249,7 +212,6 @@ namespace PhantomVault.Core.Services.Security
                 var process = Process.GetCurrentProcess();
                 var modules = process.Modules;
 
-                // Known suspicious DLL patterns (common injection vectors)
                 string[] suspiciousPatterns = new[]
                 {
                     "inject",
@@ -266,11 +228,9 @@ namespace PhantomVault.Core.Services.Security
                 {
                     var moduleName = module.ModuleName?.ToLowerInvariant() ?? string.Empty;
 
-                    // Check for suspicious patterns
                     if (suspiciousPatterns.Any(pattern => moduleName.Contains(pattern)))
                         return true;
 
-                    // Check for modules in temp directories (common injection technique)
                     var modulePath = module.FileName?.ToLowerInvariant() ?? string.Empty;
                     if (modulePath.Contains("\\temp\\") || modulePath.Contains("\\tmp\\"))
                         return true;
@@ -280,24 +240,23 @@ namespace PhantomVault.Core.Services.Security
             }
             catch
             {
-                return false; // Can't check, assume OK
+                return false;
             }
         }
 
         private bool DetectMemoryManipulation()
         {
-            // Use canary values in memory to detect manipulation
-            // This is a simplified implementation
+
             try
             {
                 var testValue = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF };
                 var handle = GCHandle.Alloc(testValue, GCHandleType.Pinned);
-                
+
                 try
                 {
-                    // Check if memory address is in expected range
+
                     var address = handle.AddrOfPinnedObject();
-                    return address == IntPtr.Zero; // Should never be null
+                    return address == IntPtr.Zero;
                 }
                 finally
                 {
@@ -312,19 +271,17 @@ namespace PhantomVault.Core.Services.Security
 
         private bool DetectTimingAnomaly()
         {
-            // Measure execution time to detect analysis tools
+
             var sw = Stopwatch.StartNew();
-            
-            // Perform simple operation that should take < 1ms
+
             var sum = 0;
             for (int i = 0; i < 1000; i++)
             {
                 sum += i;
             }
-            
+
             sw.Stop();
 
-            // If operation takes > 100ms, likely being analyzed/debugged
             return sw.ElapsedMilliseconds > 100;
         }
 
@@ -362,9 +319,6 @@ namespace PhantomVault.Core.Services.Security
         }
     }
 
-    /// <summary>
-    /// Result of tamper detection check.
-    /// </summary>
     public sealed class TamperCheckResult
     {
         public bool IsTampered { get; set; }
@@ -392,17 +346,12 @@ namespace PhantomVault.Core.Services.Security
         }
     }
 
-    /// <summary>
-    /// Event args for tamper detection.
-    /// </summary>
     public sealed class TamperDetectedEventArgs : EventArgs
     {
         public TamperCheckResult Result { get; set; } = new();
         public DateTimeOffset Timestamp { get; set; }
 
-        /// <summary>
-        /// Indicates whether the decoy vault was activated in response to this tamper detection.
-        /// </summary>
         public bool DecoyActivated { get; set; }
     }
 }
+

@@ -6,10 +6,7 @@ using System.Text.Json;
 
 namespace PhantomVault.Core.Services.Security
 {
-    /// <summary>
-    /// Default implementation of IDefenceSettingsService that persists rule enable/disable
-    /// state to a JSON configuration file in the user's local application data folder.
-    /// </summary>
+
     public sealed class DefenceSettingsService : IDefenceSettingsService
     {
         private readonly IReadOnlyList<DefenceRule> _rules;
@@ -20,7 +17,6 @@ namespace PhantomVault.Core.Services.Security
         {
             _rules = rules ?? throw new ArgumentNullException(nameof(rules));
 
-            // Store config in local app data
             var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             var appFolder = Path.Combine(appDataPath, "PhantomVault");
             Directory.CreateDirectory(appFolder);
@@ -34,11 +30,9 @@ namespace PhantomVault.Core.Services.Security
             if (string.IsNullOrWhiteSpace(ruleId))
                 return false;
 
-            // Check persisted state first
             if (_ruleStates.TryGetValue(ruleId, out var enabled))
                 return enabled;
 
-            // Default to enabled if not found in persisted state
             return true;
         }
 
@@ -47,17 +41,14 @@ namespace PhantomVault.Core.Services.Security
             if (string.IsNullOrWhiteSpace(ruleId))
                 return;
 
-            // Update in-memory state
             _ruleStates[ruleId] = enabled;
 
-            // Update the rule object itself
             var rule = _rules.FirstOrDefault(r => r.Id == ruleId);
             if (rule != null)
             {
                 rule.IsEnabled = enabled;
             }
 
-            // Persist to disk
             SaveRuleStates();
         }
 
@@ -67,7 +58,7 @@ namespace PhantomVault.Core.Services.Security
             {
                 if (!File.Exists(_configFilePath))
                 {
-                    // Initialize with default enabled state for all rules
+
                     var defaultStates = new Dictionary<string, bool>();
                     foreach (var rule in _rules)
                     {
@@ -78,10 +69,9 @@ namespace PhantomVault.Core.Services.Security
                 }
 
                 var json = File.ReadAllText(_configFilePath);
-                var states = JsonSerializer.Deserialize<Dictionary<string, bool>>(json) 
+                var states = JsonSerializer.Deserialize<Dictionary<string, bool>>(json)
                              ?? new Dictionary<string, bool>();
 
-                // Apply loaded states to rules
                 foreach (var rule in _rules)
                 {
                     if (states.TryGetValue(rule.Id, out var enabled))
@@ -90,7 +80,7 @@ namespace PhantomVault.Core.Services.Security
                     }
                     else
                     {
-                        // Default to enabled
+
                         rule.IsEnabled = true;
                         states[rule.Id] = true;
                     }
@@ -100,7 +90,7 @@ namespace PhantomVault.Core.Services.Security
             }
             catch
             {
-                // On any error, return default enabled state
+
                 var defaultStates = new Dictionary<string, bool>();
                 foreach (var rule in _rules)
                 {
@@ -115,16 +105,17 @@ namespace PhantomVault.Core.Services.Security
         {
             try
             {
-                var json = JsonSerializer.Serialize(_ruleStates, new JsonSerializerOptions 
-                { 
-                    WriteIndented = true 
+                var json = JsonSerializer.Serialize(_ruleStates, new JsonSerializerOptions
+                {
+                    WriteIndented = true
                 });
                 File.WriteAllText(_configFilePath, json);
             }
             catch
             {
-                // Silently fail - settings won't persist but won't crash the app
+
             }
         }
     }
 }
+

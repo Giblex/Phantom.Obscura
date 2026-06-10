@@ -16,7 +16,7 @@
     </Design.DataContext>
 
     <Window.Styles>
-        <!-- Recovery-specific styles -->
+
         <Style Selector="Border.step-card">
             <Setter Property="Background" Value="{DynamicResource ContentBackgroundBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
@@ -99,12 +99,12 @@
     </Window.Styles>
 
     <Grid RowDefinitions="Auto,*,Auto">
-        <!-- Header -->
+
         <Border Grid.Row="0"
                 Background="{DynamicResource HeaderBackgroundBrush}"
                 Padding="24,16">
             <Grid ColumnDefinitions="Auto,*,Auto">
-                <!-- Logo/Icon -->
+
                 <Border Grid.Column="0"
                         Width="48" Height="48"
                         Background="{DynamicResource Brush.Accent}"
@@ -118,7 +118,6 @@
                                VerticalAlignment="Center"/>
                 </Border>
 
-                <!-- Title -->
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                     <TextBlock Text="Phantom Recovery"
                                FontSize="{StaticResource Type.Icon.Size}"
@@ -128,7 +127,6 @@
                                Foreground="{DynamicResource TextSecondaryBrush}"/>
                 </StackPanel>
 
-                <!-- Step indicator -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
                     <Border Width="8" Height="8" CornerRadius="4"
                             Background="{DynamicResource Brush.Accent}"/>
@@ -142,11 +140,10 @@
             </Grid>
         </Border>
 
-        <!-- Main Content -->
         <ScrollViewer Grid.Row="1" Padding="24">
             <Border Classes="step-card">
                 <Panel>
-                <!-- Step: Welcome -->
+
                 <StackPanel IsVisible="{Binding CurrentStep, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:RecoveryStep.Welcome}}">
                     <TextBlock Classes="step-title" Text="Recovery Mode"/>
                     <TextBlock Classes="step-description">
@@ -155,7 +152,6 @@
                         <Run Text="You will need one of your recovery codes to proceed. Recovery codes are one-time use only."/>
                     </TextBlock>
 
-                    <!-- Explicit unsupported state -->
                     <Border Classes="warning-banner" IsVisible="{Binding !IsRecoveryAvailable}">
                         <StackPanel Spacing="8">
                             <TextBlock Text="Recovery Context Required"
@@ -170,7 +166,6 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Warning about recovery -->
                     <Border Classes="warning-banner" IsVisible="{Binding IsRecoveryAvailable}">
                         <StackPanel Spacing="8">
                             <TextBlock Text="Important Security Information" FontWeight="SemiBold" Foreground="{DynamicResource WarningBrush}"/>
@@ -182,12 +177,10 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Device warning if present -->
                     <Border Classes="warning-banner" IsVisible="{Binding HasDeviceWarning}">
                         <TextBlock Text="{Binding DeviceWarning}" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     </Border>
 
-                    <!-- Remaining codes info -->
                     <Border Background="{DynamicResource ControlBackgroundBrush}"
                             CornerRadius="8" Padding="16" Margin="0,0,0,16"
                             IsVisible="{Binding IsRecoveryAvailable}">
@@ -217,18 +210,15 @@
                             IsVisible="{Binding !IsRecoveryAvailable}"/>
                 </StackPanel>
 
-                <!-- Step: Enter Code -->
                 <StackPanel IsVisible="{Binding CurrentStep, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:RecoveryStep.EnterCode}}">
                     <TextBlock Classes="step-title" Text="Enter Recovery Code"/>
                     <TextBlock Classes="step-description"
                                Text="Enter one of your recovery codes. Codes are case-insensitive and dashes are optional."/>
 
-                    <!-- Error display -->
                     <Border Classes="error-banner" IsVisible="{Binding HasError}">
                         <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" Foreground="{DynamicResource ErrorBrush}"/>
                     </Border>
 
-                    <!-- Code input -->
                     <StackPanel Spacing="8" Margin="0,0,0,24">
                         <TextBlock Text="Recovery Code" FontWeight="SemiBold"/>
                         <TextBox Text="{Binding RecoveryCode, Mode=TwoWay}"
@@ -241,7 +231,6 @@
                                  Classes="liquid-glass"/>
                     </StackPanel>
 
-                    <!-- Failed attempts warning -->
                     <Border Classes="warning-banner" IsVisible="{Binding FailedAttempts}">
                         <TextBlock Foreground="{DynamicResource SecondaryTextBrush}">
                             <Run Text="Failed attempts: "/>
@@ -261,28 +250,24 @@
                     </StackPanel>
                 </StackPanel>
 
-                <!-- Step: Waiting Delay -->
                 <StackPanel IsVisible="{Binding CurrentStep, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:RecoveryStep.WaitingDelay}}"
                             HorizontalAlignment="Center">
                     <TextBlock Classes="step-title" Text="Security Delay" HorizontalAlignment="Center"/>
                     <TextBlock Classes="step-description" HorizontalAlignment="Center" TextAlignment="Center"
                                Text="For your protection, there is a mandatory delay before recovery proceeds. This gives you time to abort if you're being coerced."/>
 
-                    <!-- Big countdown -->
                     <TextBlock Classes="countdown" Text="{Binding DelaySecondsRemaining}"/>
                     <TextBlock Text="seconds remaining"
                                HorizontalAlignment="Center"
                                Foreground="{DynamicResource TextSecondaryBrush}"
                                Margin="0,0,0,24"/>
 
-                    <!-- Progress bar -->
                     <ProgressBar Classes="countdown-progress"
                                  Minimum="0"
                                  Maximum="{Binding TotalDelaySeconds}"
                                  Value="{Binding DelaySecondsRemaining}"
                                  Width="300"/>
 
-                    <!-- Abort button -->
                     <Button Content="Abort Recovery"
                             Command="{Binding AbortRecoveryCommand}"
                             Classes="liquid-glass"
@@ -297,15 +282,13 @@
                                Margin="0,8,0,0"/>
                 </StackPanel>
 
-                <!-- Step: Select Domain -->
                 <StackPanel IsVisible="{Binding CurrentStep, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:RecoveryStep.SelectDomain}}">
                     <TextBlock Classes="step-title" Text="Select Domain to Recover"/>
                     <TextBlock Classes="step-description"
                                Text="Choose which domain you need to recover. You can only recover one domain per recovery code."/>
 
-                    <!-- Domain cards -->
                     <Grid ColumnDefinitions="*,*" Margin="0,8,0,24">
-                        <!-- Obscura Domain -->
+
                         <Border Grid.Column="0" Classes="domain-card"
                                 IsEnabled="{Binding CanSelectObscura}">
                             <Button Command="{Binding SelectDomainCommand}"
@@ -336,7 +319,6 @@
                             </Button>
                         </Border>
 
-                        <!-- Attestor Domain -->
                         <Border Grid.Column="1" Classes="domain-card"
                                 IsEnabled="{Binding CanSelectAttestor}">
                             <Button Command="{Binding SelectDomainCommand}"
@@ -375,7 +357,6 @@
                             Width="160"/>
                 </StackPanel>
 
-                <!-- Step: Complete -->
                 <StackPanel IsVisible="{Binding CurrentStep, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:RecoveryStep.Complete}}"
                             HorizontalAlignment="Center">
                     <Border Width="80" Height="80"
@@ -395,7 +376,6 @@
                                    Foreground="{DynamicResource SuccessTextBrush}"/>
                     </Border>
 
-                    <!-- Rekey warning -->
                     <Border Classes="warning-banner" IsVisible="{Binding RekeyRequired}">
                         <StackPanel Spacing="8">
                             <TextBlock Text="Password Change Required" FontWeight="SemiBold" Foreground="{DynamicResource WarningBrush}"/>
@@ -417,7 +397,6 @@
                     </StackPanel>
                 </StackPanel>
 
-                <!-- Step: Aborted -->
                 <StackPanel IsVisible="{Binding CurrentStep, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:RecoveryStep.Aborted}}"
                             HorizontalAlignment="Center">
                     <Border Width="80" Height="80"
@@ -442,7 +421,6 @@
                             Margin="0,16,0,0"/>
                 </StackPanel>
 
-                <!-- Step: Error -->
                 <StackPanel IsVisible="{Binding CurrentStep, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:RecoveryStep.Error}}"
                             HorizontalAlignment="Center">
                     <Border Width="80" Height="80"
@@ -470,7 +448,6 @@
                             Margin="0,16,0,0"/>
                 </StackPanel>
 
-                <!-- Step: Audit History -->
                 <StackPanel IsVisible="{Binding CurrentStep, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:RecoveryStep.AuditHistory}}">
                     <TextBlock Classes="step-title" Text="Recovery Audit Log"/>
                     <TextBlock Classes="step-description"
@@ -519,7 +496,6 @@
             </Border>
         </ScrollViewer>
 
-        <!-- Footer -->
         <Border Grid.Row="2"
                 Background="{DynamicResource FooterBackgroundBrush}"
                 Padding="24,12">
@@ -529,7 +505,6 @@
                            Foreground="{DynamicResource TextSecondaryBrush}"
                            VerticalAlignment="Center"/>
 
-                <!-- Busy indicator -->
                 <StackPanel Grid.Column="1"
                             Orientation="Horizontal"
                             Spacing="8"
@@ -546,3 +521,4 @@
         </Border>
     </Grid>
 </Window>
+

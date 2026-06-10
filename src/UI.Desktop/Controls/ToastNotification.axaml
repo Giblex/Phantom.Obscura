@@ -48,7 +48,6 @@
     <Border x:Name="ToastBorder" Classes="toast">
         <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto">
 
-            <!-- Icon -->
             <controls:SvgIcon x:Name="ToastIcon"
                               Grid.Column="0"
                               Grid.RowSpan="2"
@@ -58,7 +57,6 @@
                               VerticalAlignment="Center"
                               IconColor="{DynamicResource AccentBrush}"/>
 
-            <!-- Title -->
             <TextBlock x:Name="TitleText"
                        Grid.Column="1"
                        Grid.Row="0"
@@ -68,7 +66,6 @@
                        TextWrapping="NoWrap"
                        TextTrimming="CharacterEllipsis"/>
 
-            <!-- Message -->
             <TextBlock x:Name="MessageText"
                        Grid.Column="1"
                        Grid.Row="1"
@@ -79,7 +76,6 @@
                        TextTrimming="CharacterEllipsis"
                        Margin="0,4,0,0"/>
 
-            <!-- Close Button -->
             <Button x:Name="CloseButton"
                     Grid.Column="2"
                     Grid.RowSpan="2"
@@ -101,3 +97,4 @@
     </Border>
 
 </UserControl>
+

@@ -3,13 +3,109 @@
              xmlns:vm="using:PhantomVault.UI.ViewModels.Settings"
              x:Class="PhantomVault.UI.Views.Settings.BackupSettingsView"
              x:DataType="vm:BackupSettingsViewModel">
-    <StackPanel Spacing="20" Margin="0,0,30,60">
-        <TextBlock Text="Backup &amp; Restore"
+    <StackPanel Spacing="20" Margin="0,0,0,60">
+        <TextBlock Text="Recovery &amp; Backup"
                    FontSize="{StaticResource Type.H3.Size}"
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource PrimaryTextBrush}"/>
 
-        <Border Classes="fade-in stagger-1"
+        <Border Classes="fade-in stagger-1" HorizontalAlignment="Stretch"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
+                Padding="20">
+            <StackPanel Spacing="14">
+                <TextBlock Text="Set Up Recovery"
+                           FontSize="{StaticResource Type.Body.Size}"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <TextBlock Text="PhantomRecovery lets you recover this vault if you lose your USB keyfile or password. Configure the recovery activation policy and launch the recovery app from here."
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Embedded recovery vault"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <TextBlock Text="{Binding EmbeddedRecoveryStatus}"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Phantom Recovery app"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <TextBlock Text="{Binding ExternalRecoveryStatus}"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </StackPanel>
+
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Vault manifest"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <TextBlock Text="{Binding VaultManifestStatus}"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <Button Content="Set Up Vault Manifest"
+                            Classes="dull-blue"
+                            HorizontalAlignment="Left"
+                            Command="{Binding SetupVaultManifestCommand}"/>
+                </StackPanel>
+
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Windows Hello"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <TextBlock Text="{Binding WindowsHelloStatus}"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <Button Content="Enroll Windows Hello"
+                            Classes="dull-blue"
+                            HorizontalAlignment="Left"
+                            Command="{Binding EnrollWindowsHelloCommand}"/>
+                </StackPanel>
+
+                <StackPanel Spacing="6">
+                    <TextBlock Text="TOTP authenticator"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <TextBlock Text="{Binding TotpStatus}"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <Button Content="Set Up TOTP"
+                            Classes="dull-blue"
+                            HorizontalAlignment="Left"
+                            Command="{Binding SetupTotpCommand}"/>
+                </StackPanel>
+
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Recovery PIN"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <TextBlock Text="{Binding RecoveryPinStatus}"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <Button Content="Generate Recovery PIN"
+                            Classes="dull-blue"
+                            HorizontalAlignment="Left"
+                            Command="{Binding GenerateRecoveryPinCommand}"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Button Content="Open Phantom Recovery"
+                            Classes="dull-blue"
+                            Command="{Binding OpenPhantomRecoveryCommand}"/>
+                    <Button Content="Configure Recovery Activation"
+                            Command="{Binding ConfigureRecoveryActivationCommand}"
+                            IsVisible="{Binding CanConfigureRecoveryActivation}"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <Border Classes="fade-in stagger-1" HorizontalAlignment="Stretch"
                 Background="{DynamicResource SettingsPanelBackgroundBrush}"
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
                 BorderThickness="1"
@@ -81,7 +177,7 @@
             </StackPanel>
         </Border>
 
-        <Border Classes="fade-in stagger-2"
+        <Border Classes="fade-in stagger-2" HorizontalAlignment="Stretch"
                 Background="{DynamicResource SettingsPanelBackgroundBrush}"
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
                 BorderThickness="1"
@@ -119,7 +215,7 @@
             </StackPanel>
         </Border>
 
-        <Border Classes="fade-in stagger-3"
+        <Border Classes="fade-in stagger-3" HorizontalAlignment="Stretch"
                 Background="{DynamicResource SettingsPanelBackgroundBrush}"
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
                 BorderThickness="1"
@@ -159,7 +255,7 @@
             </StackPanel>
         </Border>
 
-        <Border Classes="fade-in stagger-4"
+        <Border Classes="fade-in stagger-4" HorizontalAlignment="Stretch"
                 Background="{DynamicResource SettingsPanelBackgroundBrush}"
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
                 BorderThickness="1"
@@ -183,7 +279,7 @@
             </StackPanel>
         </Border>
 
-        <Border Classes="fade-in stagger-5"
+        <Border Classes="fade-in stagger-5" HorizontalAlignment="Stretch"
                 Background="{DynamicResource SettingsPanelBackgroundBrush}"
                 BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
                 BorderThickness="1"

@@ -22,7 +22,7 @@ namespace PhantomVault.UI.Views.Settings
                 var parentWindow = this.FindAncestorOfType<Window>();
                 if (parentWindow != null)
                 {
-                    // Explicitly create with TotpService so verification works
+
                     var totpService = new PhantomVault.Core.Services.TotpService();
                     var viewModel = new TotpSettingsViewModel(totpService);
 
@@ -89,9 +89,6 @@ namespace PhantomVault.UI.Views.Settings
             });
         }
 
-        /// <summary>
-        /// Wrapper for async void event handlers to ensure exceptions are logged and displayed.
-        /// </summary>
         private async Task HandleEventAsync(Func<Task> action)
         {
             try
@@ -115,3 +112,4 @@ namespace PhantomVault.UI.Views.Settings
         }
     }
 }
+

@@ -5,14 +5,11 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PhantomVault.Core.Models.Security;
 using PhantomVault.Core.Services;
+using PhantomVault.Core.Utils;
 
 namespace PhantomVault.Core.Services.Security
 {
-    /// <summary>
-    /// Central defence engine implementation. Processes threat events and executes
-    /// defensive actions according to configured rules. Maintains cooldown tracking
-    /// to prevent over-triggering of responses.
-    /// </summary>
+
     public sealed class DefenceEngine : IDefenceEngine
     {
         private readonly IReadOnlyList<DefenceRule> _rules;
@@ -21,11 +18,9 @@ namespace PhantomVault.Core.Services.Security
         private readonly ISystemSecurityController _systemSecurityController;
         private readonly ILogger<DefenceEngine>? _logger;
 
-        // Tracks when each rule last fired to enforce cooldowns
         private readonly Dictionary<string, DateTimeOffset> _ruleLastFired = new();
         private readonly object _lock = new();
-        
-        // Incident scoring and manifest management
+
         private readonly IncidentState _incidentState = new();
         private readonly ManifestService? _manifestService;
         private string? _manifestPath;
@@ -48,9 +43,6 @@ namespace PhantomVault.Core.Services.Security
             _manifestPath = manifestPath;
         }
 
-        /// <summary>
-        /// Processes a threat event and executes matching defensive rules.
-        /// </summary>
         public void RaiseThreat(ThreatEvent threat)
         {
             if (threat == null)
@@ -60,7 +52,6 @@ namespace PhantomVault.Core.Services.Security
                 "Threat raised: Type={ThreatType}, Level={ThreatLevel}, Details={Details}",
                 threat.Type, threat.Level, threat.Details ?? "none");
 
-            // Find all rules that match this threat
             var matchingRules = _rules
                 .Where(r => r.IsEnabled && r.TriggerType == threat.Type && threat.Level >= r.MinLevel)
                 .ToList();
@@ -75,7 +66,7 @@ namespace PhantomVault.Core.Services.Security
             {
                 foreach (var rule in matchingRules)
                 {
-                    // Check cooldown
+
                     if (rule.Cooldown.HasValue && _ruleLastFired.TryGetValue(rule.Id, out var lastFired))
                     {
                         var elapsed = DateTimeOffset.UtcNow - lastFired;
@@ -88,19 +79,16 @@ namespace PhantomVault.Core.Services.Security
                         }
                     }
 
-                    // Execute actions
                     _logger?.LogWarning(
                         "Executing defence rule {RuleId} for threat {ThreatType} ({ThreatLevel})",
                         rule.Id, threat.Type, threat.Level);
 
-                    // Fire-and-forget async execution with top-level error logging.
                     _ = ExecuteActionsAsync(rule.Actions, threat).ContinueWith(
                         t => _logger?.LogError(t.Exception?.GetBaseException(),
                             "Unhandled error executing defence actions for rule {RuleId} / threat {ThreatType}",
                             rule.Id, threat.Type),
                         System.Threading.Tasks.TaskContinuationOptions.OnlyOnFaulted);
 
-                    // Update last fired timestamp
                     _ruleLastFired[rule.Id] = DateTimeOffset.UtcNow;
                 }
             }
@@ -111,13 +99,11 @@ namespace PhantomVault.Core.Services.Security
             var now = DateTimeOffset.UtcNow;
             var elapsed = now - _incidentState.LastUpdated;
 
-            // Apply exponential time decay (30-minute half-life)
             if (elapsed.TotalMinutes > 0)
             {
                 _incidentState.Score *= Math.Exp(-elapsed.TotalMinutes / 30.0);
             }
 
-            // Calculate threat weight based on type and level
             var weight = CalculateThreatWeight(threat.Type, threat.Level);
             _incidentState.Score += weight;
 
@@ -125,7 +111,6 @@ namespace PhantomVault.Core.Services.Security
                 "Incident score updated: {Score:F2} (added {Weight:F2} for {ThreatType}/{ThreatLevel})",
                 _incidentState.Score, weight, threat.Type, threat.Level);
 
-            // Determine new security state based on score thresholds
             var newState = _incidentState.Score switch
             {
                 < 4.0 => VaultSecurityState.Normal,
@@ -133,19 +118,19 @@ namespace PhantomVault.Core.Services.Security
                 _ => VaultSecurityState.Compromised
             };
 
-            // If state changed to Compromised, update manifest
             if (newState == VaultSecurityState.Compromised && _incidentState.State != VaultSecurityState.Compromised)
             {
                 _logger?.LogCritical("Vault security state escalated to COMPROMISED - Setting RekeyRequired flag");
-                
+
                 if (_manifestService != null && !string.IsNullOrEmpty(_manifestPath))
                 {
                     try
                     {
-                        var manifest = _manifestService.ReadManifest(_manifestPath, null, null);
+                        using var sp = SecurePassword.Empty();
+                        var manifest = _manifestService.ReadManifestSecure(_manifestPath, sp, null);
                         manifest.SecurityState = VaultSecurityState.Compromised;
                         manifest.RekeyRequired = true;
-                        _manifestService.WriteManifest(manifest, _manifestPath, null, null);
+                        _manifestService.WriteManifestSecure(manifest, _manifestPath, sp, null);
                         _logger?.LogWarning("Manifest updated with Compromised state and RekeyRequired flag");
                     }
                     catch (Exception ex)
@@ -171,7 +156,7 @@ namespace PhantomVault.Core.Services.Security
 
         private double CalculateThreatWeight(ThreatType type, ThreatLevel level)
         {
-            // Base weights by level
+
             var baseWeight = level switch
             {
                 ThreatLevel.Info => 0.5,
@@ -180,7 +165,6 @@ namespace PhantomVault.Core.Services.Security
                 _ => 1.0
             };
 
-            // Multipliers by threat type (more severe threats get higher multipliers)
             var typeMultiplier = type switch
             {
                 ThreatType.FailedLoginBurst => 1.5,
@@ -218,7 +202,7 @@ namespace PhantomVault.Core.Services.Security
             switch (action)
             {
                 case DefenceActionType.AddDelay:
-                    // Progressively increase delay based on threat level
+
                     var delay = threat.Level switch
                     {
                         ThreatLevel.Info => TimeSpan.FromSeconds(1),
@@ -231,7 +215,7 @@ namespace PhantomVault.Core.Services.Security
                     break;
 
                 case DefenceActionType.TempLockout:
-                    // Lock out based on threat level
+
                     var lockoutDuration = threat.Level switch
                     {
                         ThreatLevel.Warning => TimeSpan.FromMinutes(5),
@@ -255,7 +239,7 @@ namespace PhantomVault.Core.Services.Security
                     }
                     catch (Exception ex)
                     {
-                        // If decoy vault activation fails, fall back to lock + wipe
+
                         _logger?.LogError(ex, "Decoy vault activation failed, falling back to lock + scrub");
                         _authController.RequireReauthentication("Security threat detected");
                         _systemSecurityController.ScrubSensitiveCaches();
@@ -280,3 +264,4 @@ namespace PhantomVault.Core.Services.Security
         }
     }
 }
+

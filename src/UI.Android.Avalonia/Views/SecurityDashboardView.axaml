@@ -5,13 +5,9 @@
              x:DataType="vm:SecurityDashboardViewModel"
              Background="{DynamicResource WindowBackgroundBrush}">
 
-  <!-- Trimmed adaptation of Views/SecurityDashboardWindow.axaml — header,
-       password strength tester, and 6 stat tiles. Live-update wiring lands
-       once PasswordHealthService is hooked up on Android. -->
-
   <ScrollViewer>
     <StackPanel Spacing="0">
-      <!-- Header -->
+
       <Border Background="{DynamicResource SurfaceBrush}"
               BorderBrush="{DynamicResource DividerBrush}"
               BorderThickness="0,0,0,1" Padding="20,16">
@@ -35,7 +31,6 @@
         </Grid>
       </Border>
 
-      <!-- Password strength tester -->
       <Border Background="{DynamicResource SurfaceBrush}"
               BorderBrush="{DynamicResource DividerBrush}"
               BorderThickness="0,0,0,1" Padding="20,16">
@@ -64,7 +59,6 @@
         </StackPanel>
       </Border>
 
-      <!-- Quick stat tiles -->
       <Border Padding="14,14">
         <UniformGrid Rows="2" Columns="3">
           <Border Margin="6" Padding="14,12" CornerRadius="10"
@@ -127,3 +121,4 @@
     </StackPanel>
   </ScrollViewer>
 </UserControl>
+

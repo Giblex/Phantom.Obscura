@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:views="clr-namespace:PhantomVault.UI.Views"
              x:Class="PhantomVault.UI.Views.Overlays.CategoryManagerOverlay">
-    
+
     <Border Background="{DynamicResource OverlayBackgroundBrush}"
             IsVisible="{Binding IsCategoryManagerPanelVisible}"
             IsHitTestVisible="{Binding IsCategoryManagerPanelVisible}">
@@ -25,12 +25,11 @@
         </Border.Styles>
 
         <Grid ClipToBounds="True">
-            <!-- Transparent area to close panel -->
-            <Border Background="Transparent" 
+
+            <Border Background="Transparent"
                     PointerPressed="OnBackgroundClicked"/>
 
-            <!-- Category Manager Container - Slides in from right -->
-            <Border x:Name="CategoryManagerSlideHost" 
+            <Border x:Name="CategoryManagerSlideHost"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Stretch"
                     Width="820"
@@ -65,10 +64,10 @@
                     </Transitions>
                 </Border.Transitions>
 
-                <!-- Embed the CategoryManagerView and bind to the ViewModel provided by VaultViewModel -->
                 <views:CategoryManagerView DataContext="{Binding CategoryManagerViewModel}"/>
             </Border>
         </Grid>
     </Border>
-    
+
 </UserControl>
+

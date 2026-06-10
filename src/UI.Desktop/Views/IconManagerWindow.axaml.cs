@@ -13,15 +13,13 @@ namespace PhantomVault.UI.Views
 {
     public partial class IconManagerWindow : ThemeAwareWindow
     {
-        /// <summary>Tracks the last Button clicked whose DataContext is an IconFileEntryViewModel.</summary>
+
         private Button? _lastClickedIconButton;
 
         public IconManagerWindow()
         {
             InitializeComponent();
 
-            // Capture every Button.Click that bubbles through the window so we know
-            // exactly which button was pressed (for popup anchoring).
             AddHandler(Button.ClickEvent, OnAnyButtonClick, RoutingStrategies.Bubble, handledEventsToo: true);
 
             DataContextChanged += (_, _) =>
@@ -41,7 +39,6 @@ namespace PhantomVault.UI.Views
                 }
             };
 
-            // Close variant popup on Escape
             this.KeyDown += IconManagerWindow_KeyDown;
 
             Opened += (_, _) =>
@@ -68,7 +65,6 @@ namespace PhantomVault.UI.Views
             AvaloniaXamlLoader.Load(this);
         }
 
-        /// <summary>Captures every button click so we can reliably anchor the popup.</summary>
         private void OnAnyButtonClick(object? sender, RoutedEventArgs e)
         {
             if (e.Source is Button btn && btn.DataContext is IconFileEntryViewModel)
@@ -90,7 +86,7 @@ namespace PhantomVault.UI.Views
 
                     if (vm.IsVariantPopupOpen)
                     {
-                        // Find the item container for the clicked icon across all ItemsControls
+
                         Control? container = null;
                         if (vm.VariantOwnerIcon != null)
                         {
@@ -130,18 +126,12 @@ namespace PhantomVault.UI.Views
             }
         }
 
-        /// <summary>
-        /// Returns the Button that was just clicked for the target icon.
-        /// Uses the tracked _lastClickedIconButton for reliable anchoring,
-        /// regardless of whether the click came from TopIconsList or the grid.
-        /// </summary>
         private Control? FindOwnerContainer(IconFileEntryViewModel target)
         {
-            // Best: use the button we captured from the Click event
+
             if (_lastClickedIconButton != null && _lastClickedIconButton.DataContext == target)
                 return _lastClickedIconButton;
 
-            // Fallback: search the visual tree
             return FindButtonByDataContextInTree(this, target);
         }
 
@@ -182,7 +172,6 @@ namespace PhantomVault.UI.Views
                 }
             }
 
-            // Handle keyboard navigation for variant popup
             try
             {
                 if (DataContext is IconManagerViewModel vm && vm.IsVariantPopupOpen)
@@ -206,7 +195,7 @@ namespace PhantomVault.UI.Views
                         }
                         if (e.Key == Avalonia.Input.Key.Enter)
                         {
-                            // Apply currently selected variant
+
                             _ = vm.ApplySelectedVariantAsync();
                             e.Handled = true;
                             return;
@@ -262,7 +251,7 @@ namespace PhantomVault.UI.Views
 
                 if (container != null)
                 {
-                    // Find a Button descendant and focus it
+
                     var btn = FindButtonInContainer(container);
                     btn?.Focus();
                 }
@@ -290,3 +279,4 @@ namespace PhantomVault.UI.Views
         }
     }
 }
+

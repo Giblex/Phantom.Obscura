@@ -9,7 +9,6 @@ public partial class PlaceholderView : UserControl
     public PlaceholderView() => InitializeComponent();
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
 
-    /// <summary>Convenience factory used by the navigator.</summary>
     public static PlaceholderView Create(string title, string sourceView, string description, string portStatus)
         => new()
         {
@@ -22,3 +21,4 @@ public partial class PlaceholderView : UserControl
             }
         };
 }
+

@@ -7,9 +7,7 @@ using System.Threading.Tasks;
 
 namespace PhantomVault.Core.Services
 {
-    /// <summary>
-    /// Represents a reusable import template with custom column mappings.
-    /// </summary>
+
     public sealed class ImportTemplate
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
@@ -24,9 +22,6 @@ namespace PhantomVault.Core.Services
         public int UseCount { get; set; } = 0;
     }
 
-    /// <summary>
-    /// Manages import templates for reusable column mappings and configurations.
-    /// </summary>
     public sealed class ImportTemplateService
     {
         private readonly string _templatesFilePath;
@@ -38,9 +33,6 @@ namespace PhantomVault.Core.Services
             LoadTemplates();
         }
 
-        /// <summary>
-        /// Creates a new import template.
-        /// </summary>
         public async Task<ImportTemplate> CreateTemplateAsync(
             string name,
             string format,
@@ -65,17 +57,11 @@ namespace PhantomVault.Core.Services
             return template;
         }
 
-        /// <summary>
-        /// Gets all available templates.
-        /// </summary>
         public List<ImportTemplate> GetAllTemplates()
         {
             return _templates.OrderByDescending(t => t.LastUsedUtc).ToList();
         }
 
-        /// <summary>
-        /// Gets templates for a specific format.
-        /// </summary>
         public List<ImportTemplate> GetTemplatesByFormat(string format)
         {
             return _templates
@@ -84,25 +70,16 @@ namespace PhantomVault.Core.Services
                 .ToList();
         }
 
-        /// <summary>
-        /// Gets a specific template by ID.
-        /// </summary>
         public ImportTemplate? GetTemplate(string templateId)
         {
             return _templates.FirstOrDefault(t => t.Id == templateId);
         }
 
-        /// <summary>
-        /// Gets a template by name.
-        /// </summary>
         public ImportTemplate? GetTemplateByName(string name)
         {
             return _templates.FirstOrDefault(t => t.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
         }
 
-        /// <summary>
-        /// Updates an existing template.
-        /// </summary>
         public async Task<bool> UpdateTemplateAsync(
             string templateId,
             string? name = null,
@@ -122,9 +99,6 @@ namespace PhantomVault.Core.Services
             return true;
         }
 
-        /// <summary>
-        /// Records template usage (updates last used time and use count).
-        /// </summary>
         public async Task RecordTemplateUsageAsync(string templateId)
         {
             var template = GetTemplate(templateId);
@@ -136,9 +110,6 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Deletes a template.
-        /// </summary>
         public async Task<bool> DeleteTemplateAsync(string templateId)
         {
             var template = GetTemplate(templateId);
@@ -149,9 +120,6 @@ namespace PhantomVault.Core.Services
             return true;
         }
 
-        /// <summary>
-        /// Exports a template to JSON file for sharing.
-        /// </summary>
         public async Task<string> ExportTemplateAsync(string templateId, string exportPath)
         {
             var template = GetTemplate(templateId);
@@ -169,9 +137,6 @@ namespace PhantomVault.Core.Services
             return fullPath;
         }
 
-        /// <summary>
-        /// Imports a template from JSON file.
-        /// </summary>
         public async Task<ImportTemplate> ImportTemplateAsync(string filePath)
         {
             if (!File.Exists(filePath))
@@ -183,7 +148,6 @@ namespace PhantomVault.Core.Services
             if (template == null)
                 throw new InvalidOperationException("Failed to deserialize template");
 
-            // Generate new ID to avoid conflicts
             template.Id = Guid.NewGuid().ToString();
             template.CreatedUtc = DateTimeOffset.UtcNow;
             template.LastUsedUtc = DateTimeOffset.UtcNow;
@@ -195,9 +159,6 @@ namespace PhantomVault.Core.Services
             return template;
         }
 
-        /// <summary>
-        /// Gets template usage statistics.
-        /// </summary>
         public TemplateStatistics GetStatistics()
         {
             return new TemplateStatistics
@@ -210,14 +171,10 @@ namespace PhantomVault.Core.Services
             };
         }
 
-        /// <summary>
-        /// Creates predefined templates for common formats.
-        /// </summary>
         public async Task CreateDefaultTemplatesAsync()
         {
-            if (_templates.Any()) return; // Don't create if templates already exist
+            if (_templates.Any()) return;
 
-            // 1Password Template
             await CreateTemplateAsync(
                 "1Password Standard",
                 "1Password CSV",
@@ -235,7 +192,6 @@ namespace PhantomVault.Core.Services
                 isShared: true
             );
 
-            // Bitwarden Template
             await CreateTemplateAsync(
                 "Bitwarden Standard",
                 "Bitwarden CSV",
@@ -253,7 +209,6 @@ namespace PhantomVault.Core.Services
                 isShared: true
             );
 
-            // LastPass Template
             await CreateTemplateAsync(
                 "LastPass Standard",
                 "LastPass CSV",
@@ -306,7 +261,7 @@ namespace PhantomVault.Core.Services
             }
             catch
             {
-                // Log error but don't throw
+
             }
         }
 
@@ -317,9 +272,6 @@ namespace PhantomVault.Core.Services
         }
     }
 
-    /// <summary>
-    /// Template usage statistics.
-    /// </summary>
     public sealed class TemplateStatistics
     {
         public int TotalTemplates { get; set; }
@@ -329,3 +281,4 @@ namespace PhantomVault.Core.Services
         public int TotalUsage { get; set; }
     }
 }
+

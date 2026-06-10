@@ -3,16 +3,6 @@
              x:Class="PhantomVault.UI.Views.PlaceholderView"
              Background="{DynamicResource WindowBackgroundBrush}">
 
-  <!--
-    Reusable placeholder for screens whose desktop AXAML is too large to port
-    verbatim in a single turn (DashboardView 1287 LOC, VaultWindow 2032 LOC,
-    AddEditCredentialWindow 845 LOC, etc.). Renders a brand-correct card
-    explaining what desktop view will land here.
-
-    Bound to PlaceholderViewModel which exposes:
-      Title, SourceViewName, Description, PortStatus.
-  -->
-
   <ScrollViewer>
     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="20" Margin="32,40">
       <Border CornerRadius="20"
@@ -60,3 +50,4 @@
     </StackPanel>
   </ScrollViewer>
 </UserControl>
+

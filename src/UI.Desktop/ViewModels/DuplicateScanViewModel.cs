@@ -586,3 +586,4 @@ namespace PhantomVault.UI.ViewModels
         public string Reason { get; }
     }
 }
+

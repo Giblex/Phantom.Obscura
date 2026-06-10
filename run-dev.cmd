@@ -2,8 +2,10 @@
 REM ===================================================================
 REM Phantom Obscura V6 - Developer Mode Launcher
 REM ===================================================================
-REM This script bypasses USB policy enforcement for development/testing
-REM Set environment variable to enable policy bypass
+REM Bypasses USB policy enforcement for development/testing.
+REM The bypass is honoured in Debug builds only; Release builds refuse
+REM to start when PHANTOM_DEV_BYPASS_POLICY is set. Use run.cmd for a
+REM normal (fully enforced) launch.
 set PHANTOM_DEV_BYPASS_POLICY=1
 set MSBUILDDISABLENODEREUSE=1
 set UseSharedCompilation=false

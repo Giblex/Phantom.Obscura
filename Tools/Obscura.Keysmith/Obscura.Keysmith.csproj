@@ -2,15 +2,16 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <!-- Copy certificates to output directory for signing operations -->
-    <None Include="certs\*.pfx" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="certs\*.crt" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
+  <!--
+    Signing material is intentionally NOT copied to the output directory and is
+    excluded from source control (see ../../.gitignore). Keysmith loads certs
+    from a path provided via the OBSCURA_KEYSMITH_CERTS env var, falling back
+    to ./certs/ relative to the exe for local operator use only.
+  -->
 
 </Project>

@@ -15,6 +15,12 @@
 
     <!-- Application Icon (Desktop/Taskbar icon) -->
     <ApplicationIcon>Assets\Visuals\Giblex Icons\Parent Icon.ico</ApplicationIcon>
+    <!--
+      App manifest: requests administrator at process start so per-call UAC prompts
+      from diskpart / USB write-protection IOCTLs are suppressed (one prompt at
+      launch instead of one per invocation).
+    -->
+    <ApplicationManifest>app.manifest</ApplicationManifest>
     <!-- CS1591: Missing XML comment for publicly visible type or member - Temporarily suppressed -->
     <!-- CS0618: Obsolete method usage - Some internal uses of deprecated methods are intentional -->
     <!-- CS1573, CS1574, CS1571: XML documentation parameter mismatches - Fix in future refactor -->
@@ -37,8 +43,8 @@
          have been moved to Legacy folder. Stub replacements are in use. -->
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.9" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.11" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.11" />
     <ProjectReference Include="..\Core\PhantomVault.Core.csproj" />
     <ProjectReference Include="..\Platform\PhantomVault.Platform.csproj" />
     <ProjectReference Include="..\Crypto\GiblexVault.Security.ZK.csproj" />
@@ -47,15 +53,15 @@
     <ProjectReference Include="..\..\..\Phantom.Shared\Phantom.UI.Shared\Phantom.UI.Shared.csproj" />
     <!-- <ProjectReference Include="..\..\..\PhantomRecovery\PhantomRecovery.App\PhantomRecovery.App.csproj" /> -->
     <!-- <ProjectReference Include="..\..\..\PhantomRecovery\PhantomRecovery.Core\PhantomRecovery.Core.csproj" /> -->
-    <PackageReference Include="Avalonia" Version="11.3.9" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.3.9" />
+    <PackageReference Include="Avalonia" Version="11.3.11" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.11" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.9" />
-    <PackageReference Include="Avalonia.Skia" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Skia" Version="11.3.11" />
     <PackageReference Include="SkiaSharp" Version="3.119.1" />
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="Avalonia.Markup.Xaml.Loader" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Markup.Xaml.Loader" Version="11.3.11" />
     <PackageReference Include="Avalonia.Svg.Skia" Version="11.0.0" />
     <PackageReference Include="Avalonia.Xaml.Interactivity" Version="11.3.0.6" />
     <PackageReference Include="Isopoh.Cryptography.Argon2" Version="2.0.0" />

@@ -11,15 +11,11 @@ using PhantomVault.UI.Services;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// View model for Windows Hello settings.
-    /// Manages Windows Hello-backed enrollment, verification, and configuration.
-    /// Uses the current platform-backed authenticator service.
-    /// </summary>
+
     public sealed class WindowsHelloSettingsViewModel : ReactiveObject
     {
         private const string VaultCredentialName = "PhantomVault.WindowsHello";
-        
+
         private bool _isWindowsHelloAvailable;
         private bool _isWindowsHelloEnabled;
         private bool _isBiometricEnrolled;
@@ -27,7 +23,7 @@ namespace PhantomVault.UI.ViewModels
         private string _statusMessage = string.Empty;
         private bool _isBusy;
         private Window? _ownerWindow;
-        
+
         private readonly IPasskeyService _passkeyService;
 
         public WindowsHelloSettingsViewModel() : this(new PasskeyService())
@@ -37,13 +33,12 @@ namespace PhantomVault.UI.ViewModels
         public WindowsHelloSettingsViewModel(IPasskeyService passkeyService)
         {
             _passkeyService = passkeyService ?? throw new ArgumentNullException(nameof(passkeyService));
-            
+
             EnrollBiometricCommand = ReactiveCommand.CreateFromTask(EnrollBiometric);
             RemoveBiometricCommand = ReactiveCommand.CreateFromTask(RemoveBiometric);
             TestBiometricCommand = ReactiveCommand.CreateFromTask(TestBiometric);
             CheckAvailabilityCommand = ReactiveCommand.CreateFromTask(CheckAvailability);
 
-            // Initialize availability check
             _ = CheckAvailability();
         }
 
@@ -100,20 +95,18 @@ namespace PhantomVault.UI.ViewModels
                 IsBusy = true;
                 StatusMessage = "Checking Windows Hello availability...";
 
-                // Use the PasskeyService to check real Windows Hello availability
                 IsWindowsHelloAvailable = _passkeyService.IsSupported;
-                
+
                 if (IsWindowsHelloAvailable)
                 {
-                    // Check if biometric specifically is available (not just PIN)
+
                     var biometricAvailable = _passkeyService.IsBiometricAvailable;
-                    
-                    // Check if we have an existing credential for this app
+
                     IsBiometricEnrolled = await CheckExistingCredentialAsync().ConfigureAwait(false);
-                    
+
                     if (biometricAvailable)
                     {
-                        StatusMessage = IsBiometricEnrolled 
+                        StatusMessage = IsBiometricEnrolled
                             ? "Windows Hello is set up and ready"
                             : "Windows Hello is available. Set it up to use this local authenticator flow.";
                     }
@@ -161,12 +154,9 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Generate a challenge for the registration
                 var challenge = new byte[32];
                 RandomNumberGenerator.Fill(challenge);
 
-                // Use PasskeyService to register with Windows Hello
-                // This triggers the actual Windows Hello prompt
                 var credentialId = await _passkeyService.RegisterAsync(
                     userId: Environment.UserName,
                     userName: $"{Environment.UserName}@{Environment.MachineName}",
@@ -176,9 +166,9 @@ namespace PhantomVault.UI.ViewModels
 
                 if (credentialId != null && credentialId.Length > 0)
                 {
-                    // Store the credential ID for later authentication
+
                     await StoreCredentialIdAsync(credentialId).ConfigureAwait(false);
-                    
+
                     IsBiometricEnrolled = true;
                     EnrollmentStatus = "Enrolled - Biometric authentication active";
                     StatusMessage = "Windows Hello setup completed successfully.";
@@ -214,7 +204,6 @@ namespace PhantomVault.UI.ViewModels
                 IsBusy = true;
                 StatusMessage = "Removing stored Windows Hello credentials...";
 
-                // Remove the stored credential ID
                 await RemoveStoredCredentialAsync().ConfigureAwait(false);
 
                 IsBiometricEnrolled = false;
@@ -244,7 +233,6 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Get the stored credential ID
                 var credentialId = await GetStoredCredentialIdAsync().ConfigureAwait(false);
                 if (credentialId == null || credentialId.Length == 0)
                 {
@@ -252,11 +240,9 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Generate a test challenge
                 var challenge = new byte[32];
                 RandomNumberGenerator.Fill(challenge);
 
-                // Use PasskeyService to verify with Windows Hello
                 var authenticated = await _passkeyService.AuthenticateAsync(
                     credentialId: credentialId,
                     rpId: "phantomvault.local",
@@ -286,9 +272,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Checks if a Windows Hello credential exists for this application.
-        /// </summary>
         private async Task<bool> CheckExistingCredentialAsync()
         {
             try
@@ -302,9 +285,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Stores the Windows Hello credential ID in the Windows Credential Manager.
-        /// </summary>
         private static Task StoreCredentialIdAsync(byte[] credentialId)
         {
             WindowsCredentialStore.WriteSecret(
@@ -315,9 +295,6 @@ namespace PhantomVault.UI.ViewModels
             return Task.CompletedTask;
         }
 
-        /// <summary>
-        /// Retrieves the stored credential ID.
-        /// </summary>
         private static Task<byte[]?> GetStoredCredentialIdAsync()
         {
             try
@@ -330,9 +307,6 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Removes the stored credential.
-        /// </summary>
         private static Task RemoveStoredCredentialAsync()
         {
             WindowsCredentialStore.DeleteSecret(VaultCredentialName);
@@ -340,3 +314,4 @@ namespace PhantomVault.UI.ViewModels
         }
     }
 }
+

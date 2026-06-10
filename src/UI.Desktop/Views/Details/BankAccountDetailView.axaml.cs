@@ -10,3 +10,4 @@ public partial class BankAccountDetailView : UserControl
         AvaloniaXamlLoader.Load(this);
     }
 }
+

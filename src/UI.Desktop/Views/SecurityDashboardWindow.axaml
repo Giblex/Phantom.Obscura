@@ -15,10 +15,10 @@
     WindowStartupLocation="CenterScreen"
     Background="{DynamicResource WindowBackgroundBrush}"
     Classes="animated-window">
-    
+
     <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="0" Background="{DynamicResource WindowBackgroundBrush}">
-        <!-- Header -->
-        <Border Grid.Row="0" 
+
+        <Border Grid.Row="0"
                 Background="{DynamicResource SurfaceBrush}"
                 BorderBrush="{DynamicResource DividerBrush}"
                 BorderThickness="0,0,0,1"
@@ -41,15 +41,22 @@
                 </StackPanel>
                 <Button Grid.Column="1"
                         Command="{Binding RefreshSecurityDashboard}"
+                        IsEnabled="{Binding !IsRefreshingDashboard}"
                         Classes="liquid-glass"
                         ToolTip.Tip="Refresh all metrics"
                         Padding="12,28">
-                    <TextBlock Text="🔄" FontSize="18"/>
+                    <Panel>
+                        <TextBlock Text="🔄" FontSize="18" IsVisible="{Binding !IsRefreshingDashboard}"/>
+                        <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsRefreshingDashboard}">
+                            <TextBlock Text="⏳" FontSize="18"/>
+                            <TextBlock Text="Refreshing…" FontSize="12" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                        </StackPanel>
+                    </Panel>
                 </Button>
             </Grid>
         </Border>
 
-        <!-- Password Strength Tester -->
         <Border Grid.Row="1"
                 Background="{DynamicResource SurfaceBrush}"
                 BorderBrush="{DynamicResource DividerBrush}"
@@ -57,15 +64,15 @@
                 Padding="24,16">
             <StackPanel Spacing="12">
                 <TextBlock Text="Test Password Strength" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
-                
+
                 <TextBox Text="{Binding TestPassword}"
                          Watermark="Type a password to test its strength..."
                          Padding="12,10"
                          FontSize="12"
                          Classes="themed-textbox"/>
-                
+
                 <StackPanel Spacing="8" IsVisible="{Binding TestPassword.Length}">
-                    <!-- Strength Score -->
+
                     <StackPanel Spacing="4">
                         <Grid ColumnDefinitions="Auto,*,Auto">
                             <TextBlock Grid.Column="0" Text="Strength:" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -75,7 +82,6 @@
                         <TextBlock Text="{Binding TestPasswordStrengthLabel}" FontSize="11" FontWeight="SemiBold" Foreground="{Binding TestPasswordStrengthColor}"/>
                     </StackPanel>
 
-                    <!-- Suggested Improvement -->
                     <StackPanel Spacing="4" IsVisible="{Binding HasSuggestedPassword}">
                         <TextBlock Text="💡 Suggested Stronger Password:" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
                         <Border Background="#F5F5F5" Padding="12,8" CornerRadius="4" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
@@ -94,61 +100,69 @@
             </StackPanel>
         </Border>
 
-        <!-- Quick Stats -->
         <Border Grid.Row="2"
                 Background="{DynamicResource SurfaceBrush}"
                 BorderBrush="{DynamicResource DividerBrush}"
                 BorderThickness="0,0,0,1"
                 Padding="24,16">
-            <Grid ColumnDefinitions="*,*,*,*,*,*">
-                <!-- Total -->
+            <Grid ColumnDefinitions="*,*,*,*,*,*,*">
+
                 <Border Grid.Column="0" Margin="6,0" MinHeight="82" Padding="12,10" CornerRadius="8" Background="{DynamicResource WindowBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
                     <StackPanel Spacing="4" VerticalAlignment="Center">
                         <TextBlock Text="{Binding TotalCount}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}"/>
                         <TextBlock Text="Total" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     </StackPanel>
                 </Border>
-                <!-- Weak -->
+
                 <Border Grid.Column="1" Margin="6,0" MinHeight="82" Padding="12,10" CornerRadius="8" Background="{DynamicResource WindowBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
                     <StackPanel Spacing="4" VerticalAlignment="Center">
                         <TextBlock Text="{Binding WeakCredentials.Count}" FontSize="20" FontWeight="Bold" Foreground="#FFA726"/>
                         <TextBlock Text="Weak" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     </StackPanel>
                 </Border>
-                <!-- Reused -->
+
                 <Border Grid.Column="2" Margin="6,0" MinHeight="82" Padding="12,10" CornerRadius="8" Background="{DynamicResource WindowBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
                     <StackPanel Spacing="4" VerticalAlignment="Center">
                         <TextBlock Text="{Binding ReusedPasswordCount}" FontSize="20" FontWeight="Bold" Foreground="#EF5350"/>
                         <TextBlock Text="Reused" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     </StackPanel>
                 </Border>
-                <!-- Breached -->
+
                 <Border Grid.Column="3" Margin="6,0" MinHeight="82" Padding="12,10" CornerRadius="8" Background="{DynamicResource WindowBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
                     <StackPanel Spacing="4" VerticalAlignment="Center">
                         <TextBlock Text="{Binding BreachedPasswordCount}" FontSize="20" FontWeight="Bold" Foreground="#E53935"/>
                         <TextBlock Text="Breached" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     </StackPanel>
                 </Border>
-                <!-- Expiring -->
+
                 <Border Grid.Column="4" Margin="6,0" MinHeight="82" Padding="12,10" CornerRadius="8" Background="{DynamicResource WindowBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
                     <StackPanel Spacing="4" VerticalAlignment="Center">
                         <TextBlock Text="{Binding ExpiringCredentialCount}" FontSize="20" FontWeight="Bold" Foreground="#AB47BC"/>
                         <TextBlock Text="Expiring" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     </StackPanel>
                 </Border>
-                <!-- 2FA Enabled -->
+
                 <Border Grid.Column="5" Margin="6,0" MinHeight="82" Padding="12,10" CornerRadius="8" Background="{DynamicResource WindowBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1">
                     <StackPanel Spacing="4" VerticalAlignment="Center">
                         <TextBlock Text="{Binding TwoFactorEnabledCount}" FontSize="20" FontWeight="Bold" Foreground="#29B6F6"/>
                         <TextBlock Text="2FA" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     </StackPanel>
                 </Border>
+
+                <Border Grid.Column="6" Margin="6,0" MinHeight="82" Padding="12,10" CornerRadius="8" Background="{DynamicResource WindowBackgroundBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1" ToolTip.Tip="Average password entropy (bits) across the vault">
+                    <StackPanel Spacing="4" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding AverageEntropyDisplay}" FontSize="20" FontWeight="Bold" Foreground="#66BB6A"/>
+                        <TextBlock FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}">
+                            <Run Text="Avg bits • "/>
+                            <Run Text="{Binding AverageEntropyLabel}"/>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
             </Grid>
         </Border>
 
-        <!-- Main Content: Filters and Passwords List -->
         <Grid Grid.Row="3" RowDefinitions="Auto,*">
-            <!-- Filter Section -->
+
             <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}" Padding="24,16" Margin="0" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1">
                 <StackPanel Spacing="12">
                     <TextBlock Text="Filter by Security Score" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
@@ -162,41 +176,36 @@
                 </StackPanel>
             </Border>
 
-            <!-- Passwords List -->
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                 <Grid Margin="24,16" RowDefinitions="Auto,Auto">
-                    <!-- Password Items -->
+
                     <ItemsControl Grid.Row="0" ItemsSource="{Binding FilteredCredentialsForDashboard}" Margin="0" HorizontalAlignment="Stretch">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Button Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:SecurityDashboardWindow}}, Path=DataContext.OpenEditPasswordCommand}" CommandParameter="{Binding Credential}" Background="Transparent" Padding="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
                                     <Border CornerRadius="6" Padding="0" Margin="0,0,0,8" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1" Cursor="Hand" HorizontalAlignment="Stretch" MinHeight="76">
                                         <Grid ColumnDefinitions="6,*,80,Auto,70,100">
-                                            <!-- Category Color Bar -->
+
                                             <Border Grid.Column="0" CornerRadius="5,0,0,5" Background="{Binding CategoryColor}"/>
-                                            
-                                            <!-- Content -->
+
                                             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center" Margin="12,10">
-                                                <!-- Icon -->
+
                                                 <Border Width="40" Height="40" CornerRadius="4" Background="{DynamicResource DividerBrush}" VerticalAlignment="Center">
                                                     <Image Source="{Binding IconBitmap}" Stretch="UniformToFill"/>
                                                 </Border>
-                                                
-                                                <!-- Title & Username -->
+
                                                 <StackPanel Spacing="3" VerticalAlignment="Center">
                                                     <TextBlock Text="{Binding CredentialTitle}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
                                                     <TextBlock Text="{Binding CredentialUsername}" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
                                                 </StackPanel>
                                             </StackPanel>
 
-                                            <!-- Security Score -->
                                             <StackPanel Grid.Column="2" Margin="12,0" VerticalAlignment="Center" HorizontalAlignment="Center" ToolTip.Tip="Security Score">
                                                 <Border CornerRadius="4" Padding="8,6" Background="{Binding SecurityScoreColor}">
                                                     <TextBlock Text="{Binding SecurityScore}" FontWeight="Bold" Foreground="White" TextAlignment="Center" FontSize="12"/>
                                                 </Border>
                                             </StackPanel>
 
-                                            <!-- Status Indicators -->
                                             <ItemsControl Grid.Column="3" ItemsSource="{Binding StatusIndicators}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="12,0">
                                                 <ItemsControl.ItemsPanel>
                                                     <ItemsPanelTemplate>
@@ -212,10 +221,8 @@
                                                 </ItemsControl.ItemTemplate>
                                             </ItemsControl>
 
-                                            <!-- 2FA Status -->
                                             <TextBlock Grid.Column="4" Text="{Binding IsTwoFactorEnabled}" Margin="12,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-                                            <!-- Last Modified -->
                                             <TextBlock Grid.Column="5" Text="{Binding LastModifiedFormatted}" Margin="12,0,12,0" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}"/>
                                         </Grid>
                                     </Border>
@@ -224,10 +231,10 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
 
-                    <!-- Empty State -->
                     <TextBlock Grid.Row="1" IsVisible="{Binding !FilteredCredentialsForDashboard.Count}" Text="No passwords to display" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextAlignment="Center" Margin="0,32"/>
                 </Grid>
             </ScrollViewer>
         </Grid>
     </Grid>
 </views:ThemeAwareWindow>
+

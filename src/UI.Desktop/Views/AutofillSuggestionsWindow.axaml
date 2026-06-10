@@ -2,8 +2,8 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="PhantomVault.UI.Views.AutofillSuggestionsWindow"
-        Title="Auto-Fill Suggestions" 
-        Width="420" 
+        Title="Auto-Fill Suggestions"
+        Width="420"
         Height="580"
         MinWidth="380"
         MinHeight="400"
@@ -12,7 +12,7 @@
         ShowInTaskbar="False"
         CanResize="True"
         Classes="animated-window">
-    
+
     <Window.Styles>
         <Style Selector="TabItem">
             <Setter Property="FontSize" Value="12"/>
@@ -22,60 +22,54 @@
             <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
     </Window.Styles>
-    
+
     <Grid RowDefinitions="Auto,*">
-        
-        <!-- Header -->
-        <Border Grid.Row="0" 
-                Background="{DynamicResource HeaderBackgroundBrush}" 
+
+        <Border Grid.Row="0"
+                Background="{DynamicResource HeaderBackgroundBrush}"
                 Padding="15,12"
                 BorderBrush="{DynamicResource ControlBorderBrush}"
                 BorderThickness="0,0,0,1">
             <StackPanel Spacing="4">
-                <TextBlock Text="Auto-Fill Suggestions" 
-                           FontSize="{StaticResource Type.H5.Size}" 
+                <TextBlock Text="Auto-Fill Suggestions"
+                           FontSize="{StaticResource Type.H5.Size}"
                            FontWeight="Bold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
-                <TextBlock Text="Select credentials or detect new passwords" 
-                           FontSize="{StaticResource Type.Tiny.Size}" 
+                <TextBlock Text="Select credentials or detect new passwords"
+                           FontSize="{StaticResource Type.Tiny.Size}"
                            Foreground="{DynamicResource MutedTextBrush}"/>
             </StackPanel>
         </Border>
-        
-        <!-- Tabbed Content -->
-        <TabControl Grid.Row="1" 
+
+        <TabControl Grid.Row="1"
                     Padding="0"
                     Background="{DynamicResource WindowBackgroundBrush}">
-            
-            <!-- Tab 1: Credential Suggestions -->
+
             <TabItem Header="⌘ Credentials">
                 <Grid RowDefinitions="Auto,*,Auto">
-                    
-                    <!-- Current Site Info -->
+
                     <Border Grid.Row="0"
                             Background="{DynamicResource ControlBackgroundBrush}"
                             Padding="12,10"
                             Margin="0,0,0,8">
                         <StackPanel Spacing="4">
-                            <TextBlock Text="Current site:" 
+                            <TextBlock Text="Current site:"
                                        FontSize="{StaticResource Type.Micro.Size}"
                                        Foreground="{DynamicResource MutedTextBrush}"/>
-                            <TextBlock Text="github.com" 
+                            <TextBlock Text="github.com"
                                        FontSize="{StaticResource Type.Small.Size}"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource PrimaryTextBrush}"/>
                         </StackPanel>
                     </Border>
-                    
-                    <!-- Credentials List -->
-                    <ScrollViewer Grid.Row="1" 
+
+                    <ScrollViewer Grid.Row="1"
                                   VerticalScrollBarVisibility="Auto"
                                   Padding="8,0">
                         <ItemsControl>
-                            <!-- Sample Credentials -->
+
                             <StackPanel Spacing="6">
-                                
-                                <!-- Credential Item 1 -->
+
                                 <Border Background="{DynamicResource ContentBackgroundBrush}"
                                         CornerRadius="{StaticResource Radius.Md}"
                                         Padding="12,10"
@@ -92,21 +86,21 @@
                                                 CornerRadius="{StaticResource Radius.Xxl}"
                                                 Background="{DynamicResource AccentBrush}"
                                                 Margin="0,0,10,0">
-                                            <TextBlock Text="GH" 
+                                            <TextBlock Text="GH"
                                                        FontSize="{StaticResource Type.Small.Size}"
                                                        FontWeight="Bold"
                                                        Foreground="{DynamicResource ButtonAccentForegroundBrush}"
                                                        HorizontalAlignment="Center"
                                                        VerticalAlignment="Center"/>
                                         </Border>
-                                        <StackPanel Grid.Column="1" 
+                                        <StackPanel Grid.Column="1"
                                                     VerticalAlignment="Center"
                                                     Spacing="2">
-                                            <TextBlock Text="user@example.com" 
+                                            <TextBlock Text="user@example.com"
                                                        FontSize="{StaticResource Type.Small.Size}"
                                                        FontWeight="SemiBold"
                                                        Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                            <TextBlock Text="GitHub Account" 
+                                            <TextBlock Text="GitHub Account"
                                                        FontSize="{StaticResource Type.Micro.Size}"
                                                        Foreground="{DynamicResource MutedTextBrush}"/>
                                         </StackPanel>
@@ -117,8 +111,7 @@
                                                    Margin="8,0,0,0"/>
                                     </Grid>
                                 </Border>
-                                
-                                <!-- Credential Item 2 -->
+
                                 <Border Background="{DynamicResource ContentBackgroundBrush}"
                                         CornerRadius="{StaticResource Radius.Md}"
                                         Padding="12,10"
@@ -135,54 +128,52 @@
                                                 CornerRadius="{StaticResource Radius.Xxl}"
                                                 Background="#4078C0"
                                                 Margin="0,0,10,0">
-                                            <TextBlock Text="GH" 
+                                            <TextBlock Text="GH"
                                                        FontSize="{StaticResource Type.Small.Size}"
                                                        FontWeight="Bold"
                                                        Foreground="White"
                                                        HorizontalAlignment="Center"
                                                        VerticalAlignment="Center"/>
                                         </Border>
-                                        <StackPanel Grid.Column="1" 
+                                        <StackPanel Grid.Column="1"
                                                     VerticalAlignment="Center"
                                                     Spacing="2">
-                                            <TextBlock Text="work@company.com" 
+                                            <TextBlock Text="work@company.com"
                                                        FontSize="{StaticResource Type.Small.Size}"
                                                        FontWeight="SemiBold"
                                                        Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                            <TextBlock Text="Work GitHub" 
+                                            <TextBlock Text="Work GitHub"
                                                        FontSize="{StaticResource Type.Micro.Size}"
                                                        Foreground="{DynamicResource MutedTextBrush}"/>
                                         </StackPanel>
                                     </Grid>
                                 </Border>
-                                
-                                <!-- No Matching Credentials Message -->
+
                                 <Border Background="{DynamicResource ControlBackgroundBrush}"
                                         CornerRadius="{StaticResource Radius.Md}"
                                         Padding="20"
                                         Margin="0,20,0,0"
                                         IsVisible="False">
                                     <StackPanel Spacing="8" HorizontalAlignment="Center">
-                                        <TextBlock Text="🔍" 
+                                        <TextBlock Text="🔍"
                                                    FontSize="{StaticResource Type.H1.Size}"
                                                    HorizontalAlignment="Center"/>
-                                        <TextBlock Text="No saved credentials for this site" 
+                                        <TextBlock Text="No saved credentials for this site"
                                                    FontSize="{StaticResource Type.Small.Size}"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"
                                                    HorizontalAlignment="Center"/>
-                                        <TextBlock Text="Enter credentials to save them" 
+                                        <TextBlock Text="Enter credentials to save them"
                                                    FontSize="{StaticResource Type.Micro.Size}"
                                                    Foreground="{DynamicResource MutedTextBrush}"
                                                    HorizontalAlignment="Center"/>
                                     </StackPanel>
                                 </Border>
-                                
+
                             </StackPanel>
                         </ItemsControl>
                     </ScrollViewer>
-                    
-                    <!-- Footer Actions -->
+
                     <Border Grid.Row="2"
                             Background="{DynamicResource ControlBackgroundBrush}"
                             BorderBrush="{DynamicResource ControlBorderBrush}"
@@ -201,43 +192,39 @@
                                     FontSize="{StaticResource Type.Tiny.Size}"/>
                         </StackPanel>
                     </Border>
-                    
+
                 </Grid>
             </TabItem>
-            
-            <!-- Tab 2: New Password Detection -->
+
             <TabItem Header="🔔 Detect Changes">
                 <Grid RowDefinitions="Auto,*,Auto">
-                    
-                    <!-- Info Header -->
+
                     <Border Grid.Row="0"
                             Background="{DynamicResource ControlBackgroundBrush}"
                             Padding="12,10"
                             Margin="0,0,0,12">
                         <StackPanel Spacing="6">
-                            <TextBlock Text="Automatic Password Change Detection" 
+                            <TextBlock Text="Automatic Password Change Detection"
                                        FontSize="{StaticResource Type.Small.Size}"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource PrimaryTextBrush}"/>
-                            <TextBlock Text="PhantomVault will automatically detect when you create or change passwords and offer to update your vault." 
+                            <TextBlock Text="PhantomVault will automatically detect when you create or change passwords and offer to update your vault."
                                        FontSize="{StaticResource Type.Micro.Size}"
                                        Foreground="{DynamicResource SecondaryTextBrush}"
                                        TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>
-                    
-                    <!-- Detection Content -->
-                    <ScrollViewer Grid.Row="1" 
+
+                    <ScrollViewer Grid.Row="1"
                                   VerticalScrollBarVisibility="Auto"
                                   Padding="8,0">
                         <StackPanel Spacing="12">
-                            
-                            <!-- Detection Settings -->
+
                             <Border Background="{DynamicResource ContentBackgroundBrush}"
                                     CornerRadius="{StaticResource Radius.Md}"
                                     Padding="15">
                                 <StackPanel Spacing="10">
-                                    <TextBlock Text="Detection Settings" 
+                                    <TextBlock Text="Detection Settings"
                                                FontSize="{StaticResource Type.Tiny.Size}"
                                                FontWeight="SemiBold"
                                                Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -252,58 +239,55 @@
                                                   FontSize="{StaticResource Type.Tiny.Size}"/>
                                 </StackPanel>
                             </Border>
-                            
-                            <!-- Recent Detections -->
+
                             <Border Background="{DynamicResource ContentBackgroundBrush}"
                                     CornerRadius="{StaticResource Radius.Md}"
                                     Padding="15">
                                 <StackPanel Spacing="10">
-                                    <TextBlock Text="Recent Detections" 
+                                    <TextBlock Text="Recent Detections"
                                                FontSize="{StaticResource Type.Tiny.Size}"
                                                FontWeight="SemiBold"
                                                Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                    
-                                    <!-- Detection Item -->
+
                                     <Border Background="{DynamicResource WindowBackgroundBrush}"
                                             CornerRadius="{StaticResource Radius.Sm}"
                                             Padding="10"
                                             BorderBrush="{DynamicResource SuccessBrush}"
                                             BorderThickness="1">
                                         <Grid RowDefinitions="Auto,Auto,Auto">
-                                            <StackPanel Grid.Row="0" 
-                                                        Orientation="Horizontal" 
+                                            <StackPanel Grid.Row="0"
+                                                        Orientation="Horizontal"
                                                         Spacing="6">
-                                                <TextBlock Text="✓" 
+                                                <TextBlock Text="✓"
                                                            FontSize="{StaticResource Type.Small.Size}"
                                                            Foreground="{DynamicResource SuccessBrush}"/>
-                                                <TextBlock Text="Password Changed" 
+                                                <TextBlock Text="Password Changed"
                                                            FontSize="{StaticResource Type.Tiny.Size}"
                                                            FontWeight="SemiBold"
                                                            Foreground="{DynamicResource PrimaryTextBrush}"/>
                                             </StackPanel>
-                                            <TextBlock Grid.Row="1" 
-                                                       Text="github.com • user@example.com" 
+                                            <TextBlock Grid.Row="1"
+                                                       Text="github.com • user@example.com"
                                                        FontSize="{StaticResource Type.Micro.Size}"
                                                        Foreground="{DynamicResource MutedTextBrush}"
                                                        Margin="0,4,0,0"/>
-                                            <TextBlock Grid.Row="2" 
-                                                       Text="Updated 2 minutes ago" 
+                                            <TextBlock Grid.Row="2"
+                                                       Text="Updated 2 minutes ago"
                                                        FontSize="{StaticResource Type.Mini.Size}"
                                                        Foreground="{DynamicResource MutedTextBrush}"
                                                        Margin="0,2,0,0"/>
                                         </Grid>
                                     </Border>
-                                    
-                                    <!-- Empty State -->
+
                                     <Border Background="{DynamicResource WindowBackgroundBrush}"
                                             CornerRadius="{StaticResource Radius.Sm}"
                                             Padding="15"
                                             IsVisible="False">
                                         <StackPanel Spacing="4" HorizontalAlignment="Center">
-                                            <TextBlock Text="👁️" 
+                                            <TextBlock Text="👁️"
                                                        FontSize="{StaticResource Type.H2.Size}"
                                                        HorizontalAlignment="Center"/>
-                                            <TextBlock Text="No recent detections" 
+                                            <TextBlock Text="No recent detections"
                                                        FontSize="{StaticResource Type.Micro.Size}"
                                                        Foreground="{DynamicResource MutedTextBrush}"
                                                        HorizontalAlignment="Center"/>
@@ -311,8 +295,7 @@
                                     </Border>
                                 </StackPanel>
                             </Border>
-                            
-                            <!-- Quick Update -->
+
                             <Border Background="{DynamicResource ControlBackgroundBrush}"
                                     CornerRadius="{StaticResource Radius.Md}"
                                     Padding="15"
@@ -321,12 +304,12 @@
                                 <StackPanel Spacing="10">
                                     <StackPanel Orientation="Horizontal" Spacing="6">
                                         <TextBlock Text="🔄" FontSize="{StaticResource Type.Body.Size}"/>
-                                        <TextBlock Text="Quick Update Credential" 
+                                        <TextBlock Text="Quick Update Credential"
                                                    FontSize="{StaticResource Type.Tiny.Size}"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
                                     </StackPanel>
-                                    <TextBlock Text="Detected a password change on this page" 
+                                    <TextBlock Text="Detected a password change on this page"
                                                FontSize="{StaticResource Type.Micro.Size}"
                                                Foreground="{DynamicResource SecondaryTextBrush}"
                                                TextWrapping="Wrap"/>
@@ -343,11 +326,10 @@
                                             HorizontalAlignment="Stretch"/>
                                 </StackPanel>
                             </Border>
-                            
+
                         </StackPanel>
                     </ScrollViewer>
-                    
-                    <!-- Footer -->
+
                     <Border Grid.Row="2"
                             Background="{DynamicResource ControlBackgroundBrush}"
                             BorderBrush="{DynamicResource ControlBorderBrush}"
@@ -359,12 +341,13 @@
                                 Height="32"
                                 FontSize="{StaticResource Type.Tiny.Size}"/>
                     </Border>
-                    
+
                 </Grid>
             </TabItem>
-            
+
         </TabControl>
-        
+
     </Grid>
-    
+
 </Window>
+

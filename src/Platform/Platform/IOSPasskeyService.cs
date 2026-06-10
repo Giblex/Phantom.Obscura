@@ -11,11 +11,7 @@ using Security;
 namespace PhantomVault.Core.Services.Platform
 {
 #if IOS || MACCATALYST
-    /// <summary>
-    /// iOS/iPadOS implementation of passkey service using LocalAuthentication framework.
-    /// Supports Touch ID, Face ID, and device passcode authentication.
-    /// Requires iOS 8.0 or later, with biometric features available on iOS 11.0+.
-    /// </summary>
+
     public sealed class IOSPasskeyService : IPasskeyService
     {
         private readonly LAContext _context;
@@ -25,7 +21,7 @@ namespace PhantomVault.Core.Services.Platform
             _context = new LAContext();
         }
 
-        public bool IsSupported => true; // LocalAuthentication available on all iOS versions we target
+        public bool IsSupported => true;
 
         public bool IsBiometricAvailable
         {
@@ -72,13 +68,12 @@ namespace PhantomVault.Core.Services.Platform
 
             try
             {
-                // Prompt for biometric authentication
+
                 var authenticated = await AuthenticateAsync("Register new credential", "Confirm your identity to create a new vault credential");
-                
+
                 if (!authenticated)
                     throw new InvalidOperationException("User cancelled biometric authentication.");
 
-                // Create a key in the iOS Keychain with biometric protection
                 var keyQuery = new SecRecord(SecKind.Key)
                 {
                     Account = credentialId,
@@ -88,7 +83,6 @@ namespace PhantomVault.Core.Services.Platform
                     UseOperationPrompt = "Authenticate to access vault"
                 };
 
-                // Generate a random key to store
                 var keyData = NSData.FromArray(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
                 keyQuery.ValueData = keyData;
 
@@ -114,8 +108,7 @@ namespace PhantomVault.Core.Services.Platform
             try
             {
                 var credentialIdStr = System.Text.Encoding.UTF8.GetString(credentialId);
-                
-                // Verify the credential exists in Keychain
+
                 var query = new SecRecord(SecKind.Key)
                 {
                     Account = credentialIdStr,
@@ -126,7 +119,6 @@ namespace PhantomVault.Core.Services.Platform
                 if (status != SecStatusCode.Success)
                     return false;
 
-                // Authenticate with biometric/passcode
                 return await AuthenticateAsync("Unlock vault", "Confirm your identity to unlock the vault");
             }
             catch (Exception)
@@ -144,9 +136,8 @@ namespace PhantomVault.Core.Services.Platform
                     LocalizedFallbackTitle = fallbackTitle
                 };
 
-                // Prefer biometrics, but allow device passcode as fallback
-                var policy = IsBiometricAvailable 
-                    ? LAPolicy.DeviceOwnerAuthenticationWithBiometrics 
+                var policy = IsBiometricAvailable
+                    ? LAPolicy.DeviceOwnerAuthenticationWithBiometrics
                     : LAPolicy.DeviceOwnerAuthentication;
 
                 var result = await context.EvaluatePolicyAsync(policy, reason);
@@ -159,9 +150,7 @@ namespace PhantomVault.Core.Services.Platform
         }
     }
 #else
-    /// <summary>
-    /// Placeholder for when iOS-specific code is not being compiled.
-    /// </summary>
+
     public sealed class IOSPasskeyService : IPasskeyService
     {
         public bool IsSupported => false;
@@ -190,3 +179,4 @@ namespace PhantomVault.Core.Services.Platform
     }
 #endif
 }
+

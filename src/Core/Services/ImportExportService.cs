@@ -11,9 +11,7 @@ using PhantomVault.Core.Models;
 
 namespace PhantomVault.Core.Services
 {
-    /// <summary>
-    /// Represents the result of an import operation.
-    /// </summary>
+
     public sealed class ImportResult
     {
         public List<Credential> SuccessfulCredentials { get; set; } = new();
@@ -30,9 +28,6 @@ namespace PhantomVault.Core.Services
         public int ExpiredCount { get; set; }
     }
 
-    /// <summary>
-    /// Represents password strength levels.
-    /// </summary>
     public enum PasswordStrength
     {
         VeryWeak,
@@ -42,9 +37,6 @@ namespace PhantomVault.Core.Services
         VeryStrong
     }
 
-    /// <summary>
-    /// Represents a validation warning for a credential.
-    /// </summary>
     public sealed class ValidationWarning
     {
         public string CredentialTitle { get; set; } = "";
@@ -61,9 +53,6 @@ namespace PhantomVault.Core.Services
         public List<Credential>? Credentials { get; set; }
     }
 
-    /// <summary>
-    /// Represents a duplicate credential detection result.
-    /// </summary>
     public sealed class DuplicateInfo
     {
         public Credential NewCredential { get; set; } = new();
@@ -74,14 +63,11 @@ namespace PhantomVault.Core.Services
 
     public enum DuplicateMatchType
     {
-        ExactMatch,      // Title, Username, and URL match
-        PasswordMatch,   // Same password used
-        UsernameUrlMatch // Same username and URL but different password
+        ExactMatch,
+        PasswordMatch,
+        UsernameUrlMatch
     }
 
-    /// <summary>
-    /// Represents import progress information.
-    /// </summary>
     public sealed class ImportProgress
     {
         public int TotalItems { get; set; }
@@ -92,15 +78,9 @@ namespace PhantomVault.Core.Services
         public int PercentComplete => TotalItems > 0 ? (ProcessedItems * 100) / TotalItems : 0;
     }
 
-    /// <summary>
-    /// Provides import and export functionality for credentials in various formats.
-    /// Supports CSV, KeePass XML 2.x, JSON, 1Password, Bitwarden, Proton Pass, KeeWeb, and KeePassXC formats.
-    /// </summary>
     public sealed class ImportExportService
     {
-        /// <summary>
-        /// Detects the character encoding of a file by analyzing BOM and byte patterns.
-        /// </summary>
+
         private Encoding DetectFileEncoding(string filePath)
         {
             try
@@ -111,41 +91,34 @@ namespace PhantomVault.Core.Services
                     fs.ReadExactly(buffer, 0, 4);
                 }
 
-                // Check for BOM (Byte Order Mark)
                 if (buffer[0] == 0xEF && buffer[1] == 0xBB && buffer[2] == 0xBF)
-                    return Encoding.UTF8; // UTF-8 BOM
+                    return Encoding.UTF8;
 
                 if (buffer[0] == 0xFF && buffer[1] == 0xFE && buffer[2] == 0x00 && buffer[3] == 0x00)
-                    return Encoding.UTF32; // UTF-32 LE
+                    return Encoding.UTF32;
 
                 if (buffer[0] == 0xFF && buffer[1] == 0xFE)
-                    return Encoding.Unicode; // UTF-16 LE
+                    return Encoding.Unicode;
 
                 if (buffer[0] == 0xFE && buffer[1] == 0xFF)
-                    return Encoding.BigEndianUnicode; // UTF-16 BE
+                    return Encoding.BigEndianUnicode;
 
                 if (buffer[0] == 0x00 && buffer[1] == 0x00 && buffer[2] == 0xFE && buffer[3] == 0xFF)
-                    return new UTF32Encoding(true, true); // UTF-32 BE
+                    return new UTF32Encoding(true, true);
 
-                // No BOM - try to detect from content
                 var content = File.ReadAllBytes(filePath);
 
-                // Check for UTF-8 without BOM
                 if (IsValidUtf8(content))
                     return new UTF8Encoding(false);
 
-                // Default to Latin-1 (ISO-8859-1) for compatibility
                 return Encoding.GetEncoding("ISO-8859-1");
             }
             catch
             {
-                return Encoding.UTF8; // Fallback to UTF-8
+                return Encoding.UTF8;
             }
         }
 
-        /// <summary>
-        /// Validates if byte array is valid UTF-8.
-        /// </summary>
         private bool IsValidUtf8(byte[] bytes)
         {
             try
@@ -161,14 +134,10 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Validates URL format.
-        /// </summary>
         private bool IsValidUrl(string? url)
         {
-            if (string.IsNullOrWhiteSpace(url)) return true; // Empty URL is acceptable
+            if (string.IsNullOrWhiteSpace(url)) return true;
 
-            // Allow URLs without protocol
             var urlToCheck = url;
             if (!url.Contains("://"))
             {
@@ -179,31 +148,24 @@ namespace PhantomVault.Core.Services
                 && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
         }
 
-        /// <summary>
-        /// Calculates password strength based on length, complexity, and common patterns.
-        /// </summary>
         private PasswordStrength CalculatePasswordStrength(string? password)
         {
             if (string.IsNullOrEmpty(password)) return PasswordStrength.VeryWeak;
 
             var score = 0;
 
-            // Length score
             if (password.Length >= 8) score++;
             if (password.Length >= 12) score++;
             if (password.Length >= 16) score++;
 
-            // Complexity score
             if (password.Any(char.IsLower)) score++;
             if (password.Any(char.IsUpper)) score++;
             if (password.Any(char.IsDigit)) score++;
-            if (password.Any(c => !char.IsLetterOrDigit(c))) score++; // Special chars
+            if (password.Any(c => !char.IsLetterOrDigit(c))) score++;
 
-            // Common patterns (reduce score)
             var commonPasswords = new[] { "password", "123456", "qwerty", "abc123", "letmein", "welcome", "admin" };
             if (commonPasswords.Any(p => password.ToLower().Contains(p))) score -= 3;
 
-            // Sequential patterns
             if (HasSequentialPattern(password)) score--;
 
             return score switch
@@ -216,37 +178,28 @@ namespace PhantomVault.Core.Services
             };
         }
 
-        /// <summary>
-        /// Checks for sequential patterns in password.
-        /// </summary>
         private bool HasSequentialPattern(string password)
         {
             var sequences = new[] { "012", "123", "234", "345", "456", "567", "678", "789", "abc", "bcd", "cde" };
             return sequences.Any(seq => password.ToLower().Contains(seq));
         }
 
-        /// <summary>
-        /// Validates credential and returns warnings.
-        /// </summary>
         private List<string> ValidateCredential(Credential credential)
         {
             var warnings = new List<string>();
             var title = credential.Title ?? "Untitled";
 
-            // URL validation
             if (!IsValidUrl(credential.Url))
             {
                 warnings.Add($"{title}: Invalid URL format '{credential.Url}'");
             }
 
-            // Password strength
             var strength = CalculatePasswordStrength(credential.Password);
             if (strength == PasswordStrength.VeryWeak || strength == PasswordStrength.Weak)
             {
                 warnings.Add($"{title}: Weak password detected (strength: {strength})");
             }
 
-            // Expiry date
             if (credential.ExpiryUtc.HasValue)
             {
                 var daysUntilExpiry = (credential.ExpiryUtc.Value - DateTimeOffset.UtcNow).Days;
@@ -264,10 +217,6 @@ namespace PhantomVault.Core.Services
             return warnings;
         }
 
-        /// <summary>
-        /// Attempts to automatically detect the format of an import file.
-        /// Returns the detected format name or null if unable to determine.
-        /// </summary>
         public async Task<string?> DetectFormatAsync(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath)) return null;
@@ -279,13 +228,11 @@ namespace PhantomVault.Core.Services
                 if (extension == ".kdbx")
                     return "KeePass KDBX";
 
-                // Read first few lines for analysis
                 var lines = await File.ReadAllLinesAsync(filePath, Encoding.UTF8);
                 if (lines.Length == 0) return null;
 
                 var firstLine = lines[0].Trim();
 
-                // Check for XML (KeePass)
                 if (firstLine.StartsWith("<?xml") || firstLine.StartsWith("<KeePassFile"))
                 {
                     var content = await File.ReadAllTextAsync(filePath, Encoding.UTF8);
@@ -293,64 +240,53 @@ namespace PhantomVault.Core.Services
                         return "KeePass XML";
                 }
 
-                // Check for JSON formats
                 if (firstLine.StartsWith("{") || firstLine.StartsWith("["))
                 {
                     var content = await File.ReadAllTextAsync(filePath, Encoding.UTF8);
 
-                    // Bitwarden JSON has "encrypted" and "folders" properties
                     if (content.Contains("\"encrypted\"") && content.Contains("\"folders\""))
                         return "Bitwarden JSON";
 
-                    // Proton Pass JSON has "vaults" array
                     if (content.Contains("\"vaults\"") && content.Contains("\"items\""))
                         return "Proton Pass JSON";
 
-                    // Generic JSON as fallback
                     if (content.Contains("\"credentials\"") || content.Contains("\"password\""))
                         return "JSON";
                 }
 
-                // Check CSV formats by header
                 if (lines.Length > 0)
                 {
                     var header = firstLine.ToLower();
 
-                    // 1Password CSV: title,username,password,url,notes,type,name,folder
                     if (header.Contains("title") && header.Contains("username") &&
                         header.Contains("password") && header.Contains("folder") &&
                         header.Contains("type"))
                         return "1Password CSV";
 
-                    // Bitwarden CSV: folder,favorite,type,name,notes,fields,reprompt,login_uri,login_username,login_password,login_totp
                     if (header.Contains("login_uri") && header.Contains("login_username") &&
                         header.Contains("login_password") && header.Contains("folder"))
                         return "Bitwarden CSV";
 
-                    // LastPass CSV: url,username,password,extra,name,grouping,fav
                     if (header.Contains("grouping") && header.Contains("extra") &&
                         header.Contains("url") && header.Contains("username") && header.Contains("password"))
                         return "LastPass CSV";
 
-                    // Chrome/Edge CSV: name,url,username,password
                     if (header.Contains("name") && header.Contains("url") &&
                         header.Contains("username") && header.Contains("password") &&
                         !header.Contains("notes") && !header.Contains("title"))
                         return "Chrome CSV";
 
-                    // Firefox CSV: url,username,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged
                     if (header.Contains("httprealm") || header.Contains("formactionorigin") ||
                         header.Contains("timecreated"))
                         return "Firefox CSV";
 
-                    // Generic CSV - our custom format
                     if (header.Contains("title") && header.Contains("username") &&
                         header.Contains("password") && header.Contains("notes") &&
                         header.Contains("group"))
                         return "CSV";
                 }
 
-                return null; // Unable to detect
+                return null;
             }
             catch
             {
@@ -358,16 +294,13 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        /// <summary>
-        /// Exports credentials to CSV format.
-        /// </summary>
         public async Task ExportToCsvAsync(List<Credential> credentials, string filePath)
         {
             if (credentials == null) throw new ArgumentNullException(nameof(credentials));
             if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("File path cannot be empty", nameof(filePath));
 
             var sb = new StringBuilder();
-            // CSV Header
+
             sb.AppendLine("Title,Username,Password,URL,Notes,Group,Icon,Tags,Created,LastUpdated,Expiry");
 
             foreach (var cred in credentials)
@@ -390,10 +323,6 @@ namespace PhantomVault.Core.Services
             await File.WriteAllTextAsync(filePath, sb.ToString(), Encoding.UTF8);
         }
 
-        /// <summary>
-        /// Imports credentials from CSV format.
-        /// Expected columns: Title,Username,Password,URL,Notes,Group,Icon,Tags,Created,LastUpdated,Expiry
-        /// </summary>
         public async Task<List<Credential>> ImportFromCsvAsync(string filePath, IProgress<ImportProgress>? progress = null)
         {
             if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("File path cannot be empty", nameof(filePath));
@@ -401,7 +330,6 @@ namespace PhantomVault.Core.Services
 
             var credentials = new List<Credential>();
 
-            // Auto-detect encoding and parse full CSV text so quoted newlines are preserved.
             var encoding = DetectFileEncoding(filePath);
             var content = await File.ReadAllTextAsync(filePath, encoding);
             var records = ParseCsvRecords(content);
@@ -464,7 +392,6 @@ namespace PhantomVault.Core.Services
                     if (DateTimeOffset.TryParse(GetColumn(row, "Expiry", "expiry", "Expires", "expires"), out var expiry))
                         cred.ExpiryUtc = expiry;
 
-                    // Skip completely empty rows.
                     if (string.IsNullOrWhiteSpace(cred.Title) &&
                         string.IsNullOrWhiteSpace(cred.Username) &&
                         string.IsNullOrWhiteSpace(cred.Password) &&
@@ -474,7 +401,6 @@ namespace PhantomVault.Core.Services
                         continue;
                     }
 
-                    // Guard against malformed multiline fragments being interpreted as standalone rows.
                     if (string.IsNullOrWhiteSpace(cred.Username) &&
                         string.IsNullOrWhiteSpace(cred.Password) &&
                         string.IsNullOrWhiteSpace(cred.Url))
@@ -501,10 +427,6 @@ namespace PhantomVault.Core.Services
             return credentials;
         }
 
-        /// <summary>
-        /// Imports large CSV files using streaming to avoid memory issues.
-        /// Processes files with 1000+ credentials in chunks.
-        /// </summary>
         public async Task<List<Credential>> ImportFromCsvStreamingAsync(
             string filePath,
             IProgress<ImportProgress>? progress = null,
@@ -516,21 +438,20 @@ namespace PhantomVault.Core.Services
             var credentials = new List<Credential>();
             var encoding = DetectFileEncoding(filePath);
 
-            // Count total lines for progress
             int totalLines = 0;
             using (var reader = new StreamReader(filePath, encoding))
             {
                 while (await reader.ReadLineAsync() != null)
                     totalLines++;
             }
-            totalLines--; // Subtract header line
+            totalLines--;
 
             int processed = 0;
             int lineNumber = 0;
 
             using (var reader = new StreamReader(filePath, encoding))
             {
-                // Skip header
+
                 await reader.ReadLineAsync();
                 lineNumber++;
 
@@ -560,7 +481,6 @@ namespace PhantomVault.Core.Services
                                 : new List<string>()
                         };
 
-                        // Parse dates
                         if (parts.Length > 8 && DateTimeOffset.TryParse(parts[8], out var created))
                             cred.CreatedUtc = created;
 
@@ -574,7 +494,6 @@ namespace PhantomVault.Core.Services
 
                         processed++;
 
-                        // Report progress and consider GC every chunk
                         if (processed % chunkSize == 0)
                         {
                             progress?.Report(new ImportProgress
@@ -585,7 +504,6 @@ namespace PhantomVault.Core.Services
                                 CurrentItem = cred.Title ?? cred.Username ?? "Unknown"
                             });
 
-                            // Force garbage collection for large imports
                             if (processed % (chunkSize * 4) == 0)
                             {
                                 GC.Collect();
@@ -601,7 +519,6 @@ namespace PhantomVault.Core.Services
                 }
             }
 
-            // Final progress update
             progress?.Report(new ImportProgress
             {
                 TotalItems = totalLines,
@@ -613,9 +530,6 @@ namespace PhantomVault.Core.Services
             return credentials;
         }
 
-        /// <summary>
-        /// Exports credentials to KeePass 2.x XML format.
-        /// </summary>
         public async Task ExportToKeePassXmlAsync(List<Credential> credentials, string filePath, string databaseName = "PhantomVault Export")
         {
             if (credentials == null) throw new ArgumentNullException(nameof(credentials));
@@ -651,9 +565,6 @@ namespace PhantomVault.Core.Services
             await doc.SaveAsync(stream, SaveOptions.None, default);
         }
 
-        /// <summary>
-        /// Imports credentials from KeePass 2.x XML format.
-        /// </summary>
         public async Task<List<Credential>> ImportFromKeePassXmlAsync(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("File path cannot be empty", nameof(filePath));
@@ -667,7 +578,6 @@ namespace PhantomVault.Core.Services
             {
                 var cred = new Credential();
 
-                // Parse String fields (KeePass stores most data in Key-Value pairs)
                 foreach (var stringElement in entry.Elements("String"))
                 {
                     var key = stringElement.Element("Key")?.Value ?? "";
@@ -693,7 +603,6 @@ namespace PhantomVault.Core.Services
                     }
                 }
 
-                // Parse Times
                 var times = entry.Element("Times");
                 if (times != null)
                 {
@@ -708,12 +617,11 @@ namespace PhantomVault.Core.Services
                         cred.ExpiryUtc = new DateTimeOffset(expiry, TimeSpan.Zero);
                 }
 
-                // Get group from parent Group element
                 var groupName = entry.Parent?.Element("Name")?.Value;
                 if (!string.IsNullOrEmpty(groupName) && groupName != "Root")
                     cred.Group = groupName;
 
-                cred.Icon = "🔑"; // Default icon
+                cred.Icon = "🔑";
 
                 if (!string.IsNullOrEmpty(cred.Title) || !string.IsNullOrEmpty(cred.Username))
                     credentials.Add(cred);
@@ -722,9 +630,6 @@ namespace PhantomVault.Core.Services
             return credentials;
         }
 
-        /// <summary>
-        /// Exports credentials to JSON format.
-        /// </summary>
         public async Task ExportToJsonAsync(List<Credential> credentials, string filePath)
         {
             if (credentials == null) throw new ArgumentNullException(nameof(credentials));
@@ -738,9 +643,6 @@ namespace PhantomVault.Core.Services
             await File.WriteAllTextAsync(filePath, json, Encoding.UTF8);
         }
 
-        /// <summary>
-        /// Imports credentials from JSON format.
-        /// </summary>
         public async Task<List<Credential>> ImportFromJsonAsync(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("File path cannot be empty", nameof(filePath));
@@ -866,13 +768,11 @@ namespace PhantomVault.Core.Services
                     row.Add(field.ToString());
                     field.Clear();
 
-                    // Skip CRLF second char.
                     if (c == '\r' && i + 1 < content.Length && content[i + 1] == '\n')
                     {
                         i++;
                     }
 
-                    // Avoid emitting a trailing blank record.
                     if (row.Any(v => !string.IsNullOrEmpty(v)))
                     {
                         records.Add(row.ToArray());
@@ -908,7 +808,7 @@ namespace PhantomVault.Core.Services
                     if (inQuotes && i + 1 < line.Length && line[i + 1] == '"')
                     {
                         current.Append('"');
-                        i++; // Skip next quote
+                        i++;
                     }
                     else
                     {
@@ -930,9 +830,6 @@ namespace PhantomVault.Core.Services
             return result.ToArray();
         }
 
-        /// <summary>
-        /// Imports credentials from 1Password CSV export format.
-        /// </summary>
         public async Task<List<Credential>> ImportFrom1PasswordCsvAsync(string filePath, IProgress<ImportProgress>? progress = null)
         {
             if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("File path cannot be empty", nameof(filePath));
@@ -946,7 +843,6 @@ namespace PhantomVault.Core.Services
             int totalLines = lines.Length - 1;
             int processed = 0;
 
-            // 1Password CSV format: Title,Username,Password,URL,Notes,Type,Name,Folder
             for (int i = 1; i < lines.Length; i++)
             {
                 var line = lines[i].Trim();
@@ -964,7 +860,7 @@ namespace PhantomVault.Core.Services
                         Password = parts.Length > 2 ? parts[2] : "",
                         Url = parts.Length > 3 ? parts[3] : "",
                         Notes = parts.Length > 4 ? parts[4] : "",
-                        Group = parts.Length > 7 ? parts[7] : "", // Folder
+                        Group = parts.Length > 7 ? parts[7] : "",
                         Icon = "🔑"
                     };
 
@@ -989,9 +885,6 @@ namespace PhantomVault.Core.Services
             return credentials;
         }
 
-        /// <summary>
-        /// Imports credentials from Bitwarden JSON export format.
-        /// </summary>
         public async Task<List<Credential>> ImportFromBitwardenJsonAsync(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("File path cannot be empty", nameof(filePath));
@@ -1005,7 +898,7 @@ namespace PhantomVault.Core.Services
             {
                 foreach (var item in items.EnumerateArray())
                 {
-                    if (!item.TryGetProperty("type", out var typeEl) || typeEl.GetInt32() != 1) // 1 = Login
+                    if (!item.TryGetProperty("type", out var typeEl) || typeEl.GetInt32() != 1)
                         continue;
 
                     var cred = new Credential { Icon = "🔑" };
@@ -1053,9 +946,6 @@ namespace PhantomVault.Core.Services
             return credentials;
         }
 
-        /// <summary>
-        /// Imports credentials from Bitwarden CSV export format with header-aware parsing.
-        /// </summary>
         public async Task<List<Credential>> ImportFromBitwardenCsvAsync(string filePath, IProgress<ImportProgress>? progress = null)
         {
             if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("File path cannot be empty", nameof(filePath));
@@ -1066,7 +956,6 @@ namespace PhantomVault.Core.Services
 
             if (lines.Length < 2) return credentials;
 
-            // Parse header to map column names to indices
             var headerParts = ParseCsvLine(lines[0]);
             var columnMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             for (int i = 0; i < headerParts.Length; i++)
@@ -1074,7 +963,6 @@ namespace PhantomVault.Core.Services
                 columnMap[headerParts[i].Trim()] = i;
             }
 
-            // Helper to safely get column value
             string GetColumn(string[] parts, string columnName, string fallback = "")
             {
                 if (columnMap.TryGetValue(columnName, out var index) && index < parts.Length)
@@ -1085,7 +973,6 @@ namespace PhantomVault.Core.Services
             int totalLines = lines.Length - 1;
             int processed = 0;
 
-            // Parse data rows
             for (int i = 1; i < lines.Length; i++)
             {
                 var line = lines[i].Trim();
@@ -1106,7 +993,6 @@ namespace PhantomVault.Core.Services
                         Icon = "🔑"
                     };
 
-                    // Only add if has at least title or username
                     if (!string.IsNullOrWhiteSpace(cred.Title) || !string.IsNullOrWhiteSpace(cred.Username))
                     {
                         credentials.Add(cred);
@@ -1123,7 +1009,7 @@ namespace PhantomVault.Core.Services
                 }
                 catch
                 {
-                    // Skip malformed lines
+
                     processed++;
                     continue;
                 }
@@ -1132,9 +1018,6 @@ namespace PhantomVault.Core.Services
             return credentials;
         }
 
-        /// <summary>
-        /// Imports credentials from Proton Pass JSON export format.
-        /// </summary>
         public async Task<List<Credential>> ImportFromProtonPassJsonAsync(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("File path cannot be empty", nameof(filePath));
@@ -1190,9 +1073,6 @@ namespace PhantomVault.Core.Services
             return credentials;
         }
 
-        /// <summary>
-        /// Imports credentials from LastPass CSV export format.
-        /// </summary>
         public async Task<List<Credential>> ImportFromLastPassCsvAsync(string filePath, IProgress<ImportProgress>? progress = null)
         {
             if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("File path cannot be empty", nameof(filePath));
@@ -1203,7 +1083,6 @@ namespace PhantomVault.Core.Services
 
             if (lines.Length < 2) return credentials;
 
-            // Parse header
             var headerParts = ParseCsvLine(lines[0]);
             var columnMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             for (int i = 0; i < headerParts.Length; i++)
@@ -1221,7 +1100,6 @@ namespace PhantomVault.Core.Services
             int totalLines = lines.Length - 1;
             int processed = 0;
 
-            // LastPass CSV format: url,username,password,extra,name,grouping,fav
             for (int i = 1; i < lines.Length; i++)
             {
                 var line = lines[i].Trim();
@@ -1266,9 +1144,6 @@ namespace PhantomVault.Core.Services
             return credentials;
         }
 
-        /// <summary>
-        /// Imports credentials from Chrome/Edge CSV export format.
-        /// </summary>
         public async Task<List<Credential>> ImportFromChromeCsvAsync(string filePath, IProgress<ImportProgress>? progress = null)
         {
             if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("File path cannot be empty", nameof(filePath));
@@ -1279,7 +1154,6 @@ namespace PhantomVault.Core.Services
 
             if (lines.Length < 2) return credentials;
 
-            // Parse header
             var headerParts = ParseCsvLine(lines[0]);
             var columnMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             for (int i = 0; i < headerParts.Length; i++)
@@ -1297,7 +1171,6 @@ namespace PhantomVault.Core.Services
             int totalLines = lines.Length - 1;
             int processed = 0;
 
-            // Chrome CSV format: name,url,username,password
             for (int i = 1; i < lines.Length; i++)
             {
                 var line = lines[i].Trim();
@@ -1341,9 +1214,6 @@ namespace PhantomVault.Core.Services
             return credentials;
         }
 
-        /// <summary>
-        /// Imports credentials from Firefox CSV export format.
-        /// </summary>
         public async Task<List<Credential>> ImportFromFirefoxCsvAsync(string filePath, IProgress<ImportProgress>? progress = null)
         {
             if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("File path cannot be empty", nameof(filePath));
@@ -1354,7 +1224,6 @@ namespace PhantomVault.Core.Services
 
             if (lines.Length < 2) return credentials;
 
-            // Parse header
             var headerParts = ParseCsvLine(lines[0]);
             var columnMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             for (int i = 0; i < headerParts.Length; i++)
@@ -1372,7 +1241,6 @@ namespace PhantomVault.Core.Services
             int totalLines = lines.Length - 1;
             int processed = 0;
 
-            // Firefox CSV format: url,username,password,httpRealm,formActionOrigin,guid,timeCreated,timeLastUsed,timePasswordChanged
             for (int i = 1; i < lines.Length; i++)
             {
                 var line = lines[i].Trim();
@@ -1417,9 +1285,6 @@ namespace PhantomVault.Core.Services
             return credentials;
         }
 
-        /// <summary>
-        /// Imports credentials with duplicate detection and error handling.
-        /// </summary>
         public async Task<ImportResult> ImportWithDuplicateDetectionAsync(
             string filePath,
             string format,
@@ -1432,11 +1297,9 @@ namespace PhantomVault.Core.Services
             {
                 List<Credential> importedCredentials;
 
-                // Check file size for streaming decision (CSV formats only)
                 var fileInfo = new FileInfo(filePath);
-                var isLargeFile = fileInfo.Length > 5_000_000; // 5MB threshold for streaming
+                var isLargeFile = fileInfo.Length > 5_000_000;
 
-                // Import based on format
                 var formatLower = format.ToLowerInvariant();
                 switch (formatLower)
                 {
@@ -1488,7 +1351,6 @@ namespace PhantomVault.Core.Services
 
                 result.TotalProcessed = importedCredentials.Count;
 
-                // Validate imported credentials and collect warnings
                 var validCredentials = new List<Credential>();
                 int weakPasswordCount = 0;
                 int invalidUrlCount = 0;
@@ -1502,13 +1364,11 @@ namespace PhantomVault.Core.Services
                         continue;
                     }
 
-                    // Validate and collect warnings
                     var warnings = ValidateCredential(cred);
                     foreach (var warning in warnings)
                     {
                         result.Warnings.Add(warning);
 
-                        // Count warning types
                         if (warning.Contains("Weak password") || warning.Contains("VeryWeak"))
                             weakPasswordCount++;
                         if (warning.Contains("Invalid URL"))
@@ -1524,7 +1384,6 @@ namespace PhantomVault.Core.Services
                 result.InvalidUrlCount = invalidUrlCount;
                 result.ExpiredCount = expiredCount;
 
-                // Detect duplicates
                 if (existingCredentials.Any())
                 {
                     result.Duplicates = DetectDuplicates(validCredentials, existingCredentials);
@@ -1594,10 +1453,6 @@ namespace PhantomVault.Core.Services
             return result;
         }
 
-        /// <summary>
-        /// Backward-compatible import entry point used by older callers/tests.
-        /// Auto-detects format when not provided.
-        /// </summary>
         public async Task<ImportResult> ImportFromFileAsync(
             string filePath,
             List<Credential> existingCredentials,
@@ -1643,7 +1498,6 @@ namespace PhantomVault.Core.Services
                 }
             }
 
-            // Keep legacy behavior: malformed/unsupported content should surface as an error.
             if (result.SuccessCount == 0 && result.ErrorCount == 0 && result.WarningCount == 0)
             {
                 if (normalized == "json")
@@ -1659,9 +1513,6 @@ namespace PhantomVault.Core.Services
             return result;
         }
 
-        /// <summary>
-        /// Backward-compatible export entry point used by older callers/tests.
-        /// </summary>
         public async Task ExportToFileAsync(
             List<Credential> credentials,
             string filePath,
@@ -1700,14 +1551,6 @@ namespace PhantomVault.Core.Services
             };
         }
 
-        /// <summary>
-        /// Imports credentials from KeeWeb/KeePassXC KDBX database (requires password).
-        /// </summary>
-        /// <param name="filePath">Path to the .kdbx file.</param>
-        /// <param name="password">Master password for the database.</param>
-        /// <param name="keyfilePath">Optional keyfile path for additional security.</param>
-        /// <param name="progress">Optional progress reporter (0-100).</param>
-        /// <returns>List of imported credentials.</returns>
         public async Task<List<Credential>> ImportFromKeePassKdbxAsync(
             string filePath,
             string password,
@@ -1725,9 +1568,6 @@ namespace PhantomVault.Core.Services
             return result.Credentials;
         }
 
-        /// <summary>
-        /// Detects duplicate credentials between new imports and existing credentials.
-        /// </summary>
         public List<DuplicateInfo> DetectDuplicates(List<Credential> newCredentials, List<Credential> existingCredentials)
         {
             var duplicates = new List<DuplicateInfo>();
@@ -1736,7 +1576,7 @@ namespace PhantomVault.Core.Services
             {
                 foreach (var existingCred in existingCredentials)
                 {
-                    // Exact match: same title, username, and URL
+
                     if (!string.IsNullOrEmpty(newCred.Title) &&
                         string.Equals(newCred.Title, existingCred.Title, StringComparison.OrdinalIgnoreCase) &&
                         string.Equals(newCred.Username, existingCred.Username, StringComparison.OrdinalIgnoreCase) &&
@@ -1747,11 +1587,11 @@ namespace PhantomVault.Core.Services
                             NewCredential = newCred,
                             ExistingCredential = existingCred,
                             MatchType = DuplicateMatchType.ExactMatch,
-                            KeepNew = false // Default to keeping existing for exact matches
+                            KeepNew = false
                         });
                         break;
                     }
-                    // Password reuse: same password on different accounts
+
                     else if (!string.IsNullOrEmpty(newCred.Password) &&
                              newCred.Password == existingCred.Password &&
                              !string.Equals(newCred.Title, existingCred.Title, StringComparison.OrdinalIgnoreCase))
@@ -1761,11 +1601,11 @@ namespace PhantomVault.Core.Services
                             NewCredential = newCred,
                             ExistingCredential = existingCred,
                             MatchType = DuplicateMatchType.PasswordMatch,
-                            KeepNew = true // Import password reuse warnings
+                            KeepNew = true
                         });
                         break;
                     }
-                    // Username/URL match with different password (possible update)
+
                     else if (!string.IsNullOrEmpty(newCred.Username) &&
                              string.Equals(newCred.Username, existingCred.Username, StringComparison.OrdinalIgnoreCase) &&
                              string.Equals(NormalizeUrl(newCred.Url), NormalizeUrl(existingCred.Url), StringComparison.OrdinalIgnoreCase) &&
@@ -1776,7 +1616,7 @@ namespace PhantomVault.Core.Services
                             NewCredential = newCred,
                             ExistingCredential = existingCred,
                             MatchType = DuplicateMatchType.UsernameUrlMatch,
-                            KeepNew = true // Default to newer password
+                            KeepNew = true
                         });
                         break;
                     }
@@ -1786,9 +1626,6 @@ namespace PhantomVault.Core.Services
             return duplicates;
         }
 
-        /// <summary>
-        /// Filters credentials based on duplicate resolution choices.
-        /// </summary>
         public List<Credential> ApplyDuplicateResolution(List<Credential> newCredentials, List<DuplicateInfo> duplicates)
         {
             var duplicateNewCreds = new HashSet<Credential>(duplicates.Where(d => !d.KeepNew).Select(d => d.NewCredential));
@@ -1799,13 +1636,11 @@ namespace PhantomVault.Core.Services
         {
             if (string.IsNullOrEmpty(url)) return "";
 
-            // Remove protocol and www
             var normalized = url.ToLowerInvariant()
                 .Replace("https://", "")
                 .Replace("http://", "")
                 .Replace("www.", "");
 
-            // Remove trailing slash
             if (normalized.EndsWith("/"))
                 normalized = normalized.Substring(0, normalized.Length - 1);
 
@@ -1818,10 +1653,9 @@ namespace PhantomVault.Core.Services
 
             try
             {
-                // Remove protocol
+
                 var domain = url.Replace("https://", "").Replace("http://", "").Replace("www.", "");
 
-                // Get just the domain part (before first /)
                 var slashIndex = domain.IndexOf('/');
                 if (slashIndex > 0)
                     domain = domain.Substring(0, slashIndex);
@@ -1835,3 +1669,4 @@ namespace PhantomVault.Core.Services
         }
     }
 }
+

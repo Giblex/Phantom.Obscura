@@ -15,7 +15,7 @@ namespace PhantomVault.UI.Views
         {
             var window = new EditPasswordWindow();
             var viewModel = new EditPasswordViewModel(credential, credentialVM, vaultViewModel);
-            
+
             viewModel.RequestClose += (saved) =>
             {
                 if (window.IsVisible)

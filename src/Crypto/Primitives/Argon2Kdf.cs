@@ -9,7 +9,7 @@ namespace GiblexVault.Security.ZK.Primitives
     {
         public static byte[] DeriveKey(ReadOnlySpan<byte> password, ReadOnlySpan<byte> salt, KdfParams p)
         {
-            // Copy inputs to managed arrays so we can zero them deterministically
+
             var passBytes = password.ToArray();
             var saltBytes = salt.ToArray();
 
@@ -17,7 +17,7 @@ namespace GiblexVault.Security.ZK.Primitives
             {
                 var cfg = new Argon2Config
                 {
-                    // Argon2id (hybrid addressing: data-independent for first pass, data-dependent thereafter)
+
                     Type = Argon2Type.HybridAddressing,
                     Version = Argon2Version.Nineteen,
                     TimeCost = Math.Max(1, p.Ops),
@@ -32,18 +32,16 @@ namespace GiblexVault.Security.ZK.Primitives
                 using var a = new Argon2(cfg);
                 using var res = a.Hash();
 
-                // Copy library-managed buffer into our own array that we control
                 var output = new byte[res.Buffer.Length];
                 Array.Copy(res.Buffer, output, output.Length);
 
-                // Zero library buffer as soon as we've copied it
-                try { CryptographicOperations.ZeroMemory(res.Buffer); } catch { /* best-effort */ }
+                try { CryptographicOperations.ZeroMemory(res.Buffer); } catch {  }
 
                 return output;
             }
             finally
             {
-                // Zero input buffers
+
                 try { CryptographicOperations.ZeroMemory(passBytes); } catch { }
                 try { CryptographicOperations.ZeroMemory(saltBytes); } catch { }
             }
@@ -53,3 +51,4 @@ namespace GiblexVault.Security.ZK.Primitives
             => DeriveKey(System.Text.Encoding.UTF8.GetBytes(password), salt, p);
     }
 }
+

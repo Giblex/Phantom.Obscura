@@ -9,10 +9,7 @@ using PhantomVault.Core.Services.DomainKeys;
 
 namespace PhantomVault.UI.ViewModels
 {
-    /// <summary>
-    /// ViewModel for the recovery wizard UI.
-    /// Manages the multi-step recovery flow with proper state transitions.
-    /// </summary>
+
     public sealed class RecoveryViewModel : ReactiveObject, IDisposable
     {
         private readonly ScopedRecoveryService _scopedRecoveryService;
@@ -27,39 +24,32 @@ namespace PhantomVault.UI.ViewModels
             "This recovery wizard needs an initialized recovery store from an unlocked vault. " +
             "The standalone recovery surface is not ready from this Obscura entry point yet.";
 
-        // Step state
         private RecoveryStep _currentStep = RecoveryStep.Welcome;
         private bool _isBusy;
         private string _statusMessage = string.Empty;
         private string _errorMessage = string.Empty;
         private bool _hasError;
 
-        // Welcome step
         private string _deviceWarning = string.Empty;
         private bool _hasDeviceWarning;
 
-        // Code entry step
         private string _recoveryCode = string.Empty;
         private int _remainingCodes;
         private int _failedAttempts;
 
-        // Delay step
         private int _delaySecondsRemaining;
         private int _totalDelaySeconds;
         private bool _isDelayActive;
 
-        // Domain selection step
         private CryptoDomain? _selectedDomain;
         private bool _canSelectObscura = true;
         private bool _canSelectAttestor = true;
         private string _obscuraStatus = string.Empty;
         private string _attestorStatus = string.Empty;
 
-        // Completion step
         private bool _rekeyRequired;
         private string _completionMessage = string.Empty;
 
-        // Audit history
         private ObservableCollection<RecoveryAuditEntryViewModel> _auditHistory = new();
 
         public RecoveryViewModel(
@@ -71,10 +61,8 @@ namespace PhantomVault.UI.ViewModels
             _auditService = auditService ?? throw new ArgumentNullException(nameof(auditService));
             _verifyHash = verifyHash ?? throw new ArgumentNullException(nameof(verifyHash));
 
-            // Subscribe to rekey events
             _auditService.RekeyRequired += OnRekeyRequired;
 
-            // Commands
             StartRecoveryCommand = ReactiveCommand.CreateFromTask(StartRecoveryAsync);
             ValidateCodeCommand = ReactiveCommand.CreateFromTask(ValidateCodeAsync);
             AbortRecoveryCommand = ReactiveCommand.Create(AbortRecovery);
@@ -252,19 +240,14 @@ namespace PhantomVault.UI.ViewModels
 
         #region Public Methods
 
-        /// <summary>
-        /// Initializes the recovery view model with a recovery store.
-        /// </summary>
         public void Initialize(RecoveryStore store, string? deviceFingerprint = null, string? appVersion = null)
         {
             _recoveryStore = store ?? throw new ArgumentNullException(nameof(store));
             IsRecoveryAvailable = true;
             RecoveryAvailabilityMessage = string.Empty;
 
-            // Update remaining codes
             RemainingCodes = _auditService.GetRemainingCodeCount(store);
 
-            // Check sealed key availability
             CanSelectObscura = store.ObscuraSealed != null && !store.ObscuraSealed.HasBeenUsed;
             CanSelectAttestor = store.AttestorSealed != null && !store.AttestorSealed.HasBeenUsed;
 
@@ -280,10 +263,8 @@ namespace PhantomVault.UI.ViewModels
                     ? "Recovery key already used"
                     : "Available";
 
-            // Load audit history
             LoadAuditHistory();
 
-            // Create session
             _session = new RecoverySession(
                 _scopedRecoveryService,
                 _auditService,
@@ -297,9 +278,6 @@ namespace PhantomVault.UI.ViewModels
                 : "Recovery context loaded, but there are no unused recovery codes remaining.";
         }
 
-        /// <summary>
-        /// Called when USB is removed during recovery.
-        /// </summary>
         public void OnUsbRemoved()
         {
             _session?.OnUsbRemoved();
@@ -391,7 +369,6 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                // Code is valid - proceed to delay
                 TotalDelaySeconds = _session.RecoveryDelaySeconds;
                 DelaySecondsRemaining = TotalDelaySeconds;
 
@@ -431,7 +408,7 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (OperationCanceledException)
             {
-                // User aborted
+
                 CurrentStep = RecoveryStep.Aborted;
             }
             finally
@@ -455,13 +432,10 @@ namespace PhantomVault.UI.ViewModels
             {
                 var recoveredKey = _session.RecoverDomain(domain);
 
-                // Key recovered successfully
                 SelectedDomain = domain;
                 CompletionMessage = $"Successfully recovered access to {domain} domain.\n\n" +
                                    "Your domain key has been restored.";
 
-                // Zero the key - in a real implementation, this would be passed
-                // to the appropriate service for re-keying
                 System.Security.Cryptography.CryptographicOperations.ZeroMemory(recoveredKey);
 
                 CurrentStep = RecoveryStep.Complete;
@@ -519,7 +493,6 @@ namespace PhantomVault.UI.ViewModels
 
             AuditHistory.Clear();
 
-            // Load in reverse order (newest first)
             for (int i = _recoveryStore.AuditLog.Count - 1; i >= 0; i--)
             {
                 var entry = _recoveryStore.AuditLog[i];
@@ -545,9 +518,6 @@ namespace PhantomVault.UI.ViewModels
         }
     }
 
-    /// <summary>
-    /// Recovery wizard steps.
-    /// </summary>
     public enum RecoveryStep
     {
         Welcome,
@@ -560,9 +530,6 @@ namespace PhantomVault.UI.ViewModels
         AuditHistory
     }
 
-    /// <summary>
-    /// View model for audit history entries.
-    /// </summary>
     public sealed class RecoveryAuditEntryViewModel : ReactiveObject
     {
         public string Id { get; }
@@ -583,7 +550,7 @@ namespace PhantomVault.UI.ViewModels
             TargetDomain = entry.TargetDomain;
             FailureReason = entry.FailureReason;
 
-            StatusIcon = Success ? "\u2714" : "\u2718"; // Check or X mark
+            StatusIcon = Success ? "\u2714" : "\u2718";
 
             var domainPart = string.IsNullOrEmpty(TargetDomain) ? "" : $" [{TargetDomain}]";
             var failurePart = string.IsNullOrEmpty(FailureReason) ? "" : $" - {FailureReason}";
@@ -591,3 +558,4 @@ namespace PhantomVault.UI.ViewModels
         }
     }
 }
+

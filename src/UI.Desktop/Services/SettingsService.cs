@@ -6,10 +6,7 @@ using Serilog;
 
 namespace PhantomVault.UI.Services
 {
-    /// <summary>
-    /// A single desktop-app auto-fill permission entry: the process/app name
-    /// and whether PhantomVault is allowed to auto-fill into it.
-    /// </summary>
+
     public sealed class AutoFillAppPermission
     {
         public string AppName { get; set; } = string.Empty;
@@ -21,6 +18,10 @@ namespace PhantomVault.UI.Services
         public bool PrivacyModeEnabled { get; set; }
         public bool RedactDiagnosticLogs { get; set; } = true;
         public bool EnableDebugLogging { get; set; } = false;
+
+        public bool UpdateAutoCheckEnabled { get; set; } = false;
+        public bool StartWithWindows { get; set; } = false;
+        public bool GlobalHotkeyEnabled { get; set; } = false;
         public bool SecureTrashEnabled { get; set; } = true;
         public bool SecureTrashAutoPurge { get; set; } = true;
         public int SecureTrashRetentionDays { get; set; } = 30;
@@ -39,422 +40,187 @@ namespace PhantomVault.UI.Services
         public int BackupRetentionCount { get; set; } = 2;
         public DateTimeOffset? LastAutomatedBackupUtc { get; set; }
         public double RenderScale { get; set; } = 1.0;
-        // Auto-fill desktop app permissions: which processes may receive auto-fill.
+
         public List<AutoFillAppPermission> AutoFillAppPermissions { get; set; } = new();
-        // Appearance: app-wide font family, base font size, and accent colour.
+
         public string AppFontFamily { get; set; } = "Segoe UI";
         public double AppFontSize { get; set; } = 14.0;
-        public string AccentColorHex { get; set; } = "#2B4A7A"; // dull blue
-        // Accessibility: selected UI language index (maps to the language list
-        // in AccessibilitySettingsView). 0 = English (United States).
+        public string AccentColorHex { get; set; } = "#2B4A7A";
+
         public int LanguageIndex { get; set; } = 0;
-        // Accessibility tab preferences.
+
         public bool ShowEntryIcons { get; set; } = true;
         public bool ShowCategoryColors { get; set; } = true;
-        public int AccessibilityFontSize { get; set; } = 1;   // 0=Small,1=Medium,2=Large,3=XL
-        public int AccessibilityFontFamily { get; set; } = 0; // index into the family list
+        public int AccessibilityFontSize { get; set; } = 1;
+        public int AccessibilityFontFamily { get; set; } = 0;
         public bool EnableKeyboardShortcuts { get; set; } = true;
         public bool FocusSearchOnOpen { get; set; } = true;
         public bool EnableScreenReader { get; set; } = false;
+        public bool LargeTooltips { get; set; } = false;
         public bool IsDarkTheme { get; set; } = true;
         public int ThemeSkin { get; set; } = 0;
         public bool EnableHighContrast { get; set; } = false;
         public bool ReduceAnimations { get; set; } = false;
         public bool ReduceTransparency { get; set; } = false;
+        public bool UseFlatButtons { get; set; } = false;
+
         /// <summary>
-        /// When true, sidebar category rows show only the small left colour bar
-        /// (no full-row category tint wash). When false (default), the category
-        /// colour also tints the row background.
+        /// When true, liquid-glass button borders are replaced with a standard flat 1px
+        /// border (the glass fill stays). Independent of UseFlatButtons — that one swaps
+        /// the entire glass treatment for a solid accent rectangle. Together they cascade
+        /// (UseFlatButtons wins when both are on).
         /// </summary>
+        public bool UseFlatButtonBorders { get; set; } = false;
+
+        /// <summary>
+        /// When true, manifest writes use the reduced Argon2id parameter set
+        /// (KdfParams.Fast — 64 MiB / 3 iterations) for faster unlock. Existing
+        /// manifests stay at their stored parameters until the user runs the
+        /// "Re-key for Fast Unlock" action in Security settings.
+        /// </summary>
+        public bool UseFastUnlock { get; set; } = false;
+
         public bool ShowCategoryColorBarOnly { get; set; } = false;
-        /// <summary>
-        /// Selected runtime theme ID (e.g., "ClassicDark", "GiblexGlassNavy").
-        /// </summary>
+
         public string SelectedThemeId { get; set; } = "ClassicDark";
-        /// <summary>
-        /// Clipboard clear time index: 0=30s, 1=1min, 2=2min, 3=5min, 4=never.
-        /// </summary>
+
         public int ClipboardClearTime { get; set; } = 1;
 
-        // ===== Lock Screen / Re-auth Settings =====
-
-        /// <summary>
-        /// Enables a local PIN lock to re-authenticate without exiting the app.
-        /// This PIN is a local UI lock and is not the vault encryption passphrase.
-        /// </summary>
         public bool EnablePinLock { get; set; } = false;
 
-        /// <summary>
-        /// If enabled, auto-lock uses the in-app PIN lockscreen (soft lock) instead of dismounting.
-        /// </summary>
         public bool UsePinLockForAutoLock { get; set; } = false;
 
-        /// <summary>
-        /// Base64-encoded random salt used for PIN PBKDF2 hashing.
-        /// </summary>
         public string? PinSaltBase64 { get; set; }
 
-        /// <summary>
-        /// Base64-encoded PBKDF2 hash for the PIN.
-        /// </summary>
         public string? PinHashBase64 { get; set; }
 
-        /// <summary>
-        /// PBKDF2 iteration count used for the PIN hash.
-        /// </summary>
         public int PinPbkdf2Iterations { get; set; } = 150_000;
 
-        /// <summary>
-        /// Auto-copy TOTP code when copying passwords for entries with TOTP enabled.
-        /// </summary>
         public bool AutoCopyTotpWithPassword { get; set; } = false;
 
-        /// <summary>
-        /// Enable screenshot protection (window appears black in screenshots/recordings).
-        /// </summary>
         public bool EnableScreenshotProtection { get; set; } = true;
 
-        // ===== Security Settings =====
-
-        /// <summary>
-        /// Require hardware token for vault authentication.
-        /// </summary>
         public bool RequireHardwareToken { get; set; } = false;
 
-        /// <summary>
-        /// Require keyfile for vault authentication.
-        /// </summary>
         public bool RequireKeyfile { get; set; } = false;
 
-        /// <summary>
-        /// Idle timeout in minutes before auto-lock.
-        /// </summary>
         public int IdleTimeoutMinutes { get; set; } = 15;
 
-        /// <summary>
-        /// When true, lock the vault when the window is minimized.
-        /// </summary>
         public bool AutoLockOnMinimize { get; set; } = false;
 
-        /// <summary>
-        /// When true, lock the vault when the Windows session is locked.
-        /// </summary>
         public bool AutoLockOnScreenLock { get; set; } = true;
 
-        /// <summary>
-        /// When true, clear the clipboard when the vault enters its lockscreen state.
-        /// </summary>
         public bool ClearClipboardOnLock { get; set; } = true;
 
-        /// <summary>
-        /// When true, show the vault window in a locked state until the user re-authenticates.
-        /// </summary>
         public bool RequireUnlockToShow { get; set; } = false;
 
-        /// <summary>
-        /// Maximum failed unlock attempts before lockout. Null means unlimited.
-        /// </summary>
         public int? MaxFailedUnlockAttempts { get; set; } = 10;
 
-        /// <summary>
-        /// Session timeout in minutes used by advanced policy preferences.
-        /// </summary>
         public int SessionTimeoutMinutes { get; set; } = 30;
 
-        /// <summary>
-        /// Saved preference for startup hardening against remote debugging.
-        /// </summary>
         public bool BlockRemoteDebugging { get; set; } = true;
 
-        /// <summary>
-        /// Enable decoy vault protection.
-        /// </summary>
         public bool EnableDecoyVault { get; set; } = false;
 
-        /// <summary>
-        /// Number of fake credentials to generate for decoy vault.
-        /// </summary>
         public int DecoyCredentialCount { get; set; } = 20;
 
-        /// <summary>
-        /// Enable read-only mode when decoy vault is active.
-        /// </summary>
         public bool DecoyReadOnlyMode { get; set; } = true;
 
-        /// <summary>
-        /// Log decoy vault activation events.
-        /// </summary>
         public bool DecoyLogActivations { get; set; } = true;
 
-        // ===== Window State Settings =====
-
-        /// <summary>
-        /// MainWindow X position. Null means center on screen.
-        /// </summary>
         public double? MainWindowX { get; set; }
 
-        /// <summary>
-        /// MainWindow Y position. Null means center on screen.
-        /// </summary>
         public double? MainWindowY { get; set; }
 
-        /// <summary>
-        /// MainWindow width.
-        /// </summary>
         public double? MainWindowWidth { get; set; }
 
-        /// <summary>
-        /// MainWindow height.
-        /// </summary>
         public double? MainWindowHeight { get; set; }
 
-        /// <summary>
-        /// MainWindow state (Normal, Minimized, Maximized).
-        /// </summary>
         public string? MainWindowState { get; set; }
 
-        // ===== View Preferences =====
-
-        /// <summary>
-        /// Default vault view mode: true for grid view, false for list view.
-        /// </summary>
         public bool PreferGridView { get; set; } = false;
 
-        /// <summary>
-        /// Preferred default password generator length.
-        /// </summary>
         public int DefaultPasswordLength { get; set; } = 16;
 
-        /// <summary>
-        /// Preferred password generator character set toggles.
-        /// </summary>
         public bool PasswordGeneratorIncludeUppercase { get; set; } = true;
         public bool PasswordGeneratorIncludeLowercase { get; set; } = true;
         public bool PasswordGeneratorIncludeNumbers { get; set; } = true;
         public bool PasswordGeneratorIncludeSymbols { get; set; } = true;
 
-        /// <summary>
-        /// When false, the Dashboard view is disabled and the app starts on the Passwords view.
-        /// The sidebar Dashboard button is hidden.
-        /// </summary>
         public bool DashboardEnabled { get; set; } = true;
 
-        // ===== Category Manager Preferences =====
-
-        /// <summary>
-        /// Last selected icon library path for category icons.
-        /// </summary>
         public string? LastIconLibraryPath { get; set; }
 
-        /// <summary>
-        /// Default category tile color (hex format, e.g., "#2196F3").
-        /// </summary>
         public string? DefaultCategoryColor { get; set; }
 
-        /// <summary>
-        /// Remember last opened category in vault.
-        /// </summary>
         public string? LastActiveCategory { get; set; }
 
-        // ===== Icon Manager Preferences =====
-
-        /// <summary>
-        /// Last selected icon pack or folder.
-        /// </summary>
         public string? LastIconPack { get; set; }
 
-        /// <summary>
-        /// Icon size preference for icon manager (Small, Medium, Large).
-        /// </summary>
         public string? IconDisplaySize { get; set; } = "Medium";
 
-        // ===== Encryption Preferences =====
-
-        /// <summary>
-        /// Preferred encryption profile for new vaults (Basic, Advanced, Paranoid).
-        /// </summary>
         public string PreferredEncryptionProfile { get; set; } = "Advanced";
 
-        /// <summary>
-        /// Default storage/privacy tier to preselect during new-vault setup.
-        /// </summary>
         public string DefaultVaultProtectionTier { get; set; } = "StealthSecure";
 
-        // ===== Authentication Preferences =====
-
-        /// <summary>
-        /// Default setting for requiring hardware token on new vaults.
-        /// </summary>
         public bool DefaultRequireHardwareToken { get; set; } = false;
 
-        /// <summary>
-        /// Default setting for enabling TOTP on new vaults.
-        /// </summary>
         public bool DefaultUseTotp { get; set; } = false;
 
-        /// <summary>
-        /// Shows post-create authentication onboarding on the next successful unlock.
-        /// </summary>
         public bool PendingPostCreateAuthOnboarding { get; set; } = false;
 
         public bool PendingSetupWindowsHello { get; set; } = false;
         public bool PendingSetupPasskey { get; set; } = false;
         public bool PendingSetupTotp { get; set; } = false;
 
-        /// <summary>
-        /// Default setting for enabling Windows Hello/Passkey on new vaults.
-        /// </summary>
         public bool DefaultUsePasskey { get; set; } = false;
 
-        /// <summary>
-        /// Vault unlock preference chosen during first-time setup.
-        /// Values: "Pin", "WindowsHello", "Automatic", or null if not yet configured.
-        /// </summary>
         public string? VaultUnlockPreference { get; set; }
 
-        /// <summary>
-        /// Remember last authentication method used (YubiKey, Passkey, TOTP, etc.).
-        /// </summary>
         public string? LastAuthenticationMethod { get; set; }
 
-        /// <summary>
-        /// Absolute paths to vaults stored locally (not on a USB drive).
-        /// Populated at provisioning time so the welcome screen can discover them without a USB scan.
-        /// </summary>
         public List<string> KnownLocalVaultPaths { get; set; } = new();
 
-        // ===== AutoFill Preferences =====
-
-        /// <summary>
-        /// Enable browser auto-fill for credentials.
-        /// </summary>
         public bool EnableAutoFill { get; set; } = false;
 
-        /// <summary>
-        /// Auto-inject username field during autofill.
-        /// </summary>
         public bool AutoFillInjectUsername { get; set; } = true;
 
-        /// <summary>
-        /// Auto-inject password field during autofill.
-        /// </summary>
         public bool AutoFillInjectPassword { get; set; } = true;
 
-        /// <summary>
-        /// Comma-separated whitelist of domains for autofill (empty = all domains).
-        /// </summary>
         public string AutoFillDomainWhitelist { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Automatically submit the login form after auto-filling credentials.
-        /// </summary>
         public bool AutoFillAutoSubmit { get; set; } = false;
 
-        /// <summary>
-        /// Show the PhantomVault auto-fill icon inside detected password fields.
-        /// </summary>
         public bool AutoFillShowIcon { get; set; } = true;
 
-        /// <summary>
-        /// Allow auto-fill into native desktop applications (not just browsers).
-        /// </summary>
         public bool AutoFillDesktopApps { get; set; } = false;
 
-        // ===== AutoFill Mode (USB-Triggered) =====
-
-        /// <summary>
-        /// When true, the app runs in system tray and auto-fills credentials on USB insertion
-        /// for both browser and native Windows login portals. Passkeys are prioritised
-        /// when Attestor is linked.
-        /// </summary>
         public bool AutoFillModeEnabled { get; set; } = false;
 
-        /// <summary>
-        /// When true, TOTP codes are automatically detected and input after the password
-        /// fill step completes.
-        /// </summary>
         public bool AutoFillAutoInputTotp { get; set; } = true;
 
-        /// <summary>
-        /// When true, the no-match dialog is shown if no stored credential matches
-        /// the active login portal. Passkey handoff is only exposed when Attestor
-        /// integration is linked.
-        /// </summary>
         public bool AutoFillShowNewEntryOnNoMatch { get; set; } = true;
 
-        /// <summary>
-        /// Milliseconds to wait after password fill before starting to poll for a TOTP field.
-        /// </summary>
         public int AutoFillTotpPollDelayMs { get; set; } = 1500;
 
-        /// <summary>
-        /// Maximum milliseconds to spend polling for a TOTP field before giving up.
-        /// </summary>
         public int AutoFillTotpPollTimeoutMs { get; set; } = 8000;
 
-        // ===== USB OS-Junk Write Protection =====
-
-        /// <summary>
-        /// When true, Phantom Obscura sets the GPT ReadOnly attribute on the
-        /// bound USB partition outside of active unlock sessions. Prevents
-        /// foreign OSes (Android, macOS, Windows) from injecting indexing
-        /// folders (LOST.DIR, .Spotlight-V100, System Volume Information,
-        /// etc.) after the drive has been formatted/bound by Phantom Obscura.
-        /// The bit is cleared on unlock and re-set on close.
-        /// </summary>
         public bool UsbWriteProtectionEnabled { get; set; } = true;
 
-        /// <summary>
-        /// When true, Phantom Obscura automatically scrubs OS-injected indexing
-        /// junk from the drive root on every unlock. Whitelist-driven; never
-        /// touches user data.
-        /// </summary>
         public bool UsbAutoScrubEnabled { get; set; } = true;
 
-        /// <summary>
-        /// Number of days scrubbed entries are retained in the on-drive
-        /// <c>.phantom_quarantine/</c> folder before being hard-deleted.
-        /// Set to 0 to disable quarantine and hard-delete immediately.
-        /// </summary>
         public int UsbScrubQuarantineDays { get; set; } = 7;
 
-        /// <summary>
-        /// When true, the first time the scrubber finds OS junk on a drive it
-        /// surfaces a confirmation prompt before removing anything. (Plumbing
-        /// reserved for a future UI; currently the scrubber runs unattended.)
-        /// </summary>
         public bool UsbScrubPromptOnFirstFind { get; set; } = true;
 
-        /// <summary>
-        /// When true, Phantom Obscura keeps the standard "Basic Data" GPT
-        /// partition type so the drive remains browsable on non-PO machines.
-        /// When false, the partition is re-tagged with
-        /// <c>UsbWriteProtectionService.PhantomObscuraPartitionTypeGuid</c>
-        /// — stops macOS/Android from auto-mounting the drive entirely.
-        /// </summary>
         public bool UsbCompatibilityMode { get; set; } = true;
 
-        // ===== Cross-App Sync Settings =====
-
-        /// <summary>
-        /// Enable cross-app sync with other Phantom apps.
-        /// </summary>
         public bool SyncEnabled { get; set; } = true;
 
-        /// <summary>
-        /// Sync theme selection across Phantom apps.
-        /// </summary>
         public bool SyncTheme { get; set; } = true;
 
-        /// <summary>
-        /// Last time settings were synced from another app.
-        /// </summary>
         public DateTimeOffset? LastSyncTime { get; set; }
 
-        /// <summary>
-        /// Gets the clipboard clear delay as a TimeSpan based on ClipboardClearTime index.
-        /// Returns null if "Never" is selected.
-        /// </summary>
         public TimeSpan? GetClipboardClearDelay()
         {
             return ClipboardClearTime switch
@@ -463,8 +229,8 @@ namespace PhantomVault.UI.Services
                 1 => TimeSpan.FromMinutes(1),
                 2 => TimeSpan.FromMinutes(2),
                 3 => TimeSpan.FromMinutes(5),
-                4 => null, // Never
-                _ => TimeSpan.FromMinutes(1) // Default fallback
+                4 => null,
+                _ => TimeSpan.FromMinutes(1)
             };
         }
     }
@@ -695,3 +461,4 @@ namespace PhantomVault.UI.Services
         }
     }
 }
+

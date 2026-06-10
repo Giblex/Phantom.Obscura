@@ -10,3 +10,4 @@ public partial class NotesDetailSection : UserControl
         AvaloniaXamlLoader.Load(this);
     }
 }
+

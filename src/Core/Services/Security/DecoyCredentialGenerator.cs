@@ -6,24 +6,33 @@ using PhantomVault.Core.Models;
 
 namespace PhantomVault.Core.Services.Security
 {
-    /// <summary>
-    /// Generates realistic-looking fake credentials for decoy vaults.
-    /// The goal is to make the decoy vault appear legitimate to an attacker,
-    /// wasting their time and providing false intelligence.
-    /// </summary>
+
     public sealed class DecoyCredentialGenerator
     {
-        // NOTE: This generator produces intentionally-fake decoy data and MUST be
-        // seedable for reproducible decoy vaults (test/QA scenarios). System.Random
-        // is appropriate here: there is no secret, key, password, or token being
-        // produced from this RNG that an attacker could benefit from predicting.
-        // Do not "upgrade" this to RandomNumberGenerator without also removing the
-        // seedable constructor — and even then it adds no security value.
-#pragma warning disable CA5394 // Do not use insecure randomness (justified above)
-        private readonly Random _rng;
-#pragma warning restore CA5394
 
-        // Common website patterns
+        // CSPRNG by default so generated decoys are not predictable from process
+        // start time; a seeded System.Random is only used when an explicit seed is
+        // supplied (deterministic test scenarios).
+        private sealed class SecureRng
+        {
+#pragma warning disable CA5394 // seeded Random is intentional for reproducible tests
+            private readonly Random? _seeded;
+
+            public SecureRng(int? seed)
+            {
+                _seeded = seed.HasValue ? new Random(seed.Value) : null;
+            }
+
+            public int Next(int maxExclusive)
+                => _seeded?.Next(maxExclusive) ?? RandomNumberGenerator.GetInt32(maxExclusive);
+
+            public int Next(int minInclusive, int maxExclusive)
+                => _seeded?.Next(minInclusive, maxExclusive) ?? RandomNumberGenerator.GetInt32(minInclusive, maxExclusive);
+#pragma warning restore CA5394
+        }
+
+        private readonly SecureRng _rng;
+
         private static readonly string[] PopularSites = new[]
         {
             "google.com", "facebook.com", "amazon.com", "microsoft.com", "apple.com",
@@ -33,14 +42,12 @@ namespace PhantomVault.Core.Services.Security
             "gmail.com", "outlook.com", "yahoo.com", "protonmail.com"
         };
 
-        // Common email providers
         private static readonly string[] EmailProviders = new[]
         {
             "gmail.com", "outlook.com", "yahoo.com", "hotmail.com",
             "protonmail.com", "icloud.com", "aol.com"
         };
 
-        // First names for generating realistic usernames
         private static readonly string[] FirstNames = new[]
         {
             "james", "john", "robert", "michael", "william", "david", "richard", "joseph",
@@ -48,7 +55,6 @@ namespace PhantomVault.Core.Services.Security
             "alex", "chris", "sam", "jordan", "taylor", "morgan", "casey", "riley"
         };
 
-        // Last names for generating realistic usernames
         private static readonly string[] LastNames = new[]
         {
             "smith", "johnson", "williams", "brown", "jones", "garcia", "miller", "davis",
@@ -56,7 +62,6 @@ namespace PhantomVault.Core.Services.Security
             "thomas", "taylor", "moore", "jackson", "martin", "lee", "thompson", "white"
         };
 
-        // WiFi network name patterns
         private static readonly string[] WifiPrefixes = new[]
         {
             "HOME", "NETGEAR", "LINKSYS", "TP-LINK", "Fios", "Xfinity",
@@ -65,51 +70,40 @@ namespace PhantomVault.Core.Services.Security
 
         public DecoyCredentialGenerator(int? seed = null)
         {
-            _rng = seed.HasValue ? new Random(seed.Value) : new Random();
+            _rng = new SecureRng(seed);
         }
 
-        /// <summary>
-        /// Generates a set of realistic decoy credentials.
-        /// </summary>
-        /// <param name="count">Number of credentials to generate (default: 15-30)</param>
-        /// <returns>List of fake credentials</returns>
         public List<Credential> GenerateDecoyCredentials(int? count = null)
         {
             int credentialCount = count ?? _rng.Next(15, 31);
             var credentials = new List<Credential>();
 
-            // Generate mix of different entry types
-            int passwordCount = (int)(credentialCount * 0.6); // 60% passwords
+            int passwordCount = (int)(credentialCount * 0.6);
             int wifiCount = _rng.Next(2, 5);
             int creditCardCount = _rng.Next(1, 3);
             int apiKeyCount = _rng.Next(2, 4);
             int identityCount = _rng.Next(1, 2);
 
-            // Generate password entries
             for (int i = 0; i < passwordCount; i++)
             {
                 credentials.Add(GeneratePasswordEntry());
             }
 
-            // Generate WiFi entries
             for (int i = 0; i < wifiCount; i++)
             {
                 credentials.Add(GenerateWiFiEntry());
             }
 
-            // Generate credit card entries
             for (int i = 0; i < creditCardCount; i++)
             {
                 credentials.Add(GenerateCreditCardEntry());
             }
 
-            // Generate API key entries
             for (int i = 0; i < apiKeyCount; i++)
             {
                 credentials.Add(GenerateApiKeyEntry());
             }
 
-            // Generate identity entries
             for (int i = 0; i < identityCount; i++)
             {
                 credentials.Add(GenerateIdentityEntry());
@@ -124,10 +118,8 @@ namespace PhantomVault.Core.Services.Security
             string firstName = FirstNames[_rng.Next(FirstNames.Length)];
             string lastName = LastNames[_rng.Next(LastNames.Length)];
 
-            // Generate realistic username variations
             string username = GenerateRealisticUsername(firstName, lastName);
 
-            // Generate realistic password (appears complex but is fake)
             string password = GenerateRealisticPassword();
 
             return new Credential
@@ -169,14 +161,11 @@ namespace PhantomVault.Core.Services.Security
             string lastName = LastNames[_rng.Next(LastNames.Length)];
             string cardholderName = $"{CapitalizeFirst(firstName)} {CapitalizeFirst(lastName)}";
 
-            // Generate fake but realistic-looking card number (Luhn algorithm not required for decoy)
             string cardNumber = GenerateFakeCreditCardNumber();
 
-            // Generate expiry date (1-3 years in future)
             DateTime expiry = DateTime.Now.AddMonths(_rng.Next(12, 37));
             string expiryDate = expiry.ToString("MM/yy");
 
-            // Generate CVV
             string cvv = _rng.Next(100, 1000).ToString();
 
             return new Credential
@@ -223,7 +212,6 @@ namespace PhantomVault.Core.Services.Security
             string lastName = LastNames[_rng.Next(LastNames.Length)];
             string fullName = $"{CapitalizeFirst(firstName)} {CapitalizeFirst(lastName)}";
 
-            // Generate fake but realistic-looking ID numbers
             string dlNumber = $"{(char)_rng.Next('A', 'Z')}{_rng.Next(10000000, 99999999)}";
             string ssn = $"{_rng.Next(100, 999)}-{_rng.Next(10, 99)}-{_rng.Next(1000, 9999)}";
 
@@ -259,7 +247,7 @@ namespace PhantomVault.Core.Services.Security
 
         private string GenerateRealisticPassword()
         {
-            // Generate passwords that appear complex (mix of patterns)
+
             int pattern = NextInt(0, 4);
 
             return pattern switch
@@ -273,16 +261,16 @@ namespace PhantomVault.Core.Services.Security
 
         private string GenerateRealisticWiFiPassword()
         {
-            // WiFi passwords tend to be longer and more complex
+
             return GenerateRandomString(16, includeSpecial: false);
         }
 
         private string GenerateFakeCreditCardNumber()
         {
-            // Generate fake 16-digit card number (not valid Luhn, but looks real)
+
             var parts = new[]
             {
-                NextInt(4000, 5000).ToString(), // Visa-like prefix
+                NextInt(4000, 5000).ToString(),
                 NextInt(1000, 9999).ToString(),
                 NextInt(1000, 9999).ToString(),
                 NextInt(1000, 9999).ToString()
@@ -292,7 +280,7 @@ namespace PhantomVault.Core.Services.Security
 
         private string GenerateFakeApiKey()
         {
-            // Generate realistic-looking API key format
+
             string prefix = new[] { "sk", "pk", "api", "key" }[NextInt(0, 4)];
             string randomPart = GenerateRandomString(32, includeSpecial: false);
             return $"{prefix}_{randomPart}";
@@ -317,7 +305,7 @@ namespace PhantomVault.Core.Services.Security
         private string GenerateRealisticNotes()
         {
             int hasNotes = NextInt(0, 100);
-            if (hasNotes < 70) return string.Empty; // 70% have no notes
+            if (hasNotes < 70) return string.Empty;
 
             string[] notes = new[]
             {
@@ -369,3 +357,4 @@ namespace PhantomVault.Core.Services.Security
         }
     }
 }
+

@@ -1,2 +1,3 @@
 using System.Text.Json.Serialization;
 namespace GiblexVault.Security.ZK.Models; public sealed class KdfParams { [JsonPropertyName("kdf")] public string Kdf { get; set; } = "argon2id"; [JsonPropertyName("ops")] public int Ops { get; set; } = 6; [JsonPropertyName("memMiB")] public int MemMiB { get; set; } = 256; [JsonPropertyName("parallelism")] public int Parallelism { get; set; } = 4; [JsonPropertyName("salt")] public byte[] Salt { get; set; } = Array.Empty<byte>(); }
+

@@ -33,14 +33,6 @@
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
         </Style>
 
-        <!--
-            Breathing pulse for the unlock orb. Runs while the orb is visible
-            (i.e. IsBusy=true) and stays purely on the GPU compositor — no
-            code-behind, no ViewModel touch. The animation is scoped to the
-            'unlock-orb' class so it can't leak to other Borders.
-            The Window:not(.reduce-motion) ancestor guard makes the animation
-            skip entirely when AccessibilityService.ReduceMotion is on.
-        -->
         <Style Selector="Window:not(.reduce-motion) Border.unlock-orb">
             <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
             <Style.Animations>
@@ -58,14 +50,13 @@
             </Style.Animations>
         </Style>
 
-        <!-- Accent ring — static, no RenderTransform animation needed -->
         <Style Selector="Ellipse.unlock-ring">
             <Setter Property="Opacity" Value="0.6"/>
         </Style>
     </views:ThemeAwareWindow.Styles>
 
     <Grid RowDefinitions="Auto,*,Auto" Margin="34,28">
-        <!-- Header -->
+
         <StackPanel Grid.Row="0" Spacing="10" Margin="0,0,0,28">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
                 <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
@@ -82,14 +73,12 @@
                        HorizontalAlignment="Center"/>
         </StackPanel>
 
-        <!-- Status Content -->
-        <StackPanel Grid.Row="1" 
+        <StackPanel Grid.Row="1"
                     Spacing="22"
                     VerticalAlignment="Center">
-            
-            <!-- Progress Indicator with Icon -->
+
             <Grid Width="92" Height="92" HorizontalAlignment="Center" IsVisible="{Binding IsBusy}">
-                <!-- Slow rotating accent ring -->
+
                 <Ellipse Classes="unlock-ring"
                          Width="92" Height="92"
                          StrokeThickness="2"
@@ -102,7 +91,7 @@
                         </LinearGradientBrush>
                     </Ellipse.Stroke>
                 </Ellipse>
-                <!-- Breathing orb with brand icon -->
+
                 <Border Classes="unlock-orb"
                         Width="70"
                         Height="70"
@@ -117,7 +106,6 @@
                 </Border>
             </Grid>
 
-            <!-- Status Message -->
             <TextBlock Text="{Binding Status}"
                        FontSize="{StaticResource Type.H4.Size}"
                        Foreground="{DynamicResource PrimaryTextBrush}"
@@ -127,7 +115,6 @@
                        AutomationProperties.Name="Unlock Status"
                        AutomationProperties.LiveSetting="Assertive"/>
 
-            <!-- Progress Bar with Percentage -->
             <StackPanel Spacing="12" Margin="32,26,32,0" IsVisible="{Binding IsBusy}"
                         AutomationProperties.Name="Unlock Progress">
                 <Grid ColumnDefinitions="*,Auto">
@@ -155,7 +142,6 @@
             </StackPanel>
         </StackPanel>
 
-        <!-- Footer -->
         <TextBlock Grid.Row="2"
                    Text="Phantom Obscura • zero-knowledge vault access"
                    FontSize="{StaticResource Type.Tiny.Size}"
@@ -164,3 +150,4 @@
                    Margin="0,30,0,0"/>
     </Grid>
 </views:ThemeAwareWindow>
+

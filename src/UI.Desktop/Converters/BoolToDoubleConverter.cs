@@ -4,9 +4,7 @@ using Avalonia.Data.Converters;
 
 namespace PhantomVault.UI.Converters
 {
-    /// <summary>
-    /// Converts a boolean value into one of two doubles specified via converter parameter ("true|false").
-    /// </summary>
+
     public sealed class BoolToDoubleConverter : IValueConverter
     {
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
@@ -29,3 +27,4 @@ namespace PhantomVault.UI.Converters
         }
     }
 }
+

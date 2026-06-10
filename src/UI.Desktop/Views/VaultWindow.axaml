@@ -11,11 +11,10 @@
     xmlns:pinctrl="clr-namespace:PhantomVault.UI.Views.Controls"
     xmlns:components="clr-namespace:PhantomVault.UI.Components.Fields"
     xmlns:nav="clr-namespace:PhantomVault.UI.Components.Navigation"
-    
-        
+
         x:Class="PhantomVault.UI.Views.VaultWindow"
-        Title="PhantomVault - My Secure Vault" 
-        Width="1280" 
+        Title="PhantomVault - My Secure Vault"
+        Width="1280"
         Height="720"
         MinWidth="1100"
         MinHeight="600"
@@ -23,7 +22,6 @@
         Background="{DynamicResource WindowBackgroundBrush}"
         Classes="animated-window">
 
-    <!-- Global window shortcuts. Ctrl+K opens the Command Palette. -->
     <Window.KeyBindings>
         <KeyBinding Gesture="Ctrl+K" Command="{Binding OpenCommandPaletteCommand}"/>
     </Window.KeyBindings>
@@ -31,31 +29,25 @@
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <!-- Design Tokens: Spacing, Sizing, Thickness -->
+
                 <ResourceInclude Source="avares://PhantomVault.UI/Resources/Tokens/SpacingTokens.axaml" />
                 <ResourceInclude Source="avares://PhantomVault.UI/Resources/Tokens/SizingTokens.axaml" />
                 <ResourceInclude Source="avares://PhantomVault.UI/Resources/Tokens/ThicknessTokens.axaml" />
-                
-                <!-- Converters: All value converters in one place -->
+
                 <ResourceInclude Source="avares://PhantomVault.UI/Resources/Converters/ConverterResources.axaml" />
-                
-                <!-- Brushes: Color effects and gradients -->
+
                 <ResourceInclude Source="avares://PhantomVault.UI/Resources/Brushes/SidebarBrushes.axaml" />
                 <ResourceInclude Source="avares://PhantomVault.UI/Resources/Brushes/GlassEffects.axaml" />
-                
-                <!-- Data Templates: Credential tiles and category items -->
+
                 <ResourceInclude Source="avares://PhantomVault.UI/Resources/Templates/DataTemplates/CredentialDataTemplates.axaml" />
                 <ResourceInclude Source="avares://PhantomVault.UI/Resources/Templates/DataTemplates/CategoryDataTemplates.axaml" />
             </ResourceDictionary.MergedDictionaries>
-            
-            <!-- Tile overlay: subtle white sheen gives tiles the glass highlight while
-                 avoiding a heavy dark cast between items. -->
+
             <LinearGradientBrush x:Key="TileOverlayBrush" StartPoint="0,0" EndPoint="1,1">
                 <GradientStop Color="#22FFFFFF" Offset="0"/>
                 <GradientStop Color="#00FFFFFF" Offset="1"/>
             </LinearGradientBrush>
 
-            <!-- Vector copy icon (two stacked rectangles representing clipboard/copy) -->
             <DrawingImage x:Key="CopyIcon">
                 <DrawingImage.Drawing>
                     <DrawingGroup>
@@ -65,17 +57,16 @@
                 </DrawingImage.Drawing>
             </DrawingImage>
 
-            <!-- Grid view icon - simplified 2x2 grid -->
             <DrawingImage x:Key="GridViewIcon">
                 <DrawingImage.Drawing>
                     <DrawingGroup>
-                        <!-- Top-left square -->
+
                         <GeometryDrawing Brush="{DynamicResource PrimaryTextBrush}" Geometry="M2,2 H9 V9 H2 Z" />
-                        <!-- Top-right square -->
+
                         <GeometryDrawing Brush="{DynamicResource PrimaryTextBrush}" Geometry="M11,2 H18 V9 H11 Z" />
-                        <!-- Bottom-left square -->
+
                         <GeometryDrawing Brush="{DynamicResource PrimaryTextBrush}" Geometry="M2,11 H9 V18 H2 Z" />
-                        <!-- Bottom-right square -->
+
                         <GeometryDrawing Brush="{DynamicResource PrimaryTextBrush}" Geometry="M11,11 H18 V18 H11 Z" />
                     </DrawingGroup>
                 </DrawingImage.Drawing>
@@ -83,14 +74,12 @@
         </ResourceDictionary>
     </Window.Resources>
 
-    <!-- Styles must go in Window.Styles for Avalonia - keep visual styles separate from resources. -->
     <Window.Styles>
-        <!-- External Style Includes -->
+
         <StyleInclude Source="avares://PhantomVault.UI/Resources/Styles/ButtonStyles.axaml" />
         <StyleInclude Source="avares://PhantomVault.UI/Resources/Styles/ListBoxStyles.axaml" />
         <StyleInclude Source="avares://PhantomVault.UI/Resources/Styles/ToggleButtonStyles.axaml" />
-        
-        <!-- Narrow auto-hiding scrollbars for entire VaultWindow -->
+
         <Style Selector="ScrollViewer ScrollBar">
             <Setter Property="Opacity" Value="0"/>
             <Setter Property="Transitions">
@@ -114,10 +103,7 @@
         <Style Selector="ScrollViewer ScrollBar:horizontal">
             <Setter Property="Height" Value="4"/>
         </Style>
-        
-        <!-- ═══ Tile & header-action styles are in ButtonStyles.axaml (single source of truth) ═══ -->
 
-        <!-- Sidebar quick filter toggles - left-aligned by default, centered override on Dashboard/Passwords -->
         <Style Selector="ToggleButton.quick-filter">
             <Setter Property="FontFamily" Value="{DynamicResource MainFontFamily}" />
             <Setter Property="Background" Value="Transparent" />
@@ -196,7 +182,7 @@
                                     BorderBrush="{TemplateBinding BorderBrush}"
                                     BorderThickness="{TemplateBinding BorderThickness}"
                                     CornerRadius="{TemplateBinding CornerRadius}"/>
-                            <!-- Per-category color highlight remains subtle so shell chrome stays quiet -->
+
                             <Border x:Name="ColorHighlight"
                                     CornerRadius="{TemplateBinding CornerRadius}"
                                     Background="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource HexToBrushConverter}}"
@@ -259,30 +245,22 @@
             <Setter Property="BorderThickness" Value="1" />
         </Style>
 
-        <!-- Dashboard backdrop blur: when the dashboard sheet is showing,
-             blur the underlying credential list / sidebar so the sheet sits
-             on top of a true blurred background (real backdrop-blur). -->
         <Style Selector=":is(Control).dashboard-blur">
-            <!-- NOTE: code-behind (DashboardView.axaml.cs) animates the BlurEffect.Radius
-                 from 0 -> target in sync with the sheet slide. This style remains as a
-                 fallback only; the class toggle is no longer bound, so it won't trigger. -->
+
             <Setter Property="Effect">
                 <BlurEffect Radius="14"/>
             </Setter>
         </Style>
 
     </Window.Styles>
-    
+
     <DockPanel LastChildFill="True">
-        
-        <!-- Footer/Status Bar - Docked to Bottom FIRST -->
+
         <views:StatusBarView DockPanel.Dock="Bottom" DataContext="{Binding}" />
-        
-        <!-- Header/Toolbar - Docked to Top, ZIndex keeps it above the dashboard sheet -->
+
         <views:HeaderView x:Name="HeaderView" DockPanel.Dock="Top" DataContext="{Binding}" ZIndex="200" />
-        
-        <!-- Key Rotation Banner - Docked below header -->
-        <Border DockPanel.Dock="Top" 
+
+        <Border DockPanel.Dock="Top"
                 Background="{DynamicResource WarningBackgroundBrush}"
                 BorderBrush="{DynamicResource WarningIcon}"
                 BorderThickness="0,0,0,1"
@@ -295,34 +273,32 @@
                 </MultiBinding>
             </Border.IsVisible>
             <Grid ColumnDefinitions="Auto,12,*,12,Auto,8,Auto">
-                <!-- Warning Icon -->
-                <Border Grid.Column="0" 
-                        Width="24" Height="24" 
+
+                <Border Grid.Column="0"
+                        Width="24" Height="24"
                         Background="{DynamicResource WarningIcon}"
                         CornerRadius="{DynamicResource Radius.Xl}">
-                    <TextBlock Text="⚠" 
-                               FontSize="{StaticResource Type.H4.Size}" 
+                    <TextBlock Text="⚠"
+                               FontSize="{StaticResource Type.H4.Size}"
                                Foreground="{DynamicResource PrimaryTextBrush}"
-                               HorizontalAlignment="Center" 
+                               HorizontalAlignment="Center"
                                VerticalAlignment="Center"/>
                 </Border>
-                
-                <!-- Message -->
+
                 <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                    <TextBlock FontWeight="SemiBold" 
+                    <TextBlock FontWeight="SemiBold"
                                Foreground="{DynamicResource WarningBrushDark}"
                                FontSize="{StaticResource Type.Label.Size}">
                         <Run Text="Key Rotation Recommended"/>
                     </TextBlock>
-                    <TextBlock Foreground="{DynamicResource WarningBrushDarker}" 
+                    <TextBlock Foreground="{DynamicResource WarningBrushDarker}"
                                FontSize="{StaticResource Type.Small.Size}">
                         <Run Text="It has been"/>
                         <Run Text="{Binding DaysSinceRotation}" FontWeight="Bold"/>
                         <Run Text="days since your last key rotation. Rotate now to maintain vault security."/>
                     </TextBlock>
                 </StackPanel>
-                
-                <!-- Rotate Now Button -->
+
                 <Button Grid.Column="4"
                         Command="{Binding RotateNowCommand}"
                         Classes="liquid-glass"
@@ -337,8 +313,7 @@
                         ToolTip.Tip="Generate new encryption keys for your vault">
                     <TextBlock Text="Rotate Now"/>
                 </Button>
-                
-                <!-- Dismiss Button -->
+
                 <Button Grid.Column="6"
                         Command="{Binding DismissRotationBannerCommand}"
                         Classes="liquid-glass"
@@ -351,19 +326,18 @@
                         BorderThickness="0"
                         Cursor="Hand"
                         ToolTip.Tip="Dismiss this banner">
-                    <TextBlock Text="×" 
-                               HorizontalAlignment="Center" 
+                    <TextBlock Text="×"
+                               HorizontalAlignment="Center"
                                VerticalAlignment="Center"/>
                 </Button>
             </Grid>
         </Border>
-        
-        <!-- Main Content Area — ClipToBounds keeps the dashboard sheet from painting over the header -->
+
         <Grid ClipToBounds="True">
-            <!-- Vault View (Sidebar + Credential List + Detail View) -->
+
             <Grid x:Name="VaultGrid">
                 <Grid.ColumnDefinitions>
-                    <!-- Sidebar column - collapses to icon-only (80px) when collapsed, full (220px) when expanded -->
+
                     <ColumnDefinition>
                         <ColumnDefinition.Width>
                             <Binding Path="IsSidebarCollapsed" ConverterParameter="80|220">
@@ -373,16 +347,15 @@
                             </Binding>
                         </ColumnDefinition.Width>
                     </ColumnDefinition>
-                    <!-- Stable width tuned to match target screenshot proportions -->
+
                     <ColumnDefinition Width="510"
                                       MinWidth="420"
                                       MaxWidth="720"/>
                     <ColumnDefinition Width="*"
                                       MinWidth="520"/>
                 </Grid.ColumnDefinitions>
-            
-            <!-- Left Sidebar: Categories and Filters -->
-            <views:SidebarView Grid.Column="0" 
+
+            <views:SidebarView Grid.Column="0"
                               DataContext="{Binding}">
                 <views:SidebarView.Transitions>
                     <Transitions>
@@ -391,13 +364,9 @@
                 </views:SidebarView.Transitions>
             </views:SidebarView>
 
-            <!-- Middle: Credentials List (Column 1 only) — always visible behind dashboard.
-                 Blurred when the dashboard sheet is showing (true backdrop blur). -->
-            <!-- Effect is set + animated from DashboardView code-behind (slide-synced backdrop blur). -->
             <views:CredentialListView x:Name="CredentialList" Grid.Column="1"
                                      DataContext="{Binding}" />
-            
-            <!-- Persistent grip bar peek — interactive pull handle when dashboard is closed -->
+
             <Panel x:Name="DashboardGripPeek"
                    Grid.Column="1" Grid.ColumnSpan="2"
                    ZIndex="50"
@@ -428,26 +397,13 @@
                 </Border>
             </Panel>
 
-            <!-- Dashboard Sheet — slides down from under header, overlays vault.
-                 Issue #34: prior fix added WindowBackgroundBrush but that's a
-                 gradient — its midtone read grey when stacked under the
-                 acrylic/overlay glass. Switch to ContentBackgroundBrush
-                 (solid dark navy #162235 in GiblexGlassNavy) so the base
-                 surface unambiguously reads navy regardless of how the
-                 acrylic layer renders. Also paint Background directly on the
-                 Panel as a belt-and-braces (no transparency at the root). -->
             <Panel x:Name="DashboardSheet" Grid.Column="1" Grid.ColumnSpan="2"
                    ZIndex="100"
                    IsHitTestVisible="{Binding IsShowingDashboard}"
                     Background="Transparent"
                     Margin="16,0,16,16"
                     ClipToBounds="True">
-                <!-- Liquid-glass backdrop. Avalonia's ExperimentalAcrylic
-                     always lays down a white luminance plate on this backend,
-                     so true backdrop-blur isn't usable. Stack two translucent
-                     dark layers (gradient + flat wash) to fake depth without
-                     going white. -->
-                <!-- Heavy dark wash + softened blur (sheet now floats with rounded corners on all sides) -->
+
                 <Border IsHitTestVisible="False" CornerRadius="24">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
@@ -459,14 +415,12 @@
                         <BlurEffect Radius="26"/>
                     </Border.Effect>
                 </Border>
-                <!-- Second flat dark wash to deepen depth -->
+
                 <Border IsHitTestVisible="False" CornerRadius="24"
                         Background="#4002060D"/>
-                <!-- Layer 1: Dashboard content -->
+
                 <views:DashboardView DataContext="{Binding DashboardViewModel}"/>
-                <!-- Layer 2: Liquid-glass border — luminous edge on top of everything.
-                     Cyan covers top+sides; rainbow owns the bottom edge so they
-                     don't stack into a double line. -->
+
                 <Border IsHitTestVisible="False" CornerRadius="24"
                         BorderThickness="1,1,1,0"
                         BorderBrush="#66CFE8FF"/>
@@ -481,9 +435,8 @@
                     </Border.BorderBrush>
                 </Border>
             </Panel>
-            
-        <!-- Resizable GridSplitter between credential list and detail panel -->
-        <GridSplitter Grid.Column="1" 
+
+        <GridSplitter Grid.Column="1"
                       Grid.ColumnSpan="1"
                       Width="5"
                       HorizontalAlignment="Right"
@@ -491,9 +444,8 @@
                       ResizeDirection="Columns"
                       Cursor="SizeWestEast"
                       IsVisible="{Binding IsVisible, ElementName=DetailPanel}"/>
-            
-        <!-- Detail View Panel -->
-        <Border x:Name="DetailPanel" Grid.Column="2" 
+
+        <Border x:Name="DetailPanel" Grid.Column="2"
                     Background="{DynamicResource WindowBackgroundBrush}"
                     BorderBrush="{DynamicResource ControlBorderBrush}"
             BorderThickness="1,0,0,0"
@@ -507,7 +459,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <Grid Margin="20,20,20,20">
                         <StackPanel IsVisible="{Binding !IsShowingSecureTrash}" Classes="fade-toggle">
-                        <!-- When SelectedCredential is not null -->
+
                         <Border x:Name="DetailCard"
                                 Background="{DynamicResource CardBackgroundBrush}"
                                 CornerRadius="16"
@@ -517,9 +469,9 @@
                                 BorderThickness="1"
                                 IsVisible="{Binding SelectedCredential, Converter={x:Static ObjectConverters.IsNotNull}}">
                         <StackPanel Spacing="24" Classes="fade-toggle">
-                        <!-- Header with Icon on left, text inline to the right - actions pinned top-right -->
+
                         <Grid ColumnDefinitions="Auto,16,*,Auto" HorizontalAlignment="Stretch">
-                            <!-- Icon -->
+
                             <Border Grid.Column="0" Width="120" Height="120" CornerRadius="60" Background="{Binding SelectedCredential.IconBackgroundBrush}">
                                 <Grid>
                                     <Image Source="{Binding SelectedCredential.AutoDetectedIconBitmap}"
@@ -530,8 +482,7 @@
                                                IsVisible="{Binding !SelectedCredential.HasAutoDetectedIcon}"/>
                                 </Grid>
                             </Border>
-                            
-                            <!-- Text to the right of icon -->
+
                             <StackPanel Grid.Column="2" Spacing="8" VerticalAlignment="Center">
                                 <TextBlock FontSize="{StaticResource Type.H1.Size}" FontWeight="Bold"
                                            Foreground="{DynamicResource PrimaryTextBrush}"
@@ -546,7 +497,7 @@
                                         </MultiBinding>
                                     </TextBlock.Text>
                                 </TextBlock>
-                                <TextBlock FontSize="{StaticResource Type.H3.Size}" 
+                                <TextBlock FontSize="{StaticResource Type.H3.Size}"
                                            Foreground="{DynamicResource SecondaryTextBrush}">
                                     <TextBlock.Effect>
                                         <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
@@ -560,7 +511,6 @@
                                 </TextBlock>
                             </StackPanel>
 
-                            <!-- Action buttons (top-right) -->
                             <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,0,0,0">
                                 <Button Command="{Binding EditCredentialCommand}"
                                         CommandParameter="{Binding SelectedCredential}"
@@ -585,10 +535,9 @@
                                 </Button>
                             </StackPanel>
                         </Grid>
-                        
-                        <!-- Credential Details -->
+
                         <StackPanel Spacing="16" Margin="0,16,0,0">
-                            <!-- Login Credentials -->
+
                             <details:PasswordDetailView DataContext="{Binding}"
                                 IsVisible="{Binding SelectedCredential.IsPasswordEntry}" />
 
@@ -618,44 +567,42 @@
 
                             <details:CategoryDetailSection DataContext="{Binding}"
                                 IsVisible="{Binding SelectedCredential.HasGroup}" />
-                            
+
                             <details:NotesDetailSection DataContext="{Binding}"
                                 IsVisible="{Binding SelectedCredential.HasNotes}" />
-                            
+
                             <details:MetadataDetailSection DataContext="{Binding}" />
-                            
+
                             <details:TagsDetailSection DataContext="{Binding}" />
-                            
+
                             <details:ExpiryDetailSection DataContext="{Binding}" />
-                            
+
                             <details:DetailActionButtons DataContext="{Binding}" />
                         </StackPanel>
                     </StackPanel>
                     </Border>
-                    
-                    <!-- Empty State when SelectedCredential is null -->
-                    <StackPanel Spacing="20" 
-                                VerticalAlignment="Center" 
+
+                    <StackPanel Spacing="20"
+                                VerticalAlignment="Center"
                                 HorizontalAlignment="Center"
                                 Margin="0,120,0,0"
                                 IsVisible="{Binding SelectedCredential, Converter={x:Static ObjectConverters.IsNull}}">
-                        <TextBlock Text="🔍" 
-                                   FontSize="{StaticResource Type.EmptyState.Size}" 
-                                   HorizontalAlignment="Center" 
+                        <TextBlock Text="🔍"
+                                   FontSize="{StaticResource Type.EmptyState.Size}"
+                                   HorizontalAlignment="Center"
                                    Opacity="0.2"/>
-                        <TextBlock Text="Select an item to view details" 
-                                   FontSize="{StaticResource Type.H4.Size}" 
+                        <TextBlock Text="Select an item to view details"
+                                   FontSize="{StaticResource Type.H4.Size}"
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource SecondaryTextBrush}"
                                    HorizontalAlignment="Center"/>
-                        <TextBlock Text="Click on a credential from the list" 
-                                   FontSize="{StaticResource Type.Label.Size}" 
+                        <TextBlock Text="Click on a credential from the list"
+                                   FontSize="{StaticResource Type.Label.Size}"
                                    Foreground="{DynamicResource MutedTextBrush}"
                                    HorizontalAlignment="Center"/>
                     </StackPanel>
                         </StackPanel>
 
-                        <!-- Secure trash detail -->
                         <StackPanel Spacing="24" IsVisible="{Binding IsShowingSecureTrash}">
                             <StackPanel Spacing="24" IsVisible="{Binding SelectedTrashItem, Converter={x:Static ObjectConverters.IsNotNull}}">
                                 <Grid ColumnDefinitions="Auto,16,*,Auto" HorizontalAlignment="Stretch">
@@ -847,7 +794,6 @@
                                 </StackPanel>
                             </StackPanel>
 
-                            <!-- Placeholder when no trash item is selected -->
                             <StackPanel Spacing="20"
                                         VerticalAlignment="Center"
                                         HorizontalAlignment="Center"
@@ -871,10 +817,9 @@
                     </Grid>
                 </ScrollViewer>
             </Border>
-            
+
             </Grid>
-            
-            <!-- Narrow-width Detail Overlay (mobile-style) -->
+
             <Border x:Name="MobileDetailOverlay"
                     Grid.ColumnSpan="3"
                     Background="Transparent"
@@ -907,16 +852,16 @@
                     </Style>
                 </Border.Styles>
                 <Grid>
-                    <!-- Backdrop click closes overlay - content stops propagation -->
+
                     <Border Background="Transparent" PointerPressed="CloseMobileDetailOverlay_Click"/>
-                    <!-- Fullscreen panel for detail view on narrow widths -->
+
                     <Border x:Name="MobileDetailPanel"
                             Background="{DynamicResource WindowBackgroundBrush}"
                             BorderBrush="{DynamicResource ControlBorderBrush}"
                             BorderThickness="0"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Stretch">
-                        <!-- Esc closes overlay -->
+
                         <InputElement.KeyBindings>
                             <KeyBinding Gesture="Escape" Command="{Binding ClearSelectedCredentialCommand}"/>
                         </InputElement.KeyBindings>
@@ -927,7 +872,7 @@
                         </Border.Transitions>
 
                         <Grid RowDefinitions="Auto,*">
-                            <!-- Header -->
+
                             <Border Grid.Row="0"
                                     Background="{DynamicResource HeaderBackgroundBrush}"
                                     BorderBrush="{DynamicResource ControlBorderBrush}"
@@ -957,10 +902,9 @@
                                 </Grid>
                             </Border>
 
-                            <!-- Content -->
                             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" AllowAutoHide="False">
                                 <StackPanel Spacing="{StaticResource Space20}" Margin="20,16,20,24" IsVisible="{Binding SelectedCredential, Converter={x:Static ObjectConverters.IsNotNull}}">
-                                    <!-- Icon and basic info -->
+
                                     <Grid ColumnDefinitions="Auto,16,*" VerticalAlignment="Top">
                                         <Border Grid.Column="0" Width="84" Height="84" CornerRadius="42" Background="{Binding SelectedCredential.IconBackgroundBrush}">
                                             <Grid>
@@ -992,25 +936,22 @@
                                         </StackPanel>
                                     </Grid>
 
-                                    <!-- Username (read-only) with copy -->
-                                    <components:CopyableField 
-                                        Label="Username" 
-                                        Value="{Binding SelectedCredential.Username}" 
-                                        CopyCommand="{Binding CopyUsernameCommand}" 
-                                        CopyCommandParameter="{Binding SelectedCredential}" 
+                                    <components:CopyableField
+                                        Label="Username"
+                                        Value="{Binding SelectedCredential.Username}"
+                                        CopyCommand="{Binding CopyUsernameCommand}"
+                                        CopyCommandParameter="{Binding SelectedCredential}"
                                         ButtonTooltip="Copy username" />
 
-                                    <!-- Password (masked) with copy -->
-                                    <components:CopyableField 
-                                        Label="Password" 
-                                        Value="{Binding SelectedCredential.Password}" 
-                                        IsPassword="True" 
-                                        CopyCommand="{Binding CopyPasswordCommand}" 
-                                        CopyCommandParameter="{Binding SelectedCredential}" 
-                                        ButtonBackground="#199c8e" 
+                                    <components:CopyableField
+                                        Label="Password"
+                                        Value="{Binding SelectedCredential.Password}"
+                                        IsPassword="True"
+                                        CopyCommand="{Binding CopyPasswordCommand}"
+                                        CopyCommandParameter="{Binding SelectedCredential}"
+                                        ButtonBackground="#199c8e"
                                         ButtonTooltip="Copy password" />
 
-                                    <!-- URL -->
                                     <StackPanel Spacing="{StaticResource Space6}" IsVisible="{Binding SelectedCredential.HasUrl}">
                                         <TextBlock Text="Website" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
                                         <Grid ColumnDefinitions="*,Auto">
@@ -1027,7 +968,6 @@
                 </Grid>
             </Border>
 
-            <!-- Slide-in Edit Panel Overlay - spans all columns for maximum visibility -->
             <Border x:Name="EditPanelOverlay"
                     Grid.Column="0"
                     Grid.ColumnSpan="3"
@@ -1040,31 +980,29 @@
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
                     ClipToBounds="False">
-                
+
                 <Grid>
-                    <!-- Transparent area to close panel -->
-                    <Border Background="Transparent" 
+
+                    <Border Background="Transparent"
                             PointerPressed="CloseEditPanel_Click"
                             ZIndex="0"/>
-                    
-                    <!-- Edit Panel Container - Slides in from right, fills entire detail panel area -->
-            <Border x:Name="EditPanelContainer" 
+
+            <Border x:Name="EditPanelContainer"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Stretch"
                 Width="{Binding ElementName=DetailPanel, Path=Bounds.Width}"
                 ZIndex="1"
                 Background="Transparent"
                 Tag="{Binding IsEditPanelVisible}">
-                        
-                        <!-- Edit Panel Content -->
+
             <Border x:Name="EditPanel"
                                 Background="{DynamicResource HeaderBackgroundBrush}"
                                 BorderBrush="{DynamicResource ControlBorderBrush}"
                                 BorderThickness="1,0,0,0"
                                 BoxShadow="{DynamicResource SlideOutPanelShadow}">
-                        <!-- Touch/touchpad-friendly scrollbars scoped to this panel -->
+
                         <Border.Styles>
-                            <!-- Vertical scrollbar: always visible for better UX -->
+
                             <Style Selector="Border#EditPanel ScrollViewer ScrollBar:vertical">
                                 <Setter Property="Width" Value="8"/>
                                 <Setter Property="Opacity" Value="1"/>
@@ -1086,7 +1024,7 @@
                                 <Setter Property="Width" Value="10"/>
                                 <Setter Property="Opacity" Value="1"/>
                             </Style>
-                            <!-- Horizontal (not used here, but added for consistency) -->
+
                             <Style Selector="Border#EditPanel ScrollViewer ScrollBar:horizontal">
                                 <Setter Property="Height" Value="8"/>
                                 <Setter Property="Opacity" Value="1"/>
@@ -1109,25 +1047,23 @@
                                 <Setter Property="Opacity" Value="1"/>
                             </Style>
                         </Border.Styles>
-                        
-                        <!-- Edit Form Content -->
+
                         <Grid RowDefinitions="Auto,*,Auto" DataContext="{Binding EditViewModel}">
-                            
-                            <!-- Header -->
-                            <Border Grid.Row="0" 
-                                    Background="{DynamicResource WindowBackgroundBrush}" 
+
+                            <Border Grid.Row="0"
+                                    Background="{DynamicResource WindowBackgroundBrush}"
                                     Padding="25,30,10,20"
                                     BorderBrush="{DynamicResource ControlBorderBrush}"
                                     BorderThickness="0,0,0,1"
                                     CornerRadius="0,0,12,12">
                                 <Grid ColumnDefinitions="*,Auto">
                                     <StackPanel Grid.Column="0" Spacing="6" Margin="0,0,15,0">
-                                        <TextBlock Text="Add/Edit Credentials" 
-                                                   FontSize="{StaticResource Type.Icon.Size}" 
+                                        <TextBlock Text="Add/Edit Credentials"
+                                                   FontSize="{StaticResource Type.Icon.Size}"
                                                    FontWeight="Bold"
                                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                        <TextBlock Text="Enter credential details securely" 
-                                                   FontSize="{StaticResource Type.Label.Size}" 
+                                        <TextBlock Text="Enter credential details securely"
+                                                   FontSize="{StaticResource Type.Label.Size}"
                                                    Foreground="{DynamicResource MutedTextBrush}"/>
                                     </StackPanel>
                                     <Button Grid.Column="1"
@@ -1148,8 +1084,7 @@
                                     </Button>
                                 </Grid>
                             </Border>
-                            
-                            <!-- Form Content -->
+
                             <ScrollViewer x:Name="EditFormScrollViewer"
                                           Grid.Row="1"
                                           VerticalScrollBarVisibility="Auto"
@@ -1161,14 +1096,12 @@
                                             HorizontalAlignment="Stretch"
                                             MaxWidth="590"
                                             Margin="30,25,30,30">
-                                    
-                                    <!-- Password Entry Fields -->
+
                                     <StackPanel Spacing="14" IsVisible="{Binding IsPasswordEntry}">
-                                    
-                                    <!-- Title Field -->
+
                                     <StackPanel Spacing="8">
-                                        <TextBlock Text="Title *" 
-                                                   FontSize="{StaticResource Type.Label.Size}" 
+                                        <TextBlock Text="Title *"
+                                                   FontSize="{StaticResource Type.Label.Size}"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                                         <TextBox Text="{Binding Title}"
@@ -1185,16 +1118,15 @@
                                                 </Style>
                                             </TextBox.Styles>
                                         </TextBox>
-                                        <TextBlock Text="{Binding TitleError}" 
-                                                   FontSize="{StaticResource Type.Tiny.Size}" 
+                                        <TextBlock Text="{Binding TitleError}"
+                                                   FontSize="{StaticResource Type.Tiny.Size}"
                                                    Foreground="{DynamicResource ErrorBrush}"
                                                    IsVisible="{Binding HasTitleError}"/>
                                     </StackPanel>
-                                    
-                                    <!-- Username/Email Field -->
+
                                     <StackPanel Spacing="8" IsVisible="{Binding ShowPasswordFields}">
-                                        <TextBlock Text="Username / Email *" 
-                                                   FontSize="{StaticResource Type.Label.Size}" 
+                                        <TextBlock Text="Username / Email *"
+                                                   FontSize="{StaticResource Type.Label.Size}"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                                         <TextBox Text="{Binding Username}"
@@ -1211,18 +1143,17 @@
                                                 </Style>
                                             </TextBox.Styles>
                                         </TextBox>
-                                        <TextBlock Text="{Binding UsernameError}" 
-                                                   FontSize="{StaticResource Type.Tiny.Size}" 
+                                        <TextBlock Text="{Binding UsernameError}"
+                                                   FontSize="{StaticResource Type.Tiny.Size}"
                                                    Foreground="{DynamicResource ErrorBrush}"
                                                    IsVisible="{Binding HasUsernameError}"/>
                                     </StackPanel>
-                                    
-                                    <!-- Password Field -->
+
                                     <StackPanel Spacing="8" IsVisible="{Binding ShowPasswordFields}">
                                         <Grid ColumnDefinitions="*,Auto,4,Auto">
                                             <TextBlock Grid.Column="0"
-                                                       Text="Password *" 
-                                                       FontSize="{StaticResource Type.Label.Size}" 
+                                                       Text="Password *"
+                                                       FontSize="{StaticResource Type.Label.Size}"
                                                        FontWeight="SemiBold"
                                                        Foreground="{DynamicResource SecondaryTextBrush}"/>
                                             <Button Grid.Column="1"
@@ -1307,15 +1238,14 @@
                                             </Border>
                                         </Grid>
 
-                                        <!-- Password Strength Meter -->
                                         <Border Background="Transparent"
                                                 CornerRadius="{DynamicResource Radius.Sm}"
                                                 Padding="10,8"
                                                 IsVisible="{Binding HasPassword}">
                                             <Grid ColumnDefinitions="Auto,*,Auto">
                                                 <TextBlock Grid.Column="0"
-                                                           Text="Strength:" 
-                                                           FontSize="{StaticResource Type.Tiny.Size}" 
+                                                           Text="Strength:"
+                                                           FontSize="{StaticResource Type.Tiny.Size}"
                                                            Foreground="{DynamicResource MutedTextBrush}"
                                                            VerticalAlignment="Center"
                                                            Margin="0,0,10,0"/>
@@ -1327,8 +1257,8 @@
                                                              VerticalAlignment="Center"
                                                              Foreground="{Binding PasswordStrengthColor}"/>
                                                 <TextBlock Grid.Column="2"
-                                                           Text="{Binding PasswordStrengthText}" 
-                                                           FontSize="{StaticResource Type.Tiny.Size}" 
+                                                           Text="{Binding PasswordStrengthText}"
+                                                           FontSize="{StaticResource Type.Tiny.Size}"
                                                            FontWeight="SemiBold"
                                                            Foreground="{Binding PasswordStrengthColor}"
                                                            VerticalAlignment="Center"
@@ -1336,16 +1266,15 @@
                                             </Grid>
                                         </Border>
 
-                                        <TextBlock Text="{Binding PasswordError}" 
-                                                   FontSize="{StaticResource Type.Tiny.Size}" 
+                                        <TextBlock Text="{Binding PasswordError}"
+                                                   FontSize="{StaticResource Type.Tiny.Size}"
                                                    Foreground="{DynamicResource ErrorBrush}"
                                                    IsVisible="{Binding HasPasswordError}"/>
                                     </StackPanel>
-                                    
-                                    <!-- URL Field -->
+
                                     <StackPanel Spacing="8" IsVisible="{Binding ShowPasswordFields}">
-                                        <TextBlock Text="Website URL" 
-                                                   FontSize="{StaticResource Type.Label.Size}" 
+                                        <TextBlock Text="Website URL"
+                                                   FontSize="{StaticResource Type.Label.Size}"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                                         <TextBox Text="{Binding Url}"
@@ -1362,14 +1291,11 @@
                                                 </Style>
                                             </TextBox.Styles>
                                         </TextBox>
-                                        <TextBlock Text="Optional - Used for auto-fill and quick access" 
-                                                   FontSize="{StaticResource Type.Tiny.Size}" 
+                                        <TextBlock Text="Optional - Used for auto-fill and quick access"
+                                                   FontSize="{StaticResource Type.Tiny.Size}"
                                                    Foreground="{DynamicResource MutedTextBrush}"/>
                                     </StackPanel>
 
-                                    <!-- ═══ TOTP Authenticator Section ═══ -->
-
-                                    <!-- TOTP: Current secret display (when secret exists) -->
                                     <Border IsVisible="{Binding HasTotpSecret}"
                                             CornerRadius="12"
                                             Padding="16,14"
@@ -1403,7 +1329,7 @@
                                                                FontSize="{StaticResource Type.Tiny.Size}"
                                                                Foreground="{DynamicResource MutedTextBrush}"/>
                                                 </StackPanel>
-                                                <!-- Settings button -->
+
                                                 <Button Grid.Column="3"
                                                         Command="{Binding OpenTotpSettingsCommand}"
                                                         Classes="liquid-glass"
@@ -1417,7 +1343,7 @@
                                                                        IconColor="{DynamicResource SecondaryTextBrush}"
                                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                 </Button>
-                                                <!-- Remove button -->
+
                                                 <Button Grid.Column="5"
                                                         Command="{Binding RemoveTotpSecretCommand}"
                                                         Classes="liquid-glass"
@@ -1432,7 +1358,7 @@
                                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                 </Button>
                                             </Grid>
-                                            <!-- Secret key (editable) -->
+
                                             <StackPanel Spacing="4">
                                                 <TextBlock Text="Secret Key (Base32)"
                                                            FontSize="{StaticResource Type.Tiny.Size}" FontWeight="SemiBold"
@@ -1450,7 +1376,6 @@
                                         </StackPanel>
                                     </Border>
 
-                                    <!-- TOTP: Add setup (when no secret) -->
                                     <Border IsVisible="{Binding !HasTotpSecret}"
                                             CornerRadius="12"
                                             Padding="16,14"
@@ -1466,7 +1391,7 @@
                                             </LinearGradientBrush>
                                         </Border.Background>
                                         <StackPanel Spacing="12">
-                                            <!-- Header -->
+
                                             <Grid ColumnDefinitions="Auto,10,*">
                                                 <Border Width="30" Height="30" CornerRadius="8" VerticalAlignment="Center">
                                                     <Border.Background>
@@ -1488,7 +1413,6 @@
                                                 </StackPanel>
                                             </Grid>
 
-                                            <!-- Secret key input -->
                                             <StackPanel Spacing="4">
                                                 <TextBlock Text="Secret Key (Base32)"
                                                            FontSize="{StaticResource Type.Tiny.Size}" FontWeight="SemiBold"
@@ -1504,7 +1428,6 @@
                                                          Background="{DynamicResource ControlBackgroundBrush}"/>
                                             </StackPanel>
 
-                                            <!-- Supported apps chips -->
                                             <WrapPanel Orientation="Horizontal">
                                                 <Border Background="#10FFFFFF" CornerRadius="8" Padding="8,3" Margin="0,0,5,0">
                                                     <TextBlock Text="Google Authenticator" FontSize="{StaticResource Type.Micro.Size}"
@@ -1520,7 +1443,6 @@
                                                 </Border>
                                             </WrapPanel>
 
-                                            <!-- Generate + Import buttons -->
                                             <Grid ColumnDefinitions="*,8,*">
                                                 <Button Grid.Column="0"
                                                         Command="{Binding GenerateTotpSecretCommand}"
@@ -1555,11 +1477,10 @@
                                             </Grid>
                                         </StackPanel>
                                     </Border>
-                                    
-                                    <!-- Category Selection -->
+
                                     <StackPanel Spacing="8" IsVisible="{Binding ShowCategorySelector}">
-                                        <TextBlock Text="Category" 
-                                                   FontSize="{StaticResource Type.Label.Size}" 
+                                        <TextBlock Text="Category"
+                                                   FontSize="{StaticResource Type.Label.Size}"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                                         <ComboBox SelectedItem="{Binding SelectedCategory}"
@@ -1577,11 +1498,10 @@
                                             </ComboBox.ItemTemplate>
                                         </ComboBox>
                                     </StackPanel>
-                                    
-                                    <!-- Icon/Logo Selection -->
+
                                     <StackPanel Spacing="8" IsVisible="{Binding ShowIconSelector}">
-                                        <TextBlock Text="Icon / Logo" 
-                                                   FontSize="{StaticResource Type.Label.Size}" 
+                                        <TextBlock Text="Icon / Logo"
+                                                   FontSize="{StaticResource Type.Label.Size}"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                                         <Border Background="{DynamicResource ControlBackgroundBrush}"
@@ -1598,7 +1518,7 @@
                                                 </Style>
                                             </Border.Styles>
                                             <Grid ColumnDefinitions="Auto,*,Auto">
-                                                <!-- Current Icon Display -->
+
                                                 <Border Grid.Column="0"
                                                         Width="70"
                                                         Height="70"
@@ -1613,22 +1533,21 @@
                                                            HorizontalAlignment="Center"
                                                            VerticalAlignment="Center"/>
                                                 </Border>
-                                                <!-- Icon Info -->
+
                                                 <StackPanel Grid.Column="1"
                                                             Margin="15,0,0,0"
                                                             VerticalAlignment="Center"
                                                             Spacing="4">
-                                                    <TextBlock Text="Custom icon for this credential" 
-                                                               FontSize="{StaticResource Type.Label.Size}" 
+                                                    <TextBlock Text="Custom icon for this credential"
+                                                               FontSize="{StaticResource Type.Label.Size}"
                                                                FontWeight="SemiBold"
                                                                Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                          <TextBlock Text="Click 'Change Icon' to select from library or upload custom" 
-                                                               FontSize="{StaticResource Type.Tiny.Size}" 
+                                          <TextBlock Text="Click 'Change Icon' to select from library or upload custom"
+                                                               FontSize="{StaticResource Type.Tiny.Size}"
                                                                Foreground="{DynamicResource MutedTextBrush}"
                                                                TextWrapping="Wrap"/>
                                                 </StackPanel>
-                                                
-                                                <!-- Change Icon Button -->
+
                                                 <Button Grid.Column="2"
                                                         x:Name="IconPickerButton"
                                                         Command="{Binding OpenIconPickerCommand}"
@@ -1646,11 +1565,10 @@
                                             </Grid>
                                         </Border>
                                     </StackPanel>
-                                    
-                                    <!-- Notes Field -->
+
                                     <StackPanel Spacing="8">
-                                        <TextBlock Text="Notes" 
-                                                   FontSize="{StaticResource Type.Label.Size}" 
+                                        <TextBlock Text="Notes"
+                                                   FontSize="{StaticResource Type.Label.Size}"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                                         <TextBox Text="{Binding Notes}"
@@ -1672,9 +1590,7 @@
                                     </StackPanel>
 
                                     </StackPanel>
-                                    <!-- End Password Entry Fields -->
 
-                                    <!-- Wi-Fi Details -->
                                     <editforms:WiFiEditForm DataContext="{Binding}" />
 
                                     <editforms:CreditCardEditForm DataContext="{Binding}" />
@@ -1689,10 +1605,9 @@
 
                                     <editforms:PinCodeEditForm DataContext="{Binding}" />
 
-                                    <!-- Tags -->
                                     <StackPanel Spacing="8" Margin="0,0,0,0">
-                                        <TextBlock Text="Tags" 
-                                                   FontSize="{StaticResource Type.Label.Size}" 
+                                        <TextBlock Text="Tags"
+                                                   FontSize="{StaticResource Type.Label.Size}"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                                         <TextBox Text="{Binding TagsText}"
@@ -1701,12 +1616,11 @@
                                                  FontSize="{StaticResource Type.Body.Size}"
                                                  Foreground="{DynamicResource PrimaryTextBrush}"
                                                  Background="{DynamicResource ControlBackgroundBrush}"/>
-                                        <TextBlock Text="Add tags to organize and search credentials easily" 
-                                                   FontSize="{StaticResource Type.Tiny.Size}" 
+                                        <TextBlock Text="Add tags to organize and search credentials easily"
+                                                   FontSize="{StaticResource Type.Tiny.Size}"
                                                    Foreground="{DynamicResource MutedTextBrush}"/>
                                     </StackPanel>
 
-                                    <!-- Expiry Date -->
                                     <StackPanel Spacing="8">
                                         <Grid ColumnDefinitions="Auto,*">
                                             <CheckBox Grid.Column="0"
@@ -1714,8 +1628,8 @@
                                                       VerticalAlignment="Center"
                                                       Margin="0,0,10,0"/>
                                             <TextBlock Grid.Column="1"
-                                                       Text="Set expiration date (e.g., for temporary passwords)" 
-                                                       FontSize="{StaticResource Type.Label.Size}" 
+                                                       Text="Set expiration date (e.g., for temporary passwords)"
+                                                       FontSize="{StaticResource Type.Label.Size}"
                                                        FontWeight="SemiBold"
                                                        Foreground="{DynamicResource SecondaryTextBrush}"
                                                        VerticalAlignment="Center"/>
@@ -1726,7 +1640,6 @@
                                                     IsVisible="{Binding HasExpiryDate}"/>
                                     </StackPanel>
 
-                                    <!-- Mark as Favorite -->
                                     <Border Background="{DynamicResource ControlBackgroundBrush}"
                                             CornerRadius="{DynamicResource Radius.Md}"
                                             Padding="15,12">
@@ -1736,31 +1649,30 @@
                                                       VerticalAlignment="Center"
                                                       Margin="0,0,12,0"/>
                                             <StackPanel Grid.Column="1">
-                                                <TextBlock Text="⭐ Mark as Favorite" 
-                                                           FontSize="{StaticResource Type.Label.Size}" 
+                                                <TextBlock Text="⭐ Mark as Favorite"
+                                                           FontSize="{StaticResource Type.Label.Size}"
                                                            FontWeight="SemiBold"
                                                            Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                                <TextBlock Text="Quick access from favorites list" 
-                                                           FontSize="{StaticResource Type.Tiny.Size}" 
+                                                <TextBlock Text="Quick access from favorites list"
+                                                           FontSize="{StaticResource Type.Tiny.Size}"
                                                            Foreground="{DynamicResource MutedTextBrush}"
                                                            Margin="0,2,0,0"/>
                                             </StackPanel>
                                         </Grid>
                                     </Border>
-                                    
+
                                 </StackPanel>
                             </ScrollViewer>
-                            
-                            <!-- Footer with Action Buttons -->
-                            <Border Grid.Row="2" 
-                                    Background="{DynamicResource FooterBackgroundBrush}" 
+
+                            <Border Grid.Row="2"
+                                    Background="{DynamicResource FooterBackgroundBrush}"
                                     Padding="25,15"
                                     BorderBrush="{DynamicResource ControlBorderBrush}"
                                     BorderThickness="0,1,0,0">
                                 <Grid ColumnDefinitions="*,Auto,Auto,Auto">
                                     <TextBlock Grid.Column="0"
-                                               Text="* Required fields" 
-                                               FontSize="{StaticResource Type.Tiny.Size}" 
+                                               Text="* Required fields"
+                                               FontSize="{StaticResource Type.Tiny.Size}"
                                                Foreground="{DynamicResource MutedTextBrush}"
                                                VerticalAlignment="Center"/>
 
@@ -1774,7 +1686,7 @@
                                             Margin="0,0,10,0"
                                             IsVisible="{Binding $parent[Window].DataContext.SelectedCredential, Converter={x:Static ObjectConverters.IsNotNull}}"
                                             Content="Delete"/>
-                                    
+
                                     <Button Grid.Column="2"
                                             Command="{Binding $parent[Window].DataContext.CloseEditPanelCommand}"
                                             Classes="liquid-glass"
@@ -1783,7 +1695,7 @@
                                             CornerRadius="8"
                                             Margin="0,0,10,0"
                                             Content="Cancel"/>
-                                    
+
                                     <Button Grid.Column="3"
                                             Command="{Binding SaveCommand}"
                                             Classes="liquid-glass"
@@ -1796,26 +1708,43 @@
                                     </Button>
                                 </Grid>
                             </Border>
-                            
+
                         </Grid>
                     </Border>
                     </Border>
                 </Grid>
             </Border>
 
-            <!-- Flagged Passwords Overlay -->
             <overlays:FlaggedPasswordsOverlay Grid.RowSpan="3" Grid.ColumnSpan="3" DataContext="{Binding}" />
 
-            <!-- Category Manager Overlay (same behaviour as in settings - slides in from right) -->
             <overlays:CategoryManagerOverlay Grid.RowSpan="3" Grid.ColumnSpan="3" DataContext="{Binding}" />
 
-            <!-- Settings Panel Overlay (Slides from right) -->
             <overlays:SettingsPanelOverlay Grid.RowSpan="3" Grid.ColumnSpan="3" DataContext="{Binding}" />
 
-            <!-- Icon Manager Overlay (Slides from right) -->
             <overlays:IconManagerOverlay Grid.RowSpan="3" Grid.ColumnSpan="3" DataContext="{Binding}" />
 
-            <!-- Security Dashboard Overlay -->
+            <Border Grid.RowSpan="3"
+                    Grid.ColumnSpan="3"
+                    Classes="overlay-fade"
+                    Background="{DynamicResource OverlayBackgroundBrush}"
+                    IsVisible="{Binding IsRecoveryPanelVisible}"
+                    IsHitTestVisible="{Binding IsRecoveryPanelVisible}">
+                <Grid ClipToBounds="True">
+                    <Border Background="Transparent" PointerPressed="RecoveryOverlayBackdrop_PointerPressed"/>
+                    <Border HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            MinWidth="520"
+                            MaxWidth="640"
+                            Padding="32"
+                            CornerRadius="16"
+                            Background="{DynamicResource WindowBackgroundBrush}"
+                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                            BorderThickness="1">
+                        <views:RecoveryPanel x:Name="RecoveryPanelControl"/>
+                    </Border>
+                </Grid>
+            </Border>
+
             <Border Grid.RowSpan="3"
                     Grid.ColumnSpan="3"
                     Classes="overlay-fade"
@@ -1823,10 +1752,9 @@
                     IsVisible="{Binding IsSecurityDashboardVisible}"
                     IsHitTestVisible="{Binding IsSecurityDashboardVisible}">
                 <Grid ClipToBounds="True">
-                    <!-- Transparent area to close dashboard -->
+
                     <Border Background="Transparent" PointerPressed="CloseSecurityDashboard_Click"/>
-                    
-                    <!-- Security Dashboard Panel -->
+
                     <Border x:Name="SecurityDashboardPanel"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
@@ -1858,9 +1786,9 @@
                                 </Style.Animations>
                             </Style>
                         </Border.Styles>
-                        
+
                         <Grid RowDefinitions="Auto,*">
-                            <!-- Header -->
+
                             <Border Grid.Row="0"
                                     Background="{DynamicResource HeaderBackgroundBrush}"
                                     BorderBrush="{DynamicResource ControlBorderBrush}"
@@ -1887,8 +1815,7 @@
                                     </Button>
                                 </Grid>
                             </Border>
-                            
-                            <!-- Dashboard Content -->
+
                             <ScrollViewer Grid.Row="1"
                                          VerticalScrollBarVisibility="Auto"
                                          HorizontalScrollBarVisibility="Disabled"
@@ -1900,7 +1827,6 @@
                 </Grid>
             </Border>
 
-            <!-- In-app Lockscreen Overlay - Full screen with centered logo -->
             <Border Grid.RowSpan="3"
                     Grid.ColumnSpan="3"
                     Classes="overlay-fade"
@@ -1908,20 +1834,19 @@
                     IsVisible="{Binding IsLockscreenVisible}"
                     IsHitTestVisible="{Binding IsLockscreenVisible}">
                 <Grid>
-                    <!-- Large dimmed PhantomVault logo in center -->
+
                     <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
                            Width="400"
                            Height="400"
                            HorizontalAlignment="Center"
                            VerticalAlignment="Center"
                            Opacity="0.12"/>
-                    
-                    <!-- Lock content centered over logo -->
+
                     <StackPanel HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
                                 Spacing="20"
                                 MinWidth="420">
-                        
+
                         <TextBlock Text="{Binding LockscreenTitle}"
                                    FontSize="{StaticResource Type.H1.Size}"
                                    FontWeight="SemiBold"
@@ -1945,7 +1870,6 @@
                                    MaxWidth="500"
                                    IsVisible="{Binding LockscreenError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
-                        <!-- PIN unlock (soft lock only) — NumPad control -->
                         <pinctrl:PinEntryControl x:Name="LockscreenPinPad"
                                                   Pin="{Binding LockscreenPin, Mode=TwoWay}"
                                                   UnlockCommand="{Binding UnlockWithPinCommand}"
@@ -1962,10 +1886,9 @@
                                 Padding="20,0"
                                 FontSize="{StaticResource Type.Label.Size}"/>
 
-                        <!-- Password unlock (fallback or when PIN is unavailable) -->
                         <StackPanel Spacing="12" IsVisible="{Binding ShowPassphraseFallbackSection}" MinWidth="380">
-                            <TextBlock Text="Passphrase" 
-                                       FontSize="{StaticResource Type.Label.Size}" 
+                            <TextBlock Text="Passphrase"
+                                       FontSize="{StaticResource Type.Label.Size}"
                                        Foreground="{DynamicResource SecondaryTextBrush}"
                                        HorizontalAlignment="Center"/>
                             <TextBox Text="{Binding LockscreenPassword, Mode=TwoWay}"
@@ -1989,7 +1912,6 @@
                                     FontWeight="SemiBold"/>
                         </StackPanel>
 
-                        <!-- Developer bypass fallback: never trap user behind a message-only lock -->
                         <Button Content="Unlock"
                                 Command="{Binding DismissLockscreenCommand}"
                                 Classes="liquid-glass"
@@ -2002,9 +1924,10 @@
                     </StackPanel>
                 </Grid>
             </Border>
-            
+
         </Grid>
-        
+
     </DockPanel>
-    
+
 </views:ThemeAwareWindow>
+

@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:converters="clr-namespace:PhantomVault.UI.Converters"
              x:Class="PhantomVault.UI.Views.Details.BankAccountDetailView">
-    
+
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -10,8 +10,7 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
-    
-    <!-- Bank Account Details -->
+
     <StackPanel Spacing="12"
                 IsVisible="{Binding SelectedCredential.IsBankAccountEntry}">
         <TextBlock Text="Bank Account"
@@ -74,3 +73,4 @@
         </StackPanel>
     </StackPanel>
 </UserControl>
+

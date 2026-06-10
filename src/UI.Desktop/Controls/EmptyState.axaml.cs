@@ -6,10 +6,6 @@ using System;
 
 namespace PhantomVault.UI.Desktop.Controls;
 
-/// <summary>
-/// Empty state control for displaying friendly messages when no data is available.
-/// Includes illustration, title, description, and optional action button.
-/// </summary>
 public partial class EmptyState : UserControl
 {
     private TextBlock? _titleText;
@@ -108,3 +104,4 @@ public partial class EmptyState : UserControl
         AvaloniaXamlLoader.Load(this);
     }
 }
+

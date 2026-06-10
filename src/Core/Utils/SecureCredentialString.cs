@@ -7,10 +7,7 @@ using System.Text;
 
 namespace PhantomVault.Core.Utils
 {
-    /// <summary>
-    /// Secure wrapper for credential strings that ensures sensitive data
-    /// is encrypted in memory and properly zeroized when disposed.
-    /// </summary>
+
     [SupportedOSPlatform("windows")]
     public sealed class SecureCredentialString : IDisposable
     {
@@ -83,9 +80,6 @@ namespace PhantomVault.Core.Utils
         public int Length => _length;
         public bool IsEmpty => _length == 0;
 
-        /// <summary>
-        /// Retrieves plaintext value. CALLER MUST ZERO THE RETURNED ARRAY.
-        /// </summary>
         public string GetPlaintext()
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
@@ -108,9 +102,6 @@ namespace PhantomVault.Core.Utils
             }
         }
 
-        /// <summary>
-        /// Executes action with plaintext and immediately zeros it.
-        /// </summary>
         public void UseSecurely(Action<string> action)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
@@ -121,7 +112,7 @@ namespace PhantomVault.Core.Utils
             }
             finally
             {
-                // Force GC to zero the string memory
+
                 unsafe
                 {
                     fixed (char* ptr = plaintext)
@@ -154,3 +145,4 @@ namespace PhantomVault.Core.Utils
         }
     }
 }
+

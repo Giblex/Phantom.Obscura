@@ -43,3 +43,4 @@ public sealed partial class DashboardRecentItem : ObservableObject
     [ObservableProperty] private IBrush _tintColor = Brushes.SteelBlue;
     [ObservableProperty] private string _lastUsed = "";
 }
+
