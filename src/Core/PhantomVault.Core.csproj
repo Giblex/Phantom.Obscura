@@ -43,6 +43,20 @@
     <!-- CS1591: Missing XML comment for publicly visible type or member - tracked separately, too many to fix in one pass -->
     <!-- TODO (A-5/A-6): drive CS1591 to zero by adding XML docs to public APIs. Other suppressions removed; CS0618 obsolete-usage and CS1573/74/71 XML param mismatches are now hard errors. -->
     <NoWarn>$(NoWarn);1591</NoWarn>
+    <!--
+        iOS turns the trim, AOT and single-file analyzers on by default for the net10.0-ios
+        TFM, and Core compiles with TreatWarningsAsErrors=true. That promotes IL2026/IL3050
+        (reflection-based System.Text.Json) and CA1416 (APIs such as Process.GetProcesses
+        that are flagged unsupported on iOS but already sit behind runtime OS guards) to hard
+        errors — none of which the Android or desktop targets raise. Trim/AOT-safety of this
+        library is the app head's responsibility at publish time, and the iOS simulator smoke
+        build is not trimmed, so the analysis is not meaningful during Core's own compile.
+        Disable those analyzers and stop treating the platform-compat warning as an error for
+        the iOS target only; desktop and Android builds are entirely unaffected. -->
+    <EnableTrimAnalyzer Condition="'$(_TargetPlatform)' == 'ios'">false</EnableTrimAnalyzer>
+    <EnableAotAnalyzer Condition="'$(_TargetPlatform)' == 'ios'">false</EnableAotAnalyzer>
+    <EnableSingleFileAnalyzer Condition="'$(_TargetPlatform)' == 'ios'">false</EnableSingleFileAnalyzer>
+    <WarningsNotAsErrors Condition="'$(_TargetPlatform)' == 'ios'">$(WarningsNotAsErrors);CA1416</WarningsNotAsErrors>
     <!-- SECURITY: Embed build metadata for integrity verification -->
     <VersionPrefix>1.0.0</VersionPrefix>
     <InformationalVersion>$(VersionPrefix)+$(SourceRevisionId)</InformationalVersion>
