@@ -1,0 +1,120 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-ios</TargetFramework>
+    <OutputType>Exe</OutputType>
+
+    <!--
+      Like the Android head, the Apple head deliberately reuses the desktop
+      assembly identity (PhantomVault.UI) so the `avares://PhantomVault.UI/...`
+      resource URIs baked into the linked AXAML resolve correctly. The iOS app
+      and the desktop EXE are never loaded into the same process, so two
+      assemblies with the same simple name is fine.
+    -->
+    <AssemblyName>PhantomVault.UI</AssemblyName>
+    <RootNamespace>PhantomVault.UI</RootNamespace>
+
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AvaloniaUseCompiledXaml>true</AvaloniaUseCompiledXaml>
+
+    <ApplicationTitle>Phantom Obscura</ApplicationTitle>
+    <!-- Mirror the Android application id so the two mobile heads share one bundle namespace. -->
+    <ApplicationId>com.giblex.phantom.obscura</ApplicationId>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+    <ApplicationVersion>1</ApplicationVersion>
+
+    <!-- iOS 13 is the floor for the UILaunchScreen dictionary and matches Core's iOS target. -->
+    <SupportedOSPlatformVersion>13.0</SupportedOSPlatformVersion>
+
+    <!--
+      No RuntimeIdentifier is pinned here. A device build (ios-arm64) needs a signing
+      identity + provisioning profile; an unsigned simulator build (iossimulatorarm64 /
+      iossimulator-x64) does not. CI and local device builds pass the RID explicitly so
+      this project file stays signing-agnostic.
+    -->
+
+    <!-- Match desktop/Android's permissive warning posture so the linked code compiles. -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);1591;CS0618;CS1573;CS1574;CS1571;CS1998;CS8625;CS0012</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Avalonia core + iOS backend -->
+    <PackageReference Include="Avalonia" Version="11.3.11" />
+    <PackageReference Include="Avalonia.iOS" Version="11.3.11" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.11" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.11" />
+    <PackageReference Include="Avalonia.Skia" Version="11.3.11" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Markup.Xaml.Loader" Version="11.3.11" />
+    <PackageReference Include="Avalonia.Svg.Skia" Version="11.0.0" />
+    <PackageReference Include="Avalonia.Xaml.Interactivity" Version="11.3.0.6" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+    <PackageReference Include="Isopoh.Cryptography.Argon2" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+    <PackageReference Include="SkiaSharp" Version="3.119.1" />
+    <PackageReference Include="Serilog" Version="4.2.0" />
+    <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Core now multi-targets net10.0;net10.0-android;net10.0-ios so the Mobile/* stubs
+         shadow the desktop-only canonical implementations on iOS too. Crypto is portable. -->
+    <ProjectReference Include="..\Core\PhantomVault.Core.csproj" />
+    <ProjectReference Include="..\Crypto\GiblexVault.Security.ZK.csproj" />
+    <ProjectReference Include="..\..\..\Phantom.Shared\Phantom.UI.Shared\Phantom.UI.Shared.csproj" />
+  </ItemGroup>
+
+  <!--
+    Shared mobile UI. The Android head (UI.Android.Avalonia) is the canonical home of the
+    touch-friendly views, view-models, and the platform-neutral UsbDriveMonitor; the Apple
+    head links those exact files so the two mobile surfaces never drift. Only the platform
+    entry points (AppDelegate / Main) and the App lifetime glue differ per head.
+  -->
+  <ItemGroup>
+    <Compile Include="..\UI.Android.Avalonia\ViewModels\*.cs"
+             Link="ViewModels\%(Filename)%(Extension)" />
+    <Compile Include="..\UI.Android.Avalonia\Views\*.axaml.cs"
+             Link="Views\%(Filename)%(Extension)" />
+    <Compile Include="..\UI.Android.Avalonia\Services\UsbDriveMonitor.cs"
+             Link="Services\UsbDriveMonitor.cs" />
+    <AvaloniaXaml Include="..\UI.Android.Avalonia\Views\*.axaml"
+                  Link="Views\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <!--
+    Themes / global strings, linked from the desktop project exactly as the Android head does.
+    Keeping the link list identical to Android avoids a second source of truth for the brushes
+    and string table the shared views bind against.
+  -->
+  <ItemGroup>
+    <AvaloniaXaml Include="..\UI.Desktop\Assets\Themes\PhantomTheme.Dark.axaml"
+                  Link="Assets\Themes\PhantomTheme.Dark.axaml" />
+    <AvaloniaXaml Include="..\UI.Desktop\Assets\Themes\PhantomTheme.Light.axaml"
+                  Link="Assets\Themes\PhantomTheme.Light.axaml" />
+    <AvaloniaXaml Include="..\UI.Desktop\Assets\Themes\PreVaultTheme.axaml"
+                  Link="Assets\Themes\PreVaultTheme.axaml" />
+    <AvaloniaXaml Include="..\UI.Desktop\Resources\Strings.en-US.axaml"
+                  Link="Resources\Strings.en-US.axaml" />
+
+    <!-- Models referenced by linked AXAML (DetectedVaultLaunchRequest is used in the
+         WelcomePage vault picker DataTemplate). -->
+    <Compile Include="..\UI.Desktop\Models\DetectedVaultLaunchRequest.cs"
+             Link="Models\DetectedVaultLaunchRequest.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+        Brand assets. Per-file <Link> only — recursive globs with LinkBase produce bogus
+        avares URIs that take precedence over the canonical ones and break Image.Source
+        bindings at runtime. We pin only the assets the linked views actually consume.
+    -->
+    <AvaloniaResource Include="..\UI.Desktop\Assets\Visuals\Giblex Icons\Icon Transparent background.png"
+                      Link="Assets\Visuals\Giblex Icons\Icon Transparent background.png" />
+    <AvaloniaResource Include="..\UI.Desktop\Assets\noise_128.png"
+                      Link="Assets\noise_128.png" />
+  </ItemGroup>
+
+</Project>

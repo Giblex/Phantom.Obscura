@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDisplayName</key>
+	<string>Phantom Obscura</string>
+	<key>CFBundleName</key>
+	<string>Phantom Obscura</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.giblex.phantom.obscura</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>MinimumOSVersion</key>
+	<string>13.0</string>
+	<key>UIDeviceFamily</key>
+	<array>
+		<integer>1</integer>
+		<integer>2</integer>
+	</array>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>arm64</string>
+	</array>
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<!-- The vault is local-first: no analytics, no background networking. App Transport
+	     Security stays at its secure default (TLS-only) for the few opt-in HTTPS calls
+	     (HIBP k-anonymity, icon downloads, update checks) that the privacy gate allows. -->
+	<key>UIUserInterfaceStyle</key>
+	<string>Dark</string>
+	<!-- Privacy usage strings — mirror the Android manifest's camera / biometric / NFC grants. -->
+	<key>NSCameraUsageDescription</key>
+	<string>Phantom Obscura uses the camera to scan TOTP (two-factor) QR codes when you add an authenticator secret.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Phantom Obscura uses Face ID to unlock your vault.</string>
+</dict>
+</plist>

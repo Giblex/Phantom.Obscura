@@ -1,6 +1,6 @@
 # Phantom Obscura (PhantomVault)
 
-A local-first, privacy-preserving password vault and security suite. Phantom Obscura stores credentials encrypted on-device using Argon2id-derived keys and AES-GCM authenticated encryption — no cloud sync required. It ships a Windows desktop app, an Android app (Avalonia), and a browser extension that communicates with the local vault over native messaging.
+A local-first, privacy-preserving password vault and security suite. Phantom Obscura stores credentials encrypted on-device using Argon2id-derived keys and AES-GCM authenticated encryption — no cloud sync required. It ships a Windows desktop app, an Android app (Avalonia), an Apple iOS/iPadOS app (Avalonia), and a browser extension that communicates with the local vault over native messaging.
 
 ---
 
@@ -16,6 +16,7 @@ A local-first, privacy-preserving password vault and security suite. Phantom Obs
 | `PhantomVault.Autofill` | `src/Autofill` | `net10.0` | Autofill backend: native messaging host, Windows + Android autofill, form field detection |
 | `PhantomVault.UI` (Desktop) | `src/UI.Desktop` | `net10.0-windows10.0.19041.0` | Windows desktop app (Avalonia 11) |
 | `PhantomVault.UI` (Android/Avalonia) | `src/UI.Android.Avalonia` | `net10.0-android` | Android app (Avalonia) — shares assembly name with desktop to reuse `avares://` resources |
+| `PhantomVault.UI` (iOS/Avalonia) | `src/UI.iOS.Avalonia` | `net10.0-ios` | Apple iOS/iPadOS app (Avalonia) — links the Android head's shared mobile views/view-models and reuses the desktop `avares://` resources |
 | Browser Extension | `src/Extension` | — | MV3 extension (Chrome/Edge/Firefox) — relays autofill via native messaging |
 | `Obscura.Keysmith` | `Tools/Obscura.Keysmith` | `net10.0` | Dev tool for generating and inspecting vault keys and signing policies (`Tools/Tools.sln`) |
 | `PhantomVault.Core.Tests` | `tests/PhantomVault.Core.Tests` | `net10.0` | Unit and integration tests for Core and Crypto |
@@ -120,12 +121,18 @@ dotnet build src\Crypto\GiblexVault.Security.ZK.csproj
 dotnet build src\UI.Android.Avalonia\PhantomVault.UI.Android.csproj -f net10.0-android
 dotnet build Tools\Tools.sln
 
+# Build the Apple iOS head (requires macOS + Xcode; pass a RID).
+# Unsigned simulator build (no provisioning profile needed):
+dotnet build src/UI.iOS.Avalonia/PhantomVault.UI.iOS.csproj -f net10.0-ios -r iossimulatorarm64
+# Signed device build (needs an Apple signing identity + provisioning profile):
+dotnet build src/UI.iOS.Avalonia/PhantomVault.UI.iOS.csproj -f net10.0-ios -r ios-arm64
+
 # Tests (run per project — they are not part of PhantomVault.sln)
 dotnet test tests\PhantomVault.Core.Tests
 dotnet test tests\PhantomVault.UI.Tests
 ```
 
-The Android APK is produced by the `build-apk.yml` GitHub Actions workflow.
+The Android APK is produced by the `build-apk.yml` GitHub Actions workflow, and the iOS app is built (unsigned, for the simulator) by the `build-ios.yml` workflow on a macOS runner.
 
 ---
 
@@ -164,7 +171,8 @@ Phantom.Obscura/
 │   ├── Platform/                 Platform abstraction (Windows / mobile)
 │   ├── Autofill/                 Native messaging host + OS autofill services
 │   ├── UI.Desktop/               Windows app (Avalonia)
-│   ├── UI.Android.Avalonia/      Android app (Avalonia shell — shares avares:// with desktop)
+│   ├── UI.Android.Avalonia/      Android app (Avalonia shell — shares avares:// with desktop; canonical home of the shared mobile views/view-models)
+│   ├── UI.iOS.Avalonia/          Apple iOS/iPadOS app (Avalonia shell — links the Android head's shared mobile UI; iOS-only glue in Platforms/iOS)
 │   └── Extension/                Browser extension (MV3)
 │       ├── manifest.json         Firefox ID: phantomvault@giblex.com; min Firefox 128
 │       ├── background.js         Service worker / native messaging bridge
@@ -216,6 +224,7 @@ Windows-only packages (`System.Runtime.WindowsRuntime`, `System.Management`, `Yu
 | Platform passkeys (non-Windows) | macOS and Linux platform passkeys are surfaced as unsupported in `PasskeySettingsWindow`; only Windows Hello passkeys are wired |
 | USB binding / phone | Binding only occurs on the desktop. The mobile head can read a binding token from an already-bound USB vault but cannot create or rebind on Android |
 | Android (Avalonia) | `UI.Android.Avalonia` is the single Android head (application ID `com.giblex.phantom.obscura`). It ships Welcome, Unlock, Dashboard, CredentialList, AddEditCredential, CategoryLanding, SecurityDashboard, ImportExport, IconDownloader, Settings, ThemeSettings, and SmokeTest views; remaining desktop windows are tracked for future ports |
+| iOS (Avalonia) | `UI.iOS.Avalonia` is the single Apple head (bundle ID `com.giblex.phantom.obscura`). It links and ships the same shared mobile views as the Android head. USB-keyfile binding has no iOS equivalent yet (iOS exposes no removable USB volume to apps), so `UsbDriveMonitor` reports no drives; biometric unlock surfaces via Face ID/Touch ID is not yet wired. Device builds require an Apple signing identity + provisioning profile |
 | Multi-session vault access | Concurrent multi-session vault access is intentionally not implemented; the settings toggle is shown for roadmap visibility only |
 | Keysmith certs | `Tools/Obscura.Keysmith/certs/` contains development certificate material; should not be committed to production branches |
 | Settings storage | `%APPDATA%\PhantomVault\settings.json` is plaintext JSON and includes PIN verification material (salt/hash); the vault manifest copy is authoritative |
@@ -235,5 +244,6 @@ The `Policies/` directory holds the runtime security policy consumed by `PolicyE
 - **Build metadata** — git commit hash (`SourceRevisionId`) and UTC build timestamp are embedded as assembly attributes and verified at startup by `BuildIntegrityVerifier`.
 - A root `Legacy/` folder holds archived snapshots (e.g. `Legacy/2026-06-04/`) kept for reference; nothing in it is compiled.
 - The `UI.Android.Avalonia` project sets `AssemblyName=PhantomVault.UI` intentionally so that `avares://PhantomVault.UI/…` URIs resolve to the same resources as on desktop.
-- `PhantomVault.Core` multi-targets `net10.0;net10.0-android`. The Android target removes desktop-only services (`BlackSecureRawVolumeService`, `PasskeyService`, `UsbBindingService`, `YubiKeyService`, `VirtualMachineDetection`, `PolicyService`) and substitutes the `Services/Mobile/*Mobile.cs` stubs in their place.
+- `PhantomVault.Core` multi-targets `net10.0;net10.0-android;net10.0-ios`. Both mobile targets (gated by the `IsMobileBuild` MSBuild flag) remove desktop-only services (`BlackSecureRawVolumeService`, `PasskeyService`, `UsbBindingService`, `YubiKeyService`, `VirtualMachineDetection`, `PolicyService`) and the Windows-only native packages, substituting the `Services/Mobile/*Mobile.cs` stubs in their place.
+- The iOS head (`UI.iOS.Avalonia`) links the Android head's `ViewModels/`, `Views/`, and the platform-neutral `Services/UsbDriveMonitor.cs` rather than copying them, so the two mobile surfaces stay in lockstep; only the platform entry points (`Platforms/iOS/AppDelegate.cs`, `Main.cs`) and `Info.plist` are iOS-specific. Like the Android head it sets `AssemblyName=PhantomVault.UI` so `avares://PhantomVault.UI/…` URIs resolve to the shared desktop resources.
 - Test runner: xUnit. Run `dotnet test` against an individual test project (the test projects are not part of `PhantomVault.sln`).

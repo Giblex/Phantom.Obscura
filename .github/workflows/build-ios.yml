@@ -1,0 +1,64 @@
+name: Build Phantom Obscura iOS
+
+on:
+  push:
+    branches: [ main, master, "claude/*" ]
+  workflow_dispatch:
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+  DOTNET_NOLOGO: true
+
+jobs:
+  build-ios:
+    name: Build iOS app (simulator, unsigned)
+    # iOS builds require the Apple toolchain (Xcode), so this must run on macOS.
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Clear global.json SDK pin
+        run: echo '{}' > global.json
+
+      - name: Setup .NET 10 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Show .NET SDK info
+        run: |
+          dotnet --version
+          dotnet --list-sdks
+
+      - name: Restore .NET workloads
+        run: dotnet workload restore src/UI.iOS.Avalonia/PhantomVault.UI.iOS.csproj
+
+      - name: Restore NuGet packages
+        run: dotnet restore src/UI.iOS.Avalonia/PhantomVault.UI.iOS.csproj
+
+      # Build for the iOS Simulator. The simulator runtime needs no signing identity or
+      # provisioning profile, so this validates that the Apple head and its shared mobile
+      # UI compile and link without requiring App Store credentials in CI.
+      - name: Build iOS app (simulator, unsigned)
+        run: |
+          dotnet build src/UI.iOS.Avalonia/PhantomVault.UI.iOS.csproj \
+            -f net10.0-ios \
+            -c Release \
+            -r iossimulatorarm64 \
+            -p:CodesignRequireProvisioningProfile=false \
+            -p:EnableCodeSigning=false \
+            -o ./artifacts/ios
+
+      - name: Collect .app bundle
+        run: find ./artifacts/ios -name "*.app" -maxdepth 3 -print | sort
+
+      - name: Upload iOS app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: phantom-obscura-ios-sim
+          path: |
+            artifacts/ios/**/*.app/**
+          retention-days: 30
+          if-no-files-found: warn

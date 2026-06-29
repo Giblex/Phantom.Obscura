@@ -8,8 +8,17 @@
         produced CS0101 duplicate-definition errors on every build. The split
         compile graph below scopes each set to the right target.
     -->
-    <TargetFrameworks>net10.0;net10.0-android</TargetFrameworks>
-    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
+    <TargetFrameworks>net10.0;net10.0-android;net10.0-ios</TargetFrameworks>
+    <!--
+        IsMobileBuild is true for both Android and iOS heads. Mobile targets drop the
+        desktop-only services (raw volume, passkeys, USB binding, YubiKey, VM detection,
+        PolicyEngine) and the Windows-only native packages, substituting the Services/Mobile
+        stubs in their place. Authoring the substitution against this single flag keeps the
+        Android and Apple heads in lockstep instead of duplicating the per-platform conditions. -->
+    <_TargetPlatform>$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)'))</_TargetPlatform>
+    <IsMobileBuild Condition="'$(_TargetPlatform)' == 'android' or '$(_TargetPlatform)' == 'ios'">true</IsMobileBuild>
+    <SupportedOSPlatformVersion Condition="'$(_TargetPlatform)' == 'android'">21.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="'$(_TargetPlatform)' == 'ios'">13.0</SupportedOSPlatformVersion>
     <!-- Enable nullable reference types and treat warnings as errors for stronger code quality. -->
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -44,23 +53,24 @@
   <!--
       ┌── Compile graph ─────────────────────────────────────────────────────
       │  Desktop / net10.0 build: include canonical Services/{Name}.cs only.
-      │  Android  / net10.0-android build: include Services/Mobile/{Name}Mobile.cs
-      │    in place of the desktop ones. The four files affected are listed
-      │    explicitly so the substitution is auditable rather than a wide glob.
+      │  Mobile  / net10.0-android + net10.0-ios build: include
+      │    Services/Mobile/{Name}Mobile.cs in place of the desktop ones. The
+      │    four files affected are listed explicitly so the substitution is
+      │    auditable rather than a wide glob.
       └─────────────────────────────────────────────────────────────────────-->
-  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+  <ItemGroup Condition="'$(IsMobileBuild)' == 'true'">
     <!-- Desktop-canonical classes shadowed by the Mobile stubs. -->
     <Compile Remove="Services\BlackSecureRawVolumeService.cs" />
     <Compile Remove="Services\PasskeyService.cs" />
     <Compile Remove="Services\UsbBindingService.cs" />
     <Compile Remove="Services\YubiKeyService.cs" />
-    <!-- Windows-only implementations excluded from the android build -->
+    <!-- Windows-only implementations excluded from the mobile build -->
     <Compile Remove="Services\YubiKeyService.Implementation.cs" />       <!-- depends on Yubico.YubiKey native HID -->
     <Compile Remove="Services\YubiKeyService.Oath.cs" />                 <!-- depends on Yubico.YubiKey OATH module -->
     <Compile Remove="Services\Security\VirtualMachineDetection.cs" />    <!-- uses System.Management (WMI) -->
     <Compile Remove="Services\PolicyService.cs" />                       <!-- transitively depends on PolicyEngine which uses System.Management -->
   </ItemGroup>
-  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'android'">
+  <ItemGroup Condition="'$(IsMobileBuild)' != 'true'">
     <Compile Remove="Services\Mobile\BlackSecureRawVolumeServiceMobile.cs" />
     <Compile Remove="Services\Mobile\PasskeyServiceMobile.cs" />
     <Compile Remove="Services\Mobile\UsbBindingServiceMobile.cs" />
@@ -87,7 +97,7 @@
   <!-- Windows-only package refs (Windows Hello WinRT bridge, WMI, YubiKey USB HID).
        These pull native libraries that don't exist on Android — restricted to the
        net10.0 desktop target so the Android Core target builds clean. -->
-  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'android'">
+  <ItemGroup Condition="'$(IsMobileBuild)' != 'true'">
     <PackageReference Include="System.Runtime.WindowsRuntime" Version="4.7.0" />
     <PackageReference Include="System.Management" Version="10.0.0" />
     <PackageReference Include="Yubico.YubiKey" Version="1.12.0" />
@@ -99,7 +109,7 @@
          is desktop-only (uses System.Management/WMI); the rest is portable. -->
     <Compile Include="..\..\Policies\ObscuraPolicy.cs" Link="Policies\ObscuraPolicy.cs" />
     <Compile Include="..\..\Policies\PolicyEngine.cs" Link="Policies\PolicyEngine.cs"
-             Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'android'" />
+             Condition="'$(IsMobileBuild)' != 'true'" />
     <Compile Include="..\..\Policies\PolicySynchronizer.cs" Link="Policies\PolicySynchronizer.cs" />
     <Compile Include="..\..\Policies\PolicyViolationException.cs" Link="Policies\PolicyViolationException.cs" />
     <Compile Include="..\..\Policies\UsbKeyFile.cs" Link="Policies\UsbKeyFile.cs" />
