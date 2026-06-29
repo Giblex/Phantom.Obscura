@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-#if !ANDROID
+#if !ANDROID && !IOS
 using System.Management;
 using System.Runtime.Versioning;
 #endif
@@ -233,7 +233,7 @@ namespace PhantomVault.Core.Services
             }
         }
 
-#if !ANDROID
+#if !ANDROID && !IOS
         #region WMI / MSFT_Partition manipulation (Windows-only)
 
         [SupportedOSPlatform("windows")]
