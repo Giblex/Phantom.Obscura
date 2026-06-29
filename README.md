@@ -123,7 +123,7 @@ dotnet build Tools\Tools.sln
 
 # Build the Apple iOS head (requires macOS + Xcode; pass a RID).
 # Unsigned simulator build (no provisioning profile needed):
-dotnet build src/UI.iOS.Avalonia/PhantomVault.UI.iOS.csproj -f net10.0-ios -r iossimulatorarm64
+dotnet build src/UI.iOS.Avalonia/PhantomVault.UI.iOS.csproj -f net10.0-ios -r iossimulator-arm64
 # Signed device build (needs an Apple signing identity + provisioning profile):
 dotnet build src/UI.iOS.Avalonia/PhantomVault.UI.iOS.csproj -f net10.0-ios -r ios-arm64
 

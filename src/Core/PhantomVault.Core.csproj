@@ -8,7 +8,15 @@
         produced CS0101 duplicate-definition errors on every build. The split
         compile graph below scopes each set to the right target.
     -->
-    <TargetFrameworks>net10.0;net10.0-android;net10.0-ios</TargetFrameworks>
+    <!--
+        net10.0-ios is only added on macOS. The iOS workload (and its toolchain) exists only
+        on macOS, so adding the TFM unconditionally would make the Linux Android CI and the
+        Windows desktop CI fail to even restore Core (NETSDK1178: missing iOS workload packs).
+        The Apple head (UI.iOS.Avalonia) only ever builds on the macOS runner, so gating the
+        TFM here keeps the other platforms' Core builds clean while still giving the iOS head
+        a net10.0-ios Core to reference. -->
+    <TargetFrameworks>net10.0;net10.0-android</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('OSX'))">$(TargetFrameworks);net10.0-ios</TargetFrameworks>
     <!--
         IsMobileBuild is true for both Android and iOS heads. Mobile targets drop the
         desktop-only services (raw volume, passkeys, USB binding, YubiKey, VM detection,

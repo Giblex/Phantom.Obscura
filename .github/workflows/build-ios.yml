@@ -5,6 +5,10 @@ on:
     branches: [ main, master, "claude/*" ]
   workflow_dispatch:
 
+# Minimal token scope — this workflow only needs to read the repo to build it.
+permissions:
+  contents: read
+
 env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
   DOTNET_NOLOGO: true
@@ -46,7 +50,7 @@ jobs:
           dotnet build src/UI.iOS.Avalonia/PhantomVault.UI.iOS.csproj \
             -f net10.0-ios \
             -c Release \
-            -r iossimulatorarm64 \
+            -r iossimulator-arm64 \
             -p:CodesignRequireProvisioningProfile=false \
             -p:EnableCodeSigning=false \
             -o ./artifacts/ios

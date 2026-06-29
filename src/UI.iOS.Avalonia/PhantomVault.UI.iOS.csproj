@@ -29,7 +29,7 @@
 
     <!--
       No RuntimeIdentifier is pinned here. A device build (ios-arm64) needs a signing
-      identity + provisioning profile; an unsigned simulator build (iossimulatorarm64 /
+      identity + provisioning profile; an unsigned simulator build (iossimulator-arm64 /
       iossimulator-x64) does not. CI and local device builds pass the RID explicitly so
       this project file stays signing-agnostic.
     -->
