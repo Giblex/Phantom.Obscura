@@ -23,6 +23,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # The .NET 10 iOS workload tracks the latest Xcode, but the runner image may
+      # default to an older one (e.g. Xcode 16.4 while 26.x is also installed),
+      # which fails the build with "requires Xcode <new>. The current version of
+      # Xcode is <old>". Select the newest Xcode actually present on the runner.
+      - name: Select newest installed Xcode
+        run: |
+          set -euo pipefail
+          echo "Installed Xcodes:"
+          ls -d /Applications/Xcode*.app
+          latest=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+          echo "Selecting: $latest"
+          sudo xcode-select -s "$latest/Contents/Developer"
+          xcodebuild -version
+
       - name: Clear global.json SDK pin
         run: echo '{}' > global.json
 
