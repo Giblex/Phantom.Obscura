@@ -8,7 +8,6 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://PhantomVault.UI/Resources/Strings.en-US.axaml" />
-                <ResourceInclude Source="avares://Phantom.UI.Shared/Icons/VectorIcons.axaml" />
             </ResourceDictionary.MergedDictionaries>
             <FontFamily x:Key="MonoFontFamily">Consolas</FontFamily>
         </ResourceDictionary>

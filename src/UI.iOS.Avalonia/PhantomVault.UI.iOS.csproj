@@ -64,7 +64,10 @@
          shadow the desktop-only canonical implementations on iOS too. Crypto is portable. -->
     <ProjectReference Include="..\Core\PhantomVault.Core.csproj" />
     <ProjectReference Include="..\Crypto\GiblexVault.Security.ZK.csproj" />
-    <ProjectReference Include="..\..\..\Phantom.Shared\Phantom.UI.Shared\Phantom.UI.Shared.csproj" />
+    <!-- Phantom.UI.Shared (external sibling repo) is intentionally NOT referenced by the
+         mobile heads: it only supplied avares://Phantom.UI.Shared/Icons/VectorIcons.axaml,
+         which none of the mobile views consume. Dropping it keeps the Apple head buildable
+         without the out-of-tree Phantom.Shared checkout, in lockstep with the Android head. -->
   </ItemGroup>
 
   <!--
