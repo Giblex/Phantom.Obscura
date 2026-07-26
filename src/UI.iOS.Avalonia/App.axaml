@@ -9,7 +9,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://PhantomVault.UI/Resources/Strings.en-US.axaml" />
             </ResourceDictionary.MergedDictionaries>
-            <FontFamily x:Key="MonoFontFamily">Consolas</FontFamily>
+            <FontFamily x:Key="MonoFontFamily">Menlo</FontFamily>
         </ResourceDictionary>
     </Application.Resources>
 
@@ -21,4 +21,3 @@
     </Application.Styles>
 
 </Application>
-

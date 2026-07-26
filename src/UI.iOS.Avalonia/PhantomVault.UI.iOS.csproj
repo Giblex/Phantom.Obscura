@@ -1,14 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0-android</TargetFramework>
+    <TargetFramework>net10.0-ios</TargetFramework>
     <OutputType>Exe</OutputType>
 
     <!--
-      We deliberately reuse the desktop assembly identity so that all the
-      desktop AXAML files we link in below resolve their `avares://PhantomVault.UI/...`
-      resource URIs correctly. Two assemblies with the same simple name are fine
-      here because the desktop EXE and the Android APK are never loaded together.
+      Like the Android head, the Apple head deliberately reuses the desktop
+      assembly identity (PhantomVault.UI) so the `avares://PhantomVault.UI/...`
+      resource URIs baked into the linked AXAML resolve correctly. The iOS app
+      and the desktop EXE are never loaded into the same process, so two
+      assemblies with the same simple name is fine.
     -->
     <AssemblyName>PhantomVault.UI</AssemblyName>
     <RootNamespace>PhantomVault.UI</RootNamespace>
@@ -18,21 +19,30 @@
     <AvaloniaUseCompiledXaml>true</AvaloniaUseCompiledXaml>
 
     <ApplicationTitle>Phantom Obscura</ApplicationTitle>
+    <!-- Mirror the Android application id so the two mobile heads share one bundle namespace. -->
     <ApplicationId>com.giblex.phantom.obscura</ApplicationId>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <ApplicationVersion>1</ApplicationVersion>
 
-    <SupportedOSPlatformVersion>26.0</SupportedOSPlatformVersion>
+    <!-- iOS 13 is the floor for the UILaunchScreen dictionary and matches Core's iOS target. -->
+    <SupportedOSPlatformVersion>13.0</SupportedOSPlatformVersion>
 
-    <!-- Match desktop's permissive warning posture so linked code compiles. -->
+    <!--
+      No RuntimeIdentifier is pinned here. A device build (ios-arm64) needs a signing
+      identity + provisioning profile; an unsigned simulator build (iossimulator-arm64 /
+      iossimulator-x64) does not. CI and local device builds pass the RID explicitly so
+      this project file stays signing-agnostic.
+    -->
+
+    <!-- Match desktop/Android's permissive warning posture so the linked code compiles. -->
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <NoWarn>$(NoWarn);1591;CS0618;CS1573;CS1574;CS1571;CS1998;CS8625;CS0012</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Avalonia core + Android backend -->
+    <!-- Avalonia core + iOS backend -->
     <PackageReference Include="Avalonia" Version="11.3.11" />
-    <PackageReference Include="Avalonia.Android" Version="11.3.11" />
+    <PackageReference Include="Avalonia.iOS" Version="11.3.11" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.11" />
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.11" />
     <PackageReference Include="Avalonia.Skia" Version="11.3.11" />
@@ -50,34 +60,39 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Core now multi-targets net10.0;net10.0-android so the Mobile/* stubs shadow
-         the desktop-only canonical implementations on Android. Crypto is portable. -->
+    <!-- Core now multi-targets net10.0;net10.0-android;net10.0-ios so the Mobile/* stubs
+         shadow the desktop-only canonical implementations on iOS too. Crypto is portable. -->
     <ProjectReference Include="..\Core\PhantomVault.Core.csproj" />
     <ProjectReference Include="..\Crypto\GiblexVault.Security.ZK.csproj" />
     <!-- Phantom.UI.Shared (external sibling repo) is intentionally NOT referenced by the
          mobile heads: it only supplied avares://Phantom.UI.Shared/Icons/VectorIcons.axaml,
-         which none of the mobile views consume. Dropping it lets the APK build in CI without
-         the out-of-tree Phantom.Shared checkout. The desktop head still references it for its
-         own icon-consuming views. -->
-    <!-- Platform stays opt-in until its Android target is verified.
-         <ProjectReference Include="..\Platform\PhantomVault.Platform.csproj" /> -->
-
+         which none of the mobile views consume. Dropping it keeps the Apple head buildable
+         without the out-of-tree Phantom.Shared checkout, in lockstep with the Android head. -->
   </ItemGroup>
 
   <!--
-    Bring in the desktop's themes, global styles, and the proof-of-concept
-    DashboardView. We deliberately exclude Windows-only views (autofill,
-    decoy preview, native messaging surfaces) and the desktop App.axaml.cs
-    (which is heavily Window/Desktop-lifecycle coupled — Android.cs supplies
-    a touch-friendly equivalent).
+    Shared mobile UI. The Android head (UI.Android.Avalonia) is the canonical home of the
+    touch-friendly views, view-models, and the platform-neutral UsbDriveMonitor; the Apple
+    head links those exact files so the two mobile surfaces never drift. Only the platform
+    entry points (AppDelegate / Main) and the App lifetime glue differ per head.
   -->
   <ItemGroup>
-    <!--
-        Phase 1: link only the theme dictionaries (brushes/colors) and the
-        en-US string table. LiquidGlass / Animations / GlobalStyles need their
-        custom controls (BorderEnergyTrace, ParticleField, …) and a Skia
-        smoke-test on Android first — added in Phase 3.
-    -->
+    <Compile Include="..\UI.Android.Avalonia\ViewModels\*.cs"
+             Link="ViewModels\%(Filename)%(Extension)" />
+    <Compile Include="..\UI.Android.Avalonia\Views\*.axaml.cs"
+             Link="Views\%(Filename)%(Extension)" />
+    <Compile Include="..\UI.Android.Avalonia\Services\UsbDriveMonitor.cs"
+             Link="Services\UsbDriveMonitor.cs" />
+    <AvaloniaXaml Include="..\UI.Android.Avalonia\Views\*.axaml"
+                  Link="Views\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <!--
+    Themes / global strings, linked from the desktop project exactly as the Android head does.
+    Keeping the link list identical to Android avoids a second source of truth for the brushes
+    and string table the shared views bind against.
+  -->
+  <ItemGroup>
     <AvaloniaXaml Include="..\UI.Desktop\Assets\Themes\PhantomTheme.Dark.axaml"
                   Link="Assets\Themes\PhantomTheme.Dark.axaml" />
     <AvaloniaXaml Include="..\UI.Desktop\Assets\Themes\PhantomTheme.Light.axaml"
@@ -91,23 +106,13 @@
          WelcomePage vault picker DataTemplate). -->
     <Compile Include="..\UI.Desktop\Models\DetectedVaultLaunchRequest.cs"
              Link="Models\DetectedVaultLaunchRequest.cs" />
-
-    <!--
-        Phase 1: no desktop views linked yet — Phase 3 turns wire them in batches
-        (Welcome, Unlock, Dashboard, Vault, CategoryManager, …). Each view link
-        pulls its dependency cluster: its .axaml + .axaml.cs + the ViewModel it
-        binds to + any helper controls. The SmokeTestView in this project is a
-        local Avalonia control that exercises the linked themes / brushes only.
-    -->
   </ItemGroup>
 
   <ItemGroup>
     <!--
-        Brand assets. Per-file <Link> only — recursive globs with LinkBase produce
-        bogus avares URIs (`../UI.Desktop/Assets/...`) that take precedence over
-        the canonical ones, breaking Image.Source bindings at runtime. We pin only
-        the assets each linked view actually consumes; later phases extend this
-        list as more views come on.
+        Brand assets. Per-file <Link> only — recursive globs with LinkBase produce bogus
+        avares URIs that take precedence over the canonical ones and break Image.Source
+        bindings at runtime. We pin only the assets the linked views actually consume.
     -->
     <AvaloniaResource Include="..\UI.Desktop\Assets\Visuals\Giblex Icons\Icon Transparent background.png"
                       Link="Assets\Visuals\Giblex Icons\Icon Transparent background.png" />
