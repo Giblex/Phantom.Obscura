@@ -36,6 +36,9 @@
     <SolidColorBrush x:Key="AccentBrush" Color="#FF2D95"/>
     <SolidColorBrush x:Key="AccentHoverBrush" Color="#FF5CAF"/>
     <SolidColorBrush x:Key="SecondaryAccentBrush" Color="#B833FF"/>
+    <SolidColorBrush x:Key="Brush.Accent" Color="{StaticResource Color.Accent}"/>
+    <SolidColorBrush x:Key="Brush.AccentHover" Color="{StaticResource Color.AccentHover}"/>
+    <SolidColorBrush x:Key="Brush.BorderSoft" Color="#3A2050"/>
 
     <Color x:Key="PrimaryTextColor">#FFFFFF</Color>
     <SolidColorBrush x:Key="PrimaryTextBrush" Color="#FFFFFF"/>
@@ -96,8 +99,10 @@
 
     <SolidColorBrush x:Key="FlyoutPresenterBackground" Color="#F0E6FF"/>
     <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#F0E6FF"/>
-    <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#F0E6FF"/>
-    <SolidColorBrush x:Key="PopupBackgroundBrush" Color="#F0E6FF"/>
+    <!-- Was #F0E6FF, a pale lavender popup paired with white InputForegroundBrush text —
+         nearly invisible. Matched to InputBackgroundBrush's dark surface instead. -->
+    <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#1C1C2C"/>
+    <SolidColorBrush x:Key="PopupBackgroundBrush" Color="#1C1C2C"/>
     <SolidColorBrush x:Key="SystemControlBackgroundChromeMediumLowBrush" Color="#F0E6FF"/>
     <SolidColorBrush x:Key="SystemControlForegroundBaseHighBrush" Color="#0D0D12"/>
     <SolidColorBrush x:Key="ComboBoxItemForeground" Color="#0D0D12"/>

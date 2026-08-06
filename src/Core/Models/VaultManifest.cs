@@ -101,6 +101,14 @@ namespace PhantomVault.Core.Models
         public bool PhantomKeyBridgeEnabled { get; set; }
             = false;
 
+        [JsonPropertyName("phantomKeyBindingTokenEnabled")]
+        public bool PhantomKeyBindingTokenEnabled { get; set; }
+            = false;
+
+        [JsonPropertyName("phantomKeyBindingTokenPath")]
+        public string? PhantomKeyBindingTokenPath { get; set; }
+            = null;
+
         [JsonPropertyName("phantomKeyBridgeWorkspacePath")]
         public string? PhantomKeyBridgeWorkspacePath { get; set; }
             = null;
@@ -249,6 +257,23 @@ namespace PhantomVault.Core.Models
         [JsonPropertyName("signatureTimestamp")]
         public DateTimeOffset? SignatureTimestamp { get; set; } = null;
 
+        /// <summary>
+        /// Base64 Ed25519 public key of the vault's manifest-signing identity. When
+        /// present, the manifest is authenticated asymmetrically: any enrolled
+        /// device can verify it, but only a holder of the matching private key can
+        /// produce a valid signature. Null on legacy HMAC-only manifests.
+        /// </summary>
+        [JsonPropertyName("manifestSigningPublicKey")]
+        public string? ManifestSigningPublicKeyBase64 { get; set; } = null;
+
+        /// <summary>
+        /// Base64 Ed25519 signature over the manifest's canonical bytes, produced
+        /// with the private key matching <see cref="ManifestSigningPublicKeyBase64"/>.
+        /// Null on legacy HMAC-only manifests.
+        /// </summary>
+        [JsonPropertyName("manifestEd25519Signature")]
+        public string? ManifestEd25519SignatureBase64 { get; set; } = null;
+
         [JsonPropertyName("pinSaltBase64")]
         public string? PinSaltBase64 { get; set; } = null;
 
@@ -285,6 +310,14 @@ namespace PhantomVault.Core.Models
         [JsonPropertyName("scrubHistory")]
         public System.Collections.Generic.List<ScrubEvent> ScrubHistory { get; set; }
             = new System.Collections.Generic.List<ScrubEvent>();
+
+        /// <summary>
+        /// Signed premium license token (Ed25519, verified by LicenseVerifier).
+        /// Null = Free tier. Stored inside the encrypted, integrity-signed
+        /// manifest so it cannot be transplanted between vaults undetected.
+        /// </summary>
+        [JsonPropertyName("premiumLicenseToken")]
+        public string? PremiumLicenseToken { get; set; } = null;
     }
 
     public sealed class RecoveryCode

@@ -603,6 +603,7 @@ namespace PhantomVault.Core.Services
                 }
             }
 
+            candidates.Add(PhantomDeviceLayout.GetSystemVolumePath(usbPath));
             candidates.Add(Path.Combine(usbPath, "system.bin"));
             candidates.Add(Path.Combine(usbPath, ".phantom", "obscura.vol"));
 

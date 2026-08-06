@@ -4,7 +4,7 @@ using Avalonia.Markup.Xaml;
 
 namespace PhantomVault.UI.Views;
 
-public partial class AutofillSuggestionsWindow : Window
+public partial class AutofillSuggestionsWindow : ThemeAwareWindow
 {
     public AutofillSuggestionsWindow()
     {

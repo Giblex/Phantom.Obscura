@@ -18,7 +18,7 @@ namespace GiblexVault.Security.ZK.Primitives
                 var cfg = new Argon2Config
                 {
 
-                    Type = Argon2Type.HybridAddressing,
+                    Type = ResolveArgon2Type(p.Kdf),
                     Version = Argon2Version.Nineteen,
                     TimeCost = Math.Max(1, p.Ops),
                     MemoryCost = Math.Max(8, p.MemMiB) * 1024,
@@ -46,6 +46,15 @@ namespace GiblexVault.Security.ZK.Primitives
                 try { CryptographicOperations.ZeroMemory(saltBytes); } catch { }
             }
         }
+
+        private static Argon2Type ResolveArgon2Type(string? kdf)
+            => (kdf?.Trim().ToLowerInvariant()) switch
+            {
+                null or "" or "argon2id" => Argon2Type.HybridAddressing,
+                "argon2i" => Argon2Type.DataIndependentAddressing,
+                "argon2d" => Argon2Type.DataDependentAddressing,
+                _ => throw new NotSupportedException($"Unsupported KDF '{kdf}'. Expected argon2id, argon2i, or argon2d.")
+            };
 
         public static byte[] DeriveKeyFromString(string password, byte[] salt, KdfParams p)
             => DeriveKey(System.Text.Encoding.UTF8.GetBytes(password), salt, p);

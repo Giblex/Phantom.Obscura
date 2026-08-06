@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -43,15 +42,17 @@ namespace PhantomVault.Core.Services.Security
             _generator = new DecoyCredentialGenerator(_options.RandomSeed);
         }
 
-        public async Task<VaultDatabase> ActivateDecoyVaultAsync()
+        public Task<VaultDatabase> ActivateDecoyVaultAsync()
         {
+            // Deniability rule: activation must leave NO trace that distinguishes the decoy
+            // from a normal session. No "decoy"/"compromise" wording is ever written to the
+            // shared (plaintext, on-disk) Serilog sink, no marker file is persisted, and the
+            // fake credentials are kept in memory only. If the legitimate user wants an audit
+            // of duress activations, that belongs in an encrypted in-vault record — never here.
             if (_isDecoyActive)
             {
-                _logger?.LogWarning("Decoy vault already active, returning existing instance");
-                return _decoyDatabase!;
+                return Task.FromResult(_decoyDatabase!);
             }
-
-            _logger?.LogCritical("ACTIVATING DECOY VAULT - Suspected security compromise");
 
             var decoyCredentials = _generator.GenerateDecoyCredentials(_options.CredentialCount);
 
@@ -67,34 +68,16 @@ namespace PhantomVault.Core.Services.Security
 
             _isDecoyActive = true;
 
-            if (!string.IsNullOrEmpty(_options.DecoyDatabasePath))
-            {
-                await PersistDecoyDatabaseAsync(_decoyDatabase, _options.DecoyDatabasePath);
-            }
+            // _options.DecoyDatabasePath / _options.LogActivation are intentionally NOT
+            // honoured here: a persisted marker or an activation log entry would betray the
+            // decoy to anyone who can read the disk. The in-memory database is sufficient.
 
-            if (_options.LogActivation)
-            {
-                int totalCredentials = groups.Sum(g => g.Entries?.Count ?? 0);
-                _logger?.LogCritical(
-                    "Decoy vault activated with {CredentialCount} fake credentials. " +
-                    "This event indicates potential security compromise. " +
-                    "Real vault has been protected.",
-                    totalCredentials);
-            }
-
-            return _decoyDatabase;
+            return Task.FromResult(_decoyDatabase);
         }
 
         public void DeactivateDecoyVault()
         {
-            if (!_isDecoyActive)
-            {
-                _logger?.LogWarning("Attempted to deactivate decoy vault but none is active");
-                return;
-            }
-
-            _logger?.LogWarning("Deactivating decoy vault");
-
+            // Silent by design — see deniability rule above.
             _decoyDatabase = null;
             _isDecoyActive = false;
         }
@@ -136,29 +119,21 @@ namespace PhantomVault.Core.Services.Security
             };
         }
 
-        private async Task PersistDecoyDatabaseAsync(VaultDatabase database, string path)
-        {
-            try
-            {
-                var directory = Path.GetDirectoryName(path);
-                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-                {
-                    Directory.CreateDirectory(directory);
-                }
-
-                await File.WriteAllTextAsync(path, $"Decoy vault created: {DateTime.UtcNow:O}");
-                _logger?.LogInformation("Decoy database marker persisted to {Path}", path);
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "Failed to persist decoy database marker to {Path}", path);
-            }
-        }
-
+        /// <summary>
+        /// Produces a plausible Argon2id-style hash string for the decoy. Uses random bytes
+        /// (not an all-zero buffer, which is instantly recognisable as fake) and randomised
+        /// cost parameters within normal ranges so it is indistinguishable from a real hash.
+        /// </summary>
         public string GenerateFakeMasterPasswordHash()
         {
-            var fakeHash = Convert.ToBase64String(new byte[64]);
-            return $"$argon2id$v=19$m=65536,t=3,p=1${fakeHash}";
+            var saltBytes = System.Security.Cryptography.RandomNumberGenerator.GetBytes(16);
+            var hashBytes = System.Security.Cryptography.RandomNumberGenerator.GetBytes(32);
+            var salt = Convert.ToBase64String(saltBytes).TrimEnd('=');
+            var hash = Convert.ToBase64String(hashBytes).TrimEnd('=');
+
+            int memKib = new[] { 65536, 131072, 262144 }[System.Security.Cryptography.RandomNumberGenerator.GetInt32(3)];
+            int iterations = System.Security.Cryptography.RandomNumberGenerator.GetInt32(2, 5);
+            return $"$argon2id$v=19$m={memKib},t={iterations},p=1${salt}${hash}";
         }
     }
 }

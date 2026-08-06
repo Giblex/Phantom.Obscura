@@ -684,7 +684,17 @@ namespace PhantomVault.Core.Services
 
                 if (!string.IsNullOrEmpty(password))
                 {
-                    passwordKey = _encryptionService.DeriveKey(password.AsSpan(), salt, 32, memoryCostKb, iterations);
+                    // Argon2id at production cost (256 MiB / multiple passes) is CPU-bound
+                    // and would otherwise block whichever thread awaited us (often the UI
+                    // thread during provisioning). Run it on a worker thread so the caller
+                    // stays responsive and concurrent container derivations can overlap.
+                    var pwd = password;
+                    var saltLocal = salt;
+                    int memLocal = memoryCostKb;
+                    int iterLocal = iterations;
+                    passwordKey = await Task.Run(
+                        () => _encryptionService.DeriveKey(pwd.AsSpan(), saltLocal, 32, memLocal, iterLocal))
+                        .ConfigureAwait(false);
                 }
                 else
                 {

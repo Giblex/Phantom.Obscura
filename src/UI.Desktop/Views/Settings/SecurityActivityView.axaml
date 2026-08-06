@@ -1,0 +1,86 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:PhantomVault.UI.ViewModels.Settings"
+             x:DataType="vm:SecurityActivityViewModel"
+             x:Class="PhantomVault.UI.Views.Settings.SecurityActivityView">
+    <StackPanel Spacing="20" Margin="0,0,0,60">
+        <TextBlock Text="Security Activity"
+                   FontSize="{StaticResource Type.H3.Size}"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+        <Border Classes="fade-in stagger-1" HorizontalAlignment="Stretch"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
+                Padding="20">
+            <StackPanel Spacing="15">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0"
+                               Text="A tamper-evident record of what happened on this device — unlocks, mounts and locks. Stored locally and never uploaded."
+                               FontSize="{StaticResource Type.Small.Size}"
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               TextWrapping="Wrap"
+                               VerticalAlignment="Center"/>
+                    <Button Grid.Column="1"
+                            Content="Refresh"
+                            Command="{Binding RefreshCommand}"
+                            Classes="liquid-glass"
+                            Width="100"
+                            VerticalAlignment="Top"/>
+                </Grid>
+
+                <!-- Integrity banner -->
+                <Border CornerRadius="10"
+                        Padding="12,10"
+                        Background="{DynamicResource CardBackgroundBrush}"
+                        BorderThickness="1"
+                        BorderBrush="{DynamicResource SettingsPanelBorderBrush}">
+                    <TextBlock Text="{Binding StatusSummary}"
+                               TextWrapping="Wrap"
+                               FontWeight="SemiBold"
+                               Foreground="{Binding StatusBrush}"/>
+                </Border>
+
+                <TextBlock Text="No activity recorded yet."
+                           IsVisible="{Binding IsEmpty}"
+                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+
+                <ItemsControl ItemsSource="{Binding Entries}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:SecurityActivityEntry">
+                            <Border Background="{DynamicResource CardBackgroundBrush}"
+                                    CornerRadius="8"
+                                    Padding="12,8"
+                                    Margin="0,0,0,8">
+                                <Grid ColumnDefinitions="Auto,*,Auto" >
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding Glyph}"
+                                               FontSize="16"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,12,0"/>
+                                    <StackPanel Grid.Column="1" Spacing="2">
+                                        <TextBlock Text="{Binding CategoryDisplay}"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                        <TextBlock Text="{Binding Message}"
+                                                   TextWrapping="Wrap"
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="2"
+                                               Text="{Binding TimeDisplay}"
+                                               VerticalAlignment="Center"
+                                               Margin="12,0,0,0"
+                                               FontSize="{StaticResource Type.Small.Size}"
+                                               Foreground="{DynamicResource MutedTextBrush}"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

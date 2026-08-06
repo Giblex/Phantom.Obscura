@@ -803,6 +803,13 @@ namespace PhantomVault.UI.ViewModels
 
                         svc.GetService<PhantomVault.UI.Services.AutoFill.INativeHostPipeServer>()
                            ?.SetCredentialProvider(credProvider, testManifest!);
+
+                        // Suite presence: report this app unlocked (with its own keyfile, in
+                        // this process). No key material leaves the process — the coordinator
+                        // only records "PhantomObscura is unlocked" so the suite shows one
+                        // live session. The other app still needs its own keyfile to unlock.
+                        try { svc.GetService<Phantom.Suite.Session.ISuiteSessionCoordinator>()?.ReportUnlocked(); }
+                        catch (Exception sessEx) { System.Diagnostics.Debug.WriteLine($"[VaultUnlock] suite-session report-unlocked failed: {sessEx.Message}"); }
                     }
                 }
                 catch (Exception wireEx)
@@ -823,6 +830,10 @@ namespace PhantomVault.UI.ViewModels
                                       ?.SetLocked();
                             svcOnClose.GetService<PhantomVault.UI.Services.AutoFill.INativeHostPipeServer>()
                                       ?.ClearCredentialProvider();
+
+                            // Suite presence: vault window closed → this app is locked.
+                            svcOnClose.GetService<Phantom.Suite.Session.ISuiteSessionCoordinator>()
+                                      ?.ReportLocked();
                         }
                     }
                     catch {  }
@@ -935,6 +946,7 @@ namespace PhantomVault.UI.ViewModels
         {
             var candidates = new[]
             {
+                PhantomDeviceLayout.GetSystemVolumePath(usbPath),
                 Path.Combine(usbPath, "system.bin"),
                 Path.Combine(usbPath, ".phantom", "obscura.vol")
             };

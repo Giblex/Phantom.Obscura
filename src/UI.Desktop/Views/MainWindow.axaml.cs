@@ -103,9 +103,25 @@ namespace PhantomVault.UI.Views
             window.Show();
         }
 
-        public void OpenProvisionWindow_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        public async void OpenProvisionWindow_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
         {
             var app = (App)Application.Current!;
+
+            // Creating an additional vault while one is already unlocked on this
+            // device is the premium "multiple vaults per device" feature.
+            if (DataContext is ViewModels.VaultViewModel vm && !vm.CanUseMultiVault)
+            {
+                var dialog = new Services.DialogService();
+                await dialog.ShowInfoAsync(
+                    "Premium feature",
+                    "Running multiple vaults on one device is a Premium feature. " +
+                    "Upgrade from Settings → Subscription to add another vault.",
+                    this);
+                if (vm.ShowSubscriptionSettingsCommand is System.Windows.Input.ICommand cmd && cmd.CanExecute(null))
+                    cmd.Execute(null);
+                return;
+            }
+
             var window = new ProvisionWindow
             {
                 DataContext = app.Services!.GetRequiredService<ProvisionViewModel>()

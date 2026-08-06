@@ -14,6 +14,56 @@ using PhantomVault.UI.Views;
 
 namespace PhantomVault.UI.ViewModels.Settings
 {
+    // One card in the website-style Theme Studio grid: three preview dots, a name, and
+    // optional Pro lock. Top-level (not nested) so XAML can bind it with x:DataType.
+    public sealed class ThemeSwatch
+    {
+        public string Id { get; }
+        public string DisplayName { get; }
+        public Avalonia.Media.IBrush Color1 { get; }
+        public Avalonia.Media.IBrush Color2 { get; }
+        public Avalonia.Media.IBrush Color3 { get; }
+        public bool IsActive { get; }
+        public bool IsLocked { get; }
+
+        // Active card is ringed in its own accent dot; locked cards are dimmed. Computed
+        // here so the XAML needs no extra converters.
+        public Avalonia.Media.IBrush ActiveBorderBrush { get; }
+        public double CardOpacity { get; }
+
+        // Contrast-aware text colour for the hover-preview mockup, since Color1 (the theme's
+        // background swatch) ranges from near-black to Giblex Light's pale #DEF2F6 — a fixed
+        // white would be illegible against light backgrounds.
+        public Avalonia.Media.IBrush PreviewForeground { get; }
+        public Avalonia.Media.IBrush PreviewMutedForeground { get; }
+
+        public ThemeSwatch(string id, string displayName, IReadOnlyList<string> colors, bool isActive, bool isLocked)
+        {
+            Id = id;
+            DisplayName = displayName;
+            IsActive = isActive;
+            IsLocked = isLocked;
+            Avalonia.Media.IBrush Brush(int i) =>
+                new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse(colors[i]));
+            Color1 = Brush(0);
+            Color2 = Brush(1);
+            Color3 = Brush(2);
+            ActiveBorderBrush = isActive ? Brush(1) : Avalonia.Media.Brushes.Transparent;
+            CardOpacity = isLocked ? 0.5 : 1.0;
+
+            var bg = Avalonia.Media.Color.Parse(colors[0]);
+            // Standard relative-luminance approximation.
+            var luminance = (0.299 * bg.R + 0.587 * bg.G + 0.114 * bg.B) / 255.0;
+            var isLightBg = luminance > 0.6;
+            PreviewForeground = isLightBg
+                ? new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#1A1A1A"))
+                : Avalonia.Media.Brushes.White;
+            PreviewMutedForeground = isLightBg
+                ? new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#5A5A5A"))
+                : new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#CCFFFFFF"));
+        }
+    }
+
     public class ThemeSettingsViewModel : ReactiveObject
     {
         private bool _isDarkTheme = false;
@@ -31,6 +81,7 @@ namespace PhantomVault.UI.ViewModels.Settings
         private int _selectedRuntimeThemeIndex = 0;
         private readonly ThemeManagerService _themeManager;
         private readonly IRuntimeThemeService? _runtimeThemeService;
+        private readonly PhantomVault.UI.Services.Entitlements.IEntitlementService? _entitlements;
 
         private readonly PhantomVault.UI.Services.SettingsDraftTracker _draft;
         private readonly double[] _scales = { 0.8, 0.9, 1.0, 1.1, 1.25, 1.5 };
@@ -52,6 +103,12 @@ namespace PhantomVault.UI.ViewModels.Settings
             get => _runtimeThemeNames;
             private set => this.RaiseAndSetIfChanged(ref _runtimeThemeNames, value);
         }
+
+        // Website-style swatch grid: the six Phantom Obscura web palettes, each shown as
+        // three colour dots with a name and a Pro lock badge (mirrors the web demo).
+        public System.Collections.ObjectModel.ObservableCollection<ThemeSwatch> ThemeSwatches { get; } = new();
+
+        public ICommand ApplyThemeByIdCommand { get; private set; } = null!;
 
         public int SelectedRuntimeThemeIndex
         {
@@ -462,6 +519,20 @@ namespace PhantomVault.UI.ViewModels.Settings
         public ICommand SaveCustomThemeCommand { get; }
         public ICommand CancelCustomThemeCommand { get; }
 
+        public bool CanUseCustomThemes => _entitlements?.IsUnlocked(
+            PhantomVault.Core.Models.Licensing.PremiumFeature.CustomThemes) ?? false;
+
+        public bool IsCustomThemesLocked => !CanUseCustomThemes;
+
+        public ICommand UpgradeCommand { get; private set; } = null!;
+
+        private void OpenSubscriptionTab()
+        {
+            var host = GetOwnerWindow()?.DataContext as PhantomVault.UI.ViewModels.VaultViewModel;
+            if (host?.ShowSubscriptionSettingsCommand is System.Windows.Input.ICommand cmd && cmd.CanExecute(null))
+                cmd.Execute(null);
+        }
+
         private static string SafeHex(string hex)
         {
             if (string.IsNullOrWhiteSpace(hex)) return "#000000";
@@ -470,10 +541,66 @@ namespace PhantomVault.UI.ViewModels.Settings
             return h;
         }
 
-        public ThemeSettingsViewModel(ThemeManagerService? themeManager = null, IRuntimeThemeService? runtimeThemeService = null, PhantomVault.UI.Services.SettingsDraftTracker? draftTracker = null)
+        // Staged locally so toggling it doesn't retint every open category tile until the
+        // user presses Save; the with/without preview swatches in the view show the effect
+        // in the meantime.
+        private bool _pendingUseColouredCategoryBlur;
+        private bool _categoryBlurStaged;
+
+        public bool UseColouredCategoryBlur
         {
-            _themeManager = themeManager ?? ((Application.Current as App)?.Services?.GetService(typeof(ThemeManagerService)) as ThemeManagerService) ?? new ThemeManagerService();
+            get => _pendingUseColouredCategoryBlur;
+            set
+            {
+                if (_pendingUseColouredCategoryBlur == value) return;
+                this.RaiseAndSetIfChanged(ref _pendingUseColouredCategoryBlur, value);
+                StageCategoryBlur();
+            }
+        }
+
+        // Fixed on/off flags for the with/without-blur preview tiles — independent of the
+        // staged toggle above so both examples are always visible side by side.
+        public bool PreviewBlurOn => true;
+        public bool PreviewBlurOff => false;
+
+        private void StageCategoryBlur()
+        {
+            bool stagedValue = _pendingUseColouredCategoryBlur;
+            bool previousPersisted = CategoryBlurPreference.UseColouredBlur;
+
+            if (stagedValue == previousPersisted)
+            {
+                _categoryBlurStaged = false;
+                _draft.ClearKey("Theme.CategoryBlur");
+                return;
+            }
+
+            _categoryBlurStaged = true;
+            _draft.Stage(
+                key: "Theme.CategoryBlur",
+                commit: () =>
+                {
+                    _categoryBlurStaged = false;
+                    CategoryBlurPreference.UseColouredBlur = stagedValue;
+                },
+                discard: () =>
+                {
+                    _categoryBlurStaged = false;
+                    _pendingUseColouredCategoryBlur = previousPersisted;
+                    this.RaisePropertyChanged(nameof(UseColouredCategoryBlur));
+                });
+        }
+
+        public ThemeSettingsViewModel(ThemeManagerService? themeManager = null, IRuntimeThemeService? runtimeThemeService = null, PhantomVault.UI.Services.SettingsDraftTracker? draftTracker = null)
+        {_themeManager = themeManager ?? ((Application.Current as App)?.Services?.GetService(typeof(ThemeManagerService)) as ThemeManagerService) ?? new ThemeManagerService();
             _runtimeThemeService = runtimeThemeService ?? ((Application.Current as App)?.Services?.GetService(typeof(IRuntimeThemeService)) as IRuntimeThemeService);
+            _entitlements = (Application.Current as App)?.Services?.GetService(typeof(PhantomVault.UI.Services.Entitlements.IEntitlementService)) as PhantomVault.UI.Services.Entitlements.IEntitlementService;
+            if (_entitlements != null)
+                _entitlements.Changed += (_, _) =>
+                {
+                    this.RaisePropertyChanged(nameof(CanUseCustomThemes));
+                    this.RaisePropertyChanged(nameof(IsCustomThemesLocked));
+                };
 
             _draft = draftTracker
                 ?? ((Application.Current as App)?.Services?.GetService(typeof(PhantomVault.UI.Services.SettingsDraftTracker)) as PhantomVault.UI.Services.SettingsDraftTracker)
@@ -483,6 +610,22 @@ namespace PhantomVault.UI.ViewModels.Settings
             DeleteCustomThemeCommand = ReactiveCommand.Create(DeleteSelectedCustomTheme);
             SaveCustomThemeCommand = ReactiveCommand.Create(SaveCustomTheme);
             CancelCustomThemeCommand = ReactiveCommand.Create(() => IsCustomEditorOpen = false);
+            UpgradeCommand = ReactiveCommand.Create(OpenSubscriptionTab);
+            ApplyThemeByIdCommand = ReactiveCommand.Create<string?>(ApplyThemeById);
+
+            _pendingUseColouredCategoryBlur = CategoryBlurPreference.UseColouredBlur;
+            CategoryBlurPreference.Changed += (_, _) =>
+            {
+                // Only follow an external change (e.g. from Category Manager) when we don't
+                // have our own unsaved toggle pending — otherwise it would clobber the user's
+                // in-progress edit before they've had a chance to save or discard it.
+                if (_categoryBlurStaged) return;
+                _pendingUseColouredCategoryBlur = CategoryBlurPreference.UseColouredBlur;
+                this.RaisePropertyChanged(nameof(UseColouredCategoryBlur));
+            };
+
+            if (_entitlements != null)
+                _entitlements.Changed += (_, _) => BuildThemeSwatches();
 
             RefreshThemeNames();
 
@@ -517,6 +660,49 @@ namespace PhantomVault.UI.ViewModels.Settings
                     _selectedRuntimeThemeIndex = themeIdx;
                 }
             }
+
+            BuildThemeSwatches();
+        }
+
+        private void BuildThemeSwatches()
+        {
+            if (_runtimeThemeService == null) return;
+
+            var themes = _runtimeThemeService.GetThemes();
+            var currentId = (SelectedRuntimeThemeIndex >= 0 && SelectedRuntimeThemeIndex < themes.Count)
+                ? themes[SelectedRuntimeThemeIndex].Id
+                : _runtimeThemeService.CurrentThemeId;
+
+            ThemeSwatches.Clear();
+            foreach (var t in themes)
+            {
+                // Only the website palettes carry preview colours and render as swatches.
+                if (t.PreviewColors.Count < 3) continue;
+                ThemeSwatches.Add(new ThemeSwatch(
+                    t.Id, t.DisplayName, t.PreviewColors,
+                    isActive: t.Id == currentId,
+                    isLocked: t.IsPremium && !CanUseCustomThemes));
+            }
+        }
+
+        private void ApplyThemeById(string? id)
+        {
+            if (string.IsNullOrEmpty(id) || _runtimeThemeService == null) return;
+
+            var themes = _runtimeThemeService.GetThemes();
+            var idx = themes.ToList().FindIndex(t => t.Id == id);
+            if (idx < 0) return;
+
+            if (themes[idx].IsPremium && !CanUseCustomThemes)
+            {
+                // Locked palette — route to the upgrade flow instead of applying, matching
+                // the website demo's "Switch to Pro to unlock this theme" behaviour.
+                OpenSubscriptionTab();
+                return;
+            }
+
+            SelectedRuntimeThemeIndex = idx; // applies + stages via the existing setter
+            BuildThemeSwatches();
         }
 
         private void ToggleTheme()
@@ -688,8 +874,8 @@ namespace PhantomVault.UI.ViewModels.Settings
             {
                 var selectedTheme = themes[SelectedRuntimeThemeIndex];
 
-                _runtimeThemeService.Apply(selectedTheme.Id);
-
+                // Not applied live here — only staged. The swatch grid's active ring is the
+                // preview; the running app keeps the persisted theme until Save commits it.
                 string stagedId = selectedTheme.Id;
                 string? previousPersistedId;
                 int previousIndex = SelectedRuntimeThemeIndex;
@@ -717,6 +903,7 @@ namespace PhantomVault.UI.ViewModels.Settings
                         {
                             try
                             {
+                                _runtimeThemeService.Apply(stagedId);
                                 var s = SettingsService.Load();
                                 s.SelectedThemeId = stagedId;
                                 SettingsService.Save(s);
@@ -725,8 +912,8 @@ namespace PhantomVault.UI.ViewModels.Settings
                         },
                         discard: () =>
                         {
-                            if (!string.IsNullOrEmpty(previousPersistedId))
-                                _runtimeThemeService.Apply(previousPersistedId);
+                            // Nothing to revert live — the theme was never applied. Just
+                            // move the swatch selection back to what's actually persisted.
                             _selectedRuntimeThemeIndex = previousIdx;
                             this.RaisePropertyChanged(nameof(SelectedRuntimeThemeIndex));
                             this.RaisePropertyChanged(nameof(IsCustomThemeSelected));
@@ -735,6 +922,7 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
 
             this.RaisePropertyChanged(nameof(IsCustomThemeSelected));
+            BuildThemeSwatches();
         }
 
         private void RefreshThemeNames()
@@ -751,6 +939,7 @@ namespace PhantomVault.UI.ViewModels.Settings
 
         private void OpenCustomEditor()
         {
+            if (IsCustomThemesLocked) return;
             CustomThemeName = "";
             CustomPrimaryBg = "#0D0D12";
             CustomSecondaryBg = "#12121A";

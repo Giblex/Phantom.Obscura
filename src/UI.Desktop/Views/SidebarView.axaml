@@ -562,6 +562,14 @@
             </Style>
         </Border.Styles>
         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <ScrollViewer.OpacityMask>
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                    <GradientStop Offset="0.00" Color="#00FFFFFF"/>
+                    <GradientStop Offset="0.04" Color="#FFFFFFFF"/>
+                    <GradientStop Offset="0.85" Color="#FFFFFFFF"/>
+                    <GradientStop Offset="1.00" Color="#33FFFFFF"/>
+                </LinearGradientBrush>
+            </ScrollViewer.OpacityMask>
             <StackPanel Spacing="0" Margin="0,20">
 
                 <StackPanel Orientation="Horizontal"

@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Giblex.AssetShield;
 using PhantomVault.Core;
 using PhantomVault.Core.Services;
@@ -104,6 +105,15 @@ namespace PhantomVault.UI
                 {
                     Log.Fatal("Unhandled exception raised with non-exception payload");
                 }
+            };
+
+            // Async-void handlers (like button click handlers) surface uncaught
+            // exceptions through this event. Marking them observed keeps the app
+            // alive so a checkout/HTTP failure doesn't collapse the whole UI.
+            TaskScheduler.UnobservedTaskException += (_, e) =>
+            {
+                Log.Warning(e.Exception, "Unobserved task exception (swallowed to keep UI alive)");
+                e.SetObserved();
             };
 
             Log.Information("Starting PhantomVault");

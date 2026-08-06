@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -171,17 +172,17 @@ namespace PhantomVault.Core.Services.Autofill
                 var message = JsonSerializer.Deserialize<NativeMessage>(messageJson);
 
                 if (message == null)
-                    return CreateErrorResponse("Invalid message format");
+                    return CreateErrorResponse("Invalid message format", null);
 
                 if (string.IsNullOrEmpty(message.Origin) || !ValidateOrigin(message.Origin))
-                    return CreateErrorResponse("Unauthorized origin");
+                    return CreateErrorResponse("Unauthorized origin", message.RequestId);
 
                 if (message.Type == "getCredentials" || message.Type == "saveCredential")
                 {
                     var (allowed, reason) = EnsureAutofillAllowed();
                     if (!allowed)
                     {
-                        return CreateErrorResponse(reason ?? "Autofill is disabled while the vault is locked.");
+                        return CreateErrorResponse(reason ?? "Autofill is disabled while the vault is locked.", message.RequestId);
                     }
                 }
 
@@ -195,19 +196,19 @@ namespace PhantomVault.Core.Services.Autofill
                     "fill" => HandleFill(message),
 
                     "detectTotp" => HandleDetectTotp(message),
-                    "getSyncState" => HandleGetSyncState(),
-                    "pushSyncState" => HandlePushSyncState(message),
-                    "ping" => CreateSuccessResponse(new { status = "ok" }),
-                    _ => CreateErrorResponse($"Unknown message type: {message.Type}")
+                    "getSyncState" => HandleGetSyncState(message.RequestId),
+                    "pushSyncState" => HandlePushSyncState(message, message.RequestId),
+                    "ping" => CreateSuccessResponse(new { status = "ok" }, message.RequestId),
+                    _ => CreateErrorResponse($"Unknown message type: {message.Type}", message.RequestId)
                 };
             }
             catch (JsonException ex)
             {
-                return CreateErrorResponse($"JSON parsing error: {ex.Message}");
+                return CreateErrorResponse($"JSON parsing error: {ex.Message}", null);
             }
             catch (Exception ex)
             {
-                return CreateErrorResponse($"Error handling message: {ex.Message}");
+                return CreateErrorResponse($"Error handling message: {ex.Message}", null);
             }
         }
 
@@ -218,23 +219,28 @@ namespace PhantomVault.Core.Services.Autofill
                 var domain = message.Data?.GetProperty("domain").GetString();
 
                 if (string.IsNullOrWhiteSpace(domain))
-                    return CreateErrorResponse("Domain not specified");
+                    return CreateErrorResponse("Domain not specified", message.RequestId);
 
                 var credentials = await _credentialRepository.GetCredentialsByDomainAsync(domain, cancellationToken);
 
-                var credentialList = credentials.Select(c => new
-                {
-                    id = c.Title,
-                    username = c.Username,
-                    title = c.Title,
-                    domain = ExtractDomain(c.Url)
-                }).ToArray();
+                var credentialList = credentials
+                    .OrderByDescending(c => c.LastUsedUtc ?? DateTimeOffset.MinValue)
+                    .Take(3)
+                    .Select(c => new
+                    {
+                        id = c.Title,
+                        username = c.Username,
+                        password = c.Password,
+                        title = c.Title,
+                        domain = ExtractDomain(c.Url),
+                        url = c.Url
+                    }).ToArray();
 
-                return CreateSuccessResponse(new { credentials = credentialList });
+                return CreateSuccessResponse(new { credentials = credentialList }, message.RequestId);
             }
             catch (Exception ex)
             {
-                return CreateErrorResponse($"Failed to get credentials: {ex.Message}");
+                return CreateErrorResponse($"Failed to get credentials: {ex.Message}", message.RequestId);
             }
         }
 
@@ -244,7 +250,7 @@ namespace PhantomVault.Core.Services.Autofill
             {
                 var data = message.Data;
                 if (!data.HasValue)
-                    return CreateErrorResponse("No data provided");
+                    return CreateErrorResponse("No data provided", message.RequestId);
 
                 var domain = data.Value.GetProperty("domain").GetString();
                 var username = data.Value.GetProperty("username").GetString();
@@ -257,7 +263,7 @@ namespace PhantomVault.Core.Services.Autofill
                     string.IsNullOrWhiteSpace(username) ||
                     string.IsNullOrWhiteSpace(password))
                 {
-                    return CreateErrorResponse("Missing required fields");
+                    return CreateErrorResponse("Missing required fields", message.RequestId);
                 }
 
                 var credential = new Credential
@@ -272,11 +278,11 @@ namespace PhantomVault.Core.Services.Autofill
 
                 await _credentialRepository.SaveCredentialAsync(credential, cancellationToken);
 
-                return CreateSuccessResponse(new { saved = true });
+                return CreateSuccessResponse(new { saved = true }, message.RequestId);
             }
             catch (Exception ex)
             {
-                return CreateErrorResponse($"Failed to save credential: {ex.Message}");
+                return CreateErrorResponse($"Failed to save credential: {ex.Message}", message.RequestId);
             }
         }
 
@@ -286,11 +292,11 @@ namespace PhantomVault.Core.Services.Autofill
             {
                 var data = message.Data;
                 if (!data.HasValue)
-                    return CreateErrorResponse("No data provided");
+                    return CreateErrorResponse("No data provided", message.RequestId);
 
                 var url = data.Value.GetProperty("url").GetString();
                 if (string.IsNullOrWhiteSpace(url))
-                    return CreateErrorResponse("URL not specified");
+                    return CreateErrorResponse("URL not specified", message.RequestId);
 
                 var fieldsJson = data.Value.GetProperty("fields");
                 var fields = new List<FormFieldInfo>();
@@ -324,11 +330,11 @@ namespace PhantomVault.Core.Services.Autofill
                     Fields = fields
                 });
 
-                return CreateSuccessResponse(new { detected = true, fieldCount = fields.Count });
+                return CreateSuccessResponse(new { detected = true, fieldCount = fields.Count }, message.RequestId);
             }
             catch (Exception ex)
             {
-                return CreateErrorResponse($"Failed to detect form: {ex.Message}");
+                return CreateErrorResponse($"Failed to detect form: {ex.Message}", message.RequestId);
             }
         }
 
@@ -338,11 +344,11 @@ namespace PhantomVault.Core.Services.Autofill
             {
                 var data = message.Data;
                 if (!data.HasValue)
-                    return CreateErrorResponse("No data provided");
+                    return CreateErrorResponse("No data provided", message.RequestId);
 
                 var url = data.Value.GetProperty("url").GetString();
                 if (string.IsNullOrWhiteSpace(url))
-                    return CreateErrorResponse("URL not specified");
+                    return CreateErrorResponse("URL not specified", message.RequestId);
 
                 var fieldsJson = data.Value.GetProperty("fields");
                 var fields = new List<FormFieldInfo>();
@@ -384,11 +390,11 @@ namespace PhantomVault.Core.Services.Autofill
                     FieldValues = fieldValues
                 });
 
-                return CreateSuccessResponse(new { submitted = true });
+                return CreateSuccessResponse(new { submitted = true }, message.RequestId);
             }
             catch (Exception ex)
             {
-                return CreateErrorResponse($"Failed to handle form submission: {ex.Message}");
+                return CreateErrorResponse($"Failed to handle form submission: {ex.Message}", message.RequestId);
             }
         }
 
@@ -398,11 +404,11 @@ namespace PhantomVault.Core.Services.Autofill
             if (!allowed)
             {
                 _pendingFill = null;
-                return CreateErrorResponse(reason ?? "Autofill is disabled.");
+                return CreateErrorResponse(reason ?? "Autofill is disabled.", message.RequestId);
             }
 
             if (_pendingFill is null)
-                return CreateSuccessResponse(new { hasFill = false });
+                return CreateSuccessResponse(new { hasFill = false }, message.RequestId);
 
             var fill = _pendingFill;
             _pendingFill = null;
@@ -413,7 +419,7 @@ namespace PhantomVault.Core.Services.Autofill
                 username = fill.Username,
                 password = fill.Password,
                 totpCode = fill.TotpCode
-            });
+            }, message.RequestId);
         }
 
         private string HandleDetectTotp(NativeMessage message)
@@ -422,7 +428,7 @@ namespace PhantomVault.Core.Services.Autofill
             {
                 var data = message.Data;
                 if (!data.HasValue)
-                    return CreateErrorResponse("No data provided");
+                    return CreateErrorResponse("No data provided", message.RequestId);
 
                 var url = data.Value.TryGetProperty("url", out var urlProp) ? urlProp.GetString() ?? "" : "";
                 var fieldId = data.Value.TryGetProperty("fieldId", out var idProp) ? idProp.GetString() ?? "" : "";
@@ -443,11 +449,11 @@ namespace PhantomVault.Core.Services.Autofill
                     }
                 });
 
-                return CreateSuccessResponse(new { received = true });
+                return CreateSuccessResponse(new { received = true }, message.RequestId);
             }
             catch (Exception ex)
             {
-                return CreateErrorResponse($"detectTotp error: {ex.Message}");
+                return CreateErrorResponse($"detectTotp error: {ex.Message}", message.RequestId);
             }
         }
 
@@ -485,15 +491,15 @@ namespace PhantomVault.Core.Services.Autofill
             PropertyNameCaseInsensitive = true
         };
 
-        private string HandleGetSyncState()
+        private string HandleGetSyncState(int? requestId)
         {
             if (_syncBridge == null)
-                return CreateErrorResponse("Sync is not available.");
+                return CreateErrorResponse("Sync is not available.", requestId);
 
             try
             {
                 return JsonSerializer.Serialize(
-                    new { success = true, data = _syncBridge.Read() }, SyncJsonOptions);
+                    new { success = true, data = _syncBridge.Read(), _reqId = requestId }, SyncJsonOptions);
             }
             catch (Exception ex)
             {
@@ -501,34 +507,34 @@ namespace PhantomVault.Core.Services.Autofill
             }
         }
 
-        private string HandlePushSyncState(NativeMessage message)
+        private string HandlePushSyncState(NativeMessage message, int? requestId)
         {
             if (_syncBridge == null)
-                return CreateErrorResponse("Sync is not available.");
+                return CreateErrorResponse("Sync is not available.", requestId);
 
             if (message.Data == null)
-                return CreateErrorResponse("pushSyncState requires a data payload.");
+                return CreateErrorResponse("pushSyncState requires a data payload.", requestId);
 
             try
             {
                 var incoming = JsonSerializer.Deserialize<SyncState>(
                     message.Data.Value.GetRawText(), SyncJsonOptions);
                 if (incoming == null)
-                    return CreateErrorResponse("Invalid sync payload.");
+                    return CreateErrorResponse("Invalid sync payload.", requestId);
 
                 // Defence in depth: never accept secret-bearing fields from the
                 // extension. Only theme + UI prefs are writable back to the app.
                 incoming.TotpIssuers = new System.Collections.Generic.List<string>();
                 _syncBridge.Apply(incoming);
-                return CreateSuccessResponse(new { applied = true });
+                return CreateSuccessResponse(new { applied = true }, requestId);
             }
             catch (JsonException ex)
             {
-                return CreateErrorResponse($"Invalid sync payload: {ex.Message}");
+                return CreateErrorResponse($"Invalid sync payload: {ex.Message}", requestId);
             }
             catch (Exception ex)
             {
-                return CreateErrorResponse($"Failed to apply sync state: {ex.Message}");
+                return CreateErrorResponse($"Failed to apply sync state: {ex.Message}", requestId);
             }
         }
 
@@ -565,24 +571,28 @@ namespace PhantomVault.Core.Services.Autofill
             }
         }
 
-        private string CreateSuccessResponse(object data)
+        private string CreateSuccessResponse(object data, int? requestId = null)
         {
             var response = new
             {
                 success = true,
-                data
+                data,
+                _reqId = requestId
             };
-            return JsonSerializer.Serialize(response);
+            var options = new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
+            return JsonSerializer.Serialize(response, options);
         }
 
-        private string CreateErrorResponse(string error)
+        private string CreateErrorResponse(string error, int? requestId = null)
         {
             var response = new
             {
                 success = false,
-                error
+                error,
+                _reqId = requestId
             };
-            return JsonSerializer.Serialize(response);
+            var options = new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
+            return JsonSerializer.Serialize(response, options);
         }
 
         private async Task SendMessageAsync(Stream stdout, string message, CancellationToken cancellationToken)
@@ -613,6 +623,8 @@ namespace PhantomVault.Core.Services.Autofill
         {
             public string Type { get; set; } = string.Empty;
             public string? Origin { get; set; }
+            [JsonPropertyName("_reqId")]
+            public int? RequestId { get; set; }
             public JsonElement? Data { get; set; }
         }
 

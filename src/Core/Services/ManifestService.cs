@@ -539,6 +539,19 @@ namespace PhantomVault.Core.Services
             if (manifest == null) throw new ArgumentNullException(nameof(manifest));
             if (key == null || key.Length < 32) throw new ArgumentException("Signing key must be at least 32 bytes", nameof(key));
 
+            byte[] dataBytes = BuildCanonicalManifestBytes(manifest);
+            byte[] hmac = HMACSHA256.HashData(key, dataBytes);
+            return Convert.ToBase64String(hmac);
+        }
+
+        /// <summary>
+        /// Builds the canonical, deterministic byte representation of a manifest's
+        /// security-relevant fields. Used by both the HMAC integrity signature and
+        /// the asymmetric Ed25519 manifest signature so the two schemes cover the
+        /// exact same data. Signature fields themselves are excluded.
+        /// </summary>
+        private static byte[] BuildCanonicalManifestBytes(VaultManifest manifest)
+        {
             var canonicalData = new StringBuilder();
             canonicalData.Append(manifest.ContainerPath ?? string.Empty);
             canonicalData.Append('|');
@@ -567,10 +580,11 @@ namespace PhantomVault.Core.Services
             canonicalData.Append(manifest.PhantomKeyBridgePolicyPath ?? string.Empty);
             canonicalData.Append('|');
             canonicalData.Append(manifest.PhantomKeyBridgeContinuityPath ?? string.Empty);
+            canonicalData.Append('|');
+            // Bind the signing public key so an attacker cannot swap in their own key.
+            canonicalData.Append(manifest.ManifestSigningPublicKeyBase64 ?? string.Empty);
 
-            byte[] dataBytes = Encoding.UTF8.GetBytes(canonicalData.ToString());
-            byte[] hmac = HMACSHA256.HashData(key, dataBytes);
-            return Convert.ToBase64String(hmac);
+            return Encoding.UTF8.GetBytes(canonicalData.ToString());
         }
 
         public static bool VerifyIntegritySignature(VaultManifest manifest, byte[] key, bool requireSignature = false)
@@ -607,6 +621,57 @@ namespace PhantomVault.Core.Services
 
             manifest.IntegritySignatureBase64 = ComputeIntegritySignature(manifest, key);
             manifest.SignatureTimestamp = DateTimeOffset.UtcNow;
+        }
+
+        /// <summary>
+        /// Signs the manifest asymmetrically with the vault's Ed25519 signing key.
+        /// The public key is embedded in the manifest so any enrolled device can
+        /// verify authenticity, while only a holder of <paramref name="signingPrivateKey"/>
+        /// (an owner device) can mint a valid signature. Increments the manifest
+        /// sequence to preserve anti-rollback semantics.
+        /// </summary>
+        public static void SignManifestEd25519(VaultManifest manifest, byte[] signingPrivateKey, byte[] signingPublicKey)
+        {
+            if (manifest == null) throw new ArgumentNullException(nameof(manifest));
+            if (signingPrivateKey == null || signingPrivateKey.Length == 0) throw new ArgumentException("Signing private key must not be empty", nameof(signingPrivateKey));
+            if (signingPublicKey == null || signingPublicKey.Length == 0) throw new ArgumentException("Signing public key must not be empty", nameof(signingPublicKey));
+
+            manifest.ManifestSequence++;
+            manifest.ManifestSigningPublicKeyBase64 = Convert.ToBase64String(signingPublicKey);
+
+            byte[] canonical = BuildCanonicalManifestBytes(manifest);
+            byte[] signature = GiblexVault.Security.ZK.Keys.UserKeys.Sign(canonical, signingPrivateKey);
+            manifest.ManifestEd25519SignatureBase64 = Convert.ToBase64String(signature);
+            manifest.SignatureTimestamp = DateTimeOffset.UtcNow;
+        }
+
+        /// <summary>
+        /// Verifies the manifest's Ed25519 signature against its embedded signing
+        /// public key. Returns true (no asymmetric signature present) when
+        /// <paramref name="requireSignature"/> is false, allowing legacy HMAC-only
+        /// manifests to load. Throws on tamper.
+        /// </summary>
+        public static bool VerifyManifestEd25519(VaultManifest manifest, bool requireSignature = false)
+        {
+            if (manifest == null) throw new ArgumentNullException(nameof(manifest));
+
+            bool hasSig = !string.IsNullOrEmpty(manifest.ManifestEd25519SignatureBase64)
+                          && !string.IsNullOrEmpty(manifest.ManifestSigningPublicKeyBase64);
+            if (!hasSig)
+            {
+                if (requireSignature)
+                    throw new SecurityException("Manifest asymmetric signature is required but missing.");
+                return true;
+            }
+
+            byte[] canonical = BuildCanonicalManifestBytes(manifest);
+            byte[] signature = Convert.FromBase64String(manifest.ManifestEd25519SignatureBase64!);
+            byte[] publicKey = Convert.FromBase64String(manifest.ManifestSigningPublicKeyBase64!);
+
+            if (!GiblexVault.Security.ZK.Keys.UserKeys.Verify(canonical, signature, publicKey))
+                throw new SecurityException("Manifest asymmetric signature verification failed. The manifest may have been tampered with.");
+
+            return true;
         }
 
         public static void VerifyAntiRollback(VaultManifest manifest, long lastKnownSequence)
@@ -698,4 +763,5 @@ namespace PhantomVault.Core.Services
         }
     }
 }
+
 

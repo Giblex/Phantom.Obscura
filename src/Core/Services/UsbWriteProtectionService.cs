@@ -7,6 +7,7 @@ using System.Runtime.Versioning;
 #endif
 using System.Text;
 using PhantomVault.Core.Models;
+using PhantomVault.Core.Services.Privileged;
 
 namespace PhantomVault.Core.Services
 {
@@ -52,6 +53,11 @@ namespace PhantomVault.Core.Services
             if (string.IsNullOrEmpty(driveRoot)) throw new ArgumentException(nameof(driveRoot));
             if (state == null) throw new ArgumentNullException(nameof(state));
 
+            if (PrivilegedExecution.ShouldBroker)
+                return PrivilegedExecution.Broker!.ApplyProtection(driveRoot, state);
+            if (OperatingSystem.IsWindows() && PrivilegedExecution.RequiresBrokerButMissing)
+                throw new PrivilegedBrokerUnavailableException();
+
             TryWriteSentinels(driveRoot, state);
 
             if (!OperatingSystem.IsWindows()) return false;
@@ -78,6 +84,11 @@ namespace PhantomVault.Core.Services
         {
             if (string.IsNullOrEmpty(driveRoot)) throw new ArgumentException(nameof(driveRoot));
             if (!OperatingSystem.IsWindows()) return false;
+
+            if (PrivilegedExecution.ShouldBroker)
+                return PrivilegedExecution.Broker!.EnableWriteAccess(driveRoot);
+            if (PrivilegedExecution.RequiresBrokerButMissing)
+                throw new PrivilegedBrokerUnavailableException();
 
             try
             {
@@ -147,6 +158,11 @@ namespace PhantomVault.Core.Services
         {
             if (string.IsNullOrEmpty(driveRoot)) throw new ArgumentException(nameof(driveRoot));
             if (!OperatingSystem.IsWindows()) return false;
+
+            if (PrivilegedExecution.ShouldBroker)
+                return PrivilegedExecution.Broker!.DisableWriteAccess(driveRoot);
+            if (PrivilegedExecution.RequiresBrokerButMissing)
+                throw new PrivilegedBrokerUnavailableException();
 
             try
             {

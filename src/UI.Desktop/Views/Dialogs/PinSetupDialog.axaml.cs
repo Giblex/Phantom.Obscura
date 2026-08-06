@@ -1,9 +1,10 @@
 using Avalonia.Controls;
 using PhantomVault.UI.ViewModels.Dialogs;
+using PhantomVault.UI.Views;
 
 namespace PhantomVault.UI.Views.Dialogs
 {
-    public partial class PinSetupDialog : Window
+    public partial class PinSetupDialog : ThemeAwareWindow
     {
         public PinSetupDialog()
         {

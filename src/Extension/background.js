@@ -174,6 +174,15 @@ async function handleMessage(message, sender) {
       }
     }
 
+    case 'fill': {
+      try {
+        const resp = await sendToNativeHost({ type: 'fill' });
+        return resp;
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    }
+
     case 'getSyncState': {
       try {
         const resp = await sendToNativeHost({ type: 'getSyncState' });

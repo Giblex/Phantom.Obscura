@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Phantom Obscura Privileged Helper.
+
+    A minimal, headless Windows service that runs as LocalSystem and performs the
+    few operations that genuinely require administrator rights (diskpart /
+    MSFT_Partition attribute changes and raw \\.\PhysicalDrive I/O) on behalf of
+    the non-elevated desktop UI. The UI talks to it over a hardened named pipe,
+    so the app can ship asInvoker and never needs a per-launch UAC prompt.
+
+    Security posture:
+      * LocalSystem, auto-start, no network listeners — pipe only.
+      * Pipe ACL restricts access; the server additionally verifies the connecting
+        client process image path against the allow-listed UI executable.
+      * Only the BrokerOperation set is reachable; no arbitrary command surface.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Deterministic>true</Deterministic>
+    <RootNamespace>PhantomVault.PrivilegedBroker</RootNamespace>
+    <AssemblyName>PhantomVault.PrivilegedBroker</AssemblyName>
+    <!-- Helper executable: keep warnings visible but non-blocking for the build. -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Core\PhantomVault.Core.csproj" />
+  </ItemGroup>
+
+  <!-- Opt-in Authenticode signing for Release publish. Critical for this
+       binary because callers Authenticode-verify each other's signatures
+       via WinVerifyTrust; an unsigned broker in Release refuses all clients. -->
+  <Import Project="..\..\..\Phantom.Root\build\SignPublishOutput.targets" />
+
+</Project>

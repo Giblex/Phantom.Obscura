@@ -3,13 +3,14 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:PhantomVault.UI.ViewModels"
         xmlns:views="clr-namespace:PhantomVault.UI.Views"
+        xmlns:conv="clr-namespace:PhantomVault.UI.Converters"
         x:Class="PhantomVault.UI.Views.VaultUnlockWindow"
         x:DataType="vm:VaultUnlockViewModel"
         Title="Unlocking Vault"
         Width="520"
-        Height="340"
+        Height="440"
         MinWidth="450"
-        MinHeight="250"
+        MinHeight="380"
         CanResize="False"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource WindowBackgroundBrush}"
@@ -25,6 +26,7 @@
             <SolidColorBrush x:Key="UnlockAccentBrush" Color="#5D7DA7"/>
             <SolidColorBrush x:Key="UnlockTrackBrush" Color="#13202D"/>
             <SolidColorBrush x:Key="UnlockOrbBrush" Color="#173247"/>
+            <conv:PercentToRingDashConverter x:Key="PercentToRingDashConverter"/>
         </ResourceDictionary>
     </views:ThemeAwareWindow.Resources>
 
@@ -51,7 +53,7 @@
         </Style>
 
         <Style Selector="Ellipse.unlock-ring">
-            <Setter Property="Opacity" Value="0.6"/>
+            <Setter Property="Opacity" Value="0.95"/>
         </Style>
     </views:ThemeAwareWindow.Styles>
 
@@ -77,12 +79,17 @@
                     Spacing="22"
                     VerticalAlignment="Center">
 
-            <Grid Width="92" Height="92" HorizontalAlignment="Center" IsVisible="{Binding IsBusy}">
+            <Grid Width="132" Height="132" HorizontalAlignment="Center" IsVisible="{Binding IsBusy}">
 
                 <Ellipse Classes="unlock-ring"
-                         Width="92" Height="92"
-                         StrokeThickness="2"
-                         StrokeDashArray="3,6">
+                         Width="132" Height="132"
+                         StrokeThickness="5"
+                         StrokeLineCap="Round"
+                         StrokeDashArray="{Binding ProgressPercent, Converter={StaticResource PercentToRingDashConverter}, ConverterParameter='132|5'}"
+                         RenderTransformOrigin="50%,50%">
+                    <Ellipse.RenderTransform>
+                        <RotateTransform Angle="-90"/>
+                    </Ellipse.RenderTransform>
                     <Ellipse.Stroke>
                         <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
                             <GradientStop Offset="0" Color="#5D7DA7"/>
@@ -92,18 +99,11 @@
                     </Ellipse.Stroke>
                 </Ellipse>
 
-                <Border Classes="unlock-orb"
-                        Width="70"
-                        Height="70"
-                        CornerRadius="35"
-                        Background="{DynamicResource UnlockOrbBrush}"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center">
-                    <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
-                           Width="42" Height="42"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center"/>
-                </Border>
+                <!-- Logo sits inside the loading ring — no circular tile behind it. -->
+                <Image Source="avares://PhantomVault.UI/Assets/ok.png"
+                       Width="80" Height="80"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"/>
             </Grid>
 
             <TextBlock Text="{Binding Status}"

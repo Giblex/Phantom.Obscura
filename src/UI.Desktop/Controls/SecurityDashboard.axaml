@@ -41,7 +41,13 @@
                             Command="{Binding OpenSecurityDashboardWindowCommand}"
                             ToolTip.Tip="Open full security dashboard">
                         <StackPanel Spacing="8" HorizontalAlignment="Center">
-                            <TextBlock Text="📊" FontSize="24" TextAlignment="Center"/>
+                            <Path Data="{StaticResource Icon.FileText}"
+                                  Width="22" Height="22" Stretch="Uniform"
+                                  HorizontalAlignment="Center"
+                                  Stroke="{DynamicResource PrimaryTextBrush}"
+                                  StrokeThickness="1.5"
+                                  StrokeLineCap="Round"
+                                  Fill="Transparent"/>
                             <TextBlock Text="Full" FontSize="12" TextAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
                             <TextBlock Text="Report" FontSize="12" TextAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
                         </StackPanel>
@@ -52,17 +58,20 @@
 
                 <StackPanel Orientation="Horizontal" Spacing="16">
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="✓" Foreground="{DynamicResource SuccessBrush}" FontWeight="Bold"/>
+                        <Path Data="{StaticResource Icon.Check}" Width="13" Height="13" Stretch="Uniform"
+                              Stroke="{DynamicResource SuccessBrush}" StrokeThickness="2.2" StrokeLineCap="Round" StrokeJoin="Round" Fill="Transparent"/>
                         <TextBlock Text="{Binding TwoFactorEnabledCount}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
                         <TextBlock Text="2FA" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="⚠" Foreground="{DynamicResource WarningBrush}"/>
+                        <Path Data="{StaticResource Icon.AlertTriangle}" Width="14" Height="14" Stretch="Uniform"
+                              Stroke="{DynamicResource WarningBrush}" StrokeThickness="1.8" StrokeLineCap="Round" StrokeJoin="Round" Fill="Transparent"/>
                         <TextBlock Text="{Binding WeakCredentials.Count}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
                         <TextBlock Text="weak" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="✕" Foreground="{DynamicResource ErrorBrush}" FontWeight="Bold"/>
+                        <Path Data="{StaticResource Icon.X}" Width="13" Height="13" Stretch="Uniform"
+                              Stroke="{DynamicResource ErrorBrush}" StrokeThickness="2.2" StrokeLineCap="Round" Fill="Transparent"/>
                         <TextBlock Text="{Binding BreachedPasswordCount}" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
                         <TextBlock Text="breached" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}"/>
                     </StackPanel>

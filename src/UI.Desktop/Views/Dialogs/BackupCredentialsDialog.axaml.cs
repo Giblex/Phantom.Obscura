@@ -5,10 +5,11 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Avalonia.Markup.Xaml;
+using PhantomVault.UI.Views;
 
 namespace PhantomVault.UI.Views.Dialogs
 {
-    public partial class BackupCredentialsDialog : Window
+    public partial class BackupCredentialsDialog : ThemeAwareWindow
     {
         public record Result(string? Passphrase, string? KeyfilePath, string Pin);
 

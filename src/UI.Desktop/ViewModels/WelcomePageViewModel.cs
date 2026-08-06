@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using PhantomVault.Core.Services;
+using PhantomVault.Core.Services.Privileged;
 using PhantomVault.UI.Models;
 using PhantomVault.UI.Services;
 using ReactiveUI;
@@ -94,6 +95,18 @@ namespace PhantomVault.UI.ViewModels
             _ownerWindow = window;
         }
 
+        /// <summary>
+        /// Stops the background USB/vault scan. Call this once the welcome page is
+        /// hidden behind a vault or setup window — hiding alone leaves the 2-second
+        /// timer running for the rest of the app's life, which keeps hammering the
+        /// privileged broker (and, if it's not installed, kept popping the "Enable
+        /// privileged helper" dialog on every tick).
+        /// </summary>
+        public void StopScanning()
+        {
+            _scanTimer.Stop();
+        }
+
         public string AppName => "Phantom Obscura";
         public string AppVersion => "5.0.0";
         public string WelcomeMessage => "USB-bound post-quantum vault protection";
@@ -110,6 +123,28 @@ namespace PhantomVault.UI.ViewModels
         public bool IsLandingVisible => !IsSetupChoiceVisible;
 
         public ObservableCollection<DetectedVaultLaunchRequest> DetectedVaults { get; }
+
+        // Hard cap on how many vaults the user can load at once.
+        public const int MaxVaultSlots = 3;
+
+        // Fixed-width slot accessors so the welcome page can render three
+        // slots even when there are fewer detected vaults (null → empty slot).
+        public DetectedVaultLaunchRequest? Slot1 => DetectedVaults.ElementAtOrDefault(0);
+        public DetectedVaultLaunchRequest? Slot2 => DetectedVaults.ElementAtOrDefault(1);
+        public DetectedVaultLaunchRequest? Slot3 => DetectedVaults.ElementAtOrDefault(2);
+        public bool Slot1HasVault => Slot1 != null;
+        public bool Slot2HasVault => Slot2 != null;
+        public bool Slot3HasVault => Slot3 != null;
+
+        private void RaiseSlotChanges()
+        {
+            this.RaisePropertyChanged(nameof(Slot1));
+            this.RaisePropertyChanged(nameof(Slot2));
+            this.RaisePropertyChanged(nameof(Slot3));
+            this.RaisePropertyChanged(nameof(Slot1HasVault));
+            this.RaisePropertyChanged(nameof(Slot2HasVault));
+            this.RaisePropertyChanged(nameof(Slot3HasVault));
+        }
 
         public bool IsCheckingForVault
         {
@@ -170,8 +205,8 @@ namespace PhantomVault.UI.ViewModels
         public bool ShowVaultPicker => HasRecognizedVaults && DetectedVaults.Count > 0;
         public bool HasSelectedVault => SelectedVault != null;
 
-        public string OpenVaultButtonText => HasRecognizedVaults
-            ? "Open selected vault"
+        public string OpenVaultButtonText => HasSelectedVault
+            ? "Open"
             : "Access your vault";
 
         public string GetStartedButtonText => HasUsbDevice && !HasRecognizedVaults
@@ -236,17 +271,9 @@ namespace PhantomVault.UI.ViewModels
 
                 if (removableDrives.Count == 0)
                 {
-                    var rawVaults = await DiscoverRawVaultsAsync().ConfigureAwait(false);
-                    var localVaults = DiscoverKnownLocalVaults();
-                    var allNoUsbVaults = rawVaults.Concat(localVaults).ToList();
-                    if (allNoUsbVaults.Count == 0)
-                    {
-                        ApplyNoUsbState();
-                        return;
-                    }
-
-                    await EnsureDetectionPresentationDelayAsync(BuildDetectionSignature(allNoUsbVaults), true).ConfigureAwait(false);
-                    ApplyRecognizedVaultState(allNoUsbVaults);
+                    // USB-only policy: no removable drive → nothing to show.
+                    // Local vaults on disk are no longer surfaced in the slot picker.
+                    ApplyNoUsbState();
                     return;
                 }
 
@@ -263,15 +290,7 @@ namespace PhantomVault.UI.ViewModels
 
                 if (discoveredVaults.Count == 0)
                 {
-
-                    var localFallback = DiscoverKnownLocalVaults();
-                    if (localFallback.Count > 0)
-                    {
-                        await EnsureDetectionPresentationDelayAsync(BuildDetectionSignature(localFallback), true).ConfigureAwait(false);
-                        ApplyRecognizedVaultState(localFallback);
-                        return;
-                    }
-
+                    // USB-only policy: never fall back to local-disk vaults.
                     await EnsureDetectionPresentationDelayAsync($"unrecognized:{removableDrives[0]}", true).ConfigureAwait(false);
                     ApplyUnrecognizedUsbState(removableDrives[0]);
                     return;
@@ -280,6 +299,12 @@ namespace PhantomVault.UI.ViewModels
                 await EnsureDetectionPresentationDelayAsync(BuildDetectionSignature(discoveredVaults), true).ConfigureAwait(false);
                 ApplyRecognizedVaultState(discoveredVaults);
                 _ = TryAutoOpenSelectedVaultAsync();
+            }
+            catch (PrivilegedBrokerUnavailableException)
+            {
+                // Background detection is best-effort and must stay silent when the privileged
+                // helper isn't installed — surfacing it as a modal turns into a per-scan nag.
+                ApplyNoUsbState();
             }
             catch (Exception ex)
             {
@@ -315,6 +340,7 @@ namespace PhantomVault.UI.ViewModels
             DeviceLinkDetail = "Insert a removable drive to create a new vault or open an existing one.";
             StatusMessage = "Please insert a USB device";
             DetectedVaults.Clear();
+            RaiseSlotChanges();
             SelectedVault = null;
             this.RaisePropertyChanged(nameof(DetectedVaultPathDisplay));
             this.RaisePropertyChanged(nameof(UsbDisplayName));
@@ -335,6 +361,7 @@ namespace PhantomVault.UI.ViewModels
             DeviceLinkDetail = "This USB is not recognized by Phantom Obscura yet. You can proceed to set up the device now.";
             StatusMessage = "USB device detected";
             DetectedVaults.Clear();
+            RaiseSlotChanges();
             SelectedVault = null;
             this.RaisePropertyChanged(nameof(DetectedVaultPathDisplay));
             this.RaisePropertyChanged(nameof(UsbDisplayName));
@@ -344,7 +371,6 @@ namespace PhantomVault.UI.ViewModels
 
         private void ApplyRecognizedVaultState(IReadOnlyList<DetectedVaultLaunchRequest> discoveredVaults)
         {
-            HasUsbDevice = true;
             HasRecognizedVaults = true;
             HasExistingVault = true;
             IsDeviceDetectionActive = false;
@@ -352,23 +378,40 @@ namespace PhantomVault.UI.ViewModels
 
             var previousSelection = SelectedVault?.VaultPath;
             DetectedVaults.Clear();
-            foreach (var vault in discoveredVaults)
+            // Cap at MaxVaultSlots so the fixed 3-slot UI never has to scroll
+            // or hide overflow — extras beyond the cap are dropped from the picker.
+            foreach (var vault in discoveredVaults.Take(MaxVaultSlots))
             {
                 DetectedVaults.Add(vault);
             }
+            RaiseSlotChanges();
 
             SelectedVault = DetectedVaults.FirstOrDefault(v => string.Equals(v.VaultPath, previousSelection, StringComparison.OrdinalIgnoreCase))
                 ?? DetectedVaults.FirstOrDefault();
 
             if (SelectedVault != null)
             {
+                // A vault entry with a null UsbPath (see DiscoverKnownLocalVaults) is stored
+                // locally, not on a physical device — no USB was actually detected for it, so
+                // don't claim otherwise in HasUsbDevice/headline/status.
+                bool isDeviceBacked = SelectedVault.UsbPath != null;
+                HasUsbDevice = isDeviceBacked;
                 _detectedUsbPath = SelectedVault.UsbPath;
                 _detectedUsbDisplayName = SelectedVault.UsbDisplayName;
-                DeviceLinkHeadline = $"Detected USB: {SelectedVault.UsbDisplayName}";
+
+                DeviceLinkHeadline = isDeviceBacked
+                    ? $"Detected USB: {SelectedVault.UsbDisplayName}"
+                    : "Local vault found";
                 DeviceLinkDetail = DetectedVaults.Count > 1
                     ? "Select a vault from the list below, then open it."
-                    : "Recognized vault ready. If the linked device authenticator is available, Phantom Obscura will continue into verification automatically.";
-                StatusMessage = "USB device detected";
+                    : isDeviceBacked
+                        ? "Recognized vault ready. If the linked device authenticator is available, Phantom Obscura will continue into verification automatically."
+                        : "Recognized local vault ready. Open it to continue.";
+                StatusMessage = isDeviceBacked ? "USB device detected" : "Local vault found";
+            }
+            else
+            {
+                HasUsbDevice = false;
             }
 
             this.RaisePropertyChanged(nameof(DetectedVaultPathDisplay));
@@ -584,6 +627,7 @@ namespace PhantomVault.UI.ViewModels
             var packedVaults = new List<DetectedVaultLaunchRequest>();
             var candidatePaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
+            AddPackedVaultCandidate(candidatePaths, PhantomDeviceLayout.GetSystemVolumePath(driveRoot));
             AddPackedVaultCandidate(candidatePaths, Path.Combine(driveRoot, "system.bin"));
             AddPackedVaultCandidate(candidatePaths, Path.Combine(driveRoot, ".phantom", "obscura.vol"));
 
@@ -632,23 +676,34 @@ namespace PhantomVault.UI.ViewModels
         {
             var vaults = new List<DetectedVaultLaunchRequest>();
 
-            foreach (var rawSelection in _blackSecureRawVolumeService.GetSelectableRawDevices())
+            try
             {
-                var physicalDrivePath = _blackSecureRawVolumeService.TryResolvePhysicalDevicePathFromSelection(rawSelection);
-                if (string.IsNullOrWhiteSpace(physicalDrivePath))
-                    continue;
-
-                if (!await _blackSecureRawVolumeService.IsBlackSecureVolumeAsync(physicalDrivePath).ConfigureAwait(false))
-                    continue;
-
-                vaults.Add(new DetectedVaultLaunchRequest
+                foreach (var rawSelection in _blackSecureRawVolumeService.GetSelectableRawDevices())
                 {
-                    UsbPath = rawSelection,
-                    UsbDisplayName = rawSelection,
-                    VaultPath = rawSelection,
-                    DisplayName = "Phantom Secured vault",
-                    AutoOpenEligible = false
-                });
+                    var physicalDrivePath = _blackSecureRawVolumeService.TryResolvePhysicalDevicePathFromSelection(rawSelection);
+                    if (string.IsNullOrWhiteSpace(physicalDrivePath))
+                        continue;
+
+                    if (!await _blackSecureRawVolumeService.IsBlackSecureVolumeAsync(physicalDrivePath).ConfigureAwait(false))
+                        continue;
+
+                    vaults.Add(new DetectedVaultLaunchRequest
+                    {
+                        UsbPath = rawSelection,
+                        UsbDisplayName = rawSelection,
+                        VaultPath = rawSelection,
+                        DisplayName = "Phantom Secured vault",
+                        AutoOpenEligible = false
+                    });
+                }
+            }
+            catch (PrivilegedBrokerUnavailableException)
+            {
+                // Passive welcome-page detection must never demand elevation. Probing raw
+                // physical volumes needs the privileged helper, but the only tier that used
+                // them ("Phantom Secured"/BlackSecure) has been retired — so a missing helper
+                // here simply means there are no legacy raw vaults to surface. Degrade
+                // silently rather than popping the "Vault Detection Error" nag on every scan.
             }
 
             return vaults;
@@ -711,6 +766,7 @@ namespace PhantomVault.UI.ViewModels
         {
             var candidates = new[]
             {
+                PhantomDeviceLayout.GetSystemVolumePath(usbPath),
                 Path.Combine(usbPath, "system.bin"),
                 Path.Combine(usbPath, ".phantom", "obscura.vol")
             };

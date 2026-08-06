@@ -107,9 +107,15 @@
         <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
     </Style>
 
+    <!-- Was a fixed navy (#26385C) regardless of theme; now tracks UserAccentBrush (the live
+         custom-accent-picker resource from ThemeManagerService.SetAccentColor), matching the
+         Settings Save button, so it responds when the user picks a colour from the accent
+         dropdown — AccentBrush only updates on a theme/skin switch, not a picker selection.
+         Hover/pressed use opacity rather than a separate resource, since there's no dedicated
+         "hover" variant of UserAccentBrush. -->
     <Style Selector="Button.dull-blue">
-        <Setter Property="Background" Value="#26385C" />
-        <Setter Property="BorderBrush" Value="#26385C" />
+        <Setter Property="Background" Value="{DynamicResource UserAccentBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource UserAccentBrush}" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
         <Setter Property="CornerRadius" Value="10" />
@@ -130,28 +136,30 @@
     </Style>
 
     <Style Selector="Button.dull-blue /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="#26385C" />
-        <Setter Property="BorderBrush" Value="#26385C" />
+        <Setter Property="Background" Value="{DynamicResource UserAccentBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource UserAccentBrush}" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="CornerRadius" Value="10" />
     </Style>
 
     <Style Selector="Button.dull-blue:pointerover">
-        <Setter Property="Background" Value="#2F4470" />
-        <Setter Property="BorderBrush" Value="#2F4470" />
+        <Setter Property="Background" Value="{DynamicResource UserAccentBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource UserAccentBrush}" />
+        <Setter Property="Opacity" Value="0.88" />
     </Style>
     <Style Selector="Button.dull-blue:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="#2F4470" />
-        <Setter Property="BorderBrush" Value="#2F4470" />
+        <Setter Property="Background" Value="{DynamicResource UserAccentBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource UserAccentBrush}" />
     </Style>
 
     <Style Selector="Button.dull-blue:pressed">
-        <Setter Property="Background" Value="#1F2E4A" />
-        <Setter Property="BorderBrush" Value="#1F2E4A" />
+        <Setter Property="Background" Value="{DynamicResource UserAccentBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource UserAccentBrush}" />
+        <Setter Property="Opacity" Value="0.75" />
     </Style>
     <Style Selector="Button.dull-blue:pressed /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="#1F2E4A" />
-        <Setter Property="BorderBrush" Value="#1F2E4A" />
+        <Setter Property="Background" Value="{DynamicResource UserAccentBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource UserAccentBrush}" />
     </Style>
 
     <Style Selector="Button.dull-blue:disabled">

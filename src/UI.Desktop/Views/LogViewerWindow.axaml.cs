@@ -4,7 +4,7 @@ using PhantomVault.UI.ViewModels;
 
 namespace PhantomVault.UI.Views
 {
-    public partial class LogViewerWindow : Window
+    public partial class LogViewerWindow : ThemeAwareWindow
     {
         public LogViewerWindow()
         {

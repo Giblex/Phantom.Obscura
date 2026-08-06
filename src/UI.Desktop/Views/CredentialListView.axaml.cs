@@ -12,7 +12,11 @@ namespace PhantomVault.UI.Views;
 public partial class CredentialListView : UserControl
 {
 
-    private const double MinTileWidth = 240;
+    // Grid view targets 3 columns by default. We only drop to 2 (then 1) once the
+    // per-tile slot would fall below MinTileWidth — that way the panel keeps 3 columns
+    // even when it's narrower than 3×MinTileWidth as long as tiles can still render.
+    private const double MinTileWidth = 132;
+    private const int TargetColumns = 3;
 
     private ScrollViewer? _scrollViewer;
     private ItemsControl? _gridItemsControl;
@@ -93,7 +97,14 @@ public partial class CredentialListView : UserControl
 
         available -= 18;
 
-        int columns = Math.Max(1, (int)(available / MinTileWidth));
+        // Prefer TargetColumns; step down only if that would shrink each tile below
+        // MinTileWidth. Below 1 column just clamps to 1.
+        int columns = TargetColumns;
+        while (columns > 1 && (available / columns) < MinTileWidth)
+        {
+            columns--;
+        }
+
         double itemWidth = Math.Floor(available / columns);
 
         if (Math.Abs(_gridWrapPanel.ItemWidth - itemWidth) > 1)

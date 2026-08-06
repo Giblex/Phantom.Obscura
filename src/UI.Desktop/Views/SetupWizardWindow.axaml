@@ -23,6 +23,14 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://PhantomVault.UI/Assets/Themes/PreVaultTheme.axaml"/>
             </ResourceDictionary.MergedDictionaries>
+
+            <!-- Remove the Fluent ComboBox popup's default light background/border
+                 that showed as white strips on each end of the dropdown list. -->
+            <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#0C1620"/>
+            <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="#4C6170"/>
+            <SolidColorBrush x:Key="ComboBoxDropDownForeground" Color="#ECF7FB"/>
+            <Thickness x:Key="ComboBoxDropdownBorderPadding">0</Thickness>
+            <Thickness x:Key="ComboBoxDropdownContentMargin">0</Thickness>
         </ResourceDictionary>
     </views:ThemeAwareWindow.Resources>
 
@@ -108,6 +116,14 @@
             <Setter Property="BorderBrush" Value="Transparent"/>
         </Style>
 
+        <!-- Flyout chrome: liquid-glass instead of the default (yellow) accent border. -->
+        <Style Selector="FlyoutPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="CornerRadius" Value="14"/>
+        </Style>
+
         <Style Selector="RadioButton:checked /template/ Ellipse#CheckGlyph">
             <Setter Property="Fill" Value="#ECF7FB"/>
         </Style>
@@ -178,33 +194,34 @@
 
     <Grid RowDefinitions="Auto,*,Auto">
 
-        <Border Grid.Row="0" Background="{DynamicResource HeaderBackgroundBrush}" Padding="24,20,24,18">
-            <Grid RowDefinitions="Auto,Auto,Auto">
+        <!-- Dot-grid overlay across the whole wizard (matches welcome + vault header). -->
+        <Border Grid.Row="0" Grid.RowSpan="3"
+                IsHitTestVisible="False"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch">
+            <Border.Background>
+                <ImageBrush Source="avares://PhantomVault.UI/Assets/dot_pattern.png"
+                            TileMode="Tile"
+                            Stretch="None"
+                            SourceRect="0,0,8,8"
+                            DestinationRect="0,0,8,8"/>
+            </Border.Background>
+        </Border>
 
-                <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="14" Margin="0,0,0,18">
-                    <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
-                           Width="74" Height="74" Stretch="Uniform" VerticalAlignment="Center"/>
-                    <TextBlock Text="Phantom Obscura Setup Wizard"
-                               FontSize="{StaticResource Type.H2.Size}"
-                               FontFamily="{DynamicResource TitleFontFamily}"
-                               FontWeight="Normal"
-                               Foreground="{DynamicResource PrimaryTextBrush}"
-                               VerticalAlignment="Center"/>
-                </StackPanel>
-
-                <Grid Grid.Row="1" Margin="8,0,8,14">
+        <Border Grid.Row="0" Background="#400F1A2E" Padding="24,6,24,6">
+            <Grid Margin="8,0,8,0" HorizontalAlignment="Center">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <Button Grid.Column="0" Classes="step-btn"
+                    <Button Grid.Column="0" Classes="step-btn" Width="96"
                             Command="{Binding GoToStepCommand}" CommandParameter="1"
                             IsEnabled="{Binding CurrentStep, Converter={x:Static views:StepClickableConverter.Instance}, ConverterParameter=1}"
                             Background="Transparent" BorderThickness="0" Padding="0"
@@ -213,7 +230,7 @@
                         <StackPanel HorizontalAlignment="Center" Spacing="8">
                             <Border Width="44" Height="44" CornerRadius="22"
                                     Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=1}"
-                                    BorderBrush="#4BFFFFFF" BorderThickness="2">
+                                    BorderBrush="#18FFFFFF" BorderThickness="2">
                                 <controls:SvgIcon Preset="Info" IconColor="White" IconSize="20"
                                                   Width="20" Height="20"
                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -224,7 +241,7 @@
                         </StackPanel>
                     </Button>
 
-                    <Button Grid.Column="1" Classes="step-btn"
+                    <Button Grid.Column="1" Classes="step-btn" Width="96"
                             Command="{Binding GoToStepCommand}" CommandParameter="2"
                             IsEnabled="{Binding CurrentStep, Converter={x:Static views:StepClickableConverter.Instance}, ConverterParameter=2}"
                             Background="Transparent" BorderThickness="0" Padding="0"
@@ -233,8 +250,8 @@
                         <StackPanel HorizontalAlignment="Center" Spacing="8">
                             <Border Width="44" Height="44" CornerRadius="22"
                                     Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=2}"
-                                    BorderBrush="#4BFFFFFF" BorderThickness="2">
-                                <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Password Strength.svg" IconColor="White" IconSize="20"
+                                    BorderBrush="#18FFFFFF" BorderThickness="2">
+                                <controls:SvgIcon Preset="Star" IconColor="White" IconSize="20"
                                                   Width="20" Height="20"
                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
@@ -244,7 +261,7 @@
                         </StackPanel>
                     </Button>
 
-                    <Button Grid.Column="2" Classes="step-btn"
+                    <Button Grid.Column="2" Classes="step-btn" Width="96"
                             Command="{Binding GoToStepCommand}" CommandParameter="3"
                             IsEnabled="{Binding CurrentStep, Converter={x:Static views:StepClickableConverter.Instance}, ConverterParameter=3}"
                             Background="Transparent" BorderThickness="0" Padding="0"
@@ -253,7 +270,7 @@
                         <StackPanel HorizontalAlignment="Center" Spacing="8">
                             <Border Width="44" Height="44" CornerRadius="22"
                                     Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=3}"
-                                    BorderBrush="#4BFFFFFF" BorderThickness="2">
+                                    BorderBrush="#18FFFFFF" BorderThickness="2">
                                 <controls:SvgIcon Preset="Shield" IconColor="White" IconSize="20"
                                                   Width="20" Height="20"
                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -264,7 +281,7 @@
                         </StackPanel>
                     </Button>
 
-                    <Button Grid.Column="3" Classes="step-btn"
+                    <Button Grid.Column="3" Classes="step-btn" Width="96"
                             Command="{Binding GoToStepCommand}" CommandParameter="4"
                             IsEnabled="{Binding CurrentStep, Converter={x:Static views:StepClickableConverter.Instance}, ConverterParameter=4}"
                             Background="Transparent" BorderThickness="0" Padding="0"
@@ -273,8 +290,8 @@
                         <StackPanel HorizontalAlignment="Center" Spacing="8">
                             <Border Width="44" Height="44" CornerRadius="22"
                                     Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=4}"
-                                    BorderBrush="#4BFFFFFF" BorderThickness="2">
-                                <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Storage Location.svg" IconColor="White" IconSize="20"
+                                    BorderBrush="#18FFFFFF" BorderThickness="2">
+                                <controls:SvgIcon Preset="Database" IconColor="White" IconSize="20"
                                                   Width="20" Height="20"
                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
@@ -284,7 +301,7 @@
                         </StackPanel>
                     </Button>
 
-                    <Button Grid.Column="4" Classes="step-btn"
+                    <Button Grid.Column="4" Classes="step-btn" Width="96"
                             Command="{Binding GoToStepCommand}" CommandParameter="5"
                             IsEnabled="{Binding CurrentStep, Converter={x:Static views:StepClickableConverter.Instance}, ConverterParameter=5}"
                             Background="Transparent" BorderThickness="0" Padding="0"
@@ -293,8 +310,8 @@
                         <StackPanel HorizontalAlignment="Center" Spacing="8">
                             <Border Width="44" Height="44" CornerRadius="22"
                                     Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=5}"
-                                    BorderBrush="#4BFFFFFF" BorderThickness="2">
-                                <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Keyfile.svg" IconColor="White" IconSize="20"
+                                    BorderBrush="#18FFFFFF" BorderThickness="2">
+                                <controls:SvgIcon Preset="Key" IconColor="White" IconSize="20"
                                                   Width="20" Height="20"
                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
@@ -304,7 +321,7 @@
                         </StackPanel>
                     </Button>
 
-                    <Button Grid.Column="5" Classes="step-btn"
+                    <Button Grid.Column="5" Classes="step-btn" Width="96"
                             Command="{Binding GoToStepCommand}" CommandParameter="6"
                             IsEnabled="{Binding CurrentStep, Converter={x:Static views:StepClickableConverter.Instance}, ConverterParameter=6}"
                             Background="Transparent" BorderThickness="0" Padding="0"
@@ -313,7 +330,7 @@
                         <StackPanel HorizontalAlignment="Center" Spacing="8">
                             <Border Width="44" Height="44" CornerRadius="22"
                                     Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=6}"
-                                    BorderBrush="#4BFFFFFF" BorderThickness="2">
+                                    BorderBrush="#18FFFFFF" BorderThickness="2">
                                 <controls:SvgIcon Preset="Lock" IconColor="White" IconSize="20"
                                                   Width="20" Height="20"
                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -324,11 +341,11 @@
                         </StackPanel>
                     </Button>
 
-                    <StackPanel Grid.Column="6" HorizontalAlignment="Center" Spacing="8"
+                    <StackPanel Grid.Column="6" HorizontalAlignment="Center" Spacing="8" Width="96"
                                 IsVisible="{Binding UsesExtendedProgress}">
                         <Border Width="44" Height="44" CornerRadius="22"
                                 Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=7}"
-                                BorderBrush="#4BFFFFFF" BorderThickness="2">
+                                BorderBrush="#18FFFFFF" BorderThickness="2">
                             <controls:SvgIcon Preset="AlertTriangle" IconColor="White" IconSize="20"
                                               Width="20" Height="20"
                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -338,11 +355,11 @@
                                    HorizontalAlignment="Center"/>
                     </StackPanel>
 
-                    <StackPanel Grid.Column="6" HorizontalAlignment="Center" Spacing="8"
+                    <StackPanel Grid.Column="6" HorizontalAlignment="Center" Spacing="8" Width="96"
                                 IsVisible="{Binding !UsesExtendedProgress}">
                         <Border Width="44" Height="44" CornerRadius="22"
                                 Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=7}"
-                                BorderBrush="#4BFFFFFF" BorderThickness="2">
+                                BorderBrush="#18FFFFFF" BorderThickness="2">
                             <controls:SvgIcon Preset="Check" IconColor="White" IconSize="20"
                                               Width="20" Height="20"
                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -352,11 +369,11 @@
                                    HorizontalAlignment="Center"/>
                     </StackPanel>
 
-                    <StackPanel Grid.Column="7" HorizontalAlignment="Center" Spacing="8"
+                    <StackPanel Grid.Column="7" HorizontalAlignment="Center" Spacing="8" Width="96"
                                 IsVisible="{Binding UsesExtendedProgress}">
                         <Border Width="44" Height="44" CornerRadius="22"
                                 Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=8}"
-                                BorderBrush="#4BFFFFFF" BorderThickness="2">
+                                BorderBrush="#18FFFFFF" BorderThickness="2">
                             <controls:SvgIcon Preset="Check" IconColor="White" IconSize="20"
                                               Width="20" Height="20"
                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -366,15 +383,6 @@
                                    HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Grid>
-
-                <TextBlock Grid.Row="2"
-                           Text="{Binding CurrentStepTitle}"
-                           FontSize="{StaticResource Type.H3.Size}"
-                           FontFamily="{DynamicResource TitleFontFamily}"
-                           FontWeight="Normal"
-                           Foreground="{DynamicResource PrimaryTextBrush}"
-                           HorizontalAlignment="Center"/>
-            </Grid>
         </Border>
 
         <Border Grid.Row="1" ClipToBounds="True">
@@ -393,9 +401,9 @@
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="16">
 
-                                <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
-                                       Width="124"
-                                       Height="124"
+                                <Image Source="avares://PhantomVault.UI/Assets/ok.png"
+                                       Width="140"
+                                       Height="140"
                                        Stretch="Uniform"
                                        HorizontalAlignment="Center"/>
 
@@ -415,7 +423,7 @@
                                     Phantom Obscura uses military-grade post-quantum encryption to protect your credentials.
                                 </TextBlock>
 
-                                <Border Background="#162235"
+                                <Border Background="#40214247"
                                         CornerRadius="{StaticResource Radius.Lg}"
                                         Padding="20,16"
                                         Margin="0,12,0,0"
@@ -454,7 +462,7 @@
                                             </StackPanel>
                                             <StackPanel Orientation="Horizontal" Spacing="10">
                                                 <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Password.svg" IconColor="White" IconSize="22" Width="22" Height="22" VerticalAlignment="Center"/>
-                                                <TextBlock Text="Master password support, required for Phantom Secured"
+                                                <TextBlock Text="Optional master password support — the keyfile is always the required factor"
                                                            TextWrapping="Wrap"
                                                            Foreground="{DynamicResource SecondaryTextBrush}"/>
                                             </StackPanel>
@@ -513,6 +521,89 @@
                                 </CheckBox>
                             </StackPanel>
                         </Border>
+
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                CornerRadius="{StaticResource Radius.Xl}"
+                                Padding="24,20"
+                                BoxShadow="0 4 16 0 #40000000">
+                            <StackPanel Spacing="16">
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <Border Width="40" Height="40" CornerRadius="20" Background="#601B2846">
+                                        <controls:SvgIcon Preset="Shield" IconColor="White" IconSize="24"
+                                                          Width="24" Height="24"
+                                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Choose Your Plan"
+                                                   FontSize="{StaticResource Type.H4.Size}"
+                                                   FontWeight="Normal"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                        <TextBlock Text="Premium is optional — your vault is fully protected on the Free plan."
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <RadioButton GroupName="WizardPlan"
+                                             IsChecked="{Binding !SelectedPlanIsPremium}">
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="Free"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                        <TextBlock Text="Zero-knowledge vault, USB binding, keyfile and all core encryption. No subscription."
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    </StackPanel>
+                                </RadioButton>
+
+                                <RadioButton GroupName="WizardPlan"
+                                             IsChecked="{Binding SelectedPlanIsPremium}">
+                                    <StackPanel Spacing="2">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBlock Text="Premium"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                            <Border Background="{DynamicResource AccentBrush}"
+                                                    CornerRadius="6" Padding="6,1" VerticalAlignment="Center">
+                                                <TextBlock Text="PREMIUM" FontSize="10" FontWeight="Bold" Foreground="White"/>
+                                            </Border>
+                                        </StackPanel>
+                                        <TextBlock Text="Everything in Free plus virtual-drive mounting and future premium features."
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    </StackPanel>
+                                </RadioButton>
+
+                                <Button Content="{Binding UpgradePlanButtonText}"
+                                        Command="{Binding UpgradeToPremiumCommand}"
+                                        IsVisible="{Binding SelectedPlanIsPremium}"
+                                        IsEnabled="{Binding !IsPremiumActivated}"
+                                        HorizontalAlignment="Left"
+                                        Padding="18,8"/>
+
+                                <Border CornerRadius="10"
+                                        Padding="14,12"
+                                        Background="{DynamicResource Brush.Glass.BaseFill}"
+                                        BorderBrush="{DynamicResource Brush.Glass.BorderHover}"
+                                        BorderThickness="1">
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="{Binding PlanStatusText}"
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                        <TextBlock Text="{Binding SubscriptionStatusText}"
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   FontStyle="Italic"
+                                                   TextWrapping="Wrap"
+                                                   IsVisible="{Binding SubscriptionStatusText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </Border>
 
@@ -525,10 +616,10 @@
                                 Padding="24,20"
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="12">
-                                <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Border Width="40" Height="40" CornerRadius="20" Background="#111B2A">
-                                        <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Password Strength.svg" IconColor="White" IconSize="24"
-                                                          Width="24" Height="24"
+                                <StackPanel Orientation="Horizontal" Spacing="14">
+                                    <Border Width="56" Height="56" CornerRadius="28" Background="#601B2846">
+                                        <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Password Strength.svg" IconColor="White" IconSize="34"
+                                                          Width="34" Height="34"
                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <StackPanel>
@@ -559,77 +650,114 @@
                                             <RadioButton Grid.Column="0"
                                                          GroupName="SecurityLevel"
                                                          IsChecked="{Binding IsSelected, Mode=OneWay}"
-                                                         VerticalAlignment="Top"
-                                                         Margin="0,4,16,0"/>
-                                            <StackPanel Grid.Column="1" Spacing="8">
+                                                         VerticalAlignment="Center"
+                                                         Margin="0,0,16,0"/>
+                                            <StackPanel Grid.Column="1" Spacing="6">
                                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                                                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+                                                    <WrapPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding Name}"
                                                                    FontSize="{StaticResource Type.H4.Size}"
                                                                    FontWeight="Normal"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="0,0,10,0"
                                                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                                        <Border IsVisible="{Binding Name, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                                                Background="#111B2A"
+                                                        <Border IsVisible="{Binding RecommendedFor, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                                                Background="#601B2846"
                                                                 CornerRadius="4"
                                                                 Padding="8,2"
+                                                                Margin="0,0,8,4"
                                                                 VerticalAlignment="Center">
                                                             <TextBlock Text="{Binding RecommendedFor}"
                                                                        FontSize="{StaticResource Type.Micro.Size}"
                                                                        Foreground="{DynamicResource SecondaryTextBrush}"/>
                                                         </Border>
-                                                        <Border Background="#173042"
+                                                        <Border Background="#40214247"
                                                                 CornerRadius="4"
                                                                 Padding="8,2"
+                                                                Margin="0,0,0,4"
                                                                 VerticalAlignment="Center">
-                                                            <TextBlock Text="{Binding SecurityIncreasePercent, StringFormat='Security boost: {0}%'}"
+                                                            <TextBlock Text="{Binding SecurityIncreasePercent, StringFormat='+{0}% security'}"
                                                                        FontSize="{StaticResource Type.Micro.Size}"
                                                                        Foreground="{DynamicResource PrimaryTextBrush}"/>
                                                         </Border>
-                                                    </StackPanel>
-                                                    <Border Grid.Column="1"
-                                                            Width="28"
-                                                            Height="28"
-                                                            CornerRadius="14"
-                                                            Background="#122334"
+                                                    </WrapPanel>
+
+                                                    <Button Grid.Column="1"
+                                                            Width="26"
+                                                            Height="26"
+                                                            MinWidth="26"
+                                                            MinHeight="26"
+                                                            Padding="0"
+                                                            CornerRadius="13"
+                                                            Background="#1B3148"
+                                                            BorderThickness="1"
+                                                            BorderBrush="{DynamicResource Brush.Glass.Border}"
                                                             HorizontalAlignment="Right"
                                                             VerticalAlignment="Top"
-                                                            ToolTip.Tip="{Binding SecurityHelpText}">
+                                                            Margin="0,0,2,0"
+                                                            ToolTip.Tip="View details"
+                                                            Tag="{Binding Name}">
                                                         <TextBlock Text="?"
-                                                                   FontSize="{StaticResource Type.Body.Size}"
+                                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                                   FontWeight="SemiBold"
                                                                    Foreground="{DynamicResource PrimaryTextBrush}"
                                                                    HorizontalAlignment="Center"
                                                                    VerticalAlignment="Center"/>
-                                                    </Border>
+                                                        <Button.Flyout>
+                                                            <Flyout Placement="Bottom" ShowMode="Transient">
+                                                                <Border Width="360"
+                                                                        Background="{DynamicResource CardBackgroundBrush}"
+                                                                        BorderBrush="{DynamicResource Brush.Glass.BorderHover}"
+                                                                        BorderThickness="1"
+                                                                        CornerRadius="14"
+                                                                        Padding="20,18"
+                                                                        BoxShadow="0 8 28 0 #66000000">
+                                                                    <StackPanel Spacing="14">
+                                                                        <TextBlock Text="{Binding Name}"
+                                                                                   FontSize="{StaticResource Type.H4.Size}"
+                                                                                   FontWeight="Normal"
+                                                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                                        <TextBlock Text="{Binding Description}"
+                                                                                   FontSize="{StaticResource Type.Body.Size}"
+                                                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                                                   TextWrapping="Wrap"
+                                                                                   LineHeight="22"/>
+                                                                        <ItemsControl ItemsSource="{Binding Features}">
+                                                                            <ItemsControl.ItemTemplate>
+                                                                                <DataTemplate>
+                                                                                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,3">
+                                                                                        <TextBlock Text="✓" FontSize="{StaticResource Type.Small.Size}"
+                                                                                                   Foreground="#5B93E0"/>
+                                                                                        <TextBlock Text="{Binding}"
+                                                                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                                                                   TextWrapping="Wrap"/>
+                                                                                    </StackPanel>
+                                                                                </DataTemplate>
+                                                                            </ItemsControl.ItemTemplate>
+                                                                        </ItemsControl>
+                                                                        <Border Background="#601B2846"
+                                                                                CornerRadius="10"
+                                                                                Padding="12,10"
+                                                                                IsVisible="{Binding SecurityHelpText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                                                            <TextBlock Text="{Binding SecurityHelpText}"
+                                                                                       FontSize="{StaticResource Type.Small.Size}"
+                                                                                       Foreground="{DynamicResource MutedTextBrush}"
+                                                                                       TextWrapping="Wrap"
+                                                                                       LineHeight="20"/>
+                                                                        </Border>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </Flyout>
+                                                        </Button.Flyout>
+                                                    </Button>
                                                 </Grid>
 
-                                                <TextBlock Text="{Binding Description}"
-                                                           FontSize="{StaticResource Type.Body.Size}"
+                                                <TextBlock Text="{Binding FriendlySummary}"
+                                                           FontSize="{StaticResource Type.Small.Size}"
                                                            Foreground="{DynamicResource SecondaryTextBrush}"
-                                                           TextWrapping="Wrap"/>
-
-                                                <Border Background="#122334"
-                                                        CornerRadius="10"
-                                                        Padding="12,10"
-                                                        Margin="0,2,0,0">
-                                                    <TextBlock Text="{Binding FriendlySummary}"
-                                                               FontSize="{StaticResource Type.Small.Size}"
-                                                               Foreground="{DynamicResource PrimaryTextBrush}"
-                                                               TextWrapping="Wrap"/>
-                                                </Border>
-
-                                                <ItemsControl ItemsSource="{Binding Features}" Margin="0,4,0,0">
-                                                    <ItemsControl.ItemTemplate>
-                                                        <DataTemplate>
-                                                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,2">
-                                                                <TextBlock Text="✓" FontSize="{StaticResource Type.Small.Size}"
-                                                                           Foreground="White"/>
-                                                                <TextBlock Text="{Binding}"
-                                                                           FontSize="{StaticResource Type.Small.Size}"
-                                                                           Foreground="{DynamicResource MutedTextBrush}"/>
-                                                            </StackPanel>
-                                                        </DataTemplate>
-                                                    </ItemsControl.ItemTemplate>
-                                                </ItemsControl>
+                                                           TextWrapping="Wrap"
+                                                           LineHeight="20"/>
                                             </StackPanel>
                                         </Grid>
                                     </Border>
@@ -650,7 +778,7 @@
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Border Width="40" Height="40" CornerRadius="20" Background="#111B2A">
+                                    <Border Width="40" Height="40" CornerRadius="20" Background="#601B2846">
                                         <controls:SvgIcon Preset="Shield" IconColor="White" IconSize="24"
                                                           Width="24" Height="24"
                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -675,7 +803,7 @@
                             </StackPanel>
                         </Border>
 
-                        <Border Background="#162235" CornerRadius="12" Padding="20,16"
+                        <Border Background="#40214247" CornerRadius="12" Padding="20,16"
                                 IsVisible="{Binding EnablePhantomKey}"
                                 BorderThickness="0"
                                 BoxShadow="0 4 16 0 #40000000">
@@ -773,14 +901,15 @@
                             </StackPanel>
                         </Border>
 
-                        <Border Background="#162235" CornerRadius="8" Padding="14,10"
+                        <Border Background="#40214247" CornerRadius="8" Padding="14,12"
                                 IsVisible="{Binding EnablePhantomKey}"
                                 BorderThickness="0"
                                 BoxShadow="0 4 16 0 #40000000">
-                            <StackPanel Orientation="Horizontal" Spacing="10">
-                                <controls:SvgIcon Preset="Info" IconColor="{DynamicResource MutedTextBrush}" IconSize="20"
-                                                  Width="20" Height="20" VerticalAlignment="Top" Margin="0,2,0,0"/>
-                                <TextBlock TextWrapping="Wrap"
+                            <Grid ColumnDefinitions="Auto,*">
+                                <controls:SvgIcon Grid.Column="0" Preset="Info" IconColor="{DynamicResource MutedTextBrush}" IconSize="20"
+                                                  Width="20" Height="20" VerticalAlignment="Top" Margin="0,2,10,0"/>
+                                <TextBlock Grid.Column="1"
+                                           TextWrapping="Wrap"
                                            FontSize="{StaticResource Type.Small.Size}"
                                            Foreground="{DynamicResource MutedTextBrush}"
                                            LineHeight="20">
@@ -788,7 +917,7 @@
                                     passkey, TOTP, and Windows Hello factors can be completed in the dedicated
                                     authentication step before the vault goes live.
                                 </TextBlock>
-                            </StackPanel>
+                            </Grid>
                         </Border>
                     </StackPanel>
                 </Border>
@@ -803,7 +932,7 @@
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Border Width="40" Height="40" CornerRadius="20" Background="#111B2A">
+                                    <Border Width="40" Height="40" CornerRadius="20" Background="#601B2846">
                                         <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Storage Location.svg" IconColor="White" IconSize="24"
                                                           Width="24" Height="24"
                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -853,10 +982,10 @@
                                 Padding="20,16"
                                 BoxShadow="0 6 20 2 #50000000">
                             <Grid ColumnDefinitions="Auto,*,Auto">
-                                <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18" Background="#111B2A"
+                                <Border Grid.Column="0" Width="40" Height="40" CornerRadius="20" Background="#601B2846"
                                         VerticalAlignment="Center" Margin="0,0,16,0">
-                                    <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Storage Location.svg" IconColor="White" IconSize="22"
-                                                      Width="22" Height="22"
+                                    <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Storage Location.svg" IconColor="White" IconSize="24"
+                                                      Width="24" Height="24"
                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                                 <StackPanel Grid.Column="1" Spacing="6">
@@ -916,11 +1045,15 @@
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <controls:SvgIcon Preset="Lock" IconColor="White" IconSize="24"
-                                                      Width="24" Height="24" VerticalAlignment="Center"/>
+                                    <Border Width="40" Height="40" CornerRadius="20" Background="#601B2846">
+                                        <controls:SvgIcon Preset="Lock" IconColor="White" IconSize="24"
+                                                          Width="24" Height="24"
+                                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
                                     <TextBlock Text="USB Device Binding"
                                                FontSize="{StaticResource Type.H4.Size}"
                                                FontWeight="Normal"
+                                               VerticalAlignment="Center"
                                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                                 </StackPanel>
 
@@ -972,9 +1105,9 @@
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Border Width="36" Height="36" CornerRadius="18" Background="#111B2A">
-                                        <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Link.svg" IconColor="White" IconSize="22"
-                                                          Width="22" Height="22"
+                                    <Border Width="40" Height="40" CornerRadius="20" Background="#601B2846">
+                                        <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Link.svg" IconColor="White" IconSize="24"
+                                                          Width="24" Height="24"
                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <StackPanel>
@@ -995,7 +1128,7 @@
                                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                                 </CheckBox>
 
-                                <Border Background="#162235" CornerRadius="8" Padding="12,8"
+                                <Border Background="#40214247" CornerRadius="8" Padding="12,8"
                                         IsVisible="{Binding GuuidValue, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                         BorderThickness="0"
                                         BoxShadow="0 4 16 0 #40000000">
@@ -1016,9 +1149,9 @@
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Border Width="36" Height="36" CornerRadius="18" Background="#111B2A">
-                                        <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Encrypted Container.svg" IconColor="White" IconSize="22"
-                                                          Width="22" Height="22"
+                                    <Border Width="40" Height="40" CornerRadius="20" Background="#601B2846">
+                                        <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Encrypted Container.svg" IconColor="White" IconSize="24"
+                                                          Width="24" Height="24"
                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <StackPanel>
@@ -1054,6 +1187,103 @@
                                         <ComboBoxItem Content="2 GB"/>
                                     </ComboBox>
                                 </StackPanel>
+
+                                <Border Margin="0,8,0,0"
+                                        Padding="14,12"
+                                        CornerRadius="10"
+                                        Background="#1A6B8CAE"
+                                        BorderBrush="{DynamicResource AccentBrush}"
+                                        BorderThickness="1"
+                                        IsVisible="{Binding EnableEncryptedContainer}">
+                                    <StackPanel Spacing="6">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Encrypted Container.svg"
+                                                              IconColor="#8FB5DF" IconSize="16"
+                                                              Width="16" Height="16" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Mount as a Windows drive"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource PrimaryTextBrush}"
+                                                       VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <TextBlock TextWrapping="Wrap"
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   Text="Enable 'Provision this vault as a virtual encrypted drive' below to mount this container as a real Windows drive letter — open, edit, and save files directly with no plaintext ever written to disk. Changes are re-encrypted into the container automatically when you unmount or lock the vault. Requires WinFsp (installed for you below)."/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="{DynamicResource CardBackgroundBrush}"
+                                CornerRadius="{StaticResource Radius.Xl}"
+                                Padding="20,16"
+                                BoxShadow="0 4 16 0 #40000000">
+                            <StackPanel Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <Border Width="40" Height="40" CornerRadius="20" Background="#601B2846">
+                                        <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Encrypted Container.svg" IconColor="White" IconSize="24"
+                                                          Width="24" Height="24"
+                                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Virtual Drive Provisioning &amp; Driver"
+                                                   FontSize="{StaticResource Type.H4.Size}"
+                                                   FontWeight="Normal"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                        <TextBlock Text="Mount your vault as a live Windows drive letter via the WinFsp driver"
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <Border CornerRadius="10"
+                                        Padding="14,12"
+                                        Background="{DynamicResource Brush.Glass.BaseFill}"
+                                        BorderBrush="{DynamicResource Brush.Glass.BorderHover}"
+                                        BorderThickness="1">
+                                    <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto">
+                                        <Grid Grid.Column="0" Grid.Row="0" VerticalAlignment="Center" Margin="0,0,10,0">
+                                            <Ellipse Width="12" Height="12" Fill="#2ECC71"
+                                                     IsVisible="{Binding IsWinFspInstalled}"/>
+                                            <Ellipse Width="12" Height="12" Fill="#E6A23C"
+                                                     IsVisible="{Binding !IsWinFspInstalled}"/>
+                                        </Grid>
+                                        <TextBlock Grid.Column="1" Grid.Row="0"
+                                                   Text="{Binding WinFspStatusText}"
+                                                   FontWeight="SemiBold"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                        <StackPanel Grid.Column="2" Grid.Row="0" Orientation="Horizontal" Spacing="8">
+                                            <Button Content="Install Driver"
+                                                    Command="{Binding InstallWinFspCommand}"
+                                                    IsVisible="{Binding !IsWinFspInstalled}"
+                                                    Padding="14,6"/>
+                                            <Button Content="Re-check"
+                                                    Command="{Binding RefreshWinFspStatusCommand}"
+                                                    Padding="14,6"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="3"
+                                                   Margin="0,8,0,0"
+                                                   TextWrapping="Wrap"
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   Text="{Binding WinFspStatusDetail}"/>
+                                    </Grid>
+                                </Border>
+
+                                <CheckBox IsChecked="{Binding EnableEncryptedContainer}" Margin="0,2,0,0">
+                                    <TextBlock Text="Provision this vault as a virtual encrypted drive"
+                                               FontSize="{StaticResource Type.Body.Size}"
+                                               TextWrapping="Wrap"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                </CheckBox>
+
+                                <TextBlock TextWrapping="Wrap"
+                                           FontSize="{StaticResource Type.Small.Size}"
+                                           FontStyle="Italic"
+                                           Foreground="{DynamicResource MutedTextBrush}"
+                                           Text="{Binding VirtualDriveReadinessText}"/>
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -1069,7 +1299,7 @@
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Border Width="40" Height="40" CornerRadius="20" Background="#111B2A">
+                                    <Border Width="40" Height="40" CornerRadius="20" Background="#601B2846">
                                         <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Keyfile.svg" IconColor="White" IconSize="24"
                                                           Width="24" Height="24"
                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -1184,7 +1414,7 @@
                                                    FontSize="{StaticResource Type.Small.Size}"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
 
-                                        <Border Background="#102030"
+                                        <Border Background="#40193A42"
                                                 CornerRadius="{StaticResource Radius.Sm}"
                                                 Padding="16,14">
                                             <StackPanel Spacing="12">
@@ -1310,7 +1540,7 @@
                                                    FontSize="{StaticResource Type.Small.Size}"
                                                    TextWrapping="Wrap"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                        <TextBlock Text="• Master password is required"
+                                        <TextBlock Text="• Master password is optional — your keyfile alone unlocks this tier"
                                                    FontSize="{StaticResource Type.Small.Size}"
                                                    TextWrapping="Wrap"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
@@ -1455,7 +1685,7 @@
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="10">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Border Width="44" Height="44" CornerRadius="22" Background="#122334">
+                                    <Border Width="44" Height="44" CornerRadius="22" Background="#601B2846">
                                         <controls:SvgIcon Preset="Lock" IconColor="White" IconSize="24"
                                                           Width="24" Height="24"
                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -1674,7 +1904,7 @@
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Border Width="44" Height="44" CornerRadius="22" Background="#122334">
+                                    <Border Width="44" Height="44" CornerRadius="22" Background="#601B2846">
                                         <controls:SvgIcon Preset="AlertTriangle" IconColor="{DynamicResource AccentBrush}" IconSize="24"
                                                           Width="28" Height="28"
                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -1782,20 +2012,20 @@
                                 CornerRadius="{StaticResource Radius.Xl}"
                                 Padding="24,20"
                                 BoxShadow="0 4 16 0 #40000000">
-                            <StackPanel Spacing="12">
-                                <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
-                                    <Border Width="44" Height="44" CornerRadius="22" Background="#111B2A">
-                                        <controls:SvgIcon Preset="Check" IconColor="White" IconSize="24"
-                                                          Width="24" Height="24"
-                                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <TextBlock Text="Ready to Create Your Vault!"
-                                               FontSize="{StaticResource Type.H2.Size}"
-                                               FontFamily="{DynamicResource TitleFontFamily}"
-                                               FontWeight="Normal"
-                                               Foreground="{DynamicResource PrimaryTextBrush}"
-                                               VerticalAlignment="Center"/>
-                                </StackPanel>
+                            <StackPanel Spacing="12" HorizontalAlignment="Center">
+                                <Border Width="44" Height="44" CornerRadius="22" Background="#601B2846"
+                                        HorizontalAlignment="Center">
+                                    <controls:SvgIcon Preset="Check" IconColor="White" IconSize="24"
+                                                      Width="24" Height="24"
+                                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="Ready to Create Your Vault!"
+                                           FontSize="{StaticResource Type.H2.Size}"
+                                           FontFamily="{DynamicResource TitleFontFamily}"
+                                           FontWeight="Normal"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"
+                                           HorizontalAlignment="Center"
+                                           TextAlignment="Center"/>
 
                                 <TextBlock Text="Review your settings below, then click 'Create Vault' to finish setup."
                                            FontSize="{StaticResource Type.Body.Size}"
@@ -2004,7 +2234,7 @@
 
         <Border Grid.Row="2"
                 Background="{DynamicResource FooterBackgroundBrush}"
-                Padding="24,20,24,32"
+                Padding="24,8,24,10"
                 BorderBrush="{DynamicResource ControlBorderBrush}"
                 BorderThickness="0,1,0,0">
             <Grid ColumnDefinitions="Auto,*,Auto">

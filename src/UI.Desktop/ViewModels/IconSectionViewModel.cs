@@ -299,14 +299,44 @@ namespace PhantomVault.UI.ViewModels
         private static string NormalizeBaseName(string name)
         {
             if (string.IsNullOrWhiteSpace(name)) return name ?? string.Empty;
-            var idx = name.LastIndexOf('_');
-            if (idx > 0 && idx < name.Length - 1)
+
+            var key = name.Trim().ToLowerInvariant();
+
+            // Drop scale markers like "@2x", "@3x".
+            key = Regex.Replace(key, "@\\d+x$", string.Empty);
+
+            // Unify separators so "home_icon", "home-icon" and "home icon" collapse together.
+            key = key.Replace('_', '-').Replace(' ', '-');
+
+            // Repeatedly strip trailing variant tokens: pure indices ("-2"), pixel sizes
+            // ("-256", "-64x64") and common style words ("-outline", "-filled", ...).
+            var styleTokens = new HashSet<string>(StringComparer.Ordinal)
             {
-                var suffix = name.Substring(idx + 1);
-                if (Regex.IsMatch(suffix, "^[a-z0-9-]+$", RegexOptions.IgnoreCase))
-                    return name.Substring(0, idx);
+                "outline", "filled", "fill", "solid", "line", "lines", "linear",
+                "bold", "regular", "thin", "light", "duotone", "flat", "color",
+                "colour", "mono", "monochrome", "round", "rounded", "sharp", "alt"
+            };
+
+            bool changed = true;
+            while (changed)
+            {
+                changed = false;
+                var idx = key.LastIndexOf('-');
+                if (idx <= 0 || idx >= key.Length - 1) break;
+
+                var suffix = key.Substring(idx + 1);
+                bool isIndex = Regex.IsMatch(suffix, "^\\d+$");
+                bool isPixelSize = Regex.IsMatch(suffix, "^\\d+(x\\d+)?(px)?$");
+                bool isStyle = styleTokens.Contains(suffix);
+
+                if (isIndex || isPixelSize || isStyle)
+                {
+                    key = key.Substring(0, idx);
+                    changed = true;
+                }
             }
-            return name;
+
+            return key;
         }
     }
 }

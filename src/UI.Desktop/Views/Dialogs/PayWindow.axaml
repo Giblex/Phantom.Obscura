@@ -1,0 +1,111 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PhantomVault.UI.Views.Dialogs.PayWindow"
+        Title="Phantom Obscura Premium"
+        Width="540"
+        Height="720"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="{DynamicResource WindowBackgroundBrush}">
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- Dot-grid overlay (matches welcome/vault/wizard/import). -->
+        <Border Grid.Row="0" Grid.RowSpan="3"
+                IsHitTestVisible="False"
+                HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <Border.Background>
+                <ImageBrush Source="avares://PhantomVault.UI/Assets/dot_pattern.png"
+                            TileMode="Tile"
+                            Stretch="None"
+                            SourceRect="0,0,8,8"
+                            DestinationRect="0,0,8,8"/>
+            </Border.Background>
+        </Border>
+
+        <StackPanel Grid.Row="0" Spacing="6" Margin="28,28,28,18">
+            <TextBlock Text="Phantom Obscura Premium"
+                       FontSize="22"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <TextBlock Text="$4.99"
+                           FontSize="28"
+                           FontWeight="Bold"
+                           Foreground="{DynamicResource AccentBrush}"/>
+                <TextBlock Text="/ month"
+                           VerticalAlignment="Bottom"
+                           Margin="0,0,0,4"
+                           Foreground="{DynamicResource MutedTextBrush}"/>
+            </StackPanel>
+            <TextBlock Text="Billed locally to this vault. Your subscription unlocks the full premium toolset on this device."
+                       FontSize="{StaticResource Type.Small.Size}"
+                       Foreground="{DynamicResource MutedTextBrush}"
+                       TextWrapping="Wrap"/>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="28,0">
+            <StackPanel Spacing="14">
+
+                <Border Background="{DynamicResource CardBackgroundBrush}"
+                        BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        Padding="20,16"
+                        BoxShadow="0 4 16 0 #40000000">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="What you get"
+                                   FontWeight="SemiBold"
+                                   FontSize="{StaticResource Type.H4.Size}"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <TextBlock Text="• Custom theme creator (beyond Dark / Light)" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <TextBlock Text="• Advanced settings &amp; expert controls" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <TextBlock Text="• Full password &amp; security dashboard" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <TextBlock Text="• Advanced category manager (custom icons)" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <TextBlock Text="• Icon manager" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <TextBlock Text="• Multiple vaults on one device" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    </StackPanel>
+                </Border>
+
+                <Border x:Name="PaymentPanel"
+                        Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                        BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        Padding="20,16">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Secure checkout"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <TextBlock Text="Payment is handled by Stripe. When you continue, your browser opens Stripe's secure checkout page — no card details are entered or stored in Phantom Obscura."
+                                   FontSize="{StaticResource Type.Small.Size}"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   TextWrapping="Wrap"/>
+                        <TextBlock Text="After you pay, keep this window open — Premium activates here automatically within a few seconds."
+                                   FontSize="{StaticResource Type.Small.Size}"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock x:Name="StatusText"
+                           Margin="2,0,0,0"
+                           TextWrapping="Wrap"
+                           IsVisible="False"
+                           Foreground="{DynamicResource AccentBrush}"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right"
+                    Spacing="10" Margin="28,18,28,28">
+            <Button x:Name="CancelButton"
+                    Content="Cancel"
+                    Click="OnCancel"/>
+            <Button x:Name="SubscribeButton"
+                    Content="Continue to secure checkout"
+                    Click="OnSubscribe"
+                    Background="{DynamicResource AccentBrush}"
+                    Foreground="#FFFFFFFF"/>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -68,8 +68,10 @@ namespace PhantomVault.UI.Services.AutoFill
                 {
                     list.Add(new Credential
                     {
+                        Id = GetString(item, "id"),
                         Title = GetString(item, "title"),
                         Username = GetString(item, "username"),
+                        Password = GetString(item, "password"),
                         Url = GetString(item, "url")
                     });
                 }

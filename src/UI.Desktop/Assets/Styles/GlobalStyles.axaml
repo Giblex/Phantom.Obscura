@@ -384,14 +384,18 @@
         <Setter Property="BorderThickness" Value="2"/>
     </Style>
 
+    <!-- Checked state uses UserAccentBrush (the live custom-accent-picker resource), same as
+         Button.dull-blue/Save/ToggleSwitch, so it responds when the user picks a colour from
+         Theme Settings' accent dropdown — Brush.Accent only changes on a theme/skin switch. -->
     <Style Selector="CheckBox:checked /template/ Border#NormalRectangle">
-        <Setter Property="Background" Value="{DynamicResource Brush.Accent}"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
+        <Setter Property="Background" Value="{DynamicResource UserAccentBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource UserAccentBrush}"/>
     </Style>
 
     <Style Selector="CheckBox:checked:pointerover /template/ Border#NormalRectangle">
-        <Setter Property="Background" Value="{DynamicResource Brush.AccentHover}"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource Brush.AccentHover}"/>
+        <Setter Property="Background" Value="{DynamicResource UserAccentBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource UserAccentBrush}"/>
+        <Setter Property="Opacity" Value="0.88"/>
     </Style>
 
     <Style Selector="RadioButton">
@@ -409,20 +413,24 @@
         <Setter Property="BorderThickness" Value="2"/>
     </Style>
 
+    <!-- Checked state uses UserAccentBrush (the live custom-accent-picker resource) for the
+         same reason as CheckBox/ToggleSwitch above. -->
     <Style Selector="RadioButton:checked /template/ Ellipse#CheckGlyph">
-        <Setter Property="Fill" Value="{DynamicResource Brush.Accent}"/>
+        <Setter Property="Fill" Value="{DynamicResource UserAccentBrush}"/>
     </Style>
 
     <Style Selector="RadioButton:checked /template/ Border#OuterBorder">
-        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource UserAccentBrush}"/>
     </Style>
 
     <Style Selector="RadioButton:checked:pointerover /template/ Border#OuterBorder">
-        <Setter Property="BorderBrush" Value="{DynamicResource Brush.AccentHover}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource UserAccentBrush}"/>
+        <Setter Property="Opacity" Value="0.88"/>
     </Style>
 
     <Style Selector="RadioButton:checked:pointerover /template/ Ellipse#CheckGlyph">
-        <Setter Property="Fill" Value="{DynamicResource Brush.AccentHover}"/>
+        <Setter Property="Fill" Value="{DynamicResource UserAccentBrush}"/>
+        <Setter Property="Opacity" Value="0.88"/>
     </Style>
 
     <Style Selector="ToggleSwitch">
@@ -440,12 +448,24 @@
         <Setter Property="BorderThickness" Value="2"/>
     </Style>
 
+    <!-- Unchecked track was relying on Avalonia's built-in Fluent default, which reads as a
+         near-invisible hairline against this app's darker window backgrounds. Give it an
+         explicit, always-available border colour so the Off state is clearly visible. -->
+    <Style Selector="ToggleSwitch /template/ Border#SwitchKnobBounds">
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1.5"/>
+    </Style>
+
+    <!-- Checked state uses UserAccentBrush (the live custom-accent-picker resource) for the
+         same reason as CheckBox/RadioButton above. -->
     <Style Selector="ToggleSwitch:checked /template/ Border#SwitchKnobBounds">
-        <Setter Property="Background" Value="{DynamicResource Brush.Accent}"/>
+        <Setter Property="Background" Value="{DynamicResource UserAccentBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource UserAccentBrush}"/>
     </Style>
 
     <Style Selector="ToggleSwitch:checked:pointerover /template/ Border#SwitchKnobBounds">
-        <Setter Property="Background" Value="{DynamicResource Brush.AccentHover}"/>
+        <Setter Property="Background" Value="{DynamicResource UserAccentBrush}"/>
+        <Setter Property="Opacity" Value="0.88"/>
     </Style>
 
     <Style Selector="Border.nav-bar">

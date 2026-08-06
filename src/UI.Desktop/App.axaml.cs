@@ -139,6 +139,41 @@ namespace PhantomVault.UI
             {
 
             }
+
+            // Keyless suite session: start watching shared suite state and honour a
+            // suite-wide lock by locking the active vault. Subscribed ONCE here (app
+            // scope) to avoid per-unlock handler accumulation. Carries no key material.
+            try
+            {
+                var suiteSession = _serviceProvider.GetRequiredService<Phantom.Suite.Session.ISuiteSessionCoordinator>();
+                suiteSession.SuiteLockRequested += (_, e) =>
+                {
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        try
+                        {
+                            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime dt)
+                            {
+                                foreach (var w in dt.Windows)
+                                {
+                                    if (w.DataContext is PhantomVault.UI.ViewModels.VaultViewModel vvm)
+                                        vvm.RequestSuiteLock();
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"[App] Suite lock handling failed: {ex.Message}");
+                        }
+                    });
+                };
+                suiteSession.Start();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[App] Failed to start suite session coordinator: {ex.Message}");
+            }
+
             var secureTrash = _serviceProvider.GetRequiredService<SecureTrashService>();
             secureTrash.ApplyConfiguration(
                 persistedSettings.SecureTrashEnabled,
@@ -211,6 +246,18 @@ namespace PhantomVault.UI
                     Debug.WriteLine($"[App] Failed to start native-host pipe server: {ex.Message}");
                 }
 
+                try
+                {
+                    var totpSyncPipeServer = _serviceProvider.GetRequiredService<PhantomVault.UI.Services.Sync.ITotpSyncPipeServer>();
+                    totpSyncPipeServer.Start();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[App] Failed to start TOTP sync pipe server: {ex.Message}");
+                }
+
+                InitializePrivilegedBroker();
+
                 desktop.MainWindow.Closing += (sender, e) =>
                 {
                     var settings = SettingsService.Load();
@@ -242,6 +289,84 @@ namespace PhantomVault.UI
             }
 
             base.OnFrameworkInitializationCompleted();
+        }
+
+        private void InitializePrivilegedBroker()
+        {
+            if (!OperatingSystem.IsWindows() || _serviceProvider is null)
+                return;
+
+            try
+            {
+                // Already elevated (e.g. a deliberate "Run as administrator"): run the
+                // privileged primitives in-process and skip the broker entirely.
+                if (PhantomVault.Core.Services.Privileged.PrivilegedExecution.IsProcessElevated())
+                {
+                    PhantomVault.Core.Services.Privileged.PrivilegedExecution.ForceInProcess = true;
+                    return;
+                }
+
+                // Non-elevated: route privileged primitives to the elevated helper.
+                var client = _serviceProvider.GetRequiredService<PhantomVault.UI.Services.Privileged.NamedPipeBrokerClient>();
+                var controller = _serviceProvider.GetRequiredService<PhantomVault.UI.Services.Privileged.BrokerServiceController>();
+                var dialogService = _serviceProvider.GetRequiredService<DialogService>();
+
+                // First launch shows the "Enable privileged helper" dialog once.
+                // The user's answer is stored in settings so subsequent launches
+                // either install silently (consented) or skip the prompt entirely
+                // (declined). Toggleable under Settings → Security.
+                client.EnsureAvailableAsync = async () =>
+                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+                    {
+                        var current = SettingsService.Load();
+
+                        Func<Task<bool>> confirm;
+                        if (current.PrivilegedBrokerAutoInstall)
+                        {
+                            // Consent already given — install silently.
+                            confirm = () => Task.FromResult(true);
+                        }
+                        else if (current.PrivilegedBrokerDeclined)
+                        {
+                            // User previously declined — never re-prompt.
+                            confirm = () => Task.FromResult(false);
+                        }
+                        else
+                        {
+                            // First time — prompt, then persist the answer.
+                            confirm = async () =>
+                            {
+                                var granted = await dialogService.ShowConfirmationAsync(
+                                    "Enable privileged helper",
+                                    "This action needs the Phantom Obscura privileged helper. Install it once to continue — you won't be asked again.",
+                                    confirmText: "Enable",
+                                    cancelText: "Cancel");
+
+                                var s = SettingsService.Load();
+                                if (granted) s.PrivilegedBrokerAutoInstall = true;
+                                else s.PrivilegedBrokerDeclined = true;
+                                SettingsService.Save(s);
+                                return granted;
+                            };
+                        }
+
+                        return await controller.PromptAndInstallAsync(confirm);
+                    });
+
+                PhantomVault.Core.Services.Privileged.PrivilegedExecution.Broker = client;
+
+                // Deliberately no eager install here. This used to fire a raw Windows
+                // UAC elevation prompt in the background on every non-elevated launch —
+                // with no app-level context and no memory of a decline, so cancelling it
+                // just meant getting it again on the very next launch. Installing the
+                // helper is now purely reactive: EnsureAvailableAsync (wired above) shows
+                // an in-app confirmation dialog the moment a privileged feature actually
+                // needs it, and only then triggers the single UAC prompt.
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[App] InitializePrivilegedBroker failed: {ex.Message}");
+            }
         }
 
         private static void ApplyTooltipScale(bool largeTooltips)

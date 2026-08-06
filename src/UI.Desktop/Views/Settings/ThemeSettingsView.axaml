@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:PhantomVault.UI.ViewModels.Settings"
+             xmlns:converters="using:PhantomVault.UI.Converters"
              x:Class="PhantomVault.UI.Views.Settings.ThemeSettingsView"
              x:DataType="vm:ThemeSettingsViewModel">
     <UserControl.Resources>
@@ -8,6 +9,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://PhantomVault.UI/Resources/Converters/ConverterResources.axaml"/>
             </ResourceDictionary.MergedDictionaries>
+            <converters:ColouredBlurBrushConverter x:Key="ColouredBlurBrushConverter"/>
         </ResourceDictionary>
     </UserControl.Resources>
     <StackPanel Spacing="20" Margin="0,0,0,60">
@@ -23,11 +25,140 @@
                 CornerRadius="16"
                 Padding="20">
             <StackPanel Spacing="15">
-                <TextBlock Text="Theme &amp; Appearance"
+                <TextBlock Text="Theme Studio"
                            FontSize="{StaticResource Type.Body.Size}"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
-                <TextBlock Text="Choose a color scheme, font, and accent for the main vault windows."
+                <TextBlock Text="Switch colour palette — every palette here is free. Pick one and press Save to apply it."
+                           FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource MutedTextBrush}"/>
+
+                <ItemsControl ItemsSource="{Binding ThemeSwatches}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:ThemeSwatch">
+                            <Button Command="{Binding DataContext.ApplyThemeByIdCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding Id}"
+                                    Margin="0,0,10,10"
+                                    Padding="0"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Cursor="Hand"
+                                    ToolTip.ShowDelay="300">
+                                <!-- Rich hover preview — a miniature of the "Preview" panel
+                                     further down this page (Header bar / icon sidebar / sample
+                                     heading + body + Accent+Glass buttons), just built from
+                                     this swatch's own three colours instead of the live
+                                     DynamicResource theme (which reflects the currently-applied
+                                     theme, not the one being hovered). Avalonia's ToolTip
+                                     already shows on hover and hides on pointer-leave. -->
+                                <ToolTip.Tip>
+                                    <Border Width="260" CornerRadius="10" ClipToBounds="True"
+                                            BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1"
+                                            Background="{Binding Color1}">
+                                        <Grid RowDefinitions="30,*">
+                                            <Border Grid.Row="0"
+                                                    BorderBrush="#22FFFFFF" BorderThickness="0,0,0,1">
+                                                <TextBlock Text="Header"
+                                                           FontWeight="SemiBold"
+                                                           FontSize="11"
+                                                           VerticalAlignment="Center"
+                                                           Margin="10,0"
+                                                           Foreground="{Binding PreviewForeground}"/>
+                                            </Border>
+                                            <Grid Grid.Row="1" ColumnDefinitions="46,*">
+                                                <Border Grid.Column="0" Opacity="0.85"
+                                                        BorderBrush="#15FFFFFF" BorderThickness="0,0,1,0">
+                                                    <StackPanel Margin="8,10" Spacing="5">
+                                                        <Border Width="16" Height="16" CornerRadius="4" Background="{Binding Color2}"/>
+                                                        <Border Height="4" CornerRadius="2" Background="{Binding PreviewMutedForeground}" Opacity="0.5"/>
+                                                        <Border Height="4" CornerRadius="2" Background="{Binding PreviewMutedForeground}" Opacity="0.35"/>
+                                                    </StackPanel>
+                                                </Border>
+                                                <StackPanel Grid.Column="1" Margin="10,10" Spacing="6">
+                                                    <TextBlock Text="Sample heading"
+                                                               FontWeight="SemiBold"
+                                                               FontSize="12"
+                                                               Foreground="{Binding PreviewForeground}"/>
+                                                    <TextBlock Text="The quick brown fox jumps."
+                                                               FontSize="10"
+                                                               TextWrapping="Wrap"
+                                                               Foreground="{Binding PreviewMutedForeground}"/>
+                                                    <!-- Real buttons in this app are liquid-glass (translucent
+                                                         border + faint tinted fill + diagonal sheen), never a
+                                                         flat colour pill — even for the "accent" one, which only
+                                                         gets an accent-tinted border, not an accent fill. -->
+                                                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2,0,0">
+                                                        <Border Padding="8,4" CornerRadius="5" BorderThickness="1"
+                                                                BorderBrush="{Binding Color2}" ClipToBounds="True">
+                                                            <Border.Background>
+                                                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                                                    <GradientStop Color="#26FFFFFF" Offset="0"/>
+                                                                    <GradientStop Color="#08FFFFFF" Offset="0.55"/>
+                                                                    <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                                                </LinearGradientBrush>
+                                                            </Border.Background>
+                                                            <TextBlock Text="Accent" FontSize="9" FontWeight="SemiBold" Foreground="{Binding PreviewForeground}"/>
+                                                        </Border>
+                                                        <Border Padding="8,4" CornerRadius="5" BorderThickness="1"
+                                                                BorderBrush="{Binding PreviewMutedForeground}" ClipToBounds="True">
+                                                            <Border.Background>
+                                                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                                                    <GradientStop Color="#1AFFFFFF" Offset="0"/>
+                                                                    <GradientStop Color="#06FFFFFF" Offset="0.55"/>
+                                                                    <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                                                </LinearGradientBrush>
+                                                            </Border.Background>
+                                                            <TextBlock Text="Glass" FontSize="9" Foreground="{Binding PreviewForeground}"/>
+                                                        </Border>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Grid>
+                                    </Border>
+                                </ToolTip.Tip>
+                                <Border Width="120"
+                                        Background="{DynamicResource ControlBackgroundBrush}"
+                                        BorderBrush="{Binding ActiveBorderBrush}"
+                                        BorderThickness="2"
+                                        CornerRadius="10"
+                                        Padding="12"
+                                        Opacity="{Binding CardOpacity}">
+                                    <StackPanel Spacing="8" HorizontalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Center">
+                                            <Border Width="20" Height="20" CornerRadius="10" Background="{Binding Color1}" BorderBrush="#22FFFFFF" BorderThickness="1"/>
+                                            <Border Width="20" Height="20" CornerRadius="10" Background="{Binding Color2}" BorderBrush="#22FFFFFF" BorderThickness="1"/>
+                                            <Border Width="20" Height="20" CornerRadius="10" Background="{Binding Color3}" BorderBrush="#22FFFFFF" BorderThickness="1"/>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding DisplayName}"
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   HorizontalAlignment="Center"
+                                                   TextAlignment="Center"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                        <TextBlock Text="🔒 Pro only"
+                                                   IsVisible="{Binding IsLocked}"
+                                                   FontSize="{StaticResource Type.Tiny.Size}"
+                                                   HorizontalAlignment="Center"
+                                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                                    </StackPanel>
+                                </Border>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Border Background="{DynamicResource ControlBorderBrush}" Height="1" Opacity="0.5" Margin="0,4"/>
+
+                <TextBlock Text="More themes"
+                           FontSize="{StaticResource Type.Small.Size}"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <TextBlock Text="Additional palettes, system themes, and any custom themes you create."
                            FontSize="{StaticResource Type.Small.Size}"
                            Foreground="{DynamicResource MutedTextBrush}"/>
                 <ComboBox
@@ -36,7 +167,84 @@
                     Width="250"
                     HorizontalAlignment="Left"/>
 
-                <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,5,0,0">
+                <Grid ColumnDefinitions="*,Auto" Margin="0,6,0,0">
+                    <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                        <TextBlock Text="Coloured category blur"
+                                   FontSize="{StaticResource Type.Body.Size}"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <TextBlock Text="Tint category tiles with their own colour. When off, tiles use a neutral translucent glass."
+                                   FontSize="{StaticResource Type.Small.Size}"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <ToggleSwitch Grid.Column="1"
+                                  VerticalAlignment="Center"
+                                  Margin="16,0,0,0"
+                                  IsChecked="{Binding UseColouredCategoryBlur, Mode=TwoWay}"/>
+                </Grid>
+
+                <!-- Static side-by-side example of a category tile with and without the
+                     coloured blur, independent of the toggle above and of Save — this is
+                     the "preview" the toggle no longer needs to live-apply for. -->
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,2,0,0">
+                    <Border Grid.Column="0" CornerRadius="10"
+                            BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1"
+                            Padding="10,8">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="With colour"
+                                       FontSize="{StaticResource Type.Tiny.Size}"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       HorizontalAlignment="Center"/>
+                            <Border CornerRadius="10" Padding="8,6">
+                                <Border.Background>
+                                    <MultiBinding Converter="{StaticResource ColouredBlurBrushConverter}">
+                                        <Binding Path="AccentColorHex"/>
+                                        <Binding Path="PreviewBlurOn"/>
+                                    </MultiBinding>
+                                </Border.Background>
+                                <Grid ColumnDefinitions="Auto,*">
+                                    <Border Grid.Column="0" Width="4" CornerRadius="2"
+                                            Background="{Binding AccentColorHex, Converter={StaticResource HexToBrushConverter}}"
+                                            Margin="0,0,8,0"/>
+                                    <TextBlock Grid.Column="1" Text="Category"
+                                               VerticalAlignment="Center"
+                                               FontSize="{StaticResource Type.Small.Size}"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="1" CornerRadius="10"
+                            BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1"
+                            Padding="10,8">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Without colour"
+                                       FontSize="{StaticResource Type.Tiny.Size}"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       HorizontalAlignment="Center"/>
+                            <Border CornerRadius="10" Padding="8,6">
+                                <Border.Background>
+                                    <MultiBinding Converter="{StaticResource ColouredBlurBrushConverter}">
+                                        <Binding Path="AccentColorHex"/>
+                                        <Binding Path="PreviewBlurOff"/>
+                                    </MultiBinding>
+                                </Border.Background>
+                                <Grid ColumnDefinitions="Auto,*">
+                                    <Border Grid.Column="0" Width="4" CornerRadius="2"
+                                            Background="{Binding AccentColorHex, Converter={StaticResource HexToBrushConverter}}"
+                                            Margin="0,0,8,0"/>
+                                    <TextBlock Grid.Column="1" Text="Category"
+                                               VerticalAlignment="Center"
+                                               FontSize="{StaticResource Type.Small.Size}"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,5,0,0"
+                            IsVisible="{Binding CanUseCustomThemes}">
                     <Button Content="Create Custom Theme"
                             Command="{Binding CreateCustomThemeCommand}"
                             Background="#2B4A7A"
@@ -51,6 +259,34 @@
                             Foreground="{DynamicResource ErrorBrush}"
                             Padding="12,6"/>
                 </StackPanel>
+
+                <Border IsVisible="{Binding IsCustomThemesLocked}"
+                        Background="{DynamicResource ContentBackgroundBrush}"
+                        BorderBrush="{DynamicResource AccentBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{StaticResource Radius.Md}"
+                        Padding="14"
+                        Margin="0,5,0,0">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                            <TextBlock Text="🔒 Custom themes are a Premium feature"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <TextBlock Text="Free plan includes the Dark and Light themes. Upgrade to create and save your own."
+                                       FontSize="{StaticResource Type.Small.Size}"
+                                       Foreground="{DynamicResource MutedTextBrush}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <Button Grid.Column="1"
+                                Content="Upgrade"
+                                Command="{Binding UpgradeCommand}"
+                                Background="{DynamicResource AccentBrush}"
+                                Foreground="#FFFFFFFF"
+                                VerticalAlignment="Center"
+                                Margin="12,0,0,0"
+                                Padding="12,6"/>
+                    </Grid>
+                </Border>
 
                 <Border IsVisible="{Binding IsCustomEditorOpen}"
                         Background="{DynamicResource ContentBackgroundBrush}"
@@ -262,15 +498,26 @@
                                            TextWrapping="Wrap"
                                            Foreground="{DynamicResource SecondaryTextBrush}"/>
 
+                                <!-- Real buttons in this app are liquid-glass (translucent
+                                     border + faint tinted fill + sheen), never a flat colour
+                                     fill — the "accent" example only gets an accent-tinted
+                                     border, matching how the app actually renders buttons. -->
                                 <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,4,0,0">
-                                    <Border Padding="14,7"
-                                            CornerRadius="6"
-                                            Background="{Binding AccentColorHex, Converter={StaticResource HexToBrushConverter}}">
+                                    <Border Padding="14,7" CornerRadius="6" BorderThickness="1"
+                                            BorderBrush="{Binding AccentColorHex, Converter={StaticResource HexToBrushConverter}}"
+                                            ClipToBounds="True">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                                <GradientStop Color="#26FFFFFF" Offset="0"/>
+                                                <GradientStop Color="#08FFFFFF" Offset="0.55"/>
+                                                <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
                                         <TextBlock Text="Accent"
                                                    FontFamily="{Binding AppFontFamily}"
                                                    FontSize="12"
                                                    FontWeight="SemiBold"
-                                                   Foreground="#FFFFFFFF"/>
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
                                     </Border>
                                     <Button Content="Glass"
                                             Classes="liquid-glass"

@@ -127,41 +127,19 @@ namespace PhantomVault.Core.Services.Security
 
         private async void ActivateDecoyVault(TamperCheckResult tamperResult)
         {
+            // Deniability rule: activation must leave no on-disk trace. The previous
+            // implementation wrote a plaintext "[SECURITY ALERT] Decoy vault activated…
+            // Real vault is protected" file (Hidden/System, but trivially found) — a
+            // smoking gun that proves the decoy exists. That alert file is no longer
+            // written. A coercer inspecting the disk sees an ordinary, working vault.
             try
             {
                 _decoyActivated = true;
-
                 await _decoyService!.ActivateDecoyVaultAsync();
-
-                if (!string.IsNullOrEmpty(_securityOptions.DecoyAlertFilePath))
-                {
-                    try
-                    {
-                        var alertMessage = $"[SECURITY ALERT] Decoy vault activated at {DateTime.UtcNow:O}\n" +
-                                         $"Tamper detected: {tamperResult.GetDescription()}\n" +
-                                         $"Debugger: {tamperResult.DebuggerDetected}, " +
-                                         $"DLL Injection: {tamperResult.UnknownModulesDetected}, " +
-                                         $"Memory Manipulation: {tamperResult.MemoryManipulationDetected}\n" +
-                                         $"This indicates a potential security compromise. Real vault is protected.";
-
-                        await File.WriteAllTextAsync(_securityOptions.DecoyAlertFilePath, alertMessage);
-
-                        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                        {
-                            File.SetAttributes(_securityOptions.DecoyAlertFilePath,
-                                FileAttributes.Hidden | FileAttributes.System);
-                        }
-                    }
-                    catch
-                    {
-
-                    }
-                }
             }
-            catch (Exception ex)
+            catch
             {
-
-                Debug.WriteLine($"[INTERNAL] Decoy activation failed: {ex.Message}");
+                // No decoy-identifying diagnostics, even at Debug level.
                 _decoyActivated = false;
             }
         }

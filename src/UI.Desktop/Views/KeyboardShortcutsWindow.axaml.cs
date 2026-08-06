@@ -3,7 +3,7 @@ using Avalonia.Interactivity;
 
 namespace PhantomVault.UI.Views
 {
-    public partial class KeyboardShortcutsWindow : Window
+    public partial class KeyboardShortcutsWindow : ThemeAwareWindow
     {
         public KeyboardShortcutsWindow()
         {

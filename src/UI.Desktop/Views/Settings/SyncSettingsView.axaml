@@ -33,8 +33,9 @@
                             <TextBlock Text="Phantom Attestor (TOTP Authenticator)"
                                        FontWeight="SemiBold" FontSize="{StaticResource Type.Label.Size}"
                                        Foreground="{DynamicResource PrimaryTextBrush}"/>
-                            <TextBlock Text="Syncs theme, display preferences, and security policies"
+                            <TextBlock Text="Shares theme and, when enabled below, TOTP codes, passkey metadata, and PhantomKey bridge documents"
                                        FontSize="{StaticResource Type.Tiny.Size}"
+                                       TextWrapping="Wrap"
                                        Foreground="{DynamicResource SecondaryTextBrush}"/>
                         </StackPanel>
                         <Border Grid.Column="2" CornerRadius="12"
@@ -68,6 +69,36 @@
                           IsChecked="{Binding SyncTheme}"
                           IsEnabled="{Binding SyncEnabled}"
                           ToolTip.Tip="Share the selected color theme across all Phantom apps"/>
+
+                <CheckBox Content="Sync TOTP codes with Phantom Attestor"
+                          IsChecked="{Binding SyncTotp}"
+                          IsEnabled="{Binding SyncEnabled}"
+                          ToolTip.Tip="Share two-factor (TOTP) secrets with Phantom Attestor through the per-vault sync file on your USB device. This is the only channel that moves secret material — turn it off to keep TOTP seeds inside the vault only."/>
+                <TextBlock Text="⚠ Moves TOTP secrets onto the USB sync file so Attestor can read them. Disable to keep seeds vault-only."
+                           FontSize="{StaticResource Type.Tiny.Size}"
+                           TextWrapping="Wrap"
+                           Margin="28,-6,0,0"
+                           Foreground="{DynamicResource WarningBrush}"/>
+
+                <CheckBox Content="Share passkey metadata with Phantom Attestor"
+                          IsChecked="{Binding SyncPasskeys}"
+                          IsEnabled="{Binding SyncEnabled}"
+                          ToolTip.Tip="Share non-secret passkey identity (label, relying party, credential id, public key) for cross-app awareness. Private keys stay device-bound and are never exported."/>
+                <TextBlock Text="Public identity only — private keys never leave this device."
+                           FontSize="{StaticResource Type.Tiny.Size}"
+                           TextWrapping="Wrap"
+                           Margin="28,-6,0,0"
+                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+
+                <CheckBox Content="Share PhantomKey bridge documents with Phantom Attestor"
+                          IsChecked="{Binding SyncPhantomKey}"
+                          IsEnabled="{Binding SyncEnabled}"
+                          ToolTip.Tip="Share the PhantomKey continuity and policy bridge documents (non-secret) so Attestor can participate as a consumer. Honours the bridge policy and never exports raw key material."/>
+                <TextBlock Text="Bridge continuity/policy documents only — no raw key material."
+                           FontSize="{StaticResource Type.Tiny.Size}"
+                           TextWrapping="Wrap"
+                           Margin="28,-6,0,0"
+                           Foreground="{DynamicResource SecondaryTextBrush}"/>
             </StackPanel>
         </Border>
 
@@ -92,7 +123,7 @@
 
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Synced items" FontSize="{StaticResource Type.Small.Size}" Margin="0,6,0,0"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
-                    <TextBlock Grid.Row="1" Grid.Column="1" Text="Theme" FontSize="{StaticResource Type.Small.Size}" Margin="0,6,0,0"
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="Theme + enabled channels" FontSize="{StaticResource Type.Small.Size}" Margin="0,6,0,0"
                                Foreground="{DynamicResource PrimaryTextBrush}" HorizontalAlignment="Right"/>
 
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="Sync direction" FontSize="{StaticResource Type.Small.Size}" Margin="0,6,0,0"

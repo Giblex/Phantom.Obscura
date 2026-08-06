@@ -14,12 +14,15 @@
 
         x:Class="PhantomVault.UI.Views.VaultWindow"
         Title="PhantomVault - My Secure Vault"
-        Width="1280"
-        Height="720"
-        MinWidth="1100"
-        MinHeight="600"
+        Width="1560"
+        Height="820"
+        MinWidth="1320"
+        MinHeight="640"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource WindowBackgroundBrush}"
+        RenderOptions.TextRenderingMode="SubpixelAntialias"
+        RenderOptions.BitmapInterpolationMode="HighQuality"
+        RenderOptions.EdgeMode="Antialias"
         Classes="animated-window">
 
     <Window.KeyBindings>
@@ -348,11 +351,21 @@
                         </ColumnDefinition.Width>
                     </ColumnDefinition>
 
-                    <ColumnDefinition Width="510"
-                                      MinWidth="420"
-                                      MaxWidth="720"/>
+                    <!-- Middle column: widens when grid view is active so 3 tile
+                         columns fit without cramping. List view keeps the original
+                         510 so wide rows don't feel oversized. -->
+                    <ColumnDefinition MinWidth="420"
+                                      MaxWidth="780">
+                        <ColumnDefinition.Width>
+                            <Binding Path="IsGridView" ConverterParameter="720|510">
+                                <Binding.Converter>
+                                    <converters:BoolToGridLengthConverter />
+                                </Binding.Converter>
+                            </Binding>
+                        </ColumnDefinition.Width>
+                    </ColumnDefinition>
                     <ColumnDefinition Width="*"
-                                      MinWidth="520"/>
+                                      MinWidth="560"/>
                 </Grid.ColumnDefinitions>
 
             <views:SidebarView Grid.Column="0"
@@ -457,7 +470,9 @@
                 </MultiBinding>
             </Border.IsVisible>
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                    <Grid Margin="20,20,20,20">
+                    <!-- Right margin bumped from 20 → 36 so the vertical scrollbar
+                         doesn't sit over the card / clip the header buttons. -->
+                    <Grid Margin="20,20,36,20">
                         <StackPanel IsVisible="{Binding !IsShowingSecureTrash}" Classes="fade-toggle">
 
                         <Border x:Name="DetailCard"
@@ -465,8 +480,8 @@
                                 CornerRadius="16"
                                 Padding="28,24"
                                 BoxShadow="{DynamicResource DetailCardShadow}"
-                                BorderBrush="{DynamicResource ControlBorderBrush}"
-                                BorderThickness="1"
+                                BorderBrush="{Binding SelectedCredentialCategoryBrush}"
+                                BorderThickness="3"
                                 IsVisible="{Binding SelectedCredential, Converter={x:Static ObjectConverters.IsNotNull}}">
                         <StackPanel Spacing="24" Classes="fade-toggle">
 

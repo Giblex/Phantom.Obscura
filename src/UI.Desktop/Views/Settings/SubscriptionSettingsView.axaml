@@ -1,0 +1,59 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PhantomVault.UI.ViewModels.Settings"
+             x:Class="PhantomVault.UI.Views.Settings.SubscriptionSettingsView"
+             x:DataType="vm:SubscriptionSettingsViewModel">
+    <StackPanel Spacing="20" Margin="0,0,0,60">
+        <TextBlock Text="Subscription"
+                   FontSize="{StaticResource Type.H3.Size}"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+        <Border Classes="fade-in stagger-1" HorizontalAlignment="Stretch"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
+                Padding="20">
+            <StackPanel Spacing="14">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Grid.Column="0" Spacing="4">
+                        <TextBlock Text="{Binding StatusSummary}"
+                                   FontSize="{StaticResource Type.Body.Size}"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        <TextBlock Text="{Binding ExpiryText}"
+                                   IsVisible="{Binding ShowExpiry}"
+                                   FontSize="{StaticResource Type.Small.Size}"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <Border Grid.Column="1"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource AccentBrush}"
+                            CornerRadius="10"
+                            Padding="12,4">
+                        <TextBlock Text="{Binding TierName}"
+                                   Foreground="#FFFFFFFF"
+                                   FontWeight="SemiBold"/>
+                    </Border>
+                </Grid>
+
+                <TextBlock Text="Premium unlocks custom themes, advanced settings, the full security &amp; password dashboard, the advanced category and icon managers, and multiple vaults on one device."
+                           FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
+
+                <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,4,0,0">
+                    <Button Content="{Binding UpgradeButtonText}"
+                            Command="{Binding UpgradeCommand}"
+                            Background="{DynamicResource AccentBrush}"
+                            Foreground="#FFFFFFFF"/>
+                    <Button Content="Refresh status"
+                            Command="{Binding RefreshCommand}"
+                            Classes="liquid-glass"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

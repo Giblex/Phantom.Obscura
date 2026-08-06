@@ -46,7 +46,13 @@ namespace PhantomVault.UI.ViewModels
         private string _copiedFeedback = string.Empty;
         private bool _isRecoveryAvailable;
         private string _recoveryStatus = "Recovery is not available from this build entry point.";
-        private readonly IntegratedAttestorService _integratedAttestorService = new();
+        // Resolved from DI (registered as a singleton in App.Composition.cs) rather than
+        // "new()" so the switcher's tracked-process state is shared with VaultViewModel's
+        // instance — otherwise this view and the header/detail switcher would each think
+        // Attestor isn't running even when the other one launched it.
+        private readonly IntegratedAttestorService _integratedAttestorService =
+            ((Application.Current as App)?.Services?.GetService(typeof(IntegratedAttestorService)) as IntegratedAttestorService)
+            ?? new IntegratedAttestorService();
         private bool _isAttestorAvailable;
         private string _attestorStatus = "PhantomAttestor is not available from this suite build.";
         private bool _isCategoryPinOptionsOpen;
@@ -281,8 +287,6 @@ namespace PhantomVault.UI.ViewModels
         public IClipboardGuard? ClipboardGuard { get; set; }
 
         public Action<string>? NavigateToFilter { get; set; }
-
-        public SecurityDashboardViewModel? SecurityDashboardViewModel { get; private set; }
 
         public void SetRecoveryAvailability(bool isAvailable, string status)
         {
@@ -530,28 +534,28 @@ namespace PhantomVault.UI.ViewModels
         private async Task AddPasswordAsync()
         {
 
-            RequestNavigation("Password");
+            RequestNavigation("AddCredential");
             await Task.CompletedTask;
         }
 
         private async Task OpenGeneratorAsync()
         {
 
-            RequestNavigation("All");
+            RequestNavigation("Generator");
             await Task.CompletedTask;
         }
 
         private async Task OpenImportAsync()
         {
 
-            RequestNavigation("All");
+            RequestNavigation("Import");
             await Task.CompletedTask;
         }
 
         private async Task OpenPasswordHealthAsync()
         {
 
-            RequestNavigation("Password");
+            RequestNavigation("PasswordHealth");
             await Task.CompletedTask;
         }
 
@@ -679,10 +683,6 @@ namespace PhantomVault.UI.ViewModels
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string TimeAgo { get; set; } = string.Empty;
-    }
-
-    public class SecurityDashboardViewModel
-    {
     }
 }
 

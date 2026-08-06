@@ -1314,6 +1314,8 @@ namespace PhantomVault.Core.Services
                     case "keepass kdbx":
                         throw new NotSupportedException("KeePass KDBX import requires an interactive password/keyfile prompt and must be started from the import window.");
                     case "json":
+                    case "phantom obscura":
+                        // Phantom Obscura's own export format is JSON.
                         importedCredentials = await ImportFromJsonAsync(filePath);
                         break;
                     case "1password csv":

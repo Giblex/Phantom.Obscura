@@ -21,6 +21,51 @@ namespace PhantomVault.UI.Services
 
         private static readonly SolidColorBrush DullNavyBrush = new SolidColorBrush(Color.Parse("#3D4F61"));
 
+        private static IBrush ThemeBrush(string key, string fallbackHex)
+        {
+            if (Application.Current is { } app &&
+                app.TryGetResource(key, app.ActualThemeVariant, out var value) && value is IBrush brush)
+            {
+                return brush;
+            }
+
+            return new SolidColorBrush(Color.Parse(fallbackHex));
+        }
+
+        // Semantic button-colour helpers replacing this file's hardcoded hex literals — each
+        // was a fixed colour that never followed the user's selected theme. Fallback hexes
+        // keep the original look when the resource is unavailable (e.g. no Application.Current).
+        // ConfirmButtonBrush uses UserAccentBrush (the live custom-accent-picker resource from
+        // ThemeManagerService.SetAccentColor) rather than AccentBrush, so it responds when the
+        // user picks a colour from Theme Settings' accent dropdown — matching the Settings
+        // Save button and Button.dull-blue, which follow the same resource for the same reason.
+        private static IBrush ConfirmButtonBrush => ThemeBrush("UserAccentBrush", "#6B8CAE");
+        private static IBrush NeutralButtonBrush => ThemeBrush("ControlBorderBrush", "#5A6C7E");
+        private static IBrush DangerButtonBrush => ThemeBrush("ErrorBrush", "#A85A5A");
+        private static IBrush WarningButtonBrush => ThemeBrush("WarningBrush", "#7A6C5A");
+
+        private static Button ThemedButton(string text, double width, double height, bool primary)
+        {
+            var button = new Button
+            {
+                Width = width,
+                Height = height,
+                Content = new TextBlock { Text = text, HorizontalAlignment = HorizontalAlignment.Center },
+                HorizontalContentAlignment = HorizontalAlignment.Center,
+                VerticalContentAlignment = VerticalAlignment.Center,
+                Foreground = ThemeBrush(primary ? "ButtonForegroundBrush" : "PrimaryTextBrush", primary ? "#FFFFFF" : "#E6ECF5"),
+                Classes = { "liquid-glass" }
+            };
+
+            if (primary)
+            {
+                button.Background = ThemeBrush("AccentBrush", "#5D7DA7");
+            }
+
+            return button;
+        }
+
+
         public async Task ShowInfoAsync(string title, string message, Window? owner = null)
         {
             var dialog = new Window
@@ -58,7 +103,7 @@ namespace PhantomVault.UI.Services
                 Width = 100,
                 Height = 35,
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
-                Background = new SolidColorBrush(Color.Parse("#6B8CAE")),
+                Background = ConfirmButtonBrush,
                 Foreground = Avalonia.Media.Brushes.White
             };
             okButton.Content = new TextBlock { Text = "OK" };
@@ -111,7 +156,7 @@ namespace PhantomVault.UI.Services
                 Width = 100,
                 Height = 35,
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
-                Background = new SolidColorBrush(Color.Parse("#6B8CAE")),
+                Background = ConfirmButtonBrush,
                 Foreground = Avalonia.Media.Brushes.White
             };
             okButton.Content = new TextBlock { Text = "OK" };
@@ -299,8 +344,8 @@ namespace PhantomVault.UI.Services
             {
                 Width = 120,
                 Height = 40,
-                Background = new SolidColorBrush(Color.Parse("#0C1620")),
-                BorderBrush = new SolidColorBrush(Color.Parse("#395264")),
+                Background = ThemeBrush("ControlBackgroundBrush", "#0C1620"),
+                BorderBrush = NeutralButtonBrush,
                 BorderThickness = new Thickness(1),
                 Foreground = Brushes.White,
                 Content = new TextBlock
@@ -315,8 +360,8 @@ namespace PhantomVault.UI.Services
             {
                 Width = 160,
                 Height = 40,
-                Background = new SolidColorBrush(Color.Parse("#173042")),
-                BorderBrush = new SolidColorBrush(Color.Parse("#55C3CF")),
+                Background = ThemeBrush("ControlBackgroundBrush", "#173042"),
+                BorderBrush = ConfirmButtonBrush,
                 BorderThickness = new Thickness(1),
                 Foreground = Brushes.White,
                 Content = new TextBlock
@@ -833,7 +878,7 @@ namespace PhantomVault.UI.Services
             {
                 Width = 100,
                 Height = 35,
-                Background = new SolidColorBrush(Color.Parse("#6B8CAE")),
+                Background = ConfirmButtonBrush,
                 Foreground = Avalonia.Media.Brushes.White
             };
             yesButton.Content = new TextBlock { Text = "Yes" };
@@ -848,7 +893,7 @@ namespace PhantomVault.UI.Services
             {
                 Width = 100,
                 Height = 35,
-                Background = new SolidColorBrush(Color.Parse("#5A6C7E")),
+                Background = NeutralButtonBrush,
                 Foreground = Avalonia.Media.Brushes.White
             };
             noButton.Content = new TextBlock { Text = "No" };
@@ -930,13 +975,13 @@ namespace PhantomVault.UI.Services
 
             var buttonPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right, Spacing = 8 };
 
-            var moveBtn = new Button { Width = 100, Height = 36, Background = new SolidColorBrush(Color.Parse("#6B8CAE")), Foreground = Avalonia.Media.Brushes.White };
+            var moveBtn = new Button { Width = 100, Height = 36, Background = ConfirmButtonBrush, Foreground = Avalonia.Media.Brushes.White };
             moveBtn.Content = new TextBlock { Text = "Move" };
-            var deleteBtn = new Button { Width = 100, Height = 36, Background = new SolidColorBrush(Color.Parse("#A85A5A")), Foreground = Avalonia.Media.Brushes.White };
+            var deleteBtn = new Button { Width = 100, Height = 36, Background = DangerButtonBrush, Foreground = Avalonia.Media.Brushes.White };
             deleteBtn.Content = new TextBlock { Text = "Delete" };
-            var trashBtn = new Button { Width = 140, Height = 36, Background = new SolidColorBrush(Color.Parse("#7A6C5A")), Foreground = Avalonia.Media.Brushes.White };
+            var trashBtn = new Button { Width = 140, Height = 36, Background = WarningButtonBrush, Foreground = Avalonia.Media.Brushes.White };
             trashBtn.Content = new TextBlock { Text = "Move to Trash" };
-            var cancelBtn = new Button { Width = 100, Height = 36, Background = new SolidColorBrush(Color.Parse("#5A6C7E")), Foreground = Avalonia.Media.Brushes.White };
+            var cancelBtn = new Button { Width = 100, Height = 36, Background = NeutralButtonBrush, Foreground = Avalonia.Media.Brushes.White };
             cancelBtn.Content = new TextBlock { Text = "Cancel" };
 
             (CategoryDeleteAction Action, string? TargetCategory) result = (CategoryDeleteAction.Cancel, null);
@@ -1051,11 +1096,11 @@ namespace PhantomVault.UI.Services
             }
 
             var buttonPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right, Spacing = 8 };
-            var restoreBtn = new Button { Width = 140, Height = 36, Background = new SolidColorBrush(Color.Parse("#6B8CAE")), Foreground = Avalonia.Media.Brushes.White };
+            var restoreBtn = new Button { Width = 140, Height = 36, Background = ConfirmButtonBrush, Foreground = Avalonia.Media.Brushes.White };
             restoreBtn.Content = new TextBlock { Text = "Restore Selected" };
-            var emptyBtn = new Button { Width = 120, Height = 36, Background = new SolidColorBrush(Color.Parse("#A85A5A")), Foreground = Avalonia.Media.Brushes.White };
+            var emptyBtn = new Button { Width = 120, Height = 36, Background = DangerButtonBrush, Foreground = Avalonia.Media.Brushes.White };
             emptyBtn.Content = new TextBlock { Text = "Empty Trash" };
-            var closeBtn = new Button { Width = 100, Height = 36, Background = new SolidColorBrush(Color.Parse("#5A6C7E")), Foreground = Avalonia.Media.Brushes.White };
+            var closeBtn = new Button { Width = 100, Height = 36, Background = NeutralButtonBrush, Foreground = Avalonia.Media.Brushes.White };
             closeBtn.Content = new TextBlock { Text = "Close" };
 
             (TrashManagerAction Action, List<SecureTrashRecord> Selected) result = (TrashManagerAction.Cancel, new List<SecureTrashRecord>());
@@ -1141,28 +1186,32 @@ namespace PhantomVault.UI.Services
             {
                 Title = "Bulk Actions",
                 Width = 520,
-                Height = 220,
+                Height = 230,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 CanResize = false,
-                Background = DullNavyBrush
+                Background = ThemeBrush("WindowBackgroundBrush", "#1A2530"),
+                Classes = { "animated-window" }
             };
 
-            var panel = new StackPanel { Margin = new Avalonia.Thickness(12), Spacing = 8 };
-            panel.Children.Add(new TextBlock { Text = "Apply action to items in the selected categories:", Foreground = Avalonia.Media.Brushes.White });
+            var panel = new StackPanel { Margin = new Avalonia.Thickness(20), Spacing = 14 };
+            panel.Children.Add(new TextBlock
+            {
+                Text = "Apply action to items in the selected categories:",
+                FontWeight = Avalonia.Media.FontWeight.SemiBold,
+                Foreground = ThemeBrush("PrimaryTextBrush", "#E6ECF5"),
+                TextWrapping = Avalonia.Media.TextWrapping.Wrap
+            });
 
             var combo = new ComboBox { ItemsSource = availableTargetCategories, SelectedIndex = availableTargetCategories.Count > 0 ? 0 : -1, Width = 360 };
             var row = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 8 };
-            row.Children.Add(new TextBlock { Text = "Move to:", Foreground = Avalonia.Media.Brushes.LightGray, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center });
+            row.Children.Add(new TextBlock { Text = "Move to:", Foreground = ThemeBrush("SecondaryTextBrush", "#9FB0C4"), VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center });
             row.Children.Add(combo);
             panel.Children.Add(row);
 
-            var buttonPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right, Spacing = 8 };
-            var moveBtn = new Button { Width = 100, Height = 36, Background = new SolidColorBrush(Color.Parse("#6B8CAE")), Foreground = Avalonia.Media.Brushes.White };
-            moveBtn.Content = new TextBlock { Text = "Move" };
-            var deleteBtn = new Button { Width = 140, Height = 36, Background = new SolidColorBrush(Color.Parse("#7A6C5A")), Foreground = Avalonia.Media.Brushes.White };
-            deleteBtn.Content = new TextBlock { Text = "Move to Deleted" };
-            var cancelBtn = new Button { Width = 100, Height = 36, Background = new SolidColorBrush(Color.Parse("#5A6C7E")), Foreground = Avalonia.Media.Brushes.White };
-            cancelBtn.Content = new TextBlock { Text = "Cancel" };
+            var buttonPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right, Spacing = 10, Margin = new Avalonia.Thickness(0, 6, 0, 0) };
+            var moveBtn = ThemedButton("Move", 110, 38, primary: true);
+            var deleteBtn = ThemedButton("Move to Deleted", 150, 38, primary: false);
+            var cancelBtn = ThemedButton("Cancel", 110, 38, primary: false);
 
             (BulkCategoriesAction Action, string? TargetCategory) result = (BulkCategoriesAction.Cancel, null);
 
@@ -1204,16 +1253,15 @@ namespace PhantomVault.UI.Services
                 Height = 520,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 CanResize = true,
-                Background = DullNavyBrush
+                Background = ThemeBrush("WindowBackgroundBrush", "#1A2530"),
+                Classes = { "animated-window" }
             };
 
-            var panel = new StackPanel { Margin = new Avalonia.Thickness(12), Spacing = 8 };
-            var header = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 8 };
-            header.Children.Add(new TextBlock { Text = $"Items in '{categoryName}'", FontSize = 18, FontWeight = Avalonia.Media.FontWeight.Bold, Foreground = Avalonia.Media.Brushes.White });
-            var selectAllBtn = new Button { Width = 110, Height = 30, Background = new SolidColorBrush(Color.Parse("#6B8CAE")), Foreground = Avalonia.Media.Brushes.White };
-            selectAllBtn.Content = new TextBlock { Text = "Select All" };
-            var selectNoneBtn = new Button { Width = 110, Height = 30, Background = new SolidColorBrush(Color.Parse("#5A6C7E")), Foreground = Avalonia.Media.Brushes.White };
-            selectNoneBtn.Content = new TextBlock { Text = "Select None" };
+            var panel = new StackPanel { Margin = new Avalonia.Thickness(20), Spacing = 12 };
+            var header = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 10 };
+            header.Children.Add(new TextBlock { Text = $"Items in '{categoryName}'", FontSize = 18, FontWeight = Avalonia.Media.FontWeight.Bold, Foreground = ThemeBrush("PrimaryTextBrush", "#E6ECF5"), VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center });
+            var selectAllBtn = ThemedButton("Select All", 110, 32, primary: false);
+            var selectNoneBtn = ThemedButton("Select None", 110, 32, primary: false);
             header.Children.Add(selectAllBtn);
             header.Children.Add(selectNoneBtn);
             panel.Children.Add(header);
@@ -1223,12 +1271,12 @@ namespace PhantomVault.UI.Services
             foreach (var cred in credentialsInCategory)
             {
                 var label = string.IsNullOrWhiteSpace(cred.Username) ? cred.Title : $"{cred.Title} — {cred.Username}";
-                var cb = new CheckBox { Content = label, IsChecked = false, Foreground = Avalonia.Media.Brushes.LightGray };
+                var cb = new CheckBox { Content = label, IsChecked = false, Foreground = ThemeBrush("PrimaryTextBrush", "#E6ECF5") };
                 checkboxPanel.Children.Add(cb);
                 checkboxMap[cred] = cb;
             }
 
-            var targetLabel = new TextBlock { Text = "Move selected to:", Foreground = Avalonia.Media.Brushes.LightGray };
+            var targetLabel = new TextBlock { Text = "Move selected to:", Foreground = ThemeBrush("SecondaryTextBrush", "#9FB0C4"), VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
             var targetCombo = new ComboBox { ItemsSource = availableTargetCategories, SelectedIndex = availableTargetCategories.Count > 0 ? 0 : -1 };
 
             panel.Children.Add(checkboxPanel);
@@ -1239,11 +1287,9 @@ namespace PhantomVault.UI.Services
                 Children = { targetLabel, targetCombo }
             });
 
-            var buttonPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right, Spacing = 8 };
-            var moveBtn = new Button { Width = 140, Height = 36, Background = new SolidColorBrush(Color.Parse("#6B8CAE")), Foreground = Avalonia.Media.Brushes.White };
-            moveBtn.Content = new TextBlock { Text = "Move Selected" };
-            var closeBtn = new Button { Width = 100, Height = 36, Background = new SolidColorBrush(Color.Parse("#5A6C7E")), Foreground = Avalonia.Media.Brushes.White };
-            closeBtn.Content = new TextBlock { Text = "Close" };
+            var buttonPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right, Spacing = 10, Margin = new Avalonia.Thickness(0, 6, 0, 0) };
+            var moveBtn = ThemedButton("Move Selected", 150, 38, primary: true);
+            var closeBtn = ThemedButton("Close", 110, 38, primary: false);
 
             (CategoryItemsAction Action, List<Credential> Selected, string? TargetCategory) result = (CategoryItemsAction.Cancel, new List<Credential>(), null);
 
@@ -1305,9 +1351,9 @@ namespace PhantomVault.UI.Services
             panel.Children.Add(combo);
 
             var buttonPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right, Spacing = 8 };
-            var ok = new Button { Width = 100, Height = 36, Background = new SolidColorBrush(Color.Parse("#6B8CAE")), Foreground = Avalonia.Media.Brushes.White };
+            var ok = new Button { Width = 100, Height = 36, Background = ConfirmButtonBrush, Foreground = Avalonia.Media.Brushes.White };
             ok.Content = new TextBlock { Text = "OK" };
-            var cancel = new Button { Width = 100, Height = 36, Background = new SolidColorBrush(Color.Parse("#5A6C7E")), Foreground = Avalonia.Media.Brushes.White };
+            var cancel = new Button { Width = 100, Height = 36, Background = NeutralButtonBrush, Foreground = Avalonia.Media.Brushes.White };
             cancel.Content = new TextBlock { Text = "Cancel" };
 
             string? result = null;
@@ -1458,7 +1504,7 @@ namespace PhantomVault.UI.Services
                 Content = "Select All",
                 Width = 100,
                 Height = 32,
-                Background = new SolidColorBrush(Color.Parse("#5A6C7E")),
+                Background = NeutralButtonBrush,
                 Foreground = Avalonia.Media.Brushes.White
             };
             selectAllBtn.Click += (s, e) =>
@@ -1471,7 +1517,7 @@ namespace PhantomVault.UI.Services
                 Content = "Deselect All",
                 Width = 100,
                 Height = 32,
-                Background = new SolidColorBrush(Color.Parse("#5A6C7E")),
+                Background = NeutralButtonBrush,
                 Foreground = Avalonia.Media.Brushes.White
             };
             deselectAllBtn.Click += (s, e) =>
@@ -1496,7 +1542,7 @@ namespace PhantomVault.UI.Services
                 Content = "Skip",
                 Width = 100,
                 Height = 36,
-                Background = new SolidColorBrush(Color.Parse("#5A6C7E")),
+                Background = NeutralButtonBrush,
                 Foreground = Avalonia.Media.Brushes.White
             };
 
@@ -1505,7 +1551,7 @@ namespace PhantomVault.UI.Services
                 Content = "Move Selected",
                 Width = 120,
                 Height = 36,
-                Background = new SolidColorBrush(Color.Parse("#6B8CAE")),
+                Background = ConfirmButtonBrush,
                 Foreground = Avalonia.Media.Brushes.White
             };
 
@@ -1612,7 +1658,7 @@ namespace PhantomVault.UI.Services
             {
                 Width = 140,
                 Height = 42,
-                Background = new SolidColorBrush(Color.Parse("#A85A5A")),
+                Background = DangerButtonBrush,
                 Foreground = Avalonia.Media.Brushes.White,
                 FontWeight = FontWeight.SemiBold,
                 IsEnabled = false
@@ -1623,7 +1669,7 @@ namespace PhantomVault.UI.Services
             {
                 Width = 120,
                 Height = 42,
-                Background = new SolidColorBrush(Color.Parse("#5A6C7E")),
+                Background = NeutralButtonBrush,
                 Foreground = Avalonia.Media.Brushes.White
             };
             cancelButton.Content = new TextBlock { Text = "Cancel" };

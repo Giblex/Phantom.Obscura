@@ -2,7 +2,7 @@ using Avalonia.Controls;
 
 namespace PhantomVault.UI.Views
 {
-    public partial class ShortcutsWindow : Window
+    public partial class ShortcutsWindow : ThemeAwareWindow
     {
         public ShortcutsWindow()
         {

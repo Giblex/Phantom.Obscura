@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Window xmlns="https://github.com/avaloniaui"
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:PhantomVault.UI.ViewModels"
+        xmlns:views="clr-namespace:PhantomVault.UI.Views"
         x:Class="PhantomVault.UI.Views.AddCategoryDialog"
         Title="Add New Category"
         Width="800"
@@ -160,5 +161,5 @@
             </Grid>
         </Border>
     </Grid>
-</Window>
+</views:ThemeAwareWindow>
 

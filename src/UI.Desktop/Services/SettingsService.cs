@@ -51,6 +51,7 @@ namespace PhantomVault.UI.Services
 
         public bool ShowEntryIcons { get; set; } = true;
         public bool ShowCategoryColors { get; set; } = true;
+        public bool UseColouredCategoryBlur { get; set; } = false;
         public int AccessibilityFontSize { get; set; } = 1;
         public int AccessibilityFontFamily { get; set; } = 0;
         public bool EnableKeyboardShortcuts { get; set; } = true;
@@ -82,7 +83,7 @@ namespace PhantomVault.UI.Services
 
         public bool ShowCategoryColorBarOnly { get; set; } = false;
 
-        public string SelectedThemeId { get; set; } = "ClassicDark";
+        public string SelectedThemeId { get; set; } = "GiblexGlassNavy";
 
         public int ClipboardClearTime { get; set; } = 1;
 
@@ -197,6 +198,14 @@ namespace PhantomVault.UI.Services
 
         public bool AutoFillModeEnabled { get; set; } = false;
 
+        // Privileged helper (broker) install consent — remembered across launches
+        // so the "Enable privileged helper" dialog only ever fires on the very
+        // first request. `AutoInstall = true` means "user consented, install
+        // silently from now on"; `Declined = true` means "user said no, don't
+        // ever ask again." Both are toggleable from Settings → Security.
+        public bool PrivilegedBrokerAutoInstall { get; set; } = false;
+        public bool PrivilegedBrokerDeclined { get; set; } = false;
+
         public bool AutoFillAutoInputTotp { get; set; } = true;
 
         public bool AutoFillShowNewEntryOnNoMatch { get; set; } = true;
@@ -218,6 +227,29 @@ namespace PhantomVault.UI.Services
         public bool SyncEnabled { get; set; } = true;
 
         public bool SyncTheme { get; set; } = true;
+
+        /// <summary>
+        /// When enabled (and <see cref="SyncEnabled"/> is on), TOTP secrets are shared
+        /// with Phantom Attestor through the per-vault sync file on the USB device.
+        /// This is the only sync channel that moves secret material, so it is gated by
+        /// its own opt-out and never runs when cross-app sync is disabled.
+        /// </summary>
+        public bool SyncTotp { get; set; } = true;
+
+        /// <summary>
+        /// When enabled, non-secret passkey identity metadata (label, relying-party id,
+        /// credential id, public key) is shared with Phantom Attestor for cross-app
+        /// awareness. Private key material is never exported — passkeys stay device-bound.
+        /// </summary>
+        public bool SyncPasskeys { get; set; } = false;
+
+        /// <summary>
+        /// When enabled, the PhantomKey bridge continuity/policy documents (non-secret,
+        /// per <see cref="PhantomVault.Core.Models.PhantomKeyBridgeContract"/>) are shared
+        /// with Phantom Attestor. Honours the bridge policy's PrivateMaterialExportAllowed
+        /// flag and never exports raw key material.
+        /// </summary>
+        public bool SyncPhantomKey { get; set; } = false;
 
         public DateTimeOffset? LastSyncTime { get; set; }
 

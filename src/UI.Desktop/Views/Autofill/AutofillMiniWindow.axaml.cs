@@ -3,11 +3,12 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using PhantomVault.UI.ViewModels.Autofill;
+using PhantomVault.UI.Views;
 
 namespace PhantomVault.UI.Views.Autofill
 {
 
-    public partial class AutofillMiniWindow : Window
+    public partial class AutofillMiniWindow : ThemeAwareWindow
     {
         public AutofillMiniWindow()
         {

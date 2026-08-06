@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
@@ -88,9 +89,16 @@ namespace PhantomVault.UI.Services.TrayBackground
             {
                 if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 {
-                    var win = desktop.MainWindow;
+                    // Prefer the currently-live vault window (the unlocked session) over
+                    // MainWindow if they've diverged — e.g. MainWindow still points at the
+                    // welcome window after unlock. Falls back to MainWindow otherwise.
+                    var win = desktop.Windows
+                        .FirstOrDefault(w => w.GetType().Name == "VaultWindow")
+                        ?? desktop.MainWindow;
                     if (win is null) return;
                     win.Show();
+                    if (win.WindowState == WindowState.Minimized)
+                        win.WindowState = WindowState.Normal;
                     win.Activate();
                     win.BringIntoView();
                 }
@@ -123,7 +131,7 @@ namespace PhantomVault.UI.Services.TrayBackground
         {
             try
             {
-                var uri = new Uri("avares://PhantomVault.UI/Assets/phantom_icon.ico");
+                var uri = new Uri("avares://PhantomVault.UI/Assets/phantom_obscura_tray.ico");
                 using var stream = Avalonia.Platform.AssetLoader.Open(uri);
                 return new WindowIcon(stream);
             }

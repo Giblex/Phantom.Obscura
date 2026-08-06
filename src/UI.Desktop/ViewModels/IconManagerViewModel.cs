@@ -865,17 +865,39 @@ namespace PhantomVault.UI.ViewModels
         {
             if (string.IsNullOrWhiteSpace(name)) return name ?? string.Empty;
 
-            var idx = name.LastIndexOf('_');
-            if (idx > 0 && idx < name.Length - 1)
-            {
-                var suffix = name.Substring(idx + 1);
+            var rx = System.Text.RegularExpressions.RegexOptions.None;
+            var key = name.Trim().ToLowerInvariant();
 
-                if (System.Text.RegularExpressions.Regex.IsMatch(suffix, "^[a-z0-9-]+$", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+            key = System.Text.RegularExpressions.Regex.Replace(key, "@\\d+x$", string.Empty, rx);
+            key = key.Replace('_', '-').Replace(' ', '-');
+
+            var styleTokens = new HashSet<string>(StringComparer.Ordinal)
+            {
+                "outline", "filled", "fill", "solid", "line", "lines", "linear",
+                "bold", "regular", "thin", "light", "duotone", "flat", "color",
+                "colour", "mono", "monochrome", "round", "rounded", "sharp", "alt"
+            };
+
+            bool changed = true;
+            while (changed)
+            {
+                changed = false;
+                var idx = key.LastIndexOf('-');
+                if (idx <= 0 || idx >= key.Length - 1) break;
+
+                var suffix = key.Substring(idx + 1);
+                bool isIndex = System.Text.RegularExpressions.Regex.IsMatch(suffix, "^\\d+$");
+                bool isPixelSize = System.Text.RegularExpressions.Regex.IsMatch(suffix, "^\\d+(x\\d+)?(px)?$");
+                bool isStyle = styleTokens.Contains(suffix);
+
+                if (isIndex || isPixelSize || isStyle)
                 {
-                    return name.Substring(0, idx);
+                    key = key.Substring(0, idx);
+                    changed = true;
                 }
             }
-            return name;
+
+            return key;
         }
 
         private static bool IsExcluded(IconFileEntryViewModel icon)

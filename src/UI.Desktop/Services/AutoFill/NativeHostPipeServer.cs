@@ -206,7 +206,10 @@ namespace PhantomVault.UI.Services.AutoFill
             var credentials = provider.GetCredentials()
                 .Where(c => normalizedSearch.Length == 0 ||
                             NormalizeDomain(ExtractDomain(c.Url)).Contains(normalizedSearch, StringComparison.OrdinalIgnoreCase))
-                .Select(c => new { title = c.Title, username = c.Username, url = c.Url })
+                .OrderByDescending(c => string.Equals(NormalizeDomain(ExtractDomain(c.Url)), normalizedSearch, StringComparison.OrdinalIgnoreCase))
+                .ThenByDescending(c => c.LastUsedUtc ?? DateTimeOffset.MinValue)
+                .Take(3)
+                .Select(c => new { title = c.Title, username = c.Username, password = c.Password, url = c.Url })
                 .ToList();
 
             return JsonSerializer.Serialize(new { success = true, credentials });

@@ -324,14 +324,6 @@
             </Border.Background>
         </Border>
         <ScrollViewer x:Name="SheetScroller" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-            <ScrollViewer.OpacityMask>
-                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                    <GradientStop Offset="0.0" Color="#FFFFFFFF"/>
-                    <GradientStop Offset="0.88" Color="#FFFFFFFF"/>
-                    <GradientStop Offset="0.96" Color="#40FFFFFF"/>
-                    <GradientStop Offset="1.0" Color="#00FFFFFF"/>
-                </LinearGradientBrush>
-            </ScrollViewer.OpacityMask>
         <StackPanel Spacing="{StaticResource Space.Xl}" Margin="24,4,24,96">
 
             <TextBlock Text="Dashboard"

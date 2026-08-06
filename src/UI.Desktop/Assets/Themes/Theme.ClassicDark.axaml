@@ -36,6 +36,9 @@
     <SolidColorBrush x:Key="AccentBrush" Color="#556C83"/>
     <SolidColorBrush x:Key="AccentHoverBrush" Color="#647D94"/>
     <SolidColorBrush x:Key="SecondaryAccentBrush" Color="#6FA89F"/>
+    <SolidColorBrush x:Key="Brush.Accent" Color="{StaticResource Color.Accent}"/>
+    <SolidColorBrush x:Key="Brush.AccentHover" Color="{StaticResource Color.AccentHover}"/>
+    <SolidColorBrush x:Key="Brush.BorderSoft" Color="#556C83"/>
 
     <Color x:Key="PrimaryTextColor">#FFFFFF</Color>
     <SolidColorBrush x:Key="PrimaryTextBrush" Color="#FFFFFF"/>

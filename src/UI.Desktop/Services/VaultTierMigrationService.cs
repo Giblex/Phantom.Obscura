@@ -175,7 +175,8 @@ namespace PhantomVault.UI.Services
             else
             {
                 string targetRoot = NormalizeDriveRoot(plan.TargetFilesystemRoot!);
-                masterVolumePath = Path.Combine(targetRoot, "system.bin");
+                PhantomDeviceLayout.EnsurePhantomRoot(targetRoot);
+                masterVolumePath = PhantomDeviceLayout.GetSystemVolumePath(targetRoot);
                 await _obscuraVolumeService.CreateVolumeFromDirectoryAsync(masterVolumePath, context.TransportLayoutRoot, cancellationToken).ConfigureAwait(false);
             }
 
@@ -232,7 +233,7 @@ namespace PhantomVault.UI.Services
             manifest.ProtectionTier = targetTier;
             manifest.EffectiveStorageTransport = targetTransport;
             manifest.RequestedStorageTransport = targetTier == VaultProtectionTier.BlackSecure ? VaultStorageTransport.RawDevice : null;
-            manifest.MasterVolumePath = targetTransport == VaultStorageTransport.PackedVolume ? "system.bin" : null;
+            manifest.MasterVolumePath = targetTransport == VaultStorageTransport.PackedVolume ? PhantomDeviceLayout.SystemVolumeRelativePath : null;
             manifest.RootContainerPath = NormalizeCanonicalPath(provisioningRecord.CurrentRootContainerPath, RootContainerRelativePath);
             manifest.ContainerPath = NormalizeCanonicalPath(provisioningRecord.CurrentVaultContainerPath, VaultContainerRelativePath);
             manifest.ObjectContainerPath = NormalizeCanonicalPath(provisioningRecord.CurrentObjectContainerPath, ObjectContainerRelativePath);
@@ -316,7 +317,7 @@ namespace PhantomVault.UI.Services
             provisioningRecord.CurrentVaultContainerPath = NormalizeCanonicalPath(provisioningRecord.CurrentVaultContainerPath, VaultContainerRelativePath);
             provisioningRecord.CurrentObjectContainerPath = NormalizeCanonicalPath(provisioningRecord.CurrentObjectContainerPath, ObjectContainerRelativePath);
             provisioningRecord.CurrentRecoveryContainerPath = NormalizeCanonicalPath(provisioningRecord.CurrentRecoveryContainerPath, RecoveryContainerRelativePath);
-            provisioningRecord.CurrentMasterVolumePath = targetTransport == VaultStorageTransport.PackedVolume ? "system.bin" : null;
+            provisioningRecord.CurrentMasterVolumePath = targetTransport == VaultStorageTransport.PackedVolume ? PhantomDeviceLayout.SystemVolumeRelativePath : null;
             provisioningRecord.RecommendedRollbackTransport = targetTier == VaultProtectionTier.BlackSecure
                 ? VaultStorageTransport.PackedVolume
                 : VaultStorageTransport.RawDevice;

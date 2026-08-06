@@ -24,6 +24,14 @@
 
     <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#DEF2F6"/>
     <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#E5EFF2"/>
+
+    <!-- Vault header (main banner) — very faint teal wash (matches the
+         sidebar tone) with equally faint navy-blue accent spots. -->
+    <SolidColorBrush x:Key="HeaderPrimaryBrush" Color="#22B8E0D8"/>
+    <Color x:Key="HeaderBlob1Color">#183B5B93</Color>
+    <Color x:Key="HeaderBlob2Color">#122A4A85</Color>
+    <Color x:Key="HeaderBlob3Color">#14406090</Color>
+    <Color x:Key="HeaderBlob4Color">#125A7ACD</Color>
     <SolidColorBrush x:Key="HeaderBorderBrush" Color="#138A9C"/>
     <SolidColorBrush x:Key="FooterBackgroundBrush" Color="#E9F3F5"/>
     <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#E5EFF2"/>
@@ -52,7 +60,7 @@
     <SolidColorBrush x:Key="FooterTextBrush" Color="#10202A"/>
     <SolidColorBrush x:Key="FooterMutedTextBrush" Color="#5A7280"/>
     <SolidColorBrush x:Key="SecondaryTextBrush" Color="#3A5060"/>
-    <SolidColorBrush x:Key="MutedTextBrush" Color="#5A7280"/>
+    <SolidColorBrush x:Key="MutedTextBrush" Color="#3A4A56"/>
     <SolidColorBrush x:Key="DisabledTextBrush" Color="#8FA0AB"/>
 
     <SolidColorBrush x:Key="HeaderButtonBackgroundBrush" Color="#138A9C"/>
@@ -187,37 +195,47 @@
     <Color x:Key="Glass.Sheen.Bright">#FFFFFF</Color>
     <Color x:Key="Glass.Sheen.Mid">#E5EFF2</Color>
     <Color x:Key="Glass.Sheen.Soft">#C8D7DE</Color>
-    <SolidColorBrush x:Key="Brush.Glass.Border" Color="#48FFFFFF"/>
-    <SolidColorBrush x:Key="Brush.Glass.BorderHover" Color="#6AFFFFFF"/>
+    <LinearGradientBrush x:Key="Brush.Glass.Border" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#78FFFFFF" Offset="0"/>
+        <GradientStop Color="#28138A9C" Offset="0.35"/>
+        <GradientStop Color="#18FFFFFF" Offset="0.7"/>
+        <GradientStop Color="#40138A9C" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="Brush.Glass.BorderHover" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#A0FFFFFF" Offset="0"/>
+        <GradientStop Color="#48138A9C" Offset="0.35"/>
+        <GradientStop Color="#30FFFFFF" Offset="0.7"/>
+        <GradientStop Color="#60138A9C" Offset="1"/>
+    </LinearGradientBrush>
     <SolidColorBrush x:Key="Brush.Glass.BorderPressed" Color="#30E8F2F5"/>
     <SolidColorBrush x:Key="Brush.Glass.BorderFocus" Color="#138A9C"/>
     <SolidColorBrush x:Key="Brush.Glass.EdgeHighlight.Start" Color="#50EEF3F5"/>
     <SolidColorBrush x:Key="Brush.Glass.EdgeHighlight.Mid" Color="#30D4DDE3"/>
     <SolidColorBrush x:Key="Brush.Glass.EdgeHighlight.End" Color="#00138A9C"/>
 
-    <RadialGradientBrush x:Key="Brush.Glass.BaseFill" Center="35%,40%" RadiusX="80%" RadiusY="80%">
-        <GradientStop Color="#18FFFFFF" Offset="0"/>
-        <GradientStop Color="#14D8E8ED" Offset="0.5"/>
-        <GradientStop Color="#0EC8D7DE" Offset="0.8"/>
-        <GradientStop Color="#08B8CCD5" Offset="1"/>
+            <RadialGradientBrush x:Key="Brush.Glass.BaseFill" Center="35%,40%" RadiusX="80%" RadiusY="80%">
+        <GradientStop Color="#0A000000" Offset="0"/>
+        <GradientStop Color="#08000000" Offset="0.5"/>
+        <GradientStop Color="#06000000" Offset="0.8"/>
+        <GradientStop Color="#00000000" Offset="1"/>
     </RadialGradientBrush>
-    <RadialGradientBrush x:Key="Brush.Glass.BaseFillHover" Center="35%,40%" RadiusX="80%" RadiusY="80%">
-        <GradientStop Color="#28FFFFFF" Offset="0"/>
-        <GradientStop Color="#1ED8E8ED" Offset="0.5"/>
-        <GradientStop Color="#16C8D7DE" Offset="0.8"/>
-        <GradientStop Color="#0EB8CCD5" Offset="1"/>
+            <RadialGradientBrush x:Key="Brush.Glass.BaseFillHover" Center="35%,40%" RadiusX="80%" RadiusY="80%">
+        <GradientStop Color="#14000000" Offset="0"/>
+        <GradientStop Color="#10000000" Offset="0.5"/>
+        <GradientStop Color="#0A000000" Offset="0.8"/>
+        <GradientStop Color="#04000000" Offset="1"/>
     </RadialGradientBrush>
-    <RadialGradientBrush x:Key="Brush.Glass.BaseFillPressed" Center="35%,40%" RadiusX="80%" RadiusY="80%">
-        <GradientStop Color="#10FFFFFF" Offset="0"/>
-        <GradientStop Color="#0CD0E0E5" Offset="0.5"/>
-        <GradientStop Color="#0AC2D1D8" Offset="0.8"/>
-        <GradientStop Color="#06B0C4CD" Offset="1"/>
+            <RadialGradientBrush x:Key="Brush.Glass.BaseFillPressed" Center="35%,40%" RadiusX="80%" RadiusY="80%">
+        <GradientStop Color="#06000000" Offset="0"/>
+        <GradientStop Color="#05000000" Offset="0.5"/>
+        <GradientStop Color="#04000000" Offset="0.8"/>
+        <GradientStop Color="#00000000" Offset="1"/>
     </RadialGradientBrush>
-    <RadialGradientBrush x:Key="Brush.Glass.BaseFillChecked" Center="35%,40%" RadiusX="80%" RadiusY="80%">
-        <GradientStop Color="#38FFFFFF" Offset="0"/>
-        <GradientStop Color="#2CD8E8ED" Offset="0.5"/>
-        <GradientStop Color="#22C8D7DE" Offset="0.8"/>
-        <GradientStop Color="#18B8CCD5" Offset="1"/>
+            <RadialGradientBrush x:Key="Brush.Glass.BaseFillChecked" Center="35%,40%" RadiusX="80%" RadiusY="80%">
+        <GradientStop Color="#1E000000" Offset="0"/>
+        <GradientStop Color="#18000000" Offset="0.5"/>
+        <GradientStop Color="#12000000" Offset="0.8"/>
+        <GradientStop Color="#08000000" Offset="1"/>
     </RadialGradientBrush>
 
     <LinearGradientBrush x:Key="Brush.Glass.InnerShadow" StartPoint="100%,100%" EndPoint="0%,0%">
@@ -225,12 +243,7 @@
         <GradientStop Color="#00A0B5C0" Offset="0.4"/>
     </LinearGradientBrush>
 
-    <RadialGradientBrush x:Key="Brush.Glass.Sheen" Center="30%,25%" RadiusX="60%" RadiusY="50%">
-        <GradientStop Color="#30FFFFFF" Offset="0"/>
-        <GradientStop Color="#1CF4FAFB" Offset="0.2"/>
-        <GradientStop Color="#10E5EFF2" Offset="0.5"/>
-        <GradientStop Color="#00000000" Offset="1"/>
-    </RadialGradientBrush>
+    <SolidColorBrush x:Key="Brush.Glass.Sheen" Color="#00FFFFFF"/>
 
     <LinearGradientBrush x:Key="Brush.Glass.EdgeHighlightBorder" StartPoint="0%,0%" EndPoint="100%,100%">
         <GradientStop Color="#5CFFFFFF" Offset="0"/>
@@ -247,12 +260,12 @@
     <Color x:Key="LiquidGlassDropShadow">#223A5060</Color>
     <Color x:Key="LiquidGlassDropShadowHover">#2C3A5060</Color>
     <Color x:Key="LiquidGlassDropShadowPressed">#163A5060</Color>
-    <DropShadowEffect x:Key="LiquidGlassButtonEffect" BlurRadius="10" OffsetX="0" OffsetY="3" Color="#3A5060" Opacity="0.14"/>
-    <DropShadowEffect x:Key="LiquidGlassButtonEffectHover" BlurRadius="16" OffsetX="0" OffsetY="4" Color="#3A5060" Opacity="0.20"/>
-    <DropShadowEffect x:Key="LiquidGlassButtonEffectPressed" BlurRadius="5" OffsetX="0" OffsetY="1" Color="#3A5060" Opacity="0.08"/>
+    <DropShadowEffect x:Key="LiquidGlassButtonEffect" BlurRadius="18" OffsetX="0" OffsetY="4" Color="#3A5060" Opacity="0.22"/>
+    <DropShadowEffect x:Key="LiquidGlassButtonEffectHover" BlurRadius="24" OffsetX="0" OffsetY="6" Color="#3A5060" Opacity="0.28"/>
+    <DropShadowEffect x:Key="LiquidGlassButtonEffectPressed" BlurRadius="10" OffsetX="0" OffsetY="2" Color="#3A5060" Opacity="0.14"/>
 
     <SolidColorBrush x:Key="LiquidGlassButtonForeground" Color="#10202A"/>
-    <SolidColorBrush x:Key="HeaderSvgIconColor" Color="#3B5260"/>
+    <SolidColorBrush x:Key="HeaderSvgIconColor" Color="#10202A"/>
 
     <SolidColorBrush x:Key="TileHoverBrush" Color="#0A10202A"/>
     <SolidColorBrush x:Key="TilePressedBrush" Color="#1210202A"/>

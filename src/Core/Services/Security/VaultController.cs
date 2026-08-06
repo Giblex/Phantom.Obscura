@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PhantomVault.Core.Models;
@@ -25,24 +24,18 @@ namespace PhantomVault.Core.Services.Security
 
         public async Task SwitchToDecoyVaultAsync()
         {
-            _logger?.LogCritical("SWITCHING TO DECOY VAULT - Suspected security compromise");
-
+            // Deniability rule: no decoy-identifying text reaches the on-disk log sink.
+            // Activation and read-only entry happen silently; a coercer reading the logs
+            // must see nothing that distinguishes this from an ordinary session.
             try
             {
-
-                var decoyDatabase = await _decoyService.ActivateDecoyVaultAsync();
-
+                await _decoyService.ActivateDecoyVaultAsync();
                 EnterReadOnlyMode();
-
-                int totalCredentials = decoyDatabase.Groups?.Sum(g => g.Entries?.Count ?? 0) ?? 0;
-                _logger?.LogCritical(
-                    "Decoy vault activated successfully with {CredentialCount} fake credentials. " +
-                    "Real vault data is protected. This is a critical security event.",
-                    totalCredentials);
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Failed to activate decoy vault");
+                // Generic wording only — never name the decoy in a persisted log.
+                _logger?.LogError(ex, "Protected-mode activation failed");
                 throw;
             }
         }

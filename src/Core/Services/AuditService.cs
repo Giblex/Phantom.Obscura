@@ -90,9 +90,22 @@ namespace PhantomVault.Core.Services
 
         public bool VerifyAuditLog(string logFilePath, out string? error)
         {
-            error = null;
-            if (!File.Exists(logFilePath))
-                return true;
+            var result = ReadEntries(logFilePath);
+            error = result.Error;
+            return result.ChainValid;
+        }
+
+        /// <summary>
+        /// Decodes every entry from a (plaintext or encrypted) audit log, verifying the
+        /// hash chain as it goes. Used by the in-app Security Activity viewer. On a chain
+        /// break it returns the entries decoded so far plus an explanatory error, so the UI
+        /// can show partial history and flag tampering rather than failing silently.
+        /// </summary>
+        public AuditReadResult ReadEntries(string logFilePath)
+        {
+            var entries = new List<AuditEntry>();
+            if (string.IsNullOrWhiteSpace(logFilePath) || !File.Exists(logFilePath))
+                return new AuditReadResult(entries, true, null);
 
             string expectedPrev = string.Empty;
 
@@ -104,6 +117,7 @@ namespace PhantomVault.Core.Services
                 try
                 {
                     AuditEntry entry;
+                    bool verifyContentHash = false;
                     if (_encryptionService != null && _auditLogKey != null)
                     {
                         var enc = JsonSerializer.Deserialize<EncryptedAuditEntry>(line);
@@ -114,29 +128,50 @@ namespace PhantomVault.Core.Services
                         var nonce = Convert.FromBase64String(enc.Nonce);
                         var tag = Convert.FromBase64String(enc.Tag);
                         var aad = Encoding.UTF8.GetBytes(enc.PrevHash ?? string.Empty);
+                        // AEAD (with PrevHash as AAD) authenticates both content and linkage.
                         var plain = _encryptionService.Decrypt(ciphertext, nonce, tag, _auditLogKey, aad);
                         entry = JsonSerializer.Deserialize<AuditEntry>(plain)!;
+                        entry = entry with { PreviousHash = enc.PrevHash };
                     }
                     else
                     {
                         entry = JsonSerializer.Deserialize<AuditEntry>(line)!;
+                        verifyContentHash = true;
                     }
 
-                    if (entry.PreviousHash != expectedPrev)
+                    if ((entry.PreviousHash ?? string.Empty) != expectedPrev)
+                        return new AuditReadResult(entries, false, $"Hash chain broken at {entry.Timestamp:u}");
+
+                    if (verifyContentHash)
                     {
-                        error = $"Hash chain broken at {entry.Timestamp}";
-                        return false;
+                        // Recompute the entry hash over its content (with Hash blanked, matching
+                        // how LogEvent derives it) so an edited line is detected even if its
+                        // stored hash field was left untouched.
+                        var recomputed = ComputeEntryHash(entry);
+                        if (!string.Equals(recomputed, entry.Hash, StringComparison.Ordinal))
+                            return new AuditReadResult(entries, false, $"Entry content altered at {entry.Timestamp:u}");
                     }
+
                     expectedPrev = entry.Hash;
+                    entries.Add(entry);
                 }
                 catch (Exception ex)
                 {
-                    error = $"Audit log verification failed: {ex.Message}";
-                    return false;
+                    return new AuditReadResult(entries, false, $"Audit log read failed: {ex.Message}");
                 }
             }
 
-            return true;
+            return new AuditReadResult(entries, true, null);
+        }
+
+        public sealed record AuditReadResult(IReadOnlyList<AuditEntry> Entries, bool ChainValid, string? Error);
+
+        private static string ComputeEntryHash(AuditEntry entry)
+        {
+            var basis = entry with { Hash = string.Empty };
+            var bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(basis));
+            using var sha = SHA256.Create();
+            return Convert.ToBase64String(sha.ComputeHash(bytes));
         }
 
         private record EncryptedAuditEntry

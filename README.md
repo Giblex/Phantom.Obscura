@@ -27,7 +27,7 @@ Phantom Obscura links into the shared libraries that live alongside it in the wo
 
 | Reference | Consumed by | Role |
 |---|---|---|
-| `Phantom.Shared/Giblex.AssetShield` | `PhantomVault.UI` (Desktop) | Shared asset / brand-shielding helpers; the AssetShield tool also encrypts all published files except the main exe at publish time |
+| `Phantom.Root/Giblex.AssetShield` | `PhantomVault.UI` (Desktop) | Shared asset / brand-shielding helpers; the AssetShield tool also encrypts all published files except the main exe at publish time |
 
 The integrated recovery panel (`Views/RecoveryPanelStub.cs` → `RecoveryPanel`, plus `RecoveryWindow.axaml`) is wired and launches the external `PhantomRecovery` process when the recovery vault is detected; the `PhantomRecovery.App` / `PhantomRecovery.Core` references remain commented out in the desktop project file because recovery runs as a separate process for isolation.
 

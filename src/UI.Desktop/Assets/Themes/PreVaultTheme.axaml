@@ -1,18 +1,29 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#0B1422"/>
+    <!-- Matches PhantomTheme.Dark: navy → teal acrylic wash so pre-vault windows
+         (setup wizard, quick setup, welcome, import) all share one look. -->
+    <LinearGradientBrush x:Key="WindowBackgroundBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#1B2846" Offset="0"/>
+        <GradientStop Color="#1E3540" Offset="0.5"/>
+        <GradientStop Color="#1A2C3A" Offset="1"/>
+    </LinearGradientBrush>
     <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#0F1A2E"/>
     <SolidColorBrush x:Key="FooterBackgroundBrush" Color="#0B1422"/>
     <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#0C1620"/>
-    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#152838"/>
+    <!-- Card fill matches the acrylic wash on welcome/setup tiles. -->
+    <LinearGradientBrush x:Key="CardBackgroundBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#551B2846" Offset="0"/>
+        <GradientStop Color="#55214247" Offset="0.5"/>
+        <GradientStop Color="#55193A42" Offset="1"/>
+    </LinearGradientBrush>
     <SolidColorBrush x:Key="SurfaceBrush" Color="#152838"/>
     <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#0A1420"/>
     <SolidColorBrush x:Key="ControlBorderBrush" Color="#395264"/>
     <SolidColorBrush x:Key="FooterBorderBrush" Color="Transparent"/>
 
-    <SolidColorBrush x:Key="AccentBrush" Color="#55C3CF"/>
-    <SolidColorBrush x:Key="LogoTitleBrush" Color="#55C3CF"/>
+    <SolidColorBrush x:Key="AccentBrush" Color="#5B93E0"/>
+    <SolidColorBrush x:Key="LogoTitleBrush" Color="#5B93E0"/>
 
     <SolidColorBrush x:Key="PrimaryTextBrush" Color="#ECF7FB"/>
     <SolidColorBrush x:Key="HeaderTextBrush" Color="#ECF7FB"/>
@@ -29,18 +40,64 @@
     <DropShadowEffect x:Key="FrontPageTileBaseShadow" Color="#071018" Opacity="0.25" BlurRadius="16"/>
 
     <Color x:Key="Glass.Tint.Light">#0C1620</Color>
-    <Color x:Key="Glass.Tint.Mid">#55C3CF</Color>
+    <Color x:Key="Glass.Tint.Mid">#5B93E0</Color>
     <Color x:Key="Glass.Tint.Dark">#071018</Color>
     <Color x:Key="Glass.Tint.Deepest">#071018</Color>
     <Color x:Key="Glass.Sheen.Bright">#162435</Color>
     <Color x:Key="Glass.Sheen.Mid">#101E2B</Color>
     <Color x:Key="Glass.Sheen.Soft">#0C1620</Color>
-    <SolidColorBrush x:Key="Brush.Glass.Border" Color="#3055C3CF"/>
-    <SolidColorBrush x:Key="Brush.Glass.BorderHover" Color="#50178EA0"/>
+    <SolidColorBrush x:Key="Brush.Glass.Border" Color="#305B93E0"/>
+    <SolidColorBrush x:Key="Brush.Glass.BorderHover" Color="#505B93E0"/>
     <SolidColorBrush x:Key="Brush.Glass.BorderPressed" Color="#40071018"/>
-    <SolidColorBrush x:Key="Brush.Glass.BorderFocus" Color="#55C3CF"/>
+    <SolidColorBrush x:Key="Brush.Glass.BorderFocus" Color="#5B93E0"/>
     <SolidColorBrush x:Key="LiquidGlassButtonForeground" Color="#ECF7FB"/>
     <SolidColorBrush x:Key="TileGlassBrush">#AA0C1620</SolidColorBrush>
+
+    <!-- Self-contained liquid-glass brushes. Pre-vault windows merge this dictionary to
+         own their look; defining the full glass set here (in blue/navy) stops them from
+         inheriting the teal glass brushes of whatever main app theme is currently active. -->
+    <RadialGradientBrush x:Key="Brush.Glass.BaseFill" Center="35%,40%" RadiusX="80%" RadiusY="80%">
+        <GradientStop Color="#10FFFFFF" Offset="0"/>
+        <GradientStop Color="#0C16243A" Offset="0.5"/>
+        <GradientStop Color="#08111E2B" Offset="0.8"/>
+        <GradientStop Color="#04071018" Offset="1"/>
+    </RadialGradientBrush>
+    <RadialGradientBrush x:Key="Brush.Glass.BaseFillHover" Center="35%,40%" RadiusX="80%" RadiusY="80%">
+        <GradientStop Color="#18FFFFFF" Offset="0"/>
+        <GradientStop Color="#1416243A" Offset="0.5"/>
+        <GradientStop Color="#10111E2B" Offset="0.8"/>
+        <GradientStop Color="#08071018" Offset="1"/>
+    </RadialGradientBrush>
+    <RadialGradientBrush x:Key="Brush.Glass.BaseFillPressed" Center="35%,40%" RadiusX="80%" RadiusY="80%">
+        <GradientStop Color="#08FFFFFF" Offset="0"/>
+        <GradientStop Color="#0616243A" Offset="0.5"/>
+        <GradientStop Color="#04111E2B" Offset="0.8"/>
+        <GradientStop Color="#02071018" Offset="1"/>
+    </RadialGradientBrush>
+    <RadialGradientBrush x:Key="Brush.Glass.BaseFillChecked" Center="35%,40%" RadiusX="80%" RadiusY="80%">
+        <GradientStop Color="#20FFFFFF" Offset="0"/>
+        <GradientStop Color="#205B93E0" Offset="0.5"/>
+        <GradientStop Color="#14111E2B" Offset="0.8"/>
+        <GradientStop Color="#10071018" Offset="1"/>
+    </RadialGradientBrush>
+    <LinearGradientBrush x:Key="Brush.Glass.InnerShadow" StartPoint="100%,100%" EndPoint="0%,0%">
+        <GradientStop Color="#24071018" Offset="0"/>
+        <GradientStop Color="#00071018" Offset="0.4"/>
+    </LinearGradientBrush>
+    <RadialGradientBrush x:Key="Brush.Glass.Sheen" Center="30%,25%" RadiusX="60%" RadiusY="50%">
+        <GradientStop Color="#14FFFFFF" Offset="0"/>
+        <GradientStop Color="#0C5B93E0" Offset="0.2"/>
+        <GradientStop Color="#06162435" Offset="0.5"/>
+        <GradientStop Color="#00000000" Offset="1"/>
+    </RadialGradientBrush>
+    <LinearGradientBrush x:Key="Brush.Glass.BottomShadow" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#00000000" Offset="0"/>
+        <GradientStop Color="#00000000" Offset="0.5"/>
+        <GradientStop Color="#24071018" Offset="1"/>
+    </LinearGradientBrush>
+    <DropShadowEffect x:Key="LiquidGlassButtonEffect" BlurRadius="10" OffsetX="0" OffsetY="3" Color="#071018" Opacity="0.25"/>
+    <DropShadowEffect x:Key="LiquidGlassButtonEffectHover" BlurRadius="16" OffsetX="0" OffsetY="4" Color="#071018" Opacity="0.35"/>
+    <DropShadowEffect x:Key="LiquidGlassButtonEffectPressed" BlurRadius="5" OffsetX="0" OffsetY="1" Color="#071018" Opacity="0.15"/>
 
     <FontFamily x:Key="TitleFontFamily">Soeding UI, Aptos, Segoe UI</FontFamily>
     <FontFamily x:Key="MainFontFamily">Aptos, Segoe UI</FontFamily>

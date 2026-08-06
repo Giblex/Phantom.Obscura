@@ -4,7 +4,7 @@ using PhantomVault.UI.ViewModels;
 
 namespace PhantomVault.UI.Views
 {
-    public partial class BackupSnapshotsWindow : Window
+    public partial class BackupSnapshotsWindow : ThemeAwareWindow
     {
         public BackupSnapshotsWindow()
         {

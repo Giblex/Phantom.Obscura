@@ -3,15 +3,17 @@
   <assemblyIdentity version="1.0.0.0" name="PhantomVault.UI.app" />
 
   <!--
-    Run elevated. Phantom Obscura needs administrator rights for USB volume control
-    (diskpart attribute changes, partition-type GPT writes, raw volume IOCTLs).
-    Declaring requireAdministrator here causes UAC to prompt ONCE at app launch
-    instead of every time diskpart is invoked at runtime.
+    Run as the invoking user (no elevation). Phantom Obscura ships non-elevated so it
+    never raises a per-launch UAC prompt. The few operations that genuinely need
+    administrator rights (diskpart attribute changes, partition-type GPT writes, raw
+    volume IOCTLs) are forwarded to the elevated PhantomObscuraPrivilegedBroker
+    Windows service over a hardened named pipe. The only UAC prompt the user ever
+    sees is the one-time helper install.
   -->
   <trustInfo xmlns="urn:schemas-microsoft-com:asm.v2">
     <security>
       <requestedPrivileges xmlns="urn:schemas-microsoft-com:asm.v3">
-        <requestedExecutionLevel level="requireAdministrator" uiAccess="false" />
+        <requestedExecutionLevel level="asInvoker" uiAccess="false" />
       </requestedPrivileges>
     </security>
   </trustInfo>

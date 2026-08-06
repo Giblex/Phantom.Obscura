@@ -1,10 +1,11 @@
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using PhantomVault.UI.ViewModels.AutoFill;
+using PhantomVault.UI.Views;
 
 namespace PhantomVault.UI.Views.AutoFill
 {
-    public partial class NoMatchFoundWindow : Window
+    public partial class NoMatchFoundWindow : ThemeAwareWindow
     {
         private readonly TaskCompletionSource<NoMatchResult> _tcs = new();
 

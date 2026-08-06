@@ -625,7 +625,7 @@ namespace PhantomVault.UI.ViewModels
                     try
                     {
                         string auditPath = !string.IsNullOrWhiteSpace(selectedDriveRoot)
-                            ? Path.Combine(selectedDriveRoot, "vault.audit")
+                            ? PhantomVault.Core.Services.PhantomDeviceLayout.GetAuditLogPath(selectedDriveRoot)
                             : Path.Combine(mountPath, "vault.audit");
                         _auditService.LogEvent(auditPath, "unlock", $"Vault unlocked and mounted at {mountPath}");
                     }
@@ -984,6 +984,7 @@ namespace PhantomVault.UI.ViewModels
 
             var candidates = new[]
             {
+                PhantomDeviceLayout.GetSystemVolumePath(driveRoot),
                 Path.Combine(driveRoot, "system.bin"),
                 Path.Combine(driveRoot, ".phantom", "obscura.vol")
             };

@@ -44,6 +44,7 @@ namespace PhantomVault.UI.ViewModels
 
             Formats = new ObservableCollection<string>
             {
+                "Phantom Obscura",
                 "JSON",
                 "CSV",
                 "KeePass XML",
@@ -145,6 +146,26 @@ namespace PhantomVault.UI.ViewModels
         private Bitmap? GetIconForFormat(string format)
         {
 
+            // Phantom Obscura's own export uses the app's ok.png (ghost/shield/G-key)
+            // — pulled from Assets, not from the Import logos folder.
+            if (format == "Phantom Obscura")
+            {
+                if (_iconCache.TryGetValue("__phantom_obscura__", out var pv)) return pv;
+                Bitmap? po = null;
+                try
+                {
+                    var poUri = new Uri("avares://PhantomVault.UI/Assets/ok.png");
+                    if (AssetLoader.Exists(poUri))
+                    {
+                        using var s = AssetLoader.Open(poUri);
+                        po = new Bitmap(s);
+                    }
+                }
+                catch { }
+                _iconCache["__phantom_obscura__"] = po;
+                if (po != null) return po;
+            }
+
             var fileName = format switch
             {
                 "1Password CSV" => "Password.png",
@@ -211,6 +232,7 @@ namespace PhantomVault.UI.ViewModels
                     "KeePass XML" => new[] { new FilePickerFileType("XML Files") { Patterns = new[] { "*.xml" } } },
                     "KeePass KDBX" => new[] { new FilePickerFileType("KeePass Database") { Patterns = new[] { "*.kdbx" } } },
                     "JSON" or "Bitwarden JSON" or "Proton Pass JSON" => new[] { new FilePickerFileType("JSON Files") { Patterns = new[] { "*.json" } } },
+                    "Phantom Obscura" => new[] { new FilePickerFileType("Phantom Obscura Export") { Patterns = new[] { "*.json", "*.pvex" } } },
                     _ => null
                 }
             };
@@ -280,6 +302,10 @@ namespace PhantomVault.UI.ViewModels
 
                 switch (SelectedFormat)
                 {
+                    case "Phantom Obscura":
+                        // Phantom Obscura's own export is JSON — reuse the JSON importer.
+                        credentials = await _importExportService.ImportFromJsonAsync(SelectedFile);
+                        break;
                     case "CSV":
                         credentials = await _importExportService.ImportFromCsvAsync(SelectedFile);
                         break;

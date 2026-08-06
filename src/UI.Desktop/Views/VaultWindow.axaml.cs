@@ -193,6 +193,21 @@ namespace PhantomVault.UI.Views
                 return;
             }
 
+            // AutoFill Mode: user-initiated X close should hide-to-tray, preserving the
+            // unlocked session so the tray icon can reveal it again. Real shutdowns
+            // (Exit from tray menu, OS logoff) still close normally.
+            try
+            {
+                if (e.CloseReason == WindowCloseReason.WindowClosing
+                    && SettingsService.Load().AutoFillModeEnabled)
+                {
+                    e.Cancel = true;
+                    Hide();
+                    return;
+                }
+            }
+            catch {  }
+
             try
             {
                 await RunAutomatedBackupOnCloseAsync();

@@ -3,14 +3,15 @@
         xmlns:vm="using:PhantomVault.UI.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="860" d:DesignHeight="720"
+        mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="380"
         x:Class="PhantomVault.UI.Views.SecurityCheckScreen"
         x:DataType="vm:SecurityCheckScreenViewModel"
         Title="Security Check"
-        Width="860" Height="720"
-        MinWidth="700" MinHeight="560"
+        Width="480" Height="380"
+        MinWidth="400" MinHeight="300"
         WindowStartupLocation="CenterScreen"
-        CanResize="True"
+        CanResize="False"
+        SystemDecorations="None"
         Background="{DynamicResource WindowBackgroundBrush}"
         Icon="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Parent Icon.ico"
         FontFamily="{DynamicResource DefaultFontFamily}"
@@ -30,390 +31,214 @@
     </Design.DataContext>
 
     <Window.Styles>
-        <Style Selector="ProgressBar.security-overall">
+        <!-- Sunken loading bar: dark trough color + subtle 1px top/bottom
+             rim in the template gives the recessed look. -->
+        <Style Selector="ProgressBar.sec-bar">
+            <Setter Property="Height" Value="8"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Background" Value="#88050C18"/>
+            <Setter Property="BorderBrush" Value="#40000000"/>
+            <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Transitions">
                 <Transitions>
-                    <DoubleTransition Property="Value" Duration="0:0:1.15" Easing="CubicEaseOut"/>
-                </Transitions>
-            </Setter>
-        </Style>
-        <Style Selector="ProgressBar.security-step">
-            <Setter Property="Transitions">
-                <Transitions>
-                    <DoubleTransition Property="Value" Duration="0:0:0.45" Easing="CubicEaseOut"/>
+                    <DoubleTransition Property="Value" Duration="0:0:0.4" Easing="CubicEaseOut"/>
                 </Transitions>
             </Setter>
         </Style>
     </Window.Styles>
 
-    <Grid RowDefinitions="Auto,*,Auto" Background="{DynamicResource WindowBackgroundBrush}">
-        <Border Grid.Row="0"
-                Background="{DynamicResource HeaderBackgroundBrush}"
-                Padding="28,24,28,20">
-            <StackPanel Spacing="16" HorizontalAlignment="Center" MaxWidth="680">
-                <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
-                       Width="92"
-                       Height="92"
-                       Stretch="Uniform"
-                       HorizontalAlignment="Center"/>
-                <TextBlock Text="Vault Security Check"
-                           FontSize="{StaticResource Type.H2.Size}"
-                           FontFamily="{DynamicResource TitleFontFamily}"
-                           FontWeight="Normal"
-                           Foreground="{DynamicResource PrimaryTextBrush}"
-                           HorizontalAlignment="Center"/>
-                <TextBlock Text="Running integrity and device checks before the vault opens."
-                           FontSize="{StaticResource Type.Body.Size}"
-                           Foreground="{DynamicResource SecondaryTextBrush}"
-                           HorizontalAlignment="Center"
-                           TextAlignment="Center"/>
-            </StackPanel>
+    <Grid RowDefinitions="Auto,*,Auto">
+        <!-- Dot-grid overlay (matches welcome + wizard). -->
+        <Border Grid.Row="0" Grid.RowSpan="3"
+                IsHitTestVisible="False"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch">
+            <Border.Background>
+                <ImageBrush Source="avares://PhantomVault.UI/Assets/dot_pattern.png"
+                            TileMode="Tile"
+                            Stretch="None"
+                            SourceRect="0,0,8,8"
+                            DestinationRect="0,0,8,8"/>
+            </Border.Background>
         </Border>
 
-        <ScrollViewer Grid.Row="1"
-                      VerticalScrollBarVisibility="Auto"
-                      HorizontalScrollBarVisibility="Disabled">
-            <StackPanel Margin="32,28,32,28"
-                        Spacing="18"
-                        HorizontalAlignment="Center"
-                        MaxWidth="760">
-                <Border Background="{DynamicResource CardBackgroundBrush}"
-                        CornerRadius="20"
-                        Padding="24"
-                        BorderBrush="{DynamicResource ControlBorderBrush}"
-                        BorderThickness="1">
-                    <StackPanel Spacing="18">
-                        <Grid ColumnDefinitions="Auto,*">
-                            <Border Width="56"
-                                    Height="56"
-                                    CornerRadius="28"
-                                    Background="#102130"
-                                    VerticalAlignment="Top">
-                                <TextBlock Text="✓"
-                                           FontSize="22"
-                                           Foreground="#7FAE8F"
-                                           HorizontalAlignment="Center"
-                                           VerticalAlignment="Center"/>
-                            </Border>
-                            <StackPanel Grid.Column="1" Margin="16,0,0,0" Spacing="8">
-                                <TextBlock Text="Current stage"
-                                           FontSize="{StaticResource Type.Small.Size}"
-                                           Foreground="{DynamicResource MutedTextBrush}"/>
-                                <TextBlock Text="{Binding CurrentCheckDisplay}"
-                                           FontSize="{StaticResource Type.H4.Size}"
-                                           FontWeight="Normal"
-                                           Foreground="{DynamicResource PrimaryTextBrush}"
-                                           TextWrapping="Wrap"/>
-                                <TextBlock Text="{Binding StatusMessage}"
-                                           FontSize="{StaticResource Type.Small.Size}"
-                                           Foreground="{DynamicResource SecondaryTextBrush}"
-                                           TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </Grid>
-
-                        <Border Background="#0B1520"
-                                CornerRadius="12"
-                                Padding="4">
-                            <ProgressBar Value="{Binding PercentComplete}"
-                                         Minimum="0"
-                                         Maximum="100"
-                                         Height="6"
-                                         CornerRadius="10"
-                                         Classes="security-overall"
-                                         Foreground="{Binding OverallProgressBrush}"
-                                         Background="#12212E"/>
-                        </Border>
-
-                        <Grid ColumnDefinitions="Auto,*">
-                            <TextBlock Text="{Binding PercentComplete, StringFormat='{}{0}%'}"
-                                       FontSize="{StaticResource Type.Small.Size}"
-                                       Foreground="{Binding OverallProgressBrush}"/>
-                            <TextBlock Grid.Column="1"
-                                       Text="{Binding SecuritySummaryHeadline}"
-                                       HorizontalAlignment="Right"
-                                       FontSize="{StaticResource Type.Small.Size}"
-                                       Foreground="{DynamicResource SecondaryTextBrush}"
-                                       TextWrapping="Wrap"/>
-                        </Grid>
-                    </StackPanel>
-                </Border>
-
-                <Border Background="{DynamicResource CardBackgroundBrush}"
-                        CornerRadius="20"
-                        Padding="24"
-                        BorderBrush="{DynamicResource ControlBorderBrush}"
-                        BorderThickness="1">
-                    <StackPanel Spacing="18">
-                        <StackPanel Spacing="6">
-                            <TextBlock Text="Security checks"
-                                       FontSize="{StaticResource Type.H4.Size}"
-                                       FontWeight="Normal"
-                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
-                            <TextBlock Text="{Binding SecuritySummaryHeadline}"
-                                       FontSize="{StaticResource Type.Body.Size}"
-                                       Foreground="{DynamicResource PrimaryTextBrush}"
-                                       TextWrapping="Wrap"/>
-                            <TextBlock Text="{Binding SecuritySummaryDetail}"
-                                       FontSize="{StaticResource Type.Small.Size}"
-                                       Foreground="{DynamicResource SecondaryTextBrush}"
-                                       TextWrapping="Wrap"/>
-                            <TextBlock Text="{Binding DriveSnapshotText}"
-                                       FontSize="{StaticResource Type.Small.Size}"
-                                       Foreground="{DynamicResource MutedTextBrush}"
-                                       TextWrapping="Wrap"/>
-                        </StackPanel>
-
-                        <UniformGrid Columns="2" Rows="3">
-                            <Border Margin="0,0,10,10"
-                                    Padding="16,14"
-                                    CornerRadius="14"
-                                    Background="#0E1A27"
-                                    BorderBrush="{DynamicResource ControlBorderBrush}"
-                                    BorderThickness="1">
-                                <StackPanel Spacing="10">
-                                    <Grid ColumnDefinitions="Auto,*">
-                                        <TextBlock Text="{Binding ManifestGlyph}"
-                                                   Foreground="{Binding ManifestGlyphBrush}"
-                                                   FontSize="{StaticResource Type.Body.Size}"
-                                                   VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1"
-                                                   Margin="10,0,0,0"
-                                                   Text="Manifest integrity"
-                                                   FontSize="{StaticResource Type.Small.Size}"
-                                                   Foreground="{DynamicResource PrimaryTextBrush}"
-                                                   VerticalAlignment="Center"/>
-                                    </Grid>
-                                    <ProgressBar Value="{Binding ManifestProgress}"
-                                                 Minimum="0"
-                                                 Maximum="100"
-                                                 Height="8"
-                                                 Classes="security-step"
-                                                 IsIndeterminate="{Binding ManifestIsActive}"
-                                                 Foreground="{Binding ManifestProgressBrush}"
-                                                 Background="#13212E"/>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Margin="0,0,0,10"
-                                    Padding="16,14"
-                                    CornerRadius="14"
-                                    Background="#0E1A27"
-                                    BorderBrush="{DynamicResource ControlBorderBrush}"
-                                    BorderThickness="1">
-                                <StackPanel Spacing="10">
-                                    <Grid ColumnDefinitions="Auto,*">
-                                        <TextBlock Text="{Binding UsbHealthGlyph}"
-                                                   Foreground="{Binding UsbHealthGlyphBrush}"
-                                                   FontSize="{StaticResource Type.Body.Size}"
-                                                   VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1"
-                                                   Margin="10,0,0,0"
-                                                   Text="USB health"
-                                                   FontSize="{StaticResource Type.Small.Size}"
-                                                   Foreground="{DynamicResource PrimaryTextBrush}"
-                                                   VerticalAlignment="Center"/>
-                                    </Grid>
-                                    <ProgressBar Value="{Binding UsbHealthProgress}"
-                                                 Minimum="0"
-                                                 Maximum="100"
-                                                 Height="8"
-                                                 Classes="security-step"
-                                                 IsIndeterminate="{Binding UsbHealthIsActive}"
-                                                 Foreground="{Binding UsbHealthProgressBrush}"
-                                                 Background="#13212E"/>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Margin="0,0,10,10"
-                                    Padding="16,14"
-                                    CornerRadius="14"
-                                    Background="#0E1A27"
-                                    BorderBrush="{DynamicResource ControlBorderBrush}"
-                                    BorderThickness="1">
-                                <StackPanel Spacing="10">
-                                    <Grid ColumnDefinitions="Auto,*">
-                                        <TextBlock Text="{Binding HardwareGlyph}"
-                                                   Foreground="{Binding HardwareGlyphBrush}"
-                                                   FontSize="{StaticResource Type.Body.Size}"
-                                                   VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1"
-                                                   Margin="10,0,0,0"
-                                                   Text="Hardware token"
-                                                   FontSize="{StaticResource Type.Small.Size}"
-                                                   Foreground="{DynamicResource PrimaryTextBrush}"
-                                                   VerticalAlignment="Center"/>
-                                    </Grid>
-                                    <ProgressBar Value="{Binding HardwareProgress}"
-                                                 Minimum="0"
-                                                 Maximum="100"
-                                                 Height="8"
-                                                 Classes="security-step"
-                                                 IsIndeterminate="{Binding HardwareIsActive}"
-                                                 Foreground="{Binding HardwareProgressBrush}"
-                                                 Background="#13212E"/>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Margin="0,0,0,10"
-                                    Padding="16,14"
-                                    CornerRadius="14"
-                                    Background="#0E1A27"
-                                    BorderBrush="{DynamicResource ControlBorderBrush}"
-                                    BorderThickness="1">
-                                <StackPanel Spacing="10">
-                                    <Grid ColumnDefinitions="Auto,*">
-                                        <TextBlock Text="{Binding BiometricGlyph}"
-                                                   Foreground="{Binding BiometricGlyphBrush}"
-                                                   FontSize="{StaticResource Type.Body.Size}"
-                                                   VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1"
-                                                   Margin="10,0,0,0"
-                                                   Text="Biometric"
-                                                   FontSize="{StaticResource Type.Small.Size}"
-                                                   Foreground="{DynamicResource PrimaryTextBrush}"
-                                                   VerticalAlignment="Center"/>
-                                    </Grid>
-                                    <ProgressBar Value="{Binding BiometricProgress}"
-                                                 Minimum="0"
-                                                 Maximum="100"
-                                                 Height="8"
-                                                 Classes="security-step"
-                                                 IsIndeterminate="{Binding BiometricIsActive}"
-                                                 Foreground="{Binding BiometricProgressBrush}"
-                                                 Background="#13212E"/>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Margin="0,0,10,0"
-                                    Padding="16,14"
-                                    CornerRadius="14"
-                                    Background="#0E1A27"
-                                    BorderBrush="{DynamicResource ControlBorderBrush}"
-                                    BorderThickness="1">
-                                <StackPanel Spacing="10">
-                                    <Grid ColumnDefinitions="Auto,*">
-                                        <TextBlock Text="{Binding AntiTamperGlyph}"
-                                                   Foreground="{Binding AntiTamperGlyphBrush}"
-                                                   FontSize="{StaticResource Type.Body.Size}"
-                                                   VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1"
-                                                   Margin="10,0,0,0"
-                                                   Text="Anti-tamper"
-                                                   FontSize="{StaticResource Type.Small.Size}"
-                                                   Foreground="{DynamicResource PrimaryTextBrush}"
-                                                   VerticalAlignment="Center"/>
-                                    </Grid>
-                                    <ProgressBar Value="{Binding AntiTamperProgress}"
-                                                 Minimum="0"
-                                                 Maximum="100"
-                                                 Height="8"
-                                                 Classes="security-step"
-                                                 IsIndeterminate="{Binding AntiTamperIsActive}"
-                                                 Foreground="{Binding AntiTamperProgressBrush}"
-                                                 Background="#13212E"/>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Margin="0,0,0,0"
-                                    Padding="16,14"
-                                    CornerRadius="14"
-                                    Background="#0E1A27"
-                                    BorderBrush="{DynamicResource ControlBorderBrush}"
-                                    BorderThickness="1">
-                                <StackPanel Spacing="10">
-                                    <Grid ColumnDefinitions="Auto,*">
-                                        <TextBlock Text="✓"
-                                                   Foreground="#7FAE8F"
-                                                   FontSize="{StaticResource Type.Body.Size}"
-                                                   VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1"
-                                                   Margin="10,0,0,0"
-                                                   Text="Overall"
-                                                   FontSize="{StaticResource Type.Small.Size}"
-                                                   Foreground="{DynamicResource PrimaryTextBrush}"
-                                                   VerticalAlignment="Center"/>
-                                    </Grid>
-                                    <ProgressBar Value="{Binding PercentComplete}"
-                                                 Minimum="0"
-                                                 Maximum="100"
-                                                 Height="8"
-                                                 Classes="security-step"
-                                                 Foreground="{Binding OverallProgressBrush}"
-                                                 Background="#13212E"/>
-                                </StackPanel>
-                            </Border>
-                        </UniformGrid>
-                    </StackPanel>
-                </Border>
-
-                <Border Background="{DynamicResource CardBackgroundBrush}"
-                        CornerRadius="20"
-                        Padding="24"
-                        BorderBrush="{DynamicResource ControlBorderBrush}"
-                        BorderThickness="1"
-                        IsVisible="{Binding HasWarnings}">
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="Warnings"
-                                   FontSize="{StaticResource Type.H4.Size}"
-                                   FontWeight="Normal"
-                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
-                        <TextBlock Text="{Binding WarningsText}"
-                                   FontSize="{StaticResource Type.Small.Size}"
-                                   Foreground="{DynamicResource SecondaryTextBrush}"
-                                   TextWrapping="Wrap"/>
-                    </StackPanel>
-                </Border>
-
-                <Border Background="{DynamicResource CardBackgroundBrush}"
-                        CornerRadius="20"
-                        Padding="24"
-                        BorderBrush="#55EF4444"
-                        BorderThickness="1"
-                        IsVisible="{Binding HasErrors}">
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="Errors"
-                                   FontSize="{StaticResource Type.H4.Size}"
-                                   FontWeight="Normal"
-                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
-                        <TextBlock Text="{Binding ErrorsText}"
-                                   FontSize="{StaticResource Type.Small.Size}"
-                                   Foreground="{DynamicResource SecondaryTextBrush}"
-                                   TextWrapping="Wrap"/>
-                    </StackPanel>
-                </Border>
+        <!-- Compact header -->
+        <StackPanel Grid.Row="0"
+                    Orientation="Horizontal"
+                    Spacing="12"
+                    Margin="24,20,24,12"
+                    VerticalAlignment="Center">
+            <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
+                   Width="32" Height="32" Stretch="Uniform"/>
+            <StackPanel Spacing="2" VerticalAlignment="Center">
+                <TextBlock Text="Vault Security Check"
+                           FontSize="15"
+                           FontWeight="SemiBold"
+                           Foreground="#E8EEF4"/>
+                <TextBlock Text="{Binding StatusMessage}"
+                           FontSize="11"
+                           Foreground="#6B8CA8"
+                           TextWrapping="Wrap"/>
             </StackPanel>
-        </ScrollViewer>
+        </StackPanel>
 
+        <!-- Stacked loading bars -->
+        <StackPanel Grid.Row="1"
+                    Margin="24,4,24,4"
+                    Spacing="10">
+
+            <!-- Overall -->
+            <StackPanel Spacing="4">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="Overall"
+                               FontSize="11"
+                               Foreground="#8BACC4"/>
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding PercentComplete, StringFormat='{}{0}%'}"
+                               FontSize="11"
+                               Foreground="{Binding OverallProgressBrush}"/>
+                </Grid>
+                <ProgressBar Value="{Binding PercentComplete}"
+                             Minimum="0" Maximum="100"
+                             Classes="sec-bar"
+                             Foreground="{Binding OverallProgressBrush}"/>
+            </StackPanel>
+
+            <!-- Manifest -->
+            <StackPanel Spacing="4">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="Manifest integrity"
+                               FontSize="11"
+                               Foreground="#8BACC4"/>
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding ManifestGlyph}"
+                               FontSize="11"
+                               Foreground="{Binding ManifestGlyphBrush}"/>
+                </Grid>
+                <ProgressBar Value="{Binding ManifestProgress}"
+                             Minimum="0" Maximum="100"
+                             Classes="sec-bar"
+                             IsIndeterminate="{Binding ManifestIsActive}"
+                             Foreground="{Binding ManifestProgressBrush}"/>
+            </StackPanel>
+
+            <!-- USB health -->
+            <StackPanel Spacing="4">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="USB health"
+                               FontSize="11"
+                               Foreground="#8BACC4"/>
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding UsbHealthGlyph}"
+                               FontSize="11"
+                               Foreground="{Binding UsbHealthGlyphBrush}"/>
+                </Grid>
+                <ProgressBar Value="{Binding UsbHealthProgress}"
+                             Minimum="0" Maximum="100"
+                             Classes="sec-bar"
+                             IsIndeterminate="{Binding UsbHealthIsActive}"
+                             Foreground="{Binding UsbHealthProgressBrush}"/>
+            </StackPanel>
+
+            <!-- Hardware token -->
+            <StackPanel Spacing="4">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="Hardware token"
+                               FontSize="11"
+                               Foreground="#8BACC4"/>
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding HardwareGlyph}"
+                               FontSize="11"
+                               Foreground="{Binding HardwareGlyphBrush}"/>
+                </Grid>
+                <ProgressBar Value="{Binding HardwareProgress}"
+                             Minimum="0" Maximum="100"
+                             Classes="sec-bar"
+                             IsIndeterminate="{Binding HardwareIsActive}"
+                             Foreground="{Binding HardwareProgressBrush}"/>
+            </StackPanel>
+
+            <!-- Biometric -->
+            <StackPanel Spacing="4">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="Biometric"
+                               FontSize="11"
+                               Foreground="#8BACC4"/>
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding BiometricGlyph}"
+                               FontSize="11"
+                               Foreground="{Binding BiometricGlyphBrush}"/>
+                </Grid>
+                <ProgressBar Value="{Binding BiometricProgress}"
+                             Minimum="0" Maximum="100"
+                             Classes="sec-bar"
+                             IsIndeterminate="{Binding BiometricIsActive}"
+                             Foreground="{Binding BiometricProgressBrush}"/>
+            </StackPanel>
+
+            <!-- Anti-tamper -->
+            <StackPanel Spacing="4">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="Anti-tamper"
+                               FontSize="11"
+                               Foreground="#8BACC4"/>
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding AntiTamperGlyph}"
+                               FontSize="11"
+                               Foreground="{Binding AntiTamperGlyphBrush}"/>
+                </Grid>
+                <ProgressBar Value="{Binding AntiTamperProgress}"
+                             Minimum="0" Maximum="100"
+                             Classes="sec-bar"
+                             IsIndeterminate="{Binding AntiTamperIsActive}"
+                             Foreground="{Binding AntiTamperProgressBrush}"/>
+            </StackPanel>
+
+            <!-- Errors / warnings inline — only shown when present -->
+            <TextBlock Text="{Binding ErrorsText}"
+                       FontSize="11"
+                       Foreground="#C17A7A"
+                       TextWrapping="Wrap"
+                       IsVisible="{Binding HasErrors}"
+                       Margin="0,4,0,0"/>
+
+            <TextBlock Text="{Binding WarningsText}"
+                       FontSize="11"
+                       Foreground="#B8A06A"
+                       TextWrapping="Wrap"
+                       IsVisible="{Binding HasWarnings}"/>
+        </StackPanel>
+
+        <!-- Footer -->
         <Border Grid.Row="2"
-                Background="{DynamicResource FooterBackgroundBrush}"
-                Padding="24"
-                BorderBrush="{DynamicResource ControlBorderBrush}"
+                Background="#40071018"
+                Padding="20,8"
+                BorderBrush="{DynamicResource Brush.Glass.Border}"
                 BorderThickness="0,1,0,0">
             <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Center"
-                        Spacing="14">
+                        HorizontalAlignment="Right"
+                        Spacing="10">
+                <!-- Go Back: shown only when checks finished and failed -->
                 <Button Command="{Binding CancelCommand}"
-                        Width="156"
-                        Height="46"
-                        Classes="liquid-glass">
-                    <TextBlock Text="Cancel"
+                        Width="90" Height="36"
+                        Classes="liquid-glass"
+                        IsVisible="{Binding ChecksComplete}">
+                    <TextBlock Text="Go Back"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"/>
                 </Button>
-
+                <!-- Retry: shown while running or on failure -->
                 <Button Command="{Binding RetryCommand}"
-                        Width="156"
-                        Height="46"
+                        Width="90" Height="36"
                         Classes="liquid-glass"
                         IsVisible="{Binding !ChecksSuccessful}">
                     <TextBlock Text="Retry"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"/>
                 </Button>
-
+                <!-- Continue: shown only on success -->
                 <Button Command="{Binding ContinueCommand}"
-                        Width="156"
-                        Height="46"
+                        Width="110" Height="36"
                         Classes="liquid-glass primary"
                         IsVisible="{Binding ChecksSuccessful}">
                     <TextBlock Text="Continue"
@@ -424,4 +249,3 @@
         </Border>
     </Grid>
 </Window>
-

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using PhantomVault.Core.Utils;
 
 namespace PhantomVault.Core.Security
 {
@@ -19,11 +20,26 @@ namespace PhantomVault.Core.Security
                     paramName ?? nameof(keyfilePath));
             }
 
-            if (!File.Exists(keyfilePath))
+            // keyfilePath may be a composite of several component paths (primary keyfile +
+            // host companion keyfile) joined by CompositeKeyfilePath.Delimiter. Validate each
+            // component on disk individually — never File.Exists the joined string, which is
+            // not itself a real path.
+            var parts = CompositeKeyfilePath.Split(keyfilePath);
+            if (parts.Count == 0)
             {
-                throw new FileNotFoundException(
-                    "Vault keyfile is required but the supplied path does not resolve. Re-attach the USB device and try again.",
-                    keyfilePath);
+                throw new ArgumentException(
+                    "Vault unlock requires a USB keyfile. Password alone is insufficient.",
+                    paramName ?? nameof(keyfilePath));
+            }
+
+            foreach (var part in parts)
+            {
+                if (!File.Exists(part))
+                {
+                    throw new FileNotFoundException(
+                        "Vault keyfile is required but the supplied path does not resolve. Re-attach the USB device and try again.",
+                        part);
+                }
             }
         }
     }

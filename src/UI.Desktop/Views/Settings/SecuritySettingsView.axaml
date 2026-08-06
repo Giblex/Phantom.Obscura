@@ -15,6 +15,32 @@
                 CornerRadius="16"
                 Padding="20"
                 HorizontalAlignment="Stretch">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
+                    <TextBlock Text="Offline mode"
+                               FontSize="{StaticResource Type.Body.Size}"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <TextBlock Text="Block all network access. Revokes active grants and refuses new connection requests until turned off."
+                               FontSize="{StaticResource Type.Small.Size}"
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+                <ToggleSwitch Grid.Column="1"
+                              VerticalAlignment="Center"
+                              Margin="16,0,0,0"
+                              IsChecked="{Binding PrivacyModeEnabled, Mode=TwoWay}"
+                              ToolTip.Tip="Master offline switch — mirrors the switch at the top of Settings"/>
+            </Grid>
+        </Border>
+
+        <Border Classes="fade-in stagger-1"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
+                Padding="20"
+                HorizontalAlignment="Stretch">
             <StackPanel Spacing="15">
                 <TextBlock Text="Authentication"
                            FontSize="{StaticResource Type.Body.Size}"
@@ -71,6 +97,74 @@
                         </StackPanel>
                     </StackPanel>
                 </Border>
+            </StackPanel>
+        </Border>
+
+        <Border Classes="fade-in stagger-2"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="16"
+                Padding="20"
+                HorizontalAlignment="Stretch">
+            <StackPanel Spacing="12">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="Encrypted virtual drive"
+                               FontSize="{StaticResource Type.Body.Size}"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <Border Background="{DynamicResource AccentBrush}"
+                            CornerRadius="6"
+                            Padding="6,1"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding IsFreeTier}">
+                        <TextBlock Text="PREMIUM"
+                                   FontSize="10"
+                                   FontWeight="Bold"
+                                   Foreground="White"/>
+                    </Border>
+                </StackPanel>
+
+                <TextBlock Text="Mount the vault's encrypted container as a Windows drive. Files are decrypted on the fly — nothing is written to disk in the clear — and the drive disappears when the vault locks. Read-only is safest; writable repacks your changes back into the container when you unmount."
+                           FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
+
+                <Border Background="{DynamicResource AccentBrush}"
+                        CornerRadius="10"
+                        Padding="12,8"
+                        IsVisible="{Binding IsDriveMounted}">
+                    <TextBlock FontSize="{StaticResource Type.Small.Size}"
+                               Foreground="White"
+                               TextWrapping="Wrap">
+                        <Run Text="Mounted at"/>
+                        <Run Text="{Binding MountedDriveLetter}" FontWeight="Bold"/>
+                    </TextBlock>
+                </Border>
+
+                <TextBlock Text="WinFsp is not installed on this computer. Install it from winfsp.dev to enable mounting."
+                           FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource WarningBrush}"
+                           TextWrapping="Wrap"
+                           IsVisible="{Binding !IsMountSupported}"/>
+
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Button Content="Mount (read-only)"
+                            Command="{Binding MountDriveReadOnlyCommand}"
+                            Classes="liquid-glass"
+                            IsEnabled="{Binding !IsDriveMounted}"
+                            Width="160"/>
+                    <Button Content="Mount (writable)"
+                            Command="{Binding MountDriveWritableCommand}"
+                            Classes="liquid-glass"
+                            IsEnabled="{Binding !IsDriveMounted}"
+                            Width="160"/>
+                    <Button Content="Unmount"
+                            Command="{Binding UnmountDriveCommand}"
+                            Classes="liquid-glass"
+                            IsEnabled="{Binding IsDriveMounted}"
+                            Width="120"/>
+                </StackPanel>
             </StackPanel>
         </Border>
 

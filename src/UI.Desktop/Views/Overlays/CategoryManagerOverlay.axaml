@@ -34,9 +34,11 @@
                     VerticalAlignment="Stretch"
                     Width="820"
                     Background="{DynamicResource WindowBackgroundBrush}"
-                    BorderBrush="{DynamicResource ControlBorderBrush}"
-                    BorderThickness="1,0,0,0"
-                    BoxShadow="{DynamicResource SlideOutPanelShadow}"
+                    BorderBrush="#55000000"
+                    BorderThickness="1,1,0,0"
+                    CornerRadius="20,0,0,20"
+                    ClipToBounds="True"
+                    BoxShadow="-46 0 150 -10 #EA000000, -22 0 60 -8 #C0000000, -8 0 22 -4 #90000000"
                     RenderTransformOrigin="1,0.5">
                 <Border.IsVisible>
                     <MultiBinding Converter="{x:Static BoolConverters.Or}">

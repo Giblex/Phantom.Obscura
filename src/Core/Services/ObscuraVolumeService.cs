@@ -70,40 +70,270 @@ namespace PhantomVault.Core.Services
             if (!string.IsNullOrEmpty(volumeDir))
                 Directory.CreateDirectory(volumeDir);
 
-            // Atomic write: stage to a sibling temp file, fsync, then replace the live volume.
-            // Prevents truncated/corrupt volumes when the process is killed mid-write
-            // (root cause of "Unexpected end of volume" on next unlock).
-            string tempPath = volumePath + ".tmp";
+            // Crash-safe atomic write: journal marker + write-through temp + backup-keeping
+            // replace. Prevents truncated/corrupt volumes when the process or power is lost
+            // mid-write (root cause of "Unexpected end of volume" on next unlock).
+            await CommitVolumeAtomicAsync(volumePath, headerBytes, async (output, ct) =>
+            {
+                foreach (var file in files)
+                {
+                    ct.ThrowIfCancellationRequested();
+                    await using var input = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
+                    await input.CopyToAsync(output, 81920, ct).ConfigureAwait(false);
+                }
+            }, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Rebuild a volume from in-memory/streamed sources rather than a directory on disk.
+        /// Used by the writable virtual-drive mount to repack edits without ever staging
+        /// decrypted plaintext to the filesystem. Each source provides a relative path and a
+        /// factory that opens a fresh readable stream for that entry's bytes (the factory may
+        /// be invoked twice — once to hash, once to copy). The write is atomic (temp + replace).
+        /// </summary>
+        public async Task CreateVolumeFromSourcesAsync(
+            string volumePath,
+            IReadOnlyList<ObscuraVolumeSource> sources,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(volumePath))
+                throw new ArgumentException("Volume path is required", nameof(volumePath));
+            if (sources is null)
+                throw new ArgumentNullException(nameof(sources));
+
+            var ordered = sources
+                .OrderBy(s => s.Path.Replace('\\', '/'), StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+            var entries = new List<ObscuraVolumeEntry>(ordered.Length);
+            long currentOffset = 0;
+            using var payloadHasher = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+
+            foreach (var source in ordered)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                long length;
+                byte[] entryHash;
+                await using (var stream = source.OpenRead())
+                {
+                    if (stream.CanSeek)
+                    {
+                        entryHash = await SHA256.HashDataAsync(stream, cancellationToken).ConfigureAwait(false);
+                        length = stream.Length;
+                    }
+                    else
+                    {
+                        using var counting = new CountingHashStream();
+                        await stream.CopyToAsync(counting, 81920, cancellationToken).ConfigureAwait(false);
+                        entryHash = counting.GetHash();
+                        length = counting.Count;
+                    }
+                }
+
+                entries.Add(new ObscuraVolumeEntry
+                {
+                    Path = source.Path.Replace('\\', '/'),
+                    Offset = currentOffset,
+                    Length = length,
+                    Sha256 = Convert.ToBase64String(entryHash)
+                });
+                currentOffset += length;
+                payloadHasher.AppendData(entryHash);
+            }
+
+            var manifest = new ObscuraVolumeManifest
+            {
+                Version = 1,
+                CreatedUtc = DateTimeOffset.UtcNow,
+                Entries = entries,
+                PayloadHash = Convert.ToBase64String(payloadHasher.GetHashAndReset())
+            };
+
+            byte[] headerBytes = JsonSerializer.SerializeToUtf8Bytes(manifest, JsonOptions);
+            var volumeDir = Path.GetDirectoryName(volumePath);
+            if (!string.IsNullOrEmpty(volumeDir))
+                Directory.CreateDirectory(volumeDir);
+
+            // Crash-safe atomic write (see CommitVolumeAtomicAsync): journal + write-through
+            // temp + backup-keeping replace, so an interrupted commit can never corrupt the
+            // live container — it is recovered on the next open.
+            await CommitVolumeAtomicAsync(volumePath, headerBytes, async (output, ct) =>
+            {
+                foreach (var source in ordered)
+                {
+                    ct.ThrowIfCancellationRequested();
+                    await using var input = source.OpenRead();
+                    await input.CopyToAsync(output, 81920, ct).ConfigureAwait(false);
+                }
+            }, cancellationToken).ConfigureAwait(false);
+        }
+
+        // ---- Crash-safe commit + recovery ----------------------------------------------
+
+        internal static string TempPathFor(string volumePath) => volumePath + ".tmp";
+        internal static string BackupPathFor(string volumePath) => volumePath + ".bak";
+        internal static string JournalPathFor(string volumePath) => volumePath + ".commit-journal";
+
+        /// <summary>
+        /// Durable, crash-safe replacement of <paramref name="volumePath"/>. A journal marker
+        /// is flushed to disk first; the new volume is staged to a write-through temp file and
+        /// forced to the platter; the live file is swapped in via <c>File.Replace</c>
+        /// keeping the previous good copy as a backup. On success the backup and journal are
+        /// removed. If the process or power dies at any point, <see cref="RecoverPendingCommit"/>
+        /// repairs the volume on the next open. The header (magic + length-prefixed manifest)
+        /// is written first, then <paramref name="writePayload"/> appends the entry bytes.
+        /// </summary>
+        private static async Task CommitVolumeAtomicAsync(
+            string volumePath,
+            byte[] headerBytes,
+            Func<FileStream, CancellationToken, Task> writePayload,
+            CancellationToken cancellationToken)
+        {
+            string tempPath = TempPathFor(volumePath);
+            string backupPath = BackupPathFor(volumePath);
+            string journalPath = JournalPathFor(volumePath);
+
+            // Drop any stale temp from a previously aborted attempt.
+            try { if (File.Exists(tempPath)) File.Delete(tempPath); } catch { }
+
+            // 1) Journal the intent and flush it before touching the live file.
+            var journal = new CommitJournal
+            {
+                TempFile = Path.GetFileName(tempPath),
+                BackupFile = Path.GetFileName(backupPath),
+                StartedUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+            };
+            await WriteAllBytesDurableAsync(journalPath, JsonSerializer.SerializeToUtf8Bytes(journal, JsonOptions), cancellationToken)
+                .ConfigureAwait(false);
+
             try
             {
-                await using (var output = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                // 2) Stage the full new volume, forcing bytes through the OS cache to disk.
+                await using (var output = new FileStream(
+                    tempPath, FileMode.Create, FileAccess.Write, FileShare.None, 81920, FileOptions.WriteThrough))
                 {
                     await output.WriteAsync(Magic, cancellationToken).ConfigureAwait(false);
-
                     byte[] headerLengthBytes = new byte[4];
                     BinaryPrimitives.WriteInt32LittleEndian(headerLengthBytes, headerBytes.Length);
                     await output.WriteAsync(headerLengthBytes, cancellationToken).ConfigureAwait(false);
                     await output.WriteAsync(headerBytes, cancellationToken).ConfigureAwait(false);
 
-                    foreach (var file in files)
-                    {
-                        await using var input = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
-                        await input.CopyToAsync(output, 81920, cancellationToken).ConfigureAwait(false);
-                    }
+                    await writePayload(output, cancellationToken).ConfigureAwait(false);
 
                     await output.FlushAsync(cancellationToken).ConfigureAwait(false);
+                    output.Flush(flushToDisk: true);
                 }
 
+                // 3) Atomic swap, keeping the previous good copy as a recoverable backup.
                 if (File.Exists(volumePath))
-                    File.Replace(tempPath, volumePath, destinationBackupFileName: null, ignoreMetadataErrors: true);
+                {
+                    try { if (File.Exists(backupPath)) File.Delete(backupPath); } catch { }
+                    File.Replace(tempPath, volumePath, backupPath, ignoreMetadataErrors: true);
+                }
                 else
+                {
                     File.Move(tempPath, volumePath);
+                }
+
+                // 4) Success — discard backup and journal.
+                try { if (File.Exists(backupPath)) File.Delete(backupPath); } catch { }
+                try { if (File.Exists(journalPath)) File.Delete(journalPath); } catch { }
             }
             catch
             {
+                // Leave journal (+ backup, if any) so recovery can run; clear the partial temp.
                 try { if (File.Exists(tempPath)) File.Delete(tempPath); } catch { }
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Repairs a volume after an interrupted commit. Safe and cheap to call before every
+        /// open. If a commit journal is present the live file is validated; if it is unreadable
+        /// the backup copy is restored. Stale temp/backup/journal artifacts are always swept.
+        /// Returns what (if anything) was recovered so callers can surface it to the user.
+        /// </summary>
+        public static VolumeRecoveryResult RecoverPendingCommit(string volumePath)
+        {
+            if (string.IsNullOrWhiteSpace(volumePath))
+                return new VolumeRecoveryResult(false, false, false);
+
+            string tempPath = TempPathFor(volumePath);
+            string backupPath = BackupPathFor(volumePath);
+            string journalPath = JournalPathFor(volumePath);
+
+            bool recoveryPerformed = false;
+            bool backupRestored = false;
+            bool staleTempRemoved = false;
+
+            if (File.Exists(journalPath))
+            {
+                recoveryPerformed = true;
+
+                // A commit was interrupted. Either the old (pre-Replace) or new (post-Replace)
+                // copy is live; both are internally complete. Only a rare mid-Replace failure
+                // can leave the live file unreadable — repair that from the backup.
+                if (!VolumeHeaderLooksValid(volumePath) && File.Exists(backupPath) && VolumeHeaderLooksValid(backupPath))
+                {
+                    try
+                    {
+                        if (File.Exists(volumePath)) File.Delete(volumePath);
+                        File.Move(backupPath, volumePath);
+                        backupRestored = true;
+                    }
+                    catch { }
+                }
+
+                try { if (File.Exists(tempPath)) { File.Delete(tempPath); staleTempRemoved = true; } } catch { }
+                try { if (File.Exists(backupPath)) File.Delete(backupPath); } catch { }
+                try { File.Delete(journalPath); } catch { }
+            }
+            else if (File.Exists(tempPath))
+            {
+                // Legacy abort with no journal: sweep the orphaned temp.
+                try { File.Delete(tempPath); staleTempRemoved = true; } catch { }
+            }
+
+            return new VolumeRecoveryResult(recoveryPerformed, backupRestored, staleTempRemoved);
+        }
+
+        private static bool VolumeHeaderLooksValid(string volumePath)
+        {
+            try
+            {
+                var info = new FileInfo(volumePath);
+                if (!info.Exists || info.Length < 12) return false;
+
+                Span<byte> head = stackalloc byte[12];
+                using var fs = new FileStream(volumePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                if (fs.Read(head) != 12) return false;
+                if (!head.Slice(0, 8).SequenceEqual(Magic)) return false;
+
+                int headerLen = BinaryPrimitives.ReadInt32LittleEndian(head.Slice(8, 4));
+                if (headerLen <= 0) return false;
+                return info.Length >= 12 + headerLen;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static async Task WriteAllBytesDurableAsync(string path, byte[] bytes, CancellationToken cancellationToken)
+        {
+            await using var fs = new FileStream(
+                path, FileMode.Create, FileAccess.Write, FileShare.None, 4096, FileOptions.WriteThrough);
+            await fs.WriteAsync(bytes, cancellationToken).ConfigureAwait(false);
+            await fs.FlushAsync(cancellationToken).ConfigureAwait(false);
+            fs.Flush(flushToDisk: true);
+        }
+
+        private sealed record CommitJournal
+        {
+            public int Version { get; init; } = 1;
+            public string TempFile { get; init; } = string.Empty;
+            public string BackupFile { get; init; } = string.Empty;
+            public long StartedUnix { get; init; }
         }
 
         public Task<string> ExtractVolumeAsync(string volumePath, string destinationRoot, CancellationToken cancellationToken = default)
@@ -142,6 +372,9 @@ namespace PhantomVault.Core.Services
                 throw new FileNotFoundException("Obscura volume not found", volumePath);
             if (string.IsNullOrWhiteSpace(destinationRoot))
                 throw new ArgumentException("Destination root is required", nameof(destinationRoot));
+
+            // Repair any interrupted prior commit before reading the container.
+            RecoverPendingCommit(volumePath);
 
             var manifest = await ReadManifestAsync(volumePath, cancellationToken).ConfigureAwait(false);
             Directory.CreateDirectory(destinationRoot);
@@ -346,6 +579,73 @@ namespace PhantomVault.Core.Services
         public long Offset { get; set; }
         public long Length { get; set; }
         public string Sha256 { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Outcome of <see cref="ObscuraVolumeService.RecoverPendingCommit"/>. When
+    /// <see cref="RecoveryPerformed"/> is true an earlier write was interrupted; the other
+    /// flags say whether the live volume had to be restored from its backup and whether a
+    /// stale temp file was swept.
+    /// </summary>
+    public readonly record struct VolumeRecoveryResult(
+        bool RecoveryPerformed,
+        bool BackupRestored,
+        bool StaleTempRemoved);
+
+    /// <summary>
+    /// A single entry source for <see cref="ObscuraVolumeService.CreateVolumeFromSourcesAsync"/>.
+    /// <see cref="OpenRead"/> must return a fresh readable stream each time it is called.
+    /// </summary>
+    public sealed class ObscuraVolumeSource
+    {
+        public ObscuraVolumeSource(string path, Func<Stream> openRead)
+        {
+            Path = path ?? throw new ArgumentNullException(nameof(path));
+            OpenRead = openRead ?? throw new ArgumentNullException(nameof(openRead));
+        }
+
+        public string Path { get; }
+        public Func<Stream> OpenRead { get; }
+    }
+
+    /// <summary>
+    /// Write-only sink that SHA-256 hashes and counts bytes for non-seekable sources.
+    /// </summary>
+    internal sealed class CountingHashStream : Stream
+    {
+        private readonly IncrementalHash _hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+        public long Count { get; private set; }
+
+        public override bool CanRead => false;
+        public override bool CanSeek => false;
+        public override bool CanWrite => true;
+        public override long Length => Count;
+        public override long Position { get => Count; set => throw new NotSupportedException(); }
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            _hash.AppendData(buffer, offset, count);
+            Count += count;
+        }
+
+        public override void Write(ReadOnlySpan<byte> buffer)
+        {
+            _hash.AppendData(buffer);
+            Count += buffer.Length;
+        }
+
+        public byte[] GetHash() => _hash.GetHashAndReset();
+
+        public override void Flush() { }
+        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing) _hash.Dispose();
+            base.Dispose(disposing);
+        }
     }
 }
 

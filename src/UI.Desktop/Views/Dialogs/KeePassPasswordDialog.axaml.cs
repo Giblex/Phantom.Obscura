@@ -3,10 +3,11 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using PhantomVault.UI.Views;
 
 namespace PhantomVault.UI.Views.Dialogs
 {
-    public partial class KeePassPasswordDialog : Window
+    public partial class KeePassPasswordDialog : ThemeAwareWindow
     {
         public string? Password { get; private set; }
         public string? KeyfilePath { get; private set; }

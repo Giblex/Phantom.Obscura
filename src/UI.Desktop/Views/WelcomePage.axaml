@@ -3,6 +3,7 @@
         xmlns:vm="using:PhantomVault.UI.ViewModels"
         xmlns:views="clr-namespace:PhantomVault.UI.Views"
         xmlns:models="using:PhantomVault.UI.Models"
+        xmlns:svg="clr-namespace:Avalonia.Svg.Skia;assembly=Avalonia.Svg.Skia"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
@@ -75,6 +76,22 @@
             <Setter Property="Background" Value="#6A88BC"/>
             <Setter Property="Opacity" Value="0"/>
         </Style>
+
+        <!-- Entrance animation for a vault slot when it transitions from
+             empty → filled. Simple opacity fade — runs whenever the filled
+             Button becomes visible. -->
+        <Style Selector="Button.slot-fill">
+            <Style.Animations>
+                <Animation Duration="0:0:0.5" Easing="CubicEaseOut" FillMode="Forward">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="Opacity" Value="0"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Opacity" Value="1"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
     </views:ThemeAwareWindow.Styles>
 
     <Design.DataContext>
@@ -85,47 +102,118 @@
             Margin="0"
             Background="{DynamicResource WindowBackgroundBrush}">
 
-        <Border Grid.Row="0" Background="{DynamicResource HeaderBackgroundBrush}" Padding="14,12">
-            <StackPanel HorizontalAlignment="Center" Spacing="8">
-                <TextBlock Text="{Binding AppName}"
-                           FontSize="{StaticResource Type.H2.Size}"
-                           FontFamily="{DynamicResource TitleFontFamily}"
-                           FontWeight="Normal"
-                           Foreground="{DynamicResource HeaderTextBrush}"
-                           HorizontalAlignment="Center"/>
+        <!-- Sporadic teal gradient wash: smaller, dimmer, more scattered blobs
+             so the navy stays dominant with occasional teal accents peeking through.
+             IsHitTestVisible=False so it never interferes with input. -->
+        <Panel Grid.Row="0" Grid.RowSpan="3" IsHitTestVisible="False" ClipToBounds="True">
+            <Border HorizontalAlignment="Left" VerticalAlignment="Top"
+                    Width="260" Height="260" Margin="-60,-40,0,0">
+                <Border.Background>
+                    <RadialGradientBrush Center="50%,50%" GradientOrigin="50%,50%" RadiusX="50%" RadiusY="50%">
+                        <GradientStop Color="#2A2DD4BF" Offset="0"/>
+                        <GradientStop Color="#002DD4BF" Offset="1"/>
+                    </RadialGradientBrush>
+                </Border.Background>
+            </Border>
+            <Border HorizontalAlignment="Right" VerticalAlignment="Top"
+                    Width="200" Height="200" Margin="0,120,80,0">
+                <Border.Background>
+                    <RadialGradientBrush Center="50%,50%" GradientOrigin="50%,50%" RadiusX="50%" RadiusY="50%">
+                        <GradientStop Color="#2214B8A6" Offset="0"/>
+                        <GradientStop Color="#0014B8A6" Offset="1"/>
+                    </RadialGradientBrush>
+                </Border.Background>
+            </Border>
+            <Border HorizontalAlignment="Left" VerticalAlignment="Center"
+                    Width="220" Height="220" Margin="40,60,0,0">
+                <Border.Background>
+                    <RadialGradientBrush Center="50%,50%" GradientOrigin="50%,50%" RadiusX="50%" RadiusY="50%">
+                        <GradientStop Color="#1E0D9488" Offset="0"/>
+                        <GradientStop Color="#000D9488" Offset="1"/>
+                    </RadialGradientBrush>
+                </Border.Background>
+            </Border>
+            <Border HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                    Width="240" Height="240" Margin="0,0,-40,-60">
+                <Border.Background>
+                    <RadialGradientBrush Center="50%,50%" GradientOrigin="50%,50%" RadiusX="50%" RadiusY="50%">
+                        <GradientStop Color="#2806B6D4" Offset="0"/>
+                        <GradientStop Color="#0006B6D4" Offset="1"/>
+                    </RadialGradientBrush>
+                </Border.Background>
+            </Border>
+            <Border HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                    Width="180" Height="180" Margin="120,0,0,80">
+                <Border.Background>
+                    <RadialGradientBrush Center="50%,50%" GradientOrigin="50%,50%" RadiusX="50%" RadiusY="50%">
+                        <GradientStop Color="#22115E59" Offset="0"/>
+                        <GradientStop Color="#00115E59" Offset="1"/>
+                    </RadialGradientBrush>
+                </Border.Background>
+            </Border>
+            <Border HorizontalAlignment="Center" VerticalAlignment="Top"
+                    Width="160" Height="160" Margin="220,220,0,0">
+                <Border.Background>
+                    <RadialGradientBrush Center="50%,50%" GradientOrigin="50%,50%" RadiusX="50%" RadiusY="50%">
+                        <GradientStop Color="#1A5EEAD4" Offset="0"/>
+                        <GradientStop Color="#005EEAD4" Offset="1"/>
+                    </RadialGradientBrush>
+                </Border.Background>
+            </Border>
 
-                <TextBlock Text="{Binding WelcomeMessage}"
-                           FontSize="{StaticResource Type.Body.Size}"
-                           Foreground="{DynamicResource HeaderTextBrush}"
-                           HorizontalAlignment="Center"/>
-            </StackPanel>
+            <!-- Dot-grid overlay matching giblex.com body::after —
+                 8×8 tile, 1px white dot, ~4% opacity. -->
+            <Border HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <Border.Background>
+                    <ImageBrush Source="avares://PhantomVault.UI/Assets/dot_pattern.png"
+                                TileMode="Tile"
+                                Stretch="None"
+                                SourceRect="0,0,8,8"
+                                DestinationRect="0,0,8,8"/>
+                </Border.Background>
+            </Border>
+        </Panel>
+
+        <Border Grid.Row="0" Background="{DynamicResource HeaderBackgroundBrush}" Padding="14,6">
+            <TextBlock Text="{Binding WelcomeMessage}"
+                       FontSize="{StaticResource Type.Body.Size}"
+                       Foreground="{DynamicResource HeaderTextBrush}"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"/>
         </Border>
 
         <ScrollViewer x:Name="MainScrollViewer"
                       Grid.Row="1"
-                      Background="{DynamicResource WindowBackgroundBrush}"
+                      Background="Transparent"
                       Padding="20,20,20,28"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled">
-            <StackPanel Spacing="18" HorizontalAlignment="Center" VerticalAlignment="Center" MinHeight="300" Margin="0,0,0,112">
+            <StackPanel Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Top" MinHeight="300" Margin="0,4,0,112">
 
                 <Border Classes="liquid-glass-tile"
                         CornerRadius="16"
                         ClipToBounds="True"
                         HorizontalAlignment="Center" VerticalAlignment="Center"
-                        Width="760" MaxWidth="760" MinHeight="188" MaxHeight="260" Padding="20,18">
+                        Width="760" MaxWidth="760" MinHeight="280" MaxHeight="380" Padding="20,18">
                     <Border.Transitions>
                         <Transitions>
                             <DoubleTransition Property="Opacity" Duration="0:0:0.6"/>
                         </Transitions>
                     </Border.Transitions>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="22">
-                            <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
-                                   Stretch="Uniform" MaxHeight="150"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+                            <!-- Logo — no tile backdrop, drop shadow gives it depth on its own. -->
+                            <Image Source="avares://PhantomVault.UI/Assets/ok.png"
+                                   Stretch="Uniform" Height="240"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Image.Effect>
+                                    <DropShadowEffect BlurRadius="24" OffsetX="0" OffsetY="8"
+                                                      Color="#000000" Opacity="0.85"/>
+                                </Image.Effect>
+                            </Image>
                             <TextBlock Text="Phantom Obscura"
                                        FontSize="40" FontFamily="{DynamicResource TitleFontFamily}" FontWeight="Normal"
-                                       Foreground="{DynamicResource LogoTitleBrush}"
+                                       Foreground="#FFFFFF"
+                                       HorizontalAlignment="Center"
                                        VerticalAlignment="Center"/>
                         </StackPanel>
                 </Border>
@@ -136,55 +224,237 @@
                            HorizontalAlignment="Center"
                            Margin="0,6,0,0"/>
 
+                <!-- Status pill — clean acrylic build, same recipe as logo tile / slot window. -->
                 <Border x:Name="DetectionStatusCard"
-                        Background="{DynamicResource ControlBackgroundBrush}"
-                        CornerRadius="20"
-                        Padding="18,12"
                         HorizontalAlignment="Center"
                         IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                         Margin="0,10,0,0"
-                        BorderBrush="{DynamicResource ControlBorderBrush}"
-                        BorderThickness="2">
-                    <Border.Transitions>
-                        <Transitions>
-                            <DoubleTransition Property="Opacity" Duration="0:0:0.4"/>
-                        </Transitions>
-                    </Border.Transitions>
-                    <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+                        MinWidth="260" Height="56"
+                        CornerRadius="28"
+                        Padding="24,0"
+                        BorderBrush="{DynamicResource Brush.Glass.Border}"
+                        BorderThickness="1"
+                        BoxShadow="inset 0 1 0 0 #40FFFFFF, 0 6 20 0 #40000000">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                            <GradientStop Color="#55D9E9EB" Offset="0"/>
+                            <GradientStop Color="#55214247" Offset="0.35"/>
+                            <GradientStop Color="#55214247" Offset="0.65"/>
+                            <GradientStop Color="#55193A42" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <StackPanel Orientation="Horizontal" Spacing="10"
+                                HorizontalAlignment="Center" VerticalAlignment="Center">
                         <ProgressBar IsIndeterminate="True"
-                                     Width="72"
-                                     Height="4"
+                                     Width="72" Height="4"
                                      Foreground="{DynamicResource AccentBrush}"
                                      IsVisible="{Binding IsDeviceDetectionActive}"/>
                         <TextBlock Text="{Binding StatusMessage}"
                                    FontSize="{StaticResource Type.Label.Size}"
-                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"
                                    FontWeight="Normal"
                                    HorizontalAlignment="Center"
                                    VerticalAlignment="Center"/>
                     </StackPanel>
                 </Border>
 
-                <ProgressBar IsIndeterminate="True"
-                             IsVisible="{Binding IsDeviceDetectionActive}"
-                             Height="4"
-                             Foreground="{DynamicResource AccentBrush}"
-                             Width="260"
-                             Margin="0,10,0,0">
-                    <ProgressBar.Transitions>
-                        <Transitions>
-                            <DoubleTransition Property="Opacity" Duration="0:0:0.4"/>
-                        </Transitions>
-                    </ProgressBar.Transitions>
-                </ProgressBar>
 
+                <Border x:Name="DetectedVaultCard"
+                        BorderBrush="{DynamicResource Brush.Glass.Border}"
+                        BorderThickness="1"
+                        CornerRadius="20"
+                        Padding="18,16"
+                        MaxWidth="760"
+                        Width="760"
+                        IsVisible="{Binding IsLandingVisible}"
+                        BoxShadow="0 8 24 0 #40000000">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                            <GradientStop Color="#551B2846" Offset="0"/>
+                            <GradientStop Color="#55214247" Offset="0.5"/>
+                            <GradientStop Color="#55193A42" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <StackPanel Spacing="14" HorizontalAlignment="Center">
+                        <!-- Vault picker — single acrylic "window" containing three
+                             stacked slot rows (not three separate bubbles). Each row is
+                             either a "vault loaded" row (Button) or an empty placeholder,
+                             with a hairline divider between rows. -->
+                        <StackPanel x:Name="VaultListAnchor"
+                                    Spacing="8"
+                                    HorizontalAlignment="Center">
+                            <TextBlock Text="Vault slots (up to 3)"
+                                       FontSize="{StaticResource Type.Label.Size}"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"
+                                       HorizontalAlignment="Center"/>
+                            <Border Background="#33091724"
+                                    BorderBrush="{DynamicResource Brush.Glass.Border}"
+                                    BorderThickness="1"
+                                    CornerRadius="14"
+                                    Padding="0"
+                                    Width="600"
+                                    HorizontalAlignment="Center">
+                                <StackPanel Spacing="0">
+                                    <!-- Slot 1 -->
+                                    <Grid Height="56">
+                                        <Border Padding="16,10"
+                                                Background="#22B0C4D8"
+                                                BoxShadow="inset 0 2 6 0 #60000000, inset 0 -1 0 0 #30FFFFFF"
+                                                IsVisible="{Binding !Slot1HasVault}">
+                                            <Grid ColumnDefinitions="52,1,14,*" VerticalAlignment="Center">
+                                                <TextBlock Grid.Column="0" Text="Slot 1"
+                                                           Foreground="{DynamicResource MutedTextBrush}"
+                                                           FontSize="{StaticResource Type.Tiny.Size}"
+                                                           VerticalAlignment="Center"/>
+                                                <Border Grid.Column="1" Width="1" Background="{DynamicResource Brush.Glass.Border}" Margin="0,2"/>
+                                                <TextBlock Grid.Column="3" Text="Empty — insert a USB to load"
+                                                           Foreground="{DynamicResource MutedTextBrush}"
+                                                           FontSize="{StaticResource Type.Body.Size}"
+                                                           VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                        <Button Classes="vault-choice slot-fill"
+                                                Click="DetectedVaultChoice_Click"
+                                                Tag="{Binding Slot1}"
+                                                IsVisible="{Binding Slot1HasVault}"
+                                                Padding="0"
+                                                HorizontalAlignment="Stretch"
+                                                HorizontalContentAlignment="Stretch">
+                                            <Border Padding="16,10"
+                                                    Background="#55050C18"
+                                                    BoxShadow="inset 0 2 6 0 #80000000, inset 0 -1 0 0 #40FFFFFF">
+                                                <Grid ColumnDefinitions="52,1,14,*" VerticalAlignment="Center">
+                                                    <TextBlock Grid.Column="0" Text="Slot 1"
+                                                               Foreground="{DynamicResource MutedTextBrush}"
+                                                               FontSize="{StaticResource Type.Tiny.Size}"
+                                                               VerticalAlignment="Center"/>
+                                                    <Border Grid.Column="1" Width="1" Background="{DynamicResource Brush.Glass.Border}" Margin="0,2"/>
+                                                    <StackPanel Grid.Column="3" Spacing="2" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Slot1.DisplayName}"
+                                                                   Foreground="{DynamicResource PrimaryTextBrush}"
+                                                                   FontSize="{StaticResource Type.Body.Size}"/>
+                                                        <TextBlock Text="{Binding Slot1.VaultPath}"
+                                                                   FontSize="{StaticResource Type.Tiny.Size}"
+                                                                   Foreground="{DynamicResource MutedTextBrush}"
+                                                                   TextWrapping="NoWrap"
+                                                                   TextTrimming="CharacterEllipsis"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </Button>
+                                    </Grid>
+                                    <!-- Divider -->
+                                    <Border Height="1" Background="{DynamicResource Brush.Glass.Border}" Margin="12,0"/>
+                                    <!-- Slot 2 -->
+                                    <Grid Height="56">
+                                        <Border Padding="16,10"
+                                                Background="#22B0C4D8"
+                                                BoxShadow="inset 0 2 6 0 #60000000, inset 0 -1 0 0 #30FFFFFF"
+                                                IsVisible="{Binding !Slot2HasVault}">
+                                            <Grid ColumnDefinitions="52,1,14,*" VerticalAlignment="Center">
+                                                <TextBlock Grid.Column="0" Text="Slot 2"
+                                                           Foreground="{DynamicResource MutedTextBrush}"
+                                                           FontSize="{StaticResource Type.Tiny.Size}"
+                                                           VerticalAlignment="Center"/>
+                                                <Border Grid.Column="1" Width="1" Background="{DynamicResource Brush.Glass.Border}" Margin="0,2"/>
+                                                <TextBlock Grid.Column="3" Text="Empty — insert a USB to load"
+                                                           Foreground="{DynamicResource MutedTextBrush}"
+                                                           FontSize="{StaticResource Type.Body.Size}"
+                                                           VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                        <Button Classes="vault-choice slot-fill"
+                                                Click="DetectedVaultChoice_Click"
+                                                Tag="{Binding Slot2}"
+                                                IsVisible="{Binding Slot2HasVault}"
+                                                Padding="0"
+                                                HorizontalAlignment="Stretch"
+                                                HorizontalContentAlignment="Stretch">
+                                            <Border Padding="16,10"
+                                                    Background="#55050C18"
+                                                    BoxShadow="inset 0 2 6 0 #80000000, inset 0 -1 0 0 #40FFFFFF">
+                                                <Grid ColumnDefinitions="52,1,14,*" VerticalAlignment="Center">
+                                                    <TextBlock Grid.Column="0" Text="Slot 2"
+                                                               Foreground="{DynamicResource MutedTextBrush}"
+                                                               FontSize="{StaticResource Type.Tiny.Size}"
+                                                               VerticalAlignment="Center"/>
+                                                    <Border Grid.Column="1" Width="1" Background="{DynamicResource Brush.Glass.Border}" Margin="0,2"/>
+                                                    <StackPanel Grid.Column="3" Spacing="2" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Slot2.DisplayName}"
+                                                                   Foreground="{DynamicResource PrimaryTextBrush}"
+                                                                   FontSize="{StaticResource Type.Body.Size}"/>
+                                                        <TextBlock Text="{Binding Slot2.VaultPath}"
+                                                                   FontSize="{StaticResource Type.Tiny.Size}"
+                                                                   Foreground="{DynamicResource MutedTextBrush}"
+                                                                   TextWrapping="NoWrap"
+                                                                   TextTrimming="CharacterEllipsis"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </Button>
+                                    </Grid>
+                                    <!-- Divider -->
+                                    <Border Height="1" Background="{DynamicResource Brush.Glass.Border}" Margin="12,0"/>
+                                    <!-- Slot 3 -->
+                                    <Grid Height="56">
+                                        <Border Padding="16,10"
+                                                Background="#22B0C4D8"
+                                                BoxShadow="inset 0 2 6 0 #60000000, inset 0 -1 0 0 #30FFFFFF"
+                                                IsVisible="{Binding !Slot3HasVault}">
+                                            <Grid ColumnDefinitions="52,1,14,*" VerticalAlignment="Center">
+                                                <TextBlock Grid.Column="0" Text="Slot 3"
+                                                           Foreground="{DynamicResource MutedTextBrush}"
+                                                           FontSize="{StaticResource Type.Tiny.Size}"
+                                                           VerticalAlignment="Center"/>
+                                                <Border Grid.Column="1" Width="1" Background="{DynamicResource Brush.Glass.Border}" Margin="0,2"/>
+                                                <TextBlock Grid.Column="3" Text="Empty — insert a USB to load"
+                                                           Foreground="{DynamicResource MutedTextBrush}"
+                                                           FontSize="{StaticResource Type.Body.Size}"
+                                                           VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                        <Button Classes="vault-choice slot-fill"
+                                                Click="DetectedVaultChoice_Click"
+                                                Tag="{Binding Slot3}"
+                                                IsVisible="{Binding Slot3HasVault}"
+                                                Padding="0"
+                                                HorizontalAlignment="Stretch"
+                                                HorizontalContentAlignment="Stretch">
+                                            <Border Padding="16,10"
+                                                    Background="#55050C18"
+                                                    BoxShadow="inset 0 2 6 0 #80000000, inset 0 -1 0 0 #40FFFFFF">
+                                                <Grid ColumnDefinitions="52,1,14,*" VerticalAlignment="Center">
+                                                    <TextBlock Grid.Column="0" Text="Slot 3"
+                                                               Foreground="{DynamicResource MutedTextBrush}"
+                                                               FontSize="{StaticResource Type.Tiny.Size}"
+                                                               VerticalAlignment="Center"/>
+                                                    <Border Grid.Column="1" Width="1" Background="{DynamicResource Brush.Glass.Border}" Margin="0,2"/>
+                                                    <StackPanel Grid.Column="3" Spacing="2" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Slot3.DisplayName}"
+                                                                   Foreground="{DynamicResource PrimaryTextBrush}"
+                                                                   FontSize="{StaticResource Type.Body.Size}"/>
+                                                        <TextBlock Text="{Binding Slot3.VaultPath}"
+                                                                   FontSize="{StaticResource Type.Tiny.Size}"
+                                                                   Foreground="{DynamicResource MutedTextBrush}"
+                                                                   TextWrapping="NoWrap"
+                                                                   TextTrimming="CharacterEllipsis"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </Button>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Dev Bypass — sits at the far left, below the vault-slot list. -->
                 <StackPanel Orientation="Horizontal"
                             Spacing="10"
-                            HorizontalAlignment="Right"
+                            HorizontalAlignment="Left"
                             IsVisible="{Binding IsDeveloperBypassVisible}"
-                            Margin="0,16,12,20"
-                            MaxWidth="760"
-                            Width="760">
+                            Margin="12,4,0,10">
                     <Button Command="{Binding DeveloperBypassCommand}"
                             Classes="liquid-glass"
                             CornerRadius="10"
@@ -196,101 +466,6 @@
                         <TextBlock Text="Dev Bypass" Foreground="{DynamicResource ButtonTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Button>
                 </StackPanel>
-
-                <Border x:Name="DetectedVaultCard"
-                        Background="{DynamicResource CardBackgroundBrush}"
-                        CornerRadius="20"
-                        Padding="18,16"
-                        MaxWidth="760"
-                        Width="760"
-                        IsVisible="{Binding IsLandingVisible}"
-                        BoxShadow="0 8 24 0 #30000000">
-                    <StackPanel Spacing="14">
-                        <StackPanel Orientation="Horizontal" Spacing="14">
-                            <Grid Width="72" Height="72">
-                                <Border Classes="usb-pulse-ring"
-                                        Width="42" Height="42"
-                                        CornerRadius="43"
-                                        BorderBrush="#4A55C3CF"
-                                        BorderThickness="2"
-                                        Background="Transparent"
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        IsVisible="{Binding HasRecognizedVaults}"/>
-                                <Border Classes="usb-pulse-ring delayed"
-                                        Width="42" Height="42"
-                                        CornerRadius="43"
-                                        BorderBrush="#3655C3CF"
-                                        BorderThickness="2"
-                                        Background="Transparent"
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        IsVisible="{Binding HasRecognizedVaults}"/>
-                                <Border Width="46" Height="46" CornerRadius="23" Background="#143041"
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center">
-                                    <TextBlock Text="•"
-                                               FontSize="30"
-                                               Foreground="{DynamicResource PrimaryTextBrush}"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"/>
-                                </Border>
-                            </Grid>
-                            <StackPanel Spacing="4" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding DeviceLinkHeadline}"
-                                           FontSize="{StaticResource Type.H4.Size}"
-                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                <TextBlock Text="{Binding DeviceLinkDetail}"
-                                           FontSize="{StaticResource Type.Small.Size}"
-                                           Foreground="{DynamicResource MutedTextBrush}"
-                                           TextWrapping="Wrap"
-                                           MaxWidth="620"/>
-                            </StackPanel>
-                        </StackPanel>
-
-                        <TextBlock Text="{Binding DetectedVaultPathDisplay}"
-                                   FontSize="{StaticResource Type.Small.Size}"
-                                   Foreground="{DynamicResource SecondaryTextBrush}"
-                                   IsVisible="{Binding HasRecognizedVaults}"/>
-
-                        <StackPanel x:Name="VaultListAnchor"
-                                    Spacing="8"
-                                    IsVisible="{Binding ShowVaultPicker}">
-                            <TextBlock Text="Available vaults on this USB"
-                                       FontSize="{StaticResource Type.Label.Size}"
-                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
-                            <ItemsControl ItemsSource="{Binding DetectedVaults}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="models:DetectedVaultLaunchRequest">
-                                        <Button Classes="vault-choice"
-                                                Click="DetectedVaultChoice_Click"
-                                                Tag="{Binding}"
-                                                Margin="0,0,0,8">
-                                            <Border Background="#121C2B"
-                                                    CornerRadius="14"
-                                                    Padding="16,10"
-                                                    Width="336"
-                                                    BorderThickness="1"
-                                                    BorderBrush="{DynamicResource ControlBorderBrush}">
-                                                <StackPanel Spacing="2"
-                                                            HorizontalAlignment="Stretch">
-                                                    <TextBlock Text="{Binding DisplayName}"
-                                                               Foreground="{DynamicResource PrimaryTextBrush}"
-                                                               FontSize="{StaticResource Type.Body.Size}"/>
-                                                    <TextBlock Text="{Binding VaultPath}"
-                                                               FontSize="{StaticResource Type.Tiny.Size}"
-                                                               Foreground="{DynamicResource MutedTextBrush}"
-                                                               TextWrapping="NoWrap"
-                                                               TextTrimming="CharacterEllipsis"/>
-                                                </StackPanel>
-                                            </Border>
-                                        </Button>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
 
                 <Canvas x:Name="DetectionTraceCanvas"
                         Height="140"
@@ -326,13 +501,22 @@
                             CornerRadius="2"/>
                 </Canvas>
 
-                <Border Background="{DynamicResource CardBackgroundBrush}"
+                <Border x:Name="SetupChoiceCard"
+                        BorderBrush="{DynamicResource Brush.Glass.Border}"
+                        BorderThickness="1"
                         CornerRadius="20"
                         Padding="24,22"
                         MaxWidth="760"
                         Width="760"
                         IsVisible="{Binding IsSetupChoiceVisible}"
-                        BoxShadow="0 8 24 0 #30000000">
+                        BoxShadow="0 8 24 0 #40000000">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                            <GradientStop Color="#551B2846" Offset="0"/>
+                            <GradientStop Color="#55214247" Offset="0.5"/>
+                            <GradientStop Color="#55193A42" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
                     <StackPanel Spacing="18">
                         <StackPanel Spacing="6">
                             <TextBlock Text="Choose Your Setup Path"
@@ -346,21 +530,44 @@
 
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
                             <Border Grid.Column="0"
-                                    Background="#162235"
+                                    BorderBrush="{DynamicResource Brush.Glass.Border}"
+                                    BorderThickness="1"
                                     CornerRadius="18"
-                                    Padding="18,16">
+                                    Padding="18,16"
+                                    BoxShadow="0 6 20 0 #40000000, inset 0 1 0 0 #40FFFFFF">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                        <GradientStop Color="#551B2846" Offset="0"/>
+                                        <GradientStop Color="#55214247" Offset="0.5"/>
+                                        <GradientStop Color="#55193A42" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
                                 <StackPanel Spacing="12">
                                     <TextBlock Text="Default Setup"
                                                FontSize="{StaticResource Type.H4.Size}"
                                                Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                    <TextBlock Text="Best if you just want a vault without wrestling the knobs. You choose the vault name and your authentication, and Obscura handles the rest with hardened defaults."
+                                    <TextBlock Text="Fast, safe, no decisions."
                                                FontSize="{StaticResource Type.Small.Size}"
                                                Foreground="{DynamicResource MutedTextBrush}"
                                                TextWrapping="Wrap"/>
-                                    <TextBlock Text="Includes Ghost Secured, PhantomKey, dual keyfiles, USB binding, 1 GB container, and remnant cleanup."
-                                               FontSize="{StaticResource Type.Small.Size}"
-                                               Foreground="{DynamicResource SecondaryTextBrush}"
-                                               TextWrapping="Wrap"/>
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="• Pick a vault name and how you sign in"
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   TextWrapping="Wrap"/>
+                                        <TextBlock Text="• Strong defaults picked for you"
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   TextWrapping="Wrap"/>
+                                        <TextBlock Text="• Bound to your USB, cleans up after itself"
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   TextWrapping="Wrap"/>
+                                        <TextBlock Text="• Ready in under a minute"
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   TextWrapping="Wrap"/>
+                                    </StackPanel>
                                     <Button Command="{Binding ShowDefaultSetupCommand}"
                                             Classes="liquid-glass"
                                             Height="42"
@@ -371,21 +578,44 @@
                             </Border>
 
                             <Border Grid.Column="1"
-                                    Background="#162235"
+                                    BorderBrush="{DynamicResource Brush.Glass.Border}"
+                                    BorderThickness="1"
                                     CornerRadius="18"
-                                    Padding="18,16">
+                                    Padding="18,16"
+                                    BoxShadow="0 6 20 0 #40000000, inset 0 1 0 0 #40FFFFFF">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                        <GradientStop Color="#551B2846" Offset="0"/>
+                                        <GradientStop Color="#55214247" Offset="0.5"/>
+                                        <GradientStop Color="#55193A42" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
                                 <StackPanel Spacing="12">
                                     <TextBlock Text="Advanced Setup"
                                                FontSize="{StaticResource Type.H4.Size}"
                                                Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                    <TextBlock Text="Best if you want full control over the protection tier, storage layout, keyfile flow, remnant handling, and every other vault-building decision."
+                                    <TextBlock Text="Full control, every setting yours."
                                                FontSize="{StaticResource Type.Small.Size}"
                                                Foreground="{DynamicResource MutedTextBrush}"
                                                TextWrapping="Wrap"/>
-                                    <TextBlock Text="You will walk through the full wizard and choose the exact security profile and provisioning path."
-                                               FontSize="{StaticResource Type.Small.Size}"
-                                               Foreground="{DynamicResource SecondaryTextBrush}"
-                                               TextWrapping="Wrap"/>
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="• Choose your security tier"
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   TextWrapping="Wrap"/>
+                                        <TextBlock Text="• Control keyfile and USB binding"
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   TextWrapping="Wrap"/>
+                                        <TextBlock Text="• Pick storage layout and container size"
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   TextWrapping="Wrap"/>
+                                        <TextBlock Text="• Full wizard, step by step"
+                                                   FontSize="{StaticResource Type.Small.Size}"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   TextWrapping="Wrap"/>
+                                    </StackPanel>
                                     <Button Command="{Binding ShowAdvancedSetupCommand}"
                                             Classes="liquid-glass"
                                             Height="42"
@@ -400,20 +630,38 @@
             </StackPanel>
         </ScrollViewer>
 
+        <!-- Bottom fade — content dissolves into window background -->
+        <Border Grid.Row="1"
+                VerticalAlignment="Bottom"
+                Height="80"
+                IsHitTestVisible="False">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                    <GradientStop Color="#000B1422" Offset="0"/>
+                    <GradientStop Color="#FF0B1422" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+        </Border>
+
+
+        <!-- Top-of-bottom-banner separator: full-width hairline above the buttons. -->
+        <Border Grid.Row="2"
+                Height="1"
+                VerticalAlignment="Top"
+                HorizontalAlignment="Stretch"
+                Background="{DynamicResource Brush.Glass.Border}"/>
+
         <Border x:Name="ActionFooterCard"
                 Grid.Row="2"
-                Background="{DynamicResource HeaderBackgroundBrush}"
+                Background="Transparent"
                 Padding="12"
                 HorizontalAlignment="Center"
-                VerticalAlignment="Bottom"
+                VerticalAlignment="Center"
                 MaxWidth="760"
-                CornerRadius="16"
-                Margin="18,8,18,18"
-                Effect="{DynamicResource FooterGroundedShadow}"
-                BorderBrush="{DynamicResource FooterBorderBrush}"
-                BorderThickness="1"
-                ClipToBounds="True">
-            <WrapPanel Orientation="Horizontal" ItemWidth="160" HorizontalAlignment="Center">
+                CornerRadius="0"
+                Margin="18,10,18,10"
+                BorderThickness="0">
+            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Button Command="{Binding GetStartedCommand}" Classes="liquid-glass" CornerRadius="10" Height="40" Width="140" FontSize="{StaticResource Type.Body.Size}" FontWeight="Normal" FontFamily="{DynamicResource MainFontFamily}" IsVisible="{Binding IsLandingVisible}">
                     <TextBlock Text="Get Started" Foreground="{DynamicResource ButtonTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Button>
@@ -435,7 +683,7 @@
                     <TextBlock Text="Back" Foreground="{DynamicResource ButtonTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Button>
 
-            </WrapPanel>
+            </StackPanel>
         </Border>
     </Grid>
 </views:ThemeAwareWindow>

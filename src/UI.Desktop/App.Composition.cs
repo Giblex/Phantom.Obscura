@@ -81,6 +81,13 @@ namespace PhantomVault.UI
             services.AddSingleton<PhantomVault.UI.Services.SettingsDraftTracker>();
             services.AddSingleton<SecureTrashService>();
             services.AddSingleton<IdleLockService>(provider => new IdleLockService(TimeSpan.FromMinutes(5)));
+
+            // Keyless suite-session coordinator: reports this app's unlock presence to
+            // the suite and honours suite-wide lock without ever sharing key material.
+            services.AddSingleton<Phantom.Suite.Session.ISuiteSessionCoordinator>(
+                _ => new Phantom.Suite.Session.SuiteSessionCoordinator(
+                    Phantom.Suite.Session.SuiteSessionConstants.AppIdObscura));
+
             services.AddSingleton<YubiKeyService>();
             services.AddSingleton<SharingService>();
             services.AddSingleton<PasswordHealthService>();
@@ -128,10 +135,53 @@ namespace PhantomVault.UI
                     sp.GetRequiredService<PhantomVault.Core.Services.Update.IUpdateVerifier>(),
                     sp.GetRequiredService<PhantomVault.Core.Services.Update.UpdateChannelSettings>()));
 
+            // Premium licensing / entitlements — fails closed to Free while the
+            // embedded license key remains the all-zero placeholder. The dev
+            // authority (env-gated PHANTOM_DEV_LICENSING=1, off by default) can
+            // seed a trusting verifier so the purchase/unlock flow is testable.
+            services.AddSingleton<PhantomVault.UI.Services.Licensing.DevLicenseAuthority>();
+            services.AddSingleton<PhantomVault.Core.Services.Licensing.ILicenseVerifier>(sp =>
+            {
+                var dev = sp.GetRequiredService<PhantomVault.UI.Services.Licensing.DevLicenseAuthority>();
+                var devKey = dev.PublicKey;
+                return devKey is not null
+                    ? new PhantomVault.Core.Services.Licensing.LicenseVerifier(devKey)
+                    : new PhantomVault.Core.Services.Licensing.LicenseVerifier();
+            });
+            services.AddSingleton<PhantomVault.Core.Services.Licensing.IMonotonicTimeGuard>(sp =>
+            {
+                var stateDir = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    "PhantomVault", "Licensing");
+                Directory.CreateDirectory(stateDir);
+                return new PhantomVault.Core.Services.Licensing.MonotonicTimeGuard(
+                    Path.Combine(stateDir, "clock.watermark"));
+            });
+            services.AddSingleton<PhantomVault.UI.Services.Entitlements.IEntitlementService,
+                PhantomVault.UI.Services.Entitlements.EntitlementService>();
+            // Real payment backend (Stripe hosted Checkout -> signed token) in normal
+            // builds. When the env-gated dev authority is on, keep the stub so the
+            // flow stays testable offline with locally-signed dev tokens.
+            services.AddSingleton<PhantomVault.UI.Services.Licensing.ILicensingClient>(sp =>
+            {
+                if (PhantomVault.UI.Services.Licensing.DevLicenseAuthority.IsEnabled)
+                {
+                    var dev = sp.GetRequiredService<PhantomVault.UI.Services.Licensing.DevLicenseAuthority>();
+                    return new PhantomVault.UI.Services.Licensing.StubLicensingClient(dev);
+                }
+                return new PhantomVault.UI.Services.Licensing.StripeLicensingClient();
+            });
+
             services.AddSingleton<IAuthController, AuthController>();
             services.AddSingleton<IVaultController, VaultController>();
             services.AddSingleton<ISystemSecurityController, SystemSecurityController>();
             services.AddSingleton<IDeviceFingerprintProvider, DeviceFingerprintProvider>();
+
+            // Public-key device identity + QR pairing (manifest-centric multi-device).
+            services.AddSingleton<PhantomVault.Core.Services.Security.IDeviceIdentityService,
+                PhantomVault.Core.Services.Security.DeviceIdentityService>();
+            services.AddSingleton<PhantomVault.Core.Services.Security.IDeviceEnrollmentService,
+                PhantomVault.Core.Services.Security.DeviceEnrollmentService>();
             services.AddSingleton<IClipboardGuard, ClipboardGuard>();
             services.AddSingleton<IExportGuard, ExportGuard>();
             services.AddSingleton<RekeyService>();
@@ -163,6 +213,11 @@ namespace PhantomVault.UI
             services.AddSingleton<VaultAutofillContext>();
             services.AddSingleton<IAutofillVaultContext>(sp => sp.GetRequiredService<VaultAutofillContext>());
 
+            services.AddSingleton<PhantomVault.UI.Services.Sync.TotpSyncVaultContext>();
+            services.AddSingleton<PhantomVault.UI.Services.Sync.ITotpSyncVaultContext>(sp => sp.GetRequiredService<PhantomVault.UI.Services.Sync.TotpSyncVaultContext>());
+            services.AddSingleton<PhantomVault.UI.Services.Sync.ITotpSyncPipeServer, PhantomVault.UI.Services.Sync.TotpSyncPipeServer>();
+            services.AddSingleton<PhantomVault.UI.Services.Sync.TotpSyncPipeClient>();
+
             services.AddSingleton<PhantomVault.UI.Services.RecoveryActivationPolicyStore>();
             services.AddSingleton<PhantomVault.UI.Services.RecoveryActivationSessionState>();
             services.AddTransient<PhantomVault.UI.ViewModels.Settings.RecoveryActivationSettingsViewModel>(sp =>
@@ -181,6 +236,12 @@ namespace PhantomVault.UI
             services.AddSingleton<INativeHostPipeServer, NativeHostPipeServer>();
 
             services.AddSingleton<ITrayBackgroundService, TrayBackgroundService>();
+
+            // Privileged helper (Windows service broker). The non-elevated UI forwards
+            // the few admin-only volume/write-protection primitives to the elevated
+            // helper over a named pipe, so the app ships asInvoker with no per-launch UAC.
+            services.AddSingleton<PhantomVault.UI.Services.Privileged.BrokerServiceController>();
+            services.AddSingleton<PhantomVault.UI.Services.Privileged.NamedPipeBrokerClient>();
 
             services.AddTransient<MainViewModel>();
             services.AddTransient<ProvisionViewModel>();

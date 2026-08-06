@@ -21,6 +21,7 @@ namespace PhantomVault.UI.Views
         private ScrollViewer? _mainScrollViewer;
         private Control? _vaultListAnchor;
         private Control? _detectedVaultCard;
+        private Control? _setupChoiceCard;
         private Control? _actionFooterCard;
         private Control? _detectionStatusCard;
         private Canvas? _detectionTraceCanvas;
@@ -31,6 +32,9 @@ namespace PhantomVault.UI.Views
         private Border? _traceRightEdge;
         private bool _hasAutoScrolledToUsbActions;
         private bool _hasAutoScrolledToVaultPicker;
+        private bool _hasAutoScrolledToSetupChoice;
+        private DispatcherTimer? _spinTimer;
+        private ConicGradientBrush? _spinRingBrush;
 
         public WelcomePage()
         {
@@ -41,6 +45,7 @@ namespace PhantomVault.UI.Views
             _mainScrollViewer = this.FindControl<ScrollViewer>("MainScrollViewer");
             _vaultListAnchor = this.FindControl<Control>("VaultListAnchor");
             _detectedVaultCard = this.FindControl<Control>("DetectedVaultCard");
+            _setupChoiceCard = this.FindControl<Control>("SetupChoiceCard");
             _actionFooterCard = this.FindControl<Control>("ActionFooterCard");
             _detectionStatusCard = this.FindControl<Control>("DetectionStatusCard");
             _detectionTraceCanvas = this.FindControl<Canvas>("DetectionTraceCanvas");
@@ -49,6 +54,7 @@ namespace PhantomVault.UI.Views
             _traceLeftEdge = this.FindControl<Border>("TraceLeftEdge");
             _traceBottomEdge = this.FindControl<Border>("TraceBottomEdge");
             _traceRightEdge = this.FindControl<Border>("TraceRightEdge");
+            _spinRingBrush = this.FindControl<Border>("SpinRingOuter")?.BorderBrush as ConicGradientBrush;
 
             this.DataContextChanged += OnDataContextChanged;
         }
@@ -79,11 +85,53 @@ namespace PhantomVault.UI.Views
                 _currentViewModel = viewModel;
                 _hasAutoScrolledToUsbActions = false;
                 _hasAutoScrolledToVaultPicker = false;
+                _hasAutoScrolledToSetupChoice = false;
+                UpdateSpinTimer(viewModel.IsDeviceDetectionActive);
             }
             else
             {
                 _currentViewModel = null;
+                UpdateSpinTimer(false);
             }
+        }
+
+        private void UpdateSpinTimer(bool active)
+        {
+            if (active)
+            {
+                if (_spinTimer == null)
+                {
+                    _spinTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
+                    _spinTimer.Tick += OnSpinTimerTick;
+                }
+                _spinTimer.Start();
+            }
+            else
+            {
+                _spinTimer?.Stop();
+            }
+        }
+
+        private void OnSpinTimerTick(object? sender, EventArgs e)
+        {
+            if (_spinRingBrush == null)
+                return;
+
+            var angle = _spinRingBrush.Angle + 360.0 / 1400.0 * 16.0;
+            if (angle >= 360)
+                angle -= 360;
+            _spinRingBrush.Angle = angle;
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            if (_spinTimer != null)
+            {
+                _spinTimer.Stop();
+                _spinTimer.Tick -= OnSpinTimerTick;
+                _spinTimer = null;
+            }
+            base.OnClosed(e);
         }
 
         private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -115,6 +163,24 @@ namespace PhantomVault.UI.Views
                 else if (!_currentViewModel.ShowVaultPicker)
                 {
                     _hasAutoScrolledToVaultPicker = false;
+                }
+            }
+
+            if (e.PropertyName == nameof(WelcomePageViewModel.IsDeviceDetectionActive))
+            {
+                UpdateSpinTimer(_currentViewModel.IsDeviceDetectionActive);
+            }
+
+            if (e.PropertyName == nameof(WelcomePageViewModel.IsSetupChoiceVisible))
+            {
+                if (_currentViewModel.IsSetupChoiceVisible && !_hasAutoScrolledToSetupChoice)
+                {
+                    _hasAutoScrolledToSetupChoice = true;
+                    _ = AnimateScrollSetupChoiceIntoViewAsync();
+                }
+                else if (!_currentViewModel.IsSetupChoiceVisible)
+                {
+                    _hasAutoScrolledToSetupChoice = false;
                 }
             }
         }
@@ -182,6 +248,36 @@ namespace PhantomVault.UI.Views
             catch (Exception ex)
             {
                 Log.Warning(ex, "Failed to auto-scroll detected vault list into view");
+            }
+        }
+
+        private async Task AnimateScrollSetupChoiceIntoViewAsync()
+        {
+            try
+            {
+                if (_mainScrollViewer == null || _setupChoiceCard == null)
+                    return;
+
+                var startOffsetY = _mainScrollViewer.Offset.Y;
+                // Allow the card to become visible and lay out before measuring.
+                await Task.Delay(220);
+
+                var targetPoint = _setupChoiceCard.TranslatePoint(new Point(0, 0), _mainScrollViewer);
+                var desiredViewportY = targetPoint?.Y ?? (_mainScrollViewer.Viewport.Height * 0.5);
+                // Scroll a bit further so the Default/Advanced option buttons are
+                // comfortably in view, not just the card header.
+                var targetOffsetY = Math.Max(0, startOffsetY + desiredViewportY - 24);
+                var maxOffsetY = Math.Max(0, _mainScrollViewer.Extent.Height - _mainScrollViewer.Viewport.Height);
+                targetOffsetY = Math.Min(maxOffsetY, targetOffsetY);
+
+                if (targetOffsetY <= startOffsetY + 12)
+                    return;
+
+                await AnimateScrollAsync(startOffsetY, targetOffsetY, 900);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Failed to auto-scroll welcome page to setup choice area");
             }
         }
 
@@ -298,6 +394,9 @@ namespace PhantomVault.UI.Views
             if (DataContext is WelcomePageViewModel viewModel)
             {
                 viewModel.SelectDetectedVault(launchRequest);
+                // Fire the same command the "Open" button uses so clicking the
+                // active slot directly enters the vault-open flow.
+                viewModel.OpenExistingVaultCommand.Execute().Subscribe();
             }
         }
 
@@ -484,6 +583,13 @@ namespace PhantomVault.UI.Views
 
                 var vaultLockDurationService = services.GetRequiredService<VaultLockDurationService>();
                 vaultLockDurationService.SetActiveSession(null);
+
+                // Hiding this page (below) doesn't stop its background USB scan timer —
+                // it'd keep polling every 2 seconds behind the vault window indefinitely.
+                if (DataContext is WelcomePageViewModel welcomeViewModel)
+                {
+                    welcomeViewModel.StopScanning();
+                }
 
                 vaultViewModel.SetOwnerWindow(vaultWindow);
                 vaultWindow.Show();
@@ -707,10 +813,28 @@ namespace PhantomVault.UI.Views
                 var vaultLockDurationService = services.GetRequiredService<VaultLockDurationService>();
                 vaultLockDurationService.SetActiveSession(null);
 
+                // Hiding this page (below) doesn't stop its background USB scan timer —
+                // it'd keep polling every 2 seconds behind the vault window indefinitely.
+                if (DataContext is WelcomePageViewModel welcomeViewModel)
+                {
+                    welcomeViewModel.StopScanning();
+                }
+
                 vaultViewModel.SetOwnerWindow(vaultWindow);
                 vaultViewModel.SetDeveloperBypassMode(true);
                 vaultViewModel.VaultName = "Developer Vault";
                 vaultViewModel.StatusMessage = "Developer bypass active (no vault mounted).";
+
+                // Dev bypass skips real vault provisioning, so there's no license token to
+                // verify — default to Premium locally so premium-gated UI is testable without
+                // going through checkout every time.
+                vaultViewModel.EntitlementService?.ForceStatus(
+                    PhantomVault.Core.Models.Licensing.LicenseStatus.Premium());
+
+                // No vault is mounted, so seed one sample entry of every credential type
+                // (password, WiFi, identity, API key, contact, credit card, bank account,
+                // TOTP, PIN) so the UI has something to look at while testing.
+                vaultViewModel.LoadSampleCredentials();
 
                 vaultWindow.Closed += (_, _) => this.Show();
 

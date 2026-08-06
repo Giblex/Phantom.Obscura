@@ -20,6 +20,7 @@
     <converters:IconPathExistsConverter x:Key="IconPathExistsConverter"/>
     <converters:InvertBoolConverter x:Key="InvertBoolConverter"/>
     <converters:IsTrashToBrushConverter x:Key="IsTrashToBrushConverter"/>
+    <converters:ColouredBlurBrushConverter x:Key="ColouredBlurBrushConverter"/>
     </UserControl.Resources>
 
     <UserControl.Styles>
@@ -67,19 +68,33 @@
 
     <Grid RowDefinitions="Auto,*,Auto" ClipToBounds="False">
 
+        <!-- Dot-grid overlay (matches welcome page / vault header). -->
+        <Border Grid.Row="0" Grid.RowSpan="3"
+                IsHitTestVisible="False"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch">
+            <Border.Background>
+                <ImageBrush Source="avares://PhantomVault.UI/Assets/dot_pattern.png"
+                            TileMode="Tile"
+                            Stretch="None"
+                            SourceRect="0,0,8,8"
+                            DestinationRect="0,0,8,8"/>
+            </Border.Background>
+        </Border>
+
         <Border Grid.Row="0"
                 Background="{DynamicResource HeaderBackgroundBrush}"
                 Padding="20,16"
                 BorderBrush="{DynamicResource ControlBorderBrush}"
                 BorderThickness="0,0,0,1">
-            <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Grid.Column="0"
+            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                <TextBlock Grid.Row="0" Grid.Column="0"
                            Text="Manage Categories"
                            FontSize="{StaticResource Type.H3.Size}"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryTextBrush}"
                            VerticalAlignment="Center"/>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="8">
                     <Button Content="Select all"
                             Width="100"
                             Command="{Binding SelectAllCommand}"
@@ -101,6 +116,12 @@
                             BorderBrush="{DynamicResource ControlBorderBrush}"
                             BorderThickness="1"/>
                 </StackPanel>
+                <CheckBox Grid.Row="1" Grid.Column="1"
+                          Content="Coloured blur"
+                          IsChecked="{Binding UseColouredTileBlur, Mode=TwoWay}"
+                          HorizontalAlignment="Right"
+                          Margin="0,10,2,0"
+                          ToolTip.Tip="Tint category tiles with their own colour (mirrors Theme settings)"/>
             </Grid>
         </Border>
 
@@ -142,7 +163,6 @@
                                 </Border.Transitions>
 
                                 <Border x:Name="CategoryTile"
-                                        Background="{DynamicResource TileGlassBrush}"
                                         BorderBrush="{DynamicResource ControlBorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="12"
@@ -150,6 +170,12 @@
                                         MaxWidth="700"
                                         HorizontalAlignment="Stretch"
                                         ClipToBounds="False">
+                                    <Border.Background>
+                                        <MultiBinding Converter="{StaticResource ColouredBlurBrushConverter}">
+                                            <Binding Path="TileColor"/>
+                                            <Binding Path="DataContext.UseColouredTileBlur" ElementName="CategoryWindow"/>
+                                        </MultiBinding>
+                                    </Border.Background>
 
                                     <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto">
                                         <Border Grid.Column="0" Width="6" CornerRadius="3" Background="{Binding TileColor, Converter={StaticResource HexToBrushConverter}}" Margin="6,0,8,0"/>
@@ -166,9 +192,9 @@
                                                 ToolTip.Tip="Choose icon"
                                                 VerticalAlignment="Center">
                                             <Border Width="50" Height="50" CornerRadius="25"
-                                                    Background="{DynamicResource HeaderBackgroundBrush}"
-                                                    BorderBrush="{DynamicResource ControlBorderBrush}"
-                                                    BorderThickness="1"
+                                                    BorderBrush="Transparent"
+                                                    BorderThickness="0"
+                                                    Background="Transparent"
                                                     ClipToBounds="True"
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center">
@@ -257,18 +283,29 @@
                                                      Height="34"
                                                      VerticalAlignment="Center"
                                                      VerticalContentAlignment="Center"
-                                                     Background="{DynamicResource ControlBackgroundBrush}"
                                                      Foreground="{DynamicResource PrimaryTextBrush}"
                                                      FontSize="{StaticResource Type.Label.Size}"
                                                      Padding="8,4"
-                                                     IsReadOnly="{Binding ., Converter={StaticResource CategoryDeletedNameToReadOnlyConverter}}"/>
+                                                     IsReadOnly="{Binding ., Converter={StaticResource CategoryDeletedNameToReadOnlyConverter}}">
+                                                <TextBox.Background>
+                                                    <MultiBinding Converter="{StaticResource ColouredBlurBrushConverter}" ConverterParameter="darker">
+                                                        <Binding Path="TileColor"/>
+                                                        <Binding Path="DataContext.UseColouredTileBlur" ElementName="CategoryWindow"/>
+                                                    </MultiBinding>
+                                                </TextBox.Background>
+                                            </TextBox>
 
-                                            <Border Background="{DynamicResource HeaderBackgroundBrush}"
-                                                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                                            <Border BorderBrush="{DynamicResource ControlBorderBrush}"
                                                     BorderThickness="1"
                                                     CornerRadius="10"
                                                     Padding="8,4"
                                                     VerticalAlignment="Center">
+                                                <Border.Background>
+                                                    <MultiBinding Converter="{StaticResource ColouredBlurBrushConverter}" ConverterParameter="darker">
+                                                        <Binding Path="TileColor"/>
+                                                        <Binding Path="DataContext.UseColouredTileBlur" ElementName="CategoryWindow"/>
+                                                    </MultiBinding>
+                                                </Border.Background>
                                                 <TextBlock Text="{Binding Count}"
                                                            FontSize="{StaticResource Type.Tiny.Size}"
                                                            FontWeight="SemiBold"
@@ -277,21 +314,30 @@
                                         </StackPanel>
 
                                         <Button Grid.Column="5"
-                                                Content="X"
-                                                Width="28" Height="28"
+                                                Content="✕"
+                                                Width="34" Height="34"
+                                                MinWidth="0"
                                                 Margin="8,0,0,0"
                                                 VerticalAlignment="Center"
                                                 FontWeight="Bold"
                                                 FontSize="{StaticResource Type.Small.Size}"
-                                                Background="{DynamicResource ControlBackgroundBrush}"
-                                                BorderThickness="0"
-                                                CornerRadius="4"
+                                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="8"
                                                 Padding="0"
-                                                Foreground="{DynamicResource MutedTextBrush}"
+                                                Foreground="{DynamicResource PrimaryTextBrush}"
                                                 Effect="{x:Null}"
+                                                ToolTip.Tip="Remove category"
                                                 Command="{Binding #CategoryWindow.DataContext.RemoveCategoryCommand}"
                                                 CommandParameter="{Binding .}"
-                                                IsEnabled="{Binding ., Converter={StaticResource CategoryRemovableToEnabledConverter}}"/>
+                                                IsEnabled="{Binding ., Converter={StaticResource CategoryRemovableToEnabledConverter}}">
+                                            <Button.Background>
+                                                <MultiBinding Converter="{StaticResource ColouredBlurBrushConverter}" ConverterParameter="darker">
+                                                    <Binding Path="TileColor"/>
+                                                    <Binding Path="DataContext.UseColouredTileBlur" ElementName="CategoryWindow"/>
+                                                </MultiBinding>
+                                            </Button.Background>
+                                        </Button>
 
                                         <Border Grid.Column="6"
                                                 x:Name="DragHandle"
@@ -324,7 +370,13 @@
             <Border Grid.Row="1" IsVisible="{Binding HasSelection}" Padding="8" Margin="0,8,12,0" Background="{DynamicResource HeaderBackgroundBrush}">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
                     <TextBlock Text="Bulk actions:" VerticalAlignment="Center"/>
-                    <Button Content="Manage Selected…" Width="160" Command="{Binding ManageSelectedCategoriesCommand}"/>
+                    <Button Content="Manage Selected…" Width="160"
+                            Classes="liquid-glass"
+                            Background="{DynamicResource AccentBrush}"
+                            Foreground="{DynamicResource ButtonForegroundBrush}"
+                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                            BorderThickness="1"
+                            Command="{Binding ManageSelectedCategoriesCommand}"/>
                 </StackPanel>
             </Border>
             </Grid>

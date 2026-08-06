@@ -22,20 +22,35 @@
         <Style Selector="Border#SettingsSlideHost Border.fade-in TextBlock">
             <Setter Property="TextWrapping" Value="Wrap"/>
         </Style>
+        <!-- Active tab: matches the same "selected" background/border language the main
+             sidebar uses for its quick-filter highlight, instead of relying on a 3px accent
+             bar + bold text alone (too subtle to register as "selected" at a glance). -->
+        <Style Selector="Button.settings-tab.active /template/ Border#BaseBorder">
+            <Setter Property="Background" Value="{DynamicResource QuickFilterGlassActiveBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource QuickFilterGlassActiveBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
         <Style Selector="Button.settings-tab.active Border.tab-accent">
             <Setter Property="IsVisible" Value="True"/>
+            <Setter Property="Width" Value="4"/>
         </Style>
 
-        <!-- Save button — always painted in the live accent colour so theme changes are
-             reflected immediately (the dirty-vs-clean distinction is conveyed by the orange
-             unsaved-changes ellipse next to it instead of the button colour). -->
+        <!-- Save button — painted in UserAccentBrush, the live custom-accent-picker resource
+             (ThemeManagerService.SetAccentColor) rather than the theme's own AccentBrush, so
+             it responds immediately when the user picks a colour from the accent dropdown in
+             Theme Settings. AccentBrush only changes on a theme/skin switch, not on a picker
+             selection — using it here silently ignored the user's custom accent choice. -->
         <Style Selector="Button.settings-save-primary /template/ Border#BaseBorder">
             <Setter Property="Background" Value="{DynamicResource UserAccentBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource UserAccentBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
         </Style>
+        <!-- Save button text: PrimaryTextBrush is theme-aware — white on dark
+             themes, near-black on light themes — so it stays readable regardless
+             of what the live accent picker resolves UserAccentBrush to. Hardcoded
+             #FFFFFF (old value) read as invisible/off on light backgrounds. -->
         <Style Selector="Button.settings-save-primary /template/ ContentPresenter">
-            <Setter Property="TextBlock.Foreground" Value="#FFFFFFFF"/>
+            <Setter Property="TextBlock.Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
         </Style>
         <Style Selector="Button.settings-save-primary /template/ Border#Sheen">
             <Setter Property="IsVisible" Value="False"/>
@@ -58,37 +73,25 @@
             </Setter>
         </Style>
 
+        <!-- Settings-panel liquid-glass buttons: use the theme's own glass brushes
+             so dark themes get their navy tint and light themes get white-alpha —
+             hardcoded navy gradients here read as dirty grey on light backgrounds.
+             Shadow is left on (was forced null) so buttons get soft depth. -->
         <Style Selector="Border#SettingsSlideHost Button.liquid-glass">
-            <Setter Property="Effect" Value="{x:Null}"/>
+            <Setter Property="Effect" Value="{DynamicResource LiquidGlassButtonEffect}"/>
         </Style>
         <Style Selector="Border#SettingsSlideHost Button.liquid-glass /template/ Border#BaseBorder">
-            <Setter Property="Background">
-                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
-                    <GradientStop Color="#552B4A7A" Offset="0"/>
-                    <GradientStop Color="#1F2B4A7A" Offset="0.35"/>
-                    <GradientStop Color="#00000000" Offset="0.7"/>
-                </LinearGradientBrush>
-            </Setter>
+            <Setter Property="Background" Value="{DynamicResource Brush.Glass.BaseFill}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource Brush.Glass.Border}"/>
         </Style>
         <Style Selector="Border#SettingsSlideHost Button.liquid-glass:pointerover /template/ Border#BaseBorder">
-            <Setter Property="Background">
-                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
-                    <GradientStop Color="#803A5E94" Offset="0"/>
-                    <GradientStop Color="#383A5E94" Offset="0.4"/>
-                    <GradientStop Color="#00000000" Offset="0.8"/>
-                </LinearGradientBrush>
-            </Setter>
+            <Setter Property="Background" Value="{DynamicResource Brush.Glass.BaseFillHover}"/>
         </Style>
         <Style Selector="Border#SettingsSlideHost Button.liquid-glass:pressed /template/ Border#BaseBorder">
-            <Setter Property="Background">
-                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
-                    <GradientStop Color="#A0213D66" Offset="0"/>
-                    <GradientStop Color="#48213D66" Offset="0.4"/>
-                    <GradientStop Color="#00000000" Offset="0.85"/>
-                </LinearGradientBrush>
-            </Setter>
+            <Setter Property="Background" Value="{DynamicResource Brush.Glass.BaseFillPressed}"/>
         </Style>
+        <!-- Sheen kept faint; light themes have already zeroed Brush.Glass.Sheen, so
+             this only affects dark themes visually. -->
         <Style Selector="Border#SettingsSlideHost Button.liquid-glass /template/ Border#Sheen">
             <Setter Property="Opacity" Value="0.15"/>
         </Style>
@@ -137,36 +140,29 @@
                     VerticalAlignment="Stretch"
                     Width="920"
                     Background="{DynamicResource WindowBackgroundBrush}"
-                    BorderBrush="{DynamicResource ControlBorderBrush}"
-                    BorderThickness="1,0,0,0"
+                    BorderBrush="#55000000"
+                    BorderThickness="1,1,0,0"
                     CornerRadius="20,0,0,20"
                     ClipToBounds="True"
-                    BoxShadow="-40 0 140 -10 #E0000000, -18 0 48 -8 #B0000000, -6 0 18 -4 #80000000"
+                    BoxShadow="-46 0 150 -10 #EA000000, -22 0 60 -8 #C0000000, -8 0 22 -4 #90000000"
                     RenderTransformOrigin="1,0.5">
                 <Border.IsVisible>
                     <MultiBinding Converter="{x:Static BoolConverters.Or}">
                         <Binding Path="IsSettingsPanelVisible"/>
                     </MultiBinding>
                 </Border.IsVisible>
-                <Border.RenderTransform>
-                    <TranslateTransform X="0" />
-                </Border.RenderTransform>
+                <Border.RenderTransform>translateX(0px)</Border.RenderTransform>
                 <Border.Styles>
                     <Style Selector="Border">
-                        <Setter Property="RenderTransform">
-                            <TranslateTransform X="920" />
-                        </Setter>
+                        <Setter Property="RenderTransform" Value="translateX(920px)"/>
                     </Style>
                     <Style Selector="Border[IsVisible=true]">
-                        <Setter Property="RenderTransform">
-                            <TranslateTransform X="0" />
-                        </Setter>
+                        <Setter Property="RenderTransform" Value="translateX(0px)"/>
                     </Style>
                 </Border.Styles>
                 <Border.Transitions>
                     <Transitions>
-
-                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:1.7" Easing="QuinticEaseOut"/>
+                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.85" Easing="CubicEaseInOut"/>
                     </Transitions>
                 </Border.Transitions>
 
@@ -210,34 +206,31 @@
                             Background="{DynamicResource CategoryPanelBackgroundBrush}"
                             BorderBrush="{DynamicResource ControlBorderBrush}"
                             BorderThickness="0,0,0,1"
-                            Padding="25,14"
+                            Padding="25,9"
                             ZIndex="1">
                         <Grid ColumnDefinitions="Auto,*,Auto">
                             <Border Grid.Column="0"
-                                    Width="34" Height="34"
-                                    CornerRadius="17"
+                                    Width="28" Height="28"
+                                    CornerRadius="14"
                                     VerticalAlignment="Center"
                                     Background="{DynamicResource ControlBackgroundBrush}"
                                     BorderBrush="{DynamicResource ControlBorderBrush}"
                                     BorderThickness="1">
                                 <TextBlock Text="🛡"
-                                           FontSize="16"
+                                           FontSize="14"
                                            HorizontalAlignment="Center"
                                            VerticalAlignment="Center"/>
                             </Border>
-                            <StackPanel Grid.Column="1" Spacing="2" Margin="14,0,12,0" VerticalAlignment="Center">
-                                <TextBlock Text="Offline mode"
-                                           FontWeight="SemiBold"
-                                           FontSize="{StaticResource Type.Body.Size}"/>
-                                <TextBlock Text="Block all network access. Revokes active grants and refuses new connection requests until turned off."
-                                           FontSize="{StaticResource Type.Label.Size}"
-                                           Classes="header-muted"
-                                           TextWrapping="Wrap"/>
-                            </StackPanel>
+                            <TextBlock Grid.Column="1"
+                                       Text="Offline mode"
+                                       FontWeight="SemiBold"
+                                       FontSize="{StaticResource Type.Body.Size}"
+                                       VerticalAlignment="Center"
+                                       Margin="14,0,12,0"/>
                             <ToggleSwitch Grid.Column="2"
                                           VerticalAlignment="Center"
                                           IsChecked="{Binding PrivacyModeEnabled, Mode=TwoWay}"
-                                          ToolTip.Tip="Master offline switch"/>
+                                          ToolTip.Tip="Master offline switch — blocks all network access and revokes active grants"/>
                         </Grid>
                     </Border>
 
@@ -262,10 +255,10 @@
                                           MinHeight="0">
                                 <ScrollViewer.OpacityMask>
                                     <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                                        <GradientStop Offset="0.00" Color="#80FFFFFF"/>
-                                        <GradientStop Offset="0.04" Color="#FFFFFFFF"/>
-                                        <GradientStop Offset="0.82" Color="#FFFFFFFF"/>
-                                        <GradientStop Offset="1.00" Color="#80FFFFFF"/>
+                                        <GradientStop Offset="0.00" Color="#00FFFFFF"/>
+                                        <GradientStop Offset="0.09" Color="#FFFFFFFF"/>
+                                        <GradientStop Offset="0.80" Color="#FFFFFFFF"/>
+                                        <GradientStop Offset="1.00" Color="#33FFFFFF"/>
                                     </LinearGradientBrush>
                                 </ScrollViewer.OpacityMask>
                             <StackPanel Spacing="6" Margin="15,20,15,90">
@@ -327,6 +320,27 @@
                                                 IsVisible="False"/>
                                         <TextBlock Grid.Column="1" Classes="tab-label"
                                                    Text="Theme"
+                                                   VerticalAlignment="Center"
+                                                   Margin="12,0,0,0"/>
+                                    </Grid>
+                                </Button>
+
+                                <Button Command="{Binding ShowSubscriptionSettingsCommand}"
+                                        IsVisible="{Binding SettingsSearchQuery, Converter={StaticResource SettingsTabSearchConverter}, ConverterParameter='subscription premium upgrade billing plan pay license unlock'}"
+                                        Classes="liquid-glass settings-tab"
+                                        Classes.active="{Binding SelectedSettingsTab, Converter={StaticResource SettingsTabEqualsConverter}, ConverterParameter=subscription}"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Stretch"
+                                        Height="40"
+                                        Padding="0">
+                                    <Grid ColumnDefinitions="3,*">
+                                        <Border Grid.Column="0" Classes="tab-accent"
+                                                Background="{DynamicResource AccentBrush}"
+                                                CornerRadius="2"
+                                                Margin="2,6"
+                                                IsVisible="False"/>
+                                        <TextBlock Grid.Column="1" Classes="tab-label"
+                                                   Text="Subscription"
                                                    VerticalAlignment="Center"
                                                    Margin="12,0,0,0"/>
                                     </Grid>
@@ -474,6 +488,27 @@
                                                 IsVisible="False"/>
                                         <TextBlock Grid.Column="1" Classes="tab-label"
                                                    Text="Recent Issues"
+                                                   VerticalAlignment="Center"
+                                                   Margin="12,0,0,0"/>
+                                    </Grid>
+                                </Button>
+
+                                <Button Command="{Binding ShowSecurityActivityCommand}"
+                                        IsVisible="{Binding SettingsSearchQuery, Converter={StaticResource SettingsTabSearchConverter}, ConverterParameter='security activity audit log history tamper events unlock mount integrity'}"
+                                        Classes="liquid-glass settings-tab"
+                                        Classes.active="{Binding SelectedSettingsTab, Converter={StaticResource SettingsTabEqualsConverter}, ConverterParameter=securityactivity}"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Stretch"
+                                        Height="40"
+                                        Padding="0">
+                                    <Grid ColumnDefinitions="3,*">
+                                        <Border Grid.Column="0" Classes="tab-accent"
+                                                Background="{DynamicResource AccentBrush}"
+                                                CornerRadius="2"
+                                                Margin="2,6"
+                                                IsVisible="False"/>
+                                        <TextBlock Grid.Column="1" Classes="tab-label"
+                                                   Text="Security Activity"
                                                    VerticalAlignment="Center"
                                                    Margin="12,0,0,0"/>
                                     </Grid>

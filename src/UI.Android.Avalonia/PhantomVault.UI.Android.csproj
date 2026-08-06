@@ -54,7 +54,7 @@
          the desktop-only canonical implementations on Android. Crypto is portable. -->
     <ProjectReference Include="..\Core\PhantomVault.Core.csproj" />
     <ProjectReference Include="..\Crypto\GiblexVault.Security.ZK.csproj" />
-    <ProjectReference Include="..\..\..\Phantom.Shared\Phantom.UI.Shared\Phantom.UI.Shared.csproj" />
+    <ProjectReference Include="..\..\..\Phantom.Root\Phantom.UI.Shared\Phantom.UI.Shared.csproj" />
     <!-- Platform stays opt-in until its Android target is verified.
          <ProjectReference Include="..\Platform\PhantomVault.Platform.csproj" /> -->
 

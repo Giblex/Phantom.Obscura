@@ -20,6 +20,13 @@ namespace PhantomVault.Core.Models
         [JsonPropertyName("description")]
         public string? Description { get; set; }
 
+        /// <summary>
+        /// Monotonic counter incremented on every successful vault save. Used together
+        /// with a host-local trust anchor to detect whole-volume rollback at unlock.
+        /// </summary>
+        [JsonPropertyName("saveSequence")]
+        public long SaveSequence { get; set; }
+
         [JsonPropertyName("groups")]
         public List<VaultGroup>? Groups { get; set; } = new();
     }

@@ -33,9 +33,40 @@ namespace PhantomVault.UI.ViewModels
         private CancellationTokenSource? _persistDebounceCts;
         private IconManager? _iconManager;
 
+        private PhantomVault.UI.Services.Entitlements.IEntitlementService? Entitlements =>
+            (Application.Current as App)?.Services?.GetService(typeof(PhantomVault.UI.Services.Entitlements.IEntitlementService))
+                as PhantomVault.UI.Services.Entitlements.IEntitlementService;
+
+        public bool CanUseAdvancedCategoryManager =>
+            Entitlements?.IsUnlocked(PhantomVault.Core.Models.Licensing.PremiumFeature.AdvancedCategoryManager) ?? false;
+
+        private async Task<bool> EnsureAdvancedCategoryAccessAsync()
+        {
+            if (CanUseAdvancedCategoryManager) return true;
+            await _dialogService.ShowInfoAsync(
+                "Premium feature",
+                "Changing category icons is part of the advanced category manager, a Premium feature. " +
+                "Upgrade from Settings → Subscription to unlock it.",
+                GetOwnerWindow());
+            return false;
+        }
+
         public event Action? DismissRequested;
 
         public bool CloseOwnerOnDismiss { get; set; } = true;
+
+        public bool UseColouredTileBlur
+        {
+            get => CategoryBlurPreference.UseColouredBlur;
+            set
+            {
+                if (CategoryBlurPreference.UseColouredBlur != value)
+                {
+                    CategoryBlurPreference.UseColouredBlur = value;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
 
         public CategoryManagerViewModel()
         {
@@ -155,6 +186,7 @@ namespace PhantomVault.UI.ViewModels
 
         private void InitializeCommands()
         {
+            CategoryBlurPreference.Changed += (_, _) => this.RaisePropertyChanged(nameof(UseColouredTileBlur));
             AddCategoryCommand = ReactiveCommand.CreateFromTask(AddCategoryAsync);
             RemoveCategoryCommand = ReactiveCommand.CreateFromTask<CategoryItem>(item => RemoveCategoryAsync(item, deleteContents: false));
             MoveUpCommand = ReactiveCommand.CreateFromTask<CategoryItem>(MoveUpAsync);
@@ -651,6 +683,7 @@ namespace PhantomVault.UI.ViewModels
 
         private async Task PickIconAsync(CategoryItem item)
         {
+            if (!await EnsureAdvancedCategoryAccessAsync()) return;
             try
             {
 
@@ -769,7 +802,7 @@ namespace PhantomVault.UI.ViewModels
 
         private async Task OpenIconLibraryAsync()
         {
-
+            if (!await EnsureAdvancedCategoryAccessAsync()) return;
             try
             {
                 var iconManagerVm = new IconManagerViewModel(GetIconManager());

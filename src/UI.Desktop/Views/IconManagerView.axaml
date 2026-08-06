@@ -12,8 +12,23 @@
     <UserControl.Resources>
         <converters:NullToBoolConverter x:Key="NullToBoolConverter"/>
         <converters:InvertBoolConverter x:Key="InvertBoolConverter"/>
-        <SolidColorBrush x:Key="IconTileCellBrush">Transparent</SolidColorBrush>
+        <SolidColorBrush x:Key="IconTileCellBrush">#14FFFFFF</SolidColorBrush>
+        <SolidColorBrush x:Key="IconTileCellBorderBrush">#22FFFFFF</SolidColorBrush>
     </UserControl.Resources>
+
+    <!-- Badge tiles match the website demo's icon look: rounded surface, subtle
+         theme-aware border, accent on hover. Styles are scoped to this view. -->
+    <UserControl.Styles>
+        <Style Selector="Border.iconTile">
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <Style Selector="Button:pointerover Border.iconTile">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+        </Style>
+    </UserControl.Styles>
 
     <DockPanel Margin="20" LastChildFill="True">
 
@@ -27,6 +42,10 @@
                            FontSize="{StaticResource Type.H3.Size}"
                            FontWeight="Bold"
                            Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <TextBlock Text="Browse, import, and assign custom icons to your entries. Pick a tile to apply it."
+                           FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
                 <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
                     <Border Grid.Column="0"
                             Background="{DynamicResource ControlBackgroundBrush}"
@@ -44,18 +63,43 @@
                         </Grid>
                     </Border>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" Margin="16,0,0,0" VerticalAlignment="Center">
+                        <Button Command="{Binding DownloadFlatIconsCommand}"
+                                Classes="liquid-glass"
+                                Height="34" MinWidth="150"
+                                Padding="14,0"
+                                ToolTip.Tip="Download a curated SVG/icon pack into your library">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <TextBlock Text="⬇" VerticalAlignment="Center"/>
+                                <TextBlock Text="Download Icons" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding ImportIconCommand}"
+                                Classes="liquid-glass"
+                                Height="34" MinWidth="130"
+                                Padding="14,0"
+                                Background="{DynamicResource AccentBrush}"
+                                Foreground="{DynamicResource ButtonForegroundBrush}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1"
+                                ToolTip.Tip="Import your own icon files (SVG / PNG)">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <TextBlock Text="⬆" VerticalAlignment="Center"/>
+                                <TextBlock Text="Import Icon" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
                         <Button Command="{Binding RefreshCommand}"
                                 Classes="liquid-glass"
-                                Width="110" Height="34">
+                                Width="100" Height="34"
+                                ToolTip.Tip="Rescan the icon library">
                             <TextBlock Text="Refresh" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Button>
 
-                        <Button Name="OptionsButton" Classes="liquid-glass" Width="40" Height="34" ToolTip.Tip="Options">
+                        <Button Name="OptionsButton" Classes="liquid-glass" Width="40" Height="34" ToolTip.Tip="More options">
                             <TextBlock Text="⋮" FontSize="{StaticResource Type.Icon.Size}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             <Button.ContextMenu>
                                 <ContextMenu>
-                                    <MenuItem Header="Download Icons" Command="{Binding DownloadFlatIconsCommand}"/>
-                                    <MenuItem Header="Import Icons" Command="{Binding ImportIconCommand}"/>
                                     <MenuItem Header="Open Icons Folder" Command="{Binding OpenIconsFolderCommand}"/>
                                     <MenuItem Header="Toggle grid view" Command="{Binding ToggleGridViewCommand}"/>
                                     <MenuItem Header="Show Selected" Command="{Binding RevealIconCommand}" CommandParameter="{Binding SelectedIcon}"/>
@@ -150,7 +194,7 @@
                     <DataGridTemplateColumn Header="" Width="48">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <Border Width="40" Height="40" CornerRadius="6" HorizontalAlignment="Center" VerticalAlignment="Center" Background="{StaticResource IconTileCellBrush}">
+                                <Border Classes="iconTile" Width="40" Height="40" CornerRadius="8" HorizontalAlignment="Center" VerticalAlignment="Center">
                                     <Image Source="{Binding IconBitmap}" Stretch="Uniform" Width="28" Height="28"/>
                                 </Border>
                             </DataTemplate>
@@ -189,7 +233,9 @@
                 <ItemsControl ItemsSource="{Binding FilteredSections}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Margin="0,0,0,6" CornerRadius="6" ClipToBounds="True">
+                            <Border Margin="0,0,0,10" CornerRadius="10" ClipToBounds="True"
+                                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                                    BorderThickness="1">
                                 <StackPanel>
 
                                     <Button Command="{Binding ToggleExpandedCommand}"
@@ -197,7 +243,7 @@
                                             HorizontalContentAlignment="Stretch"
                                             Height="38"
                                             Padding="12,0"
-                                            CornerRadius="6"
+                                            CornerRadius="10,10,0,0"
                                             Background="{DynamicResource ControlBackgroundBrush}">
                                         <Grid ColumnDefinitions="Auto,Auto,*,Auto">
 
@@ -220,7 +266,7 @@
                                     <Border IsVisible="{Binding IsExpanded}"
                                             Background="{DynamicResource CardBackgroundBrush}"
                                             Padding="8"
-                                            CornerRadius="0,0,6,6"
+                                            CornerRadius="0,0,10,10"
                                             MinHeight="32">
                                         <StackPanel>
 
@@ -259,10 +305,9 @@
                                                                 MinWidth="72" Height="96"
                                                                 Classes="liquid-glass" Margin="4">
                                                             <StackPanel>
-                                                                <Border Width="68" Height="68" CornerRadius="8"
-                                                                        Background="{StaticResource IconTileCellBrush}"
+                                                                <Border Classes="iconTile" Width="68" Height="68"
                                                                         HorizontalAlignment="Center">
-                                                                    <Image Source="{Binding IconBitmap}" Width="60" Height="60" Stretch="Uniform"/>
+                                                                    <Image Source="{Binding IconBitmap}" Width="56" Height="56" Stretch="Uniform"/>
                                                                 </Border>
                                                             </StackPanel>
                                                         </Button>

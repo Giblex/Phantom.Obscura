@@ -4,14 +4,14 @@
                         xmlns:views="clr-namespace:PhantomVault.UI.Views"
                         xmlns:controls="clr-namespace:PhantomVault.UI.Desktop.Controls"
                         x:Class="PhantomVault.UI.Views.VaultCreationLoadingWindow"
-                        Title="Phantom Obscura"
-                        Width="720" Height="560"
-                        MinWidth="720" MinHeight="560"
+                        Title="Phantom Obscura — Creating Your Vault"
+                        Width="720" Height="680"
+                        MinWidth="720" MinHeight="680"
                         CanResize="False"
                         WindowStartupLocation="CenterScreen"
                         Background="{DynamicResource WindowBackgroundBrush}"
                         Classes="animated-window"
-                        SystemDecorations="BorderOnly">
+                        SystemDecorations="Full">
 
     <Window.Resources>
         <ResourceDictionary>
@@ -177,14 +177,17 @@
                 </Border.Background>
             </Border>
 
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          Padding="0,20">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="24">
 
-                <Panel Width="200" Height="200" HorizontalAlignment="Center">
+                <Panel Width="310" Height="310" HorizontalAlignment="Center">
 
                     <Border x:Name="PulseRing3"
                             Classes="pulse-ring-delay2"
-                            Width="190" Height="190"
-                            CornerRadius="95"
+                            Width="300" Height="300"
+                            CornerRadius="150"
                             BorderBrush="#1A6BB3AE"
                             BorderThickness="1.5"
                             RenderTransformOrigin="0.5,0.5"
@@ -196,8 +199,8 @@
 
                     <Border x:Name="PulseRing2"
                             Classes="pulse-ring-delay"
-                            Width="160" Height="160"
-                            CornerRadius="80"
+                            Width="260" Height="260"
+                            CornerRadius="130"
                             BorderBrush="#2A6BB3AE"
                             BorderThickness="1.5"
                             RenderTransformOrigin="0.5,0.5"
@@ -209,8 +212,8 @@
 
                     <Border x:Name="PulseRing1"
                             Classes="pulse-ring"
-                            Width="130" Height="130"
-                            CornerRadius="65"
+                            Width="216" Height="216"
+                            CornerRadius="108"
                             BorderBrush="#406BB3AE"
                             BorderThickness="2"
                             RenderTransformOrigin="0.5,0.5"
@@ -221,7 +224,7 @@
                     </Border>
 
                     <Canvas x:Name="SegmentedRing"
-                            Width="175" Height="175"
+                            Width="280" Height="280"
                             RenderTransformOrigin="0.5,0.5"
                             HorizontalAlignment="Center" VerticalAlignment="Center">
                         <Canvas.RenderTransform>
@@ -231,7 +234,7 @@
                     </Canvas>
 
                     <Canvas x:Name="SegmentedRingInner"
-                            Width="140" Height="140"
+                            Width="224" Height="224"
                             RenderTransformOrigin="0.5,0.5"
                             HorizontalAlignment="Center" VerticalAlignment="Center">
                         <Canvas.RenderTransform>
@@ -240,7 +243,7 @@
                     </Canvas>
 
                     <Border x:Name="OrbitDot1"
-                            Width="150" Height="150"
+                            Width="240" Height="240"
                             RenderTransformOrigin="0.5,0.5"
                             HorizontalAlignment="Center" VerticalAlignment="Center">
                         <Border.RenderTransform>
@@ -253,7 +256,7 @@
                     </Border>
 
                     <Border x:Name="OrbitDot2"
-                            Width="170" Height="170"
+                            Width="272" Height="272"
                             RenderTransformOrigin="0.5,0.5"
                             HorizontalAlignment="Center" VerticalAlignment="Center">
                         <Border.RenderTransform>
@@ -266,7 +269,7 @@
                     </Border>
 
                     <Border x:Name="OrbitDot3"
-                            Width="195" Height="195"
+                            Width="306" Height="306"
                             RenderTransformOrigin="0.5,0.5"
                             HorizontalAlignment="Center" VerticalAlignment="Center">
                         <Border.RenderTransform>
@@ -278,16 +281,10 @@
                                  HorizontalAlignment="Center"/>
                     </Border>
 
-                    <Border Width="96" Height="96"
-                            CornerRadius="48"
-                            Background="#15FFFFFF"
-                            HorizontalAlignment="Center" VerticalAlignment="Center"
-                            ClipToBounds="True">
-                        <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
-                               Width="70" Height="70"
-                               Stretch="Uniform"
-                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
+                    <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
+                           Width="236" Height="236"
+                           Stretch="Uniform"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
                     <Border x:Name="CompletionCheck"
                             Classes="check-appear"
@@ -384,6 +381,7 @@
                            Margin="0,4,0,0"/>
 
             </StackPanel>
+            </ScrollViewer>
         </Panel>
     </Grid>
 

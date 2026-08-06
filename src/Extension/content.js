@@ -108,7 +108,7 @@
     header.textContent = 'PHANTOMVAULT';
     chip.appendChild(header);
 
-    credentials.slice(0, 5).forEach(cred => {
+    credentials.slice(0, 3).forEach(cred => {
       const row = document.createElement('div');
       row.style.cssText = `
         display:flex;align-items:center;gap:8px;padding:6px 8px;
@@ -147,7 +147,7 @@
     activeChip = host;
 
     // Close chip on outside click
-    setTimeout(() => {
+    setTimeout(function () {
       document.addEventListener('mousedown', onOutsideClick, { once: true, capture: true });
     }, 0);
   }
@@ -159,7 +159,9 @@
   }
 
   function removeChip() {
-    activeChip?.remove();
+    if (activeChip) {
+      activeChip.remove();
+    }
     activeChip = null;
   }
 
@@ -198,70 +200,104 @@
   }
 
 
-  async function handleForm(form) {
-    const fields = collectFormFields(form);
+  function handleForm(form) {
+    var fields = collectFormFields(form);
     if (!hasPasswordField(fields)) return;
 
-    const domain = location.hostname;
+    var url = window.location.href;
+    var domain = location.hostname;
 
-    // Notify native host of form detection
-    chrome.runtime.sendMessage({
-      type: 'detectForm',
-      data: { domain, fields }
-    }).catch(() => {});
-
-    // Request matching credentials
-    let resp;
     try {
-      resp = await chrome.runtime.sendMessage({
-        type: 'getCredentials',
-        data: { domain }
+      chrome.runtime.sendMessage({
+        type: 'detectForm',
+        data: { url: url, fields: fields }
       });
-    } catch {
-      return;
+    } catch (err) {
+      // best-effort only
     }
 
-    if (!resp?.success || !resp.data?.credentials?.length) return;
+    chrome.runtime.sendMessage({
+      type: 'getCredentials',
+      data: { domain: domain }
+    }, function (resp) {
+      if (!resp || !resp.success || !resp.data || !Array.isArray(resp.data.credentials) || resp.data.credentials.length === 0) {
+        return;
+      }
 
-    const passwordInput = form.querySelector('input[type="password"]');
-    if (passwordInput) {
-      showSuggestionChip(passwordInput, resp.data.credentials);
-      passwordInput.addEventListener('focus', () => {
+      var passwordInput = form.querySelector('input[type="password"]');
+      if (passwordInput) {
         showSuggestionChip(passwordInput, resp.data.credentials);
-      }, { once: true });
-    }
+        passwordInput.addEventListener('focus', function () {
+          showSuggestionChip(passwordInput, resp.data.credentials);
+        }, { once: true });
+      }
+    });
   }
 
-
   function watchFormSubmit(form) {
-    form.addEventListener('submit', () => {
-      const fields = collectFormFields(form);
+    form.addEventListener('submit', function () {
+      var fields = collectFormFields(form);
       if (!hasPasswordField(fields)) return;
 
-      const data = {};
-      fields.forEach(f => {
-        const el = document.querySelector(f.selector);
-        if (el) data[f.fieldClass] = el.value;
-      });
+      var submission = [];
+      for (var i = 0; i < fields.length; i += 1) {
+        var f = fields[i];
+        var el = document.querySelector(f.selector);
+        submission.push({
+          selector: f.selector,
+          type: f.type,
+          id: f.id,
+          name: f.name,
+          placeholder: f.placeholder,
+          autocomplete: f.autocomplete,
+          fieldClass: f.fieldClass,
+          value: el ? el.value : ''
+        });
+      }
 
-      chrome.runtime.sendMessage({
-        type: 'submitForm',
-        data: { domain: location.hostname, fields: data }
-      }).catch(() => {});
+      try {
+        chrome.runtime.sendMessage({
+          type: 'submitForm',
+          data: { url: window.location.href, fields: submission }
+        });
+      } catch (err) {
+        // ignore
+      }
     });
   }
 
 
   const processedForms = new WeakSet();
 
-  function scanForms() {
+  function scanForms(force = false) {
     document.querySelectorAll('form').forEach(form => {
-      if (processedForms.has(form)) return;
+      if (!force && processedForms.has(form)) return;
       processedForms.add(form);
       handleForm(form);
       watchFormSubmit(form);
     });
   }
+
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (!message || !message.type) return false;
+
+    if (message.type === 'triggerFill') {
+      const fillMessage = { type: 'fill' };
+      chrome.runtime.sendMessage(fillMessage, (resp) => {
+        if (resp && resp.success && resp.data && resp.data.hasFill) {
+          fillCredential(resp.data);
+          sendResponse({ success: true, filled: true });
+          return;
+        }
+
+        scanForms(true);
+        sendResponse({ success: true, filled: false });
+      });
+      return true;
+    }
+
+    return false;
+  });
 
   // Initial scan
   scanForms();

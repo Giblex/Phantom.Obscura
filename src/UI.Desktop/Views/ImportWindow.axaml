@@ -69,6 +69,20 @@
 
     <Grid RowDefinitions="*,Auto">
 
+        <!-- Dot-grid overlay (matches welcome + wizard). -->
+        <Border Grid.Row="0" Grid.RowSpan="2"
+                IsHitTestVisible="False"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch">
+            <Border.Background>
+                <ImageBrush Source="avares://PhantomVault.UI/Assets/dot_pattern.png"
+                            TileMode="Tile"
+                            Stretch="None"
+                            SourceRect="0,0,8,8"
+                            DestinationRect="0,0,8,8"/>
+            </Border.Background>
+        </Border>
+
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <Border Padding="30,25" ClipToBounds="True">
                 <StackPanel Spacing="16">
@@ -95,7 +109,12 @@
 
                                 <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
-                                        <Image Source="{Binding IconSource}" Width="56" Height="56" Stretch="Uniform" HorizontalAlignment="Center" />
+                                        <Image Source="{Binding IconSource}"
+                                               Width="56" Height="56"
+                                               Stretch="Uniform"
+                                               HorizontalAlignment="Center"
+                                               RenderOptions.BitmapInterpolationMode="HighQuality"
+                                               RenderOptions.EdgeMode="Antialias"/>
                                         <TextBlock Text="{Binding Name}" FontSize="{StaticResource Type.Small.Size}" TextAlignment="Center" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}" MaxWidth="140" />
                                     </StackPanel>
                                 </Grid>
@@ -119,7 +138,7 @@
                     <Button Grid.Column="1"
                             Content="Browse..."
                             Width="100"
-                            Classes="dull-blue"
+                            Classes="liquid-glass"
                             Command="{Binding BrowseCommand}"/>
                 </Grid>
             </StackPanel>
@@ -183,7 +202,7 @@
 
         <Border Grid.Row="1" Background="{DynamicResource HeaderBackgroundBrush}"
                 BorderBrush="{DynamicResource ControlBorderBrush}"
-                BorderThickness="0,1,0,0" Padding="20,12">
+                BorderThickness="0,1,0,0" Padding="20,8">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
                 <Button Content="Import Credentials" Width="170" Command="{Binding ImportCommand}" Classes="dull-blue" IsEnabled="{Binding !IsImporting}"/>
                 <Button Content="Cancel" Width="110" Command="{Binding CloseCommand}" Classes="liquid-glass"/>

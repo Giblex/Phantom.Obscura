@@ -151,6 +151,10 @@ namespace PhantomVault.UI.ViewModels
                 this.RaisePropertyChanged(nameof(CurrentManifestKdfDisplay));
                 this.RaisePropertyChanged(nameof(FastUnlockNeedsReKey));
             }
+            else if (e.PropertyName == nameof(VaultViewModel.PrivacyModeEnabled))
+            {
+                this.RaisePropertyChanged(nameof(PrivacyModeEnabled));
+            }
         }
 
         private void OnTamperDetected(object? sender, TamperDetectedEventArgs e)
@@ -229,6 +233,30 @@ namespace PhantomVault.UI.ViewModels
                     this.RaiseAndSetIfChanged(ref _idleTimeoutMinutes, value);
                     StageAll();
                 }
+            }
+        }
+
+        public bool PrivacyModeEnabled
+        {
+            get => _hostViewModel?.PrivacyModeEnabled ?? PrivacyShield.PrivacyModeEnabled;
+            set
+            {
+                if (PrivacyModeEnabled == value)
+                {
+                    return;
+                }
+
+                if (_hostViewModel != null)
+                {
+                    _hostViewModel.PrivacyModeEnabled = value;
+                }
+                else if (PrivacyShield.PrivacyModeEnabled != value)
+                {
+                    PrivacyShield.PrivacyModeEnabled = value;
+                    try { SettingsService.Update(s => s.PrivacyModeEnabled = value); } catch { }
+                }
+
+                this.RaisePropertyChanged();
             }
         }
 

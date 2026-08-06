@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Management;
@@ -18,11 +19,15 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PhantomVault.Core.Models;
+using PhantomVault.Core.Models.Licensing;
 using PhantomVault.Core.Services;
 using PhantomVault.Core.Services.DomainKeys;
 using PhantomVault.Core.Services.Security;
 using PhantomVault.Core.Utils;
 using PhantomVault.UI.Services;
+using PhantomVault.UI.Services.Licensing;
+using PhantomVault.UI.Services.Mount;
+using PhantomVault.UI.Views.Dialogs;
 using Serilog;
 
 namespace PhantomVault.UI.ViewModels
@@ -177,6 +182,12 @@ namespace PhantomVault.UI.ViewModels
         private string _encryptedContainerSize = "1 GB";
 
         [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(WinFspStatusText))]
+        [NotifyPropertyChangedFor(nameof(WinFspStatusDetail))]
+        [NotifyPropertyChangedFor(nameof(VirtualDriveReadinessText))]
+        private bool _isWinFspInstalled;
+
+        [ObservableProperty]
         private ObservableCollection<DetectedRemnant> _detectedRemnants = new();
 
         [ObservableProperty]
@@ -287,7 +298,7 @@ namespace PhantomVault.UI.ViewModels
                 {
                     "Single packed master volume built from the same canonical inner layout",
                     "Reduced visible structure and better artifact minimisation",
-                    "Clean migration path back to Standard or forward to Phantom Secured"
+                    "Clean, reversible migration path to and from Standard Secure"
                 },
                 RecommendedFor = "Recommended",
                 FriendlySummary = "Like hiding that locked drawer behind a bookcase too. Harder to notice, still practical to use.",
@@ -298,45 +309,45 @@ namespace PhantomVault.UI.ViewModels
             new SecurityLevelOption
             {
                 Name = "Phantom Secured",
-                Description = "Expert profile that writes the canonical vault layout directly to the USB device as a raw Phantom Secured transport.",
+                Description = "Maximum concealment. Binds the vault to a raw-device USB transport with a mandatory keyfile, device binding, and provisioning metadata.",
                 Features = new[]
                 {
-                    "USB is bound and reopened through the physical device path instead of a browsable filesystem",
-                    "Requires a master password and device-bound factors without an external keyfile path",
-                    "Provisioned with reversible migration metadata and rollback-ready storage records"
+                    "Raw-device transport bound to the selected USB hardware",
+                    "Mandatory keyfile (keyfile-first) with an optional master password",
+                    "Strongest artifact minimisation and device-bound access"
                 },
-                RecommendedFor = "Expert / adversarial",
-                FriendlySummary = "Like storing everything in a bunker that forgot how to be obvious. Strongest, but definitely stricter.",
-                SecurityIncreasePercent = 88,
-                SecurityHelpText = "Phantom Secured is the bunker option. It gives the most aggressive hardening and concealment, but it expects you to be comfortable with a stricter, more expert-oriented setup."
+                RecommendedFor = "Maximum security",
+                FriendlySummary = "Like a hidden safe welded to one specific key. The strongest option, bound to your USB device.",
+                SecurityIncreasePercent = 92,
+                SecurityHelpText = "Phantom Secured ties the vault to a single USB device using a raw-device transport. It still uses a mandatory keyfile like the other tiers, and a master password remains optional for an extra layer."
             }
+            // NOTE: every tier — including Phantom Secured (BlackSecure) — now provisions a
+            // mandatory keyfile and keeps the master password optional, preserving the
+            // keyfile-first / password-optional rule. Phantom Secured additionally binds the
+            // vault to a raw-device USB transport.
         };
 
         public bool IsBlackSecureSelected => GetSelectedProtectionTier() == VaultProtectionTier.BlackSecure;
-        public bool SupportsExternalKeyfile => !IsBlackSecureSelected;
+        public bool SupportsExternalKeyfile => true;
         public bool ShowGeneratedKeyfileInfo => SupportsExternalKeyfile && !UseExistingKeyfile;
         public bool RequiresGeneratedKeyfileEntropy => ShowGeneratedKeyfileInfo;
         public int EntropyProgressPercent => Math.Min(100, (EntropyCollectedBits * 100) / Math.Max(1, EntropyRequiredBits));
         public bool CanSealEntropyKeyfile => RequiresGeneratedKeyfileEntropy && !EntropyKeyfileSealed && (_entropyKeyfileGenerator?.CanFinalize ?? false);
-        public bool ShowPasswordToggle => !IsBlackSecureSelected;
+        public bool ShowPasswordToggle => true;
 
         public WindowsHelloSettingsViewModel WindowsHelloOnboarding { get; }
         public PasskeySettingsViewModel PasskeyOnboarding { get; }
         public TotpSettingsViewModel TotpOnboarding { get; }
-        public string KeyMaterialSectionTitle => IsBlackSecureSelected ? "Device-Bound Authentication" : "Keyfile Configuration";
+        public string KeyMaterialSectionTitle => "Keyfile Configuration";
         public string KeyMaterialSectionSubtitle => IsBlackSecureSelected
-            ? "Phantom Secured disables the external keyfile path and binds the vault directly to the selected USB device."
+            ? "Required - Your vault is secured with a unique keyfile and bound to the selected USB device."
             : "Required - Your vault will be secured with a unique keyfile";
         public string KeyMaterialDescription => IsBlackSecureSelected
-            ? "Phantom Secured uses a raw-device transport with USB binding, provisioning metadata, and a required master password. There is no external keyfile file to browse or store separately."
+            ? "Phantom Secured uses a mandatory keyfile (keyfile-first) and additionally binds the vault to a raw-device USB transport. Store the keyfile securely; without it your vault cannot be accessed."
             : "A keyfile is a cryptographic file that acts as your primary authentication method. Store it securely on your USB drive or in a safe location. Without this file, your vault cannot be accessed.";
-        public string PasswordSectionTitle => IsBlackSecureSelected ? "Required Master Password" : "Optional Master Password";
-        public string PasswordSectionDescription => IsBlackSecureSelected
-            ? "Phantom Secured requires a master password because the USB does not expose a browsable filesystem or external keyfile path."
-            : "Add an extra layer of protection with a password";
-        public string PasswordToggleText => IsBlackSecureSelected
-            ? "Phantom Secured requires a master password"
-            : "Enable master password (recommended for extra security)";
+        public string PasswordSectionTitle => "Optional Master Password";
+        public string PasswordSectionDescription => "Add an extra layer of protection with a password";
+        public string PasswordToggleText => "Enable master password (recommended for extra security)";
         public string PhantomKeyBridgeLocationDescription
         {
             get
@@ -390,6 +401,7 @@ namespace PhantomVault.UI.ViewModels
 
             EnableGuuidBinding = true;
             EnableEncryptedContainer = true;
+            IsWinFspInstalled = PhantomMountService.IsWinFspAvailable;
         }
 
         public void SetOwnerWindow(Window owner)
@@ -595,11 +607,6 @@ namespace PhantomVault.UI.ViewModels
                             return false;
                         }
                     }
-                    else if (GetSelectedProtectionTier() == VaultProtectionTier.BlackSecure)
-                    {
-                        StatusMessage = "Phantom Secured requires a master password because the USB will not expose a browsable filesystem or external keyfile path.";
-                        return false;
-                    }
                     break;
 
                 case 6:
@@ -630,7 +637,7 @@ namespace PhantomVault.UI.ViewModels
         {
             CurrentStepTitle = CurrentStep switch
             {
-                1 => "Welcome to Phantom Obscura",
+                1 => string.Empty,
                 2 => "Choose Security Level",
                 3 => "PhantomKey Bridge Setup",
                 4 => "Select Storage Location",
@@ -668,7 +675,7 @@ namespace PhantomVault.UI.ViewModels
 
                         var deviceId = GetPhysicalDeviceId(driveLetter);
 
-                        var displayName = $"ID: {deviceId[..8]} ({driveLetter}) {volumeLabel} [{sizeGb} GB]";
+                        var displayName = $"ID: {deviceId[..8]} ({driveLetter}) {volumeLabel}";
                         results.Add(displayName);
 
                         map[displayName] = (driveLetter, volumeLabel, deviceId, sizeGb);
@@ -764,65 +771,100 @@ namespace PhantomVault.UI.ViewModels
             {
                 var seenPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 var remnants = new List<DetectedRemnant>();
-                var searchPatterns = new[]
-                {
-                    "*.pvault",
-                    "*.key",
-                    "*.keyfile",
-                    "*.manifest",
-                    "*.manifest.encrypted",
-                    "*.encrypted",
-                    "*.pmeta",
-                    "system.bin",
-                    "obscura.vol"
-                };
 
-                foreach (var pattern in searchPatterns)
+                // SAFETY: only ever scan inside Obscura's own canonical container
+                // ({drive}\.phantom). Everything under it is definitively ours; nothing
+                // outside it is touched. This guarantees the remnant wipe can never
+                // delete unrelated user files that merely happen to share an extension
+                // (e.g. a personal ".key", ".encrypted", or "system.bin" elsewhere).
+                var phantomRoot = PhantomDeviceLayout.GetPhantomRoot(driveRoot);
+
+                if (Directory.Exists(phantomRoot))
                 {
                     try
                     {
-                        foreach (var file in Directory.GetFiles(driveRoot, pattern, SearchOption.AllDirectories))
+                        foreach (var file in Directory.EnumerateFiles(phantomRoot, "*", SearchOption.AllDirectories))
                         {
-                            if (!seenPaths.Add(file))
-                                continue;
-
-                            var info = new FileInfo(file);
-                            var fileType = Path.GetFileName(file).ToLowerInvariant() switch
-                            {
-                                "system.bin" => "Packed Vault",
-                                "obscura.vol" => "Packed Vault",
-                                _ => Path.GetExtension(file).ToLowerInvariant() switch
-                                {
-                                    ".pvault" => "Vault",
-                                    ".key" or ".keyfile" => "Keyfile",
-                                    ".pmeta" => "Metadata",
-                                    ".encrypted" => "Encrypted Container",
-                                    ".manifest" or ".manifest.encrypted" => "Manifest",
-                                    _ when file.Contains("manifest", StringComparison.OrdinalIgnoreCase) => "Manifest",
-                                    _ => "Encrypted Container"
-                                }
-                            };
-                            remnants.Add(new DetectedRemnant
-                            {
-                                FileName = info.Name,
-                                FilePath = info.FullName,
-                                FileType = fileType,
-                                FileSize = FormatFileSize(info.Length)
-                            });
+                            AddRemnant(file);
                         }
                     }
                     catch (UnauthorizedAccessException)
                     {
-                        Log.Debug("Skipped inaccessible directory during vault artifact scan");
+                        Log.Debug("Skipped inaccessible path inside the .phantom container during remnant scan");
                     }
                     catch (DirectoryNotFoundException)
                     {
-                        Log.Debug("Directory was deleted during vault artifact scan");
+                        Log.Debug("The .phantom container was removed during the remnant scan");
                     }
                     catch (Exception ex)
                     {
-                        Log.Warning(ex, "Error scanning for vault artifacts with pattern {Pattern}", pattern);
+                        Log.Warning(ex, "Error scanning the .phantom container for Obscura remnants");
                     }
+                }
+
+                // Some Obscura vault layouts place the packed master volume (and the
+                // legacy audit log) OUTSIDE the .phantom folder — at the drive root or
+                // one directory down — which is exactly where WelcomePageViewModel
+                // detects an existing vault. Mirror that here so a vault the welcome
+                // screen can see is never invisible to the remnant scanner. Only the
+                // well-known Obscura artifact filenames are considered, so unrelated
+                // user files are never picked up.
+                try
+                {
+                    foreach (var name in VaultFileProtection.KnownObscuraArtifactNames)
+                        AddRemnantIfExists(Path.Combine(driveRoot, name));
+
+                    foreach (var dir in SafeEnumerateImmediateDirectories(driveRoot, phantomRoot))
+                    {
+                        foreach (var name in VaultFileProtection.KnownObscuraArtifactNames)
+                            AddRemnantIfExists(Path.Combine(dir, name));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "Error scanning the drive root for Obscura vault artifacts");
+                }
+
+                void AddRemnantIfExists(string path)
+                {
+                    if (File.Exists(path))
+                        AddRemnant(path);
+                }
+
+                void AddRemnant(string file)
+                {
+                    if (!seenPaths.Add(file))
+                        return;
+
+                    FileInfo info;
+                    try { info = new FileInfo(file); }
+                    catch { return; }
+
+                    var lowerName = info.Name.ToLowerInvariant();
+                    var fileType = lowerName switch
+                    {
+                        PhantomDeviceLayout.SystemVolumeFileName => "Packed Vault",
+                        "obscura.vol" => "Packed Vault",
+                        PhantomDeviceLayout.DeviceIdFileName => "Device Binding",
+                        PhantomDeviceLayout.AuditLogFileName => "Audit Log",
+                        _ => Path.GetExtension(file).ToLowerInvariant() switch
+                        {
+                            ".pvault" => "Vault",
+                            ".key" or ".keyfile" => "Keyfile",
+                            ".pmeta" => "Metadata",
+                            ".encrypted" => "Encrypted Container",
+                            ".manifest" => "Manifest",
+                            _ when lowerName.Contains("manifest") => "Manifest",
+                            _ => "Vault Artifact"
+                        }
+                    };
+                    remnants.Add(new DetectedRemnant
+                    {
+                        FileName = info.Name,
+                        FilePath = info.FullName,
+                        FileType = fileType,
+                        FileSize = FormatFileSize(info.Length)
+                    });
                 }
 
                 string remainingUsbSpace;
@@ -1212,12 +1254,27 @@ namespace PhantomVault.UI.ViewModels
                 var effectiveTransport = GetEffectiveStorageTransport(selectedTier);
                 var requestedTransport = GetRequestedStorageTransport(selectedTier);
                 bool usePackedMasterVolume = effectiveTransport == VaultStorageTransport.PackedVolume;
+                // Both the packed-volume and raw-device (BlackSecure) tiers stage the
+                // canonical layout into a temp directory first, then project it into
+                // their concealed transport (a packed .bin volume, or the raw
+                // \\.\PhysicalDrive). Only the plain FileSystem tier writes containers
+                // directly into the on-disk vault path.
+                bool useStagingRoot = effectiveTransport != VaultStorageTransport.FileSystem;
+
+                // Packed-volume tiers mount as a virtual drive via WinFsp. Auto-install
+                // the bundled driver now (elevated, silent) so the vault is mountable the
+                // moment provisioning finishes. Non-blocking: provisioning continues even
+                // if the driver isn't installed (e.g. no bundled MSI / declined UAC).
+                if (usePackedMasterVolume)
+                    await EnsureWinFspForProvisioningAsync();
+
                 bool needsOnboarding = (EnableWindowsHello && !WindowsHelloOnboarding.IsBiometricEnrolled)
                                    || (EnablePasskeys && !PasskeyOnboarding.HasRegisteredPasskey)
                                    || (EnableTotp && !TotpOnboarding.IsTotpEnabled);
-                if (usePackedMasterVolume)
+                if (useStagingRoot)
                 {
                     stagingRoot = Path.Combine(Path.GetTempPath(), "PhantomObscuraSetup", Guid.NewGuid().ToString("N"));
+                    Directory.CreateDirectory(stagingRoot);
                     cleanupDirectories.Add(stagingRoot);
                 }
 
@@ -1239,8 +1296,54 @@ namespace PhantomVault.UI.ViewModels
                     vaultPath = Path.Combine(driveRoot, ".phantom");
                     if (usePackedMasterVolume)
                     {
-                        volumePath = Path.Combine(driveRoot, "system.bin");
+                        PhantomDeviceLayout.EnsurePhantomRoot(driveRoot);
+                        volumePath = PhantomDeviceLayout.GetSystemVolumePath(driveRoot);
                         cleanupFiles.Add(volumePath);
+                    }
+
+                    // Suite-wide readiness probes. Run BEFORE vault creation so a
+                    // broken install surfaces immediately, not mid-provisioning.
+                    var bootstrap = new Phantom.Sync.Usb.SuiteBootstrapService();
+
+                    // Shared-sync integrity — refuse to proceed if the shared DLLs
+                    // aren't next to us. Indicates a corrupt or partial install
+                    // that the Giblex installer should have staged.
+                    var syncProbe = bootstrap.ProbeSharedSync();
+                    if (!syncProbe.AllPresent)
+                    {
+                        throw new InvalidOperationException(
+                            "Cannot create vault: required shared libraries are missing (" +
+                            string.Join(", ", syncProbe.MissingAssemblies) +
+                            "). Reinstall Phantom Obscura via the Giblex installer to restore them.");
+                    }
+
+                    // PhantomKey availability — if the user's setup enables it but
+                    // the portable exe wasn't staged by the installer, warn (not
+                    // fatal: we still provision the partition; PhantomKey can be
+                    // installed later and pick it up).
+                    var pkProbe = bootstrap.ProbePhantomKey();
+                    if (!pkProbe.IsInstalled)
+                        Log.Warning("PhantomKey.Portable not found next to Obscura. Provisioning the partition anyway; install PhantomKey to unlock it.");
+                    else
+                        Log.Information("PhantomKey detected at {Path}", pkProbe.ExecutablePath);
+
+                    // Suite-shared PhantomKey partition provisioning. Idempotent —
+                    // if Attestor's wizard already created it (or we're re-running
+                    // this wizard), the existing marker is honoured and we skip.
+                    // Best-effort: never fail Obscura setup because PhantomKey's
+                    // side-partition couldn't be created.
+                    try
+                    {
+                        var provisioner = new Phantom.Sync.Usb.PhantomVolumeProvisioner();
+                        var result = provisioner.Provision(driveRoot, callingAppId: "obscura");
+                        if (result.Created)
+                            Log.Information("Provisioned PhantomKey partition at {Path} ({Size} bytes)", result.ContainerPath, result.Marker.SizeBytes);
+                        else
+                            Log.Information("PhantomKey partition already provisioned by {App} on {Utc}", result.Marker.CreatedByApp, result.Marker.CreatedUtc);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Warning(ex, "PhantomKey partition provisioning skipped: {Message}", ex.Message);
                     }
                 }
                 else
@@ -1257,7 +1360,7 @@ namespace PhantomVault.UI.ViewModels
                     }
                 }
 
-                string workingRoot = usePackedMasterVolume ? stagingRoot! : vaultPath;
+                string workingRoot = useStagingRoot ? stagingRoot! : vaultPath;
                 string rootContainerPath = Path.Combine(workingRoot, rootContainerRelativePath.Replace('/', Path.DirectorySeparatorChar));
                 string vaultContainerPath = Path.Combine(workingRoot, vaultContainerRelativePath.Replace('/', Path.DirectorySeparatorChar));
                 string objectContainerPath = Path.Combine(workingRoot, objectContainerRelativePath.Replace('/', Path.DirectorySeparatorChar));
@@ -1280,74 +1383,98 @@ namespace PhantomVault.UI.ViewModels
                     ReportProvisioningStage(1, 14, "Securely wiping remnant files...", "Removing prior protected artifacts before provisioning the new vault.");
                     Log.Information("Wiping {Count} remnant file(s)", DetectedRemnants.Count);
 
-                    if (!string.IsNullOrEmpty(driveRoot))
-                    {
-                        try
-                        {
-                            var wpLifter = new UsbWriteProtectionService();
-                            bool lifted = wpLifter.EnableWriteAccess(driveRoot);
-                            Log.Information("Write-protect lifted before remnant wipe: {Lifted}", lifted);
-                        }
-                        catch (Exception wpEx)
-                        {
-                            Log.Warning(wpEx, "Could not lift write-protection on {DriveRoot} before remnant wipe — will attempt anyway", driveRoot);
-                        }
-                    }
+                    var remnantsSnapshot = DetectedRemnants.ToList();
 
-                    var phantomDirsToClean = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                    var remnantFailures = new List<string>();
-
-                    foreach (var remnant in DetectedRemnants.ToList())
+                    // WMI / diskpart write-protect lifting and multi-pass secure deletion are
+                    // blocking operations. Run them off the UI thread so the provisioning
+                    // animation keeps rendering instead of appearing stuck at this stage.
+                    var remnantFailures = await Task.Run(async () =>
                     {
-                        try
+                        var failures = new List<string>();
+
+                        if (!string.IsNullOrEmpty(driveRoot))
                         {
-                            if (File.Exists(remnant.FilePath))
+                            try
                             {
+                                var wpLifter = new UsbWriteProtectionService();
+                                bool lifted = wpLifter.EnableWriteAccess(driveRoot);
+                                Log.Information("Write-protect lifted before remnant wipe: {Lifted}", lifted);
+                            }
+                            catch (Exception wpEx)
+                            {
+                                Log.Warning(wpEx, "Could not lift write-protection on {DriveRoot} before remnant wipe — will attempt anyway", driveRoot);
+                            }
+                        }
 
-                                VaultFileProtection.StripFileProtection(remnant.FilePath);
+                        var phantomDirsToClean = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-                                await SecureDeletionService.BestEffortDeleteAsync(
-                                    remnant.FilePath,
-                                    SecureDeletionService.DeletionMethod.StandardSecure);
-                                Log.Information("Wiped remnant: {FilePath}", remnant.FilePath);
+                        foreach (var remnant in remnantsSnapshot)
+                        {
+                            try
+                            {
+                                // Defense-in-depth: never wipe anything that is not a
+                                // definitively Obscura-owned artifact — i.e. it must live
+                                // inside a ".phantom" container, or be one of the well-known
+                                // Obscura artifact filenames (system.bin / obscura.vol /
+                                // vault.audit). Anything else is skipped outright so
+                                // unrelated user files are never deleted.
+                                if (!VaultFileProtection.IsObscuraOwnedArtifact(remnant.FilePath))
+                                {
+                                    Log.Warning("Refusing to wipe non-Obscura path: {FilePath}", remnant.FilePath);
+                                    continue;
+                                }
 
                                 var phantomAncestor = VaultFileProtection.FindPhantomAncestor(remnant.FilePath);
-                                if (phantomAncestor != null)
-                                    phantomDirsToClean.Add(phantomAncestor);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Error(ex, "Failed to wipe remnant file: {FilePath}", remnant.FilePath);
-                            remnantFailures.Add(remnant.FilePath);
-                        }
-                    }
 
-                    foreach (var cleanDir in phantomDirsToClean)
-                    {
-                        try
-                        {
-                            VaultFileProtection.StripDirectoryProtection(cleanDir);
-
-                            foreach (var sub in Directory.GetDirectories(cleanDir, "*", SearchOption.AllDirectories)
-                                         .OrderByDescending(d => d.Length))
-                            {
-                                if (!Directory.EnumerateFileSystemEntries(sub).Any())
+                                if (File.Exists(remnant.FilePath))
                                 {
-                                    var di = new DirectoryInfo(sub);
-                                    di.Attributes = FileAttributes.Normal;
-                                    Directory.Delete(sub);
+
+                                    VaultFileProtection.StripFileProtection(remnant.FilePath);
+
+                                    await SecureDeletionService.BestEffortDeleteAsync(
+                                        remnant.FilePath,
+                                        SecureDeletionService.DeletionMethod.StandardSecure);
+                                    Log.Information("Wiped remnant: {FilePath}", remnant.FilePath);
+
+                                    if (phantomAncestor != null)
+                                        phantomDirsToClean.Add(phantomAncestor);
                                 }
                             }
-                            if (!Directory.EnumerateFileSystemEntries(cleanDir).Any())
-                                Directory.Delete(cleanDir);
+                            catch (Exception ex)
+                            {
+                                Log.Error(ex, "Failed to wipe remnant file: {FilePath}", remnant.FilePath);
+                                failures.Add(remnant.FilePath);
+                            }
                         }
-                        catch (Exception ex)
+
+                        foreach (var cleanDir in phantomDirsToClean)
                         {
-                            Log.Error(ex, "Failed to clean up .phantom directory: {Dir}", cleanDir);
-                            remnantFailures.Add(cleanDir);
+                            try
+                            {
+                                VaultFileProtection.StripDirectoryProtection(cleanDir);
+
+                                foreach (var sub in Directory.GetDirectories(cleanDir, "*", SearchOption.AllDirectories)
+                                             .OrderByDescending(d => d.Length))
+                                {
+                                    if (!Directory.EnumerateFileSystemEntries(sub).Any())
+                                    {
+                                        var di = new DirectoryInfo(sub);
+                                        di.Attributes = FileAttributes.Normal;
+                                        Directory.Delete(sub);
+                                    }
+                                }
+                                if (!Directory.EnumerateFileSystemEntries(cleanDir).Any())
+                                    Directory.Delete(cleanDir);
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.Error(ex, "Failed to clean up .phantom directory: {Dir}", cleanDir);
+                                failures.Add(cleanDir);
+                            }
                         }
-                    }
+
+                        return failures;
+                    });
 
                     if (remnantFailures.Count > 0)
                     {
@@ -1413,7 +1540,10 @@ namespace PhantomVault.UI.ViewModels
                 string bindingGuid = Guid.NewGuid().ToString("D");
 
                 string? keyfilePath = null;
-                bool usesExternalKeyfile = selectedTier != VaultProtectionTier.BlackSecure;
+                // Keyfile-first for every tier — including Phantom Secured (BlackSecure),
+                // which now provisions a mandatory keyfile in addition to its raw-device
+                // USB binding.
+                bool usesExternalKeyfile = true;
                 if (usesExternalKeyfile && UseExistingKeyfile && KeyfileSelected)
                 {
                     keyfilePath = KeyfilePath;
@@ -1628,6 +1758,10 @@ namespace PhantomVault.UI.ViewModels
                     Guuid = GuuidValue,
                     RequiresHardwareToken = EnablePhantomKey,
                     PhantomKeyBridgeEnabled = EnablePhantomKey,
+                    PhantomKeyBindingTokenEnabled = EnablePhantomKey,
+                    PhantomKeyBindingTokenPath = EnablePhantomKey
+                        ? Path.Combine(PhantomDeviceLayout.PhantomFolderName, PhantomDeviceLayout.PhantomKeyBindingTokenFileName).Replace('\\', '/')
+                        : null,
                     PhantomKeyBridgeWorkspacePath = EnablePhantomKey ? PhantomKeyBridgeContract.WorkspaceRelativePath : null,
                     PhantomKeyBridgeManifestPath = EnablePhantomKey ? PhantomKeyBridgeContract.BridgeManifestRelativePath : null,
                     PhantomKeyBridgeContinuityPath = EnablePhantomKey ? PhantomKeyBridgeContract.ContinuityRelativePath : null,
@@ -1639,8 +1773,27 @@ namespace PhantomVault.UI.ViewModels
                     ProtectionTier = selectedTier,
                     EffectiveStorageTransport = effectiveTransport,
                     RequestedStorageTransport = requestedTransport,
-                    SupportsReversibleTierMigration = true
+                    SupportsReversibleTierMigration = true,
+                    PremiumLicenseToken = PendingLicenseToken
                 };
+
+                if (EnablePhantomKey)
+                {
+                    string phantomKeyTokenRoot = !string.IsNullOrWhiteSpace(driveRoot)
+                        ? driveRoot
+                        : vaultPath;
+                    var phantomKeyBindingTokenService = new PhantomKeyBindingTokenService();
+                    ReportProvisioningStage(4, 54, "Sealing PhantomKey binding token...", "Binding the vault, USB, computer, manifest, and keyfile into the PhantomKey authentication token.");
+                    phantomKeyBindingTokenService.CreateOrRotate(
+                        phantomKeyTokenRoot,
+                        manifest,
+                        passphrase,
+                        keyfilePath,
+                        GuuidValue);
+                    cleanupFiles.Add(phantomKeyBindingTokenService.GetDefaultTokenPath(phantomKeyTokenRoot));
+                    StatusMessage = "PhantomKey binding token sealed...";
+                    Log.Information("PhantomKey binding token created at {TokenPath}", phantomKeyBindingTokenService.GetDefaultTokenPath(phantomKeyTokenRoot));
+                }
 
                 if (EnableTotp)
                 {
@@ -2253,6 +2406,33 @@ namespace PhantomVault.UI.ViewModels
             return driveRoot;
         }
 
+        /// <summary>
+        /// Enumerates the immediate subdirectories of the drive root (skipping the
+        /// .phantom container, which is scanned separately) so packed vaults that
+        /// were dropped one level down can still be found. Never throws.
+        /// </summary>
+        private static IEnumerable<string> SafeEnumerateImmediateDirectories(string driveRoot, string phantomRoot)
+        {
+            List<string> dirs = new();
+            try
+            {
+                foreach (var dir in Directory.EnumerateDirectories(driveRoot, "*", SearchOption.TopDirectoryOnly))
+                {
+                    if (!string.Equals(Path.GetFullPath(dir).TrimEnd(Path.DirectorySeparatorChar),
+                                       Path.GetFullPath(phantomRoot).TrimEnd(Path.DirectorySeparatorChar),
+                                       StringComparison.OrdinalIgnoreCase))
+                    {
+                        dirs.Add(dir);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, "Could not enumerate immediate directories of {DriveRoot} during remnant scan", driveRoot);
+            }
+            return dirs;
+        }
+
         private static long ParseContainerSize(string sizeString)
         {
             if (string.IsNullOrWhiteSpace(sizeString))
@@ -2576,15 +2756,13 @@ namespace PhantomVault.UI.ViewModels
 
             if (selectedTier == VaultProtectionTier.BlackSecure)
             {
+                // Phantom Secured binds to a raw-device USB transport AND uses a mandatory
+                // keyfile like the other tiers (keyfile-first). The master password remains
+                // optional.
                 EnableGuuidBinding = true;
-                UsePassword = true;
-                UseExistingKeyfile = false;
-                KeyfilePath = null;
-                KeyfileSelected = false;
-                KeyfileStatus = "Phantom Secured uses password plus device-bound factors; no external keyfile path is provisioned.";
-                ResetEntropyKeyfileState();
             }
-            else if (!UseExistingKeyfile)
+
+            if (!UseExistingKeyfile)
             {
                 KeyfileStatus = "A new keyfile will be generated";
                 InitializeEntropyKeyfileGenerator();
@@ -2700,7 +2878,251 @@ namespace PhantomVault.UI.ViewModels
 
         partial void OnEnableEncryptedContainerChanged(bool value)
         {
+            OnPropertyChanged(nameof(VirtualDriveReadinessText));
             _ = ConfirmSecurityReductionAsync(value, nameof(EnableEncryptedContainer), () => EnableEncryptedContainer = true);
+        }
+
+        /// <summary>Short driver-status label shown on the provisioning card badge.</summary>
+        public string WinFspStatusText => IsWinFspInstalled ? "Driver installed" : "Driver not installed";
+
+        /// <summary>Longer explanation of the WinFsp driver requirement.</summary>
+        public string WinFspStatusDetail => IsWinFspInstalled
+            ? "WinFsp is present. Vaults can be provisioned and mounted as a virtual encrypted drive."
+            : "WinFsp is required to mount the vault as a Windows drive letter. Install it to enable virtual-drive provisioning.";
+
+        /// <summary>Readiness line combining the provisioning toggle with driver availability.</summary>
+        public string VirtualDriveReadinessText
+        {
+            get
+            {
+                if (!EnableEncryptedContainer)
+                    return "Virtual-drive provisioning is off. The vault will store data as an encrypted container file.";
+                return IsWinFspInstalled
+                    ? "Ready to provision the vault as a virtual encrypted drive."
+                    : "Install the WinFsp driver to provision the vault as a virtual drive.";
+            }
+        }
+
+        [RelayCommand]
+        private void RefreshWinFspStatus()
+        {
+            IsWinFspInstalled = PhantomMountService.IsWinFspAvailable;
+            StatusMessage = IsWinFspInstalled ? "WinFsp driver detected." : "WinFsp driver not detected.";
+        }
+
+        [RelayCommand]
+        private async Task InstallWinFspAsync()
+        {
+            var bundled = FindBundledWinFspInstaller();
+            if (bundled == null)
+            {
+                StatusMessage = "Opening the WinFsp download page in your browser...";
+                try
+                {
+                    Process.Start(new ProcessStartInfo("https://winfsp.dev/rel/")
+                    {
+                        UseShellExecute = true
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "Failed to open the WinFsp download page.");
+                    StatusMessage = "Could not open the WinFsp download page. Install it manually from winfsp.dev.";
+                }
+
+                RefreshWinFspStatus();
+                return;
+            }
+
+            StatusMessage = "Installing the WinFsp driver...";
+            var result = await RunBundledWinFspInstallerAsync(bundled);
+            StatusMessage = result switch
+            {
+                WinFspInstallResult.Installed => "WinFsp driver installed.",
+                WinFspInstallResult.Cancelled => "Driver installation was cancelled. The WinFsp driver is required for virtual-drive mounting.",
+                _ => "Could not start the WinFsp installer. Install it manually from winfsp.dev."
+            };
+            RefreshWinFspStatus();
+        }
+
+        private enum WinFspInstallResult
+        {
+            Installed,
+            Cancelled,
+            Failed
+        }
+
+        /// <summary>
+        /// Runs a bundled WinFsp MSI elevated and passively (single UAC prompt, no
+        /// MSI wizard), then polls until the driver is detectable. Shared by the
+        /// manual "Install driver" button and the automatic install during
+        /// provisioning. Does NOT touch <see cref="StatusMessage"/> so callers can
+        /// frame their own messaging.
+        /// </summary>
+        private static async Task<WinFspInstallResult> RunBundledWinFspInstallerAsync(string msiPath)
+        {
+            try
+            {
+                // msiexec must run elevated to install a driver. Since the app now
+                // ships asInvoker, request elevation explicitly (one UAC prompt) and
+                // install passively so the user isn't forced through the MSI wizard.
+                var psi = new ProcessStartInfo("msiexec.exe", $"/i \"{msiPath}\" /passive /norestart")
+                {
+                    UseShellExecute = true,
+                    Verb = "runas"
+                };
+
+                Process? proc;
+                try
+                {
+                    proc = Process.Start(psi);
+                }
+                catch (System.ComponentModel.Win32Exception)
+                {
+                    // User declined the elevation prompt.
+                    return WinFspInstallResult.Cancelled;
+                }
+
+                if (proc != null)
+                    await proc.WaitForExitAsync();
+
+                // The driver registry entry can lag slightly behind msiexec exiting;
+                // poll briefly so detection succeeds without a manual retry.
+                for (int i = 0; i < 10 && !PhantomMountService.IsWinFspAvailable; i++)
+                    await Task.Delay(300);
+
+                return PhantomMountService.IsWinFspAvailable
+                    ? WinFspInstallResult.Installed
+                    : WinFspInstallResult.Failed;
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Failed to launch the WinFsp installer.");
+                return WinFspInstallResult.Failed;
+            }
+        }
+
+        /// <summary>
+        /// Ensures WinFsp is present before a tier that needs virtual-drive mounting
+        /// is provisioned. If a bundled MSI is available and the driver is missing,
+        /// installs it silently+elevated inline. Never blocks provisioning on
+        /// failure (the vault still provisions; mounting just falls back until the
+        /// driver is installed from the Storage step). Returns true if WinFsp is
+        /// available afterwards.
+        /// </summary>
+        private async Task<bool> EnsureWinFspForProvisioningAsync()
+        {
+            if (PhantomMountService.IsWinFspAvailable)
+                return true;
+
+            var bundled = FindBundledWinFspInstaller();
+            if (bundled == null)
+            {
+                Log.Information("WinFsp not installed and no bundled MSI found — skipping auto-install during provisioning.");
+                return false;
+            }
+
+            ReportProvisioningStage(0, 5, "Installing the virtual-drive driver...", "Setting up WinFsp so your vault can mount as a drive.");
+            var result = await RunBundledWinFspInstallerAsync(bundled);
+            IsWinFspInstalled = PhantomMountService.IsWinFspAvailable;
+            Log.Information("WinFsp auto-install during provisioning result: {Result}", result);
+            return result == WinFspInstallResult.Installed;
+        }
+
+        private static string? FindBundledWinFspInstaller()
+        {
+            try
+            {
+                var baseDir = AppContext.BaseDirectory;
+                foreach (var sub in new[] { baseDir, Path.Combine(baseDir, "drivers"), Path.Combine(baseDir, "Assets") })
+                {
+                    if (!Directory.Exists(sub))
+                        continue;
+                    var hit = Directory.GetFiles(sub, "winfsp*.msi").FirstOrDefault();
+                    if (hit != null)
+                        return hit;
+                }
+            }
+            catch
+            {
+                // best-effort discovery only
+            }
+
+            return null;
+        }
+
+        // ---- Phase 3: optional subscription / plan selection ----------------
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(PlanStatusText))]
+        [NotifyPropertyChangedFor(nameof(UpgradePlanButtonText))]
+        private bool _selectedPlanIsPremium;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(PlanStatusText))]
+        [NotifyPropertyChangedFor(nameof(UpgradePlanButtonText))]
+        private bool _isPremiumActivated;
+
+        [ObservableProperty]
+        private string _subscriptionStatusText = string.Empty;
+
+        /// <summary>
+        /// Signed premium license token captured during setup (if the user
+        /// subscribed). Persisted into the new vault's manifest at provisioning
+        /// so premium unlocks on first open. Null = Free plan.
+        /// </summary>
+        public string? PendingLicenseToken { get; private set; }
+
+        public string PlanStatusText => IsPremiumActivated
+            ? "Premium plan activated — it will be applied to your new vault."
+            : SelectedPlanIsPremium
+                ? "Premium selected — complete checkout to activate, or keep the Free plan."
+                : "Free plan — full core protection, no subscription required.";
+
+        public string UpgradePlanButtonText => IsPremiumActivated ? "Premium Activated" : "Upgrade to Premium";
+
+        [RelayCommand]
+        private async Task UpgradeToPremiumAsync()
+        {
+            if (IsPremiumActivated)
+                return;
+
+            var services = (Avalonia.Application.Current as PhantomVault.UI.App)?.Services;
+            if (services?.GetService(typeof(ILicensingClient)) is not ILicensingClient client)
+            {
+                SubscriptionStatusText = "Licensing is unavailable in this build.";
+                return;
+            }
+
+            // The vault's USB binding id is not finalised until provisioning, so
+            // the token is issued unbound here; it still verifies against the new
+            // vault (an unbound token matches any binding).
+            var window = new PayWindow(client, null);
+            try
+            {
+                if (_ownerWindow != null)
+                    await window.ShowDialog(_ownerWindow);
+                else
+                    window.Show();
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Premium checkout window failed.");
+                SubscriptionStatusText = "Checkout could not be opened.";
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(window.ResultToken))
+            {
+                PendingLicenseToken = window.ResultToken;
+                IsPremiumActivated = true;
+                SelectedPlanIsPremium = true;
+                SubscriptionStatusText = "Premium activated. It will be sealed into your new vault.";
+            }
+            else
+            {
+                SubscriptionStatusText = "Checkout was not completed. You can upgrade later from Settings.";
+            }
         }
 
         private async Task ConfirmSecurityReductionAsync(bool newValue, string toggleName, Action restoreAction)
@@ -3071,6 +3493,37 @@ namespace PhantomVault.UI.ViewModels
                 dir = Path.GetDirectoryName(dir);
             }
             return null;
+        }
+
+        /// <summary>
+        /// Exact filenames of Obscura-owned vault artifacts that can legitimately
+        /// live OUTSIDE the <c>.phantom</c> folder (at the drive root or one level
+        /// down). These names are specific enough to Obscura that the same set is
+        /// what <c>WelcomePageViewModel</c> treats as an existing vault. Anything
+        /// not in this list — and not inside a <c>.phantom</c> container — is never
+        /// considered a remnant, so unrelated user files are never touched.
+        /// </summary>
+        public static readonly IReadOnlySet<string> KnownObscuraArtifactNames =
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "system.bin",
+                "obscura.vol",
+                "vault.audit",
+            };
+
+        /// <summary>
+        /// True when a path is definitively Obscura-owned: either it lives inside a
+        /// <c>.phantom</c> container, or its filename is one of the well-known
+        /// Obscura artifact names. Used by both remnant detection and the wipe
+        /// guard so the two stay perfectly consistent.
+        /// </summary>
+        public static bool IsObscuraOwnedArtifact(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath))
+                return false;
+            if (FindPhantomAncestor(filePath) != null)
+                return true;
+            return KnownObscuraArtifactNames.Contains(Path.GetFileName(filePath));
         }
     }
 

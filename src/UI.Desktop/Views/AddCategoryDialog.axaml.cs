@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace PhantomVault.UI.Views
 {
-    public partial class AddCategoryDialog : Window
+    public partial class AddCategoryDialog : ThemeAwareWindow
     {
         private ListBoxItem? _draggedItem;
         private Point _dragStartPoint;

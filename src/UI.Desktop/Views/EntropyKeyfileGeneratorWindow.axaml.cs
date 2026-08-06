@@ -6,7 +6,7 @@ using PhantomVault.UI.Services;
 
 namespace PhantomVault.UI.Views;
 
-public partial class EntropyKeyfileGeneratorWindow : Window
+public partial class EntropyKeyfileGeneratorWindow : ThemeAwareWindow
 {
     private readonly EntropyKeyfileGenerator _generator = new();
     private readonly int _outputSizeBytes;

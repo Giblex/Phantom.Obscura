@@ -4,7 +4,7 @@ using PhantomVault.UI.ViewModels;
 
 namespace PhantomVault.UI.Views
 {
-    public partial class AccessibilitySettingsWindow : Window
+    public partial class AccessibilitySettingsWindow : ThemeAwareWindow
     {
         public AccessibilitySettingsWindow()
         {

@@ -9,7 +9,7 @@ using PhantomVault.Core.Models.AutoInject;
 
 namespace PhantomVault.UI.Views
 {
-    public partial class AutoInjectPromptWindow : Window
+    public partial class AutoInjectPromptWindow : ThemeAwareWindow
     {
         private CredentialMatch[]? _matches;
         private CredentialMatch? _selectedCredential;
@@ -30,29 +30,39 @@ namespace PhantomVault.UI.Views
 
         public void SetCredentials(CredentialMatch[] matches, AutoInjectContext context)
         {
-            _matches = matches;
+            var topMatches = matches?.Take(3).ToArray() ?? Array.Empty<CredentialMatch>();
+            _matches = topMatches;
 
             var contextText = this.FindControl<TextBlock>("ContextText");
             if (contextText != null)
             {
-                if (!string.IsNullOrEmpty(context.Domain))
+                if (!string.IsNullOrEmpty(context?.Domain))
                 {
                     contextText.Text = $"Found credentials for {context.Domain}:";
                 }
-                else
+                else if (!string.IsNullOrEmpty(context?.WindowTitle))
                 {
                     contextText.Text = $"Found credentials for {context.WindowTitle}:";
+                }
+                else
+                {
+                    contextText.Text = "Found credentials:";
+                }
+
+                if ((matches?.Length ?? 0) > topMatches.Length)
+                {
+                    contextText.Text += $" Showing top {topMatches.Length} matches.";
                 }
             }
 
             var listBox = this.FindControl<ItemsControl>("CredentialsListBox");
             if (listBox != null)
             {
-                listBox.ItemsSource = matches;
+                listBox.ItemsSource = topMatches;
 
-                if (matches.Length == 1)
+                if (topMatches.Length == 1)
                 {
-                    _selectedCredential = matches[0];
+                    _selectedCredential = topMatches[0];
                 }
             }
         }

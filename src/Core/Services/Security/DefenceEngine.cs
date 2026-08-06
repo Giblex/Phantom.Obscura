@@ -232,15 +232,16 @@ namespace PhantomVault.Core.Services.Security
                     break;
 
                 case DefenceActionType.SwitchToDecoyVault:
-                    _logger?.LogCritical("SWITCHING TO DECOY VAULT - Suspected compromise");
+                    // Deniability rule: never log that a decoy is being activated — that text
+                    // would persist to the on-disk log sink and betray the decoy's existence.
                     try
                     {
                         await _vaultController.SwitchToDecoyVaultAsync();
                     }
                     catch (Exception ex)
                     {
-
-                        _logger?.LogError(ex, "Decoy vault activation failed, falling back to lock + scrub");
+                        // Generic wording only; fall back to lock + scrub.
+                        _logger?.LogError(ex, "Protected-mode activation failed, falling back to lock + scrub");
                         _authController.RequireReauthentication("Security threat detected");
                         _systemSecurityController.ScrubSensitiveCaches();
                     }

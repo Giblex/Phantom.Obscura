@@ -32,6 +32,27 @@
     <NoWarn>$(NoWarn);1591;CS0618;CS1573;CS1574;CS1571;CS1998;CS8625;CS0012;NU1903;NU1510</NoWarn>
   </PropertyGroup>
 
+  <!--
+    WinFsp (optional dependency): backs the encrypted virtual-drive mount.
+    The managed binding is resolved from the machine's WinFsp install via the
+    registry. When WinFsp is not installed the mount code compiles to inert
+    stubs (the WINFSP symbol is undefined), so the build never hard-fails.
+  -->
+  <PropertyGroup>
+    <WinFspDir>$(registry:HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\WinFsp@InstallDir)</WinFspDir>
+    <WinFspAssembly>$(WinFspDir)bin\winfsp-msil.dll</WinFspAssembly>
+    <HasWinFsp Condition="'$(WinFspDir)' != '' and Exists('$(WinFspAssembly)')">true</HasWinFsp>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(HasWinFsp)' == 'true'">
+    <DefineConstants>$(DefineConstants);WINFSP</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(HasWinFsp)' == 'true'">
+    <Reference Include="winfsp-msil">
+      <HintPath>$(WinFspAssembly)</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
   <!-- Exclude legacy snapshots from the build so they don't register duplicate Avalonia resources -->
   <ItemGroup>
     <Compile Remove="bin\**;obj\**;obj_*\**" />
@@ -49,8 +70,20 @@
     <ProjectReference Include="..\Platform\PhantomVault.Platform.csproj" />
     <ProjectReference Include="..\Crypto\GiblexVault.Security.ZK.csproj" />
     <ProjectReference Include="..\Autofill\PhantomVault.Autofill.csproj" />
-    <ProjectReference Include="..\..\..\Phantom.Shared\Giblex.AssetShield\Giblex.AssetShield.csproj" />
-    <ProjectReference Include="..\..\..\Phantom.Shared\Phantom.UI.Shared\Phantom.UI.Shared.csproj" />
+    <!-- Build the privileged helper before the UI, but don't reference its assembly;
+         it is copied into a Broker subfolder of the output (see CopyPrivilegedBroker). -->
+    <ProjectReference Include="..\PrivilegedBroker\PhantomVault.PrivilegedBroker.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <Private>false</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Phantom.Root\Giblex.AssetShield\Giblex.AssetShield.csproj" />
+    <!-- PhantomKey broker client for the embedded Unlock window. -->
+    <ProjectReference Include="..\..\..\Phantom.Key\src\PhantomKey.Integration\PhantomKey.Integration.csproj" />
+    <ProjectReference Include="..\..\..\Phantom.Root\Phantom.UI.Shared\Phantom.UI.Shared.csproj" />
+    <!-- Keyless cross-app suite-session coordinator (carries no key material). -->
+    <ProjectReference Include="..\..\..\Phantom.Root\Phantom.Suite.Session\Phantom.Suite.Session.csproj" />
+    <!-- Suite-wide USB partition provisioner (PhantomVolumeProvisioner) -->
+    <ProjectReference Include="..\..\..\Phantom.Root\Phantom.Sync\Phantom.Sync.csproj" />
     <!-- <ProjectReference Include="..\..\..\PhantomRecovery\PhantomRecovery.App\PhantomRecovery.App.csproj" /> -->
     <!-- <ProjectReference Include="..\..\..\PhantomRecovery\PhantomRecovery.Core\PhantomRecovery.Core.csproj" /> -->
     <PackageReference Include="Avalonia" Version="11.3.11" />
@@ -67,6 +100,7 @@
     <PackageReference Include="Isopoh.Cryptography.Argon2" Version="2.0.0" />
     <!-- MVVM Toolkit for ObservableObject and RelayCommand -->
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+    <PackageReference Include="QRCoder" Version="1.6.0" />
     <!-- Serilog for structured logging -->
     <PackageReference Include="Serilog" Version="4.2.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
@@ -88,6 +122,14 @@
     
     <AvaloniaResource Include="Assets\noise_128.png" />
     <AvaloniaResource Include="Assets\palette-icon.png" />
+    <AvaloniaResource Include="Assets\phantom_obscura_tray.png" />
+    <AvaloniaResource Include="Assets\phantom_obscura_tray.ico" />
+    <AvaloniaResource Include="Assets\PO Icon.png" />
+    <AvaloniaResource Include="Assets\PO.svg" />
+    <AvaloniaResource Include="Assets\Logo Transparent.svg" />
+    <AvaloniaResource Include="Assets\ok.svg" />
+    <AvaloniaResource Include="Assets\ok.png" />
+    <AvaloniaResource Include="Assets\dot_pattern.png" />
     <!-- Include SVG icons for UI elements -->
     <AvaloniaResource Include="Assets\Icons\*.svg" />
     <AvaloniaResource Include="Assets\SVG\*.svg" />
@@ -113,6 +155,10 @@
     <None Include="Assets\Icons\Logos\import\**\*.png" CopyToOutputDirectory="PreserveNewest" />
   <!-- Copy PO UI folder (stored under Logos) so IconManager can enumerate files at runtime -->
   <None Include="Assets\Icons\Logos\PO UI\**\*.*" CopyToOutputDirectory="PreserveNewest" />
+  <!-- Bundled drivers (e.g. WinFsp MSI). Drop winfsp-<ver>.msi into src\UI.Desktop\drivers
+       and it ships to the app's drivers\ folder so the Storage step can install it
+       automatically (elevated, passive) without a manual download. -->
+  <None Include="drivers\**\*.*" CopyToOutputDirectory="PreserveNewest" />
   <!-- Copy OS Icons to output as well for runtime enumeration -->
   <None Include="Assets\Icons\OS Icons\**\*.*" CopyToOutputDirectory="PreserveNewest" />
   <!-- Copy only Entry Logos and Cat Icons to output for IconManager runtime access -->
@@ -133,13 +179,32 @@
     <Message Text="AvaloniaResource: @(AvaloniaResource->'%(Identity)')" Importance="High" />
   </Target>
 
+  <!--
+    Deploy the privileged helper into a Broker\ subfolder of the app output so it
+    travels with its own dependencies (Core, Hosting, etc.). The UI resolves and
+    installs it from here via BrokerServiceController.
+  -->
+  <Target Name="CopyPrivilegedBroker" AfterTargets="Build">
+    <PropertyGroup>
+      <_BrokerOutDir>$(MSBuildProjectDirectory)\..\PrivilegedBroker\bin\$(Configuration)\net10.0-windows10.0.19041.0\</_BrokerOutDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <_BrokerFiles Include="$(_BrokerOutDir)**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_BrokerFiles)" DestinationFiles="@(_BrokerFiles->'$(OutDir)Broker\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" Condition="Exists('$(_BrokerOutDir)')" />
+  </Target>
+
   <!-- AssetShield: Encrypt all published files except the main exe -->
   <Target Name="EncryptPublishedAssets" AfterTargets="Publish">
     <PropertyGroup>
-      <_AssetShieldToolProject>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '..', '..', '..', 'Phantom.Shared', 'Giblex.AssetShield', 'Tool', 'Giblex.AssetShield.Tool.csproj'))</_AssetShieldToolProject>
+      <_AssetShieldToolProject>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '..', '..', '..', 'Phantom.Root', 'Giblex.AssetShield', 'Tool', 'Giblex.AssetShield.Tool.csproj'))</_AssetShieldToolProject>
     </PropertyGroup>
     <Exec Command="dotnet run --project &quot;$(_AssetShieldToolProject)&quot; -c $(Configuration) -- &quot;$(PublishDir)&quot; &quot;$(AssemblyName).exe&quot;" />
   </Target>
+
+  <!-- Opt-in Authenticode signing for Release publish. See the .targets file
+       for docs. No effect unless SignOutput=true is passed at publish time. -->
+  <Import Project="..\..\..\Phantom.Root\build\SignPublishOutput.targets" />
 
 </Project>
 

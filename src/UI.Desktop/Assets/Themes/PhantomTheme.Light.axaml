@@ -7,6 +7,14 @@
             <SolidColorBrush x:Key="WindowBackgroundBrush">#E5ECF0</SolidColorBrush>
 
             <SolidColorBrush x:Key="HeaderBackgroundBrush">#0C6E68</SolidColorBrush>
+
+            <!-- Vault header (main banner) — light teal with faint light navy blue
+                 spots (per user request). -->
+            <SolidColorBrush x:Key="HeaderPrimaryBrush">#B08FE0D5</SolidColorBrush>
+            <Color x:Key="HeaderBlob1Color">#2A3B5B93</Color>
+            <Color x:Key="HeaderBlob2Color">#1E2A4A85</Color>
+            <Color x:Key="HeaderBlob3Color">#22406090</Color>
+            <Color x:Key="HeaderBlob4Color">#1E5A7ACD</Color>
             <SolidColorBrush x:Key="HeaderBorderBrush">#085550</SolidColorBrush>
 
             <SolidColorBrush x:Key="CategoryPanelBackgroundBrush">#E5ECF0</SolidColorBrush>

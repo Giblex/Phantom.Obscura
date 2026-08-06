@@ -10,15 +10,12 @@ using PhantomVault.UI.ViewModels;
 namespace PhantomVault.UI.Views.Dialogs
 {
     /// <summary>
-    /// Mandatory post-provisioning step: forces the user to save the off-USB recovery file and record
-    /// the recovery codes before the vault setup completes. Without this kit a lost or damaged USB is
-    /// unrecoverable, so the dialog cannot be dismissed until both the file is saved and the user
-    /// confirms they have recorded the codes.
+    /// Mandatory post-provisioning step: requires at least one concrete recovery action
+    /// (save file, save PDF, or copy codes) before setup can continue.
     /// </summary>
     public partial class RecoveryExportDialog : Window
     {
         private SetupWizardViewModel? _wizard;
-        private bool _fileSaved;
         private bool _completed;
 
         public RecoveryExportDialog() => InitializeComponent();
@@ -40,13 +37,15 @@ namespace PhantomVault.UI.Views.Dialogs
             var savePdfButton = this.FindControl<Button>("SavePdfButton")!;
             var copyButton = this.FindControl<Button>("CopyCodesButton")!;
             var statusText = this.FindControl<TextBlock>("StatusText")!;
-            var confirmCheck = this.FindControl<CheckBox>("ConfirmCheck")!;
-            var continueButton = this.FindControl<Button>("ContinueButton")!;
 
             codesList.ItemsSource = _wizard!.StagedRecoveryCodes.ToArray();
 
-            void RefreshContinueState()
-                => continueButton.IsEnabled = _fileSaved && (confirmCheck.IsChecked ?? false);
+            void CompleteAndClose()
+            {
+                _completed = true;
+                _wizard.ClearStagedRecovery();
+                Close();
+            }
 
             saveButton.Click += async (_, __) =>
             {
@@ -71,22 +70,21 @@ namespace PhantomVault.UI.Views.Dialogs
 
                 if (!_wizard.IsOffUsbDestination(path))
                 {
+                    statusText.IsVisible = true;
                     statusText.Text = "That location is on the bound USB. Choose a different drive so the recovery file survives losing the USB.";
                     return;
                 }
 
                 if (await _wizard.SaveStagedRecoveryFileAsync(path))
                 {
-                    _fileSaved = true;
-                    statusText.Text = $"Recovery file saved to: {path}";
                     saveButton.Content = "Saved ✓";
+                    CompleteAndClose();
                 }
                 else
                 {
+                    statusText.IsVisible = true;
                     statusText.Text = "Failed to save the recovery file. Please try a different location.";
                 }
-
-                RefreshContinueState();
             };
 
             copyButton.Click += async (_, __) =>
@@ -97,6 +95,7 @@ namespace PhantomVault.UI.Views.Dialogs
 
                 await clipboard.SetTextAsync(string.Join(Environment.NewLine, _wizard.StagedRecoveryCodes));
                 copyButton.Content = "Copied ✓";
+                CompleteAndClose();
             };
 
             savePdfButton.Click += async (_, __) =>
@@ -122,6 +121,7 @@ namespace PhantomVault.UI.Views.Dialogs
 
                 if (!_wizard.IsOffUsbDestination(path))
                 {
+                    statusText.IsVisible = true;
                     statusText.Text = "That location is on the bound USB. Choose a different drive so the printed kit survives losing the USB.";
                     return;
                 }
@@ -130,23 +130,15 @@ namespace PhantomVault.UI.Views.Dialogs
                 {
                     PhantomVault.UI.Services.RecoveryPdfWriter.Write(
                         path, _wizard.EffectiveVaultName, _wizard.StagedRecoveryCodes);
-                    statusText.Text = $"Recovery PDF saved to: {path}";
                     savePdfButton.Content = "PDF saved ✓";
+                    CompleteAndClose();
                 }
                 catch (Exception ex)
                 {
+                    statusText.IsVisible = true;
                     statusText.Text = "Failed to write the PDF. Try a different location.";
                     Serilog.Log.Warning(ex, "Recovery PDF export failed");
                 }
-            };
-
-            confirmCheck.IsCheckedChanged += (_, __) => RefreshContinueState();
-
-            continueButton.Click += (_, __) =>
-            {
-                _completed = true;
-                _wizard.ClearStagedRecovery();
-                Close();
             };
 
             Closing += (_, e) =>

@@ -9,6 +9,25 @@
 
     <UserControl.Styles>
 
+        <Style Selector="TextBox.search-box">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="TextBox.search-box /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="TextBox.search-box:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="TextBox.search-box:focus /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+
         <Style Selector="FlyoutPresenter.actions-menu">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -117,45 +136,17 @@
                 </Transitions>
             </Setter>
         </Style>
+        <!-- Menu-open state keeps the button's normal fully-rounded shape.
+             (Previously flattened bottom corners here in 9 different selectors
+             to fake a seamless join with the flyout — that fake seam is what
+             produced the black-line/mismatched-corner artefacts.) -->
         <Style Selector="Button#ActionsMenuButton.menu-open">
-            <Setter Property="CornerRadius" Value="14,14,0,0"/>
             <Setter Property="BorderBrush" Value="#99D8E6F2"/>
-            <Setter Property="BorderThickness" Value="1,1,1,0"/>
-        </Style>
-        <Style Selector="Button#ActionsMenuButton.menu-open:pointerover">
-            <Setter Property="CornerRadius" Value="14,14,0,0"/>
-            <Setter Property="BorderThickness" Value="1,1,1,0"/>
-        </Style>
-        <Style Selector="Button#ActionsMenuButton.menu-open:pressed">
-            <Setter Property="CornerRadius" Value="14,14,0,0"/>
-            <Setter Property="BorderThickness" Value="1,1,1,0"/>
-        </Style>
-        <Style Selector="Button#ActionsMenuButton.menu-open /template/ Border#BaseBorder">
-            <Setter Property="CornerRadius" Value="14,14,0,0"/>
-        </Style>
-        <Style Selector="Button#ActionsMenuButton.menu-open:pointerover /template/ Border#BaseBorder">
-            <Setter Property="CornerRadius" Value="14,14,0,0"/>
-        </Style>
-        <Style Selector="Button#ActionsMenuButton.menu-open:pressed /template/ Border#BaseBorder">
-            <Setter Property="CornerRadius" Value="14,14,0,0"/>
-            <Setter Property="BorderThickness" Value="1,1,1,0"/>
-        </Style>
-        <Style Selector="Button#ActionsMenuButton.menu-open:focus-visible /template/ Border#BaseBorder">
-            <Setter Property="CornerRadius" Value="14,14,0,0"/>
-            <Setter Property="BorderThickness" Value="1,1,1,0"/>
-        </Style>
-        <Style Selector="Button#ActionsMenuButton.menu-open:focus-visible">
-            <Setter Property="CornerRadius" Value="14,14,0,0"/>
-            <Setter Property="BorderThickness" Value="1,1,1,0"/>
-        </Style>
-        <Style Selector="Button#ActionsMenuButton.menu-open:pointerover /template/ Border#BaseBorder">
-            <Setter Property="CornerRadius" Value="14,14,0,0"/>
-            <Setter Property="BorderThickness" Value="1,1,1,0"/>
         </Style>
     </UserControl.Styles>
 
     <Border Classes="header-surface"
-            Background="{DynamicResource HeaderBackgroundBrush}"
+            Background="{DynamicResource HeaderPrimaryBrush}"
             Padding="{StaticResource DialogPadding}"
             BorderBrush="{DynamicResource HeaderBorderBrush}"
             BorderThickness="0,0,0,1"
@@ -163,6 +154,62 @@
             ClipToBounds="True"
             Effect="{x:Null}">
         <Grid ColumnDefinitions="Auto,*,Auto">
+
+            <!-- Sporadic teal radial blobs — inside a zero-measure Canvas so
+                 they don't grow the banner. Each blob is anchor-positioned via
+                 Canvas.Left/Top and clips against the parent Border's ClipToBounds. -->
+            <Canvas Grid.Column="0" Grid.ColumnSpan="3"
+                    IsHitTestVisible="False"
+                    Width="0" Height="0"
+                    HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <Border Canvas.Left="240" Canvas.Top="-60" Width="180" Height="180">
+                    <Border.Background>
+                        <RadialGradientBrush Center="50%,50%" GradientOrigin="50%,50%" RadiusX="50%" RadiusY="50%">
+                            <GradientStop Color="{DynamicResource HeaderBlob1Color}" Offset="0"/>
+                            <GradientStop Color="#00000000" Offset="1"/>
+                        </RadialGradientBrush>
+                    </Border.Background>
+                </Border>
+                <Border Canvas.Left="520" Canvas.Top="-40" Width="160" Height="160">
+                    <Border.Background>
+                        <RadialGradientBrush Center="50%,50%" GradientOrigin="50%,50%" RadiusX="50%" RadiusY="50%">
+                            <GradientStop Color="{DynamicResource HeaderBlob2Color}" Offset="0"/>
+                            <GradientStop Color="#00000000" Offset="1"/>
+                        </RadialGradientBrush>
+                    </Border.Background>
+                </Border>
+                <Border Canvas.Left="880" Canvas.Top="-60" Width="200" Height="200">
+                    <Border.Background>
+                        <RadialGradientBrush Center="50%,50%" GradientOrigin="50%,50%" RadiusX="50%" RadiusY="50%">
+                            <GradientStop Color="{DynamicResource HeaderBlob3Color}" Offset="0"/>
+                            <GradientStop Color="#00000000" Offset="1"/>
+                        </RadialGradientBrush>
+                    </Border.Background>
+                </Border>
+                <Border Canvas.Left="1200" Canvas.Top="-40" Width="140" Height="140">
+                    <Border.Background>
+                        <RadialGradientBrush Center="50%,50%" GradientOrigin="50%,50%" RadiusX="50%" RadiusY="50%">
+                            <GradientStop Color="{DynamicResource HeaderBlob4Color}" Offset="0"/>
+                            <GradientStop Color="#00000000" Offset="1"/>
+                        </RadialGradientBrush>
+                    </Border.Background>
+                </Border>
+            </Canvas>
+
+            <!-- Dot-grid overlay (matches welcome page / giblex.com). -->
+            <Border Grid.Column="0" Grid.ColumnSpan="3"
+                    IsHitTestVisible="False"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    Margin="-24,-16,-24,-16">
+                <Border.Background>
+                    <ImageBrush Source="avares://PhantomVault.UI/Assets/dot_pattern.png"
+                                TileMode="Tile"
+                                Stretch="None"
+                                SourceRect="0,0,8,8"
+                                DestinationRect="0,0,8,8"/>
+                </Border.Background>
+            </Border>
 
             <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="{StaticResource Space12}" VerticalAlignment="Center">
                 <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png" Width="48" Height="48" VerticalAlignment="Center"/>
@@ -199,6 +246,7 @@
                               StrokeThickness="1.5"
                               Fill="Transparent"/>
                         <TextBox Grid.Column="1"
+                                 Classes="search-box"
                                  Text="{Binding SearchText}"
                                  Watermark="Search credentials..."
                                  BorderThickness="0"
@@ -290,23 +338,24 @@
 
                     <Button.Styles>
 
+                        <!-- Menu-open state keeps the button's normal rounded shape.
+                             (Previously flattened its bottom corners to fake a seamless
+                             join with the dropdown, but that showed a hard seam / dark
+                             line whenever the two backgrounds didn't match perfectly.) -->
                         <Style Selector="Button.menu-open /template/ Border#BaseBorder">
-                            <Setter Property="BorderThickness" Value="1,1,1,0"/>
-                            <Setter Property="CornerRadius" Value="14,14,0,0"/>
-                            <Setter Property="BorderBrush" Value="#99D8E6F2"/>
-                            <Setter Property="Background">
-                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                                    <GradientStop Color="#EB0E1828" Offset="0"/>
-                                    <GradientStop Color="#F50E1828" Offset="1"/>
-                                </LinearGradientBrush>
-                            </Setter>
+                            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
                         </Style>
                     </Button.Styles>
                     <Button.Flyout>
+                        <!-- VerticalOffset was 6 — a visible gap that broke the intended
+                             "seamless panel" look (the button flattens its bottom corners via
+                             the menu-open style, and the flyout below shares the exact same
+                             background gradient, clearly meant to read as one continuous
+                             shape). Flush against the button instead. -->
                         <Flyout Placement="BottomEdgeAlignedRight"
                                 FlyoutPresenterClasses="actions-menu"
                                 HorizontalOffset="0"
-                                VerticalOffset="-8">
+                                VerticalOffset="12">
 
                             <Grid x:Name="ActionsDropRootWrapper"
                                   Opacity="0"
@@ -326,33 +375,24 @@
                                         </TransformOperationsTransition>
                                     </Transitions>
                                 </Grid.Transitions>
+                            <!-- Was the same hardcoded dark-navy gradient as the button above —
+                                 matched here too, for the same reason (theme-correctness and a
+                                 seamless join with the button regardless of theme). -->
                             <Border x:Name="ActionsDropRoot"
-                                    CornerRadius="22,0,22,22"
+                                    CornerRadius="20"
                                     Padding="10,16,10,10"
                                     MinWidth="240"
-                                    BorderThickness="1,1,1,1"
-                                    BorderBrush="#99D8E6F2"
+                                    BorderThickness="1"
+                                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                                    Background="{DynamicResource HeaderBackgroundBrush}"
                                     ClipToBounds="True"
-                                    BoxShadow="0 26 80 -10 #C8000000, 0 8 24 -6 #80000000">
-                                <Border.Background>
-                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                                        <GradientStop Color="#EB0E1828" Offset="0"/>
-                                        <GradientStop Color="#F50E1828" Offset="1"/>
-                                    </LinearGradientBrush>
-                                </Border.Background>
+                                    BoxShadow="0 26 80 -10 #40000000, 0 8 24 -6 #30000000">
                                 <Grid>
 
-                                    <controls:BorderEnergyTrace IsHitTestVisible="False"
-                                                                Progress="0.35"
-                                                                SecondaryProgress="0.85"
-                                                                Direction="1"
-                                                                TraceOpacity="0.6"
-                                                                CornerRadius="22,0,22,22"
-                                                                TraceThickness="0.78"
-                                                                TraceColor="#B7CCD5DC"
-                                                                CounterTraceColor="#182434"
-                                                                CounterTraceOpacity="0.42"
-                                                                Margin="-10,-20,-10,-10"/>
+                                    <!-- BorderEnergyTrace overlay removed — its
+                                         negative margin drew trace lines above
+                                         the flyout's top edge, which looked like
+                                         a squared-off top-left corner. -->
                                 <StackPanel Spacing="4">
 
                                     <TextBlock Text="Add Credential"
@@ -506,7 +546,7 @@
                                  HorizontalAlignment="Center"
                                  VerticalAlignment="Center">
                             <Canvas Width="24" Height="24">
-                                <Path Data="{StaticResource Icon.Menu}"
+                                <Path Data="{StaticResource Icon.Plus}"
                                       Stroke="{DynamicResource HeaderSvgIconColor}"
                                       StrokeThickness="1.7"
                                       StrokeLineCap="Round"

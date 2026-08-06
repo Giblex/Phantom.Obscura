@@ -4,9 +4,22 @@
     <Style>
         <Style.Resources>
 
-            <SolidColorBrush x:Key="WindowBackgroundBrush">#1E2A38</SolidColorBrush>
+            <!-- Global window surface — navy-teal acrylic wash so every window
+                 (welcome, setup wizard, quick setup, import, etc.) shares one look. -->
+            <LinearGradientBrush x:Key="WindowBackgroundBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#1B2846" Offset="0"/>
+                <GradientStop Color="#1E3540" Offset="0.5"/>
+                <GradientStop Color="#1A2C3A" Offset="1"/>
+            </LinearGradientBrush>
 
             <SolidColorBrush x:Key="HeaderBackgroundBrush">#1A2535</SolidColorBrush>
+
+            <!-- Vault header (main banner) — theme-aware base + accent blob colors. -->
+            <SolidColorBrush x:Key="HeaderPrimaryBrush">#B01B2846</SolidColorBrush>
+            <Color x:Key="HeaderBlob1Color">#3814B8A6</Color>
+            <Color x:Key="HeaderBlob2Color">#280D9488</Color>
+            <Color x:Key="HeaderBlob3Color">#3006B6D4</Color>
+            <Color x:Key="HeaderBlob4Color">#282DD4BF</Color>
             <SolidColorBrush x:Key="HeaderBorderBrush">Transparent</SolidColorBrush>
             <SolidColorBrush x:Key="FooterBackgroundBrush">#141C28</SolidColorBrush>
             <SolidColorBrush x:Key="ContentBackgroundBrush">#151D2A</SolidColorBrush>

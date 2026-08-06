@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -34,11 +35,13 @@ using PhantomVault.UI.Desktop.Controls;
 namespace PhantomVault.UI.ViewModels
 {
 
-    public sealed class VaultViewModel : ReactiveObject
+    public sealed class VaultViewModel : ReactiveObject, PhantomVault.Core.Services.Sync.ITotpSyncBridge
     {
         private readonly VaultService _vaultService;
+        private readonly PhantomVault.UI.Services.Entitlements.IEntitlementService? _entitlementService;
         private readonly ManifestService _manifestService;
         private readonly IdleLockService _idleLockService;
+        private Phantom.Suite.Session.ISuiteSessionCoordinator? _suiteSession;
         private readonly IZkVaultService _zkVaultService;
         private readonly DialogService _dialogService;
         private readonly VaultLockDurationService _vaultLockDurationService;
@@ -85,6 +88,15 @@ namespace PhantomVault.UI.ViewModels
             set => this.RaiseAndSetIfChanged(ref _isLoadingCredentials, value);
         }
         private bool _isPersistingCredentialIndex;
+        // Monotonic vault save counter (persisted inside the encrypted payload) and the
+        // host-local DPAPI anchor used to detect whole-volume rollback at unlock.
+        private long _vaultSaveSequence;
+        private readonly VolumeTrustAnchorStore _volumeTrustAnchorStore = new();
+        private string? _volumeTrustVaultId;
+        // Encrypted virtual-drive mount (WinFsp). Null until first use; disposed on lock.
+        private PhantomVault.UI.Services.Mount.PhantomMountService? _mountService;
+        // Tracks the standalone dashboard window so live credential changes can refresh it while open.
+        private Window? _securityDashboardWindow;
         private ObservableCollection<string> _items = new();
         private ObservableCollection<CredentialViewModel> _credentials = new();
         private ObservableCollection<CredentialViewModel> _filteredCredentials = new();
@@ -156,6 +168,11 @@ namespace PhantomVault.UI.ViewModels
         private string? _manifestPath;
 
         public string? ManifestPath => _manifestPath;
+
+        internal string? CurrentUsbBindingId =>
+            _cachedRuntimeManifest?.UsbBindingId ?? _cachedRuntimeManifest?.UsbBindingGuid;
+
+        internal PhantomVault.UI.Services.Entitlements.IEntitlementService? EntitlementService => _entitlementService;
 
         private string? _containerAbsPath;
         private string? _reauthKeyfilePath;
@@ -238,9 +255,12 @@ namespace PhantomVault.UI.ViewModels
             IntegratedAttestorService? integratedAttestorService = null,
             RecoveryVaultPathResolver? recoveryVaultPathResolver = null,
             RecoverySuiteBootstrapService? recoverySuiteBootstrapService = null,
-            PhantomVault.UI.Services.SettingsDraftTracker? settingsDraftTracker = null)
+            PhantomVault.UI.Services.SettingsDraftTracker? settingsDraftTracker = null,
+            PhantomVault.UI.Services.Entitlements.IEntitlementService? entitlementService = null)
         {
             _vaultService = vaultService ?? throw new ArgumentNullException(nameof(vaultService));
+            _entitlementService = entitlementService
+                ?? ((Avalonia.Application.Current as App)?.Services?.GetService(typeof(PhantomVault.UI.Services.Entitlements.IEntitlementService)) as PhantomVault.UI.Services.Entitlements.IEntitlementService);
             _manifestService = manifestService ?? throw new ArgumentNullException(nameof(manifestService));
             _idleLockService = idleLockService ?? throw new ArgumentNullException(nameof(idleLockService));
             _zkVaultService = zkVaultService ?? throw new ArgumentNullException(nameof(zkVaultService));
@@ -263,7 +283,18 @@ namespace PhantomVault.UI.ViewModels
             _decoyVaultService = decoyVaultService;
             _tamperDetectionService = tamperDetectionService;
             _integratedRecoveryService = integratedRecoveryService ?? new IntegratedRecoveryService();
-            _integratedAttestorService = integratedAttestorService ?? new IntegratedAttestorService();
+            // DI-resolved (registered as a singleton in App.Composition.cs) rather than
+            // "new()" when not explicitly passed, so the switcher's tracked-process state is
+            // shared with DashboardViewModel's instance instead of each holding its own.
+            _integratedAttestorService = integratedAttestorService
+                ?? ((Application.Current as App)?.Services?.GetService(typeof(IntegratedAttestorService)) as IntegratedAttestorService)
+                ?? new IntegratedAttestorService();
+            _integratedAttestorService.RunningStateChanged += (_, _) =>
+                Dispatcher.UIThread.Post(() =>
+                {
+                    this.RaisePropertyChanged(nameof(IsAttestorRunning));
+                    this.RaisePropertyChanged(nameof(AttestorStatus));
+                });
             _recoveryVaultPathResolver = recoveryVaultPathResolver
                 ?? ((Application.Current as App)?.Services?.GetService(typeof(RecoveryVaultPathResolver)) as RecoveryVaultPathResolver)
                 ?? new RecoveryVaultPathResolver(new UsbArtifactProtectionService(new EncryptionService()));
@@ -291,6 +322,10 @@ namespace PhantomVault.UI.ViewModels
             _usbDetector.RemovableDriveRemoved += OnUsbRemoved;
 
             _idleLockService.IdleElapsed += OnIdleLockElapsed;
+
+            // Keyless suite session: presence is reported on unlock/lock and suite-wide
+            // lock is honoured via App (subscribed once at app scope) calling RequestSuiteLock.
+            _suiteSession = TryResolve<Phantom.Suite.Session.ISuiteSessionCoordinator>();
 
             AddCredentialCommand = ReactiveCommand.CreateFromTask(AddCredentialAsync);
             AddCredentialWithTypeCommand = ReactiveCommand.CreateFromTask<string>(AddCredentialWithTypeAsync);
@@ -401,6 +436,7 @@ namespace PhantomVault.UI.ViewModels
             ShowGeneralSettingsCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowGeneralSettings));
             ShowSecuritySettingsCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowSecuritySettings));
             ShowThemeSettingsCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowThemeSettings));
+            ShowSubscriptionSettingsCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowSubscriptionSettings));
             ShowImportExportSettingsCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowImportExportSettings));
             ShowAutoFillSettingsCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowAutoFillSettings));
             ShowBackupSettingsCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowBackupSettings));
@@ -408,6 +444,7 @@ namespace PhantomVault.UI.ViewModels
             ShowAdvancedSettingsCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowAdvancedSettings));
             ShowRubbishBinSettingsCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowRubbishBinSettings));
             ShowRecentIssuesCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowRecentIssues));
+            ShowSecurityActivityCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowSecurityActivity));
             ShowPasswordHealthCommand = ReactiveCommand.Create(ShowPasswordHealth);
             ShowSyncSettingsCommand = ReactiveCommand.CreateFromTask(() => SwitchTabIfAllowedAsync(ShowSyncSettings));
             OpenIconManagerCommand = ReactiveCommand.Create(OpenIconManager);
@@ -460,6 +497,10 @@ namespace PhantomVault.UI.ViewModels
                 await LockInAppAsync(LockReason.ManualLock);
             });
 
+            MountDriveReadOnlyCommand = ReactiveCommand.CreateFromTask(() => MountEncryptedDriveAsync(writable: false));
+            MountDriveWritableCommand = ReactiveCommand.CreateFromTask(() => MountEncryptedDriveAsync(writable: true));
+            UnmountDriveCommand = ReactiveCommand.Create(UnmountEncryptedDrive);
+
             UnlockWithPasswordCommand = ReactiveCommand.CreateFromTask(UnlockWithPasswordAsync);
             UnlockWithPinCommand = ReactiveCommand.CreateFromTask(UnlockWithPinAsync);
             ShowPassphraseFallbackCommand = ReactiveCommand.Create(ShowPassphraseFallback);
@@ -474,6 +515,13 @@ namespace PhantomVault.UI.ViewModels
             this.WhenAnyValue(x => x.SortOption)
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(_ => ApplyFilters());
+
+            Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
+                    h => _credentials.CollectionChanged += h,
+                    h => _credentials.CollectionChanged -= h)
+                .Throttle(TimeSpan.FromMilliseconds(300))
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(_ => RefreshSecurityDashboardIfActive());
 
             CategoryLandingViewModel = new CategoryLandingViewModel(vaultService);
 
@@ -1772,7 +1820,54 @@ namespace PhantomVault.UI.ViewModels
         public CredentialViewModel? SelectedCredential
         {
             get => _selectedCredential;
-            set => this.RaiseAndSetIfChanged(ref _selectedCredential, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _selectedCredential, value);
+                this.RaisePropertyChanged(nameof(SelectedCredentialCategoryBrush));
+            }
+        }
+
+        // Border brush for the detail card — resolves the selected credential's
+        // Group to the owning CategoryViewModel.TileColor, so the detail card
+        // wears the category's colour. Falls back to the accent brush when
+        // there's no match (uncategorised, unknown group, bad hex) so the
+        // border is always clearly visible.
+        public Avalonia.Media.IBrush SelectedCredentialCategoryBrush
+        {
+            get
+            {
+                Avalonia.Media.IBrush ResolveFallback()
+                {
+                    var app = Avalonia.Application.Current;
+                    if (app != null)
+                    {
+                        foreach (var key in new[] { "AccentBrush", "SystemAccentColorBrush", "ControlBorderBrush" })
+                        {
+                            if (app.Styles.TryGetResource(key, app.ActualThemeVariant, out var r) && r is Avalonia.Media.IBrush b)
+                                return b;
+                            if (app.Resources.TryGetResource(key, app.ActualThemeVariant, out var r2) && r2 is Avalonia.Media.IBrush b2)
+                                return b2;
+                        }
+                    }
+                    return new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#3B82F6"));
+                }
+
+                var group = _selectedCredential?.Group;
+                if (string.IsNullOrWhiteSpace(group)) return ResolveFallback();
+
+                var cat = _categories.FirstOrDefault(c =>
+                    string.Equals(c.Name, group, StringComparison.OrdinalIgnoreCase));
+                if (cat == null || string.IsNullOrWhiteSpace(cat.TileColor)) return ResolveFallback();
+
+                try
+                {
+                    return new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse(cat.TileColor));
+                }
+                catch
+                {
+                    return ResolveFallback();
+                }
+            }
         }
 
         public SecureTrashItemViewModel? SelectedTrashItem
@@ -1797,7 +1892,7 @@ namespace PhantomVault.UI.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _activeCategoryDisplayName, value);
         }
 
-        public bool IsShowingCategoryFiltered => !string.IsNullOrEmpty(_activeCategory) && (IsShowingAll || IsShowingFavorites);
+        public bool IsShowingCategoryFiltered => !string.IsNullOrEmpty(_activeCategory) && !IsShowingSecureTrash;
 
         public bool IsEditPanelVisible
         {
@@ -1833,7 +1928,9 @@ namespace PhantomVault.UI.ViewModels
 
         public bool IsAttestorAvailable => _integratedAttestorService.IsAvailable;
 
-        public string AttestorStatus => _integratedAttestorService.AvailabilityMessage;
+        public string AttestorStatus => _integratedAttestorService.IsRunning
+            ? "Switch to PhantomAttestor"
+            : _integratedAttestorService.AvailabilityMessage;
 
         private bool _isSettingsPanelVisible;
         public bool IsSettingsPanelVisible
@@ -1937,8 +2034,31 @@ namespace PhantomVault.UI.ViewModels
         public int SecurityScore
         {
             get => _securityScore;
-            private set => this.RaiseAndSetIfChanged(ref _securityScore, value);
+            private set
+            {
+                this.RaiseAndSetIfChanged(ref _securityScore, value);
+                this.RaisePropertyChanged(nameof(SecurityScoreColor));
+                this.RaisePropertyChanged(nameof(SecurityScoreLabel));
+            }
         }
+
+        public string SecurityScoreColor => _securityScore switch
+        {
+            >= 90 => "#22C55E",
+            >= 75 => "#84CC16",
+            >= 60 => "#EAB308",
+            >= 40 => "#F97316",
+            _ => "#EF4444"
+        };
+
+        public string SecurityScoreLabel => _securityScore switch
+        {
+            >= 90 => "Excellent",
+            >= 75 => "Good",
+            >= 60 => "Moderate",
+            >= 40 => "Weak",
+            _ => "Critical"
+        };
 
         private int _breachedPasswordCount = 0;
         public int BreachedPasswordCount
@@ -2151,6 +2271,9 @@ namespace PhantomVault.UI.ViewModels
 
         public ReactiveCommand<string, Unit> OpenItemCommand { get; }
         public ReactiveCommand<Unit, Unit> LockCommand { get; }
+        public ReactiveCommand<Unit, Unit> MountDriveReadOnlyCommand { get; }
+        public ReactiveCommand<Unit, Unit> MountDriveWritableCommand { get; }
+        public ReactiveCommand<Unit, Unit> UnmountDriveCommand { get; }
         public ReactiveCommand<Unit, Unit> UnlockWithPasswordCommand { get; }
         public ReactiveCommand<Unit, Unit> UnlockWithPinCommand { get; }
         public ReactiveCommand<Unit, Unit> ShowPassphraseFallbackCommand { get; }
@@ -2179,12 +2302,32 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> SaveTotpSecretCommand { get; }
         public ReactiveCommand<Unit, Unit> RemoveTotpCommand { get; }
 
+        // True while we're tracking a live Attestor instance we launched — drives the
+        // switcher chip in the header (shown instead of the "Open Attestor" launcher once
+        // it's running, so clicking it re-focuses the existing window instead of relaunching).
+        public bool IsAttestorRunning => _integratedAttestorService.IsRunning;
+
         private void OpenAttestor()
         {
-            if (_integratedAttestorService.TryLaunch(out var errorMessage))
+            PixelBounds? ownerBounds = null;
+            if (_ownerWindow != null)
+            {
+                try
+                {
+                    var scaling = _ownerWindow.RenderScaling;
+                    ownerBounds = new PixelBounds(
+                        _ownerWindow.Position.X,
+                        _ownerWindow.Position.Y,
+                        (int)(_ownerWindow.Width * scaling),
+                        (int)(_ownerWindow.Height * scaling));
+                }
+                catch { }
+            }
+
+            if (_integratedAttestorService.TryLaunch(ownerBounds, out var errorMessage))
             {
                 DashboardViewModel.SetAttestorAvailability(true, _integratedAttestorService.AvailabilityMessage);
-                StatusMessage = "Opened PhantomAttestor.";
+                StatusMessage = _integratedAttestorService.IsRunning ? "Switched to PhantomAttestor." : "Opened PhantomAttestor.";
             }
             else
             {
@@ -2254,6 +2397,7 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> ShowGeneralSettingsCommand { get; }
         public ReactiveCommand<Unit, Unit> ShowSecuritySettingsCommand { get; }
         public ReactiveCommand<Unit, Unit> ShowThemeSettingsCommand { get; }
+        public ReactiveCommand<Unit, Unit> ShowSubscriptionSettingsCommand { get; }
         public ReactiveCommand<Unit, Unit> ShowImportExportSettingsCommand { get; }
         public ReactiveCommand<Unit, Unit> ShowAutoFillSettingsCommand { get; }
         public ReactiveCommand<Unit, Unit> ShowBackupSettingsCommand { get; }
@@ -2261,6 +2405,7 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> ShowAdvancedSettingsCommand { get; }
         public ReactiveCommand<Unit, Unit> ShowRubbishBinSettingsCommand { get; }
         public ReactiveCommand<Unit, Unit> ShowRecentIssuesCommand { get; }
+        public ReactiveCommand<Unit, Unit> ShowSecurityActivityCommand { get; }
         public ReactiveCommand<Unit, Unit> ShowPasswordHealthCommand { get; }
         public ReactiveCommand<Unit, Unit> ShowSyncSettingsCommand { get; }
         public ReactiveCommand<Unit, Unit> OpenIconManagerCommand { get; }
@@ -2289,6 +2434,19 @@ namespace PhantomVault.UI.ViewModels
                     subtitle: "Clear keys and require keyfile + password again",
                     glyph: "🔒",
                     searchKeywords: "lock,logout,sign out,exit"),
+
+                new("Mount encrypted drive (read-only)", "Vault", () => Run(MountDriveReadOnlyCommand),
+                    subtitle: "Open the vault container as a safe, read-only Windows drive",
+                    glyph: "💽",
+                    searchKeywords: "mount,drive,winfsp,virtual,read only,explorer"),
+                new("Mount encrypted drive (writable)", "Vault", () => Run(MountDriveWritableCommand),
+                    subtitle: "Edit files on a virtual drive; changes are repacked on unmount",
+                    glyph: "💽",
+                    searchKeywords: "mount,drive,winfsp,virtual,writable,edit,explorer"),
+                new("Unmount encrypted drive",   "Vault",    () => Run(UnmountDriveCommand),
+                    subtitle: "Detach the virtual drive and commit any changes",
+                    glyph: "⏏",
+                    searchKeywords: "unmount,eject,detach,drive"),
 
                 new("New login",                 "Add",      () => Run(AddLoginCredentialCommand),
                     glyph: "+", searchKeywords: "create,add,account,credential"),
@@ -2454,7 +2612,7 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        private void LoadSampleCredentials()
+        internal void LoadSampleCredentials()
         {
 
             var sampleCreds = new List<Credential>
@@ -2676,6 +2834,18 @@ namespace PhantomVault.UI.ViewModels
                     IdExpiryDate = DateTimeOffset.Now.AddYears(1),
                     Notes = "Renew before expiry",
                     CreatedUtc = DateTimeOffset.Now.AddYears(-4)
+                },
+                new Credential
+                {
+                    Title = "Garage Door Code",
+                    Group = "PIN Codes",
+                    EntryType = EntryType.PinCode,
+                    PinLabel = "Garage Door",
+                    PinValue = "4471",
+                    PinCategory = "Home",
+                    PinIssuer = "Chamberlain",
+                    Notes = "Keypad on the side entrance",
+                    CreatedUtc = DateTimeOffset.Now.AddMonths(-1)
                 }
             };
 
@@ -3349,6 +3519,55 @@ namespace PhantomVault.UI.ViewModels
             await SaveVaultAsync();
         }
 
+        /// <summary>
+        /// Detects whole-volume rollback by comparing the monotonic save-sequence inside the
+        /// decrypted vault payload against the host-local DPAPI trust anchor. Warn-and-allow:
+        /// a rollback surfaces a prominent warning but never blocks the unlock, then the
+        /// current state is re-baselined so the user is not nagged repeatedly.
+        /// </summary>
+        private async Task VerifyVolumeRollbackAsync(VaultDatabase database)
+        {
+            try
+            {
+                _vaultSaveSequence = database.SaveSequence;
+
+                var manifest = _cachedRuntimeManifest;
+                _volumeTrustVaultId = VolumeRollbackEvaluator.ComputeVaultId(
+                    manifest?.DeviceId, manifest?.SaltBase64);
+
+                if (_volumeTrustVaultId == null)
+                    return;
+
+                var knownSequence = _volumeTrustAnchorStore.TryReadSequence(_volumeTrustVaultId);
+                var verdict = VolumeRollbackEvaluator.Evaluate(knownSequence, _vaultSaveSequence);
+
+                if (verdict == VolumeIntegrityVerdict.Rollback)
+                {
+                    Serilog.Log.Warning(
+                        "[VolumeIntegrity] Rollback detected: on-disk sequence {Current} < last-known {Known}",
+                        _vaultSaveSequence, knownSequence);
+
+                    await Dispatcher.UIThread.InvokeAsync(async () =>
+                        await _dialogService.ShowWarningAsync(
+                            "Possible vault rollback detected",
+                            "This vault appears to have been restored to an earlier state than this " +
+                            "computer last saw. If you did not roll it back or restore a backup, the " +
+                            "device may have been tampered with.\n\nThe vault will still open. Saving any " +
+                            "change will accept the current contents as the new baseline.",
+                            _ownerWindow)).ConfigureAwait(false);
+                }
+
+                // Re-baseline the anchor to the current state (advances on Ok, records on
+                // first use, accepts the warned state on rollback).
+                _volumeTrustAnchorStore.Write(_volumeTrustVaultId, _vaultSaveSequence);
+            }
+            catch (Exception ex)
+            {
+                // Rollback detection is a non-fatal enhancement — never block unlock on its failure.
+                Debug.WriteLine($"[VolumeIntegrity] verification skipped: {ex.Message}");
+            }
+        }
+
         private async Task SaveVaultAsync()
         {
             try
@@ -3364,6 +3583,7 @@ namespace PhantomVault.UI.ViewModels
                 if (string.IsNullOrEmpty(_mountPath) || string.IsNullOrEmpty(_vaultFilePath))
                     return;
 
+                _vaultSaveSequence++;
                 var database = new VaultDatabase
                 {
                     Version = "2.0",
@@ -3371,6 +3591,7 @@ namespace PhantomVault.UI.ViewModels
                     Created = System.DateTime.UtcNow,
                     VaultName = _vaultName,
                     Description = "Saved by PhantomVault",
+                    SaveSequence = _vaultSaveSequence,
                     Groups = new System.Collections.Generic.List<VaultGroup>()
                 };
 
@@ -3411,6 +3632,11 @@ namespace PhantomVault.UI.ViewModels
 
                     await PersistCredentialIndexAsync(false);
                     await FlushTransportArtifactsAsync();
+
+                    if (_volumeTrustVaultId != null)
+                    {
+                        _volumeTrustAnchorStore.Write(_volumeTrustVaultId, _vaultSaveSequence);
+                    }
 
                     StatusMessage = "Vault saved";
                 }
@@ -3481,6 +3707,7 @@ namespace PhantomVault.UI.ViewModels
             try
             {
                 _idleLockService.Reset();
+                try { _suiteSession?.TouchActivity(); } catch { /* best-effort */ }
 
                 if (_clipboardGuard != null && !_clipboardGuard.CanCopy())
                 {
@@ -3582,6 +3809,7 @@ namespace PhantomVault.UI.ViewModels
             try
             {
                 _idleLockService.Reset();
+                try { _suiteSession?.TouchActivity(); } catch { /* best-effort */ }
                 if (_clipboardGuard != null && !_clipboardGuard.CanCopy())
                 {
                     await _dialogService.ShowWarningAsync(
@@ -4397,6 +4625,28 @@ namespace PhantomVault.UI.ViewModels
                     IsShowingDashboard = false;
                     ShowFavorites();
                     break;
+                case "AddCredential":
+                case "Generator":
+                    IsShowingDashboard = false;
+                    _ = AddCredentialAsync();
+                    break;
+                case "Import":
+                    IsShowingDashboard = false;
+                    _ = OpenImportWindowAsync();
+                    break;
+                case "Export":
+                    IsShowingDashboard = false;
+                    _ = ExportVaultAsync("json");
+                    break;
+                case "Settings":
+                    IsShowingDashboard = false;
+                    OpenSettingsPanel();
+                    break;
+                case "Backup":
+                    IsShowingDashboard = false;
+                    OpenSettingsPanel();
+                    ShowBackupSettings();
+                    break;
                 default:
                     if (filterType.StartsWith("Category:", StringComparison.Ordinal))
                     {
@@ -4542,6 +4792,7 @@ namespace PhantomVault.UI.ViewModels
                     ?? _manifestService.ReadManifest(manifestPath, _vaultPassword, keyfilePath);
                 _cachedRuntimeManifest = manifest;
                 ApplyManifestTransportState(manifest, manifestPath);
+                ApplyEntitlementsFromManifest(manifest);
             }
             catch
             {
@@ -4559,6 +4810,201 @@ namespace PhantomVault.UI.ViewModels
             this.RaisePropertyChanged(nameof(ShowPassphraseFallbackLink));
 
             LoadCategoryColorsFromManifest();
+        }
+
+        private void ApplyEntitlementsFromManifest(VaultManifest? manifest)
+        {
+            if (_entitlementService is null) return;
+            string? binding = manifest?.UsbBindingId ?? manifest?.UsbBindingGuid;
+            _entitlementService.ApplyToken(manifest?.PremiumLicenseToken, binding);
+            RaiseEntitlementProperties();
+        }
+
+        private void RaiseEntitlementProperties()
+        {
+            this.RaisePropertyChanged(nameof(IsPremium));
+            this.RaisePropertyChanged(nameof(IsFreeTier));
+            this.RaisePropertyChanged(nameof(CanUseCustomThemes));
+            this.RaisePropertyChanged(nameof(CanUseAdvancedSettings));
+            this.RaisePropertyChanged(nameof(CanUseFullSecurityDashboard));
+            this.RaisePropertyChanged(nameof(CanUseAdvancedCategoryManager));
+            this.RaisePropertyChanged(nameof(CanUseIconManager));
+            this.RaisePropertyChanged(nameof(CanUseMultiVault));
+            this.RaisePropertyChanged(nameof(CanUseEncryptedDriveMount));
+        }
+
+        public bool IsPremium => _entitlementService?.IsPremium ?? false;
+        public bool IsFreeTier => !IsPremium;
+        public bool CanUseCustomThemes =>
+            _entitlementService?.IsUnlocked(PhantomVault.Core.Models.Licensing.PremiumFeature.CustomThemes) ?? false;
+        public bool CanUseAdvancedSettings =>
+            _entitlementService?.IsUnlocked(PhantomVault.Core.Models.Licensing.PremiumFeature.AdvancedSettings) ?? false;
+        public bool CanUseFullSecurityDashboard =>
+            _entitlementService?.IsUnlocked(PhantomVault.Core.Models.Licensing.PremiumFeature.FullSecurityDashboard) ?? false;
+        public bool CanUseAdvancedCategoryManager =>
+            _entitlementService?.IsUnlocked(PhantomVault.Core.Models.Licensing.PremiumFeature.AdvancedCategoryManager) ?? false;
+        public bool CanUseIconManager =>
+            _entitlementService?.IsUnlocked(PhantomVault.Core.Models.Licensing.PremiumFeature.IconManager) ?? false;
+        public bool CanUseMultiVault =>
+            _entitlementService?.IsUnlocked(PhantomVault.Core.Models.Licensing.PremiumFeature.MultiVault) ?? false;
+        public bool CanUseEncryptedDriveMount =>
+            _entitlementService?.IsUnlocked(PhantomVault.Core.Models.Licensing.PremiumFeature.EncryptedDriveMount) ?? false;
+
+        // ---- Encrypted virtual-drive mount (WinFsp) ----
+
+        private bool _isDriveMounted;
+        public bool IsDriveMounted
+        {
+            get => _isDriveMounted;
+            private set => this.RaiseAndSetIfChanged(ref _isDriveMounted, value);
+        }
+
+        private string? _mountedDriveLetter;
+        public string? MountedDriveLetter
+        {
+            get => _mountedDriveLetter;
+            private set => this.RaiseAndSetIfChanged(ref _mountedDriveLetter, value);
+        }
+
+        private bool _isMountReadOnly;
+        public bool IsMountReadOnly
+        {
+            get => _isMountReadOnly;
+            private set => this.RaiseAndSetIfChanged(ref _isMountReadOnly, value);
+        }
+
+        /// <summary>True when the WinFsp runtime is installed and the mount can be offered.</summary>
+        public bool IsMountSupported =>
+            PhantomVault.UI.Services.Mount.PhantomMountService.IsWinFspAvailable;
+
+        private string? ResolveSystemVolumePath()
+        {
+            if (string.IsNullOrEmpty(_usbRootPath) && string.IsNullOrEmpty(_mountPath))
+                return null;
+            string driveRoot = !string.IsNullOrEmpty(_usbRootPath) ? _usbRootPath : _mountPath;
+            // _mountPath points at the manifest directory (.phantom); walk up to the drive root.
+            if (string.Equals(Path.GetFileName(driveRoot.TrimEnd(Path.DirectorySeparatorChar)),
+                    PhantomVault.Core.Services.PhantomDeviceLayout.PhantomFolderName,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                driveRoot = Path.GetDirectoryName(driveRoot.TrimEnd(Path.DirectorySeparatorChar)) ?? driveRoot;
+            }
+            var path = PhantomVault.Core.Services.PhantomDeviceLayout.GetSystemVolumePath(driveRoot);
+            return File.Exists(path) ? path : null;
+        }
+
+        /// <summary>
+        /// Mounts the encrypted container as a Windows drive. <paramref name="writable"/>
+        /// edits are repacked into the container atomically on unmount, and the save-sequence
+        /// rollback anchor is advanced so the change is accepted as the new baseline.
+        /// </summary>
+        private async Task MountEncryptedDriveAsync(bool writable)
+        {
+            if (!CanUseEncryptedDriveMount)
+            {
+                EnsurePremiumOrPrompt(
+                    PhantomVault.Core.Models.Licensing.PremiumFeature.EncryptedDriveMount,
+                    "Mounting the vault as a secure virtual drive is a Premium feature.");
+                return;
+            }
+            if (!IsMountSupported)
+            {
+                await _dialogService.ShowWarningAsync(
+                    "WinFsp required",
+                    "Mounting the encrypted drive needs the WinFsp runtime, which isn't installed " +
+                    "on this computer. Install WinFsp (https://winfsp.dev) and try again.",
+                    _ownerWindow);
+                return;
+            }
+
+            var volumePath = ResolveSystemVolumePath();
+            if (volumePath == null)
+            {
+                await _dialogService.ShowWarningAsync(
+                    "No encrypted volume",
+                    "This device does not have an encrypted container to mount yet.",
+                    _ownerWindow);
+                return;
+            }
+
+            try
+            {
+                IsBusy = true;
+                StatusMessage = writable ? "Mounting encrypted drive (writable)..." : "Mounting encrypted drive...";
+                _mountService ??= new PhantomVault.UI.Services.Mount.PhantomMountService();
+
+                string? mountPoint = writable
+                    ? await _mountService.MountWritableAsync(volumePath, driveLetter: null,
+                        onCommitted: OnMountCommitted)
+                    : await _mountService.MountReadOnlyAsync(volumePath);
+
+                IsDriveMounted = _mountService.IsMounted;
+                MountedDriveLetter = mountPoint;
+                IsMountReadOnly = _mountService.IsReadOnly;
+                StatusMessage = mountPoint == null
+                    ? "Mount failed."
+                    : $"Encrypted drive mounted at {mountPoint}{(writable ? " (writable)" : " (read-only)")}.";
+
+                if (mountPoint != null)
+                    LogSecurityActivity("mount",
+                        $"Encrypted drive mounted at {mountPoint} ({(writable ? "writable" : "read-only")}).");
+            }
+            catch (Exception ex)
+            {
+                await _dialogService.ShowErrorAsync("Mount Failed",
+                    $"Could not mount the encrypted drive: {ex.Message}", _ownerWindow);
+                StatusMessage = "Mount failed.";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        private void UnmountEncryptedDrive()
+        {
+            try
+            {
+                _mountService?.Unmount();
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Warning(ex, "[Mount] Unmount raised an error (ignored).");
+            }
+            finally
+            {
+                IsDriveMounted = _mountService?.IsMounted ?? false;
+                MountedDriveLetter = _mountService?.MountPoint;
+                IsMountReadOnly = _mountService?.IsReadOnly ?? false;
+                if (!IsDriveMounted)
+                {
+                    StatusMessage = "Encrypted drive unmounted.";
+                    LogSecurityActivity("unmount", "Encrypted drive unmounted.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Fired after the writable mount repacks the container on unmount. Advances the
+        /// host-local rollback anchor so the externally written changes are trusted on the
+        /// next unlock instead of being flagged as a rollback.
+        /// </summary>
+        private void OnMountCommitted()
+        {
+            try
+            {
+                if (_volumeTrustVaultId != null)
+                {
+                    _vaultSaveSequence++;
+                    _volumeTrustAnchorStore.Write(_volumeTrustVaultId, _vaultSaveSequence);
+                    Serilog.Log.Information(
+                        "[Mount] Container repacked; rollback anchor advanced to {Seq}.", _vaultSaveSequence);
+                }
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Warning(ex, "[Mount] Failed to advance rollback anchor after commit.");
+            }
         }
 
         private async Task ManageCategoriesAsync()
@@ -4638,6 +5084,7 @@ namespace PhantomVault.UI.ViewModels
             GridViewIconPath = IsGridView ? "Assets/SVG/Current/Grid.svg" : "Assets/SVG/Current/List.svg";
             IsGridView = !IsGridView;
             StatusMessage = ViewModeIcon == "☰" ? "List view" : "Grid view";
+            ApplyFilters();
         }
 
         private void ToggleSidebar()
@@ -4802,6 +5249,20 @@ namespace PhantomVault.UI.ViewModels
 
         private void ClearVaultUiState()
         {
+            // Security: tear down any mounted encrypted drive before clearing in-memory
+            // state so the plaintext projection cannot outlive the unlocked session.
+            try
+            {
+                if (_mountService is { IsMounted: true })
+                    UnmountEncryptedDrive();
+                _mountService?.Dispose();
+                _mountService = null;
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Warning(ex, "[Mount] Failed to unmount during lock (ignored).");
+            }
+
             _items.Clear();
             _credentials.Clear();
             _filteredCredentials.Clear();
@@ -4818,6 +5279,17 @@ namespace PhantomVault.UI.ViewModels
                 _totpSyncService.Dispose();
                 _totpSyncService = null;
             }
+
+            try
+            {
+                var ctx = (Avalonia.Application.Current as App)?.Services?.GetService(typeof(PhantomVault.UI.Services.Sync.TotpSyncVaultContext))
+                          as PhantomVault.UI.Services.Sync.TotpSyncVaultContext;
+                ctx?.SetLocked();
+            }
+            catch { /* best-effort */ }
+
+            // Suite presence: this app is now locked. Presence-only — does NOT lock other apps.
+            try { _suiteSession?.ReportLocked(); } catch { /* best-effort */ }
         }
 
         private void EnterLockedState(string title, string message, bool softLock)
@@ -4860,6 +5332,25 @@ namespace PhantomVault.UI.ViewModels
 
             IsSoftLocked = false;
             IsLockscreenVisible = false;
+
+            // Re-entered the unlocked state (e.g. PIN/password dismiss of a soft lock):
+            // re-assert suite presence so the suite session reflects this app as unlocked.
+            try { _suiteSession?.ReportUnlocked(); } catch { /* best-effort */ }
+        }
+
+        /// <summary>
+        /// Honour a suite-wide lock request (raised by another app via "Lock Suite",
+        /// idle timeout, or session termination). No-op if already locked. Locks THIS
+        /// app only in response to a genuine suite signal — never used for routine
+        /// per-app locking (which stays isolated).
+        /// </summary>
+        public void RequestSuiteLock()
+        {
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                if (IsLockscreenVisible) return;
+                _ = LockInAppAsync(LockReason.ManualLock);
+            });
         }
 
         private void DismissLockscreen()
@@ -4908,6 +5399,10 @@ namespace PhantomVault.UI.ViewModels
 
         private async Task LockInAppAsync(LockReason reason)
         {
+
+            LogSecurityActivity("lock", reason == LockReason.AutoLock
+                ? "Vault auto-locked due to inactivity."
+                : "Vault locked by user.");
 
             var settings = SettingsService.Load();
             bool pinConfigured = settings.EnablePinLock && PinLockService.HasPinConfigured(settings, _manifestPath);
@@ -5402,6 +5897,13 @@ namespace PhantomVault.UI.ViewModels
                     }
                 }
 
+                bool isDecoyActive = _tamperDetectionService?.IsDecoyActive == true
+                    && _decoyVaultService?.IsDecoyActive == true;
+                if (!isDecoyActive)
+                {
+                    await VerifyVolumeRollbackAsync(database).ConfigureAwait(false);
+                }
+
                 if (database.Groups != null)
                 {
                     foreach (var group in database.Groups)
@@ -5450,6 +5952,7 @@ namespace PhantomVault.UI.ViewModels
                 _vaultLockDurationService.UnlockVault();
 
                 _idleLockService.Reset();
+                try { _suiteSession?.TouchActivity(); } catch { /* best-effort */ }
 
                 UpdateWeakCredentials();
 
@@ -5986,6 +6489,9 @@ namespace PhantomVault.UI.ViewModels
                 var window = new Views.SecurityDashboardWindow { DataContext = this };
                 System.Diagnostics.Debug.WriteLine(">>> SecurityDashboardWindow created");
 
+                _securityDashboardWindow = window;
+                window.Closed += (_, _) => _securityDashboardWindow = null;
+
                 window.Show();
                 System.Diagnostics.Debug.WriteLine(">>> SecurityDashboardWindow shown");
 
@@ -5996,6 +6502,18 @@ namespace PhantomVault.UI.ViewModels
                 System.Diagnostics.Debug.WriteLine($"!!! ERROR: {ex.Message}\n{ex.StackTrace}");
                 StatusMessage = $"❌ ERROR: {ex.Message}";
             }
+        }
+
+        // True while the inline dashboard overlay or the standalone dashboard window is on screen —
+        // gates live refresh so credential edits elsewhere don't pay the HIBP/recompute cost for nothing.
+        private bool IsSecurityDashboardActive => IsSecurityDashboardVisible || _securityDashboardWindow != null;
+
+        private void RefreshSecurityDashboardIfActive()
+        {
+            if (!IsSecurityDashboardActive) return;
+
+            UpdateWeakCredentials();
+            RefreshSecurityDashboardMetrics();
         }
 
         private void UpdateWeakCredentials()
@@ -6408,6 +6926,66 @@ namespace PhantomVault.UI.ViewModels
             SelectedSettingsContent = new Views.Settings.RecentIssuesView();
         }
 
+        private void ShowSecurityActivity()
+        {
+            EnsureSettingsPanelOpen("securityactivity");
+            var view = new Views.Settings.SecurityActivityView();
+            view.DataContext = new ViewModels.Settings.SecurityActivityViewModel(
+                ResolveAuditLogPath(),
+                new PhantomVault.Core.Services.AuditService());
+            SelectedSettingsContent = view;
+        }
+
+        /// <summary>
+        /// Resolves the active vault's plaintext activity log. Prefers the canonical
+        /// <c>.phantom\vault.audit</c> location, falling back to the legacy drive-root path
+        /// so logs written by older builds are still surfaced.
+        /// </summary>
+        private string? ResolveAuditLogPath()
+        {
+            if (string.IsNullOrEmpty(_usbRootPath) && string.IsNullOrEmpty(_mountPath))
+                return null;
+
+            string driveRoot = !string.IsNullOrEmpty(_usbRootPath) ? _usbRootPath! : _mountPath;
+            if (string.Equals(Path.GetFileName(driveRoot.TrimEnd(Path.DirectorySeparatorChar)),
+                    PhantomVault.Core.Services.PhantomDeviceLayout.PhantomFolderName,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                driveRoot = Path.GetDirectoryName(driveRoot.TrimEnd(Path.DirectorySeparatorChar)) ?? driveRoot;
+            }
+
+            var canonical = PhantomVault.Core.Services.PhantomDeviceLayout.GetAuditLogPath(driveRoot);
+            if (File.Exists(canonical))
+                return canonical;
+
+            var legacy = Path.Combine(driveRoot, "vault.audit");
+            if (File.Exists(legacy))
+                return legacy;
+
+            // Return the canonical path even if it doesn't exist yet so the viewer can show
+            // a clean "no activity recorded" state rather than an error.
+            return canonical;
+        }
+
+        /// <summary>
+        /// Appends an entry to the device's hash-chained activity log. Best-effort and never
+        /// throws — audit logging must never block or break a security action.
+        /// </summary>
+        private void LogSecurityActivity(string category, string message)
+        {
+            try
+            {
+                var path = ResolveAuditLogPath();
+                if (string.IsNullOrWhiteSpace(path))
+                    return;
+                new PhantomVault.Core.Services.AuditService().LogEvent(path, category, message);
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Debug(ex, "Activity-log write skipped");
+            }
+        }
+
         private void ShowSecuritySettings()
         {
             EnsureSettingsPanelOpen("security");
@@ -6423,6 +7001,16 @@ namespace PhantomVault.UI.ViewModels
         {
             EnsureSettingsPanelOpen("theme");
             SelectedSettingsContent = new Views.Settings.ThemeSettingsView();
+        }
+
+        private void ShowSubscriptionSettings()
+        {
+            EnsureSettingsPanelOpen("subscription");
+            var view = new Views.Settings.SubscriptionSettingsView
+            {
+                DataContext = new ViewModels.Settings.SubscriptionSettingsViewModel(this)
+            };
+            SelectedSettingsContent = view;
         }
 
         private void ShowImportExportSettings()
@@ -6578,8 +7166,26 @@ namespace PhantomVault.UI.ViewModels
 
         private void ShowAdvancedSettings()
         {
+            // Security-first: Advanced Settings hosts safety controls (auto-lock/session
+            // timeout, privacy mode, log redaction, debugger detection) and the privacy
+            // transparency dashboard. Protective and transparency features must never sit
+            // behind the paywall, so this view is available on every tier. Monetisation is
+            // applied to genuinely cosmetic / power-user features (themes, icon manager,
+            // multi-vault, encrypted drive mount) instead.
             EnsureSettingsPanelOpen("advanced");
             SelectedSettingsContent = new Views.Settings.AdvancedSettingsView();
+        }
+
+        /// <summary>
+        /// Gate helper: returns true if the feature is unlocked. Otherwise opens the
+        /// Subscription tab and surfaces a message, and returns false.
+        /// </summary>
+        private bool EnsurePremiumOrPrompt(PhantomVault.Core.Models.Licensing.PremiumFeature feature, string message)
+        {
+            if (_entitlementService?.IsUnlocked(feature) ?? false) return true;
+            StatusMessage = message + " Upgrade to unlock.";
+            ShowSubscriptionSettings();
+            return false;
         }
 
         private void ShowRubbishBinSettings()
@@ -6590,6 +7196,8 @@ namespace PhantomVault.UI.ViewModels
 
         private void OpenIconManager()
         {
+            if (!EnsurePremiumOrPrompt(PhantomVault.Core.Models.Licensing.PremiumFeature.IconManager,
+                    "The Icon Manager is a Premium feature.")) return;
 
             IconManagerViewModel = new IconManagerViewModel(_iconManager);
             IsIconManagerPanelVisible = true;
@@ -6805,6 +7413,54 @@ namespace PhantomVault.UI.ViewModels
                 Serilog.Log.Error(ex, "[VaultViewModel] RekeyManifestForFastUnlockAsync failed");
                 await _dialogService.ShowErrorAsync("Re-key Failed", $"Failed to re-key the vault manifest: {ex.Message}", _ownerWindow);
                 StatusMessage = "Re-key failed";
+                return false;
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        /// <summary>
+        /// Persists a verified premium license token into the live manifest and
+        /// re-applies entitlements. The token is stored inside the encrypted,
+        /// integrity-signed manifest so it can't be transplanted between vaults.
+        /// </summary>
+        public async Task<bool> PersistLicenseTokenAsync(string? token)
+        {
+            if (string.IsNullOrWhiteSpace(_manifestPath) || _cachedRuntimeManifest == null)
+            {
+                StatusMessage = "Activation failed: vault manifest not loaded";
+                return false;
+            }
+
+            try
+            {
+                IsBusy = true;
+                StatusMessage = "Applying subscription…";
+
+                _cachedRuntimeManifest.PremiumLicenseToken = token;
+
+                await Task.Run(() =>
+                {
+                    _manifestService.WriteManifest(
+                        _cachedRuntimeManifest,
+                        _manifestPath,
+                        _vaultPassword,
+                        _vaultKeyfilePath,
+                        usbSerial: null,
+                        requireDualFactor: false);
+                }).ConfigureAwait(false);
+
+                ApplyEntitlementsFromManifest(_cachedRuntimeManifest);
+                StatusMessage = IsPremium ? "Premium subscription active" : "Subscription updated";
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Error(ex, "[VaultViewModel] PersistLicenseTokenAsync failed");
+                await _dialogService.ShowErrorAsync("Activation Failed", $"Failed to apply the subscription: {ex.Message}", _ownerWindow);
+                StatusMessage = "Activation failed";
                 return false;
             }
             finally
@@ -7264,6 +7920,8 @@ namespace PhantomVault.UI.ViewModels
                         DataContext = e
                     };
 
+                    promptWindow.SetCredentials(e.Matches, e.Context);
+
                     var result = await promptWindow.ShowDialog<bool?>(owner);
 
                     if (result == true && promptWindow.SelectedCredential != null)
@@ -7336,6 +7994,18 @@ namespace PhantomVault.UI.ViewModels
             {
                 if (string.IsNullOrEmpty(_mountPath))
                 {
+                    SetTotpSyncContextState(syncTotpEnabled: false);
+                    return;
+                }
+
+                // TOTP secrets are the only sync channel that moves secret material, so it
+                // is governed by an explicit, revocable opt-in. When cross-app sync is off,
+                // or the TOTP channel specifically is off, we never write seeds to disk.
+                var syncSettings = SettingsService.Load();
+                if (!syncSettings.SyncEnabled || !syncSettings.SyncTotp)
+                {
+                    Debug.WriteLine("[VaultViewModel] TOTP sync disabled by settings — skipping Attestor TOTP sync.");
+                    SetTotpSyncContextState(syncTotpEnabled: false);
                     return;
                 }
 
@@ -7351,6 +8021,8 @@ namespace PhantomVault.UI.ViewModels
                 _totpSyncService.EntriesChanged += OnTotpEntriesChanged;
                 await _totpSyncService.InitializeAsync();
 
+                SetTotpSyncContextState(syncTotpEnabled: true);
+
                 await ExportTotpToSyncAsync();
 
                 StatusMessage = "TOTP sync initialized";
@@ -7361,6 +8033,23 @@ namespace PhantomVault.UI.ViewModels
                 System.Diagnostics.Debug.WriteLine($"Failed to initialize TOTP sync: {ex.Message}");
                 StatusMessage = "TOTP sync unavailable";
             }
+        }
+
+        /// <summary>
+        /// Updates the shared <see cref="PhantomVault.UI.Services.Sync.TotpSyncVaultContext"/> so
+        /// <see cref="PhantomVault.UI.Services.Sync.TotpSyncPipeServer"/> can gate and route TOTP
+        /// pushes from PhantomAttestor. Best-effort: the live pipe is purely additive on top of
+        /// the existing totp-sync.json file transport.
+        /// </summary>
+        private void SetTotpSyncContextState(bool syncTotpEnabled)
+        {
+            try
+            {
+                var ctx = (Avalonia.Application.Current as App)?.Services?.GetService(typeof(PhantomVault.UI.Services.Sync.TotpSyncVaultContext))
+                          as PhantomVault.UI.Services.Sync.TotpSyncVaultContext;
+                ctx?.SetUnlocked(this, syncTotpEnabled);
+            }
+            catch { /* best-effort */ }
         }
 
         private async Task ExportTotpToSyncAsync()
@@ -7379,6 +8068,8 @@ namespace PhantomVault.UI.ViewModels
                 {
                     await _totpSyncService.ExportToSyncFileAsync(obscuraEntries);
                     System.Diagnostics.Debug.WriteLine($"Exported {obscuraEntries.Count} TOTP entries from Obscura to sync file");
+
+                    _ = PushTotpEntriesOverPipeAsync(obscuraEntries);
                 }
             }
             catch (Exception ex)
@@ -7387,7 +8078,39 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Fire-and-forget live push of TOTP entries to PhantomAttestor over
+        /// <see cref="PhantomVault.UI.Services.Sync.TotpSyncPipeClient"/>. If Attestor isn't
+        /// running or the pipe is rejected, this silently no-ops — the totp-sync.json file
+        /// watcher on Attestor's side will pick up the change as it does today.
+        /// </summary>
+        private async Task PushTotpEntriesOverPipeAsync(System.Collections.Generic.List<PhantomVault.Core.Models.SharedTotpEntry> entries)
+        {
+            try
+            {
+                var client = (Avalonia.Application.Current as App)?.Services?.GetService(typeof(PhantomVault.UI.Services.Sync.TotpSyncPipeClient))
+                             as PhantomVault.UI.Services.Sync.TotpSyncPipeClient;
+                if (client == null) return;
+
+                await client.TryPushEntriesAsync(entries);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[VaultViewModel] TOTP pipe push failed (falling back to file sync): {ex.Message}");
+            }
+        }
+
         private async void OnTotpEntriesChanged(object? sender, System.Collections.Generic.List<PhantomVault.Core.Models.SharedTotpEntry> entries)
+        {
+            await ApplyIncomingTotpEntriesAsync(entries);
+        }
+
+        /// <summary>
+        /// Merges TOTP entries pushed from PhantomAttestor (whether delivered via the
+        /// totp-sync.json file watcher or the live <see cref="PhantomVault.UI.Services.Sync.TotpSyncPipeServer"/>)
+        /// into the unlocked vault.
+        /// </summary>
+        private async Task ApplyIncomingTotpEntriesAsync(System.Collections.Generic.List<PhantomVault.Core.Models.SharedTotpEntry> entries)
         {
             try
             {
@@ -7429,6 +8152,9 @@ namespace PhantomVault.UI.ViewModels
                 RecentIssuesLog.Instance.Record(IssueSeverity.Warning, "TOTP sync failed", $"Incoming authenticator codes could not be applied: {ex.Message}");
             }
         }
+
+        Task PhantomVault.Core.Services.Sync.ITotpSyncBridge.ApplyIncomingEntriesAsync(System.Collections.Generic.List<PhantomVault.Core.Models.SharedTotpEntry> entries)
+            => ApplyIncomingTotpEntriesAsync(entries);
 
         #endregion
 

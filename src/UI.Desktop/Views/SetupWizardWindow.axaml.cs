@@ -116,15 +116,15 @@ namespace PhantomVault.UI.Views
             {
                 if (currentStep > targetStep)
                 {
-                    return new SolidColorBrush(Color.Parse("#173042"));
+                    return new SolidColorBrush(Color.Parse("#0E1D2E"));
                 }
                 else if (currentStep == targetStep)
                 {
-                    return new SolidColorBrush(Color.Parse("#1F3F55"));
+                    return new SolidColorBrush(Color.Parse("#152638"));
                 }
                 else
                 {
-                    return new SolidColorBrush(Color.Parse("#152434"));
+                    return new SolidColorBrush(Color.Parse("#0B1725"));
                 }
             }
             return new SolidColorBrush(Colors.Transparent);

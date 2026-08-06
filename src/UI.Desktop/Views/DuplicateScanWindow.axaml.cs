@@ -4,7 +4,7 @@ using PhantomVault.UI.ViewModels;
 
 namespace PhantomVault.UI.Views
 {
-    public partial class DuplicateScanWindow : Window
+    public partial class DuplicateScanWindow : ThemeAwareWindow
     {
         public DuplicateScanWindow()
         {

@@ -12,8 +12,6 @@ namespace PhantomVault.Core.Services
 
     public sealed class UsbBindingService
     {
-        private const string HiddenIdFileName = ".phantom_device_id";
-
         private static byte[] DeriveHmacKeyFromVaultSalt(byte[] vaultSalt)
         {
             if (vaultSalt == null || vaultSalt.Length == 0)
@@ -369,7 +367,8 @@ namespace PhantomVault.Core.Services
             if (string.IsNullOrEmpty(driveRoot)) throw new ArgumentException("Drive root must not be null or empty", nameof(driveRoot));
             if (vaultSalt == null || vaultSalt.Length == 0) throw new ArgumentException("Vault salt must not be null or empty", nameof(vaultSalt));
 
-            string hiddenFilePath = Path.Combine(driveRoot, HiddenIdFileName);
+            PhantomDeviceLayout.EnsurePhantomRoot(driveRoot);
+            string hiddenFilePath = PhantomDeviceLayout.GetDeviceIdPath(driveRoot);
 
             byte[] randomId = new byte[32];
             RandomNumberGenerator.Fill(randomId);
@@ -442,7 +441,7 @@ namespace PhantomVault.Core.Services
             if (string.IsNullOrEmpty(driveRoot)) throw new ArgumentException("Drive root must not be null or empty", nameof(driveRoot));
             if (vaultSalt == null || vaultSalt.Length == 0) throw new ArgumentException("Vault salt must not be null or empty", nameof(vaultSalt));
 
-            string hiddenFilePath = Path.Combine(driveRoot, HiddenIdFileName);
+            string hiddenFilePath = PhantomDeviceLayout.GetDeviceIdPath(driveRoot);
 
             if (!File.Exists(hiddenFilePath))
             {
@@ -533,7 +532,7 @@ namespace PhantomVault.Core.Services
         public bool HasHiddenDeviceId(string driveRoot)
         {
             if (string.IsNullOrEmpty(driveRoot)) return false;
-            return File.Exists(Path.Combine(driveRoot, HiddenIdFileName));
+            return File.Exists(PhantomDeviceLayout.GetDeviceIdPath(driveRoot));
         }
 
         public string ComputeHighAssuranceDeviceId(string driveRoot, byte[] vaultSalt)
@@ -560,7 +559,8 @@ namespace PhantomVault.Core.Services
 
             try
             {
-                string hiddenFilePath = Path.Combine(driveRoot, HiddenIdFileName);
+                PhantomDeviceLayout.EnsurePhantomRoot(driveRoot);
+                string hiddenFilePath = PhantomDeviceLayout.GetDeviceIdPath(driveRoot);
                 long timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
                 byte[] hmacKey = DeriveHmacKeyFromVaultSalt(newVaultSalt);
@@ -623,7 +623,7 @@ namespace PhantomVault.Core.Services
             }
             catch (Exception ex)
             {
-                Serilog.Log.Error(ex, "[UsbBinding] RotateHiddenDeviceId threw {ExType} on path {Path}", ex.GetType().Name, Path.Combine(driveRoot, HiddenIdFileName));
+                Serilog.Log.Error(ex, "[UsbBinding] RotateHiddenDeviceId threw {ExType} on path {Path}", ex.GetType().Name, PhantomDeviceLayout.GetDeviceIdPath(driveRoot));
                 return null;
             }
         }

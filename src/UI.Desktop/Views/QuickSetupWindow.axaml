@@ -23,22 +23,28 @@
     </views:ThemeAwareWindow.Resources>
 
     <Grid RowDefinitions="Auto,*,Auto">
-        <Border Grid.Row="0" Background="{DynamicResource HeaderBackgroundBrush}" Padding="24,16,24,14">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="14">
-                <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
-                       Width="58" Height="58" Stretch="Uniform"/>
-                <StackPanel Spacing="4" VerticalAlignment="Center">
-                    <TextBlock Text="Default Secure Setup"
-                               FontSize="{StaticResource Type.H2.Size}"
-                               FontFamily="{DynamicResource TitleFontFamily}"
-                               Foreground="{DynamicResource PrimaryTextBrush}"/>
-                    <TextBlock Text="Ghost Secured profile with PhantomKey, dual keyfiles, 1 GB encrypted container, and automatic remnant cleanup."
-                               FontSize="{StaticResource Type.Small.Size}"
-                               Foreground="{DynamicResource MutedTextBrush}"
-                               TextWrapping="Wrap"
-                               MaxWidth="560"/>
-                </StackPanel>
-            </StackPanel>
+
+        <!-- Dot-grid overlay across the whole window (matches welcome + wizard). -->
+        <Border Grid.Row="0" Grid.RowSpan="3"
+                IsHitTestVisible="False"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch">
+            <Border.Background>
+                <ImageBrush Source="avares://PhantomVault.UI/Assets/dot_pattern.png"
+                            TileMode="Tile"
+                            Stretch="None"
+                            SourceRect="0,0,8,8"
+                            DestinationRect="0,0,8,8"/>
+            </Border.Background>
+        </Border>
+
+        <Border Grid.Row="0" Background="{DynamicResource HeaderBackgroundBrush}" Padding="24,6,24,6">
+            <TextBlock Text="Ghost Secured profile with PhantomKey, dual keyfiles, 1 GB encrypted container, and automatic remnant cleanup."
+                       FontSize="{StaticResource Type.Small.Size}"
+                       Foreground="{DynamicResource MutedTextBrush}"
+                       TextWrapping="Wrap"
+                       HorizontalAlignment="Center"
+                       MaxWidth="720"/>
         </Border>
 
         <ScrollViewer Grid.Row="1"
@@ -190,7 +196,7 @@
 
         <Border Grid.Row="2"
                 Background="{DynamicResource FooterBackgroundBrush}"
-                Padding="24,14,24,18"
+                Padding="24,8,24,10"
                 BorderBrush="{DynamicResource ControlBorderBrush}"
                 BorderThickness="0,1,0,0">
             <Grid ColumnDefinitions="*,Auto">
@@ -201,15 +207,10 @@
                            MaxWidth="440"/>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12">
                     <Button Click="Back_Click"
-                            Classes="liquid-glass"
-                            Width="140"
-                            Height="42">
-                        <TextBlock Text="Back"/>
-                    </Button>
+                            Content="← Back"
+                            Classes="liquid-glass nav-button"/>
                     <Button Click="CreateVault_Click"
-                            Classes="liquid-glass"
-                            Width="160"
-                            Height="42">
+                            Classes="liquid-glass nav-button">
                         <TextBlock Text="Create Default Vault"/>
                     </Button>
                 </StackPanel>

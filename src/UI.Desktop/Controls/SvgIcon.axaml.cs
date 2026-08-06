@@ -102,6 +102,20 @@ public partial class SvgIcon : UserControl
     private static readonly Regex LineRegex = new(
         @"<line\s[^>]*?x1\s*=\s*""([^""]+)""\s[^>]*?y1\s*=\s*""([^""]+)""\s[^>]*?x2\s*=\s*""([^""]+)""\s[^>]*?y2\s*=\s*""([^""]+)""",
         RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline);
+    private static readonly Regex RectRegex = new(@"<rect\b[^>]*>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex CircleRegex = new(@"<circle\b[^>]*>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex EllipseRegex = new(@"<ellipse\b[^>]*>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex PolylineRegex = new(@"<polyline\b[^>]*?\spoints\s*=\s*""([^""]+)""", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex PolygonRegex = new(@"<polygon\b[^>]*?\spoints\s*=\s*""([^""]+)""", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+    private static double GetSvgAttr(string element, string attribute, double fallback = 0)
+    {
+        var match = Regex.Match(element, @"(?<![a-zA-Z-])" + Regex.Escape(attribute) + @"\s*=\s*""([^""]+)""", RegexOptions.IgnoreCase);
+        return match.Success &&
+               double.TryParse(match.Groups[1].Value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var value)
+            ? value
+            : fallback;
+    }
 
     public static readonly StyledProperty<IconPreset?> PresetProperty =
         AvaloniaProperty.Register<SvgIcon, IconPreset?>(nameof(Preset));
@@ -212,6 +226,32 @@ public partial class SvgIcon : UserControl
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"[SvgIcon] Failed to load icon: {ex.Message}");
+        }
+    }
+
+    private static Geometry? TryBuildPolyGeometry(string points, bool close)
+    {
+        try
+        {
+            var tokens = points.Split(new[] { ' ', ',', '\t', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+            if (tokens.Length < 4 || tokens.Length % 2 != 0)
+                return null;
+
+            var builder = new System.Text.StringBuilder();
+            for (var i = 0; i < tokens.Length; i += 2)
+            {
+                builder.Append(i == 0 ? 'M' : 'L');
+                builder.Append(tokens[i]).Append(' ').Append(tokens[i + 1]).Append(' ');
+            }
+
+            if (close)
+                builder.Append('Z');
+
+            return Geometry.Parse(builder.ToString().Trim());
+        }
+        catch
+        {
+            return null;
         }
     }
 
@@ -339,6 +379,82 @@ public partial class SvgIcon : UserControl
                     catch
                     {
                     }
+                }
+
+                foreach (Match match in RectRegex.Matches(svgContent))
+                {
+                    try
+                    {
+                        var element = match.Value;
+                        var width = GetSvgAttr(element, "width");
+                        var height = GetSvgAttr(element, "height");
+                        if (width <= 0 || height <= 0)
+                            continue;
+
+                        var rect = new Rect(GetSvgAttr(element, "x"), GetSvgAttr(element, "y"), width, height);
+                        var rx = GetSvgAttr(element, "rx");
+                        var ry = GetSvgAttr(element, "ry", rx);
+                        if (rx <= 0 && ry > 0)
+                            rx = ry;
+
+                        geometries.Add(rx > 0 || ry > 0
+                            ? new RectangleGeometry(rect, rx, ry > 0 ? ry : rx)
+                            : new RectangleGeometry(rect));
+                    }
+                    catch
+                    {
+                    }
+                }
+
+                foreach (Match match in CircleRegex.Matches(svgContent))
+                {
+                    try
+                    {
+                        var element = match.Value;
+                        var r = GetSvgAttr(element, "r");
+                        if (r <= 0)
+                            continue;
+
+                        var cx = GetSvgAttr(element, "cx");
+                        var cy = GetSvgAttr(element, "cy");
+                        geometries.Add(new EllipseGeometry(new Rect(cx - r, cy - r, r * 2, r * 2)));
+                    }
+                    catch
+                    {
+                    }
+                }
+
+                foreach (Match match in EllipseRegex.Matches(svgContent))
+                {
+                    try
+                    {
+                        var element = match.Value;
+                        var rx = GetSvgAttr(element, "rx");
+                        var ry = GetSvgAttr(element, "ry");
+                        if (rx <= 0 || ry <= 0)
+                            continue;
+
+                        var cx = GetSvgAttr(element, "cx");
+                        var cy = GetSvgAttr(element, "cy");
+                        geometries.Add(new EllipseGeometry(new Rect(cx - rx, cy - ry, rx * 2, ry * 2)));
+                    }
+                    catch
+                    {
+                    }
+                }
+
+                foreach (Match match in PolylineRegex.Matches(svgContent))
+                {
+                    var geometry = TryBuildPolyGeometry(match.Groups[1].Value, close: false);
+                    if (geometry != null)
+                        geometries.Add(geometry);
+                }
+
+                foreach (Match match in PolygonRegex.Matches(svgContent))
+                {
+                    var geometry = TryBuildPolyGeometry(match.Groups[1].Value, close: true);
+                    if (geometry != null)
+                        geometries.Add(geometry);
                 }
 
                 if (geometries.Count == 0)

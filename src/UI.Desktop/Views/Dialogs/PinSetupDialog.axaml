@@ -1,6 +1,7 @@
-<Window xmlns="https://github.com/avaloniaui"
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:PhantomVault.UI.ViewModels.Dialogs"
+        xmlns:views="clr-namespace:PhantomVault.UI.Views"
         x:Class="PhantomVault.UI.Views.Dialogs.PinSetupDialog"
         x:DataType="vm:PinSetupDialogViewModel"
         Title="Set Up PIN Lock"
@@ -80,5 +81,5 @@
                     IsDefault="True"/>
         </StackPanel>
     </Grid>
-</Window>
+</views:ThemeAwareWindow>
 

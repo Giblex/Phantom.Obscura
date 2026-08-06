@@ -10,7 +10,6 @@ namespace PhantomVault.Core.Services
 
     public sealed class UsbJunkScrubber
     {
-        private const string QuarantineFolderName = ".phantom_quarantine";
         private const int MaxScrubHistory = 200;
 
         private static readonly IReadOnlyList<JunkTarget> Targets = new[]
@@ -181,7 +180,7 @@ namespace PhantomVault.Core.Services
 
         private static string EnsureQuarantineRoot(string driveRoot)
         {
-            var path = Path.Combine(driveRoot, QuarantineFolderName);
+            var path = PhantomDeviceLayout.GetQuarantineDir(driveRoot);
             Directory.CreateDirectory(path);
             if (OperatingSystem.IsWindows())
             {
@@ -241,7 +240,7 @@ namespace PhantomVault.Core.Services
 
         private static void PurgeExpiredQuarantine(string driveRoot, int retentionDays)
         {
-            var qRoot = Path.Combine(driveRoot, QuarantineFolderName);
+            var qRoot = PhantomDeviceLayout.GetQuarantineDir(driveRoot);
             if (!Directory.Exists(qRoot)) return;
 
             var cutoff = DateTimeOffset.UtcNow.AddDays(-retentionDays);

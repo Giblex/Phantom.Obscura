@@ -27,9 +27,9 @@
     <SolidColorBrush x:Key="HeaderBorderBrush" Color="Transparent"/>
     <SolidColorBrush x:Key="FooterBackgroundBrush" Color="#071018"/>
     <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#0C1620"/>
-    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#101E2B"/>
+    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#132236"/>
     <SolidColorBrush x:Key="SettingsPanelBackgroundBrush" Color="#162435"/>
-    <SolidColorBrush x:Key="SettingsPanelBorderBrush" Color="#273642"/>
+    <SolidColorBrush x:Key="SettingsPanelBorderBrush" Color="#303F57"/>
     <SolidColorBrush x:Key="TileGlassBrush">#AA0C1620</SolidColorBrush>
     <SolidColorBrush x:Key="TileGapBrush" Color="#162435"/>
 
@@ -198,9 +198,9 @@
     <BoxShadows x:Key="SlideOutPanelShadow">-20 0 40 -5 #70000000</BoxShadows>
     <BoxShadows x:Key="FlaggedPanelShadow">-16 0 32 -4 #68000000</BoxShadows>
     <BoxShadows x:Key="DetailCardShadow">0 12 38 -6 #58071018</BoxShadows>
-    <BoxShadows x:Key="TileRestingShadow">0 16 34 -16 #76000000, 0 5 14 0 #34071018</BoxShadows>
-    <BoxShadows x:Key="TileHoverShadow">0 24 52 -20 #8A000000, 0 10 24 -2 #44071018</BoxShadows>
-    <BoxShadows x:Key="TilePressedShadow">0 10 20 -8 #62000000, 0 4 12 0 #30071018</BoxShadows>
+    <BoxShadows x:Key="TileRestingShadow">0 18 44 -12 #AA000000, 0 8 20 0 #50071018</BoxShadows>
+    <BoxShadows x:Key="TileHoverShadow">0 26 62 -18 #B6000000, 0 12 28 -2 #5A071018</BoxShadows>
+    <BoxShadows x:Key="TilePressedShadow">0 14 28 -8 #94000000, 0 6 16 0 #47071018</BoxShadows>
 
     <Color x:Key="Glass.Tint.Light">#0C1620</Color>
     <Color x:Key="Glass.Tint.Mid">#55C3CF</Color>

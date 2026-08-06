@@ -270,9 +270,21 @@ namespace PhantomVault.UI.Controls
         {
             base.OnApplyTemplate(e);
 
-            if (EnableAntiKeylogging || DisableClipboard)
+            // Honest copy: this field does not "detect keylogging" (no software running in
+            // user space can reliably defeat a kernel/global-hook keylogger). What it actually
+            // does is disable clipboard exposure and monitor for environmental hostility
+            // signals (overlays, screen-capture tooling). Describe only that.
+            if (DisableClipboard && EnableAntiKeylogging)
             {
-                ToolTip.SetTip(this, "🔒 Secure input — keylogging detection active");
+                ToolTip.SetTip(this, "🔒 Secure field — clipboard disabled, input environment monitored");
+            }
+            else if (DisableClipboard)
+            {
+                ToolTip.SetTip(this, "🔒 Secure field — clipboard disabled");
+            }
+            else if (EnableAntiKeylogging)
+            {
+                ToolTip.SetTip(this, "🔒 Secure field — input environment monitored");
             }
         }
 

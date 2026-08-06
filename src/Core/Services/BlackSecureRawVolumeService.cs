@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using PhantomVault.Core.Services.Privileged;
 
 namespace PhantomVault.Core.Services
 {
@@ -96,6 +97,11 @@ namespace PhantomVault.Core.Services
             if (!OperatingSystem.IsWindows() || string.IsNullOrWhiteSpace(physicalDevicePath))
                 return false;
 
+            if (PrivilegedExecution.ShouldBroker)
+                return await PrivilegedExecution.Broker!.IsBlackSecureVolumeAsync(physicalDevicePath, cancellationToken).ConfigureAwait(false);
+            if (PrivilegedExecution.RequiresBrokerButMissing)
+                throw new PrivilegedBrokerUnavailableException();
+
             await using var stream = OpenRawDevice(physicalDevicePath, FileAccess.Read);
             byte[] magic = new byte[Magic.Length];
             int read = await stream.ReadAsync(magic.AsMemory(0, magic.Length), cancellationToken).ConfigureAwait(false);
@@ -110,6 +116,14 @@ namespace PhantomVault.Core.Services
                 throw new ArgumentException("Physical device path is required.", nameof(physicalDevicePath));
             if (string.IsNullOrWhiteSpace(sourceRoot) || !Directory.Exists(sourceRoot))
                 throw new DirectoryNotFoundException($"Source root not found: {sourceRoot}");
+
+            if (PrivilegedExecution.ShouldBroker)
+            {
+                await PrivilegedExecution.Broker!.CreateVolumeFromDirectoryAsync(physicalDevicePath, sourceRoot, cancellationToken).ConfigureAwait(false);
+                return;
+            }
+            if (PrivilegedExecution.RequiresBrokerButMissing)
+                throw new PrivilegedBrokerUnavailableException();
 
             var files = Directory.GetFiles(sourceRoot, "*", SearchOption.AllDirectories)
                 .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
@@ -183,6 +197,14 @@ namespace PhantomVault.Core.Services
             if (string.IsNullOrWhiteSpace(physicalDevicePath))
                 return;
 
+            if (PrivilegedExecution.ShouldBroker)
+            {
+                await PrivilegedExecution.Broker!.InvalidateVolumeHeaderAsync(physicalDevicePath, cancellationToken).ConfigureAwait(false);
+                return;
+            }
+            if (PrivilegedExecution.RequiresBrokerButMissing)
+                throw new PrivilegedBrokerUnavailableException();
+
             try
             {
                 await using var output = OpenRawDevice(physicalDevicePath, FileAccess.ReadWrite);
@@ -225,6 +247,11 @@ namespace PhantomVault.Core.Services
                 throw new ArgumentException("Physical device path is required.", nameof(physicalDevicePath));
             if (string.IsNullOrWhiteSpace(destinationRoot))
                 throw new ArgumentException("Destination root is required.", nameof(destinationRoot));
+
+            if (PrivilegedExecution.ShouldBroker)
+                return await PrivilegedExecution.Broker!.ExtractVolumeAsync(physicalDevicePath, destinationRoot, verify, progress, cancellationToken).ConfigureAwait(false);
+            if (PrivilegedExecution.RequiresBrokerButMissing)
+                throw new PrivilegedBrokerUnavailableException();
 
             var manifest = await ReadManifestAsync(physicalDevicePath, cancellationToken).ConfigureAwait(false);
             Directory.CreateDirectory(destinationRoot);
