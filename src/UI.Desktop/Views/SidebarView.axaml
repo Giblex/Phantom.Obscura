@@ -177,7 +177,7 @@
                         <Border x:Name="NavyTopInset"
                                 Opacity="0"
                                 BorderThickness="0,1,0,0"
-                                BorderBrush="#40000000"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
                                 IsHitTestVisible="False"/>
                         <!-- Left-side accent bar — visible only in the .active state.
                              Vertically inset 8px so it reads as centred to the row text
@@ -252,7 +252,7 @@
                                     Opacity="0.55"
                                     Effect="{DynamicResource LiquidGlassButtonEffect}"/>
                             <Border x:Name="FilterBase"
-                                    Background="#10162232"
+                                    Background="{DynamicResource SubtleBrush}"
                                     BorderBrush="{TemplateBinding BorderBrush}"
                                     BorderThickness="{TemplateBinding BorderThickness}"
                                     CornerRadius="{TemplateBinding CornerRadius}"/>
@@ -405,28 +405,31 @@
         </Style>
 
         <Style Selector="Button.sidebar-filter-item">
-            <Setter Property="Background" Value="Transparent"/>
+            <!-- Stronger teal tint and vertical centring for better alignment with the logo row. -->
+            <Setter Property="Background" Value="#4014B8A6"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="CornerRadius" Value="12"/>
             <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Effect" Value="{x:Null}"/>
         </Style>
         <Style Selector="Button.sidebar-filter-item:pointerover">
-            <Setter Property="Background" Value="#1A2A3F58"/>
+            <Setter Property="Background" Value="#6014B8A6"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
             <Setter Property="Effect" Value="{x:Null}"/>
         </Style>
         <Style Selector="Button.sidebar-filter-item:pressed">
-            <Setter Property="Background" Value="#22304558"/>
+            <Setter Property="Background" Value="#7014B8A6"/>
         </Style>
 
         <Style Selector="ToggleButton.sidebar-filter-item-toggle">
+            <!-- Category tile: outlined border for a defined edge on light themes. -->
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Glass.Border}"/>
+            <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="12,0"/>
-            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="CornerRadius" Value="14"/>
         </Style>
         <Style Selector="ToggleButton.sidebar-filter-item-toggle:pointerover">
             <Setter Property="Background" Value="#1A2A3F58"/>
@@ -577,7 +580,7 @@
                             Spacing="0"
                             Margin="8,0,0,16"
                             IsVisible="{Binding !IsSidebarCollapsed}">
-                    <Button Command="{Binding ToggleSidebarCommand}"
+                    <Button AutomationProperties.Name="Collapse Sidebar" Command="{Binding ToggleSidebarCommand}"
                             Classes="liquid-glass collapsed-icon"
                             ToolTip.Tip="Collapse Sidebar"
                             ClickMode="Press">
@@ -614,7 +617,7 @@
 
                 <StackPanel Spacing="6" Margin="0,0,0,12" IsVisible="{Binding IsSidebarCollapsed}">
 
-                    <Button Command="{Binding ToggleSidebarCommand}"
+                    <Button AutomationProperties.Name="Expand Sidebar" Command="{Binding ToggleSidebarCommand}"
                             Classes="liquid-glass collapsed-icon"
                             ToolTip.Tip="Expand Sidebar"
                             HorizontalAlignment="Center"
@@ -628,7 +631,7 @@
                               Height="13"/>
                     </Button>
 
-                    <Button Command="{Binding ShowDashboardCommand}"
+                    <Button AutomationProperties.Name="Dashboard" Command="{Binding ShowDashboardCommand}"
                             Classes="liquid-glass collapsed-icon"
                             Classes.active="{Binding IsShowingDashboard}"
                             ToolTip.Tip="Dashboard"
@@ -643,7 +646,7 @@
                         </Viewbox>
                     </Button>
 
-                    <Button Command="{Binding ShowPasswordsCommand}"
+                    <Button AutomationProperties.Name="Passwords" Command="{Binding ShowPasswordsCommand}"
                             Classes="liquid-glass collapsed-icon"
                             Classes.active="{Binding IsShowingPasswords}"
                             ToolTip.Tip="Passwords"
@@ -658,7 +661,7 @@
                               Fill="Transparent"/>
                     </Button>
 
-                    <Button Command="{Binding OpenPasswordHealthPanelCommand}"
+                    <Button AutomationProperties.Name="Password Health" Command="{Binding OpenPasswordHealthPanelCommand}"
                             Classes="liquid-glass collapsed-icon"
                             ToolTip.Tip="Password Health"
                             HorizontalAlignment="Center"
@@ -672,7 +675,7 @@
                               Fill="Transparent"/>
                     </Button>
 
-                    <Button Command="{Binding ManageCategoriesCommand}"
+                    <Button AutomationProperties.Name="Category Manager" Command="{Binding ManageCategoriesCommand}"
                             Classes="liquid-glass collapsed-icon"
                             ToolTip.Tip="Category Manager"
                             HorizontalAlignment="Center"
@@ -686,7 +689,7 @@
                               Fill="Transparent"/>
                     </Button>
 
-                    <Button x:Name="ToggleRecoveryPanelButton"
+                    <Button AutomationProperties.Name="Recovery" x:Name="ToggleRecoveryPanelButton"
                             Click="OnToggleRecoveryPanelClick"
                             Classes="liquid-glass collapsed-icon"
                             ToolTip.Tip="Recovery • Click to toggle Recovery panel"
@@ -697,7 +700,7 @@
                                           Width="21" Height="21" IconColor="{DynamicResource PrimaryTextBrush}" />
                     </Button>
 
-                    <Button Command="{Binding DashboardViewModel.LaunchPhantomAttestorCommand}"
+                    <Button AutomationProperties.Name="Launch Phantom Attestor" Command="{Binding DashboardViewModel.LaunchPhantomAttestorCommand}"
                             Classes="liquid-glass collapsed-icon"
                             ToolTip.Tip="{Binding DashboardViewModel.AttestorStatus}"
                             IsEnabled="{Binding DashboardViewModel.IsAttestorAvailable}"
@@ -910,6 +913,7 @@
                     <ItemsControl Margin="0" IsVisible="{Binding IsChecked, ElementName=EntryTypeDropdownToggle}">
                         <Button Command="{Binding FilterByEntryTypeCommand}"
                                 CommandParameter="All"
+                                AutomationProperties.Name="Show all entry types"
                                 Classes="liquid-glass sidebar-filter-item"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
@@ -918,13 +922,16 @@
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
-                                <Path Data="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" StrokeLineCap="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <Viewbox Width="14" Height="14" VerticalAlignment="Center">
+                                    <Path Data="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" StrokeLineCap="Round" Stretch="Uniform"/>
+                                </Viewbox>
                                 <TextBlock Text="All Types" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 
                         <Button Command="{Binding FilterByEntryTypeCommand}"
                                 CommandParameter="Password"
+                                AutomationProperties.Name="Filter by Passwords"
                                 Classes="liquid-glass sidebar-filter-item"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
@@ -933,13 +940,16 @@
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
-                                <Path Data="M19 11h-1.5V7c0-2.76-2.24-5-5-5s-5 2.24-5 5v4H6c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h13c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2zm-9-4c0-1.66 1.34-3 3-3s3 1.34 3 3v4h-6V7z" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <Viewbox Width="14" Height="14" VerticalAlignment="Center">
+                                    <Path Data="M19 11h-1.5V7c0-2.76-2.24-5-5-5s-5 2.24-5 5v4H6c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h13c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2zm-9-4c0-1.66 1.34-3 3-3s3 1.34 3 3v4h-6V7z" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" Stretch="Uniform"/>
+                                </Viewbox>
                                 <TextBlock Text="Passwords" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 
                         <Button Command="{Binding FilterByEntryTypeCommand}"
                                 CommandParameter="CreditCard"
+                                AutomationProperties.Name="Filter by Credit Cards"
                                 Classes="liquid-glass sidebar-filter-item"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
@@ -948,13 +958,16 @@
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
-                                <Path Data="M3 6h18v12H3z M3 10h18" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" StrokeLineCap="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <Viewbox Width="14" Height="14" VerticalAlignment="Center">
+                                    <Path Data="M3 6h18v12H3z M3 10h18" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" StrokeLineCap="Round" Stretch="Uniform"/>
+                                </Viewbox>
                                 <TextBlock Text="Credit Cards" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 
                         <Button Command="{Binding FilterByEntryTypeCommand}"
                                 CommandParameter="BankAccount"
+                                AutomationProperties.Name="Filter by Bank Accounts"
                                 Classes="liquid-glass sidebar-filter-item"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
@@ -963,13 +976,16 @@
                                 Foreground="{DynamicResource PrimaryTextBrush}"
                                 Margin="6,2">
                             <StackPanel Orientation="Horizontal" Spacing="8" Margin="6,0,0,0">
-                                <Path Data="M3 5h18v14H3z" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" StrokeLineCap="Round" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <Viewbox Width="14" Height="14" VerticalAlignment="Center">
+                                    <Path Data="M3 5h18v14H3z" Stroke="{DynamicResource PrimaryTextBrush}" StrokeThickness="1.5" StrokeLineCap="Round" Stretch="Uniform"/>
+                                </Viewbox>
                                 <TextBlock Text="Bank Accounts" FontSize="{StaticResource Type.Label.Size}" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 
                         <Button Command="{Binding FilterByEntryTypeCommand}"
                                 CommandParameter="Identity"
+                                AutomationProperties.Name="Filter by Identity Documents"
                                 Classes="liquid-glass sidebar-filter-item"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
@@ -985,6 +1001,7 @@
 
                         <Button Command="{Binding FilterByEntryTypeCommand}"
                                 CommandParameter="ApiKey"
+                                AutomationProperties.Name="Filter by API Keys"
                                 Classes="liquid-glass sidebar-filter-item"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
@@ -1000,6 +1017,7 @@
 
                         <Button Command="{Binding FilterByEntryTypeCommand}"
                                 CommandParameter="WiFi"
+                                AutomationProperties.Name="Filter by WiFi Networks"
                                 Classes="liquid-glass sidebar-filter-item"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
@@ -1015,6 +1033,7 @@
 
                         <Button Command="{Binding FilterByEntryTypeCommand}"
                                 CommandParameter="Contact"
+                                AutomationProperties.Name="Filter by Contacts"
                                 Classes="liquid-glass sidebar-filter-item"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
@@ -1030,6 +1049,7 @@
 
                         <Button Command="{Binding FilterByEntryTypeCommand}"
                                 CommandParameter="PinCode"
+                                AutomationProperties.Name="Filter by PIN Codes"
                                 Classes="liquid-glass sidebar-filter-item"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Left"
@@ -1093,7 +1113,7 @@
                         </Grid>
                     </ToggleButton>
 
-                        <Button Grid.Column="1"
+                        <Button AutomationProperties.Name="Manage Categories" Grid.Column="1"
                                 Command="{Binding ManageCategoriesCommand}"
                                 Classes="liquid-glass collapsed-icon"
                                 Width="36" Height="36"

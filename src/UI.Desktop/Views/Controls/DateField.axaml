@@ -1,0 +1,54 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PhantomVault.UI.Views.Controls.DateField">
+
+    <UserControl.Styles>
+        <Style Selector="ComboBox.date-part">
+            <Setter Property="Height" Value="42"/>
+            <Setter Property="MinHeight" Value="42"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+        </Style>
+
+        <Style Selector="ComboBox.date-part /template/ ContentControl#ContentPresenter">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+        </Style>
+
+        <Style Selector="ComboBox.date-part TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid x:Name="PartsGrid" ColumnDefinitions="*,8,*,8,*">
+
+        <ComboBox x:Name="DayBox"
+                  Grid.Column="0"
+                  Classes="date-part"
+                  PlaceholderText="Day"
+                  SelectionChanged="OnPartChanged"
+                  AutomationProperties.Name="Day"/>
+
+        <ComboBox x:Name="MonthBox"
+                  Grid.Column="2"
+                  Classes="date-part"
+                  PlaceholderText="Month"
+                  SelectionChanged="OnPartChanged"
+                  AutomationProperties.Name="Month"/>
+
+        <ComboBox x:Name="YearBox"
+                  Grid.Column="4"
+                  Classes="date-part"
+                  PlaceholderText="Year"
+                  SelectionChanged="OnPartChanged"
+                  AutomationProperties.Name="Year"/>
+    </Grid>
+</UserControl>

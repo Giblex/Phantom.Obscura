@@ -134,8 +134,25 @@ namespace PhantomVault.UI.Views
             base.OnClosed(e);
         }
 
+        /// <summary>
+        /// Marshals to the UI thread before doing anything.
+        ///
+        /// The view model raises PropertyChanged from the USB detection worker, so this
+        /// handler — and every scroll animation it starts — used to run on a background
+        /// thread. Reading ScrollViewer.Offset from there throws "Call from invalid
+        /// thread", which is why the vault-picker auto-scroll silently failed at
+        /// startup. Dispatching here fixes all three animations at once, and because
+        /// the continuations then capture Avalonia's synchronisation context, the
+        /// awaits inside them come back on the UI thread too.
+        /// </summary>
         private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
+            if (!Dispatcher.UIThread.CheckAccess())
+            {
+                Dispatcher.UIThread.Post(() => OnViewModelPropertyChanged(sender, e));
+                return;
+            }
+
             if (_currentViewModel == null)
                 return;
 

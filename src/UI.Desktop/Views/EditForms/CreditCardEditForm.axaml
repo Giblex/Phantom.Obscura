@@ -1,52 +1,51 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:PhantomVault.UI.Views.Controls"
              x:Class="PhantomVault.UI.Views.EditForms.CreditCardEditForm">
 
     <Border x:Name="CreditCardPanelBorder" Background="Transparent" IsVisible="{Binding IsCreditCardEntry, FallbackValue=False}">
-        <StackPanel x:Name="CreditCardPanel" Spacing="12">
-        <TextBlock Text="Card Details" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-        <StackPanel Spacing="6">
-            <TextBlock Text="Cardholder Name" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding CardholderName}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="Name on card"/>
-        </StackPanel>
-        <StackPanel Spacing="6">
-            <TextBlock Text="Card Number" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding CardNumber}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="1234 5678 9012 3456"/>
-        </StackPanel>
-        <StackPanel Spacing="6">
-            <TextBlock Text="Card Type" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding CardType}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="Visa"/>
-        </StackPanel>
-        <Grid ColumnDefinitions="*,16,*">
-            <StackPanel Grid.Column="0" Spacing="6">
-                <TextBlock Text="Expiry Month" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                <TextBox Text="{Binding CardExpiryMonth}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="MM"/>
+        <StackPanel x:Name="CreditCardPanel" Spacing="14">
+
+            <TextBlock Text="Card Details" Classes="form-section-title"/>
+
+            <StackPanel Classes="field-group">
+                <TextBlock Text="Cardholder Name" Classes="field-label"/>
+                <TextBox Text="{Binding CardholderName}" Classes="form-field" Watermark="Name on card"/>
             </StackPanel>
-            <StackPanel Grid.Column="2" Spacing="6">
-                <TextBlock Text="Expiry Year" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                <TextBox Text="{Binding CardExpiryYear}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="YYYY"/>
+
+            <StackPanel Classes="field-group">
+                <TextBlock Text="Card Number" Classes="field-label"/>
+                <TextBox Text="{Binding CardNumber}" Classes="form-field" Watermark="1234 5678 9012 3456"/>
             </StackPanel>
-        </Grid>
-        <Grid ColumnDefinitions="*,16,*">
-            <StackPanel Grid.Column="0" Spacing="6">
-                <TextBlock Text="CVV" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding CardCVVSecure}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="123" PasswordChar="•"/>
-        </StackPanel>
-        <StackPanel Grid.Column="2" Spacing="6">
-            <TextBlock Text="PIN" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding CardPINSecure}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="0000" PasswordChar="•"/>
-        </StackPanel>
-        </Grid>
-        <StackPanel Spacing="6">
-            <TextBlock Text="Billing Address" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding CardBillingAddress}"
-                     AcceptsReturn="True"
-                     TextWrapping="Wrap"
-                     Height="80"
-                     FontSize="{StaticResource Type.Label.Size}"
-                     />
-        </StackPanel>
+
+            <StackPanel Classes="field-group">
+                <TextBlock Text="Card Type" Classes="field-label"/>
+                <TextBox Text="{Binding CardType}" Classes="form-field" Watermark="Visa"/>
+            </StackPanel>
+
+            <StackPanel Classes="field-group">
+                <TextBlock Text="Expiry" Classes="field-label"/>
+                <controls:DateField Mode="MonthYear"
+                                    MonthText="{Binding CardExpiryMonth, Mode=TwoWay}"
+                                    YearText="{Binding CardExpiryYear, Mode=TwoWay}"/>
+                <TextBlock Text="Pick the month and year printed on the card." Classes="field-hint"/>
+            </StackPanel>
+
+            <Grid ColumnDefinitions="*,14,*">
+                <StackPanel Grid.Column="0" Classes="field-group">
+                    <TextBlock Text="CVV" Classes="field-label"/>
+                    <TextBox Text="{Binding CardCVVSecure}" Classes="form-field" Watermark="123" PasswordChar="•"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Classes="field-group">
+                    <TextBlock Text="PIN" Classes="field-label"/>
+                    <TextBox Text="{Binding CardPINSecure}" Classes="form-field" Watermark="0000" PasswordChar="•"/>
+                </StackPanel>
+            </Grid>
+
+            <StackPanel Classes="field-group">
+                <TextBlock Text="Billing Address" Classes="field-label"/>
+                <TextBox Text="{Binding CardBillingAddress}" Classes="form-field-multiline" Height="84"/>
+            </StackPanel>
         </StackPanel>
     </Border>
 </UserControl>
-

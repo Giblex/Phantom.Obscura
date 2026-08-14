@@ -28,7 +28,7 @@
                     <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
                 </TextBox.Effect>
             </TextBox>
-            <Button Grid.Column="1"
+            <Button AutomationProperties.Name="Open in browser" Grid.Column="1"
                     Command="{Binding OpenUrlCommand}"
                     CommandParameter="{Binding SelectedCredential}"
                     Classes="liquid-glass"

@@ -7,7 +7,7 @@ using PhantomVault.UI.ViewModels;
 namespace PhantomVault.UI.Views
 {
 
-    public partial class RecoveryWindow : Window
+    public partial class RecoveryWindow : ThemeAwareWindow
     {
         public RecoveryWindow()
         {

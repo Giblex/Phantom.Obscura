@@ -2,38 +2,34 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="PhantomVault.UI.Views.EditForms.ContactEditForm">
 
-    <StackPanel Spacing="12" IsVisible="{Binding IsContactEntry}">
-        <TextBlock Text="Contact" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-        <StackPanel Spacing="6">
-            <TextBlock Text="Full Name" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding ContactFullName}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="Jane Doe"/>
+    <StackPanel Spacing="14" IsVisible="{Binding IsContactEntry}">
+        <TextBlock Text="Contact" Classes="form-section-title"/>
+        <StackPanel Classes="field-group">
+            <TextBlock Text="Full Name" Classes="field-label"/>
+            <TextBox Text="{Binding ContactFullName}" Classes="form-field" Watermark="Jane Doe"/>
         </StackPanel>
-        <StackPanel Spacing="6">
-            <TextBlock Text="Email" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding ContactEmail}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="user@example.com"/>
+        <StackPanel Classes="field-group">
+            <TextBlock Text="Email" Classes="field-label"/>
+            <TextBox Text="{Binding ContactEmail}" Classes="form-field" Watermark="user@example.com"/>
         </StackPanel>
-        <StackPanel Spacing="6">
-            <TextBlock Text="Phone" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding ContactPhone}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="+1 555 123 4567"/>
+        <StackPanel Classes="field-group">
+            <TextBlock Text="Phone" Classes="field-label"/>
+            <TextBox Text="{Binding ContactPhone}" Classes="form-field" Watermark="+1 555 123 4567"/>
         </StackPanel>
-        <Grid ColumnDefinitions="*,16,*">
-            <StackPanel Grid.Column="0" Spacing="6">
-                <TextBlock Text="Company" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                <TextBox Text="{Binding ContactCompany}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="Contoso"/>
+        <Grid ColumnDefinitions="*,14,*">
+            <StackPanel Grid.Column="0" Classes="field-group">
+                <TextBlock Text="Company" Classes="field-label"/>
+                <TextBox Text="{Binding ContactCompany}" Classes="form-field" Watermark="Contoso"/>
             </StackPanel>
-            <StackPanel Grid.Column="2" Spacing="6">
-                <TextBlock Text="Job Title" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                <TextBox Text="{Binding ContactJobTitle}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="CTO"/>
+            <StackPanel Grid.Column="2" Classes="field-group">
+                <TextBlock Text="Job Title" Classes="field-label"/>
+                <TextBox Text="{Binding ContactJobTitle}" Classes="form-field" Watermark="CTO"/>
             </StackPanel>
         </Grid>
-        <StackPanel Spacing="6">
-            <TextBlock Text="Address" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+        <StackPanel Classes="field-group">
+            <TextBlock Text="Address" Classes="field-label"/>
             <TextBox Text="{Binding ContactAddress}"
-                     AcceptsReturn="True"
-                     TextWrapping="Wrap"
-                     Height="80"
-                     FontSize="{StaticResource Type.Label.Size}"
-                     />
+                     Classes="form-field-multiline" Height="80"/>
         </StackPanel>
     </StackPanel>
 </UserControl>

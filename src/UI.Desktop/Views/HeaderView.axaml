@@ -90,6 +90,8 @@
         <Style Selector="Button#ActionsMenuButton.menu-open /template/ controls|BorderEnergyTrace">
             <Setter Property="Opacity" Value="0"/>
         </Style>
+        <!-- Menu-open state intentionally does not override the button's appearance,
+             so the dropdown toggle looks the same whether the menu is closed or open. -->
         <Style Selector="Button#ActionsMenuButton /template/ Border">
             <Setter Property="Transitions">
                 <Transitions>
@@ -136,20 +138,16 @@
                 </Transitions>
             </Setter>
         </Style>
-        <!-- Menu-open state keeps the button's normal fully-rounded shape.
-             (Previously flattened bottom corners here in 9 different selectors
-             to fake a seamless join with the flyout — that fake seam is what
-             produced the black-line/mismatched-corner artefacts.) -->
-        <Style Selector="Button#ActionsMenuButton.menu-open">
-            <Setter Property="BorderBrush" Value="#99D8E6F2"/>
-        </Style>
+        <!-- Menu-open state — no styling override. Button looks identical
+             whether the menu is open or closed. -->
+
     </UserControl.Styles>
 
     <Border Classes="header-surface"
             Background="{DynamicResource HeaderPrimaryBrush}"
             Padding="{StaticResource DialogPadding}"
-            BorderBrush="{DynamicResource HeaderBorderBrush}"
-            BorderThickness="0,0,0,1"
+            BorderBrush="#4013758C"
+            BorderThickness="1,0,1,1"
             CornerRadius="0,0,12,12"
             ClipToBounds="True"
             Effect="{x:Null}">
@@ -201,7 +199,8 @@
                     IsHitTestVisible="False"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
-                    Margin="-24,-16,-24,-16">
+                    Margin="-24,-16,-24,-16"
+                    RenderOptions.BitmapInterpolationMode="None">
                 <Border.Background>
                     <ImageBrush Source="avares://PhantomVault.UI/Assets/dot_pattern.png"
                                 TileMode="Tile"
@@ -270,6 +269,7 @@
                                 VerticalContentAlignment="Center"
                                 Margin="0,0,4,0"
                                 ToolTip.Tip="Clear search"
+                                AutomationProperties.Name="Clear search"
                                 IsVisible="{Binding HasSearchText}">
                             <Path Data="{StaticResource Icon.X}"
                                   Width="14"
@@ -291,6 +291,7 @@
                         CornerRadiusValue="12"
                         PaddingOverride="8,12,8,8"
                         ToolTipText="Toggle list/grid view"
+                        AutomationProperties.Name="Toggle list or grid view"
                         IsVisible="{Binding !IsShowingSecureTrash}">
                     <controls:LiquidGlassButton.ButtonContent>
 
@@ -334,7 +335,8 @@
                         Padding="0"
                         HorizontalContentAlignment="Center"
                         VerticalContentAlignment="Center"
-                        ToolTip.Tip="Actions menu">
+                        ToolTip.Tip="Actions menu"
+                        AutomationProperties.Name="Add credential or actions menu">
 
                     <Button.Styles>
 
@@ -342,9 +344,6 @@
                              (Previously flattened its bottom corners to fake a seamless
                              join with the dropdown, but that showed a hard seam / dark
                              line whenever the two backgrounds didn't match perfectly.) -->
-                        <Style Selector="Button.menu-open /template/ Border#BaseBorder">
-                            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
-                        </Style>
                     </Button.Styles>
                     <Button.Flyout>
                         <!-- VerticalOffset was 6 — a visible gap that broke the intended
@@ -404,6 +403,7 @@
                                             Classes="liquid-glass"
                                             HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Left"
+                                            AutomationProperties.Name="Add Login or Password"
                                             Padding="12,8">
                                         <TextBlock Text="→ Login / Password" FontSize="{StaticResource Type.Small.Size}"/>
                                     </Button>
@@ -411,6 +411,7 @@
                                             Classes="liquid-glass"
                                             HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Left"
+                                            AutomationProperties.Name="Add Credit Card"
                                             Padding="12,8">
                                         <TextBlock Text="→ Credit Card" FontSize="{StaticResource Type.Small.Size}"/>
                                     </Button>
@@ -418,6 +419,7 @@
                                             Classes="liquid-glass"
                                             HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Left"
+                                            AutomationProperties.Name="Add Bank Account"
                                             Padding="12,8">
                                         <TextBlock Text="→ Bank Account" FontSize="{StaticResource Type.Small.Size}"/>
                                     </Button>
@@ -425,6 +427,7 @@
                                             Classes="liquid-glass"
                                             HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Left"
+                                            AutomationProperties.Name="Add Identity or Document"
                                             Padding="12,8">
                                         <TextBlock Text="→ Identity / Document" FontSize="{StaticResource Type.Small.Size}"/>
                                     </Button>
@@ -432,6 +435,7 @@
                                             Classes="liquid-glass"
                                             HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Left"
+                                            AutomationProperties.Name="Add Secure Note"
                                             Padding="12,8">
                                         <TextBlock Text="→ Secure Note" FontSize="{StaticResource Type.Small.Size}"/>
                                     </Button>
@@ -439,6 +443,7 @@
                                             Classes="liquid-glass"
                                             HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Left"
+                                            AutomationProperties.Name="Add WiFi Network"
                                             Padding="12,8">
                                         <TextBlock Text="→ WiFi Network" FontSize="{StaticResource Type.Small.Size}"/>
                                     </Button>
@@ -446,6 +451,7 @@
                                             Classes="liquid-glass"
                                             HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Left"
+                                            AutomationProperties.Name="Add API Key"
                                             Padding="12,8">
                                         <TextBlock Text="→ API Key" FontSize="{StaticResource Type.Small.Size}"/>
                                     </Button>
@@ -453,6 +459,7 @@
                                             Classes="liquid-glass"
                                             HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Left"
+                                            AutomationProperties.Name="Add Contact or Personal Info"
                                             Padding="12,8">
                                         <TextBlock Text="→ Contact / Personal Info" FontSize="{StaticResource Type.Small.Size}"/>
                                     </Button>
@@ -460,8 +467,18 @@
                                             Classes="liquid-glass"
                                             HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Left"
+                                            AutomationProperties.Name="Add PIN Code"
                                             Padding="12,8">
                                         <TextBlock Text="→ PIN Code" FontSize="{StaticResource Type.Small.Size}"/>
+                                    </Button>
+                                    <Button Command="{Binding AddBlankEntryCommand}"
+                                            Classes="liquid-glass"
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left"
+                                            AutomationProperties.Name="Add blank entry built from sections"
+                                            ToolTip.Tip="Start from nothing and build the entry out of whichever sections you want"
+                                            Padding="12,8">
+                                        <TextBlock Text="→ Blank / Custom Entry" FontSize="{StaticResource Type.Small.Size}"/>
                                     </Button>
 
                                     <Separator Margin="0,8" Background="{DynamicResource ControlBorderBrush}"/>
@@ -475,6 +492,7 @@
                                             Classes="liquid-glass"
                                             HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Left"
+                                            AutomationProperties.Name="Open Password Generator"
                                             Padding="12,10">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
                                             <Path Data="{StaticResource Icon.Key}"
@@ -491,6 +509,7 @@
                                             Classes="liquid-glass"
                                             HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Left"
+                                            AutomationProperties.Name="Open Security Dashboard"
                                             Padding="12,10">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
                                             <Path Data="{StaticResource Icon.Shield}"
@@ -507,6 +526,7 @@
                                             Classes="liquid-glass"
                                             HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Left"
+                                            AutomationProperties.Name="Lock Vault"
                                             Padding="12,10">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
                                             <Path Data="{StaticResource Icon.Lock}"
@@ -528,15 +548,8 @@
                                     Width="48"
                                     Height="14"
                                     Margin="0,-10,-1,0"
-                                    IsHitTestVisible="False">
-                                <Border.Background>
-                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                                        <GradientStop Color="#FF0E1828" Offset="0"/>
-                                        <GradientStop Color="#FF0E1828" Offset="0.55"/>
-                                        <GradientStop Color="#EB0E1828" Offset="1"/>
-                                    </LinearGradientBrush>
-                                </Border.Background>
-                            </Border>
+                                    IsHitTestVisible="False"
+                                    Background="{DynamicResource HeaderBackgroundBrush}"/>
                             </Grid>
                         </Flyout>
                     </Button.Flyout>
@@ -566,7 +579,8 @@
                         CornerRadius="{StaticResource Radius.Lg}"
                         HorizontalContentAlignment="Center"
                         VerticalContentAlignment="Center"
-                        ToolTip.Tip="Vault settings">
+                        ToolTip.Tip="Vault settings"
+                        AutomationProperties.Name="Vault settings">
                     <Grid Width="22" Height="22">
                         <Viewbox Width="22" Height="22"
                                  HorizontalAlignment="Center"

@@ -9,9 +9,13 @@ namespace PhantomVault.Core.Services.Security
     public sealed class ClipboardGuard : IClipboardGuard
     {
         private readonly IDefenceEngine? _defenceEngine;
+        private readonly IDefenceSettingsService? _defenceSettings;
         private readonly ILogger<ClipboardGuard>? _logger;
         private readonly List<CopyEvent> _copyEvents = new();
         private readonly object _lock = new();
+
+        // Rule id shared with SecuritySettingsViewModel.IsClipboardGuardEnabled.
+        private const string RuleId = "clipboard-guard";
 
         private const int MaxCopiesPerMinute = 25;
         private static readonly TimeSpan SlidingWindow = TimeSpan.FromMinutes(1);
@@ -19,14 +23,22 @@ namespace PhantomVault.Core.Services.Security
 
         private DateTimeOffset? _cooldownUntil;
 
-        public ClipboardGuard(IDefenceEngine? defenceEngine = null, ILogger<ClipboardGuard>? logger = null)
+        public ClipboardGuard(
+            IDefenceEngine? defenceEngine = null,
+            IDefenceSettingsService? defenceSettings = null,
+            ILogger<ClipboardGuard>? logger = null)
         {
             _defenceEngine = defenceEngine;
+            _defenceSettings = defenceSettings;
             _logger = logger;
         }
 
+        private bool IsEnabled => _defenceSettings?.GetRuleEnabled(RuleId) ?? true;
+
         public bool CanCopy()
         {
+            if (!IsEnabled) return true;
+
             lock (_lock)
             {
                 if (_cooldownUntil.HasValue && DateTimeOffset.UtcNow < _cooldownUntil.Value)
@@ -41,6 +53,8 @@ namespace PhantomVault.Core.Services.Security
 
         public void RegisterCopy(string entryId)
         {
+            if (!IsEnabled) return;
+
             lock (_lock)
             {
                 var now = DateTimeOffset.UtcNow;

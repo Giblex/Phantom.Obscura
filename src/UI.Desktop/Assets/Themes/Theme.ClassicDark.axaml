@@ -36,8 +36,8 @@
     <SolidColorBrush x:Key="AccentBrush" Color="#556C83"/>
     <SolidColorBrush x:Key="AccentHoverBrush" Color="#647D94"/>
     <SolidColorBrush x:Key="SecondaryAccentBrush" Color="#6FA89F"/>
-    <SolidColorBrush x:Key="Brush.Accent" Color="{StaticResource Color.Accent}"/>
-    <SolidColorBrush x:Key="Brush.AccentHover" Color="{StaticResource Color.AccentHover}"/>
+    <SolidColorBrush x:Key="Brush.Accent" Color="{DynamicResource Color.Accent}"/>
+    <SolidColorBrush x:Key="Brush.AccentHover" Color="{DynamicResource Color.AccentHover}"/>
     <SolidColorBrush x:Key="Brush.BorderSoft" Color="#556C83"/>
 
     <Color x:Key="PrimaryTextColor">#FFFFFF</Color>
@@ -313,5 +313,17 @@
     <Color x:Key="DashboardTileHoverBorderColor">#55CFE8FF</Color>
     <Color x:Key="DashboardAcrylicTint">#14203A</Color>
     <Color x:Key="DashboardAcrylicFallback">#0C15253A</Color>
-</ResourceDictionary>
 
+    <!-- Surface overlay + header tokens derived from this theme's own palette.
+
+         These were previously defined only in the app-level PhantomTheme fallback, so
+         they never re-tinted with the selected skin — and because that fallback is
+         chosen by the light/dark variant rather than by the skin, a light skin could
+         receive dark-theme overlay values and render hover states invisibly. -->
+    <SolidColorBrush x:Key="SubtleBrush" Color="#18FFFFFF"/>
+    <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#22FFFFFF"/>
+    <SolidColorBrush x:Key="SurfaceActiveBrush" Color="#33FFFFFF"/>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#2C3B4B"/>
+    <SolidColorBrush x:Key="HeaderPrimaryBrush" Color="#35475B"/>
+
+</ResourceDictionary>

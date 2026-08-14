@@ -494,7 +494,7 @@ namespace PhantomVault.UI.ViewModels
                                         var cb = TopLevel.GetTopLevel(OwnerWindow)?.Clipboard;
                                         if (cb != null)
                                         {
-                                            var current = await cb.GetTextAsync();
+                                            var current = await cb.TryGetTextAsync();
                                             if (current == copiedSecret)
                                                 await cb.SetTextAsync(string.Empty);
                                         }

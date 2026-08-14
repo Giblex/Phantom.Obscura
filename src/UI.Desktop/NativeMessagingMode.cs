@@ -88,9 +88,61 @@ namespace PhantomVault.UI
 
             var host = new NativeMessagingHostService(repo, ctx, origins, syncBridge);
 
+            // Relay submitted logins to the desktop app so it can offer to save them.
+            // The extension has always emitted submitForm and this host has always
+            // re-raised it as FormSubmitted, but nothing carried it across the process
+            // boundary, so the event fired into the void and nothing was ever offered.
+            host.FormSubmitted += (_, e) =>
+            {
+                try
+                {
+                    var password = e.Fields.FirstOrDefault(f =>
+                        string.Equals(f.Type, "password", StringComparison.OrdinalIgnoreCase)
+                        && !string.IsNullOrEmpty(f.Value))?.Value;
+
+                    // Without a password this was a search or first-stage form.
+                    if (string.IsNullOrEmpty(password)) return;
+
+                    var username = e.Fields.FirstOrDefault(f =>
+                        !string.Equals(f.Type, "password", StringComparison.OrdinalIgnoreCase)
+                        && !string.IsNullOrEmpty(f.Value)
+                        && (string.Equals(f.Type, "email", StringComparison.OrdinalIgnoreCase)
+                            || LooksLikeUsername(f)))?.Value
+                        ?? e.Fields.FirstOrDefault(f =>
+                            !string.Equals(f.Type, "password", StringComparison.OrdinalIgnoreCase)
+                            && !string.IsNullOrEmpty(f.Value))?.Value
+                        ?? string.Empty;
+
+                    var payload = JsonSerializer.Serialize(new
+                    {
+                        action = "credentialSubmitted",
+                        url = e.Url,
+                        username,
+                        password
+                    });
+
+                    // Fire and forget: the browser must not be held up waiting for a
+                    // prompt the user may never answer.
+                    _ = pipeClient.SendAsync(payload);
+                }
+                catch (Exception ex)
+                {
+                    // Never log the payload — it holds a live password.
+                    Log.Warning(ex, "NativeMessagingMode: failed to relay submitted credential");
+                }
+            };
+
             Log.Information("NativeMessagingMode: starting stdin/stdout message loop");
             await host.StartAsync(CancellationToken.None);
             Log.Information("NativeMessagingMode: message loop exited");
+        }
+
+        /// <summary>Descriptor heuristics for the account field on a login form.</summary>
+        private static bool LooksLikeUsername(PhantomVault.Core.Services.Autofill.FormFieldInfo f)
+        {
+            var d = $"{f.Id} {f.Name} {f.AutoComplete} {f.Label} {f.Placeholder}".ToLowerInvariant();
+            return d.Contains("user") || d.Contains("email") || d.Contains("login")
+                   || d.Contains("account") || d.Contains("identifier");
         }
 
         // DPAPI-sealed origins live next to the legacy plaintext path. On first run after

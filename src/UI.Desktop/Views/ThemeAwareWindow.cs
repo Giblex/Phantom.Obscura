@@ -10,6 +10,7 @@ namespace PhantomVault.UI.Views
     {
 
         private const string ReduceMotionClass = "reduce-motion";
+        private const string ReduceTransparencyClass = "reduce-transparency";
 
         private EventHandler? _accessibilityHandler;
 
@@ -48,22 +49,27 @@ namespace PhantomVault.UI.Views
         {
             try
             {
-                var reduce = AccessibilityService.Instance.ReduceMotion;
-                if (reduce)
-                {
-                    if (!Classes.Contains(ReduceMotionClass))
-                    {
-                        Classes.Add(ReduceMotionClass);
-                    }
-                }
-                else
-                {
-                    Classes.Remove(ReduceMotionClass);
-                }
+                ToggleClass(ReduceMotionClass, AccessibilityService.Instance.ReduceMotion);
+                ToggleClass(ReduceTransparencyClass, AccessibilityService.Instance.ReduceTransparency);
             }
             catch
             {
 
+            }
+        }
+
+        private void ToggleClass(string className, bool enabled)
+        {
+            if (enabled)
+            {
+                if (!Classes.Contains(className))
+                {
+                    Classes.Add(className);
+                }
+            }
+            else
+            {
+                Classes.Remove(className);
             }
         }
 

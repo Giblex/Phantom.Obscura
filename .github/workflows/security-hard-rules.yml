@@ -11,21 +11,43 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Reject PHANTOM_DEV_BYPASS_POLICY without #if !DEBUG guard
+      - name: Reject PHANTOM_DEV_BYPASS_POLICY outside a DEBUG-conditional block
         shell: bash
         run: |
           set -euo pipefail
-          BAD=$(grep -RIn --include='*.cs' 'PHANTOM_DEV_BYPASS_POLICY' src || true)
-          if [ -n "$BAD" ]; then
-            echo "$BAD" | while IFS= read -r line; do
-              file=$(echo "$line" | cut -d: -f1)
-              # Each occurrence must live inside a #if !DEBUG block.
-              if ! awk '/#if !DEBUG/{flag=1} /#endif/{flag=0} flag && /PHANTOM_DEV_BYPASS_POLICY/{found=1} END{exit !found}' "$file"; then
-                echo "::error file=$file::PHANTOM_DEV_BYPASS_POLICY appears outside a #if !DEBUG block"
-                exit 1
-              fi
-            done
-          fi
+          # The dev policy bypass must never survive into a Release build. Both
+          # halves of that are legitimate: the bypass itself lives under
+          # "#if DEBUG", and the refuse-to-start guard lives under "#if !DEBUG".
+          # What is forbidden is an *unconditional* mention, which would compile
+          # into Release. Requiring "#if !DEBUG" specifically (the previous rule)
+          # rejected the correctly-guarded bypass in Program.cs.
+          #
+          # The old loop also piped into "while read", so its "exit 1" only left
+          # a subshell and the step passed regardless. FAILED is checked at the end.
+          FILES=$(grep -RIl --include='*.cs' 'PHANTOM_DEV_BYPASS_POLICY' src || true)
+          FAILED=0
+          for file in $FILES; do
+            if ! awk '
+              /^[[:space:]]*#if/ {
+                stack[++top] = ($0 ~ /#if[[:space:]]+!?[[:space:]]*DEBUG[[:space:]]*$/) ? 1 : 0
+                if (stack[top]) { dbg++ }
+                next
+              }
+              /^[[:space:]]*#endif/ {
+                if (top > 0) { if (stack[top]) { dbg-- } ; top-- }
+                next
+              }
+              /PHANTOM_DEV_BYPASS_POLICY/ && dbg == 0 {
+                printf "  line %d: %s\n", NR, $0
+                bad = 1
+              }
+              END { exit bad }
+            ' "$file"; then
+              echo "::error file=$file::PHANTOM_DEV_BYPASS_POLICY appears outside a #if DEBUG / #if !DEBUG block"
+              FAILED=1
+            fi
+          done
+          [ "$FAILED" -eq 0 ]
 
       - name: Reject System.Random in src
         shell: bash
@@ -33,6 +55,13 @@ jobs:
           set -euo pipefail
           if grep -RIn --include='*.cs' -E '\bnew[[:space:]]+Random\(' src; then
             echo "::error::System.Random is forbidden — use RandomNumberGenerator"
+            exit 1
+          fi
+          # Also reject Random.Shared (non-cryptographic, same risk as new Random()).
+          # Only whole-line comments are exempt — "grep -v '// '" also let through
+          # a real call that happened to carry a trailing comment.
+          if grep -RIn --include='*.cs' 'Random\.Shared' src | grep -vE '^[^:]*:[0-9]+:[[:space:]]*(//|\*|/\*)'; then
+            echo "::error::Random.Shared is forbidden in src — use RandomNumberGenerator"
             exit 1
           fi
 

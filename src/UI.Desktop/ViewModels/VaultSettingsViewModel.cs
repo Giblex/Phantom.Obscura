@@ -17,6 +17,7 @@ using PhantomVault.Core.Models;
 using PhantomVault.UI.Services;
 using PhantomVault.UI.Views;
 using PhantomVault.Core.Services;
+using PhantomVault.Core.Utils;
 using System.Net.Http;
 using System.Security.Cryptography;
 using Serilog;
@@ -1465,15 +1466,16 @@ namespace PhantomVault.UI.ViewModels
             {
                 await Task.Run(() =>
                 {
-                    var manifest = manifestService.ReadManifest(
+                    using var backupPassphrase = SecurePassword.FromString(passphrase);
+                    var manifest = manifestService.ReadManifestSecure(
                         manifestPath,
-                        string.IsNullOrEmpty(passphrase) ? null : passphrase,
+                        backupPassphrase,
                         string.IsNullOrEmpty(keyfilePath) ? null : keyfilePath);
                     manifest.AutoBackupEnabled = value;
-                    manifestService.WriteManifest(
+                    manifestService.WriteManifestSecure(
                         manifest,
                         manifestPath,
-                        string.IsNullOrEmpty(passphrase) ? null : passphrase,
+                        backupPassphrase,
                         string.IsNullOrEmpty(keyfilePath) ? null : keyfilePath);
                 });
 
@@ -1620,9 +1622,10 @@ namespace PhantomVault.UI.ViewModels
 
             try
             {
-                var manifest = manifestService.ReadManifest(
+                using var passkeyPassphrase = SecurePassword.FromString(passphrase);
+                var manifest = manifestService.ReadManifestSecure(
                     manifestPath,
-                    string.IsNullOrEmpty(passphrase) ? null : passphrase,
+                    passkeyPassphrase,
                     string.IsNullOrEmpty(keyfilePath) ? null : keyfilePath);
 
                 CanManagePasskeys = true;
@@ -1779,7 +1782,8 @@ namespace PhantomVault.UI.ViewModels
                     VaultManifest manifest;
                     try
                     {
-                        manifest = manifestService.ReadManifest(manifestPath, string.IsNullOrEmpty(passphrase) ? null : passphrase, string.IsNullOrEmpty(keyfilePath) ? null : keyfilePath);
+                        using var readPassphrase = SecurePassword.FromString(passphrase);
+                        manifest = manifestService.ReadManifestSecure(manifestPath, readPassphrase, string.IsNullOrEmpty(keyfilePath) ? null : keyfilePath);
                     }
                     catch (Exception ex)
                     {
@@ -1894,7 +1898,8 @@ namespace PhantomVault.UI.ViewModels
                     try
                     {
                         UpdateBusyStatus("Saving vault manifest…", "Encrypting and writing the updated manifest.", progress: 75, indeterminate: false);
-                        manifestService.WriteManifest(manifest, manifestPath, string.IsNullOrEmpty(passphrase) ? null : passphrase, string.IsNullOrEmpty(keyfilePath) ? null : keyfilePath);
+                        using var writePassphrase = SecurePassword.FromString(passphrase);
+                        manifestService.WriteManifestSecure(manifest, manifestPath, writePassphrase, string.IsNullOrEmpty(keyfilePath) ? null : keyfilePath);
                     }
                     catch (Exception ex)
                     {
@@ -2065,9 +2070,10 @@ namespace PhantomVault.UI.ViewModels
 
                                 if (manifestService != null && File.Exists(manifestPath))
                                 {
-                                    var manifest = manifestService.ReadManifest(
+                                    using var totpStatePassphrase = SecurePassword.FromString(passphrase);
+                                    var manifest = manifestService.ReadManifestSecure(
                                         manifestPath,
-                                        string.IsNullOrWhiteSpace(passphrase) ? null : passphrase,
+                                        totpStatePassphrase,
                                         string.IsNullOrWhiteSpace(keyfilePath) ? null : keyfilePath);
 
                                     if (!string.IsNullOrEmpty(manifest?.TotpSecret))
@@ -2143,9 +2149,10 @@ namespace PhantomVault.UI.ViewModels
                 throw new InvalidOperationException("Cannot save TOTP: manifest service unavailable.");
             }
 
-            var manifest = manifestService.ReadManifest(
+            using var totpPassphrase = SecurePassword.FromString(passphrase);
+            var manifest = manifestService.ReadManifestSecure(
                 manifestPath,
-                string.IsNullOrWhiteSpace(passphrase) ? null : passphrase,
+                totpPassphrase,
                 string.IsNullOrWhiteSpace(keyfilePath) ? null : keyfilePath);
 
             if (manifest == null)
@@ -2156,10 +2163,10 @@ namespace PhantomVault.UI.ViewModels
             manifest.TotpSecret = totpSecret;
             manifest.RequiresTotp = true;
 
-            manifestService.WriteManifest(
+            manifestService.WriteManifestSecure(
                 manifest,
                 manifestPath,
-                string.IsNullOrWhiteSpace(passphrase) ? null : passphrase,
+                totpPassphrase,
                 string.IsNullOrWhiteSpace(keyfilePath) ? null : keyfilePath);
 
             await System.Threading.Tasks.Task.CompletedTask;
@@ -2222,8 +2229,9 @@ namespace PhantomVault.UI.ViewModels
                         VaultManifest manifest;
                         try
                         {
-                            manifest = manifestService.ReadManifest(manifestPath,
-                                string.IsNullOrEmpty(passphrase) ? null : passphrase,
+                            using var totpCodesPassphrase = SecurePassword.FromString(passphrase);
+                            manifest = manifestService.ReadManifestSecure(manifestPath,
+                                totpCodesPassphrase,
                                 string.IsNullOrEmpty(keyfilePath) ? null : keyfilePath);
                         }
                         catch (Exception ex)
@@ -2303,9 +2311,10 @@ namespace PhantomVault.UI.ViewModels
                     {
                         try
                         {
-                            var manifest = manifestService.ReadManifest(
+                            using var categoryPassphrase = SecurePassword.FromString(passphrase);
+                            var manifest = manifestService.ReadManifestSecure(
                                 manifestPath,
-                                string.IsNullOrWhiteSpace(passphrase) ? null : passphrase,
+                                categoryPassphrase,
                                 string.IsNullOrWhiteSpace(keyfilePath) ? null : keyfilePath);
 
                             newViewModel = new CategoryManagerViewModel(manifestService, manifest, manifestPath, _vaultViewModel, passphrase, keyfilePath);

@@ -68,7 +68,7 @@
                                                       OnContent="Allowed"
                                                       OffContent="Blocked"
                                                       VerticalAlignment="Center"/>
-                                        <Button Grid.Column="3"
+                                        <Button AutomationProperties.Name="Revoke permission" Grid.Column="3"
                                                 Content="✕"
                                                 Width="30" Height="30"
                                                 Padding="0"

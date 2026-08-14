@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using PhantomVault.UI.ViewModels.PhantomKey;
+using PhantomVault.UI.Views;
 
 namespace PhantomVault.UI.Views.PhantomKey;
 
@@ -11,7 +12,7 @@ namespace PhantomVault.UI.Views.PhantomKey;
 /// Obscura wants to expose the flow — settings screen, setup wizard step,
 /// header launcher menu.
 /// </summary>
-public partial class PhantomKeyUnlockDialog : Window
+public partial class PhantomKeyUnlockDialog : ThemeAwareWindow
 {
     public PhantomKeyUnlockDialog()
     {

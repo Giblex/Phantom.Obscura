@@ -7,13 +7,13 @@
         x:Class="PhantomVault.UI.Views.VaultUnlockWindow"
         x:DataType="vm:VaultUnlockViewModel"
         Title="Unlocking Vault"
-        Width="520"
-        Height="440"
-        MinWidth="450"
-        MinHeight="380"
+        Width="320"
+        Height="320"
         CanResize="False"
+        SystemDecorations="None"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent"
         WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource WindowBackgroundBrush}"
         AutomationProperties.Name="Vault Unlock Progress Window"
         AutomationProperties.HelpText="This window shows the progress of unlocking your secure vault"
         Classes="animated-window">
@@ -34,58 +34,45 @@
         <Style Selector="TextBlock">
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
         </Style>
-
-        <Style Selector="Window:not(.reduce-motion) Border.unlock-orb">
-            <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
-            <Style.Animations>
-                <Animation Duration="0:0:1.8" IterationCount="INFINITE" Easing="SineEaseInOut">
-                    <KeyFrame Cue="0%">
-                        <Setter Property="Opacity" Value="0.72"/>
-                    </KeyFrame>
-                    <KeyFrame Cue="50%">
-                        <Setter Property="Opacity" Value="1.0"/>
-                    </KeyFrame>
-                    <KeyFrame Cue="100%">
-                        <Setter Property="Opacity" Value="0.72"/>
-                    </KeyFrame>
-                </Animation>
-            </Style.Animations>
-        </Style>
-
         <Style Selector="Ellipse.unlock-ring">
             <Setter Property="Opacity" Value="0.95"/>
         </Style>
     </views:ThemeAwareWindow.Styles>
 
-    <Grid RowDefinitions="Auto,*,Auto" Margin="34,28">
+    <!-- Circular shell. The window itself is transparent and undecorated; this Border
+         is the entire visible dialog, sized a little beyond the 196px progress ring so
+         the ring stays the subject rather than floating in a large panel.
+         The title, subtitle, progress bar and footer that used to sit around it are
+         gone: the ring already encodes progress, and the status line carries the rest. -->
+    <Border x:Name="Shell"
+            Width="320" Height="320"
+            CornerRadius="160"
+            ClipToBounds="True"
+            BorderThickness="1"
+            BorderBrush="#3A5A7A">
+        <Border.Background>
+            <RadialGradientBrush Center="50%,38%" GradientOrigin="50%,38%" RadiusX="72%" RadiusY="72%">
+                <GradientStop Offset="0"   Color="#FF16273A"/>
+                <GradientStop Offset="1"   Color="#FF0C1622"/>
+            </RadialGradientBrush>
+        </Border.Background>
 
-        <StackPanel Grid.Row="0" Spacing="10" Margin="0,0,0,28">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
-                <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
-                       Width="32" Height="32" VerticalAlignment="Center"/>
-                <TextBlock Text="Unlocking Your Vault"
-                           FontSize="{StaticResource Type.H2.Size}"
-                           FontWeight="SemiBold"
-                           Foreground="{DynamicResource PrimaryTextBrush}"
-                           VerticalAlignment="Center"/>
-            </StackPanel>
-            <TextBlock Text="Please wait while we access your secure vault..."
-                       FontSize="{StaticResource Type.Body.Size}"
-                       Foreground="{DynamicResource MutedTextBrush}"
-                       HorizontalAlignment="Center"/>
-        </StackPanel>
+        <!-- Grid, not a StackPanel. In a stack the ring's position depends on the
+             height of the status text below it, so a message wrapping to a second
+             line shifted the ring and logo. Here the ring is centred in the circle
+             and the status is anchored to the bottom, so the logo never moves no
+             matter what the status says. -->
+        <Grid>
 
-        <StackPanel Grid.Row="1"
-                    Spacing="22"
-                    VerticalAlignment="Center">
-
-            <Grid Width="132" Height="132" HorizontalAlignment="Center" IsVisible="{Binding IsBusy}">
+            <Grid Width="196" Height="196"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center">
 
                 <Ellipse Classes="unlock-ring"
-                         Width="132" Height="132"
-                         StrokeThickness="5"
+                         Width="196" Height="196"
+                         StrokeThickness="7"
                          StrokeLineCap="Round"
-                         StrokeDashArray="{Binding ProgressPercent, Converter={StaticResource PercentToRingDashConverter}, ConverterParameter='132|5'}"
+                         StrokeDashArray="{Binding ProgressPercent, Converter={StaticResource PercentToRingDashConverter}, ConverterParameter='196|7'}"
                          RenderTransformOrigin="50%,50%">
                     <Ellipse.RenderTransform>
                         <RotateTransform Angle="-90"/>
@@ -101,53 +88,27 @@
 
                 <!-- Logo sits inside the loading ring — no circular tile behind it. -->
                 <Image Source="avares://PhantomVault.UI/Assets/ok.png"
-                       Width="80" Height="80"
+                       Width="104" Height="104"
                        HorizontalAlignment="Center"
                        VerticalAlignment="Center"/>
             </Grid>
 
+            <!-- Anchored to the bottom of the circle and constrained to the chord
+                 width at that height, so wrapped text cannot spill past the curve
+                 or push the ring around. -->
             <TextBlock Text="{Binding Status}"
-                       FontSize="{StaticResource Type.H4.Size}"
-                       Foreground="{DynamicResource PrimaryTextBrush}"
+                       VerticalAlignment="Bottom"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,26"
+                       FontSize="11.5"
+                       MaxWidth="200"
+                       Foreground="{DynamicResource SecondaryTextBrush}"
                        TextAlignment="Center"
                        TextWrapping="Wrap"
-                       Margin="0,12,0,0"
+                       MaxLines="2"
+                       TextTrimming="CharacterEllipsis"
                        AutomationProperties.Name="Unlock Status"
                        AutomationProperties.LiveSetting="Assertive"/>
-
-            <StackPanel Spacing="12" Margin="32,26,32,0" IsVisible="{Binding IsBusy}"
-                        AutomationProperties.Name="Unlock Progress">
-                <Grid ColumnDefinitions="*,Auto">
-                    <Border Grid.Column="0"
-                            Background="{DynamicResource UnlockTrackBrush}"
-                            CornerRadius="8"
-                            Padding="4">
-                        <ProgressBar Value="{Binding ProgressPercent}"
-                                     Maximum="100"
-                                     Height="10"
-                                     CornerRadius="6"
-                                     Foreground="{DynamicResource UnlockAccentBrush}"
-                                     Background="{DynamicResource UnlockTrackBrush}"
-                                     AutomationProperties.Name="Unlock progress bar"/>
-                    </Border>
-                    <TextBlock Grid.Column="1"
-                               Text="{Binding ProgressPercent, StringFormat={}{0}%}"
-                               FontSize="{StaticResource Type.Small.Size}"
-                               Foreground="{DynamicResource SecondaryTextBrush}"
-                               VerticalAlignment="Center"
-                               Margin="10,0,0,0"
-                               AutomationProperties.Name="Progress percentage"
-                               AutomationProperties.LiveSetting="Polite"/>
-                </Grid>
-            </StackPanel>
-        </StackPanel>
-
-        <TextBlock Grid.Row="2"
-                   Text="Phantom Obscura • zero-knowledge vault access"
-                   FontSize="{StaticResource Type.Tiny.Size}"
-                   Foreground="{DynamicResource MutedTextBrush}"
-                   HorizontalAlignment="Center"
-                   Margin="0,30,0,0"/>
-    </Grid>
+        </Grid>
+    </Border>
 </views:ThemeAwareWindow>
-

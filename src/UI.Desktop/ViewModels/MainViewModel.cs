@@ -10,9 +10,12 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia;
 using ReactiveUI;
+using Serilog;
 using PhantomVault.Core;
 using PhantomVault.Core.Models;
 using PhantomVault.Core.Services;
+using PhantomVault.Core.Services.ZeroKnowledge;
+using PhantomVault.Core.Utils;
 using PhantomVault.Core.Services.Security;
 using PhantomVault.UI.Services;
 
@@ -173,7 +176,9 @@ namespace PhantomVault.UI.ViewModels
                 try
                 {
                     IsBusy = true;
-                    var manifest = _manifestService.ReadManifest(manifestPath, password);
+                    VaultManifest manifest;
+                    using (var openPassphrase = SecurePassword.FromString(password))
+                        manifest = _manifestService.ReadManifestSecure(manifestPath, openPassphrase);
                     if (!string.IsNullOrWhiteSpace(masterVolumePath) && !string.IsNullOrWhiteSpace(extractedVolumeRoot))
                     {
                         ResolveRuntimePaths(manifest, extractedVolumeRoot, masterVolumePath);
@@ -433,7 +438,26 @@ namespace PhantomVault.UI.ViewModels
                     {
                         Status = "Unlocking vault with traditional encryption...";
                         string fallbackDeviceId = _usbBindingService.ComputeDeviceId(selectedPhysicalDrivePath ?? selectedDriveRoot!);
-                        bool zkUnlocked = await _zkVaultService.UnlockMasterKeyAsync(password ?? string.Empty, manifest.KeyfilePath, fallbackDeviceId);
+
+                        bool zkUnlocked;
+                        try
+                        {
+                            zkUnlocked = await _zkVaultService.UnlockMasterKeyAsync(password ?? string.Empty, manifest.KeyfilePath, fallbackDeviceId);
+                        }
+                        catch (VaultUnlockOperationException opEx)
+                        {
+                            // Storage/permission/platform failure — not wrong credentials.
+                            // Say so, so the user checks their USB key instead of retyping.
+                            Log.Warning(opEx, "Vault unlock failed for an operational reason");
+                            Status = "Vault could not be opened";
+                            await _dialogService.ShowErrorAsync(
+                                "Vault Unavailable",
+                                "The vault could not be opened because of a storage or system error — " +
+                                "your keyfile and password were not rejected.\n\n" +
+                                "Check that the drive holding your keyfile is still connected, then try again.",
+                                _ownerWindow);
+                            return;
+                        }
 
                         if (!zkUnlocked)
                         {
@@ -480,7 +504,8 @@ namespace PhantomVault.UI.ViewModels
 
                                 try
                                 {
-                                    _manifestService.WriteManifest(manifest, manifestPath, password ?? string.Empty, null);
+                                    using var trustPassphrase = SecurePassword.FromString(password ?? string.Empty);
+                                    _manifestService.WriteManifestSecure(manifest, manifestPath, trustPassphrase, null);
                                     Status = "Device trusted and manifest updated";
                                 }
                                 catch (Exception ex)
@@ -509,7 +534,8 @@ namespace PhantomVault.UI.ViewModels
 
                                 try
                                 {
-                                    _manifestService.WriteManifest(manifest, manifestPath, password ?? string.Empty, null);
+                                    using var touchPassphrase = SecurePassword.FromString(password ?? string.Empty);
+                                    _manifestService.WriteManifestSecure(manifest, manifestPath, touchPassphrase, null);
                                 }
                                 catch
                                 {
@@ -589,7 +615,8 @@ namespace PhantomVault.UI.ViewModels
 
                         password = newPassword;
 
-                        manifest = _manifestService.ReadManifest(manifestPath, password);
+                        using (var rekeyedPassphrase = SecurePassword.FromString(password))
+                            manifest = _manifestService.ReadManifestSecure(manifestPath, rekeyedPassphrase);
                     }
 
                     string containerAbs = Path.IsPathRooted(manifest.ContainerPath)

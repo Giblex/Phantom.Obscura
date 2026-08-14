@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -585,19 +586,40 @@ namespace PhantomVault.Core.Tests.Crypto.Primitives
             RandomNumberGenerator.Fill(salt);
             var kdfParams = new KdfParams { Ops = 3, MemMiB = 16, Parallelism = 1 };
 
-            // Act
-            var sw1 = System.Diagnostics.Stopwatch.StartNew();
+            // The original version timed one un-warmed run of each password and
+            // compared them at millisecond resolution. The first call pays JIT and
+            // first-touch allocation of the 16 MiB Argon2 arena, so it was measuring
+            // warm-up and machine load rather than the KDF, and failed intermittently
+            // (2.18x on the run that prompted this). Warm up first, then take the
+            // median of several runs so a real data dependency still shows up but
+            // scheduler noise does not.
+            const int Iterations = 5;
             Argon2Kdf.DeriveKey((byte[])password1.Clone(), (byte[])salt.Clone(), kdfParams);
-            sw1.Stop();
 
-            var sw2 = System.Diagnostics.Stopwatch.StartNew();
-            Argon2Kdf.DeriveKey((byte[])password2.Clone(), (byte[])salt.Clone(), kdfParams);
-            sw2.Stop();
+            double Median(byte[] password)
+            {
+                var samples = new List<double>(Iterations);
+                for (var i = 0; i < Iterations; i++)
+                {
+                    var sw = System.Diagnostics.Stopwatch.StartNew();
+                    Argon2Kdf.DeriveKey((byte[])password.Clone(), (byte[])salt.Clone(), kdfParams);
+                    sw.Stop();
+                    samples.Add(sw.Elapsed.TotalMilliseconds);
+                }
 
-            // Assert - Timing should be similar (within 50% variance)
-            var ratio = (double)Math.Max(sw1.ElapsedMilliseconds, sw2.ElapsedMilliseconds) /
-                        Math.Max(1, Math.Min(sw1.ElapsedMilliseconds, sw2.ElapsedMilliseconds));
-            Assert.True(ratio < 1.5, $"Timing variance too high: {ratio:F2}x");
+                samples.Sort();
+                return samples[Iterations / 2];
+            }
+
+            double median1 = Median(password1);
+            double median2 = Median(password2);
+
+            // Assert - Argon2's cost is data-independent, so equal-length passwords
+            // must not produce systematically different runtimes. The tolerance is
+            // deliberately loose: this is a smoke test for a gross data dependency,
+            // not a real side-channel measurement, which a unit test cannot do.
+            var ratio = Math.Max(median1, median2) / Math.Max(0.001, Math.Min(median1, median2));
+            Assert.True(ratio < 2.0, $"Timing variance too high: {ratio:F2}x ({median1:F1}ms vs {median2:F1}ms)");
         }
 
         #endregion

@@ -15,6 +15,7 @@ using ReactiveUI;
 using Serilog;
 using PhantomVault.Core.Models;
 using PhantomVault.Core.Services;
+using PhantomVault.Core.Utils;
 using PhantomVault.Core.Services.ZeroKnowledge;
 using PhantomVault.UI.Services;
 using PhantomVault.UI.Views;
@@ -62,7 +63,10 @@ namespace PhantomVault.UI.ViewModels
             _phantomKeyBridgeValidator = new PhantomKeyBridgeValidator(_usbArtifactProtectionService);
             _iconManager = iconManager ?? throw new ArgumentNullException(nameof(iconManager));
             _usbDetector = usbDetector ?? throw new ArgumentNullException(nameof(usbDetector));
-            _throttleService = new UnlockThrottleService();
+            // Honour the user's configured attempt limit (3 / 5 / 10 / unlimited) instead
+            // of the service's hardcoded default, which ignored the Security Settings choice.
+            _throttleService = new UnlockThrottleService(
+                () => SettingsService.Load().MaxFailedUnlockAttempts);
             _blackSecureRawVolumeService = new BlackSecureRawVolumeService();
             _preferredVaultPath = preferredVaultPath;
         }
@@ -332,7 +336,7 @@ namespace PhantomVault.UI.ViewModels
                 var keyfilePath = string.IsNullOrWhiteSpace(selectedDriveRoot) ? null : FindKeyfileOnDrive(selectedDriveRoot);
                 string? password = null;
 
-                Log.Information("[VaultUnlock] manifestPath={Manifest} keyfilePath={Keyfile}", manifestPath, keyfilePath ?? "<null>");
+                Log.Debug("[VaultUnlock] manifest={ManifestName} keyfile={KeyfileState}", System.IO.Path.GetFileName(manifestPath), keyfilePath is null ? "<none>" : "<present>");
 
                 var encryptionService = new EncryptionService();
                 var containerService = new PhantomContainerService(encryptionService);
@@ -358,7 +362,7 @@ namespace PhantomVault.UI.ViewModels
                         var candidate = candidates[i];
                         try
                         {
-                            var keyfileTestManifest = await Task.Run(() => manifestService.ReadManifest(manifestPath, string.Empty, candidate));
+                            var keyfileTestManifest = await Task.Run(() => { using var kfPass = SecurePassword.Empty(); return manifestService.ReadManifestSecure(manifestPath, kfPass, candidate); });
                             if (keyfileTestManifest != null)
                             {
                                 keyfilePath = candidate;
@@ -389,7 +393,7 @@ namespace PhantomVault.UI.ViewModels
                     try
                     {
 
-                        var noPassManifest = await Task.Run(() => manifestService.ReadManifest(manifestPath, string.Empty, null));
+                        var noPassManifest = await Task.Run(() => { using var noPass = SecurePassword.Empty(); return manifestService.ReadManifestSecure(manifestPath, noPass, null); });
                         if (noPassManifest != null)
                         {
                             password = string.Empty;
@@ -454,7 +458,7 @@ namespace PhantomVault.UI.ViewModels
                     // Reuse the manifest the keyfile-candidate or no-password attempt already validated
                     // instead of running ReadManifest (and a full Argon2id derivation) a second time.
                     testManifest = authenticatedManifest
-                        ?? await Task.Run(() => manifestService.ReadManifest(manifestPath, password, keyfilePath));
+                        ?? await Task.Run(() => { using var unlockPass = SecurePassword.FromString(password); return manifestService.ReadManifestSecure(manifestPath, unlockPass, keyfilePath); });
                     if (testManifest == null)
                     {
 
@@ -538,7 +542,13 @@ namespace PhantomVault.UI.ViewModels
 
                 var vaultOptions = new Core.Options.VaultOptions();
                 var vaultService = new VaultService(vaultOptions, _encryptionService);
-                var idleLockService = new IdleLockService(TimeSpan.FromMinutes(15));
+                // Resolve the app-scope watchdog rather than constructing a second one.
+                // A locally-created instance had its own hardcoded window, competed with
+                // the DI singleton, and was never disposed or reset by user activity.
+                var idleLockService = (Avalonia.Application.Current as App)?.Services?
+                        .GetService<IdleLockService>()
+                    ?? new IdleLockService(
+                        () => TimeSpan.FromMinutes(Math.Max(0, SettingsService.Load().IdleTimeoutMinutes)));
                 var zkVaultService = new Core.Services.ZeroKnowledge.ZkVaultService();
 
                 ProgressPercent = 82;
@@ -556,16 +566,7 @@ namespace PhantomVault.UI.ViewModels
                     testManifest.RootContainerPath = preResolvePaths.RootContainerPath;
                     testManifest.ContainerPath = preResolvePaths.ContainerPath;
                     testManifest.ObjectContainerPath = preResolvePaths.ObjectContainerPath;
-                    Log.Information("[VaultUnlock][ZKDiag] DeriveKey inputs — VaultName={VaultName} | BindingId={BindingId} | BindingGuid={BindingGuid} | DeviceId={DeviceId} | Guuid={Guuid} | Root={Root} | Container={Container} | Object={Object} | Salt={Salt} | HasPass={HasPass} | HasKey={HasKey}",
-                        testManifest.VaultName,
-                        testManifest.UsbBindingId,
-                        testManifest.UsbBindingGuid,
-                        testManifest.DeviceId,
-                        testManifest.Guuid,
-                        testManifest.RootContainerPath,
-                        testManifest.ContainerPath,
-                        testManifest.ObjectContainerPath,
-                        testManifest.SaltBase64,
+                    Log.Debug("[VaultUnlock][ZKDiag] DeriveKey inputs — HasPass={HasPass} | HasKey={HasKey}",
                         !string.IsNullOrEmpty(password),
                         !string.IsNullOrEmpty(keyfilePath));
                     try

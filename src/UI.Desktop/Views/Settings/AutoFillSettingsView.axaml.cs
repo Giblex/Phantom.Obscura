@@ -14,6 +14,19 @@ namespace PhantomVault.UI.Views.Settings
             InitializeComponent();
         }
 
+        private void PreviewAnimation_Click(object? sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var owner = this.FindAncestorOfType<Window>();
+                PhantomVault.UI.Views.Autofill.AutofillDemo.ShowDemo(owner);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to open AutoFill animation demo");
+            }
+        }
+
         private async void ConfigureMobileAutoFill_Click(object? sender, RoutedEventArgs e)
         {
             try

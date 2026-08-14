@@ -8,6 +8,7 @@ using ReactiveUI;
 using PhantomVault.Core.Services.Security;
 using PhantomVault.Core.Options;
 using PhantomVault.UI.Services;
+using PhantomVault.UI.Desktop.Services;
 using PhantomVault.UI.Views.Dialogs;
 using PhantomVault.UI.Views;
 
@@ -81,9 +82,13 @@ namespace PhantomVault.UI.ViewModels
                 ?? new SettingsDraftTracker();
             _suppressStage = true;
 
+            // Clears stale PIN flags before snapshotting, so the toggles can never
+            // read as "on" when no PIN has actually been set.
+            _hasPinConfigured = PinLockService.SyncPinFlags(_manifestPath);
+
             var settings = SettingsService.LoadSecuritySnapshot();
-            _enablePinLock = settings.EnablePinLock;
-            _usePinLockForAutoLock = settings.UsePinLockForAutoLock;
+            _enablePinLock = settings.EnablePinLock && _hasPinConfigured;
+            _usePinLockForAutoLock = settings.UsePinLockForAutoLock && _hasPinConfigured;
             _autoCopyTotpWithPassword = settings.AutoCopyTotpWithPassword;
             _requireHardwareToken = settings.RequireHardwareToken;
             _requireKeyfile = settings.RequireKeyfile;
@@ -334,11 +339,32 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
+        private bool _hasPinConfigured;
+
+        /// <summary>
+        /// True only when a PIN has actually been set (settings or manifest).
+        /// The PIN toggles bind their IsEnabled to this — there is nothing to
+        /// enable until "Set PIN" has been used.
+        /// </summary>
+        public bool HasPinConfigured
+        {
+            get => _hasPinConfigured;
+            private set => this.RaiseAndSetIfChanged(ref _hasPinConfigured, value);
+        }
+
         public bool EnablePinLock
         {
             get => _enablePinLock;
             set
             {
+                // Refuse to arm PIN lock when no PIN exists — otherwise auto-lock
+                // ends up gated behind a PIN the user never chose.
+                if (value && !HasPinConfigured)
+                {
+                    this.RaisePropertyChanged(nameof(EnablePinLock));
+                    return;
+                }
+
                 this.RaiseAndSetIfChanged(ref _enablePinLock, value);
 
                 if (!value && _usePinLockForAutoLock)
@@ -354,6 +380,12 @@ namespace PhantomVault.UI.ViewModels
             get => _usePinLockForAutoLock;
             set
             {
+                if (value && (!HasPinConfigured || !_enablePinLock))
+                {
+                    this.RaisePropertyChanged(nameof(UsePinLockForAutoLock));
+                    return;
+                }
+
                 this.RaiseAndSetIfChanged(ref _usePinLockForAutoLock, value);
                 StageAll();
             }
@@ -439,7 +471,16 @@ namespace PhantomVault.UI.ViewModels
                     }
                 }
             }
-            catch {  }
+            catch (Exception ex)
+            {
+                // A failure here means the user believes screenshot protection is on when
+                // it is not. Surfacing it beats the previous silent swallow.
+                Serilog.Log.Error(ex, "Failed to apply screenshot protection (enable={Enable})", enable);
+                RecentIssuesLog.Instance.Record(
+                    IssueSeverity.Warning,
+                    "Screenshot protection not applied",
+                    "Windows rejected the screen-capture protection request. Vault windows may still be capturable.");
+            }
         }
 
         private async Task SetOrChangePinAsync()
@@ -461,6 +502,8 @@ namespace PhantomVault.UI.ViewModels
                 var viewModel = dialog.DataContext as PhantomVault.UI.ViewModels.Dialogs.PinSetupDialogViewModel;
                 if (viewModel?.Success == true)
                 {
+                    // A PIN now exists — unblock the toggles before arming them.
+                    HasPinConfigured = true;
                     EnablePinLock = true;
                     await _dialogService.ShowSuccessAsync("PIN Set", "Your PIN lock has been enabled.", owner);
                 }
@@ -477,6 +520,7 @@ namespace PhantomVault.UI.ViewModels
             {
                 PinLockService.ClearPin(_manifestPath);
                 EnablePinLock = false;
+                HasPinConfigured = false;
                 await _dialogService.ShowSuccessAsync("PIN Disabled", "PIN lock has been disabled.", GetOwnerWindow());
             }
             catch (Exception ex)

@@ -2,6 +2,7 @@ using System;
 using System.Reactive;
 using System.Windows.Input;
 using Avalonia;
+using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Media;
 using ReactiveUI;
 using PhantomVault.UI.Services;
@@ -161,14 +162,85 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
             catch {  }
 
+            var code = LanguageCultures[Math.Clamp(_selectedLanguage, 0, LanguageCultures.Length - 1)];
+
             try
             {
-                var code = LanguageCultures[Math.Clamp(_selectedLanguage, 0, LanguageCultures.Length - 1)];
                 var culture = new System.Globalization.CultureInfo(code);
                 System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = culture;
                 System.Globalization.CultureInfo.DefaultThreadCurrentCulture = culture;
             }
             catch {  }
+
+            ApplyStringResources(code);
+        }
+
+        /// <summary>
+        /// Applies the language saved in settings. Called once at startup so the
+        /// selector's choice survives a restart instead of only taking effect
+        /// while the accessibility page is open.
+        /// </summary>
+        public static void ApplyPersistedLanguage()
+        {
+            int index;
+            try { index = SettingsService.Load().LanguageIndex; }
+            catch { return; }
+
+            var code = LanguageCultures[Math.Clamp(index, 0, LanguageCultures.Length - 1)];
+
+            try
+            {
+                var culture = new System.Globalization.CultureInfo(code);
+                System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = culture;
+                System.Globalization.CultureInfo.DefaultThreadCurrentCulture = culture;
+            }
+            catch {  }
+
+            ApplyStringResources(code);
+        }
+
+        /// <summary>
+        /// Swaps the merged Strings.&lt;culture&gt;.axaml dictionary so the UI text
+        /// actually follows the language selector. Cultures without a translation
+        /// file fall back to en-US rather than leaving the app with no strings.
+        /// </summary>
+        private static void ApplyStringResources(string cultureCode)
+        {
+            try
+            {
+                var app = Application.Current;
+                if (app == null)
+                {
+                    return;
+                }
+
+                var dictionaries = app.Resources.MergedDictionaries;
+
+                var uri = new Uri($"avares://PhantomVault.UI/Resources/Strings.{cultureCode}.axaml");
+                if (!Avalonia.Platform.AssetLoader.Exists(uri))
+                {
+                    uri = new Uri("avares://PhantomVault.UI/Resources/Strings.en-US.axaml");
+                }
+
+                for (int i = 0; i < dictionaries.Count; i++)
+                {
+                    if (dictionaries[i] is ResourceInclude include &&
+                        include.Source?.OriginalString.Contains("/Strings.", StringComparison.OrdinalIgnoreCase) == true)
+                    {
+                        if (include.Source == uri)
+                        {
+                            return;
+                        }
+
+                        dictionaries[i] = new ResourceInclude((Uri?)null) { Source = uri };
+                        return;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Warning(ex, "Failed to apply string resources for culture {Culture}", cultureCode);
+            }
         }
 
         private void ApplyFontSettings()

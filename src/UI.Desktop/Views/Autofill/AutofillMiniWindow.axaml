@@ -100,7 +100,7 @@
                           FontWeight="Bold"
                           FontSize="{StaticResource Type.Body.Size}"
                           VerticalAlignment="Center"/>
-                <Button Grid.Column="1"
+                <Button AutomationProperties.Name="Close" Grid.Column="1"
                        Content="✕"
                        Command="{Binding CloseWindowCommand}"
                        Background="Transparent"

@@ -25,6 +25,7 @@ using PhantomVault.Core.Services;
 using PhantomVault.Core.Services.AutoInject;
 using PhantomVault.Core.Services.Security;
 using PhantomVault.Core.Services.ZeroKnowledge;
+using PhantomVault.Core.Utils;
 using PhantomVault.UI.Services;
 using PhantomVault.UI.Models;
 using PhantomVault.UI.Views;
@@ -35,7 +36,7 @@ using PhantomVault.UI.Desktop.Controls;
 namespace PhantomVault.UI.ViewModels
 {
 
-    public sealed class VaultViewModel : ReactiveObject, PhantomVault.Core.Services.Sync.ITotpSyncBridge
+    public sealed partial class VaultViewModel : ReactiveObject, PhantomVault.Core.Services.Sync.ITotpSyncBridge
     {
         private readonly VaultService _vaultService;
         private readonly PhantomVault.UI.Services.Entitlements.IEntitlementService? _entitlementService;
@@ -74,8 +75,15 @@ namespace PhantomVault.UI.ViewModels
         private string _mountPath = string.Empty;
 
         private string? _vaultFilePath;
-        private string? _vaultPassword;
+        // Password is optional — vaults may use keyfile-only auth.
+        // Stored as SecurePassword (pinned GC memory, zeroed on lock) so it
+        // does not persist as a plain string for the lifetime of the session.
+        private SecurePassword? _vaultPassword;
         private string? _vaultKeyfilePath;
+        /// <summary>Extracts vault password as a transient string for APIs that require <c>string?</c>.
+        /// The returned string is not stored — it is GC-eligible immediately after use.</summary>
+        private string? GetVaultPasswordString()
+            => _vaultPassword == null || _vaultPassword.IsEmpty ? null : new string(_vaultPassword.AsSpan());
         // Cached runtime manifest from the unlock flow — lets SetManifestContext + LoadAsync skip
         // their own ReadManifest calls (each one runs a fresh Argon2id KDF ≈ 0.5–2s).
         private VaultManifest? _cachedRuntimeManifest;
@@ -340,10 +348,12 @@ namespace PhantomVault.UI.ViewModels
             AddWiFiPasswordCommand = ReactiveCommand.CreateFromTask(async () => await AddCredentialWithTypeAsync("WiFi Password"));
             AddContactCommand = ReactiveCommand.CreateFromTask(async () => await AddCredentialWithTypeAsync("Contact"));
             AddPinCodeCommand = ReactiveCommand.CreateFromTask(async () => await AddCredentialWithTypeAsync("PIN Code"));
+            AddBlankEntryCommand = ReactiveCommand.CreateFromTask(async () => await AddCredentialWithTypeAsync("Blank"));
             DashboardViewModel = new DashboardViewModel();
             DashboardViewModel.NavigateToFilter = NavigateToVaultWithFilter;
             DashboardViewModel.SetRecoveryAvailability(IsEmbeddedRecoveryAvailable, DashboardRecoveryStatus);
             DashboardViewModel.SetAttestorAvailability(_integratedAttestorService.IsAvailable, _integratedAttestorService.AvailabilityMessage);
+            InitializeDuplicateAndSectionSupport();
             EditCredentialCommand = ReactiveCommand.CreateFromTask<CredentialViewModel>(EditCredentialAsync);
             DeleteCredentialCommand = ReactiveCommand.CreateFromTask<CredentialViewModel>(DeleteCredentialAsync);
             CloseEditPanelCommand = ReactiveCommand.Create(CloseEditPanel);
@@ -2291,6 +2301,7 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> AddWiFiPasswordCommand { get; }
         public ReactiveCommand<Unit, Unit> AddContactCommand { get; }
         public ReactiveCommand<Unit, Unit> AddPinCodeCommand { get; }
+        public ReactiveCommand<Unit, Unit> AddBlankEntryCommand { get; }
         public ReactiveCommand<CredentialViewModel, Unit> EditCredentialCommand { get; }
         public ReactiveCommand<CredentialViewModel, Unit> DeleteCredentialCommand { get; }
         public ReactiveCommand<CredentialViewModel, Unit> CopyPasswordCommand { get; }
@@ -2486,6 +2497,8 @@ namespace PhantomVault.UI.ViewModels
 
                 new("Open password health",      "Tools",    () => Run(OpenPasswordHealthPanelCommand),
                     glyph: "🩺", searchKeywords: "audit,strength,scan,duplicates"),
+                new("Find and consolidate duplicates", "Tools", () => Run(OpenDuplicateScanCommand),
+                    glyph: "🧬", searchKeywords: "duplicate,merge,consolidate,dedupe,clean up"),
                 new("Toggle security dashboard", "Tools",    () => Run(ToggleSecurityDashboardCommand),
                     glyph: "🛡️", searchKeywords: "security,overview"),
                 new("Open security options",    "Tools",    () => Run(OpenSecurityOptionsCommand),
@@ -2918,7 +2931,14 @@ namespace PhantomVault.UI.ViewModels
                         ? Services.FuzzyMatcher.CalculateScore(SearchText, credential.Url)
                         : 0;
 
-                    int maxScore = Math.Max(Math.Max(titleScore, usernameScore), Math.Max(groupScore, urlScore));
+                    var sectionText = credential.SectionSearchText;
+                    int sectionScore = !string.IsNullOrEmpty(sectionText)
+                        ? Services.FuzzyMatcher.CalculateScore(SearchText, sectionText)
+                        : 0;
+
+                    int maxScore = Math.Max(
+                        Math.Max(Math.Max(titleScore, usernameScore), Math.Max(groupScore, urlScore)),
+                        sectionScore);
 
                     if (maxScore >= 30)
                     {
@@ -2927,7 +2947,8 @@ namespace PhantomVault.UI.ViewModels
                             Score = maxScore,
                             MatchedField = maxScore == titleScore ? "Title" :
                                           maxScore == usernameScore ? "Username" :
-                                          maxScore == groupScore ? "Group" : "URL"
+                                          maxScore == groupScore ? "Group" :
+                                          maxScore == urlScore ? "URL" : "Section"
                         });
                     }
                 }
@@ -3368,6 +3389,12 @@ namespace PhantomVault.UI.ViewModels
                         case "pin":
                             entryType = Core.Models.EntryType.PinCode;
                             break;
+                        case "blank":
+                        case "blank entry":
+                        case "custom":
+                        case "custom entry":
+                            entryType = Core.Models.EntryType.Blank;
+                            break;
                         default:
                             entryType = Core.Models.EntryType.Password;
                             break;
@@ -3576,7 +3603,9 @@ namespace PhantomVault.UI.ViewModels
                 if (_tamperDetectionService?.IsDecoyActive == true && _decoyVaultService?.IsDecoyActive == true)
                 {
 
-                    await Task.Delay(Random.Shared.Next(50, 150));
+                    // Crypto RNG, not Random.Shared: this jitter masks the decoy
+                    // save path's timing, so it must not be predictable.
+                    await Task.Delay(System.Security.Cryptography.RandomNumberGenerator.GetInt32(50, 150));
                     return;
                 }
 
@@ -3622,7 +3651,7 @@ namespace PhantomVault.UI.ViewModels
                         await _vaultService.SaveVaultPayloadAsync(
                             _vaultFilePath!,
                             encryptedPayload,
-                            _vaultPassword,
+                            GetVaultPasswordString(),
                             _vaultKeyfilePath).ConfigureAwait(false);
                     }
                     else
@@ -4726,7 +4755,7 @@ namespace PhantomVault.UI.ViewModels
         internal bool TryGetManifestContext(out string manifestPath, out string? passphrase, out string? keyfilePath)
         {
             manifestPath = string.Empty;
-            passphrase = _vaultPassword;
+            passphrase = GetVaultPasswordString();
             keyfilePath = _vaultKeyfilePath;
 
             if (!string.IsNullOrEmpty(_mountPath))
@@ -4766,13 +4795,14 @@ namespace PhantomVault.UI.ViewModels
 
         internal void SetManifestContext(string manifestPath, string? password, string? keyfilePath, VaultManifest? preloadedManifest)
         {
-
-            _vaultPassword = password;
+            _vaultPassword?.Dispose();
+            _vaultPassword = string.IsNullOrEmpty(password) ? null : SecurePassword.FromString(password);
             _vaultKeyfilePath = keyfilePath;
 
             _manifestPath = manifestPath;
             _reauthKeyfilePath = keyfilePath;
 
+            // Null out the incoming string immediately — password is now owned by _vaultPassword.
             password = null!;
 
             var manifestDir = Path.GetDirectoryName(manifestPath);
@@ -4789,7 +4819,7 @@ namespace PhantomVault.UI.ViewModels
                 // Reuse the manifest the unlock flow already validated (and the Argon2id KDF that
                 // produced it) instead of running ReadManifest a second time.
                 var manifest = preloadedManifest
-                    ?? _manifestService.ReadManifest(manifestPath, _vaultPassword, keyfilePath);
+                    ?? _manifestService.ReadManifestSecure(manifestPath, _vaultPassword ?? SecurePassword.Empty(), keyfilePath);
                 _cachedRuntimeManifest = manifest;
                 ApplyManifestTransportState(manifest, manifestPath);
                 ApplyEntitlementsFromManifest(manifest);
@@ -5029,12 +5059,12 @@ namespace PhantomVault.UI.ViewModels
                 if (manifestPath != null)
                 {
 
-                    var passphrase = string.IsNullOrEmpty(_vaultPassword) ? null : _vaultPassword;
+                    var passphrase = GetVaultPasswordString();
                     var keyfile = string.IsNullOrEmpty(_vaultKeyfilePath) ? null : _vaultKeyfilePath;
 
                     try
                     {
-                        var manifest = _manifestService.ReadManifest(manifestPath, passphrase, keyfile);
+                        var manifest = _manifestService.ReadManifestSecure(manifestPath, _vaultPassword ?? SecurePassword.Empty(), keyfile);
 
                         CloseAllOverlays();
                         var categoryVm = new CategoryManagerViewModel(_manifestService, manifest, manifestPath, this, passphrase: passphrase, keyfilePath: keyfile ?? manifest.KeyfilePath);
@@ -5178,19 +5208,8 @@ namespace PhantomVault.UI.ViewModels
 
         private void ClearSensitiveState()
         {
-            if (!string.IsNullOrEmpty(_vaultPassword))
-            {
-                try
-                {
-                    var chars = _vaultPassword.ToCharArray();
-                    Array.Clear(chars, 0, chars.Length);
-                }
-                catch
-                {
-
-                }
-            }
-
+            // SecurePassword.Dispose() does a multi-pass zeroization + GCHandle.Free()
+            _vaultPassword?.Dispose();
             _vaultPassword = null;
             _vaultKeyfilePath = null;
         }
@@ -5226,10 +5245,8 @@ namespace PhantomVault.UI.ViewModels
 
             try
             {
-                var settings = SettingsService.Load();
-                bool pinConfigured = settings != null
-                    && settings.EnablePinLock
-                    && PinLockService.HasPinConfigured(settings, _manifestPath);
+                bool pinConfigured = PinLockService.SyncPinFlags(_manifestPath)
+                    && SettingsService.Load().EnablePinLock;
                 if (!pinConfigured)
                 {
                     return;
@@ -5355,9 +5372,54 @@ namespace PhantomVault.UI.ViewModels
 
         private void DismissLockscreen()
         {
+            // Push the user's auto-lock setting in before restarting the timer.
+            // SetLockDuration previously had no callers at all, so this service ran on
+            // its FiveMinutes field default and ignored the configured timeout.
+            ApplyConfiguredLockDuration();
 
             _vaultLockDurationService.UnlockVault();
             ExitLockedState();
+        }
+
+        /// <summary>
+        /// Maps the persisted idle timeout onto the nearest <see cref="LockDuration"/> and
+        /// applies it. Must be called before every <c>UnlockVault()</c>/<c>ResetTimer()</c>,
+        /// because those start the timer from <c>_currentDuration</c> — which defaulted to
+        /// FiveMinutes and ignored the user's setting entirely.
+        ///
+        /// This deliberately does NOT touch <c>AutoLockEnabled</c>. Each call site owns that
+        /// decision (the main unlock path gates it on whether a PIN is configured), and
+        /// overriding it here would silently change who gets auto-locked. <c>SetLockDuration</c>
+        /// updates <c>_currentDuration</c> before its own enabled-check, so calling this
+        /// first and setting <c>AutoLockEnabled</c> afterwards is the correct order.
+        /// </summary>
+        private void ApplyConfiguredLockDuration()
+        {
+            try
+            {
+                var minutes = SettingsService.Load().IdleTimeoutMinutes;
+
+                var duration = minutes switch
+                {
+                    <= 0 => LockDuration.Never,
+                    1 => LockDuration.OneMinute,
+                    2 => LockDuration.TwoMinutes,
+                    <= 5 => LockDuration.FiveMinutes,
+                    <= 10 => LockDuration.TenMinutes,
+                    <= 15 => LockDuration.FifteenMinutes,
+                    <= 30 => LockDuration.ThirtyMinutes,
+                    _ => LockDuration.OneHour
+                };
+
+                _vaultLockDurationService.SetLockDuration(duration);
+            }
+            catch (Exception ex)
+            {
+                // Fully qualified: this file otherwise logs via Debug.WriteLine, but a
+                // silently-failing auto-lock window is security-relevant and belongs in
+                // the real log.
+                Serilog.Log.Warning(ex, "Failed to apply configured lock duration; leaving previous value in force");
+            }
         }
 
         private async Task SetupPinLockAsync()
@@ -5383,6 +5445,9 @@ namespace PhantomVault.UI.ViewModels
                     settings.EnablePinLock = true;
                     SettingsService.Save(settings);
 
+                    // A PIN was just configured, so auto-lock becomes available — the main
+                    // unlock path gates AutoLockEnabled on exactly this condition.
+                    ApplyConfiguredLockDuration();
                     _vaultLockDurationService.AutoLockEnabled = true;
                     _vaultLockDurationService.ResetTimer();
 
@@ -5520,7 +5585,8 @@ namespace PhantomVault.UI.ViewModels
             VaultManifest manifest;
             try
             {
-                manifest = _manifestService.ReadManifest(_manifestPath, password, _reauthKeyfilePath);
+                using var reauthPassphrase = SecurePassword.FromString(password);
+                manifest = _manifestService.ReadManifestSecure(_manifestPath, reauthPassphrase, _reauthKeyfilePath);
             }
             catch (Exception ex)
             {
@@ -5689,7 +5755,9 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                var manifest = _manifestService.ReadManifest(_manifestPath!, password, _reauthKeyfilePath);
+                VaultManifest manifest;
+                using (var remountPassphrase = SecurePassword.FromString(password))
+                    manifest = _manifestService.ReadManifestSecure(_manifestPath!, remountPassphrase, _reauthKeyfilePath);
                 byte[] vaultDatabaseKey = new VaultDatabaseKeyService(new EncryptionService())
                     .DeriveKey(manifest, password, _reauthKeyfilePath);
                 try
@@ -5795,7 +5863,8 @@ namespace PhantomVault.UI.ViewModels
             try
             {
                 _mountPath = mountPath;
-                _vaultPassword = password;
+                _vaultPassword?.Dispose();
+                _vaultPassword = string.IsNullOrEmpty(password) ? null : SecurePassword.FromString(password);
                 _vaultKeyfilePath = keyfilePath;
 
                 if (!string.IsNullOrWhiteSpace(_manifestPath) && File.Exists(_manifestPath))
@@ -5805,7 +5874,7 @@ namespace PhantomVault.UI.ViewModels
                         // Reuse the cached manifest (already decrypted in SetManifestContext / unlock flow)
                         // instead of running another Argon2id-backed ReadManifest.
                         var runtimeManifest = _cachedRuntimeManifest
-                            ?? _manifestService.ReadManifest(_manifestPath, password, keyfilePath);
+                            ?? _manifestService.ReadManifestSecure(_manifestPath, _vaultPassword ?? SecurePassword.Empty(), keyfilePath);
                         ApplyManifestTransportState(runtimeManifest, _manifestPath);
                     }
                     catch
@@ -5870,7 +5939,7 @@ namespace PhantomVault.UI.ViewModels
                     {
                         await using var encryptedPayloadStream = await _vaultService.OpenVaultPayloadStreamAsync(
                             _vaultFilePath,
-                            _vaultPassword,
+                            GetVaultPasswordString(),
                             _vaultKeyfilePath,
                             cancellationToken).ConfigureAwait(false);
                         stream = await _zkVaultService.OpenEncryptedStreamForViewingAsync(encryptedPayloadStream, cancellationToken)
@@ -5935,12 +6004,18 @@ namespace PhantomVault.UI.ViewModels
 
                 RegisterAutoLockSession();
 
+                // Push the configured window in before AutoLockEnabled and UnlockVault().
+                // This is the primary unlock path; without it the lock service ran on its
+                // FiveMinutes field default here, so the user's auto-lock setting was
+                // honoured only when re-unlocking from the lockscreen.
+                ApplyConfiguredLockDuration();
+
                 try
                 {
-                    var lockSettings = SettingsService.Load();
-                    bool pinConfigured = lockSettings != null
-                        && lockSettings.EnablePinLock
-                        && PinLockService.HasPinConfigured(lockSettings, _manifestPath);
+                    // Drops stale EnablePinLock/UsePinLockForAutoLock flags when no PIN
+                    // was ever set, so auto-lock never demands a PIN that doesn't exist.
+                    bool pinConfigured = PinLockService.SyncPinFlags(_manifestPath)
+                        && SettingsService.Load().EnablePinLock;
                     _vaultLockDurationService.AutoLockEnabled = pinConfigured;
                 }
                 catch
@@ -6224,7 +6299,9 @@ namespace PhantomVault.UI.ViewModels
 
             try
             {
-                var manifest = _manifestService.ReadManifest(manifestPath, passphrase, keyfilePath);
+                VaultManifest manifest;
+                using (var recoveryPassphrase = SecurePassword.FromString(passphrase))
+                    manifest = _manifestService.ReadManifestSecure(manifestPath, recoveryPassphrase, keyfilePath);
                 return _recoveryVaultPathResolver.Resolve(manifestPath, manifest, passphrase, keyfilePath);
             }
             catch (Exception ex)
@@ -6247,7 +6324,9 @@ namespace PhantomVault.UI.ViewModels
 
             try
             {
-                var manifest = _manifestService.ReadManifest(manifestPath, passphrase, keyfilePath);
+                VaultManifest manifest;
+                using (var bootstrapPassphrase = SecurePassword.FromString(passphrase))
+                    manifest = _manifestService.ReadManifestSecure(manifestPath, bootstrapPassphrase, keyfilePath);
                 _recoverySuiteBootstrapService.StageBootstrapArtifacts(
                     manifestPath,
                     manifest,
@@ -6838,81 +6917,8 @@ namespace PhantomVault.UI.ViewModels
             return (assessment.Severity, label, new Avalonia.Media.SolidColorBrush(color).ToImmutable());
         }
 
-        #region Password Strength Tester
 
-        private void UpdatePasswordTestResults()
-        {
-            if (string.IsNullOrEmpty(_testPassword))
-            {
-                TestPasswordScore = 0;
-                TestPasswordStrengthLabel = "";
-                TestPasswordStrengthColor = "#808080";
-                SuggestedPassword = "";
-                SimilarityPercentage = 0;
-                return;
-            }
 
-            var assessment = PasswordStrengthEvaluator.Evaluate(_testPassword);
-            TestPasswordScore = assessment.Score;
-            TestPasswordStrengthLabel = assessment.Label;
-            TestPasswordStrengthColor = assessment.ColorHex;
-            GenerateSuggestedPassword();
-        }
-
-        private int CalculatePasswordScore(string password)
-        {
-            return PasswordStrengthEvaluator.Evaluate(password).Score;
-        }
-
-        private void GenerateSuggestedPassword()
-        {
-            if (string.IsNullOrEmpty(_testPassword))
-                return;
-
-            string suggested = PasswordStrengthEvaluator.GenerateSuggestedPassword(_testPassword);
-            SuggestedPassword = suggested;
-            SimilarityPercentage = string.IsNullOrEmpty(suggested)
-                ? 0
-                : CalculateSimilarity(_testPassword, suggested);
-        }
-
-        private int CalculateSimilarity(string original, string suggested)
-        {
-            if (string.IsNullOrEmpty(original)) return 0;
-
-            int matches = 0;
-            for (int i = 0; i < Math.Min(original.Length, suggested.Length); i++)
-            {
-                if (char.ToLower(original[i]) == char.ToLower(suggested[i]))
-                    matches++;
-            }
-
-            return (matches * 100) / Math.Max(original.Length, suggested.Length);
-        }
-
-        private void CopySuggestedPassword()
-        {
-            if (string.IsNullOrEmpty(_suggestedPassword))
-                return;
-
-            try
-            {
-                if (_ownerWindow?.Clipboard is IClipboard clipboard)
-                {
-                    Dispatcher.UIThread.Post(async () =>
-                    {
-                        await clipboard.SetTextAsync(_suggestedPassword);
-                        StatusMessage = "✓ Suggested password copied to clipboard";
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                StatusMessage = $"Failed to copy: {ex.Message}";
-            }
-        }
-
-        #endregion
 
         private void ShowGeneralSettings()
         {
@@ -7241,7 +7247,7 @@ namespace PhantomVault.UI.ViewModels
             {
                 try
                 {
-                    var manifest = _manifestService.ReadManifest(manifestPath, _vaultPassword, _vaultKeyfilePath);
+                    var manifest = _manifestService.ReadManifestSecure(manifestPath, _vaultPassword ?? SecurePassword.Empty(), _vaultKeyfilePath);
                     IsRotationRequired = _rekeyService.IsRotationRequired(manifest);
                     DaysSinceRotation = (int)(DateTimeOffset.UtcNow - manifest.LastKeyRotation).TotalDays;
                 }
@@ -7391,10 +7397,10 @@ namespace PhantomVault.UI.ViewModels
 
                 await Task.Run(() =>
                 {
-                    _manifestService.WriteManifest(
+                    _manifestService.WriteManifestSecure(
                         _cachedRuntimeManifest,
                         _manifestPath,
-                        _vaultPassword,
+                        _vaultPassword ?? SecurePassword.Empty(),
                         _vaultKeyfilePath,
                         usbSerial: null,
                         requireDualFactor: false,
@@ -7443,10 +7449,10 @@ namespace PhantomVault.UI.ViewModels
 
                 await Task.Run(() =>
                 {
-                    _manifestService.WriteManifest(
+                    _manifestService.WriteManifestSecure(
                         _cachedRuntimeManifest,
                         _manifestPath,
-                        _vaultPassword,
+                        _vaultPassword ?? SecurePassword.Empty(),
                         _vaultKeyfilePath,
                         usbSerial: null,
                         requireDualFactor: false);
@@ -7742,7 +7748,8 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
-                _vaultPassword = string.IsNullOrEmpty(newPassword) ? null : newPassword;
+                _vaultPassword?.Dispose();
+                _vaultPassword = string.IsNullOrEmpty(newPassword) ? null : SecurePassword.FromString(newPassword);
                 var rotatedKeyfile = Path.Combine(
                     Path.GetDirectoryName(keyfilePath) ?? string.Empty, "vault.key.new");
                 if (File.Exists(rotatedKeyfile))
@@ -7773,396 +7780,14 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        #region Security Methods
 
-        private void OnThreatLevelChanged(object? sender, ThreatLevelChangedEventArgs e)
-        {
-            CurrentThreatLevel = e.CurrentLevel;
 
-            SecurityStatus = e.CurrentLevel switch
-            {
-                SecurityThreatLevel.None => "Secure",
-                SecurityThreatLevel.Low => "Low Risk",
-                SecurityThreatLevel.Medium => "Medium Risk",
-                SecurityThreatLevel.High => "High Risk",
-                SecurityThreatLevel.Critical => "Critical Threat",
-                _ => "Unknown"
-            };
 
-            ShowSecurityAlert = e.CurrentLevel >= SecurityThreatLevel.Medium;
-
-            Debug.WriteLine($"[Security] Threat level changed: {e.PreviousLevel} → {e.CurrentLevel}");
-            Debug.WriteLine($"[Security] Tamper: {e.Check.TamperCheckResult.GetDescription()}");
-            Debug.WriteLine($"[Security] Keylogging: {e.Check.KeyloggingCheckResult.GetDescription()}");
-        }
-
-        private async void OnCriticalThreatDetected(object? sender, CriticalThreatEventArgs e)
-        {
-            if (_securityCoordinator == null)
-                return;
-
-            var action = await _securityCoordinator.RespondToThreatAsync(e.Check);
-
-            await Dispatcher.UIThread.InvokeAsync(async () =>
-            {
-                await _dialogService.ShowWarningAsync(
-                    "Security Threat Detected",
-                    action.Message,
-                    _ownerWindow);
-            });
-
-            if (action.ShouldLockVault)
-            {
-                await Dispatcher.UIThread.InvokeAsync(async () =>
-                {
-                    StatusMessage = "Vault locked due to security threat";
-
-                    if (!string.IsNullOrEmpty(_mountPath))
-                    {
-                        try
-                        {
-                            var result = await _vaultLockDurationService.LockVaultAsync(LockReason.SecurityThreat);
-                            if (result.Success)
-                            {
-                                _items.Clear();
-                                _ownerWindow?.Close();
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.WriteLine($"[Security] Failed to lock vault: {ex.Message}");
-                            RecentIssuesLog.Instance.Record(IssueSeverity.Error, "Vault did not lock", $"A security threat was detected but the vault failed to lock automatically: {ex.Message}");
-                        }
-                    }
-                });
-            }
-
-            if (action.ShouldExitApplication)
-            {
-                await Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    Environment.Exit(1);
-                });
-            }
-        }
-
-        private void StartSecurityMonitoring()
-        {
-            if (_securityCoordinator == null)
-                return;
-
-            _securityCoordinator.EnableMaximumSecurity();
-            SecurityStatus = "Secure";
-            CurrentThreatLevel = SecurityThreatLevel.None;
-            ShowSecurityAlert = false;
-
-            Debug.WriteLine("[Security] Monitoring started");
-        }
-
-        private void StopSecurityMonitoring()
-        {
-            if (_securityCoordinator == null)
-                return;
-
-            _securityCoordinator.StopMonitoring();
-            SecurityStatus = "Inactive";
-            CurrentThreatLevel = SecurityThreatLevel.None;
-            ShowSecurityAlert = false;
-
-            Debug.WriteLine("[Security] Monitoring stopped");
-        }
-
-        #endregion
-
-        #region USB Auto-Inject
-
-        private void InitializeAutoInject()
-        {
-            if (_autoInjectService == null)
-                return;
-
-            try
-            {
-
-                _autoInjectService.SetCredentialProviderFactory(() =>
-                    new VaultViewModelCredentialProvider(this));
-
-                _autoInjectService.PromptRequired += OnAutoInjectPromptRequired;
-                _autoInjectService.PasskeyReady += OnPasskeyReady;
-
-                _ = _autoInjectService.StartAsync();
-
-                Debug.WriteLine("[VaultViewModel] Auto-inject service initialized");
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[VaultViewModel] Failed to initialize auto-inject: {ex.Message}");
-                RecentIssuesLog.Instance.Record(IssueSeverity.Warning, "Auto-fill unavailable", $"USB auto-inject could not start; browser auto-fill may not work this session: {ex.Message}");
-            }
-        }
-
-        private void OnAutoInjectPromptRequired(object? sender, AutoInjectPromptEventArgs e)
-        {
-
-            Dispatcher.UIThread.InvokeAsync(async () =>
-            {
-                try
-                {
-                    var owner = GetOwnerWindowForDialog();
-                    if (owner == null)
-                    {
-                        Debug.WriteLine("[VaultViewModel] Cannot show auto-inject prompt: no owner window");
-                        return;
-                    }
-
-                    var promptWindow = new AutoInjectPromptWindow
-                    {
-                        DataContext = e
-                    };
-
-                    promptWindow.SetCredentials(e.Matches, e.Context);
-
-                    var result = await promptWindow.ShowDialog<bool?>(owner);
-
-                    if (result == true && promptWindow.SelectedCredential != null)
-                    {
-                        await _autoInjectService!.AutoFillAsync(
-                            promptWindow.SelectedCredential.CredentialId,
-                            e.Policy.AutoSubmit);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"[VaultViewModel] Auto-inject prompt error: {ex.Message}");
-                }
-            });
-        }
-
-        private void OnPasskeyReady(object? sender, PasskeyReadyEventArgs e)
-        {
-
-            Dispatcher.UIThread.InvokeAsync(async () =>
-            {
-                try
-                {
-                    var services = TryGetServiceProvider();
-                    var passkeyService = services?.GetService(typeof(IPasskeyService)) as IPasskeyService
-                        ?? services?.GetService(typeof(PasskeyService)) as IPasskeyService;
-
-                    if (passkeyService == null)
-                    {
-                        Debug.WriteLine("[VaultViewModel] PasskeyService not available");
-                        return;
-                    }
-
-                    var credentialId = Convert.FromBase64String(e.CredentialId);
-                    byte[] challenge = new byte[32];
-                    System.Security.Cryptography.RandomNumberGenerator.Fill(challenge);
-
-                    bool ok = await passkeyService.AuthenticateAsync(credentialId, e.Domain, challenge);
-                    if (ok)
-                    {
-                        Debug.WriteLine($"[VaultViewModel] Passkey authenticated for {e.Domain}");
-                        if (_autoInjectService != null)
-                        {
-                            await _autoInjectService.AutoFillAsync(e.CredentialId, autoSubmit: false);
-                        }
-                    }
-                    else
-                    {
-                        Debug.WriteLine($"[VaultViewModel] Passkey authentication failed for {e.Domain}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"[VaultViewModel] Passkey handler error: {ex.Message}");
-                }
-            });
-        }
-
-        private Window? GetOwnerWindowForDialog()
-        {
-            return _ownerWindow ??
-                   (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
-        }
-
-        #region TOTP Synchronization
-
-        private async Task InitializeTotpSyncAsync()
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(_mountPath))
-                {
-                    SetTotpSyncContextState(syncTotpEnabled: false);
-                    return;
-                }
-
-                // TOTP secrets are the only sync channel that moves secret material, so it
-                // is governed by an explicit, revocable opt-in. When cross-app sync is off,
-                // or the TOTP channel specifically is off, we never write seeds to disk.
-                var syncSettings = SettingsService.Load();
-                if (!syncSettings.SyncEnabled || !syncSettings.SyncTotp)
-                {
-                    Debug.WriteLine("[VaultViewModel] TOTP sync disabled by settings — skipping Attestor TOTP sync.");
-                    SetTotpSyncContextState(syncTotpEnabled: false);
-                    return;
-                }
-
-                var syncPath = Path.Combine(_mountPath, ".phantom", "vaults", "totp-sync.json");
-                var syncDir = Path.GetDirectoryName(syncPath);
-
-                if (!string.IsNullOrEmpty(syncDir) && !Directory.Exists(syncDir))
-                {
-                    Directory.CreateDirectory(syncDir);
-                }
-
-                _totpSyncService = new PhantomVault.Core.Services.Sync.TotpSyncServiceObscura(syncPath);
-                _totpSyncService.EntriesChanged += OnTotpEntriesChanged;
-                await _totpSyncService.InitializeAsync();
-
-                SetTotpSyncContextState(syncTotpEnabled: true);
-
-                await ExportTotpToSyncAsync();
-
-                StatusMessage = "TOTP sync initialized";
-            }
-            catch (Exception ex)
-            {
-
-                System.Diagnostics.Debug.WriteLine($"Failed to initialize TOTP sync: {ex.Message}");
-                StatusMessage = "TOTP sync unavailable";
-            }
-        }
-
-        /// <summary>
-        /// Updates the shared <see cref="PhantomVault.UI.Services.Sync.TotpSyncVaultContext"/> so
-        /// <see cref="PhantomVault.UI.Services.Sync.TotpSyncPipeServer"/> can gate and route TOTP
-        /// pushes from PhantomAttestor. Best-effort: the live pipe is purely additive on top of
-        /// the existing totp-sync.json file transport.
-        /// </summary>
-        private void SetTotpSyncContextState(bool syncTotpEnabled)
-        {
-            try
-            {
-                var ctx = (Avalonia.Application.Current as App)?.Services?.GetService(typeof(PhantomVault.UI.Services.Sync.TotpSyncVaultContext))
-                          as PhantomVault.UI.Services.Sync.TotpSyncVaultContext;
-                ctx?.SetUnlocked(this, syncTotpEnabled);
-            }
-            catch { /* best-effort */ }
-        }
-
-        private async Task ExportTotpToSyncAsync()
-        {
-            try
-            {
-                if (_totpSyncService == null) return;
-
-                var coreCredentials = _credentials
-                    .Select(c => c.GetCredential())
-                    .Where(c => !string.IsNullOrWhiteSpace(c.TotpSecret));
-
-                var obscuraEntries = _totpSyncService.ExtractFromVault(coreCredentials);
-
-                if (obscuraEntries.Count > 0)
-                {
-                    await _totpSyncService.ExportToSyncFileAsync(obscuraEntries);
-                    System.Diagnostics.Debug.WriteLine($"Exported {obscuraEntries.Count} TOTP entries from Obscura to sync file");
-
-                    _ = PushTotpEntriesOverPipeAsync(obscuraEntries);
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Failed to export TOTP entries: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Fire-and-forget live push of TOTP entries to PhantomAttestor over
-        /// <see cref="PhantomVault.UI.Services.Sync.TotpSyncPipeClient"/>. If Attestor isn't
-        /// running or the pipe is rejected, this silently no-ops — the totp-sync.json file
-        /// watcher on Attestor's side will pick up the change as it does today.
-        /// </summary>
-        private async Task PushTotpEntriesOverPipeAsync(System.Collections.Generic.List<PhantomVault.Core.Models.SharedTotpEntry> entries)
-        {
-            try
-            {
-                var client = (Avalonia.Application.Current as App)?.Services?.GetService(typeof(PhantomVault.UI.Services.Sync.TotpSyncPipeClient))
-                             as PhantomVault.UI.Services.Sync.TotpSyncPipeClient;
-                if (client == null) return;
-
-                await client.TryPushEntriesAsync(entries);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[VaultViewModel] TOTP pipe push failed (falling back to file sync): {ex.Message}");
-            }
-        }
-
-        private async void OnTotpEntriesChanged(object? sender, System.Collections.Generic.List<PhantomVault.Core.Models.SharedTotpEntry> entries)
-        {
-            await ApplyIncomingTotpEntriesAsync(entries);
-        }
-
-        /// <summary>
-        /// Merges TOTP entries pushed from PhantomAttestor (whether delivered via the
-        /// totp-sync.json file watcher or the live <see cref="PhantomVault.UI.Services.Sync.TotpSyncPipeServer"/>)
-        /// into the unlocked vault.
-        /// </summary>
-        private async Task ApplyIncomingTotpEntriesAsync(System.Collections.Generic.List<PhantomVault.Core.Models.SharedTotpEntry> entries)
-        {
-            try
-            {
-
-                foreach (var entry in entries)
-                {
-                    var cred = _credentials.FirstOrDefault(c => c.Title == entry.LinkedPasswordEntryId);
-                    if (cred != null)
-                    {
-                        var coreCred = cred.GetCredential();
-
-                        coreCred.TotpSecret = entry.Secret;
-                        coreCred.TotpDigits = entry.Digits;
-                        coreCred.TotpTimeStep = entry.Period;
-                        coreCred.TotpAlgorithm = entry.Algorithm;
-                        coreCred.TotpIssuer = entry.Issuer;
-                        coreCred.TotpAccountName = entry.AccountName;
-                        coreCred.LastUpdatedUtc = DateTimeOffset.UtcNow;
-
-                        var index = _credentials.IndexOf(cred);
-                        _credentials.RemoveAt(index);
-                        var newCredentialVM = new CredentialViewModel(coreCred);
-                        _credentials.Insert(index, newCredentialVM);
-
-                        if (SelectedCredential?.Title == entry.LinkedPasswordEntryId)
-                        {
-                            SelectedCredential = newCredentialVM;
-                        }
-                    }
-                }
-
-                await SaveVaultAsync();
-
-                StatusMessage = $"Synced {entries.Count} TOTP entries from PhantomAttestor";
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Failed to sync TOTP entries: {ex.Message}");
-                RecentIssuesLog.Instance.Record(IssueSeverity.Warning, "TOTP sync failed", $"Incoming authenticator codes could not be applied: {ex.Message}");
-            }
-        }
-
-        Task PhantomVault.Core.Services.Sync.ITotpSyncBridge.ApplyIncomingEntriesAsync(System.Collections.Generic.List<PhantomVault.Core.Models.SharedTotpEntry> entries)
-            => ApplyIncomingTotpEntriesAsync(entries);
-
-        #endregion
 
         internal bool TryGetTierMigrationContext(out VaultTierMigrationContext? context)
         {
             context = null;
             if (string.IsNullOrWhiteSpace(_manifestPath) ||
-                string.IsNullOrWhiteSpace(_vaultPassword) ||
                 string.IsNullOrWhiteSpace(_transportLayoutRoot) ||
                 string.IsNullOrWhiteSpace(_usbRootPath))
             {
@@ -8171,7 +7796,7 @@ namespace PhantomVault.UI.ViewModels
 
             context = new VaultTierMigrationContext(
                 _manifestPath,
-                _vaultPassword,
+                GetVaultPasswordString(),
                 _vaultKeyfilePath,
                 _usbRootPath,
                 _transportLayoutRoot,
@@ -8195,73 +7820,7 @@ namespace PhantomVault.UI.ViewModels
             StatusMessage = result.StatusMessage;
         }
 
-        #endregion
     }
 }
 
-public class DashboardCredentialItem
-{
-    private readonly PhantomVault.Core.Models.Credential _credential;
-    private readonly bool _hasTwoFactor;
-    private readonly Avalonia.Media.Imaging.Bitmap? _icon;
-    private readonly string _categoryColor;
-
-    public DashboardCredentialItem(PhantomVault.Core.Models.Credential credential, bool hasTwoFactor, int securityScore, Avalonia.Media.Imaging.Bitmap? icon = null, string categoryColor = "#999999")
-    {
-        _credential = credential;
-        _hasTwoFactor = hasTwoFactor;
-        SecurityScore = securityScore;
-        _icon = icon;
-        _categoryColor = categoryColor;
-    }
-
-    public string CredentialTitle => _credential.Title ?? "Untitled";
-    public string CredentialUsername => _credential.Username ?? "";
-    public int SecurityScore { get; }
-    public Avalonia.Media.Imaging.Bitmap? IconBitmap => _icon;
-    public string CategoryColor => _categoryColor;
-    public PhantomVault.Core.Models.Credential Credential => _credential;
-
-    public string SecurityScoreColor => SecurityScore switch
-    {
-        >= 81 => "#4CAF50",
-        >= 61 => "#FFC107",
-        >= 41 => "#FF9800",
-        _ => "#F44336"
-    };
-
-    public ObservableCollection<StatusIndicator> StatusIndicators
-    {
-        get
-        {
-            var indicators = new ObservableCollection<StatusIndicator>();
-            var passwordAssessment = PasswordStrengthEvaluator.Evaluate(_credential.Password);
-
-            if (passwordAssessment.IsWeak)
-                indicators.Add(new StatusIndicator { Label = "W", Tooltip = "Weak Password", Color = "#FF9800" });
-
-            if (_credential.ExpiryUtc.HasValue && _credential.ExpiryUtc < DateTimeOffset.UtcNow)
-                indicators.Add(new StatusIndicator { Label = "E", Tooltip = "Expired", Color = "#F44336" });
-            else if (_credential.ExpiryUtc.HasValue && _credential.ExpiryUtc < DateTimeOffset.UtcNow.AddDays(30))
-                indicators.Add(new StatusIndicator { Label = "X", Tooltip = "Expiring Soon", Color = "#FF9800" });
-
-            if (_hasTwoFactor)
-                indicators.Add(new StatusIndicator { Label = "2FA", Tooltip = "2FA Enabled", Color = "#2196F3" });
-
-            return indicators;
-        }
-    }
-
-    public bool IsTwoFactorEnabled => _hasTwoFactor;
-    public string LastModifiedFormatted => _credential.ModifiedDate > DateTime.MinValue
-        ? _credential.ModifiedDate.ToString("yyyy-MM-dd")
-        : "N/A";
-}
-
-public class StatusIndicator
-{
-    public string Label { get; set; } = "";
-    public string Tooltip { get; set; } = "";
-    public string Color { get; set; } = "#666";
-}
 

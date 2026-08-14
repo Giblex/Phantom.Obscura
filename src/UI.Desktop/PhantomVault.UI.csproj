@@ -29,7 +29,7 @@
     <!-- TODO: Add XML documentation comments for all public APIs -->
     <!-- NU1903: vulnerable transitive dep (Tmds.DBus.Protocol via Avalonia.Linux) — suppressed until Avalonia ships a fix -->
     <!-- NU1510: System.Text.Json inbox in .NET 10 — any residual explicit ref is harmless -->
-    <NoWarn>$(NoWarn);1591;CS0618;CS1573;CS1574;CS1571;CS1998;CS8625;CS0012;NU1903;NU1510</NoWarn>
+    <NoWarn>$(NoWarn);1591;CS1573;CS1574;CS1571;CS1998;CS8625;CS0012;NU1903;NU1510</NoWarn>
   </PropertyGroup>
 
   <!--
@@ -95,7 +95,7 @@
   
   <ItemGroup>
     <PackageReference Include="Avalonia.Markup.Xaml.Loader" Version="11.3.11" />
-    <PackageReference Include="Avalonia.Svg.Skia" Version="11.0.0" />
+    <PackageReference Include="Avalonia.Svg.Skia" Version="11.3.0" />
     <PackageReference Include="Avalonia.Xaml.Interactivity" Version="11.3.0.6" />
     <PackageReference Include="Isopoh.Cryptography.Argon2" Version="2.0.0" />
     <!-- MVVM Toolkit for ObservableObject and RelayCommand -->
@@ -130,6 +130,7 @@
     <AvaloniaResource Include="Assets\ok.svg" />
     <AvaloniaResource Include="Assets\ok.png" />
     <AvaloniaResource Include="Assets\dot_pattern.png" />
+    <AvaloniaResource Include="Assets\dot_pattern_light.png" />
     <!-- Include SVG icons for UI elements -->
     <AvaloniaResource Include="Assets\Icons\*.svg" />
     <AvaloniaResource Include="Assets\SVG\*.svg" />
@@ -141,8 +142,8 @@
     <!-- Note: .axaml files are auto-included by the Avalonia SDK as AvaloniaResource.
          Explicit includes would cause duplicate key errors at startup. -->
     <!-- System.Text.Json is inbox in .NET 10; no explicit reference needed -->
-    <PackageReference Include="ZXing.Net" Version="0.16.9" />
-    <PackageReference Include="ZXing.Net.Bindings.SkiaSharp" Version="0.16.14" />
+    <PackageReference Include="ZXing.Net" Version="0.16.11" />
+    <PackageReference Include="ZXing.Net.Bindings.SkiaSharp" Version="0.16.22" />
   </ItemGroup>
 
   <ItemGroup>

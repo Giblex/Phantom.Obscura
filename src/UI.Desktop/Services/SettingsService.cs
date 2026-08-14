@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using Serilog;
 
@@ -182,6 +183,23 @@ namespace PhantomVault.UI.Services
 
         public List<string> KnownLocalVaultPaths { get; set; } = new();
 
+        /// <summary>
+        /// Shallow copy with the two collection members duplicated rather than shared.
+        /// Every other member is a value type or an immutable string, so this is a full
+        /// logical copy. Used by SettingsService.Load(), which caches one instance and
+        /// must still hand each caller its own object — callers mutate the result and
+        /// only some of them save it.
+        /// </summary>
+        internal UserSettings CreateCopy()
+        {
+            var copy = (UserSettings)MemberwiseClone();
+            copy.AutoFillAppPermissions = AutoFillAppPermissions
+                .Select(p => new AutoFillAppPermission { AppName = p.AppName, Allowed = p.Allowed })
+                .ToList();
+            copy.KnownLocalVaultPaths = new List<string>(KnownLocalVaultPaths);
+            return copy;
+        }
+
         public bool EnableAutoFill { get; set; } = false;
 
         public bool AutoFillInjectUsername { get; set; } = true;
@@ -361,19 +379,120 @@ namespace PhantomVault.UI.Services
             _ => 2
         };
 
+        // Settings were previously written as plaintext, unauthenticated JSON. Two problems:
+        //
+        //  1. Deniability. The Decoy* keys are visible to anyone who opens the file, and
+        //     their presence proves a decoy vault is configured — which in turn proves a
+        //     real vault sits behind whichever one an observer was shown. That is exactly
+        //     the inference the decoy feature exists to prevent.
+        //  2. Integrity. Anyone with write access could silently downgrade the security
+        //     posture: disable screenshot protection, set unlock attempts to unlimited,
+        //     turn off lock-on-screen-lock. The app loaded tampered values without complaint.
+        //
+        // DPAPI (CurrentUser) is the right primitive here because settings must load before
+        // the vault is unlocked, so no vault key is available. It is authenticated, so
+        // Unprotect throws on tamper — no separate MAC is needed. Same approach already
+        // used for the autofill origin allowlist.
+        private static string SealedSettingsPath => Path.Combine(SettingsDir, "settings.dat");
+        private static readonly byte[] SettingsEntropy =
+            System.Text.Encoding.UTF8.GetBytes("PhantomVault.user-settings.v1");
+
+        // Load() is called from ~130 sites, several of them hot: the idle watchdog resets
+        // on every user input, and the session-policy timer polls on a tick. Now that the
+        // settings blob is DPAPI-sealed, an uncached Load() would mean a file read plus a
+        // decrypt per keystroke. The cache is invalidated by Save/Update, which are the
+        // only writers, and by an external file change.
+        private static readonly object _cacheLock = new();
+        private static UserSettings? _cached;
+        private static DateTime _cachedFileStampUtc;
+
+        private static void InvalidateCache()
+        {
+            lock (_cacheLock)
+            {
+                _cached = null;
+            }
+        }
+
         public static UserSettings Load()
+        {
+            lock (_cacheLock)
+            {
+                if (_cached != null)
+                {
+                    // Cheap staleness check so an external edit (or another process) is
+                    // still picked up without re-reading and decrypting the file every call.
+                    try
+                    {
+                        var stamp = File.Exists(SealedSettingsPath)
+                            ? File.GetLastWriteTimeUtc(SealedSettingsPath)
+                            : DateTime.MinValue;
+
+                        if (stamp == _cachedFileStampUtc)
+                        {
+                            return Clone(_cached);
+                        }
+                    }
+                    catch
+                    {
+                        return Clone(_cached);
+                    }
+                }
+            }
+
+            var loaded = LoadUncached();
+
+            lock (_cacheLock)
+            {
+                _cached = loaded;
+                try
+                {
+                    _cachedFileStampUtc = File.Exists(SealedSettingsPath)
+                        ? File.GetLastWriteTimeUtc(SealedSettingsPath)
+                        : DateTime.MinValue;
+                }
+                catch
+                {
+                    _cachedFileStampUtc = DateTime.MinValue;
+                }
+
+                return Clone(loaded);
+            }
+        }
+
+        // Load() has always handed back a fresh object and callers rely on that — several
+        // mutate the result and only some of them call Save(). Returning the cached
+        // instance directly would turn a discarded edit into an applied one, so every
+        // caller gets its own copy via Clone() (defined below).
+
+        private static UserSettings LoadUncached()
         {
             try
             {
+                if (File.Exists(SealedSettingsPath))
+                {
+                    var json = UnsealSettings(File.ReadAllBytes(SealedSettingsPath));
+                    return JsonSerializer.Deserialize<UserSettings>(json) ?? new UserSettings();
+                }
+
+                // Legacy plaintext file: read once, re-seal, remove the plaintext copy.
                 if (File.Exists(SettingsPath))
                 {
                     var json = File.ReadAllText(SettingsPath);
-                    return JsonSerializer.Deserialize<UserSettings>(json) ?? new UserSettings();
+                    var settings = JsonSerializer.Deserialize<UserSettings>(json) ?? new UserSettings();
+                    TryMigratePlaintextSettings(settings);
+                    return settings;
                 }
+            }
+            catch (System.Security.Cryptography.CryptographicException ex)
+            {
+                // Tampered, truncated, or sealed under a different Windows profile.
+                // Defaults are the safe posture — they are the hardened values.
+                Log.Error(ex, "User settings failed integrity check; falling back to defaults");
             }
             catch (Exception ex)
             {
-                Log.Warning(ex, "Failed to load user settings from {SettingsPath}, returning defaults", SettingsPath);
+                Log.Warning(ex, "Failed to load user settings, returning defaults");
             }
             return new UserSettings();
         }
@@ -384,16 +503,111 @@ namespace PhantomVault.UI.Services
             {
                 Directory.CreateDirectory(SettingsDir);
                 var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(SettingsPath, json);
+
+                WriteAtomic(SealedSettingsPath, SealSettings(json));
+
+                // Remove any legacy plaintext file so the old copy cannot be read or edited.
+                TryDeletePlaintextSettings();
+
+                InvalidateCache();
                 RaiseSettingsChanged(settings);
-#if DEBUG
-                System.Diagnostics.Debug.WriteLine($"[SettingsService] Settings saved to {SettingsPath}");
-                System.Diagnostics.Debug.WriteLine($"[SettingsService] EnableScreenshotProtection in file: {settings.EnableScreenshotProtection}");
-#endif
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Failed to save user settings to {SettingsPath}", SettingsPath);
+                Log.Error(ex, "Failed to save user settings");
+            }
+        }
+
+        /// <summary>
+        /// Write via a temp file plus atomic replace. A direct WriteAllText that is
+        /// interrupted mid-write leaves a truncated file, which now means a failed
+        /// integrity check and a silent reset of every setting.
+        /// </summary>
+        private static void WriteAtomic(string path, byte[] contents)
+        {
+            var tempPath = path + ".tmp";
+            File.WriteAllBytes(tempPath, contents);
+
+            if (File.Exists(path))
+            {
+                // Replace is atomic on NTFS and preserves the destination on failure.
+                File.Replace(tempPath, path, destinationBackupFileName: null);
+            }
+            else
+            {
+                File.Move(tempPath, path);
+            }
+        }
+
+        private static byte[] SealSettings(string json)
+        {
+            var plain = System.Text.Encoding.UTF8.GetBytes(json);
+            try
+            {
+                if (OperatingSystem.IsWindows())
+                {
+                    return System.Security.Cryptography.ProtectedData.Protect(
+                        plain, SettingsEntropy, System.Security.Cryptography.DataProtectionScope.CurrentUser);
+                }
+
+                // Non-Windows has no DPAPI equivalent here. Returning the raw bytes keeps
+                // the app functional; the file permissions are the only protection.
+                return (byte[])plain.Clone();
+            }
+            finally
+            {
+                System.Security.Cryptography.CryptographicOperations.ZeroMemory(plain);
+            }
+        }
+
+        private static string UnsealSettings(byte[] sealedBytes)
+        {
+            if (!OperatingSystem.IsWindows())
+            {
+                return System.Text.Encoding.UTF8.GetString(sealedBytes);
+            }
+
+            var plain = System.Security.Cryptography.ProtectedData.Unprotect(
+                sealedBytes, SettingsEntropy, System.Security.Cryptography.DataProtectionScope.CurrentUser);
+            try
+            {
+                return System.Text.Encoding.UTF8.GetString(plain);
+            }
+            finally
+            {
+                System.Security.Cryptography.CryptographicOperations.ZeroMemory(plain);
+            }
+        }
+
+        private static void TryMigratePlaintextSettings(UserSettings settings)
+        {
+            try
+            {
+                Directory.CreateDirectory(SettingsDir);
+                var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
+                WriteAtomic(SealedSettingsPath, SealSettings(json));
+                TryDeletePlaintextSettings();
+                InvalidateCache();
+                Log.Information("Migrated user settings to sealed storage");
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Failed to migrate plaintext user settings to sealed storage");
+            }
+        }
+
+        private static void TryDeletePlaintextSettings()
+        {
+            try
+            {
+                if (File.Exists(SettingsPath))
+                {
+                    File.Delete(SettingsPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Failed to remove legacy plaintext settings file");
             }
         }
 
@@ -486,11 +700,12 @@ namespace PhantomVault.UI.Services
             }
         }
 
-        private static UserSettings Clone(UserSettings settings)
-        {
-            var json = JsonSerializer.Serialize(settings);
-            return JsonSerializer.Deserialize<UserSettings>(json) ?? new UserSettings();
-        }
+        // Was a JSON serialize/deserialize round-trip. That is correct but far too
+        // expensive to sit on the Load() path now that Load() is cached and called on
+        // every user-input event via the idle watchdog. MemberwiseClone plus explicit
+        // copies of the two collection members is equivalent for this type — every other
+        // member is a value type or an immutable string.
+        private static UserSettings Clone(UserSettings settings) => settings.CreateCopy();
     }
 }
 

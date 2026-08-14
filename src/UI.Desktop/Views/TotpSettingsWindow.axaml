@@ -241,7 +241,7 @@
                                            Foreground="{DynamicResource PrimaryTextBrush}"
                                            VerticalAlignment="Center"
                                            LetterSpacing="1.5"/>
-                                <Button Grid.Column="1"
+                                <Button AutomationProperties.Name="Copy to clipboard" Grid.Column="1"
                                         Command="{Binding CopySecretCommand}"
                                         Classes="liquid-glass"
                                         Width="38" Height="38"

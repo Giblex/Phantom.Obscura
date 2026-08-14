@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Window xmlns="https://github.com/avaloniaui"
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+        xmlns:views="clr-namespace:PhantomVault.UI.Views"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:PhantomVault.UI.ViewModels"
         xmlns:domain="using:PhantomVault.Core.Models.DomainStores"
@@ -15,7 +16,7 @@
         <vm:RecoveryViewModel/>
     </Design.DataContext>
 
-    <Window.Styles>
+    <views:ThemeAwareWindow.Styles>
 
         <Style Selector="Border.step-card">
             <Setter Property="Background" Value="{DynamicResource ContentBackgroundBrush}"/>
@@ -96,7 +97,7 @@
             <Setter Property="CornerRadius" Value="4"/>
             <Setter Property="Margin" Value="0,16,0,0"/>
         </Style>
-    </Window.Styles>
+    </views:ThemeAwareWindow.Styles>
 
     <Grid RowDefinitions="Auto,*,Auto">
 
@@ -520,5 +521,5 @@
             </Grid>
         </Border>
     </Grid>
-</Window>
+</views:ThemeAwareWindow>
 

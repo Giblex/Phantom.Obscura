@@ -27,19 +27,26 @@
                     <ComboBox Width="250"
                               HorizontalAlignment="Left"
                               SelectedIndex="{Binding SelectedLanguage, Mode=TwoWay}">
+                        <!--
+                          Only en-US and es-ES have a Strings.<culture>.axaml dictionary.
+                          The rest still set the thread culture (so dates, numbers and
+                          sort order follow the locale) but the interface text falls back
+                          to English, so they are labelled honestly rather than promising
+                          a translation that does not exist yet.
+                        -->
                         <ComboBoxItem Content="English (United States)"/>
                         <ComboBoxItem Content="Español (Spanish)"/>
-                        <ComboBoxItem Content="Français (French)"/>
-                        <ComboBoxItem Content="Deutsch (German)"/>
-                        <ComboBoxItem Content="Italiano (Italian)"/>
-                        <ComboBoxItem Content="Português (Portuguese)"/>
-                        <ComboBoxItem Content="中文 (Chinese Simplified)"/>
-                        <ComboBoxItem Content="日本語 (Japanese)"/>
-                        <ComboBoxItem Content="한국어 (Korean)"/>
+                        <ComboBoxItem Content="Français (French) — regional formats only"/>
+                        <ComboBoxItem Content="Deutsch (German) — regional formats only"/>
+                        <ComboBoxItem Content="Italiano (Italian) — regional formats only"/>
+                        <ComboBoxItem Content="Português (Portuguese) — regional formats only"/>
+                        <ComboBoxItem Content="中文 (Chinese Simplified) — regional formats only"/>
+                        <ComboBoxItem Content="日本語 (Japanese) — regional formats only"/>
+                        <ComboBoxItem Content="한국어 (Korean) — regional formats only"/>
                     </ComboBox>
                 </StackPanel>
 
-                <TextBlock Text="Restart required for language changes to take effect"
+                <TextBlock Text="Interface text switches immediately; some views pick up the change after a restart"
                            FontStyle="Italic"
                            Foreground="{DynamicResource WarningBrush}"/>
             </StackPanel>

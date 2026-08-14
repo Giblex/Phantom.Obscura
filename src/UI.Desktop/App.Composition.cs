@@ -80,7 +80,12 @@ namespace PhantomVault.UI
 
             services.AddSingleton<PhantomVault.UI.Services.SettingsDraftTracker>();
             services.AddSingleton<SecureTrashService>();
-            services.AddSingleton<IdleLockService>(provider => new IdleLockService(TimeSpan.FromMinutes(5)));
+            // Idle window comes from the user's auto-lock setting, re-read on every reset.
+            // This previously hardcoded 5 minutes, which overrode the setting entirely —
+            // a user who chose 60 minutes still had their master key wiped after 5.
+            // IdleTimeoutMinutes <= 0 means auto-lock is off.
+            services.AddSingleton<IdleLockService>(provider => new IdleLockService(
+                () => TimeSpan.FromMinutes(Math.Max(0, SettingsService.Load().IdleTimeoutMinutes))));
 
             // Keyless suite-session coordinator: reports this app's unlock presence to
             // the suite and honours suite-wide lock without ever sharing key material.

@@ -31,6 +31,9 @@ namespace PhantomVault.Core.Services.AutoInject
                         ConfidenceScore = score,
                         LastUsed = cred.LastUsedUtc,
                         IsPasskey = !string.IsNullOrEmpty(cred.PasskeyId),
+                        PasskeyId = cred.PasskeyId,
+                        RelyingPartyId = ExtractDomain(cred.Url),
+                        HasTotp = CredentialTotpResolver.HasTotp(cred),
                         Tags = cred.Tags?.ToArray() ?? Array.Empty<string>()
                     });
                 }

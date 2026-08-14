@@ -27,9 +27,8 @@ namespace PhantomVault.UI.Services.Licensing
 
         // Fallback Stripe Payment Link — opened when the licensing backend
         // isn't reachable (e.g. the /api/checkout endpoint isn't deployed yet).
-        // Override with PHANTOM_STRIPE_PAYMENT_LINK for a different product.
-        private const string DefaultStripePaymentLink =
-            "https://buy.stripe.com/aFa14n2VD3zdanIfe2eZ200"; // Phantom Obscura Premium (test link — replace when live)
+        // Set via PHANTOM_STRIPE_PAYMENT_LINK env var — no hardcoded link ships.
+        private const string DefaultStripePaymentLink = "";
 
         private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(3);
         private static readonly TimeSpan PollTimeout = TimeSpan.FromMinutes(15);
@@ -103,14 +102,35 @@ namespace PhantomVault.UI.Services.Licensing
             var configuredLink = Environment.GetEnvironmentVariable("PHANTOM_STRIPE_PAYMENT_LINK");
             var link = string.IsNullOrWhiteSpace(configuredLink) ? DefaultStripePaymentLink : configuredLink.Trim();
 
-            if (string.IsNullOrWhiteSpace(link) || !Uri.TryCreate(link, UriKind.Absolute, out _))
+            if (string.IsNullOrWhiteSpace(link) || !Uri.TryCreate(link, UriKind.Absolute, out var linkUri))
                 return LicensingResult.Failed($"{reason} No fallback checkout URL is configured.");
+
+            // The link comes from an environment variable, so anything that can set
+            // the process environment could otherwise redirect the user to an
+            // arbitrary page that looks like checkout. Only Stripe's own hosted
+            // checkout hosts are acceptable, and only over HTTPS.
+            if (!IsStripeCheckoutUri(linkUri))
+                return LicensingResult.Failed($"{reason} The configured fallback checkout URL is not a Stripe checkout link.");
 
             if (!TryOpenBrowser(link))
                 return LicensingResult.Failed($"{reason} Could not open the fallback checkout page.");
 
             return LicensingResult.NotConfigured(
                 "Opened Stripe checkout in your browser. Complete payment there — your activation code will arrive by email.");
+        }
+
+        /// <summary>
+        /// True only for an HTTPS URL on a Stripe-hosted checkout domain
+        /// (buy.stripe.com, checkout.stripe.com, or a *.stripe.com subdomain).
+        /// </summary>
+        private static bool IsStripeCheckoutUri(Uri uri)
+        {
+            if (!string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.Ordinal))
+                return false;
+
+            var host = uri.IdnHost;
+            return string.Equals(host, "stripe.com", StringComparison.OrdinalIgnoreCase)
+                || host.EndsWith(".stripe.com", StringComparison.OrdinalIgnoreCase);
         }
 
         public Task<LicensingResult> RenewAsync(string? currentToken, string? usbBindingId, CancellationToken ct = default)

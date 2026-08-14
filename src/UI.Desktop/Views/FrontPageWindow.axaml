@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Window xmlns="https://github.com/avaloniaui"
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+        xmlns:views="clr-namespace:PhantomVault.UI.Views"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="PhantomVault.UI.Views.FrontPageWindow"
         Title="Welcome" Width="400" Height="280"
@@ -47,5 +48,5 @@
             </StackPanel>
         </Border>
     </Grid>
-</Window>
+</views:ThemeAwareWindow>
 

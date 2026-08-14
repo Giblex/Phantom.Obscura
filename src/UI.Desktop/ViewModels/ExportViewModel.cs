@@ -123,24 +123,46 @@ namespace PhantomVault.UI.ViewModels
             if (!IncludePasswords)
             {
 
-                return filtered.Select(c => new Credential
+                // Copy the whole entry, then redact the secrets. Hand-listing the fields to
+                // keep silently dropped every type-specific value (card, bank, identity,
+                // Wi-Fi, API, TOTP, PIN) and, later, sections from a no-passwords export.
+                return filtered.Select(c =>
                 {
-                    Title = c.Title,
-                    Username = c.Username,
-                    Password = "[REDACTED]",
-                    Url = c.Url,
-                    Notes = c.Notes,
-                    Group = c.Group,
-                    Icon = c.Icon,
-                    IconColor = c.IconColor,
-                    Tags = c.Tags,
-                    CreatedUtc = c.CreatedUtc,
-                    LastUpdatedUtc = c.LastUpdatedUtc,
-                    ExpiryUtc = c.ExpiryUtc
+                    var redacted = c.Clone();
+                    RedactSecrets(redacted);
+                    return redacted;
                 }).ToList();
             }
 
             return filtered;
+        }
+
+        private const string RedactedMarker = "[REDACTED]";
+
+        /// <summary>
+        /// Blanks every secret on an entry for a "without passwords" export. Anything
+        /// secret-bearing must be listed here, including secret sections.
+        /// </summary>
+        private static void RedactSecrets(Credential credential)
+        {
+            credential.Password = RedactedMarker;
+            credential.WiFiPassword = RedactedMarker;
+            credential.ApiKeyValue = RedactedMarker;
+            credential.TotpSecret = RedactedMarker;
+            credential.PinValue = RedactedMarker;
+            credential.CardNumber = RedactedMarker;
+            credential.CardCVV = RedactedMarker;
+            credential.CardPIN = RedactedMarker;
+            credential.BankAccountNumber = RedactedMarker;
+            credential.BankRoutingNumber = RedactedMarker;
+            credential.BankIBAN = RedactedMarker;
+            credential.BankSWIFT = RedactedMarker;
+
+            foreach (var section in credential.Sections)
+            {
+                if (section.IsSecret)
+                    section.Value = RedactedMarker;
+            }
         }
 
         private async Task BrowseForDestinationAsync()

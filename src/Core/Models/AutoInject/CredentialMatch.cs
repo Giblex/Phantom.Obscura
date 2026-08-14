@@ -20,6 +20,23 @@ namespace PhantomVault.Core.Models.AutoInject
 
         public bool IsPasskey { get; set; }
 
+        /// <summary>
+        /// Stored passkey handle. Needed to actually authenticate — without it the
+        /// UI could show a passkey row but had nothing to hand the authenticator.
+        /// </summary>
+        public string? PasskeyId { get; set; }
+
+        /// <summary>
+        /// Relying-party id for the passkey ceremony, normally the site's domain.
+        /// </summary>
+        public string RelyingPartyId { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Whether this credential carries a TOTP secret. Lets the suggestion UI offer
+        /// a code without having to fetch the secret itself just to find out.
+        /// </summary>
+        public bool HasTotp { get; set; }
+
         public string[] Tags { get; set; } = Array.Empty<string>();
     }
 }

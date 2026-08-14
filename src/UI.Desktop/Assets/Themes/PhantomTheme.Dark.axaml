@@ -139,9 +139,9 @@
             <Color x:Key="LiquidGlassDropShadow">#45000000</Color>
             <Color x:Key="LiquidGlassDropShadowHover">#38000000</Color>
             <Color x:Key="LiquidGlassDropShadowPressed">#25000000</Color>
-            <DropShadowEffect x:Key="LiquidGlassButtonEffect" BlurRadius="20" OffsetX="8" OffsetY="6" Color="#45000000"/>
-            <DropShadowEffect x:Key="LiquidGlassButtonEffectHover" BlurRadius="18" OffsetX="5" OffsetY="6" Color="#38000000"/>
-            <DropShadowEffect x:Key="LiquidGlassButtonEffectPressed" BlurRadius="8" OffsetX="1" OffsetY="2" Color="#25000000"/>
+            <DropShadowEffect x:Key="LiquidGlassButtonEffect" BlurRadius="28" OffsetX="0" OffsetY="3" Color="#30000000"/>
+            <DropShadowEffect x:Key="LiquidGlassButtonEffectHover" BlurRadius="36" OffsetX="0" OffsetY="4" Color="#28000000"/>
+            <DropShadowEffect x:Key="LiquidGlassButtonEffectPressed" BlurRadius="12" OffsetX="0" OffsetY="1" Color="#18000000"/>
 
             <SolidColorBrush x:Key="OverlayBackgroundBrush">#80000000</SolidColorBrush>
             <SolidColorBrush x:Key="ReadOnlyFieldBackgroundBrush">#1A2A38</SolidColorBrush>
@@ -199,6 +199,7 @@
             <CornerRadius x:Key="Radius.Md">6</CornerRadius>
             <CornerRadius x:Key="Radius.Lg">8</CornerRadius>
             <CornerRadius x:Key="Radius.Xl">12</CornerRadius>
+            <CornerRadius x:Key="Radius.Xxl">16</CornerRadius>
             <CornerRadius x:Key="Radius.Pill">999</CornerRadius>
 
             <SolidColorBrush x:Key="Brush.BorderSoft">#FFFFFF15</SolidColorBrush>
@@ -365,6 +366,83 @@
             <Color x:Key="DashboardTileHoverBorderColor">#66CFE8FF</Color>
             <Color x:Key="DashboardAcrylicTint">#14203A</Color>
             <Color x:Key="DashboardAcrylicFallback">#0C15253A</Color>
+
+            <!-- ===================================================================
+                 Compatibility aliases (dark).
+
+                 These keys are referenced by views but were never defined anywhere,
+                 so they resolved to nothing: a dynamic lookup returned a null brush
+                 (invisible dividers, transparent window backgrounds) and the static
+                 lookups failed outright.
+
+                 They are name drifts from the Brush.*/`SeparatorBrush` convention
+                 rather than genuinely new tokens, so each one is pinned to the
+                 value of its established counterpart. Defined here in the app-level
+                 theme so every selected skin inherits them as a fallback.
+                 =================================================================== -->
+
+            <!-- Separator family -->
+            <SolidColorBrush x:Key="DividerBrush">#30FFFFFF</SolidColorBrush>
+
+            <!-- Obscura-prefixed surface family (BackupSnapshots, LogViewer,
+                 KeePassPasswordDialog) -->
+            <SolidColorBrush x:Key="ObscuraCanvasBrush">#151D2A</SolidColorBrush>
+            <SolidColorBrush x:Key="ObscuraSurfaceAltBrush">#1A2434</SolidColorBrush>
+            <SolidColorBrush x:Key="ObscuraBorderBrush">#FFFFFF15</SolidColorBrush>
+            <SolidColorBrush x:Key="ObscuraAccentBrush">#6B8CAE</SolidColorBrush>
+
+            <!-- Generic surface/text aliases -->
+            <SolidColorBrush x:Key="PrimaryBackgroundBrush">#151D2A</SolidColorBrush>
+            <SolidColorBrush x:Key="TextSecondaryBrush">#E0E6ED</SolidColorBrush>
+            <SolidColorBrush x:Key="SubtleBrush">#18FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="SurfaceHoverBrush">#22FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="SurfaceActiveBrush">#33FFFFFF</SolidColorBrush>
+            <Color x:Key="ControlBackgroundColor">#263344</Color>
+
+            <!-- Semantic status aliases -->
+            <SolidColorBrush x:Key="DangerBrush">#F48771</SolidColorBrush>
+            <SolidColorBrush x:Key="InfoBrush">#6B8CAE</SolidColorBrush>
+            <SolidColorBrush x:Key="InfoBorderBrush">#556B8CAE</SolidColorBrush>
+
+            <!-- Duplicate-review diff colours -->
+            <SolidColorBrush x:Key="NewCredentialBrush">#B8E6C8</SolidColorBrush>
+            <SolidColorBrush x:Key="ExistingCredentialBrush">#FFC107</SolidColorBrush>
+
+            <!-- Hero banner gradient (GlobalStyles + HeroHeader) -->
+            <LinearGradientBrush x:Key="Brush.HeroGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#B01B2846" Offset="0"/>
+                <GradientStop Color="#A01E3540" Offset="0.55"/>
+                <GradientStop Color="#901A2C3A" Offset="1"/>
+            </LinearGradientBrush>
+
+            <!-- Missing members of the Brush.*/Shadow.*/Thickness.*/Type.* design-token
+                 family. GlobalStyles.axaml and ModernAnimations.axaml define utility
+                 classes (.glass-card, .surface-card, .panel, .nav-bar, .hero,
+                 .status-dot.success/.warning, .toast-success, .caption) against these
+                 names, but only some of the family was ever defined — so those classes
+                 silently rendered with null brushes, no shadow and no padding. -->
+            <SolidColorBrush x:Key="Brush.Surface">#1A2434</SolidColorBrush>
+            <SolidColorBrush x:Key="Brush.Navy700">#1E2A38</SolidColorBrush>
+            <SolidColorBrush x:Key="Brush.Success">#B8E6C8</SolidColorBrush>
+            <SolidColorBrush x:Key="Brush.Warning">#FFC107</SolidColorBrush>
+            <SolidColorBrush x:Key="Brush.GlassBorder">#1FFFFFFF</SolidColorBrush>
+            <LinearGradientBrush x:Key="Brush.GlassGradient" StartPoint="0%,0%" EndPoint="0%,100%">
+                <GradientStop Color="#66263344" Offset="0"/>
+                <GradientStop Color="#4D1A2434" Offset="1"/>
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="Brush.NavGradient" StartPoint="0%,0%" EndPoint="0%,100%">
+                <GradientStop Color="#CC1A2535" Offset="0"/>
+                <GradientStop Color="#CC141C28" Offset="1"/>
+            </LinearGradientBrush>
+
+            <BoxShadows x:Key="Shadow.Soft">0 1 3 0 #26000000</BoxShadows>
+            <BoxShadows x:Key="Shadow.Card">0 2 8 0 #33000000</BoxShadows>
+            <BoxShadows x:Key="Shadow.Glass">0 4 16 0 #40000000</BoxShadows>
+
+            <Thickness x:Key="Thickness.CardPaddingSm">12,8,12,8</Thickness>
+            <Thickness x:Key="Thickness.SectionPadding">24,20,24,20</Thickness>
+
+            <x:Double x:Key="Type.Caption.Size">11</x:Double>
 </Style.Resources>
     </Style>
 

@@ -1,26 +1,24 @@
 using System;
-using System.Diagnostics;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using PhantomVault.Core.Models.Licensing;
 using PhantomVault.UI.Services.Licensing;
+using Serilog;
+using PhantomVault.UI.Views;
 
 namespace PhantomVault.UI.Views.Dialogs
 {
     /// <summary>
-    /// Premium checkout window. Routes through <see cref="ILicensingClient"/>; the
-    /// production client (<see cref="StripeLicensingClient"/>) opens Stripe's hosted
-    /// checkout in the browser and waits for the signed token, while the env-gated
-    /// dev authority issues one locally. No card data is collected in-app.
+    /// Stripe-hosted checkout window. Payment is handled entirely by Stripe in the
+    /// system browser — no card data is entered or stored here.
     /// On success, <see cref="ResultToken"/> holds the signed token to persist.
     /// </summary>
-    public partial class PayWindow : Window
+    public partial class PayWindow : ThemeAwareWindow
     {
         private readonly ILicensingClient? _client;
         private readonly string? _usbBindingId;
         private bool _activated;
-        private bool _busy;
 
         public string? ResultToken { get; private set; }
 
@@ -39,78 +37,60 @@ namespace PhantomVault.UI.Views.Dialogs
 
         private void OnCancel(object? sender, RoutedEventArgs e) => Close();
 
-        // Hard-coded Stripe Payment Link fallback — used when the backend
-        // isn't reachable (which is always, in this build). Replace with a
-        // real link from your Stripe dashboard.
-        private const string StripePaymentLink =
-            "https://buy.stripe.com/aFa14n2VD3zdanIfe2eZ200";
-
         private async void OnSubscribe(object? sender, RoutedEventArgs e)
         {
-            // Guard everything — async void means uncaught exceptions kill the app.
+            Log.Information("[PayWindow] OnSubscribe clicked (activated={Activated})", _activated);
+
+            // Once activated the primary button becomes "Done" — close on second click.
+            if (_activated)
+            {
+                Close();
+                return;
+            }
+
+            if (_client is null)
+            {
+                ShowStatus("Licensing is unavailable in this build.");
+                return;
+            }
+
+            SubscribeButton.IsEnabled = false;
+            ShowStatus("Opening secure checkout…");
+
             try
             {
-                if (_activated)
+                Log.Information("[PayWindow] Calling ActivateAsync via {ClientType}", _client.GetType().Name);
+                var result = await _client.ActivateAsync(PremiumTier.Premium, _usbBindingId);
+                Log.Information("[PayWindow] ActivateAsync returned Kind={Kind}", result.Kind);
+
+                switch (result.Kind)
                 {
-                    Close();
-                    return;
-                }
-                if (_busy) return;
-
-                _busy = true;
-                SubscribeButton.IsEnabled = false;
-
-                // ALWAYS open the browser first — never leave the user staring
-                // at a button that appears to do nothing. Backend flow (if
-                // available) then polls for the signed token in the background.
-                var link = Environment.GetEnvironmentVariable("PHANTOM_STRIPE_PAYMENT_LINK");
-                if (string.IsNullOrWhiteSpace(link)) link = StripePaymentLink;
-
-                bool opened = false;
-                try
-                {
-                    Process.Start(new ProcessStartInfo { FileName = link, UseShellExecute = true });
-                    opened = true;
-                }
-                catch (Exception ex)
-                {
-                    ShowStatus($"Could not open browser: {ex.Message}");
-                }
-
-                if (!opened)
-                {
-                    _busy = false;
-                    SubscribeButton.IsEnabled = true;
-                    return;
-                }
-
-                ShowStatus("Stripe checkout opened in your browser. Complete payment there — your activation code will arrive by email.");
-                SubscribeButton.Content = "Done";
-                SubscribeButton.IsEnabled = true;
-                _activated = true; // treat as "you can close this now"
-
-                // If a real licensing client is wired up, kick off the poll
-                // in the background so the token can auto-activate if payment
-                // completes while this window is still open.
-                if (_client is not null)
-                {
-                    try
-                    {
-                        var result = await _client.ActivateAsync(PremiumTier.Premium, _usbBindingId);
-                        if (result.Kind == LicensingResultKind.Success)
-                        {
-                            ResultToken = result.Token;
-                            ShowStatus("Payment accepted — Premium activated. Click Done to continue.");
-                        }
-                    }
-                    catch { /* silent — user still gets the manual code path */ }
+                    case LicensingResultKind.Success:
+                        ResultToken = result.Token;
+                        _activated = true;
+                        PaymentPanel.IsVisible = false;
+                        ShowStatus("Payment accepted — Premium activated. Click Done to continue.");
+                        SubscribeButton.Content = "Done";
+                        SubscribeButton.IsEnabled = true;
+                        CancelButton.IsVisible = false;
+                        return;
+                    case LicensingResultKind.NotConfigured:
+                        ShowStatus(result.Message ?? "Checkout opened in your browser. Complete payment there.");
+                        break;
+                    default:
+                        ShowStatus(result.Message ?? "Subscription could not be completed.");
+                        break;
                 }
             }
             catch (Exception ex)
             {
-                try { ShowStatus($"Checkout error: {ex.Message}"); } catch { }
-                _busy = false;
-                try { SubscribeButton.IsEnabled = true; } catch { }
+                Log.Error(ex, "[PayWindow] ActivateAsync threw");
+                ShowStatus($"Subscription failed: {ex.Message}");
+            }
+            finally
+            {
+                if (!_activated)
+                    SubscribeButton.IsEnabled = true;
             }
         }
 

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Window xmlns="https://github.com/avaloniaui"
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+        xmlns:views="clr-namespace:PhantomVault.UI.Views"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="PhantomVault.UI.Views.MainWindow"
         Title="Phantom Vault"
@@ -8,11 +9,11 @@
         Background="{DynamicResource WindowBackgroundBrush}"
         Classes="animated-window">
 
-    <Window.KeyBindings>
+    <views:ThemeAwareWindow.KeyBindings>
         <KeyBinding Gesture="Ctrl+U" Command="{Binding UnlockCommand}" />
         <KeyBinding Gesture="Ctrl+N" Command="{Binding ProvisionCommand}" />
         <KeyBinding Gesture="F1" Command="{Binding ShowHelpCommand}" />
-    </Window.KeyBindings>
+    </views:ThemeAwareWindow.KeyBindings>
 
     <Grid>
         <DockPanel Margin="10">
@@ -111,5 +112,5 @@
                ZIndex="9999"
                IsHitTestVisible="False"/>
     </Grid>
-</Window>
+</views:ThemeAwareWindow>
 

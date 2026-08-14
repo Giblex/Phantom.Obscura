@@ -183,6 +183,13 @@ namespace PhantomVault.UI.ViewModels
             _isContactEntry = entryType == EntryType.Contact;
             _isTotpEntry = entryType == EntryType.TotpGenerator;
             _isPinCodeEntry = entryType == EntryType.PinCode;
+            _isBlankEntry = entryType == EntryType.Blank;
+
+            if (_isBlankEntry)
+            {
+
+                _isPasswordEntry = false;
+            }
 
             _totpSecretInput = _existingCredential?.TotpSecret ?? string.Empty;
 
@@ -210,6 +217,7 @@ namespace PhantomVault.UI.ViewModels
             this.RaisePropertyChanged(nameof(IsContactEntry));
             this.RaisePropertyChanged(nameof(IsTotpEntry));
             this.RaisePropertyChanged(nameof(IsPinCodeEntry));
+            this.RaisePropertyChanged(nameof(IsBlankEntry));
             this.RaisePropertyChanged(nameof(ShowPasswordField));
             this.RaisePropertyChanged(nameof(ShowPasswordGenerator));
             this.RaisePropertyChanged(nameof(ShowPasswordStrength));
@@ -223,6 +231,9 @@ namespace PhantomVault.UI.ViewModels
             Console.WriteLine($"[ADD/EDIT VM] After RaisePropertyChanged: IsCreditCardEntry={IsCreditCardEntry}, IsPasswordEntry={IsPasswordEntry}");
 
             SaveCommand = ReactiveCommand.Create(Save);
+            AddSectionCommand = ReactiveCommand.Create(AddSection);
+            AddLinkedSectionCommand = ReactiveCommand.Create(AddLinkedSection);
+            ApplySectionTemplateCommand = ReactiveCommand.Create(ApplySectionTemplate);
             CancelCommand = ReactiveCommand.Create(Cancel);
             TogglePasswordVisibilityCommand = ReactiveCommand.Create(TogglePasswordVisibility);
             GeneratePasswordCommand = ReactiveCommand.Create(GeneratePassword);
@@ -385,10 +396,22 @@ namespace PhantomVault.UI.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _isPinCodeEntry, value);
         }
 
-        public bool ShowPasswordField => (IsPasswordEntry && !IsSecureNoteEntry) || IsWiFiEntry;
-        public bool ShowPasswordGenerator => IsPasswordEntry && !IsSecureNoteEntry;
-        public bool ShowPasswordStrength => IsPasswordEntry && !IsSecureNoteEntry;
-        public bool ShowPasswordVisibilityToggle => (IsPasswordEntry && !IsSecureNoteEntry) || IsWiFiEntry;
+        private bool _isBlankEntry;
+
+        /// <summary>
+        /// A blank entry has no fixed field set at all: it is built entirely out of
+        /// sections the user adds, so every type-specific block stays hidden.
+        /// </summary>
+        public bool IsBlankEntry
+        {
+            get => _isBlankEntry;
+            private set => this.RaiseAndSetIfChanged(ref _isBlankEntry, value);
+        }
+
+        public bool ShowPasswordField => !IsBlankEntry && ((IsPasswordEntry && !IsSecureNoteEntry) || IsWiFiEntry);
+        public bool ShowPasswordGenerator => !IsBlankEntry && IsPasswordEntry && !IsSecureNoteEntry;
+        public bool ShowPasswordStrength => !IsBlankEntry && IsPasswordEntry && !IsSecureNoteEntry;
+        public bool ShowPasswordVisibilityToggle => !IsBlankEntry && ((IsPasswordEntry && !IsSecureNoteEntry) || IsWiFiEntry);
         public string PasswordLabelText => IsWiFiEntry ? "Network Password *" : "Password *";
 
         public string? AutoDetectedIconPath
@@ -680,7 +703,245 @@ namespace PhantomVault.UI.ViewModels
         public string PinValue
         {
             get => _existingCredential?.PinValue ?? string.Empty;
-            set { if (_existingCredential != null) { _existingCredential.PinValue = value; this.RaisePropertyChanged(); } }
+            set
+            {
+                if (_existingCredential != null)
+                {
+                    _existingCredential.PinValue = value;
+                    this.RaisePropertyChanged();
+                }
+            }
+        }
+
+        public static Func<IReadOnlyList<Credential>>? VaultEntriesProvider { get; set; }
+
+        private ObservableCollection<SectionEditorItemViewModel>? _sectionEditors;
+        private EntrySectionKind _newSectionKind = EntrySectionKind.Note;
+
+        public ObservableCollection<SectionEditorItemViewModel> SectionEditors
+            => _sectionEditors ??= BuildSectionEditors();
+
+        public IReadOnlyList<EntrySectionKind> AvailableSectionKinds => SectionEditorItemViewModel.AllKinds;
+
+        public EntrySectionKind NewSectionKind
+        {
+            get => _newSectionKind;
+            set
+            {
+                if (_newSectionKind == value)
+                    return;
+
+                this.RaiseAndSetIfChanged(ref _newSectionKind, value);
+            }
+        }
+
+        public bool HasSectionEditors => SectionEditors.Count > 0;
+
+        public IReadOnlyList<PhantomVault.Core.Services.EntrySectionTemplate> SectionTemplates
+            => PhantomVault.Core.Services.EntrySectionTemplates.All;
+
+        private PhantomVault.Core.Services.EntrySectionTemplate? _selectedSectionTemplate;
+
+        public PhantomVault.Core.Services.EntrySectionTemplate? SelectedSectionTemplate
+        {
+            get => _selectedSectionTemplate;
+            set
+            {
+                if (ReferenceEquals(_selectedSectionTemplate, value))
+                    return;
+
+                this.RaiseAndSetIfChanged(ref _selectedSectionTemplate, value);
+                this.RaisePropertyChanged(nameof(SelectedSectionTemplateDescription));
+                this.RaisePropertyChanged(nameof(HasSelectedSectionTemplate));
+            }
+        }
+
+        public bool HasSelectedSectionTemplate => SelectedSectionTemplate != null;
+
+        public string SelectedSectionTemplateDescription => SelectedSectionTemplate?.Description ?? string.Empty;
+
+        private void ApplySectionTemplate()
+        {
+            var template = SelectedSectionTemplate;
+            if (template == null)
+                return;
+
+            var candidates = BuildLinkCandidates();
+
+            foreach (var section in template.CreateSections(SectionEditors.Count))
+            {
+                SectionEditors.Add(new SectionEditorItemViewModel(
+                    section, candidates, RemoveSectionEditor, MoveSectionEditor));
+            }
+
+            ResequenceSections();
+            RaiseSectionCollectionChanged();
+        }
+
+        public string SectionsSummary => SectionEditors.Count == 0
+            ? "No extra sections yet. Add notes, PINs, TOTP, recovery emails, recovery codes or QR data — stored inline or linked to another entry."
+            : SectionEditors.Count == 1
+                ? "1 section"
+                : $"{SectionEditors.Count} sections";
+
+        private IReadOnlyList<LinkCandidateViewModel> BuildLinkCandidates()
+        {
+            var entries = VaultEntriesProvider?.Invoke() ?? Array.Empty<Credential>();
+            var currentId = _existingCredential?.Id;
+
+            return entries
+                .Where(e => e != null && !string.Equals(e.Id, currentId, StringComparison.Ordinal))
+                .Select(e => new LinkCandidateViewModel(e))
+                .OrderBy(c => c.Title, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
+        private ObservableCollection<SectionEditorItemViewModel> BuildSectionEditors()
+        {
+            var candidates = BuildLinkCandidates();
+            var collection = new ObservableCollection<SectionEditorItemViewModel>();
+
+            var existing = _existingCredential?.Sections;
+            if (existing is { Count: > 0 })
+            {
+                foreach (var section in existing.OrderBy(s => s.SortOrder).ThenBy(s => s.CreatedUtc))
+                {
+                    collection.Add(new SectionEditorItemViewModel(section, candidates, RemoveSectionEditor, MoveSectionEditor));
+                }
+            }
+
+            return collection;
+        }
+
+        private void AddSection()
+        {
+            var section = EntrySection.CreateInline(NewSectionKind);
+            section.SortOrder = SectionEditors.Count;
+
+            SectionEditors.Add(new SectionEditorItemViewModel(
+                section, BuildLinkCandidates(), RemoveSectionEditor, MoveSectionEditor));
+
+            RaiseSectionCollectionChanged();
+        }
+
+        private void AddLinkedSection()
+        {
+            var section = EntrySection.CreateInline(NewSectionKind);
+            section.SortOrder = SectionEditors.Count;
+
+            var editor = new SectionEditorItemViewModel(
+                section, BuildLinkCandidates(), RemoveSectionEditor, MoveSectionEditor)
+            {
+                IsLinkMode = true
+            };
+
+            SectionEditors.Add(editor);
+            RaiseSectionCollectionChanged();
+        }
+
+        private void RemoveSectionEditor(SectionEditorItemViewModel editor)
+        {
+            SectionEditors.Remove(editor);
+            ResequenceSections();
+            RaiseSectionCollectionChanged();
+        }
+
+        private void MoveSectionEditor(SectionEditorItemViewModel editor, int delta)
+        {
+            var index = SectionEditors.IndexOf(editor);
+            var target = index + delta;
+
+            if (index < 0 || target < 0 || target >= SectionEditors.Count)
+                return;
+
+            SectionEditors.Move(index, target);
+            ResequenceSections();
+        }
+
+        private void ResequenceSections()
+        {
+            for (var i = 0; i < SectionEditors.Count; i++)
+            {
+                SectionEditors[i].Section.SortOrder = i;
+            }
+        }
+
+        private void RaiseSectionCollectionChanged()
+        {
+            this.RaisePropertyChanged(nameof(HasSectionEditors));
+            this.RaisePropertyChanged(nameof(SectionsSummary));
+        }
+
+        private void ApplySectionsTo(Credential credential)
+        {
+            ResequenceSections();
+
+            var sections = new List<EntrySection>();
+            foreach (var editor in SectionEditors)
+            {
+                var section = editor.Section;
+
+                if (section.IsLinked && string.IsNullOrWhiteSpace(section.LinkedEntryId))
+                    continue;
+
+                if (!section.IsLinked && string.IsNullOrWhiteSpace(section.Value) && section.Kind != EntrySectionKind.Note)
+                    continue;
+
+                if (string.IsNullOrWhiteSpace(section.Label))
+                    section.Label = EntrySection.DefaultLabel(section.Kind);
+
+                section.LastUpdatedUtc = DateTimeOffset.UtcNow;
+                sections.Add(section);
+            }
+
+            credential.Sections = sections;
+        }
+
+        public const string PinLengthFieldKey = "__pinLength";
+
+        private int? _pinLength;
+
+        public int PinLength
+        {
+            get
+            {
+                if (_pinLength.HasValue)
+                    return _pinLength.Value;
+
+                var stored = 0;
+                if (_existingCredential?.CustomFields != null &&
+                    _existingCredential.CustomFields.TryGetValue(PinLengthFieldKey, out var raw) &&
+                    int.TryParse(raw, out var parsed))
+                {
+                    stored = parsed;
+                }
+
+                if (stored <= 0)
+                    stored = string.IsNullOrEmpty(PinValue) ? 4 : PinValue.Length;
+
+                _pinLength = PhantomVault.Core.Services.PinLengthRange.Clamp(stored);
+                return _pinLength.Value;
+            }
+            set
+            {
+                var clamped = PhantomVault.Core.Services.PinLengthRange.Clamp(value);
+                if (_pinLength == clamped)
+                    return;
+
+                _pinLength = clamped;
+
+                if (_existingCredential != null)
+                {
+                    _existingCredential.CustomFields ??= new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                    _existingCredential.CustomFields[PinLengthFieldKey] = clamped.ToString();
+
+                    if (_existingCredential.PinValue.Length > clamped)
+                        _existingCredential.PinValue = _existingCredential.PinValue[..clamped];
+                }
+
+                this.RaisePropertyChanged();
+                this.RaisePropertyChanged(nameof(PinValue));
+            }
         }
         public string PinCategory
         {
@@ -932,6 +1193,9 @@ namespace PhantomVault.UI.ViewModels
         }
 
         public ReactiveCommand<Unit, Unit> SaveCommand { get; }
+        public ReactiveCommand<Unit, Unit> AddSectionCommand { get; }
+        public ReactiveCommand<Unit, Unit> AddLinkedSectionCommand { get; }
+        public ReactiveCommand<Unit, Unit> ApplySectionTemplateCommand { get; }
         public ReactiveCommand<Unit, Unit> CancelCommand { get; }
         public ReactiveCommand<Unit, Unit> TogglePasswordVisibilityCommand { get; }
         public ReactiveCommand<Unit, Unit> GeneratePasswordCommand { get; }
@@ -1148,6 +1412,8 @@ namespace PhantomVault.UI.ViewModels
                 credential.TotpSecret = string.Empty;
             }
 
+            ApplySectionsTo(credential);
+
             if (_existingCredential == null)
             {
                 credential.CreatedUtc = DateTimeOffset.UtcNow;
@@ -1264,18 +1530,7 @@ namespace PhantomVault.UI.ViewModels
         }
 
         private static void LogIconPicker(string msg)
-        {
-            try
-            {
-                var logPath = System.IO.Path.Combine(
-                    AppDomain.CurrentDomain.BaseDirectory ?? ".", "logs", "icon_picker_debug.log");
-                var dir = System.IO.Path.GetDirectoryName(logPath);
-                if (dir != null && !System.IO.Directory.Exists(dir))
-                    System.IO.Directory.CreateDirectory(dir);
-                System.IO.File.AppendAllText(logPath, $"[{DateTime.Now:O}] [VM] {msg}\n");
-            }
-            catch {  }
-        }
+            => Serilog.Log.Debug("[AddEditCredential][IconPicker] {Msg}", msg);
 
         private async System.Threading.Tasks.Task OpenIconPickerAsync()
         {

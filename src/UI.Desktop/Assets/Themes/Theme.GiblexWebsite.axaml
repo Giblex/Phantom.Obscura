@@ -184,9 +184,9 @@
     <BoxShadows x:Key="SlideOutPanelShadow">-12 0 24 -4 #2010202A</BoxShadows>
     <BoxShadows x:Key="FlaggedPanelShadow">-10 0 20 -3 #1810202A</BoxShadows>
     <BoxShadows x:Key="DetailCardShadow">0 8 30 -2 #1410202A</BoxShadows>
-    <BoxShadows x:Key="TileRestingShadow">0 2 10 0 #1010202A</BoxShadows>
-    <BoxShadows x:Key="TileHoverShadow">0 8 24 -2 #1810202A</BoxShadows>
-    <BoxShadows x:Key="TilePressedShadow">0 4 12 0 #1010202A</BoxShadows>
+    <BoxShadows x:Key="TileRestingShadow">0 12 32 -14 #10102022</BoxShadows>
+    <BoxShadows x:Key="TileHoverShadow">0 16 40 -18 #1410201A</BoxShadows>
+    <BoxShadows x:Key="TilePressedShadow">0 8 24 -12 #10102018</BoxShadows>
 
     <Color x:Key="Glass.Tint.Light">#E5EFF2</Color>
     <Color x:Key="Glass.Tint.Mid">#138A9C</Color>
@@ -260,9 +260,9 @@
     <Color x:Key="LiquidGlassDropShadow">#223A5060</Color>
     <Color x:Key="LiquidGlassDropShadowHover">#2C3A5060</Color>
     <Color x:Key="LiquidGlassDropShadowPressed">#163A5060</Color>
-    <DropShadowEffect x:Key="LiquidGlassButtonEffect" BlurRadius="18" OffsetX="0" OffsetY="4" Color="#3A5060" Opacity="0.22"/>
-    <DropShadowEffect x:Key="LiquidGlassButtonEffectHover" BlurRadius="24" OffsetX="0" OffsetY="6" Color="#3A5060" Opacity="0.28"/>
-    <DropShadowEffect x:Key="LiquidGlassButtonEffectPressed" BlurRadius="10" OffsetX="0" OffsetY="2" Color="#3A5060" Opacity="0.14"/>
+    <DropShadowEffect x:Key="LiquidGlassButtonEffect" BlurRadius="28" OffsetX="0" OffsetY="2" Color="#3A5060" Opacity="0.12"/>
+    <DropShadowEffect x:Key="LiquidGlassButtonEffectHover" BlurRadius="36" OffsetX="0" OffsetY="3" Color="#3A5060" Opacity="0.16"/>
+    <DropShadowEffect x:Key="LiquidGlassButtonEffectPressed" BlurRadius="14" OffsetX="0" OffsetY="1" Color="#3A5060" Opacity="0.07"/>
 
     <SolidColorBrush x:Key="LiquidGlassButtonForeground" Color="#10202A"/>
     <SolidColorBrush x:Key="HeaderSvgIconColor" Color="#10202A"/>
@@ -396,5 +396,17 @@
     <Color x:Key="DashboardTileHoverBorderColor">#48138A9C</Color>
     <Color x:Key="DashboardAcrylicTint">#E0ECF0</Color>
     <Color x:Key="DashboardAcrylicFallback">#10E5EFF2</Color>
-</ResourceDictionary>
 
+    <!-- Surface overlay + header tokens derived from this theme's own palette.
+
+         These were previously defined only in the app-level PhantomTheme fallback, so
+         they never re-tinted with the selected skin — and because that fallback is
+         chosen by the light/dark variant rather than by the skin, a light skin could
+         receive dark-theme overlay values and render hover states invisibly. -->
+    <SolidColorBrush x:Key="SubtleBrush" Color="#14000000"/>
+    <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#1A000000"/>
+    <SolidColorBrush x:Key="SurfaceActiveBrush" Color="#26000000"/>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#EAF3F6"/>
+    <SolidColorBrush x:Key="HeaderPrimaryBrush" Color="#EEF6F8"/>
+
+</ResourceDictionary>

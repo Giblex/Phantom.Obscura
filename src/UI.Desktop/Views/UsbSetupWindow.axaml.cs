@@ -10,7 +10,7 @@ using PhantomVault.UI.ViewModels;
 
 namespace PhantomVault.UI.Views
 {
-    public partial class UsbSetupWindow : Window
+    public partial class UsbSetupWindow : ThemeAwareWindow
     {
         public UsbSetupWindow()
         {

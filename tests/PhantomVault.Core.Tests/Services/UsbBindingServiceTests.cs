@@ -132,7 +132,7 @@ namespace PhantomVault.Core.Tests.Services
             {
                 // Act — CreateHiddenDeviceId returns the device ID string, not the file path
                 var deviceId = service.CreateHiddenDeviceId(tempDir, vaultSalt);
-                var hiddenFilePath = Path.Combine(tempDir, ".phantom_device_id");
+                var hiddenFilePath = PhantomDeviceLayout.GetDeviceIdPath(tempDir);
 
                 // Assert
                 Assert.NotNull(deviceId);
@@ -198,7 +198,7 @@ namespace PhantomVault.Core.Tests.Services
             {
                 // Create hidden device ID
                 service.CreateHiddenDeviceId(tempDir, vaultSalt);
-                var hiddenFilePath = Path.Combine(tempDir, ".phantom_device_id");
+                var hiddenFilePath = PhantomDeviceLayout.GetDeviceIdPath(tempDir);
 
                 // Remove Hidden+System attributes so we can overwrite the file
                 File.SetAttributes(hiddenFilePath, FileAttributes.Normal);
@@ -335,7 +335,7 @@ namespace PhantomVault.Core.Tests.Services
             {
                 // Act — CreateHiddenDeviceId returns a device ID string, not a file path
                 service.CreateHiddenDeviceId(tempDir, vaultSalt);
-                var hiddenFilePath = Path.Combine(tempDir, ".phantom_device_id");
+                var hiddenFilePath = PhantomDeviceLayout.GetDeviceIdPath(tempDir);
 
                 // Assert
                 var attributes = File.GetAttributes(hiddenFilePath);
@@ -437,7 +437,7 @@ namespace PhantomVault.Core.Tests.Services
                 // Act - Complete high-assurance binding workflow
                 // Step 1: Create hidden device ID
                 var deviceId = service.CreateHiddenDeviceId(tempDir, vaultSalt);
-                var hiddenFilePath = Path.Combine(tempDir, ".phantom_device_id");
+                var hiddenFilePath = PhantomDeviceLayout.GetDeviceIdPath(tempDir);
                 Assert.True(File.Exists(hiddenFilePath));
                 Assert.NotEmpty(deviceId);
 
@@ -553,7 +553,7 @@ namespace PhantomVault.Core.Tests.Services
             {
                 // Create hidden device ID
                 service.CreateHiddenDeviceId(tempDir, vaultSalt);
-                var hiddenFilePath = Path.Combine(tempDir, ".phantom_device_id");
+                var hiddenFilePath = PhantomDeviceLayout.GetDeviceIdPath(tempDir);
 
                 // Remove Hidden+System attributes so we can overwrite the file
                 File.SetAttributes(hiddenFilePath, FileAttributes.Normal);

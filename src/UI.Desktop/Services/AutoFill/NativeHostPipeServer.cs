@@ -17,12 +17,31 @@ using Serilog;
 
 namespace PhantomVault.UI.Services.AutoFill
 {
+    /// <summary>
+    /// Credentials the user submitted to a login form, relayed from the native
+    /// messaging host process so the desktop app can offer to save them.
+    /// </summary>
+    public sealed class CredentialSubmittedEventArgs : EventArgs
+    {
+        public string Url { get; init; } = string.Empty;
+        public string Username { get; init; } = string.Empty;
+        public string Password { get; init; } = string.Empty;
+    }
+
     public interface INativeHostPipeServer
     {
         void SetCredentialProvider(ICredentialProvider provider, VaultManifest manifest);
         void ClearCredentialProvider();
         void Start();
         void Stop();
+
+        /// <summary>
+        /// Raised when the browser reports a submitted login form. The extension has
+        /// always emitted this and the host has always re-raised it, but nothing
+        /// carried it across the process boundary, so passwords were never offered
+        /// for saving.
+        /// </summary>
+        event EventHandler<CredentialSubmittedEventArgs>? CredentialSubmitted;
     }
 
     public sealed class NativeHostPipeServer : INativeHostPipeServer, IDisposable
@@ -155,6 +174,12 @@ namespace PhantomVault.UI.Services.AutoFill
                     "getCredentials" => BuildCredentialsResponse(root),
 
                     "saveCredential" => JsonSerializer.Serialize(new { success = false, error = "Save from browser is not permitted; add credentials inside the Phantom app." }),
+
+                    // Not a save — it only surfaces a prompt inside the app, where the
+                    // user decides. Nothing reaches the vault without that consent, so
+                    // this stays distinct from the rejected "saveCredential".
+                    "credentialSubmitted" => HandleCredentialSubmitted(root),
+
                     _ => Fail($"Unknown action: {action}")
                 };
             }
@@ -166,6 +191,47 @@ namespace PhantomVault.UI.Services.AutoFill
                     HashForLog(requestJson), Encoding.UTF8.GetByteCount(requestJson ?? string.Empty));
                 return Fail("Invalid request");
             }
+        }
+
+        public event EventHandler<CredentialSubmittedEventArgs>? CredentialSubmitted;
+
+        /// <summary>
+        /// Relays a submitted login to the app. Deliberately does not touch the vault:
+        /// it raises an event so the UI can ask the user first.
+        /// </summary>
+        private string HandleCredentialSubmitted(JsonElement root)
+        {
+            // Only meaningful while unlocked — there is nothing to compare against or
+            // save into otherwise.
+            if (!_vaultContext.IsUnlocked)
+                return JsonSerializer.Serialize(new { success = true, handled = false });
+
+            string Get(string name) =>
+                root.TryGetProperty(name, out var p) ? p.GetString() ?? string.Empty : string.Empty;
+
+            var url = Get("url");
+            var password = Get("password");
+
+            // No password means this was not a login submission worth surfacing.
+            if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(password))
+                return JsonSerializer.Serialize(new { success = true, handled = false });
+
+            try
+            {
+                CredentialSubmitted?.Invoke(this, new CredentialSubmittedEventArgs
+                {
+                    Url = url,
+                    Username = Get("username"),
+                    Password = password
+                });
+            }
+            catch (Exception ex)
+            {
+                // Never include the payload — it contains a live password.
+                Log.Warning(ex, "NativeHostPipeServer: credentialSubmitted handler threw");
+            }
+
+            return JsonSerializer.Serialize(new { success = true, handled = true });
         }
 
         private static string HashForLog(string? value)

@@ -65,7 +65,7 @@
             <Button Grid.Row="3" Grid.Column="0" Content="Clear" Classes="pin-key"
                     FontSize="14" Click="OnClearClick"/>
             <Button Grid.Row="3" Grid.Column="1" Content="0" Classes="pin-key" Click="OnDigitClick"/>
-            <Button Grid.Row="3" Grid.Column="2" Content="⌫" Classes="pin-key" Click="OnBackspaceClick"/>
+            <Button AutomationProperties.Name="Backspace" Grid.Row="3" Grid.Column="2" Content="⌫" Classes="pin-key" Click="OnBackspaceClick"/>
         </Grid>
 
         <Button x:Name="UnlockButton"

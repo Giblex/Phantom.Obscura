@@ -23,10 +23,15 @@
     <PackageReference Include="Xamarin.AndroidX.Fragment" Version="1.6.2" />
   </ItemGroup>
 
-  <!-- iOS-specific dependencies -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-ios'">
-    <PackageReference Include="Xamarin.iOS" Version="1.0.0" />
-  </ItemGroup>
+  <!--
+    iOS-specific dependencies: intentionally none.
+    This project targets net10.0 only, so the old 'net10.0-ios' condition never
+    evaluated true and the reference was dead configuration. It also named the
+    NuGet package "Xamarin.iOS" 1.0.0, which is a legacy placeholder ID and not
+    how .NET iOS is consumed — a net*-ios TFM gets its bindings from the iOS
+    workload, not a PackageReference. If iOS support is added, add the TFM and
+    the workload; do not restore this package reference.
+  -->
 
   <!-- Windows-specific dependencies -->
   <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">

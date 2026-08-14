@@ -185,7 +185,7 @@
                                            FontSize="{StaticResource Type.Label.Size}"
                                            Classes="header-muted"/>
                             </StackPanel>
-                            <Button Grid.Column="1"
+                            <Button AutomationProperties.Name="Close settings" Grid.Column="1"
                                     Content="✕"
                                     Command="{Binding CloseSettingsPanelCommand}"
                                     Classes="copy-btn"

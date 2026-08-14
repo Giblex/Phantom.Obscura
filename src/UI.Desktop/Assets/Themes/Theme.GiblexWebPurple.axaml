@@ -388,5 +388,17 @@
     <Color x:Key="DashboardTileHoverBorderColor">#487C5CFF</Color>
     <Color x:Key="DashboardAcrylicTint">#E0ECF0</Color>
     <Color x:Key="DashboardAcrylicFallback">#10FFFFFF</Color>
-</ResourceDictionary>
 
+    <!-- Surface overlay + header tokens derived from this theme's own palette.
+
+         These were previously defined only in the app-level PhantomTheme fallback, so
+         they never re-tinted with the selected skin — and because that fallback is
+         chosen by the light/dark variant rather than by the skin, a light skin could
+         receive dark-theme overlay values and render hover states invisibly. -->
+    <SolidColorBrush x:Key="SubtleBrush" Color="#14000000"/>
+    <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#1A000000"/>
+    <SolidColorBrush x:Key="SurfaceActiveBrush" Color="#26000000"/>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#F6F8FF"/>
+    <SolidColorBrush x:Key="HeaderPrimaryBrush" Color="#F8FAFF"/>
+
+</ResourceDictionary>

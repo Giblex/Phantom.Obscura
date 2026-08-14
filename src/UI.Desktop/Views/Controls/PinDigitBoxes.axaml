@@ -1,0 +1,56 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PhantomVault.UI.Views.Controls.PinDigitBoxes">
+
+    <StackPanel Spacing="8">
+
+        <Grid ColumnDefinitions="Auto,*,Auto" x:Name="HeaderRow">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <TextBlock Text="Digits"
+                           VerticalAlignment="Center"
+                           FontSize="{StaticResource Type.Label.Size}"
+                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                <ComboBox x:Name="LengthSelector"
+                          Width="76"
+                          Height="32"
+                          SelectionChanged="OnLengthSelectionChanged"
+                          AutomationProperties.Name="PIN length"
+                          ToolTip.Tip="Number of digits in this PIN (1-32)"/>
+            </StackPanel>
+
+            <TextBlock Grid.Column="1"
+                       x:Name="CountLabel"
+                       VerticalAlignment="Center"
+                       Margin="12,0,0,0"
+                       FontSize="{StaticResource Type.Tiny.Size}"
+                       Foreground="{DynamicResource MutedTextBrush}"/>
+
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
+                <Button x:Name="RevealButton"
+                        Classes="liquid-glass"
+                        Width="32" Height="32" MinWidth="0" Padding="0"
+                        Click="OnRevealClick"
+                        AutomationProperties.Name="Toggle PIN visibility"
+                        ToolTip.Tip="Show or hide the PIN">
+                    <TextBlock x:Name="RevealGlyph" Text="&#x1F441;" FontSize="14"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Button>
+                <Button x:Name="ClearButton"
+                        Classes="liquid-glass"
+                        Width="32" Height="32" MinWidth="0" Padding="0"
+                        Click="OnClearClick"
+                        AutomationProperties.Name="Clear PIN"
+                        ToolTip.Tip="Clear the PIN">
+                    <TextBlock Text="&#x2715;" FontSize="13"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Disabled"
+                      MaxHeight="140">
+            <WrapPanel x:Name="DigitHost" Orientation="Horizontal" />
+        </ScrollViewer>
+    </StackPanel>
+</UserControl>

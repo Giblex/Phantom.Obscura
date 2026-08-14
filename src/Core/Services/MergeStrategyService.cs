@@ -42,15 +42,10 @@ namespace PhantomVault.Core.Services
         {
             options ??= new MergeOptions();
 
-            var merged = new Credential
-            {
-                Title = existing.Title,
-                Username = existing.Username,
-                Group = existing.Group,
-                Icon = existing.Icon,
-                IconColor = existing.IconColor,
-                CreatedUtc = existing.CreatedUtc
-            };
+            // Start from a full copy of the existing entry so every field the strategies
+            // below do not explicitly touch — entry type, card, bank, identity, Wi-Fi,
+            // API, contact, TOTP, PIN details and sections — survives the merge.
+            var merged = existing.Clone();
 
             switch (strategy)
             {
@@ -62,7 +57,9 @@ namespace PhantomVault.Core.Services
 
                 case MergeStrategy.KeepBoth:
 
-                    var bothCred = CloneCredential(newCred);
+                    // This copy is meant to live alongside the existing entry, so it needs
+                    // its own identity rather than the imported record's.
+                    var bothCred = newCred.Clone(newId: true);
                     bothCred.Title += " (imported)";
                     return bothCred;
 
@@ -175,22 +172,12 @@ namespace PhantomVault.Core.Services
 
         private Credential CloneCredential(Credential source, DateTimeOffset? created = null)
         {
-            return new Credential
-            {
-                Title = source.Title,
-                Username = source.Username,
-                Password = source.Password,
-                Url = source.Url,
-                Notes = source.Notes,
-                Group = source.Group,
-                Icon = source.Icon,
-                IconColor = source.IconColor,
-                Tags = new List<string>(source.Tags),
-                CustomFields = new Dictionary<string, string>(source.CustomFields),
-                CreatedUtc = created ?? source.CreatedUtc,
-                LastUpdatedUtc = source.LastUpdatedUtc,
-                ExpiryUtc = source.ExpiryUtc
-            };
+            var clone = source.Clone();
+
+            if (created.HasValue)
+                clone.CreatedUtc = created.Value;
+
+            return clone;
         }
 
         private string SelectPassword(Credential existing, Credential newCred, MergeOptions options)

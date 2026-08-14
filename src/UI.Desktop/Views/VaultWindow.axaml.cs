@@ -18,6 +18,7 @@ using PhantomVault.UI.Controls;
 using PhantomVault.UI.Desktop.Controls;
 using PhantomVault.UI.Services;
 using PhantomVault.UI.ViewModels;
+using Serilog;
 using Avalonia.Animation;
 using Avalonia.Animation.Easings;
 using Avalonia.Media;
@@ -95,37 +96,23 @@ namespace PhantomVault.UI.Views
             AddHandler(PointerPressedEvent, OnWindowPointerPressed, RoutingStrategies.Tunnel);
             AddHandler(KeyDownEvent, OnWindowKeyDown, RoutingStrategies.Tunnel, handledEventsToo: true);
 
+            var addToggle = this.FindControl<ToggleButton>("AddToggle");
+            var addPopup = this.FindControl<Avalonia.Controls.Primitives.Popup>("AddPopup");
+            Log.Debug("[VaultWindow] Constructed. AddToggle={HasToggle}, AddPopup={HasPopup}", addToggle != null, addPopup != null);
+
             try
             {
-                var debugLogPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory ?? ".", "VaultWindow_debug.log");
-                var addToggle = this.FindControl<ToggleButton>("AddToggle");
-                var addPopup = this.FindControl<Avalonia.Controls.Primitives.Popup>("AddPopup");
-                System.IO.File.AppendAllText(debugLogPath, $"[{DateTime.Now:O}] VaultWindow constructed. Found AddToggle={addToggle != null}, AddPopup={addPopup != null}\n");
-
                 if (addToggle is not null)
                 {
-
-                    try
+                    addToggle.GetObservable(ToggleButton.IsCheckedProperty).Subscribe(isChecked =>
                     {
-                        addToggle.GetObservable(ToggleButton.IsCheckedProperty).Subscribe(isChecked =>
-                        {
-                            try
-                            {
-                                var line = $"[{DateTime.Now:O}] AddToggle.IsChecked -> IsChecked={isChecked}, PopupIsOpen={addPopup?.IsOpen}\n";
-                                System.IO.File.AppendAllText(debugLogPath, line);
-                            }
-                            catch { }
-                        });
-                    }
-                    catch (Exception)
-                    {
-
-                    }
+                        Log.Debug("[VaultWindow] AddToggle.IsChecked -> {IsChecked}, PopupIsOpen={IsOpen}", isChecked, addPopup?.IsOpen);
+                    });
                 }
             }
             catch (Exception ex)
             {
-                try { System.IO.File.AppendAllText(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory ?? ".", "VaultWindow_debug.log"), $"[{DateTime.Now:O}] VaultWindow instrumentation error: {ex}\n"); } catch { }
+                Log.Warning(ex, "[VaultWindow] AddToggle instrumentation failed");
             }
 
             var headerView = this.FindControl<Views.HeaderView>("HeaderView");
@@ -398,11 +385,9 @@ namespace PhantomVault.UI.Views
 
                 try
                 {
-                    var debugLogPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory ?? ".", "VaultWindow_debug.log");
-                    var filtered = vm.FilteredCredentials?.Count ?? 0;
-                    var sel = vm.SelectedSettingsContent?.ToString() ?? "<null>";
-                    System.IO.File.AppendAllText(debugLogPath, $"[{DateTime.Now:O}] DataContext attached. Filtered={filtered}, SelectedSettingsContent={sel}\n");
-
+                    Log.Debug("[VaultWindow] DataContext attached. FilteredCount={Filtered}, SelectedSettingsContent={Sel}",
+                        vm.FilteredCredentials?.Count ?? 0,
+                        vm.SelectedSettingsContent?.ToString() ?? "<null>");
                 }
 #pragma warning disable CA1031
                 catch (Exception ex)
@@ -514,8 +499,7 @@ namespace PhantomVault.UI.Views
             {
                 if (sender is ViewModels.VaultViewModel vm2 && e.PropertyName == nameof(vm2.FilteredCount))
                 {
-                    var debugLogPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory ?? ".", "VaultWindow_debug.log");
-                    System.IO.File.AppendAllText(debugLogPath, $"[{DateTime.Now:O}] PropertyChanged: FilteredCount -> {vm2.FilteredCount}\n");
+                    Log.Debug("[VaultWindow] PropertyChanged: FilteredCount -> {Count}", vm2.FilteredCount);
                 }
             }
 #pragma warning disable CA1031
@@ -582,8 +566,9 @@ namespace PhantomVault.UI.Views
 
             try
             {
-                var pinSettings = SettingsService.Load();
-                if (!PinLockService.HasPinConfigured(pinSettings, vm.ManifestPath))
+                // Never auto-lock behind a PIN prompt unless a PIN really exists;
+                // SyncPinFlags also clears any stale enable flags it finds.
+                if (!PinLockService.SyncPinFlags(vm.ManifestPath))
                 {
                     return;
                 }
@@ -688,6 +673,19 @@ namespace PhantomVault.UI.Views
             var now = DateTimeOffset.UtcNow;
             _sessionStartedUtc ??= now;
             _lastUserActivityUtc = now;
+
+            // Keep the app-scope idle watchdog in step with this window's activity clock.
+            // Without this the watchdog only reset on a handful of specific vault events,
+            // so it behaved as a fixed countdown and could wipe keys mid-session.
+            try
+            {
+                (Avalonia.Application.Current as App)?.Services?
+                    .GetService<PhantomVault.Core.Services.IdleLockService>()?.Reset();
+            }
+            catch
+            {
+                // Activity tracking must never take down the UI thread.
+            }
         }
 
         private void CheckSessionPolicies()
@@ -1133,18 +1131,7 @@ namespace PhantomVault.UI.Views
         }
 
         private static void LogIconPicker(string msg)
-        {
-            try
-            {
-                var logPath = System.IO.Path.Combine(
-                    AppDomain.CurrentDomain.BaseDirectory ?? ".", "logs", "icon_picker_debug.log");
-                var dir = System.IO.Path.GetDirectoryName(logPath);
-                if (dir != null && !System.IO.Directory.Exists(dir))
-                    System.IO.Directory.CreateDirectory(dir);
-                System.IO.File.AppendAllText(logPath, $"[{DateTime.Now:O}] {msg}\n");
-            }
-            catch {  }
-        }
+            => Log.Debug("[VaultWindow][IconPicker] {Msg}", msg);
 
         private async void IconPickerButton_Click(object? sender, RoutedEventArgs e)
         {

@@ -218,7 +218,7 @@
                                             </Border>
                                         </Button>
 
-                                        <Button Grid.Column="3"
+                                        <Button AutomationProperties.Name="Choose color" Grid.Column="3"
                                                 Width="36" Height="36"
                                                 Background="Transparent"
                                                 BorderBrush="Transparent"
@@ -243,25 +243,25 @@
                                                             Padding="12">
                                                         <StackPanel Spacing="8">
                                                                 <WrapPanel MaxWidth="240">
-                                                                <Button Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="#FDE68A" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
+                                                                <Button AutomationProperties.Name="Colour #FDE68A" Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="#FDE68A" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
                                                                         Tag="#FDE68A" Click="OnPaletteColorClick"/>
-                                                                <Button Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="#BFDBFE" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
+                                                                <Button AutomationProperties.Name="Colour #BFDBFE" Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="#BFDBFE" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
                                                                         Tag="#BFDBFE" Click="OnPaletteColorClick"/>
-                                                                <Button Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="#C7D2FE" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
+                                                                <Button AutomationProperties.Name="Colour #C7D2FE" Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="#C7D2FE" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
                                                                         Tag="#C7D2FE" Click="OnPaletteColorClick"/>
-                                                                <Button Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="#FBCFE8" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
+                                                                <Button AutomationProperties.Name="Colour #FBCFE8" Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="#FBCFE8" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
                                                                         Tag="#FBCFE8" Click="OnPaletteColorClick"/>
-                                                                <Button Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="#A7F3D0" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
+                                                                <Button AutomationProperties.Name="Colour #A7F3D0" Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="#A7F3D0" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
                                                                         Tag="#A7F3D0" Click="OnPaletteColorClick"/>
-                                                                <Button Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="#E5E7EB" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
+                                                                <Button AutomationProperties.Name="Colour #E5E7EB" Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="#E5E7EB" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
                                                                         Tag="#E5E7EB" Click="OnPaletteColorClick"/>
-                                                                <Button Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="#FECACA" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
+                                                                <Button AutomationProperties.Name="Colour #FECACA" Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="#FECACA" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
                                                                         Tag="#FECACA" Click="OnPaletteColorClick"/>
-                                                                <Button Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="#D1FAE5" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
+                                                                <Button AutomationProperties.Name="Colour #D1FAE5" Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="#D1FAE5" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
                                                                         Tag="#D1FAE5" Click="OnPaletteColorClick"/>
-                                                                <Button Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="#E9D5FF" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
+                                                                <Button AutomationProperties.Name="Colour #E9D5FF" Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="#E9D5FF" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
                                                                     Tag="#E9D5FF" Click="OnPaletteColorClick"/>
-                                                                <Button Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="{DynamicResource ControlBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
+                                                                <Button AutomationProperties.Name="Clear colour" Classes="palette-swatch" Width="24" Height="24" Margin="3" Background="{DynamicResource ControlBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" CornerRadius="3"
                                                                         Tag="{x:Null}" Click="OnPaletteColorClick">
                                                                     <TextBlock Text="✕" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{StaticResource Type.Tiny.Size}"/>
                                                                 </Button>
@@ -313,7 +313,7 @@
                                             </Border>
                                         </StackPanel>
 
-                                        <Button Grid.Column="5"
+                                        <Button AutomationProperties.Name="Remove category" Grid.Column="5"
                                                 Content="✕"
                                                 Width="34" Height="34"
                                                 MinWidth="0"

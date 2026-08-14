@@ -1,4 +1,5 @@
-<Window xmlns="https://github.com/avaloniaui"
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+        xmlns:views="clr-namespace:PhantomVault.UI.Views"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="PhantomVault.UI.Views.Dialogs.RecoveryExportDialog"
         Width="560" Height="620"
@@ -8,13 +9,13 @@
         Background="Transparent"
         TransparencyLevelHint="Transparent"
         Title="Save Your Recovery Kit">
-  <Window.Resources>
+  <views:ThemeAwareWindow.Resources>
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
         <ResourceInclude Source="avares://PhantomVault.UI/Assets/Themes/PreVaultTheme.axaml"/>
       </ResourceDictionary.MergedDictionaries>
     </ResourceDictionary>
-  </Window.Resources>
+  </views:ThemeAwareWindow.Resources>
   <Border Background="{DynamicResource WindowBackgroundBrush}"
           BorderBrush="#26FFFFFF"
           BorderThickness="1"
@@ -81,4 +82,4 @@
 
     </Grid>
   </Border>
-</Window>
+</views:ThemeAwareWindow>

@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using PhantomVault.Core.Services;
 using PhantomVault.Core.Services.DomainKeys;
 using Serilog;
+using PhantomVault.UI.Views;
 
 namespace PhantomVault.UI.Views.Dialogs
 {
@@ -21,7 +22,7 @@ namespace PhantomVault.UI.Views.Dialogs
     /// must be paired with the user's encrypted-vault backup to restore the DATA — this is made
     /// explicit in the UI and reiterated on success.
     /// </summary>
-    public partial class RecoverKeyfileDialog : Window
+    public partial class RecoverKeyfileDialog : ThemeAwareWindow
     {
         private const string DefaultKeyfileName = "vault.key";
 

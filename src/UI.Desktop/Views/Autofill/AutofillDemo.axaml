@@ -1,0 +1,121 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PhantomVault.UI.Views.Autofill.AutofillDemo"
+        Title="AutoFill Demo — PhantomObscura"
+        Width="560" Height="620"
+        MinWidth="440" MinHeight="420"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        CanResize="True">
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                  VerticalScrollBarVisibility="Auto">
+    <StackPanel Spacing="0" Margin="0,0,0,24">
+
+        <!-- Header -->
+        <Border Background="{DynamicResource HeaderPrimaryBrush}"
+                Padding="28,20"
+                CornerRadius="0">
+            <StackPanel Spacing="4">
+                <TextBlock Text="AutoFill Demo"
+                           FontSize="20"
+                           FontWeight="Bold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <TextBlock Text="Simulate the USB → beam → field → icon → menu flow"
+                           FontSize="12"
+                           Foreground="{DynamicResource MutedTextBrush}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Mock login form -->
+        <Border Margin="28,32,28,0" Padding="24"
+                Background="{DynamicResource CardBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1" CornerRadius="16">
+            <StackPanel Spacing="14">
+                <TextBlock Text="Sign in to your account"
+                           FontSize="15" FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Email" FontSize="12" Foreground="{DynamicResource MutedTextBrush}"/>
+                    <TextBox x:Name="EmailBox"
+                             Watermark="you@example.com"
+                             FontSize="14"
+                             Height="40"/>
+                </StackPanel>
+
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Password" FontSize="12" Foreground="{DynamicResource MutedTextBrush}"/>
+                    <TextBox x:Name="PasswordBox"
+                             PasswordChar="●"
+                             Watermark="••••••••"
+                             FontSize="14"
+                             Height="40"/>
+                </StackPanel>
+
+                <Button Content="Sign in →"
+                        HorizontalAlignment="Right"
+                        Classes="liquid-glass"
+                        Padding="20,10"
+                        Margin="0,6,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Demo controls -->
+        <Border Margin="28,20,28,0" Padding="20,16"
+                Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1" CornerRadius="14">
+            <StackPanel Spacing="12">
+                <TextBlock Text="Simulation controls"
+                           FontSize="12" FontWeight="SemiBold"
+                           Foreground="{DynamicResource MutedTextBrush}"/>
+
+                <WrapPanel Orientation="Horizontal" ItemSpacing="10" LineSpacing="10">
+                    <Button x:Name="SimulateUsbBtn"
+                            Content="⚡  Simulate USB Insert"
+                            Classes="liquid-glass"
+                            Padding="16,10"
+                            AutomationProperties.Name="Simulate USB insertion and autofill animation"/>
+
+                    <Button x:Name="SimulateBrowserBtn"
+                            Content="🌐  Browser field"
+                            Classes="liquid-glass"
+                            Padding="16,10"
+                            AutomationProperties.Name="Simulate browser URL field detection"/>
+
+                    <Button x:Name="CloseBtn"
+                            Content="Close"
+                            Padding="14,10"
+                            AutomationProperties.Name="Close demo window"/>
+                </WrapPanel>
+
+                <TextBlock x:Name="StatusLabel"
+                           Text="Click 'Simulate USB Insert' — the beam will fire from the bottom-right corner and circle the Email field above."
+                           FontSize="11"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"
+                           Opacity="0.7"/>
+            </StackPanel>
+        </Border>
+
+        <!-- What to expect -->
+        <Border Margin="28,12,28,0" Padding="16,12"
+                Background="#0814B8A6"
+                BorderBrush="#2014B8A6"
+                BorderThickness="1" CornerRadius="10">
+            <StackPanel Spacing="4">
+                <TextBlock Text="What you'll see"
+                           FontSize="11" FontWeight="SemiBold"
+                           Foreground="#90B8E0D8"/>
+                <TextBlock Text="① Teal beam shoots from the bottom-right corner of your screen  →  ② Beam circles the Email field with a glowing rectangle trace  →  ③ PhantomObscura icon pops in to the left of the field  →  ④ Click the icon to open the credential drop menu"
+                           FontSize="11"
+                           Foreground="#70B8D0D8"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+
+    </StackPanel>
+    </ScrollViewer>
+</Window>

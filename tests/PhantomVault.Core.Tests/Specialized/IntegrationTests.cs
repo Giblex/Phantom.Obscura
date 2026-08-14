@@ -171,12 +171,12 @@ namespace PhantomVault.Core.Tests.Specialized
                 Tag1 = (byte[])encrypted.Tag1.Clone(),
                 Nonce2 = (byte[])encrypted.Nonce2.Clone(),
                 Tag2 = (byte[])encrypted.Tag2.Clone(),
-                // Nonce3 removed - Layer 3 only has IV3
-                IV3 = (byte[])encrypted.IV3.Clone(),
-                // Nonce4 removed - Layer 4 only has IV4
-                IV4 = (byte[])encrypted.IV4.Clone(),
-                // Nonce5 removed - Layer 5 only has IV5
-                IV5 = (byte[])encrypted.IV5.Clone(),
+                Nonce3 = (byte[])encrypted.Nonce3.Clone(),
+                Tag3 = (byte[])encrypted.Tag3.Clone(),
+                Nonce4 = (byte[])encrypted.Nonce4.Clone(),
+                Tag4 = (byte[])encrypted.Tag4.Clone(),
+                Nonce5 = (byte[])encrypted.Nonce5.Clone(),
+                Tag5 = (byte[])encrypted.Tag5.Clone(),
                 Salt = (byte[])salt.Clone()
             };
 
@@ -189,12 +189,12 @@ namespace PhantomVault.Core.Tests.Specialized
                 Tag1 = backup.Tag1,
                 Nonce2 = backup.Nonce2,
                 Tag2 = backup.Tag2,
-                // Nonce3 removed - Layer 3 only has IV3
-                IV3 = backup.IV3,
-                // Nonce4 removed - Layer 4 only has IV4
-                IV4 = backup.IV4,
-                // Nonce5 removed - Layer 5 only has IV5
-                IV5 = backup.IV5,
+                Nonce3 = backup.Nonce3,
+                Tag3 = backup.Tag3,
+                Nonce4 = backup.Nonce4,
+                Tag4 = backup.Tag4,
+                Nonce5 = backup.Nonce5,
+                Tag5 = backup.Tag5,
                 Level = SecurityLevel.Maximum
             };
 
@@ -333,8 +333,8 @@ namespace PhantomVault.Core.Tests.Specialized
                 Tag1 = Convert.ToBase64String(encrypted.Tag1),
                 Nonce2 = Convert.ToBase64String(encrypted.Nonce2),
                 Tag2 = Convert.ToBase64String(encrypted.Tag2),
-                // Nonce3 removed - Layer 3 only has IV3
-                IV3 = Convert.ToBase64String(encrypted.IV3),
+                Nonce3 = Convert.ToBase64String(encrypted.Nonce3),
+                Tag3 = Convert.ToBase64String(encrypted.Tag3),
                 Data = Convert.ToBase64String(encrypted.Ciphertext)
             };
 
@@ -348,8 +348,8 @@ namespace PhantomVault.Core.Tests.Specialized
                 Tag1 = Convert.FromBase64String(exported.Tag1),
                 Nonce2 = Convert.FromBase64String(exported.Nonce2),
                 Tag2 = Convert.FromBase64String(exported.Tag2),
-                // Nonce3 removed - Layer 3 only has IV3
-                IV3 = Convert.FromBase64String(exported.IV3),
+                Nonce3 = Convert.FromBase64String(exported.Nonce3),
+                Tag3 = Convert.FromBase64String(exported.Tag3),
                 Level = (SecurityLevel)exported.Level
             };
 

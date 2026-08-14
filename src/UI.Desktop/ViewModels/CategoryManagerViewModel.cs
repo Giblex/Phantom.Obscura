@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Reactive;
 using ReactiveUI;
 using PhantomVault.Core.Services;
+using PhantomVault.Core.Utils;
 using PhantomVault.Core.Models;
 using Avalonia.Controls;
 using Avalonia;
@@ -471,9 +472,10 @@ namespace PhantomVault.UI.ViewModels
 
                 for (int i = 0; i < Categories.Count; i++) Categories[i].Order = i;
 
-                var manifest = _manifestService.ReadManifest(_manifestPath, _passphrase, _keyfilePath);
+                using var categoryPassphrase = SecurePassword.FromString(_passphrase);
+                var manifest = _manifestService.ReadManifestSecure(_manifestPath, categoryPassphrase, _keyfilePath);
                 manifest.Categories = Categories.Select(c => new CategoryModel { Name = c.Name, Icon = c.Icon, Order = c.Order, IsTrash = c.IsTrash, TileColor = c.TileColor }).ToList();
-                _manifestService.WriteManifest(manifest, _manifestPath, _passphrase, _keyfilePath ?? manifest.KeyfilePath);
+                _manifestService.WriteManifestSecure(manifest, _manifestPath, categoryPassphrase, _keyfilePath ?? manifest.KeyfilePath);
 
                 if (_vaultManager is VaultViewModel vm && manifest.Categories != null)
                 {

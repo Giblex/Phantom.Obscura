@@ -200,7 +200,7 @@
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch">
             <Border.Background>
-                <ImageBrush Source="avares://PhantomVault.UI/Assets/dot_pattern.png"
+                <ImageBrush Source="avares://PhantomVault.UI/Assets/dot_pattern_light.png"
                             TileMode="Tile"
                             Stretch="None"
                             SourceRect="0,0,8,8"
@@ -208,7 +208,7 @@
             </Border.Background>
         </Border>
 
-        <Border Grid.Row="0" Background="#400F1A2E" Padding="24,6,24,6">
+        <Border Grid.Row="0" Background="{DynamicResource DashboardPanelBg}" Padding="24,6,24,6">
             <Grid Margin="8,0,8,0" HorizontalAlignment="Center">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
@@ -230,7 +230,7 @@
                         <StackPanel HorizontalAlignment="Center" Spacing="8">
                             <Border Width="44" Height="44" CornerRadius="22"
                                     Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=1}"
-                                    BorderBrush="#18FFFFFF" BorderThickness="2">
+                                    BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="2">
                                 <controls:SvgIcon Preset="Info" IconColor="White" IconSize="20"
                                                   Width="20" Height="20"
                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -250,7 +250,7 @@
                         <StackPanel HorizontalAlignment="Center" Spacing="8">
                             <Border Width="44" Height="44" CornerRadius="22"
                                     Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=2}"
-                                    BorderBrush="#18FFFFFF" BorderThickness="2">
+                                    BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="2">
                                 <controls:SvgIcon Preset="Star" IconColor="White" IconSize="20"
                                                   Width="20" Height="20"
                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -270,7 +270,7 @@
                         <StackPanel HorizontalAlignment="Center" Spacing="8">
                             <Border Width="44" Height="44" CornerRadius="22"
                                     Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=3}"
-                                    BorderBrush="#18FFFFFF" BorderThickness="2">
+                                    BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="2">
                                 <controls:SvgIcon Preset="Shield" IconColor="White" IconSize="20"
                                                   Width="20" Height="20"
                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -290,7 +290,7 @@
                         <StackPanel HorizontalAlignment="Center" Spacing="8">
                             <Border Width="44" Height="44" CornerRadius="22"
                                     Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=4}"
-                                    BorderBrush="#18FFFFFF" BorderThickness="2">
+                                    BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="2">
                                 <controls:SvgIcon Preset="Database" IconColor="White" IconSize="20"
                                                   Width="20" Height="20"
                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -310,7 +310,7 @@
                         <StackPanel HorizontalAlignment="Center" Spacing="8">
                             <Border Width="44" Height="44" CornerRadius="22"
                                     Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=5}"
-                                    BorderBrush="#18FFFFFF" BorderThickness="2">
+                                    BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="2">
                                 <controls:SvgIcon Preset="Key" IconColor="White" IconSize="20"
                                                   Width="20" Height="20"
                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -330,7 +330,7 @@
                         <StackPanel HorizontalAlignment="Center" Spacing="8">
                             <Border Width="44" Height="44" CornerRadius="22"
                                     Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=6}"
-                                    BorderBrush="#18FFFFFF" BorderThickness="2">
+                                    BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="2">
                                 <controls:SvgIcon Preset="Lock" IconColor="White" IconSize="20"
                                                   Width="20" Height="20"
                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -345,7 +345,7 @@
                                 IsVisible="{Binding UsesExtendedProgress}">
                         <Border Width="44" Height="44" CornerRadius="22"
                                 Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=7}"
-                                BorderBrush="#18FFFFFF" BorderThickness="2">
+                                BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="2">
                             <controls:SvgIcon Preset="AlertTriangle" IconColor="White" IconSize="20"
                                               Width="20" Height="20"
                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -359,7 +359,7 @@
                                 IsVisible="{Binding !UsesExtendedProgress}">
                         <Border Width="44" Height="44" CornerRadius="22"
                                 Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=7}"
-                                BorderBrush="#18FFFFFF" BorderThickness="2">
+                                BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="2">
                             <controls:SvgIcon Preset="Check" IconColor="White" IconSize="20"
                                               Width="20" Height="20"
                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -373,7 +373,7 @@
                                 IsVisible="{Binding UsesExtendedProgress}">
                         <Border Width="44" Height="44" CornerRadius="22"
                                 Background="{Binding CurrentStep, Converter={x:Static views:StepProgressConverter.Instance}, ConverterParameter=8}"
-                                BorderBrush="#18FFFFFF" BorderThickness="2">
+                                BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="2">
                             <controls:SvgIcon Preset="Check" IconColor="White" IconSize="20"
                                               Width="20" Height="20"
                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -423,7 +423,7 @@
                                     Phantom Obscura uses military-grade post-quantum encryption to protect your credentials.
                                 </TextBlock>
 
-                                <Border Background="#40214247"
+                                <Border Background="{DynamicResource DashboardCardBg}"
                                         CornerRadius="{StaticResource Radius.Lg}"
                                         Padding="20,16"
                                         Margin="0,12,0,0"
@@ -462,7 +462,7 @@
                                             </StackPanel>
                                             <StackPanel Orientation="Horizontal" Spacing="10">
                                                 <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Password.svg" IconColor="White" IconSize="22" Width="22" Height="22" VerticalAlignment="Center"/>
-                                                <TextBlock Text="Optional master password support — the keyfile is always the required factor"
+                                                <TextBlock Text="The keyfile is always the mandatory factor — a master password is optional and additive"
                                                            TextWrapping="Wrap"
                                                            Foreground="{DynamicResource SecondaryTextBrush}"/>
                                             </StackPanel>
@@ -528,7 +528,7 @@
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="16">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Border Width="40" Height="40" CornerRadius="20" Background="#601B2846">
+                                    <Border Width="40" Height="40" CornerRadius="20" Background="{DynamicResource DashboardSectionBg}">
                                         <controls:SvgIcon Preset="Shield" IconColor="White" IconSize="24"
                                                           Width="24" Height="24"
                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -617,7 +617,7 @@
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="14">
-                                    <Border Width="56" Height="56" CornerRadius="28" Background="#601B2846">
+                                    <Border Width="56" Height="56" CornerRadius="28" Background="{DynamicResource DashboardSectionBg}">
                                         <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Password Strength.svg" IconColor="White" IconSize="34"
                                                           Width="34" Height="34"
                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -662,7 +662,7 @@
                                                                    Margin="0,0,10,0"
                                                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
                                                         <Border IsVisible="{Binding RecommendedFor, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                                                Background="#601B2846"
+                                                                Background="{DynamicResource DashboardSectionBg}"
                                                                 CornerRadius="4"
                                                                 Padding="8,2"
                                                                 Margin="0,0,8,4"
@@ -671,7 +671,7 @@
                                                                        FontSize="{StaticResource Type.Micro.Size}"
                                                                        Foreground="{DynamicResource SecondaryTextBrush}"/>
                                                         </Border>
-                                                        <Border Background="#40214247"
+                                                        <Border Background="{DynamicResource DashboardCardBg}"
                                                                 CornerRadius="4"
                                                                 Padding="8,2"
                                                                 Margin="0,0,0,4"
@@ -689,7 +689,7 @@
                                                             MinHeight="26"
                                                             Padding="0"
                                                             CornerRadius="13"
-                                                            Background="#1B3148"
+                                                            Background="{DynamicResource CardBackgroundBrush}"
                                                             BorderThickness="1"
                                                             BorderBrush="{DynamicResource Brush.Glass.Border}"
                                                             HorizontalAlignment="Right"
@@ -727,7 +727,7 @@
                                                                                 <DataTemplate>
                                                                                     <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,3">
                                                                                         <TextBlock Text="✓" FontSize="{StaticResource Type.Small.Size}"
-                                                                                                   Foreground="#5B93E0"/>
+                                                                                                   Foreground="{DynamicResource AccentBrush}"/>
                                                                                         <TextBlock Text="{Binding}"
                                                                                                    FontSize="{StaticResource Type.Small.Size}"
                                                                                                    Foreground="{DynamicResource SecondaryTextBrush}"
@@ -736,7 +736,7 @@
                                                                                 </DataTemplate>
                                                                             </ItemsControl.ItemTemplate>
                                                                         </ItemsControl>
-                                                                        <Border Background="#601B2846"
+                                                                        <Border Background="{DynamicResource DashboardSectionBg}"
                                                                                 CornerRadius="10"
                                                                                 Padding="12,10"
                                                                                 IsVisible="{Binding SecurityHelpText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
@@ -778,7 +778,7 @@
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Border Width="40" Height="40" CornerRadius="20" Background="#601B2846">
+                                    <Border Width="40" Height="40" CornerRadius="20" Background="{DynamicResource DashboardSectionBg}">
                                         <controls:SvgIcon Preset="Shield" IconColor="White" IconSize="24"
                                                           Width="24" Height="24"
                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -803,7 +803,7 @@
                             </StackPanel>
                         </Border>
 
-                        <Border Background="#40214247" CornerRadius="12" Padding="20,16"
+                        <Border Background="{DynamicResource DashboardCardBg}" CornerRadius="12" Padding="20,16"
                                 IsVisible="{Binding EnablePhantomKey}"
                                 BorderThickness="0"
                                 BoxShadow="0 4 16 0 #40000000">
@@ -860,7 +860,7 @@
 
                                 <StackPanel Spacing="8">
                                     <StackPanel Orientation="Horizontal" Spacing="10">
-                                        <Border Width="28" Height="28" CornerRadius="14" Background="#1C2D42">
+                                        <Border Width="28" Height="28" CornerRadius="14" Background="{DynamicResource CardBackgroundBrush}">
                                             <TextBlock Text="1" FontSize="13" FontWeight="Normal"
                                                        Foreground="White"
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -873,7 +873,7 @@
                                     </StackPanel>
 
                                     <StackPanel Orientation="Horizontal" Spacing="10">
-                                        <Border Width="28" Height="28" CornerRadius="14" Background="#1C2D42">
+                                        <Border Width="28" Height="28" CornerRadius="14" Background="{DynamicResource CardBackgroundBrush}">
                                             <TextBlock Text="2" FontSize="13" FontWeight="Normal"
                                                        Foreground="White"
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -886,7 +886,7 @@
                                     </StackPanel>
 
                                     <StackPanel Orientation="Horizontal" Spacing="10">
-                                        <Border Width="28" Height="28" CornerRadius="14" Background="#1C2D42">
+                                        <Border Width="28" Height="28" CornerRadius="14" Background="{DynamicResource CardBackgroundBrush}">
                                             <TextBlock Text="3" FontSize="13" FontWeight="Normal"
                                                        Foreground="White"
                                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -901,7 +901,7 @@
                             </StackPanel>
                         </Border>
 
-                        <Border Background="#40214247" CornerRadius="8" Padding="14,12"
+                        <Border Background="{DynamicResource DashboardCardBg}" CornerRadius="8" Padding="14,12"
                                 IsVisible="{Binding EnablePhantomKey}"
                                 BorderThickness="0"
                                 BoxShadow="0 4 16 0 #40000000">
@@ -932,7 +932,7 @@
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Border Width="40" Height="40" CornerRadius="20" Background="#601B2846">
+                                    <Border Width="40" Height="40" CornerRadius="20" Background="{DynamicResource DashboardSectionBg}">
                                         <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Storage Location.svg" IconColor="White" IconSize="24"
                                                           Width="24" Height="24"
                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -982,7 +982,7 @@
                                 Padding="20,16"
                                 BoxShadow="0 6 20 2 #50000000">
                             <Grid ColumnDefinitions="Auto,*,Auto">
-                                <Border Grid.Column="0" Width="40" Height="40" CornerRadius="20" Background="#601B2846"
+                                <Border Grid.Column="0" Width="40" Height="40" CornerRadius="20" Background="{DynamicResource DashboardSectionBg}"
                                         VerticalAlignment="Center" Margin="0,0,16,0">
                                     <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Storage Location.svg" IconColor="White" IconSize="24"
                                                       Width="24" Height="24"
@@ -1045,7 +1045,7 @@
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Border Width="40" Height="40" CornerRadius="20" Background="#601B2846">
+                                    <Border Width="40" Height="40" CornerRadius="20" Background="{DynamicResource DashboardSectionBg}">
                                         <controls:SvgIcon Preset="Lock" IconColor="White" IconSize="24"
                                                           Width="24" Height="24"
                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -1105,7 +1105,7 @@
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Border Width="40" Height="40" CornerRadius="20" Background="#601B2846">
+                                    <Border Width="40" Height="40" CornerRadius="20" Background="{DynamicResource DashboardSectionBg}">
                                         <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Link.svg" IconColor="White" IconSize="24"
                                                           Width="24" Height="24"
                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -1128,7 +1128,7 @@
                                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                                 </CheckBox>
 
-                                <Border Background="#40214247" CornerRadius="8" Padding="12,8"
+                                <Border Background="{DynamicResource DashboardCardBg}" CornerRadius="8" Padding="12,8"
                                         IsVisible="{Binding GuuidValue, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                         BorderThickness="0"
                                         BoxShadow="0 4 16 0 #40000000">
@@ -1149,7 +1149,7 @@
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Border Width="40" Height="40" CornerRadius="20" Background="#601B2846">
+                                    <Border Width="40" Height="40" CornerRadius="20" Background="{DynamicResource DashboardSectionBg}">
                                         <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Encrypted Container.svg" IconColor="White" IconSize="24"
                                                           Width="24" Height="24"
                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -1191,7 +1191,7 @@
                                 <Border Margin="0,8,0,0"
                                         Padding="14,12"
                                         CornerRadius="10"
-                                        Background="#1A6B8CAE"
+                                        Background="{DynamicResource DashboardNavPrimaryBg}"
                                         BorderBrush="{DynamicResource AccentBrush}"
                                         BorderThickness="1"
                                         IsVisible="{Binding EnableEncryptedContainer}">
@@ -1220,7 +1220,7 @@
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Border Width="40" Height="40" CornerRadius="20" Background="#601B2846">
+                                    <Border Width="40" Height="40" CornerRadius="20" Background="{DynamicResource DashboardSectionBg}">
                                         <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Encrypted Container.svg" IconColor="White" IconSize="24"
                                                           Width="24" Height="24"
                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -1244,9 +1244,9 @@
                                         BorderThickness="1">
                                     <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto">
                                         <Grid Grid.Column="0" Grid.Row="0" VerticalAlignment="Center" Margin="0,0,10,0">
-                                            <Ellipse Width="12" Height="12" Fill="#2ECC71"
+                                            <Ellipse Width="12" Height="12" Fill="{DynamicResource SuccessBrush}"
                                                      IsVisible="{Binding IsWinFspInstalled}"/>
-                                            <Ellipse Width="12" Height="12" Fill="#E6A23C"
+                                            <Ellipse Width="12" Height="12" Fill="{DynamicResource WarningBrush}"
                                                      IsVisible="{Binding !IsWinFspInstalled}"/>
                                         </Grid>
                                         <TextBlock Grid.Column="1" Grid.Row="0"
@@ -1299,7 +1299,7 @@
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Border Width="40" Height="40" CornerRadius="20" Background="#601B2846">
+                                    <Border Width="40" Height="40" CornerRadius="20" Background="{DynamicResource DashboardSectionBg}">
                                         <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Keyfile.svg" IconColor="White" IconSize="24"
                                                           Width="24" Height="24"
                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -1371,7 +1371,7 @@
                                                             <TextBlock Text="Browse..." VerticalAlignment="Center"/>
                                                         </StackPanel>
                                                     </Button>
-                                                    <Button Command="{Binding ClearKeyfileCommand}"
+                                                    <Button AutomationProperties.Name="Clear selection" Command="{Binding ClearKeyfileCommand}"
                                                             IsVisible="{Binding KeyfileSelected}"
                                                             Classes="ghost"
                                                             Padding="8"
@@ -1414,7 +1414,7 @@
                                                    FontSize="{StaticResource Type.Small.Size}"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
 
-                                        <Border Background="#40193A42"
+                                        <Border Background="{DynamicResource DashboardCardBg}"
                                                 CornerRadius="{StaticResource Radius.Sm}"
                                                 Padding="16,14">
                                             <StackPanel Spacing="12">
@@ -1442,8 +1442,8 @@
                                                 </TextBlock>
 
                                                 <Border Name="EntropyCaptureSurface"
-                                                        Background="#0B1320"
-                                                        BorderBrush="#465969"
+                                                        Background="{DynamicResource ContentBackgroundBrush}"
+                                                        BorderBrush="{DynamicResource ControlBorderBrush}"
                                                         BorderThickness="1"
                                                         CornerRadius="{StaticResource Radius.Sm}"
                                                         Height="196"
@@ -1685,7 +1685,7 @@
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="10">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Border Width="44" Height="44" CornerRadius="22" Background="#601B2846">
+                                    <Border Width="44" Height="44" CornerRadius="22" Background="{DynamicResource DashboardSectionBg}">
                                         <controls:SvgIcon Preset="Lock" IconColor="White" IconSize="24"
                                                           Width="24" Height="24"
                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -1728,7 +1728,7 @@
                                     </CheckBox>
                                 </Grid>
 
-                                <Border Background="#0E1A27"
+                                <Border Background="{DynamicResource ContentBackgroundBrush}"
                                         CornerRadius="10"
                                         Padding="14,12"
                                         BorderBrush="{DynamicResource ControlBorderBrush}"
@@ -1785,7 +1785,7 @@
                                     </CheckBox>
                                 </Grid>
 
-                                <Border Background="#0E1A27"
+                                <Border Background="{DynamicResource ContentBackgroundBrush}"
                                         CornerRadius="10"
                                         Padding="14,12"
                                         BorderBrush="{DynamicResource ControlBorderBrush}"
@@ -1845,7 +1845,7 @@
                                     </CheckBox>
                                 </Grid>
 
-                                <Border Background="#0E1A27"
+                                <Border Background="{DynamicResource ContentBackgroundBrush}"
                                         CornerRadius="10"
                                         Padding="14,12"
                                         BorderBrush="{DynamicResource ControlBorderBrush}"
@@ -1904,7 +1904,7 @@
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <Border Width="44" Height="44" CornerRadius="22" Background="#601B2846">
+                                    <Border Width="44" Height="44" CornerRadius="22" Background="{DynamicResource DashboardSectionBg}">
                                         <controls:SvgIcon Preset="AlertTriangle" IconColor="{DynamicResource AccentBrush}" IconSize="24"
                                                           Width="28" Height="28"
                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -1936,7 +1936,7 @@
                                 <ItemsControl ItemsSource="{Binding DetectedRemnants}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Background="#0E1A27"
+                                            <Border Background="{DynamicResource ContentBackgroundBrush}"
                                                     CornerRadius="10" Padding="14,12" Margin="0,0,0,8"
                                                     BorderBrush="{DynamicResource ControlBorderBrush}"
                                                     BorderThickness="1">
@@ -2013,7 +2013,7 @@
                                 Padding="24,20"
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="12" HorizontalAlignment="Center">
-                                <Border Width="44" Height="44" CornerRadius="22" Background="#601B2846"
+                                <Border Width="44" Height="44" CornerRadius="22" Background="{DynamicResource DashboardSectionBg}"
                                         HorizontalAlignment="Center">
                                     <controls:SvgIcon Preset="Check" IconColor="White" IconSize="24"
                                                       Width="24" Height="24"

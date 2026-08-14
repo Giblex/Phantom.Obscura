@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Modes;
-using Org.BouncyCastle.Crypto.Paddings;
 using Org.BouncyCastle.Crypto.Parameters;
 
 namespace PhantomVault.Core.Services
@@ -35,9 +34,15 @@ namespace PhantomVault.Core.Services
             public byte[] Tag1 { get; set; } = Array.Empty<byte>();
             public byte[] Nonce2 { get; set; } = Array.Empty<byte>();
             public byte[] Tag2 { get; set; } = Array.Empty<byte>();
-            public byte[] IV3 { get; set; } = Array.Empty<byte>();
-            public byte[] IV4 { get; set; } = Array.Empty<byte>();
-            public byte[] IV5 { get; set; } = Array.Empty<byte>();
+            // Layer 3 — ChaCha20-Poly1305 (replaces former AES-CBC)
+            public byte[] Nonce3 { get; set; } = Array.Empty<byte>();
+            public byte[] Tag3 { get; set; } = Array.Empty<byte>();
+            // Layer 4 — Twofish-GCM (replaces former Twofish-CBC)
+            public byte[] Nonce4 { get; set; } = Array.Empty<byte>();
+            public byte[] Tag4 { get; set; } = Array.Empty<byte>();
+            // Layer 5 — Serpent-GCM (replaces former Serpent-CBC)
+            public byte[] Nonce5 { get; set; } = Array.Empty<byte>();
+            public byte[] Tag5 { get; set; } = Array.Empty<byte>();
             public SecurityLevel Level { get; set; }
         }
 
@@ -102,30 +107,38 @@ namespace PhantomVault.Core.Services
 
                 if (level == SecurityLevel.Sensitive)
                 {
-                    var layer3Key = DeriveLayerKey(masterKey, salt, "Layer3-AES-CBC");
-                    var layer3Result = EncryptAesCbc(currentData, layer3Key, out byte[] iv3);
-                    result.IV3 = iv3;
-                    result.Ciphertext = layer3Result;
+                    // Layer 3: ChaCha20-Poly1305 (authenticated — replaces former AES-CBC)
+                    var layer3Key = DeriveLayerKey(masterKey, salt, "Layer3-ChaCha20");
+                    var layer3Result = EncryptChaCha20(currentData, layer3Key, contextData);
+                    result.Nonce3 = layer3Result.Nonce;
+                    result.Tag3 = layer3Result.Tag;
+                    result.Ciphertext = layer3Result.Ciphertext;
                     CryptographicOperations.ZeroMemory(layer3Key);
                     return result;
                 }
 
-                var key3 = DeriveLayerKey(masterKey, salt, "Layer3-AES-CBC");
-                var enc3 = EncryptAesCbc(currentData, key3, out byte[] iv3Full);
-                result.IV3 = iv3Full;
-                currentData = enc3;
+                // Layer 3: ChaCha20-Poly1305
+                var key3 = DeriveLayerKey(masterKey, salt, "Layer3-ChaCha20");
+                var enc3 = EncryptChaCha20(currentData, key3, contextData);
+                result.Nonce3 = enc3.Nonce;
+                result.Tag3 = enc3.Tag;
+                currentData = enc3.Ciphertext;
                 CryptographicOperations.ZeroMemory(key3);
 
+                // Layer 4: Twofish-GCM (authenticated — replaces former Twofish-CBC)
                 var key4 = DeriveLayerKey(masterKey, salt, "Layer4-Twofish", contextData);
-                var enc4 = EncryptTwofish(currentData, key4, out byte[] iv4);
-                result.IV4 = iv4;
-                currentData = enc4;
+                var enc4 = EncryptTwofishGcm(currentData, key4, contextData);
+                result.Nonce4 = enc4.Nonce;
+                result.Tag4 = enc4.Tag;
+                currentData = enc4.Ciphertext;
                 CryptographicOperations.ZeroMemory(key4);
 
+                // Layer 5: Serpent-GCM (authenticated — replaces former Serpent-CBC)
                 var key5 = DeriveLayerKey(masterKey, salt, "Layer5-Serpent", contextData);
-                var enc5 = EncryptSerpent(currentData, key5, out byte[] iv5);
-                result.IV5 = iv5;
-                result.Ciphertext = enc5;
+                var enc5 = EncryptSerpentGcm(currentData, key5, contextData);
+                result.Nonce5 = enc5.Nonce;
+                result.Tag5 = enc5.Tag;
+                result.Ciphertext = enc5.Ciphertext;
                 CryptographicOperations.ZeroMemory(key5);
 
                 return result;
@@ -157,19 +170,22 @@ namespace PhantomVault.Core.Services
             {
                 if (encryptedData.Level == SecurityLevel.Maximum)
                 {
+                    // Layer 5: Serpent-GCM
                     var key5 = DeriveLayerKey(masterKey, salt, "Layer5-Serpent", contextData);
-                    currentData = ReplaceBuffer(currentData, DecryptSerpent(currentData, key5, encryptedData.IV5), ref ownsCurrentData);
+                    currentData = ReplaceBuffer(currentData, DecryptSerpentGcm(currentData, key5, encryptedData.Nonce5, encryptedData.Tag5, contextData), ref ownsCurrentData);
                     CryptographicOperations.ZeroMemory(key5);
 
+                    // Layer 4: Twofish-GCM
                     var key4 = DeriveLayerKey(masterKey, salt, "Layer4-Twofish", contextData);
-                    currentData = ReplaceBuffer(currentData, DecryptTwofish(currentData, key4, encryptedData.IV4), ref ownsCurrentData);
+                    currentData = ReplaceBuffer(currentData, DecryptTwofishGcm(currentData, key4, encryptedData.Nonce4, encryptedData.Tag4, contextData), ref ownsCurrentData);
                     CryptographicOperations.ZeroMemory(key4);
                 }
 
                 if (encryptedData.Level == SecurityLevel.Maximum || encryptedData.Level == SecurityLevel.Sensitive)
                 {
-                    var key3 = DeriveLayerKey(masterKey, salt, "Layer3-AES-CBC");
-                    currentData = ReplaceBuffer(currentData, DecryptAesCbc(currentData, key3, encryptedData.IV3), ref ownsCurrentData);
+                    // Layer 3: ChaCha20-Poly1305
+                    var key3 = DeriveLayerKey(masterKey, salt, "Layer3-ChaCha20");
+                    currentData = ReplaceBuffer(currentData, DecryptChaCha20(currentData, key3, encryptedData.Nonce3, encryptedData.Tag3, contextData), ref ownsCurrentData);
                     CryptographicOperations.ZeroMemory(key3);
                 }
 
@@ -208,12 +224,21 @@ namespace PhantomVault.Core.Services
 
         private byte[] DeriveLayerKey(ReadOnlySpan<byte> masterKey, ReadOnlySpan<byte> salt, string label, ReadOnlySpan<byte> context = default)
         {
-
-            var info = CombineBytes(Encoding.UTF8.GetBytes(label), context.ToArray());
-            var derived = new byte[32];
-            using var hkdf = new HKDF(HashAlgorithmName.SHA512, masterKey.ToArray(), salt.ToArray());
-            hkdf.DeriveKey(info, derived);
-            return derived;
+            byte[] ikmArray = masterKey.ToArray();
+            byte[] saltArray = salt.ToArray();
+            try
+            {
+                var info = CombineBytes(Encoding.UTF8.GetBytes(label), context.ToArray());
+                var derived = new byte[32];
+                using var hkdf = new HKDF(HashAlgorithmName.SHA512, ikmArray, saltArray);
+                hkdf.DeriveKey(info, derived);
+                return derived;
+            }
+            finally
+            {
+                CryptographicOperations.ZeroMemory(ikmArray);
+                CryptographicOperations.ZeroMemory(saltArray);
+            }
         }
 
         private (byte[] Ciphertext, byte[] Nonce, byte[] Tag) EncryptChaCha20(byte[] plaintext, byte[] key, ReadOnlySpan<byte> aad)
@@ -237,93 +262,98 @@ namespace PhantomVault.Core.Services
             return plaintext;
         }
 
-        private byte[] EncryptAesCbc(byte[] plaintext, byte[] key, out byte[] iv)
+        private (byte[] Ciphertext, byte[] Nonce, byte[] Tag) EncryptTwofishGcm(byte[] plaintext, byte[] key, ReadOnlySpan<byte> aad)
         {
-            iv = new byte[16];
-            RandomNumberGenerator.Fill(iv);
+            byte[] nonce = new byte[12];
+            RandomNumberGenerator.Fill(nonce);
 
-            using var aes = Aes.Create();
-            aes.Key = key;
-            aes.IV = iv;
-            aes.Mode = CipherMode.CBC;
-            aes.Padding = PaddingMode.PKCS7;
+            var cipher = new GcmBlockCipher(new TwofishEngine());
+            var parameters = new AeadParameters(new KeyParameter(key), 128, nonce, aad.ToArray());
+            cipher.Init(true, parameters);
 
-            using var encryptor = aes.CreateEncryptor();
-            return encryptor.TransformFinalBlock(plaintext, 0, plaintext.Length);
+            byte[] output = new byte[cipher.GetOutputSize(plaintext.Length)];
+            int len = cipher.ProcessBytes(plaintext, 0, plaintext.Length, output, 0);
+            len += cipher.DoFinal(output, len);
+
+            // GCM appends the 16-byte tag to the ciphertext output
+            byte[] ciphertext = output[..(len - 16)];
+            byte[] tag = output[(len - 16)..len];
+            return (ciphertext, nonce, tag);
         }
 
-        private byte[] DecryptAesCbc(byte[] ciphertext, byte[] key, byte[] iv)
+        private byte[] DecryptTwofishGcm(byte[] ciphertext, byte[] key, byte[] nonce, byte[] tag, ReadOnlySpan<byte> aad)
         {
-            using var aes = Aes.Create();
-            aes.Key = key;
-            aes.IV = iv;
-            aes.Mode = CipherMode.CBC;
-            aes.Padding = PaddingMode.PKCS7;
+            var cipher = new GcmBlockCipher(new TwofishEngine());
+            var parameters = new AeadParameters(new KeyParameter(key), 128, nonce, aad.ToArray());
+            cipher.Init(false, parameters);
 
-            using var decryptor = aes.CreateDecryptor();
-            return decryptor.TransformFinalBlock(ciphertext, 0, ciphertext.Length);
+            // Reassemble ciphertext+tag for BouncyCastle
+            byte[] input = new byte[ciphertext.Length + tag.Length];
+            Buffer.BlockCopy(ciphertext, 0, input, 0, ciphertext.Length);
+            Buffer.BlockCopy(tag, 0, input, ciphertext.Length, tag.Length);
+
+            byte[] output = new byte[cipher.GetOutputSize(input.Length)];
+            int len = cipher.ProcessBytes(input, 0, input.Length, output, 0);
+            len += DoFinalChecked(cipher, output, len, "Twofish-GCM");
+            return output[..len];
         }
 
-        private byte[] EncryptTwofish(byte[] plaintext, byte[] key, out byte[] iv)
+        private (byte[] Ciphertext, byte[] Nonce, byte[] Tag) EncryptSerpentGcm(byte[] plaintext, byte[] key, ReadOnlySpan<byte> aad)
         {
-            iv = new byte[16];
-            RandomNumberGenerator.Fill(iv);
+            byte[] nonce = new byte[12];
+            RandomNumberGenerator.Fill(nonce);
 
-            var engine = new TwofishEngine();
-            var blockCipher = new CbcBlockCipher(engine);
-            var cipher = new PaddedBufferedBlockCipher(blockCipher, new Pkcs7Padding());
-            var keyParamWithIv = new ParametersWithIV(new KeyParameter(key), iv);
+            var cipher = new GcmBlockCipher(new SerpentEngine());
+            var parameters = new AeadParameters(new KeyParameter(key), 128, nonce, aad.ToArray());
+            cipher.Init(true, parameters);
 
-            cipher.Init(true, keyParamWithIv);
-            var output = new byte[cipher.GetOutputSize(plaintext.Length)];
-            var length = cipher.ProcessBytes(plaintext, 0, plaintext.Length, output, 0);
-            length += cipher.DoFinal(output, length);
-            return output[..length];
+            byte[] output = new byte[cipher.GetOutputSize(plaintext.Length)];
+            int len = cipher.ProcessBytes(plaintext, 0, plaintext.Length, output, 0);
+            len += cipher.DoFinal(output, len);
+
+            byte[] ciphertext = output[..(len - 16)];
+            byte[] tag = output[(len - 16)..len];
+            return (ciphertext, nonce, tag);
         }
 
-        private byte[] DecryptTwofish(byte[] ciphertext, byte[] key, byte[] iv)
+        private byte[] DecryptSerpentGcm(byte[] ciphertext, byte[] key, byte[] nonce, byte[] tag, ReadOnlySpan<byte> aad)
         {
-            var engine = new TwofishEngine();
-            var blockCipher = new CbcBlockCipher(engine);
-            var cipher = new PaddedBufferedBlockCipher(blockCipher, new Pkcs7Padding());
-            var keyParamWithIv = new ParametersWithIV(new KeyParameter(key), iv);
+            var cipher = new GcmBlockCipher(new SerpentEngine());
+            var parameters = new AeadParameters(new KeyParameter(key), 128, nonce, aad.ToArray());
+            cipher.Init(false, parameters);
 
-            cipher.Init(false, keyParamWithIv);
-            var output = new byte[cipher.GetOutputSize(ciphertext.Length)];
-            var length = cipher.ProcessBytes(ciphertext, 0, ciphertext.Length, output, 0);
-            length += cipher.DoFinal(output, length);
-            return output[..length];
+            byte[] input = new byte[ciphertext.Length + tag.Length];
+            Buffer.BlockCopy(ciphertext, 0, input, 0, ciphertext.Length);
+            Buffer.BlockCopy(tag, 0, input, ciphertext.Length, tag.Length);
+
+            byte[] output = new byte[cipher.GetOutputSize(input.Length)];
+            int len = cipher.ProcessBytes(input, 0, input.Length, output, 0);
+            len += DoFinalChecked(cipher, output, len, "Serpent-GCM");
+            return output[..len];
         }
 
-        private byte[] EncryptSerpent(byte[] plaintext, byte[] key, out byte[] iv)
+        /// <summary>
+        /// Finalises a BouncyCastle AEAD decryption, translating a failed tag check
+        /// into <see cref="CryptographicException"/>.
+        ///
+        /// The ChaCha20-Poly1305 layer uses the BCL and already throws
+        /// CryptographicException on a bad tag; without this the Twofish and Serpent
+        /// layers would instead surface BouncyCastle's InvalidCipherTextException,
+        /// so callers had to know which layer failed in order to catch it. The
+        /// message deliberately carries no detail about the ciphertext.
+        /// </summary>
+        private static int DoFinalChecked(GcmBlockCipher cipher, byte[] output, int offset, string layerName)
         {
-            iv = new byte[16];
-            RandomNumberGenerator.Fill(iv);
-
-            var engine = new SerpentEngine();
-            var blockCipher = new CbcBlockCipher(engine);
-            var cipher = new PaddedBufferedBlockCipher(blockCipher, new Pkcs7Padding());
-            var keyParamWithIv = new ParametersWithIV(new KeyParameter(key), iv);
-
-            cipher.Init(true, keyParamWithIv);
-            var output = new byte[cipher.GetOutputSize(plaintext.Length)];
-            var length = cipher.ProcessBytes(plaintext, 0, plaintext.Length, output, 0);
-            length += cipher.DoFinal(output, length);
-            return output[..length];
-        }
-
-        private byte[] DecryptSerpent(byte[] ciphertext, byte[] key, byte[] iv)
-        {
-            var engine = new SerpentEngine();
-            var blockCipher = new CbcBlockCipher(engine);
-            var cipher = new PaddedBufferedBlockCipher(blockCipher, new Pkcs7Padding());
-            var keyParamWithIv = new ParametersWithIV(new KeyParameter(key), iv);
-
-            cipher.Init(false, keyParamWithIv);
-            var output = new byte[cipher.GetOutputSize(ciphertext.Length)];
-            var length = cipher.ProcessBytes(ciphertext, 0, ciphertext.Length, output, 0);
-            length += cipher.DoFinal(output, length);
-            return output[..length];
+            try
+            {
+                return cipher.DoFinal(output, offset);
+            }
+            catch (InvalidCipherTextException ex)
+            {
+                throw new CryptographicException(
+                    $"Authentication failed while decrypting the {layerName} layer — the data has been tampered with or the key is wrong.",
+                    ex);
+            }
         }
 
         private static byte[] CombineBytes(byte[] first, byte[] second)

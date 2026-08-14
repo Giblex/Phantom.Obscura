@@ -42,11 +42,9 @@ public partial class HeaderView : UserControl
         var actionsButton = this.FindControl<Button>("ActionsMenuButton");
         if (actionsButton?.Flyout is Flyout flyout)
         {
-            var openCorner = new Avalonia.CornerRadius(14, 14, 0, 0);
-            var closedCorner = new Avalonia.CornerRadius(12);
-            const int closeAnimMs = 520;
             var openOpacityMs = TimeSpan.FromMilliseconds(240);
             var openTransformMs = TimeSpan.FromMilliseconds(280);
+            const int closeAnimMs = 320;
             var closeAnimDuration = TimeSpan.FromMilliseconds(closeAnimMs);
             var allowClose = false;
 
@@ -54,7 +52,6 @@ public partial class HeaderView : UserControl
             {
                 allowClose = false;
                 actionsButton.Classes.Add("menu-open");
-                actionsButton.CornerRadius = openCorner;
                 var root = (actionsButton.Flyout as Flyout)?.Content as Control;
                 if (root == null) return;
 
@@ -73,14 +70,11 @@ public partial class HeaderView : UserControl
                 if (allowClose) return;
                 e.Cancel = true;
 
-                // Start button corner-radius animation back to rounded in sync with dropdown retract
                 actionsButton.Classes.Remove("menu-open");
-                actionsButton.CornerRadius = closedCorner;
 
                 var root = (actionsButton.Flyout as Flyout)?.Content as Control;
                 if (root != null && root.Transitions != null)
                 {
-                    // Slow the transitions for the close animation
                     foreach (var t in root.Transitions)
                     {
                         if (t is DoubleTransition dt && dt.Property == Avalonia.Visual.OpacityProperty)
@@ -88,14 +82,12 @@ public partial class HeaderView : UserControl
                         else if (t is TransformOperationsTransition tt && tt.Property == Avalonia.Visual.RenderTransformProperty)
                             tt.Duration = closeAnimDuration;
                     }
-
                     root.Opacity = 0;
                     root.RenderTransform = TransformOperations.Parse("scaleY(0.001)");
                 }
 
                 DispatcherTimer.RunOnce(() =>
                 {
-                    // Restore original durations for the next open
                     if (root != null && root.Transitions != null)
                     {
                         foreach (var t in root.Transitions)
@@ -114,7 +106,6 @@ public partial class HeaderView : UserControl
             flyout.Closed += (_, _) =>
             {
                 actionsButton.Classes.Remove("menu-open");
-                actionsButton.CornerRadius = closedCorner;
                 allowClose = false;
             };
         }

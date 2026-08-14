@@ -52,7 +52,10 @@ namespace PhantomVault.Core.Services
                         var last = JsonSerializer.Deserialize<AuditEntry>(lastLine);
                         prevHash = last?.Hash;
                     }
-                    catch {  }
+                    catch (Exception ex)
+                    {
+                        Serilog.Log.Warning(ex, "[AuditService] Failed to deserialize last audit entry — chain integrity check skipped");
+                    }
                 }
             }
 

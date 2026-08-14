@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace PhantomVault.UI.Views
 {
-    public partial class MainWindow : Window
+    public partial class MainWindow : ThemeAwareWindow
     {
         public MainWindow()
         {

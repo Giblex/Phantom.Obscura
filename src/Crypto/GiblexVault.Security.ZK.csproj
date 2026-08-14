@@ -17,7 +17,7 @@
 	<ItemGroup>
 		<Compile Remove="bin\**;obj\**;obj_*\**" />
 		<PackageReference Include="Isopoh.Cryptography.Argon2" Version="2.0.0" />
-		<PackageReference Include="NSec.Cryptography" Version="22.4.0" />
+		<PackageReference Include="NSec.Cryptography" Version="26.4.0" />
 			<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0" />
 	</ItemGroup>
 </Project>

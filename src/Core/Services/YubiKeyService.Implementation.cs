@@ -55,7 +55,7 @@ namespace PhantomVault.Core.Services
 
             var device = YubiKeyDevice.FindAll()
                 .FirstOrDefault(d => d.HasFeature(YubiKeyFeature.Fido2Application))
-                ?? throw new InvalidOperationException("No YubiKey with FIDO2 support found.");
+                ?? throw new FeatureNotAvailableException("No YubiKey with FIDO2 support found.", "obscura.yubikey.fido2");
 
             using var session = new Fido2Session(device);
 
@@ -102,7 +102,7 @@ namespace PhantomVault.Core.Services
 
             var device = YubiKeyDevice.FindAll()
                 .FirstOrDefault(d => d.HasFeature(YubiKeyFeature.Fido2Application))
-                ?? throw new InvalidOperationException("No YubiKey with FIDO2 support found.");
+                ?? throw new FeatureNotAvailableException("No YubiKey with FIDO2 support found.", "obscura.yubikey.fido2");
 
             using var session = new Fido2Session(device);
 
@@ -155,7 +155,7 @@ namespace PhantomVault.Core.Services
         {
             var device = YubiKeyDevice.FindAll()
                 .FirstOrDefault(d => d.HasFeature(YubiKeyFeature.Fido2Application))
-                ?? throw new InvalidOperationException("No YubiKey with FIDO2 support found.");
+                ?? throw new FeatureNotAvailableException("No YubiKey with FIDO2 support found.", "obscura.yubikey.fido2");
 
             using var connection = device.Connect(YubiKeyApplication.Fido2);
             var response = connection.SendCommand(new ResetCommand());

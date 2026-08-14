@@ -77,12 +77,21 @@
                                    TextWrapping="Wrap"/>
 
                         <CheckBox Content="Enable PIN lock"
-                                  IsChecked="{Binding EnablePinLock, Mode=TwoWay}"/>
+                                  IsChecked="{Binding EnablePinLock, Mode=TwoWay}"
+                                  IsEnabled="{Binding HasPinConfigured}"
+                                  ToolTip.Tip="Set a PIN first — there is nothing to enable until then."/>
 
                         <CheckBox Content="Use PIN lock for auto-lock (do not dismount)"
                                   IsChecked="{Binding UsePinLockForAutoLock, Mode=TwoWay}"
+                                  IsEnabled="{Binding HasPinConfigured}"
                                   IsVisible="{Binding EnablePinLock}"
                                   ToolTip.Tip="If enabled, auto-lock shows the lockscreen without dismounting the vault."/>
+
+                        <TextBlock Text="No PIN is set — auto-lock will not ask for one."
+                                   FontSize="{StaticResource Type.Small.Size}"
+                                   Foreground="{DynamicResource MutedTextBrush}"
+                                   TextWrapping="Wrap"
+                                   IsVisible="{Binding !HasPinConfigured}"/>
 
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <Button Content="Set / Change PIN"

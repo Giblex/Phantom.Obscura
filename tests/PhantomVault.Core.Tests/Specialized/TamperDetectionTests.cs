@@ -124,12 +124,12 @@ namespace PhantomVault.Core.Tests.Specialized
                 Tag1 = encrypted.Tag1,
                 Nonce2 = encrypted.Nonce2,
                 Tag2 = encrypted.Tag2,
-                // Layer 3 uses only IV3, not Nonce3
-                IV3 = encrypted.IV3,
-                // Nonce4 removed - Layer 4 only has IV4
-                IV4 = encrypted.IV4,
-                // Nonce5 removed - Layer 5 only has IV5
-                IV5 = encrypted.IV5,
+                Nonce3 = encrypted.Nonce3,
+                Tag3 = encrypted.Tag3,
+                Nonce4 = encrypted.Nonce4,
+                Tag4 = encrypted.Tag4,
+                Nonce5 = encrypted.Nonce5,
+                Tag5 = encrypted.Tag5,
                 Level = encrypted.Level
             };
             tamperedResult.Ciphertext[0] ^= 0xFF;
@@ -190,8 +190,8 @@ namespace PhantomVault.Core.Tests.Specialized
                 Tag1 = encrypted.Tag1,
                 Nonce2 = encrypted.Nonce2,
                 Tag2 = (byte[])encrypted.Tag2.Clone(),
-                // Layer 3 uses only IV3, not Nonce3
-                IV3 = encrypted.IV3,
+                Nonce3 = encrypted.Nonce3,
+                Tag3 = encrypted.Tag3,
                 Level = encrypted.Level
             };
             tamperedResult.Tag2[0] ^= 0xFF;
@@ -232,7 +232,7 @@ namespace PhantomVault.Core.Tests.Specialized
         }
 
         [Fact]
-        public void LayeredEncrypt_TamperedIV_DetectedByDecryption()
+        public void LayeredEncrypt_TamperedLayer3Nonce_DetectedByDecryption()
         {
             // Arrange
             var service = new LayeredEncryptionService(new EncryptionService());
@@ -244,7 +244,7 @@ namespace PhantomVault.Core.Tests.Specialized
 
             var encrypted = service.EncryptLayered(plaintext, masterKey, SecurityLevel.Sensitive, salt);
 
-            // Tamper with IV (Layer 3)
+            // Tamper with the layer 3 nonce (the AEAD successor to the old CBC IV)
             var tamperedResult = new LayeredEncryptionResult
             {
                 Ciphertext = encrypted.Ciphertext,
@@ -252,11 +252,11 @@ namespace PhantomVault.Core.Tests.Specialized
                 Tag1 = encrypted.Tag1,
                 Nonce2 = encrypted.Nonce2,
                 Tag2 = encrypted.Tag2,
-                // Layer 3 uses only IV3, not Nonce3
-                IV3 = (byte[])encrypted.IV3.Clone(),
+                Nonce3 = (byte[])encrypted.Nonce3.Clone(),
+                Tag3 = (byte[])encrypted.Tag3.Clone(),
                 Level = encrypted.Level
             };
-            tamperedResult.IV3[0] ^= 0xFF;
+            tamperedResult.Nonce3[0] ^= 0xFF;
 
             // Act & Assert
             var exception = Record.Exception(() =>
@@ -536,12 +536,12 @@ namespace PhantomVault.Core.Tests.Specialized
                 Tag1 = (byte[])original.Tag1.Clone(),
                 Nonce2 = (byte[])original.Nonce2.Clone(),
                 Tag2 = (byte[])original.Tag2.Clone(),
-                // Nonce3 removed - Layer 3 only has IV3
-                IV3 = original.IV3 != null ? (byte[])original.IV3.Clone() : null,
-                // Nonce4 removed - Layer 4 only has IV4
-                IV4 = original.IV4 != null ? (byte[])original.IV4.Clone() : null,
-                // Nonce5 removed - Layer 5 only has IV5
-                IV5 = original.IV5 != null ? (byte[])original.IV5.Clone() : null,
+                Nonce3 = original.Nonce3 != null ? (byte[])original.Nonce3.Clone() : null,
+                Tag3 = original.Tag3 != null ? (byte[])original.Tag3.Clone() : null,
+                Nonce4 = original.Nonce4 != null ? (byte[])original.Nonce4.Clone() : null,
+                Tag4 = original.Tag4 != null ? (byte[])original.Tag4.Clone() : null,
+                Nonce5 = original.Nonce5 != null ? (byte[])original.Nonce5.Clone() : null,
+                Tag5 = original.Tag5 != null ? (byte[])original.Tag5.Clone() : null,
                 Level = original.Level
             };
         }

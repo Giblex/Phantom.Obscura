@@ -4,7 +4,7 @@ using PhantomVault.UI.ViewModels;
 
 namespace PhantomVault.UI.Views
 {
-    public partial class FrontPageWindow : Window
+    public partial class FrontPageWindow : ThemeAwareWindow
     {
         public FrontPageWindow()
         {

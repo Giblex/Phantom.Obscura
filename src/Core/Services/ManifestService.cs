@@ -27,112 +27,9 @@ namespace PhantomVault.Core.Services
         private static bool IsContainerPath(string path)
             => path.EndsWith(".pvault", StringComparison.OrdinalIgnoreCase);
 
-        [Obsolete("Use WriteManifestSecure overload with SecurePassword for better memory security")]
-        public void WriteManifest(VaultManifest manifest, string filePath, string? passphrase, string? keyfilePath = null, string? usbSerial = null, bool requireDualFactor = false)
-            => WriteManifest(manifest, filePath, passphrase, keyfilePath, usbSerial, requireDualFactor, overrideKdfParams: null);
-
-        public void WriteManifest(VaultManifest manifest, string filePath, string? passphrase, string? keyfilePath, string? usbSerial, bool requireDualFactor, ManifestKdfParams? overrideKdfParams)
-        {
-            if (manifest == null) throw new ArgumentNullException(nameof(manifest));
-            if (string.IsNullOrEmpty(filePath)) throw new ArgumentException("File path must be provided", nameof(filePath));
-
-            if (IsContainerPath(filePath))
-            {
-                if (_containerService == null)
-                    throw new InvalidOperationException("PhantomContainerService is required for container-embedded manifests");
-                _containerService.UpdateManifestInContainer(filePath, manifest, passphrase, keyfilePath);
-                return;
-            }
-
-            if (requireDualFactor)
-            {
-                if (string.IsNullOrEmpty(passphrase) || string.IsNullOrEmpty(keyfilePath))
-                {
-                    throw new ArgumentException("Dual-factor authentication requires BOTH a passphrase AND a keyfile");
-                }
-            }
-            else
-            {
-
-                if (string.IsNullOrEmpty(passphrase) && string.IsNullOrEmpty(keyfilePath))
-                {
-                    throw new ArgumentException("Either a passphrase or keyfile must be provided");
-                }
-            }
-
-            byte[] salt;
-            if (!string.IsNullOrEmpty(manifest.SaltBase64))
-            {
-                try
-                {
-                    salt = Convert.FromBase64String(manifest.SaltBase64);
-                }
-                catch (FormatException ex)
-                {
-                    throw new FormatException("Manifest salt is not valid Base64", ex);
-                }
-            }
-            else
-            {
-                salt = _encryptionService.GenerateSalt();
-                manifest.SaltBase64 = Convert.ToBase64String(salt);
-            }
-
-            bool requireKeyfileMaterial = requireDualFactor || !string.IsNullOrEmpty(keyfilePath);
-            string combinedSecret = CombineSecret(passphrase, keyfilePath, requireKeyfileMaterial);
-
-            // Resolve KDF parameters for this write:
-            //   1) explicit override (re-key flow)
-            //   2) whatever the manifest was last read at (preserve params on routine writes)
-            //   3) Standard (back-compat for new vaults)
-            var effectiveKdf = overrideKdfParams ?? manifest.RuntimeKdfParams ?? ManifestKdfParams.Standard;
-            byte[] key = _encryptionService.DeriveKey(
-                combinedSecret.AsSpan(), salt,
-                memoryCostKb: effectiveKdf.MemoryKb,
-                iterations: effectiveKdf.Iterations,
-                parallelism: effectiveKdf.Parallelism);
-
-            SignManifest(manifest, key);
-
-            string json = JsonSerializer.Serialize(manifest, new JsonSerializerOptions
-            {
-                WriteIndented = false
-            });
-            byte[] plainBytes = Encoding.UTF8.GetBytes(json);
-
-            string containerPath = NormalizeContainerObjectId(manifest.ContainerPath);
-            manifest.ContainerPath = containerPath;
-            ValidateUsbSerial(usbSerial);
-
-            byte[] aad = BuildStandaloneManifestAad(filePath, usbSerial);
-            var encResult = _encryptionService.Encrypt(plainBytes, key, aad);
-
-            var payload = new
-            {
-                formatVersion = CurrentStandaloneManifestFormatVersion,
-                suite = CurrentStandaloneManifestSuite,
-                salt = manifest.SaltBase64,
-                nonce = Convert.ToBase64String(encResult.Nonce),
-                tag = Convert.ToBase64String(encResult.Tag),
-                ciphertext = Convert.ToBase64String(encResult.Ciphertext),
-                kdfParams = new
-                {
-                    memoryKb = effectiveKdf.MemoryKb,
-                    iterations = effectiveKdf.Iterations,
-                    parallelism = effectiveKdf.Parallelism
-                }
-            };
-            string payloadJson = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(filePath, payloadJson);
-
-            // Record the params we just persisted so subsequent in-memory uses (e.g. the
-            // VaultViewModel's cached runtime manifest) reflect the new state.
-            manifest.RuntimeKdfParams = effectiveKdf;
-
-            Array.Clear(key, 0, key.Length);
-            Array.Clear(plainBytes, 0, plainBytes.Length);
-        }
-
+        // The string-passphrase WriteManifest/ReadManifest overloads have been
+        // removed. Every caller now goes through the *Secure pair, so the manifest
+        // API no longer accepts a GC-managed string that cannot be zeroed.
         public void WriteManifestSecure(VaultManifest manifest, string filePath, SecurePassword passphrase, string? keyfilePath = null, string? usbSerial = null, bool requireDualFactor = false)
             => WriteManifestSecure(manifest, filePath, passphrase, keyfilePath, usbSerial, requireDualFactor, overrideKdfParams: null);
 
@@ -141,6 +38,23 @@ namespace PhantomVault.Core.Services
             if (manifest == null) throw new ArgumentNullException(nameof(manifest));
             if (string.IsNullOrEmpty(filePath)) throw new ArgumentException("File path must be provided", nameof(filePath));
             if (passphrase == null) throw new ArgumentNullException(nameof(passphrase));
+
+            // Container-embedded manifests live inside the .pvault file and must be
+            // updated through the container service. Without this branch a .pvault
+            // path would be overwritten with a standalone manifest payload, which
+            // destroys the container. ReadManifestSecure and the legacy string-based
+            // WriteManifest both have this branch; this overload was missing it.
+            if (IsContainerPath(filePath))
+            {
+                if (_containerService == null)
+                    throw new InvalidOperationException("PhantomContainerService is required for container-embedded manifests");
+
+                // The container API takes a string; this is the interop boundary
+                // where the pinned buffer has to be materialised.
+                string? containerPassphrase = passphrase.IsEmpty ? null : new string(passphrase.AsSpan());
+                _containerService.UpdateManifestInContainer(filePath, manifest, containerPassphrase, keyfilePath);
+                return;
+            }
 
             if (requireDualFactor)
             {
@@ -234,15 +148,6 @@ namespace PhantomVault.Core.Services
             {
                 CryptographicOperations.ZeroMemory(key);
             }
-        }
-
-        [Obsolete("Use ReadManifestSecure overload with SecurePassword for better memory security")]
-        public VaultManifest ReadManifest(string filePath, string? passphrase, string? keyfilePath = null, string? usbSerial = null, bool requireDualFactor = false)
-        {
-            using var securePassphrase = string.IsNullOrEmpty(passphrase)
-                ? SecurePassword.Empty()
-                : SecurePassword.FromString(passphrase);
-            return ReadManifestSecure(filePath, securePassphrase, keyfilePath, usbSerial, requireDualFactor);
         }
 
         public VaultManifest ReadManifestSecure(string filePath, SecurePassword passphrase, string? keyfilePath = null, string? usbSerial = null, bool requireDualFactor = false)
@@ -476,30 +381,9 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        private static string CombineSecret(string? passphrase, string? keyfilePath, bool keyfileRequired)
-        {
-            string combined = passphrase ?? string.Empty;
-
-            if (string.IsNullOrWhiteSpace(keyfilePath))
-            {
-                if (keyfileRequired)
-                {
-                    throw new SecurityException("Keyfile required but no keyfile path was provided.");
-                }
-
-                return combined;
-            }
-
-            byte[] keyfileBytes = CompositeKeyfilePath.ReadCombinedBytes(keyfilePath, keyfileRequired);
-            try
-            {
-                return combined + Convert.ToBase64String(keyfileBytes);
-            }
-            finally
-            {
-                Array.Clear(keyfileBytes, 0, keyfileBytes.Length);
-            }
-        }
+        // CombineSecret (the plaintext string equivalent of SecurePasswordCombiner)
+        // was removed along with the duplicated WriteManifest body it served. All
+        // key derivation now goes through SecurePasswordCombiner's pinned buffers.
 
         public bool TryReadManifest(string filePath, string? passphrase, string? keyfilePath, out VaultManifest? manifest, out string? error, string? usbSerial = null, bool requireDualFactor = false)
         {

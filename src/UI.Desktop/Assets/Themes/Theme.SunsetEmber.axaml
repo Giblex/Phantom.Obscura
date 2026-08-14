@@ -36,8 +36,8 @@
     <SolidColorBrush x:Key="AccentBrush" Color="#F59E0B"/>
     <SolidColorBrush x:Key="AccentHoverBrush" Color="#FBBF24"/>
     <SolidColorBrush x:Key="SecondaryAccentBrush" Color="#D97706"/>
-    <SolidColorBrush x:Key="Brush.Accent" Color="{StaticResource Color.Accent}"/>
-    <SolidColorBrush x:Key="Brush.AccentHover" Color="{StaticResource Color.AccentHover}"/>
+    <SolidColorBrush x:Key="Brush.Accent" Color="{DynamicResource Color.Accent}"/>
+    <SolidColorBrush x:Key="Brush.AccentHover" Color="{DynamicResource Color.AccentHover}"/>
     <SolidColorBrush x:Key="Brush.BorderSoft" Color="#5C4A38"/>
 
     <Color x:Key="PrimaryTextColor">#FFFFFF</Color>
@@ -317,5 +317,25 @@
     <Color x:Key="DashboardTileHoverBorderColor">#55FFD8A0</Color>
     <Color x:Key="DashboardAcrylicTint">#2A1E14</Color>
     <Color x:Key="DashboardAcrylicFallback">#0C201810</Color>
-</ResourceDictionary>
 
+    <!-- Surface overlay + header tokens derived from this theme's own palette.
+
+         These were previously defined only in the app-level PhantomTheme fallback, so
+         they never re-tinted with the selected skin — and because that fallback is
+         chosen by the light/dark variant rather than by the skin, a light skin could
+         receive dark-theme overlay values and render hover states invisibly. -->
+    <SolidColorBrush x:Key="SubtleBrush" Color="#18FFFFFF"/>
+    <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#22FFFFFF"/>
+    <SolidColorBrush x:Key="SurfaceActiveBrush" Color="#33FFFFFF"/>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#241816"/>
+    <SolidColorBrush x:Key="HeaderPrimaryBrush" Color="#2E2018"/>
+
+    <!-- ComboBox item + status-text tokens derived from this theme's palette. Previously these fell through to the
+         app-level PhantomTheme, so dropdown hover/selection and validation text kept
+         generic values that did not track the selected skin. -->
+    <SolidColorBrush x:Key="ComboBoxItemBackground" Color="Transparent"/>
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver" Color="#22FFFFFF"/>
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundPressed" Color="#33FFFFFF"/>
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected" Color="#59F59E0B"/>
+
+</ResourceDictionary>

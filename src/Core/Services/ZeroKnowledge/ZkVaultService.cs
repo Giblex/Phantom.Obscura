@@ -133,23 +133,35 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                 }
 
                 bool createdPepper;
-                (pepper, createdPepper) = await LoadOrCreatePepperAsync();
+                try
+                {
+                    (pepper, createdPepper) = await LoadOrCreatePepperAsync();
+                }
+                catch (CryptographicException ex)
+                {
+                    // The pepper is sealed with platform key protection (DPAPI). A failure
+                    // here means the protection blob will not unseal — a moved profile,
+                    // a restored machine, a corrupted file — not a wrong credential.
+                    // Classify it at the source rather than inferring it later.
+                    throw new VaultUnlockOperationException(
+                        "The stored key-protection data could not be read on this machine. " +
+                        "This is a system-level failure, not an incorrect keyfile or password.", ex);
+                }
 
                 pwdBytes = Encoding.UTF8.GetBytes(password);
                 keyfileBytes = !string.IsNullOrEmpty(keyfilePath)
                     ? await CompositeKeyfilePath.ReadCombinedBytesAsync(keyfilePath, required: true).ConfigureAwait(false)
                     : null;
 
-                var kfLen = keyfileBytes?.Length ?? 0;
-                combined = new byte[pwdBytes.Length + pepper.Length + kfLen];
-                Buffer.BlockCopy(pwdBytes, 0, combined, 0, pwdBytes.Length);
-                Buffer.BlockCopy(pepper, 0, combined, pwdBytes.Length, pepper.Length);
-                if (keyfileBytes != null && kfLen > 0)
-                {
-                    Buffer.BlockCopy(keyfileBytes, 0, combined, pwdBytes.Length + pepper.Length, kfLen);
-                }
-
                 var (salt, createdSalt) = LoadOrCreateSalt();
+
+                // How the Argon2 input is assembled is pinned per vault. Existing vaults
+                // keep v1 (raw concatenation) because changing it would change the derived
+                // master key and make the vault unopenable. New vaults get v2, which is
+                // domain-separated and length-prefixed.
+                var kdfInputVersion = ResolveKdfInputVersion(bootstrapping: createdPepper || createdSalt);
+                combined = BuildKdfInput(kdfInputVersion, pwdBytes, pepper, keyfileBytes);
+
                 if (!string.IsNullOrEmpty(deviceId))
                 {
                     salt = DeviceBinding.DeviceSalt(deviceId, salt);
@@ -166,7 +178,7 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
 
                 _masterKey = Argon2Kdf.DeriveKey(combined, salt, kdfParams);
 
-                if (!await ValidateOrInitializeMasterKeyVerifierAsync(_masterKey, createdPepper || createdSalt).ConfigureAwait(false))
+                if (!await ValidateOrInitializeMasterKeyVerifierAsync(_masterKey, createdPepper || createdSalt, kdfInputVersion).ConfigureAwait(false))
                 {
                     CryptographicOperations.ZeroMemory(_masterKey);
                     _masterKey = null;
@@ -175,8 +187,29 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
 
                 return true;
             }
+            catch (Exception ex) when (IsOperationalFailure(ex))
+            {
+                // Operational failures are NOT authentication failures. Returning false
+                // here told the user their keyfile was wrong when the real cause was a
+                // disconnected USB key, an unreadable file, or a DPAPI failure after a
+                // Windows profile change — and burned a throttle attempt doing it.
+                // Surfacing these lets the caller show an accurate message.
+                if (_masterKey != null)
+                {
+                    CryptographicOperations.ZeroMemory(_masterKey);
+                    _masterKey = null;
+                }
+                // Already classified at the point of failure — pass it through unchanged
+                // so the specific message survives.
+                if (ex is VaultUnlockOperationException) throw;
+
+                throw new VaultUnlockOperationException(
+                    "The vault could not be opened because of a system or storage error, " +
+                    "not because the credentials were wrong.", ex);
+            }
             catch (Exception)
             {
+                // Genuine authentication failure (bad keyfile/password, failed verifier).
                 if (_masterKey != null)
                 {
                     CryptographicOperations.ZeroMemory(_masterKey);
@@ -194,6 +227,21 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                 _lock.Release();
             }
         }
+
+        /// <summary>
+        /// Distinguishes "the environment failed" from "the credentials were wrong".
+        /// Only the latter should count as a failed unlock attempt.
+        /// </summary>
+        private static bool IsOperationalFailure(Exception ex) => ex switch
+        {
+            // Already classified at the point of failure (e.g. pepper unseal).
+            VaultUnlockOperationException => true,
+            IOException => true,
+            UnauthorizedAccessException => true,
+            System.Security.SecurityException => true,
+            OutOfMemoryException => true,
+            _ => false
+        };
 
         public async Task<bool> UnlockWithHybridKeyAsync(byte[] hybridDek)
         {
@@ -536,7 +584,7 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
             if (!File.Exists(_pepperPath) && File.Exists(legacyPepperPath))
             {
                 try { File.Move(legacyPepperPath, _pepperPath); }
-                catch {  }
+                catch (Exception ex) { Serilog.Log.Warning(ex, "[ZkVaultService] Failed to migrate legacy pepper file"); }
             }
 
             if (File.Exists(_pepperPath))
@@ -581,7 +629,97 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
             return (salt, true);
         }
 
-        private async Task<bool> ValidateOrInitializeMasterKeyVerifierAsync(byte[] masterKey, bool allowBootstrap)
+        // ── KDF input assembly ───────────────────────────────────────────────────────
+        //
+        // v1 concatenated the factors raw: password ‖ pepper ‖ keyfile. With no length
+        // prefixes or domain separation that is the classic canonicalization
+        // anti-pattern — distinct factor splits can in principle produce the same byte
+        // string, and it is fragile against exactly the changes this area keeps seeing
+        // (adding a factor, reordering, making the pepper variable-length).
+        //
+        // v2 prefixes a domain tag and length-prefixes every component, so the mapping
+        // from factors to input bytes is injective.
+        //
+        // The version is per vault and recorded in the verifier: existing vaults must
+        // keep deriving the same master key or their data becomes unreadable.
+        private const int KdfInputVersionLegacy = 1;
+        private const int KdfInputVersionCurrent = 2;
+        private static readonly byte[] KdfInputDomainV2 = Encoding.UTF8.GetBytes("PhantomVault.KdfInput.v2");
+
+        private int ResolveKdfInputVersion(bool bootstrapping)
+        {
+            // A verifier on disk is authoritative — it says how this vault was built.
+            if (File.Exists(_verifierPath))
+            {
+                try
+                {
+                    var bytes = File.ReadAllBytes(_verifierPath);
+                    var record = JsonSerializer.Deserialize<MasterKeyVerifierRecord>(bytes);
+                    if (record != null)
+                    {
+                        return record.KdfInputVersion <= 0 ? KdfInputVersionLegacy : record.KdfInputVersion;
+                    }
+                }
+                catch
+                {
+                    // Unreadable verifier: fall through. Validation will fail anyway and
+                    // report a bad unlock rather than silently deriving a different key.
+                }
+                return KdfInputVersionLegacy;
+            }
+
+            // No verifier. If we just created the pepper or salt this is a brand-new
+            // vault and can use the current scheme; otherwise it predates verifiers
+            // entirely and must stay on the legacy assembly.
+            return bootstrapping ? KdfInputVersionCurrent : KdfInputVersionLegacy;
+        }
+
+        private static byte[] BuildKdfInput(int version, byte[] password, byte[] pepper, byte[]? keyfile)
+        {
+            var kf = keyfile ?? Array.Empty<byte>();
+
+            if (version == KdfInputVersionLegacy)
+            {
+                var legacy = new byte[password.Length + pepper.Length + kf.Length];
+                Buffer.BlockCopy(password, 0, legacy, 0, password.Length);
+                Buffer.BlockCopy(pepper, 0, legacy, password.Length, pepper.Length);
+                if (kf.Length > 0)
+                {
+                    Buffer.BlockCopy(kf, 0, legacy, password.Length + pepper.Length, kf.Length);
+                }
+                return legacy;
+            }
+
+            // v2: domain ‖ len(pwd) ‖ pwd ‖ len(pepper) ‖ pepper ‖ len(keyfile) ‖ keyfile
+            var total = KdfInputDomainV2.Length + 4 + password.Length + 4 + pepper.Length + 4 + kf.Length;
+            var buffer = new byte[total];
+            var offset = 0;
+
+            Buffer.BlockCopy(KdfInputDomainV2, 0, buffer, offset, KdfInputDomainV2.Length);
+            offset += KdfInputDomainV2.Length;
+
+            offset = AppendLengthPrefixed(buffer, offset, password);
+            offset = AppendLengthPrefixed(buffer, offset, pepper);
+            _ = AppendLengthPrefixed(buffer, offset, kf);
+
+            return buffer;
+        }
+
+        private static int AppendLengthPrefixed(byte[] destination, int offset, byte[] value)
+        {
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(
+                destination.AsSpan(offset, 4), (uint)value.Length);
+            offset += 4;
+
+            if (value.Length > 0)
+            {
+                Buffer.BlockCopy(value, 0, destination, offset, value.Length);
+                offset += value.Length;
+            }
+            return offset;
+        }
+
+        private async Task<bool> ValidateOrInitializeMasterKeyVerifierAsync(byte[] masterKey, bool allowBootstrap, int kdfInputVersion)
         {
             if (File.Exists(_verifierPath))
             {
@@ -594,7 +732,7 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                 return true;
             }
 
-            await WriteMasterKeyVerifierAsync(masterKey).ConfigureAwait(false);
+            await WriteMasterKeyVerifierAsync(masterKey, kdfInputVersion).ConfigureAwait(false);
             return true;
         }
 
@@ -629,7 +767,7 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
             }
         }
 
-        private async Task WriteMasterKeyVerifierAsync(byte[] masterKey)
+        private async Task WriteMasterKeyVerifierAsync(byte[] masterKey, int kdfInputVersion)
         {
             var nonce = RandomNumberGenerator.GetBytes(12);
             var plaintext = Encoding.UTF8.GetBytes(MasterKeyVerifierPlaintext);
@@ -640,7 +778,8 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                 {
                     var verifier = new MasterKeyVerifierRecord(
                         Convert.ToBase64String(nonce),
-                        Convert.ToBase64String(ciphertext));
+                        Convert.ToBase64String(ciphertext),
+                        kdfInputVersion);
                     var json = JsonSerializer.SerializeToUtf8Bytes(verifier);
                     await File.WriteAllBytesAsync(_verifierPath, json).ConfigureAwait(false);
                 }
@@ -686,6 +825,22 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
     }
 
     internal sealed record SecureTempFile(string FilePath, string DirectoryPath, DateTimeOffset ExpiresAt);
-    internal sealed record MasterKeyVerifierRecord(string Nonce, string Ciphertext);
+    /// <summary>
+    /// Master-key verifier. <c>KdfInputVersion</c> records how the Argon2 input was
+    /// assembled for this vault so the derivation stays reproducible across upgrades —
+    /// absent means version 1 (pre-versioning vaults).
+    /// </summary>
+    internal sealed record MasterKeyVerifierRecord(string Nonce, string Ciphertext, int KdfInputVersion = 1);
+
+    /// <summary>
+    /// Raised when unlocking fails for an environmental reason — storage, permissions,
+    /// memory, or platform key protection — rather than because the supplied credentials
+    /// were wrong. Callers should report this distinctly and must not count it as a
+    /// failed unlock attempt against the throttle.
+    /// </summary>
+    public sealed class VaultUnlockOperationException : Exception
+    {
+        public VaultUnlockOperationException(string message, Exception inner) : base(message, inner) { }
+    }
 }
 

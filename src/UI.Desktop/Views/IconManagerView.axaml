@@ -96,7 +96,7 @@
                             <TextBlock Text="Refresh" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Button>
 
-                        <Button Name="OptionsButton" Classes="liquid-glass" Width="40" Height="34" ToolTip.Tip="More options">
+                        <Button AutomationProperties.Name="More options" Name="OptionsButton" Classes="liquid-glass" Width="40" Height="34" ToolTip.Tip="More options">
                             <TextBlock Text="⋮" FontSize="{StaticResource Type.Icon.Size}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             <Button.ContextMenu>
                                 <ContextMenu>
@@ -152,7 +152,7 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Button Command="{Binding #VariantItemsControl.DataContext.ApplyVariantToCategoryCommand}"
+                                <Button AutomationProperties.Name="Apply icon variant" Command="{Binding #VariantItemsControl.DataContext.ApplyVariantToCategoryCommand}"
                                         CommandParameter="{Binding}" Margin="2" Padding="0"
                                         Width="36" Height="36" MinWidth="0" MinHeight="0"
                                         Cursor="Hand" Focusable="True">
@@ -208,14 +208,14 @@
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <Button Command="{Binding DataContext.RevealIconCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    <Button AutomationProperties.Name="Show in Explorer" Command="{Binding DataContext.RevealIconCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}"
                                             Classes="liquid-glass"
                                             Width="34" Height="30"
                                             ToolTip.Tip="Show in Explorer">
                                         <TextBlock Text="📂" FontSize="{StaticResource Type.Body.Size}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Button>
-                                    <Button Command="{Binding DataContext.DeleteIconCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    <Button AutomationProperties.Name="Delete icon" Command="{Binding DataContext.DeleteIconCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}"
                                             Classes="liquid-glass"
                                             Width="34" Height="30"
@@ -300,7 +300,7 @@
                                                 </ItemsControl.ItemsPanel>
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
-                                                        <Button Command="{Binding DataContext.HandleIconClickCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        <Button AutomationProperties.Name="Select icon" Command="{Binding DataContext.HandleIconClickCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                                 CommandParameter="{Binding}"
                                                                 MinWidth="72" Height="96"
                                                                 Classes="liquid-glass" Margin="4">

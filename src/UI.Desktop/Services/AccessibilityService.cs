@@ -8,6 +8,7 @@ namespace PhantomVault.UI.Services
         private static readonly Lazy<AccessibilityService> _instance = new Lazy<AccessibilityService>(() => new AccessibilityService());
 
         private bool _reduceMotion;
+        private bool _reduceTransparency;
         private bool _useHighContrast;
         private bool _largeTooltips;
         private bool _screenReaderOptimizations;
@@ -34,6 +35,25 @@ namespace PhantomVault.UI.Services
                 if (_reduceMotion != value)
                 {
                     _reduceMotion = value;
+                    OnSettingsChanged();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Opaque-surface mode. The liquid-glass aesthetic is intentional, so this does
+        /// not strip it — it swaps the translucent glass fills for solid equivalents via
+        /// the "reduce-transparency" window class (see App.axaml). Windows re-apply their
+        /// accessibility classes whenever <see cref="SettingsChanged"/> fires.
+        /// </summary>
+        public bool ReduceTransparency
+        {
+            get => _reduceTransparency;
+            set
+            {
+                if (_reduceTransparency != value)
+                {
+                    _reduceTransparency = value;
                     OnSettingsChanged();
                 }
             }

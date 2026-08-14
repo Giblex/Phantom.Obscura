@@ -1,4 +1,5 @@
-<Window xmlns="https://github.com/avaloniaui"
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+        xmlns:views="clr-namespace:PhantomVault.UI.Views"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="PhantomVault.UI.Views.Dialogs.PayWindow"
         Title="Phantom Obscura Premium"
@@ -15,7 +16,7 @@
                 IsHitTestVisible="False"
                 HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <Border.Background>
-                <ImageBrush Source="avares://PhantomVault.UI/Assets/dot_pattern.png"
+                <ImageBrush Source="avares://PhantomVault.UI/Assets/dot_pattern_light.png"
                             TileMode="Tile"
                             Stretch="None"
                             SourceRect="0,0,8,8"
@@ -108,4 +109,4 @@
                     Foreground="#FFFFFFFF"/>
         </StackPanel>
     </Grid>
-</Window>
+</views:ThemeAwareWindow>

@@ -12,6 +12,7 @@ using Avalonia.Platform.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using PhantomVault.Core.Models;
 using PhantomVault.Core.Services;
+using PhantomVault.Core.Utils;
 using PhantomVault.UI;
 using PhantomVault.UI.Services;
 using PhantomVault.UI.ViewModels;
@@ -802,7 +803,8 @@ namespace PhantomVault.UI.ViewModels.Settings
             var encryptionService = new EncryptionService();
             var containerService = new PhantomContainerService(encryptionService);
             var manifestService = new ManifestService(encryptionService, containerService);
-            return manifestService.ReadManifest(manifestPath, passphrase, keyfilePath);
+            using var securePassphrase = SecurePassword.FromString(passphrase);
+            return manifestService.ReadManifestSecure(manifestPath, securePassphrase, keyfilePath);
         }
 
         private (string manifestPath, string? passphrase, string? keyfilePath)? GetManifestContext()
@@ -995,7 +997,8 @@ namespace PhantomVault.UI.ViewModels.Settings
                 var (manifestPath, passphrase, keyfilePath) = context.Value;
                 await Task.Run(() =>
                 {
-                    var manifest = manifestService.ReadManifest(manifestPath, passphrase, keyfilePath);
+                    using var securePassphrase = SecurePassword.FromString(passphrase);
+                    var manifest = manifestService.ReadManifestSecure(manifestPath, securePassphrase, keyfilePath);
                     manifest.AutoBackupEnabled = EnableAutomatedBackups;
                     manifest.BackupRetentionDays = SelectedRetention switch
                     {
@@ -1005,7 +1008,7 @@ namespace PhantomVault.UI.ViewModels.Settings
                         3 => 90,
                         _ => 365
                     };
-                    manifestService.WriteManifest(manifest, manifestPath, passphrase, keyfilePath);
+                    manifestService.WriteManifestSecure(manifest, manifestPath, securePassphrase, keyfilePath);
                 });
             }
             catch (Exception ex)

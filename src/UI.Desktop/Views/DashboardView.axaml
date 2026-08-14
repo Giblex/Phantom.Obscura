@@ -122,8 +122,8 @@
             <Setter Property="RenderTransform" Value="none"/>
             <Setter Property="Template">
                 <ControlTemplate>
-                    <Border Background="#26385C"
-                            BorderBrush="#26385C"
+                    <Border Background="{DynamicResource CardBackgroundBrush}"
+                            BorderBrush="{DynamicResource ControlBorderBrush}"
                             BorderThickness="0"
                             CornerRadius="20"
                             Padding="{TemplateBinding Padding}">

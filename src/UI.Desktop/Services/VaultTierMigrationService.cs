@@ -7,12 +7,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using PhantomVault.Core.Models;
 using PhantomVault.Core.Services;
+using PhantomVault.Core.Utils;
 
 namespace PhantomVault.UI.Services
 {
     public sealed record VaultTierMigrationContext(
         string ManifestPath,
-        string Password,
+        string? Password,
         string? KeyfilePath,
         string ActiveDevicePath,
         string TransportLayoutRoot,
@@ -77,7 +78,8 @@ namespace PhantomVault.UI.Services
             VaultProtectionTier targetTier,
             string? targetFilesystemRoot = null)
         {
-            var currentManifest = _manifestService.ReadManifest(context.ManifestPath, context.Password, context.KeyfilePath);
+            using var validatePassphrase = SecurePassword.FromString(context.Password);
+            var currentManifest = _manifestService.ReadManifestSecure(context.ManifestPath, validatePassphrase, context.KeyfilePath);
             var warnings = new List<string>();
 
             if (!currentManifest.SupportsReversibleTierMigration)
@@ -152,7 +154,8 @@ namespace PhantomVault.UI.Services
             if (!plan.CanProceed)
                 throw new InvalidOperationException(plan.Summary);
 
-            var manifest = _manifestService.ReadManifest(context.ManifestPath, context.Password, context.KeyfilePath);
+            using var migratePassphrase = SecurePassword.FromString(context.Password);
+            var manifest = _manifestService.ReadManifestSecure(context.ManifestPath, migratePassphrase, context.KeyfilePath);
             var provisioningRecord = TryReadProvisioningRecord(manifest, context) ?? new StorageTierProvisioningRecord();
 
             string rollbackDirectory = plan.RollbackDirectory!;
@@ -165,7 +168,7 @@ namespace PhantomVault.UI.Services
             UpdateRecoveryArtifacts(manifest, context, targetTier, plan.TargetTransport);
             WriteProvisioningRecord(manifest, provisioningRecord, context, targetTier, plan.TargetTransport, targetDevicePath);
 
-            _manifestService.WriteManifest(manifest, context.ManifestPath, context.Password, context.KeyfilePath);
+            _manifestService.WriteManifestSecure(manifest, context.ManifestPath, migratePassphrase, context.KeyfilePath);
 
             string? masterVolumePath = null;
             if (targetTier == VaultProtectionTier.BlackSecure)

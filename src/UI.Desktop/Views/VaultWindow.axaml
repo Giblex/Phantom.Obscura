@@ -317,7 +317,7 @@
                     <TextBlock Text="Rotate Now"/>
                 </Button>
 
-                <Button Grid.Column="6"
+                <Button AutomationProperties.Name="Dismiss this banner" Grid.Column="6"
                         Command="{Binding DismissRotationBannerCommand}"
                         Classes="liquid-glass"
                         Background="Transparent"
@@ -430,7 +430,7 @@
                 </Border>
 
                 <Border IsHitTestVisible="False" CornerRadius="24"
-                        Background="#4002060D"/>
+                        Background="{DynamicResource DashboardPanelBg}"/>
 
                 <views:DashboardView DataContext="{Binding DashboardViewModel}"/>
 
@@ -585,6 +585,9 @@
 
                             <details:NotesDetailSection DataContext="{Binding}"
                                 IsVisible="{Binding SelectedCredential.HasNotes}" />
+
+                            <details:SectionsDetailView DataContext="{Binding}"
+                                IsVisible="{Binding SelectedCredential.HasSections}" />
 
                             <details:MetadataDetailSection DataContext="{Binding}" />
 
@@ -895,7 +898,7 @@
                                     CornerRadius="0,0,12,12"
                                     Padding="16,12">
                                 <Grid ColumnDefinitions="Auto,*,Auto">
-                                    <Button Grid.Column="0"
+                                    <Button AutomationProperties.Name="Back" Grid.Column="0"
                                             Command="{Binding ClearSelectedCredentialCommand}"
                                             Classes="liquid-glass"
                                             Width="36" Height="36"
@@ -971,7 +974,7 @@
                                         <TextBlock Text="Website" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
                                         <Grid ColumnDefinitions="*,Auto">
                                             <TextBox Grid.Column="0" Text="{Binding SelectedCredential.Url}" IsReadOnly="True" Background="{DynamicResource ControlBackgroundBrush}" Foreground="{DynamicResource PrimaryTextBrush}" BorderThickness="1" BorderBrush="{DynamicResource ControlBorderBrush}" Height="36" Padding="10,8"/>
-                                            <Button Grid.Column="1" Command="{Binding OpenUrlCommand}" CommandParameter="{Binding SelectedCredential}" Classes="liquid-glass" Width="36" Height="36" Margin="8,0,0,0" ToolTip.Tip="Open in browser">
+                                            <Button AutomationProperties.Name="Open in browser" Grid.Column="1" Command="{Binding OpenUrlCommand}" CommandParameter="{Binding SelectedCredential}" Classes="liquid-glass" Width="36" Height="36" Margin="8,0,0,0" ToolTip.Tip="Open in browser">
                                                 <TextBlock Text="🌐" FontSize="{StaticResource Type.H4.Size}" VerticalAlignment="Center"/>
                                             </Button>
                                         </Grid>
@@ -1444,15 +1447,15 @@
                                             </StackPanel>
 
                                             <WrapPanel Orientation="Horizontal">
-                                                <Border Background="#10FFFFFF" CornerRadius="8" Padding="8,3" Margin="0,0,5,0">
+                                                <Border Background="{DynamicResource SubtleBrush}" CornerRadius="8" Padding="8,3" Margin="0,0,5,0">
                                                     <TextBlock Text="Google Authenticator" FontSize="{StaticResource Type.Micro.Size}"
                                                                Foreground="{DynamicResource SecondaryTextBrush}"/>
                                                 </Border>
-                                                <Border Background="#10FFFFFF" CornerRadius="8" Padding="8,3" Margin="0,0,5,0">
+                                                <Border Background="{DynamicResource SubtleBrush}" CornerRadius="8" Padding="8,3" Margin="0,0,5,0">
                                                     <TextBlock Text="Authy" FontSize="{StaticResource Type.Micro.Size}"
                                                                Foreground="{DynamicResource SecondaryTextBrush}"/>
                                                 </Border>
-                                                <Border Background="#10FFFFFF" CornerRadius="8" Padding="8,3" Margin="0,0,5,0">
+                                                <Border Background="{DynamicResource SubtleBrush}" CornerRadius="8" Padding="8,3" Margin="0,0,5,0">
                                                     <TextBlock Text="Microsoft Authenticator" FontSize="{StaticResource Type.Micro.Size}"
                                                                Foreground="{DynamicResource SecondaryTextBrush}"/>
                                                 </Border>
@@ -1619,6 +1622,8 @@
                                     <editforms:ContactEditForm DataContext="{Binding}" />
 
                                     <editforms:PinCodeEditForm DataContext="{Binding}" />
+
+                                    <editforms:SectionsEditForm DataContext="{Binding}" />
 
                                     <StackPanel Spacing="8" Margin="0,0,0,0">
                                         <TextBlock Text="Tags"
@@ -1820,7 +1825,7 @@
                                                    FontSize="{StaticResource Type.Label.Size}"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                                     </StackPanel>
-                                    <Button Grid.Column="1"
+                                    <Button AutomationProperties.Name="Close dashboard" Grid.Column="1"
                                             Command="{Binding ToggleSecurityDashboardCommand}"
                                             Classes="liquid-glass"
                                             Width="36"

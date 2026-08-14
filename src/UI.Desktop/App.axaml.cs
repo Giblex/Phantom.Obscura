@@ -56,6 +56,10 @@ namespace PhantomVault.UI
             }
 #endif
 
+            // Restore the saved UI language before any window is created, so the
+            // string dictionary is in place for the first view that binds to it.
+            PhantomVault.UI.ViewModels.Settings.AccessibilitySettingsViewModel.ApplyPersistedLanguage();
+
             var services = new ServiceCollection();
             ConfigureServices(services);
             _serviceProvider = services.BuildServiceProvider();
@@ -219,7 +223,23 @@ namespace PhantomVault.UI
                             await zkVaultService.LockAndWipeKeysAsync().ConfigureAwait(false);
                             await sysSecController.ClearClipboardAsync().ConfigureAwait(false);
                         }
-                        catch {  }
+                        catch (Exception ex)
+                        {
+                            // Swallowing this meant a FAILED key wipe looked identical to a
+                            // successful one: the vault stayed unlocked on an idle timeout
+                            // and nothing recorded it. Log it, then make a best-effort
+                            // second attempt at the wipe specifically.
+                            Serilog.Log.Error(ex, "Idle auto-lock failed to wipe keys or clear the clipboard");
+
+                            try
+                            {
+                                await zkVaultService.LockAndWipeKeysAsync().ConfigureAwait(false);
+                            }
+                            catch (Exception retryEx)
+                            {
+                                Serilog.Log.Fatal(retryEx, "Idle auto-lock key wipe failed on retry — vault may remain unlocked");
+                            }
+                        }
                     });
                 };
 

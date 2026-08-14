@@ -1,0 +1,198 @@
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+        xmlns:views="clr-namespace:PhantomVault.UI.Views"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PhantomVault.UI.Views.Autofill.AutofillSavePrompt"
+        ShowInTaskbar="False"
+        Topmost="True"
+        CanResize="False"
+        SystemDecorations="None"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent"
+        Width="360"
+        SizeToContent="Height"
+        WindowStartupLocation="Manual"
+        AutomationProperties.Name="Save password prompt">
+
+    <views:ThemeAwareWindow.Resources>
+        <!-- Same single edge colour the suggestion menu uses, so the two surfaces
+             read as one product rather than two different dialogs. -->
+        <SolidColorBrush x:Key="EdgeBrush" Color="#2C3B52"/>
+        <SolidColorBrush x:Key="AccentBrush" Color="#3E8C86"/>
+    </views:ThemeAwareWindow.Resources>
+
+    <views:ThemeAwareWindow.Styles>
+        <Style Selector="TextBlock.label">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="LetterSpacing" Value="0.8"/>
+            <Setter Property="Foreground" Value="#7A8FA8"/>
+        </Style>
+        <Style Selector="TextBlock.value">
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="Foreground" Value="#E4ECF4"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+
+        <!-- One button shape for the whole prompt. -->
+        <Style Selector="Button.act">
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Padding" Value="14,0"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Background" Value="#18FFFFFF"/>
+            <Setter Property="BorderBrush" Value="{StaticResource EdgeBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="#C4D2E0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.act:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#26FFFFFF"/>
+        </Style>
+        <Style Selector="Button.act.primary">
+            <Setter Property="Background" Value="#2E4F5C"/>
+            <Setter Property="Foreground" Value="#DCEDEA"/>
+        </Style>
+        <Style Selector="Button.act.primary:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#37606F"/>
+        </Style>
+    </views:ThemeAwareWindow.Styles>
+
+    <!-- BoxShadow colours are parsed at runtime, not by the XAML compiler, so a
+         malformed literal builds clean and then throws on construction. Keep every
+         colour to exactly 8 hex digits (#AARRGGBB). -->
+    <Border x:Name="Shell"
+            CornerRadius="16"
+            Background="#F8121C2E"
+            BorderThickness="1"
+            BorderBrush="{StaticResource EdgeBrush}"
+            BoxShadow="0 20 48 -12 #A0000000"
+            ClipToBounds="True"
+            Margin="10"
+            RenderTransformOrigin="50%,0%">
+
+        <Border.Transitions>
+            <Transitions>
+                <TransformOperationsTransition Property="RenderTransform"
+                                               Duration="0:0:0.22"
+                                               Easing="CubicEaseOut"/>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.16"/>
+            </Transitions>
+        </Border.Transitions>
+
+        <StackPanel>
+
+            <!-- Header -->
+            <Border Padding="14,12"
+                    Background="#14FFFFFF"
+                    BorderBrush="{StaticResource EdgeBrush}"
+                    BorderThickness="0,0,0,1">
+                <Grid ColumnDefinitions="Auto,10,*">
+                    <Border Grid.Column="0"
+                            Width="26" Height="26"
+                            CornerRadius="13"
+                            BorderThickness="1.5"
+                            BorderBrush="{StaticResource EdgeBrush}"
+                            Background="#FF16233A">
+                        <Image Source="avares://PhantomVault.UI/Assets/ok.png"
+                               Width="14" Height="14"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Grid.Column="2" Spacing="1" VerticalAlignment="Center">
+                        <TextBlock Text="PHANTOM OBSCURA" Classes="label"/>
+                        <TextBlock x:Name="TitleText"
+                                   FontSize="12.5"
+                                   FontWeight="SemiBold"
+                                   Foreground="#E8F0F6"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Details -->
+            <StackPanel Margin="14,12" Spacing="10">
+
+                <StackPanel Spacing="3">
+                    <TextBlock Text="SITE" Classes="label"/>
+                    <TextBlock x:Name="DomainText" Classes="value"/>
+                </StackPanel>
+
+                <StackPanel Spacing="3">
+                    <TextBlock Text="USERNAME" Classes="label"/>
+                    <TextBox x:Name="UsernameBox"
+                             Height="30"
+                             FontSize="12.5"
+                             Padding="8,0"
+                             VerticalContentAlignment="Center"
+                             Background="#18FFFFFF"
+                             BorderBrush="{StaticResource EdgeBrush}"
+                             BorderThickness="1"
+                             CornerRadius="8"
+                             AutomationProperties.Name="Username to save"/>
+                </StackPanel>
+
+                <StackPanel Spacing="3">
+                    <TextBlock Text="PASSWORD" Classes="label"/>
+                    <Grid ColumnDefinitions="*,6,Auto,6,Auto">
+                        <TextBox x:Name="PasswordBox"
+                                 Grid.Column="0"
+                                 Height="30"
+                                 FontSize="12.5"
+                                 Padding="8,0"
+                                 PasswordChar="●"
+                                 VerticalContentAlignment="Center"
+                                 Background="#18FFFFFF"
+                                 BorderBrush="{StaticResource EdgeBrush}"
+                                 BorderThickness="1"
+                                 CornerRadius="8"
+                                 AutomationProperties.Name="Password to save"/>
+                        <Button x:Name="RevealButton"
+                                Grid.Column="2"
+                                Classes="act"
+                                Width="34"
+                                Padding="0"
+                                Content="👁"
+                                ToolTip.Tip="Show or hide the password"
+                                AutomationProperties.Name="Toggle password visibility"/>
+                        <Button x:Name="GenerateButton"
+                                Grid.Column="4"
+                                Classes="act"
+                                Content="Generate"
+                                ToolTip.Tip="Replace with a strong generated password"
+                                AutomationProperties.Name="Generate a strong password"/>
+                    </Grid>
+                    <TextBlock x:Name="HintText"
+                               FontSize="10.5"
+                               Foreground="#7A8FA8"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Actions -->
+            <Border Padding="14,11"
+                    Background="#12000000"
+                    BorderBrush="{StaticResource EdgeBrush}"
+                    BorderThickness="0,1,0,0">
+                <Grid ColumnDefinitions="Auto,*,Auto,8,Auto">
+                    <Button x:Name="NeverButton"
+                            Grid.Column="0"
+                            Classes="act"
+                            Content="Never for this site"
+                            AutomationProperties.Name="Never save for this site"/>
+                    <Button x:Name="DismissButton"
+                            Grid.Column="2"
+                            Classes="act"
+                            Content="Not now"
+                            AutomationProperties.Name="Dismiss without saving"/>
+                    <Button x:Name="SaveButton"
+                            Grid.Column="4"
+                            Classes="act primary"
+                            Content="Save"
+                            AutomationProperties.Name="Save this credential"/>
+                </Grid>
+            </Border>
+
+        </StackPanel>
+    </Border>
+</views:ThemeAwareWindow>

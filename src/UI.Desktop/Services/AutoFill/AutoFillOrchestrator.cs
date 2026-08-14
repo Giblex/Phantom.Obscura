@@ -42,6 +42,19 @@ namespace PhantomVault.UI.Services.AutoFill
         private readonly IntegratedAttestorService _integratedAttestorService;
 
         private ICredentialProvider? _credentialProvider;
+
+        /// <summary>
+        /// Resolves a linked TOTP section's target entry by id, so a seed held on a
+        /// separate authenticator entry can still be filled.
+        /// </summary>
+        private Credential? LookupCredentialById(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id) || _credentialProvider is null)
+                return null;
+
+            return _credentialProvider.GetCredentials()
+                .FirstOrDefault(c => string.Equals(c.Id, id, StringComparison.Ordinal));
+        }
         private VaultManifest? _manifest;
 
         public AutoFillOrchestrator(
@@ -77,6 +90,7 @@ namespace PhantomVault.UI.Services.AutoFill
             NativeLoginContext? nativeContext = null;
             CredentialMatch? bestMatch = null;
             Credential? credential = null;
+            EffectiveTotp? effectiveTotp = null;
             bool isBrowser = false;
 
             Log.Information("[AutoFill] Flow started for USB path: {Path}", usbDrivePath);
@@ -241,7 +255,12 @@ namespace PhantomVault.UI.Services.AutoFill
                         Log.Information("[AutoFill] Credential filled for {Title}", bestMatch.CredentialId);
 
                         var settings = SettingsService.Load();
-                        state = (settings.AutoFillAutoInputTotp && !string.IsNullOrEmpty(credential.TotpSecret))
+
+                        // The seed may be held in a TOTP section (inline or linked to a
+                        // separate authenticator entry) rather than on the entry itself.
+                        effectiveTotp = CredentialTotpResolver.Resolve(credential, LookupCredentialById);
+
+                        state = (settings.AutoFillAutoInputTotp && effectiveTotp is not null)
                             ? State.WaitForTotp
                             : State.Done;
                         break;
@@ -276,7 +295,12 @@ namespace PhantomVault.UI.Services.AutoFill
 
                     case State.FillTotp:
                     {
-                        var code = _totpService.GenerateCode(credential!.TotpSecret!);
+                        var code = _totpService.GenerateCode(
+                            effectiveTotp!.Secret,
+                            effectiveTotp.ParsedAlgorithm,
+                            DateTimeOffset.UtcNow,
+                            effectiveTotp.Digits,
+                            effectiveTotp.Period);
                         bool filled = false;
 
                         if (!isBrowser && nativeContext?.TotpAutomationId is not null)

@@ -59,9 +59,14 @@ public sealed class LicenseVerifierTests
     }
 
     [Fact]
-    public void Unprovisioned_DefaultVerifier_ReturnsFree()
+    public void DefaultVerifier_ForeignSignedToken_ReturnsFree()
     {
-        // No injected key and the embedded key is the all-zero placeholder.
+        // This test used to assert NotProvisioned on the premise that the embedded
+        // key was still the all-zero placeholder. LicensePublicKey now carries a real
+        // production key, so IsProvisioned is true and the verifier proceeds to the
+        // signature check. What still matters — and is what this asserts — is that a
+        // token signed by anything other than the licensing authority never unlocks
+        // premium. The NotProvisioned branch is unreachable in a provisioned build.
         var (_, priv) = NewKeys();
         var verifier = new LicenseVerifier();
         var token = Token(priv, PremiumTier.Premium, DateTimeOffset.UtcNow.AddDays(20), Binding);
@@ -69,7 +74,16 @@ public sealed class LicenseVerifierTests
         var status = verifier.Verify(token, Binding, Grace);
 
         Assert.False(status.IsValid);
-        Assert.Equal(LicenseFailureReason.NotProvisioned, status.Reason);
+        Assert.Equal(LicenseFailureReason.BadSignature, status.Reason);
+    }
+
+    [Fact]
+    public void EmbeddedLicenseKey_IsProvisioned()
+    {
+        // Guards the premise of the test above: if the embedded key is ever reverted
+        // to the all-zero placeholder, this fails loudly rather than silently turning
+        // the signature test into a NotProvisioned test.
+        Assert.True(LicensePublicKey.IsProvisioned);
     }
 
     [Fact]

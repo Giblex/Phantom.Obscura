@@ -1,4 +1,5 @@
-<Window xmlns="https://github.com/avaloniaui"
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+        xmlns:views="clr-namespace:PhantomVault.UI.Views"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="PhantomVault.UI.Views.Dialogs.RecoverKeyfileDialog"
         Width="560" Height="600"
@@ -6,13 +7,13 @@
         CanResize="False"
         SystemDecorations="None"
         Title="Recover Keyfile">
-  <Window.Resources>
+  <views:ThemeAwareWindow.Resources>
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
         <ResourceInclude Source="avares://PhantomVault.UI/Assets/Themes/PreVaultTheme.axaml"/>
       </ResourceDictionary.MergedDictionaries>
     </ResourceDictionary>
-  </Window.Resources>
+  </views:ThemeAwareWindow.Resources>
   <Border Background="{DynamicResource WindowBackgroundBrush}"
           BorderBrush="{DynamicResource AccentBrush}"
           BorderThickness="1"
@@ -91,4 +92,4 @@
 
     </Grid>
   </Border>
-</Window>
+</views:ThemeAwareWindow>

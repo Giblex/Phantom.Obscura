@@ -1,0 +1,222 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:PhantomVault.UI.ViewModels"
+             x:Class="PhantomVault.UI.Views.Details.SectionsDetailView">
+
+    <StackPanel Spacing="10" IsVisible="{Binding SelectedCredential.HasSections}">
+
+        <ItemsControl ItemsSource="{Binding SelectedCredential.Sections}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:EntrySectionViewModel">
+
+                    <Border Classes="section-tile liquid-glass">
+                        <StackPanel Spacing="10">
+
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Border Classes="section-chip">
+                                    <TextBlock Text="Section"/>
+                                </Border>
+                                <Border Classes="section-chip">
+                                    <TextBlock Text="{Binding KindDisplay}"/>
+                                </Border>
+                            </StackPanel>
+
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <TextBlock Grid.Column="0"
+                                           Text="{Binding KindGlyph}"
+                                           FontSize="15"
+                                           Margin="0,0,8,0"
+                                           VerticalAlignment="Center"/>
+
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding Label}"
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
+                                    <Button Classes="liquid-glass"
+                                            Width="30" Height="30" MinWidth="0" Padding="0"
+                                            Command="{Binding ToggleRevealCommand}"
+                                            IsVisible="{Binding IsSecret}"
+                                            AutomationProperties.Name="Reveal or hide section value"
+                                            ToolTip.Tip="Reveal or hide">
+                                        <TextBlock Text="{Binding RevealGlyph}" FontSize="13"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Button>
+
+                                    <Button Classes="liquid-glass"
+                                            Width="30" Height="30" MinWidth="0" Padding="0"
+                                            Command="{Binding ToggleQrCommand}"
+                                            IsVisible="{Binding CanShowQr}"
+                                            AutomationProperties.Name="Show QR code"
+                                            ToolTip.Tip="Show QR code">
+                                        <TextBlock Text="&#x25A6;" FontSize="14"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Button>
+
+                                    <Button Classes="liquid-glass"
+                                            Width="30" Height="30" MinWidth="0" Padding="0"
+                                            Command="{Binding CopyCommand}"
+                                            AutomationProperties.Name="Copy section value"
+                                            ToolTip.Tip="Copy to clipboard">
+                                        <TextBlock Text="&#x2398;" FontSize="14"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+
+                            <Button Classes="liquid-glass"
+                                    HorizontalAlignment="Left"
+                                    Padding="8,4"
+                                    IsVisible="{Binding IsLinked}"
+                                    Command="{Binding OpenLinkedEntryCommand}"
+                                    AutomationProperties.Name="Open linked entry"
+                                    ToolTip.Tip="Open the linked vault entry">
+                                <TextBlock Text="{Binding LinkSummary}"
+                                           FontSize="{StaticResource Type.Tiny.Size}"
+                                           Foreground="{DynamicResource AccentBrush}"/>
+                            </Button>
+
+                            <TextBlock Text="{Binding SecurityQuestion}"
+                                       IsVisible="{Binding HasSecurityQuestion}"
+                                       TextWrapping="Wrap"
+                                       FontStyle="Italic"
+                                       FontSize="{StaticResource Type.Label.Size}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+
+                            <TextBlock Text="{Binding DisplayValue}"
+                                       IsVisible="{Binding IsPlainValue}"
+                                       TextWrapping="Wrap"
+                                       FontSize="{StaticResource Type.Body.Size}"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+                            <Border IsVisible="{Binding IsNote}"
+                                    Background="{DynamicResource SurfaceBrush}"
+                                    CornerRadius="6"
+                                    Padding="10">
+                                <TextBlock Text="{Binding DisplayValue}"
+                                           TextWrapping="Wrap"
+                                           FontSize="{StaticResource Type.Label.Size}"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            </Border>
+
+                            <Grid ColumnDefinitions="Auto,*,Auto"
+                                  IsVisible="{Binding IsTotp}">
+                                <TextBlock Grid.Column="0"
+                                           Text="{Binding FormattedTotpCode}"
+                                           FontSize="24"
+                                           FontWeight="SemiBold"
+                                           FontFamily="Consolas,Menlo,monospace"
+                                           VerticalAlignment="Center"
+                                           Foreground="{DynamicResource AccentBrush}"/>
+
+                                <ProgressBar Grid.Column="1"
+                                             Margin="12,0"
+                                             Height="6"
+                                             Minimum="0" Maximum="100"
+                                             VerticalAlignment="Center"
+                                             Value="{Binding TotpProgress}"/>
+
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
+                                    <TextBlock Text="{Binding TotpCountdownText}"
+                                               VerticalAlignment="Center"
+                                               FontSize="{StaticResource Type.Tiny.Size}"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    <Button Classes="liquid-glass"
+                                            Padding="8,4"
+                                            Content="Copy code"
+                                            FontSize="{StaticResource Type.Tiny.Size}"
+                                            Command="{Binding CopyTotpCommand}"
+                                            AutomationProperties.Name="Copy current TOTP code"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <StackPanel Spacing="6" IsVisible="{Binding IsRecoveryCodes}">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding RecoveryCodesSummary}"
+                                               VerticalAlignment="Center"
+                                               FontSize="{StaticResource Type.Tiny.Size}"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                    <Button Grid.Column="1"
+                                            Classes="liquid-glass"
+                                            Padding="8,4"
+                                            Content="Use next code"
+                                            FontSize="{StaticResource Type.Tiny.Size}"
+                                            IsEnabled="{Binding HasUnusedRecoveryCodes}"
+                                            Command="{Binding CopyNextRecoveryCodeCommand}"
+                                            AutomationProperties.Name="Copy the next unused recovery code"
+                                            ToolTip.Tip="Copies the next unused code and marks it used"/>
+                                </Grid>
+
+                                <ItemsControl ItemsSource="{Binding RecoveryCodes}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:RecoveryCodeItemViewModel">
+                                            <Grid ColumnDefinitions="Auto,Auto,*,Auto" Margin="0,2">
+                                                <TextBlock Grid.Column="0"
+                                                           Text="{Binding Ordinal}"
+                                                           Width="24"
+                                                           VerticalAlignment="Center"
+                                                           FontSize="{StaticResource Type.Tiny.Size}"
+                                                           Foreground="{DynamicResource MutedTextBrush}"/>
+
+                                                <CheckBox Grid.Column="1"
+                                                          IsChecked="{Binding IsUsed, Mode=TwoWay}"
+                                                          VerticalAlignment="Center"
+                                                          Margin="0,0,6,0"
+                                                          AutomationProperties.Name="Mark recovery code as used"
+                                                          ToolTip.Tip="Mark this code as used"/>
+
+                                                <TextBlock Grid.Column="2"
+                                                           Text="{Binding DisplayCode}"
+                                                           VerticalAlignment="Center"
+                                                           FontFamily="Consolas,Menlo,monospace"
+                                                           FontSize="{StaticResource Type.Label.Size}"
+                                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+                                                <Button Grid.Column="3"
+                                                        Classes="liquid-glass"
+                                                        Width="26" Height="26" MinWidth="0" Padding="0"
+                                                        Command="{Binding ToggleRevealCommand}"
+                                                        AutomationProperties.Name="Reveal or hide this recovery code">
+                                                    <TextBlock Text="&#x1F441;" FontSize="11"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Button>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+
+                            <Border IsVisible="{Binding IsQrVisible}"
+                                    HorizontalAlignment="Left"
+                                    Background="White"
+                                    CornerRadius="8"
+                                    Padding="10">
+                                <StackPanel Spacing="6">
+                                    <Image Source="{Binding QrImage}"
+                                           Width="180" Height="180"
+                                           IsVisible="{Binding HasQrImage}"/>
+                                    <TextBlock Text="Scan with your authenticator app"
+                                               IsVisible="{Binding HasQrImage}"
+                                               FontSize="{StaticResource Type.Tiny.Size}"
+                                               Foreground="Black"
+                                               HorizontalAlignment="Center"/>
+                                    <TextBlock Text="QR code could not be generated for this value."
+                                               IsVisible="{Binding !HasQrImage}"
+                                               FontSize="{StaticResource Type.Tiny.Size}"
+                                               Foreground="Black"
+                                               TextWrapping="Wrap"
+                                               MaxWidth="180"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
+</UserControl>

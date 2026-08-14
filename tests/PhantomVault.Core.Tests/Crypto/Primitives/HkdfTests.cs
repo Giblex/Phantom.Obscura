@@ -656,22 +656,22 @@ namespace PhantomVault.Core.Tests.Crypto.Primitives
 
         #region Zero-Length Output Edge Case
 
-        [Fact]
-        public void Sha256_ZeroLengthOutput_ReturnsEmptyArray()
+        [Theory]
+        [InlineData(0)]
+        [InlineData(-1)]
+        public void Sha256_NonPositiveOutputLength_Throws(int len)
         {
-            // Arrange
+            // A KDF asked for a zero-length key is a caller bug. Returning an empty
+            // array would let a zero-length "key" flow on silently, so Hkdf.Sha256
+            // rejects it instead. This test previously asserted the empty-array
+            // behaviour and has been corrected to match the defensive contract.
             var ikm = new byte[32];
             var salt = new byte[16];
             var info = Encoding.UTF8.GetBytes("zero length");
             RandomNumberGenerator.Fill(ikm);
             RandomNumberGenerator.Fill(salt);
 
-            // Act
-            var result = Hkdf.Sha256(ikm, salt, info, 0);
-
-            // Assert
-            Assert.NotNull(result);
-            Assert.Empty(result);
+            Assert.Throws<ArgumentOutOfRangeException>(() => Hkdf.Sha256(ikm, salt, info, len));
         }
 
         #endregion

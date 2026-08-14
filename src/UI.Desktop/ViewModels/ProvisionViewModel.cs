@@ -14,6 +14,7 @@ using ReactiveUI;
 using PhantomVault.Core;
 using PhantomVault.Core.Models;
 using PhantomVault.Core.Services;
+using PhantomVault.Core.Utils;
 using PhantomVault.Core.Services.ZeroKnowledge;
 using PhantomVault.UI.Services;
 using PhantomVault.UI.Views;
@@ -422,7 +423,8 @@ namespace PhantomVault.UI.ViewModels
 
                     var passwordForManifest = string.IsNullOrEmpty(Passphrase) ? null : Passphrase;
                     Progress = 0.82;
-                    _manifestService.WriteManifest(manifest, manifestPath, passwordForManifest, KeyfilePath);
+                    using (var manifestPassphrase = SecurePassword.FromString(passwordForManifest))
+                        _manifestService.WriteManifestSecure(manifest, manifestPath, manifestPassphrase, KeyfilePath);
 
                     PhantomVault.Core.Utils.HybridKeyDerivation.ZeroMemory(kemPrivateKey, kemPublicKey, kemCiphertextForManifest!);
 
@@ -453,9 +455,11 @@ namespace PhantomVault.UI.ViewModels
                             _backupService.PruneBackups(backupDir, manifest.BackupRetentionDays);
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
-
+                        // A failed first backup must not abort a successfully provisioned
+                        // vault, but it should not vanish either.
+                        Serilog.Log.Warning(ex, "Initial vault backup failed after provisioning");
                     }
 
                     try
@@ -464,9 +468,9 @@ namespace PhantomVault.UI.ViewModels
                         var auditPath = Path.Combine(phantomPath, "audit", $"{encryptedName}.audit");
                         _auditService.LogEvent(auditPath, "provision", $"Vault '{VaultName}' created on {SelectedDrive}");
                     }
-                    catch
+                    catch (Exception ex)
                     {
-
+                        Serilog.Log.Warning(ex, "Failed to write the provisioning audit entry");
                     }
 
                     SaveAuthenticationMethodPreference();
@@ -615,9 +619,10 @@ namespace PhantomVault.UI.ViewModels
                             }
                             File.Delete(tempPlaintext);
                         }
-                        catch
+                        catch (Exception ex)
                         {
-
+                            // The plaintext temp file may survive; that is worth knowing.
+                            Serilog.Log.Warning(ex, "Failed to shred the temporary plaintext import file");
                         }
                     }
                 }
@@ -1329,9 +1334,9 @@ namespace PhantomVault.UI.ViewModels
                         _auditService.LogEvent(auditPath, "import",
                             $"Imported {importResult.TotalEntries} credentials from KeePass");
                     }
-                    catch
+                    catch (Exception ex)
                     {
-
+                        Serilog.Log.Warning(ex, "Failed to write the KeePass import audit entry");
                     }
                 }
                 else
@@ -1376,9 +1381,9 @@ namespace PhantomVault.UI.ViewModels
                     SelectedDrive = _drives[0];
                 }
             }
-            catch
+            catch (Exception ex)
             {
-
+                Serilog.Log.Warning(ex, "Failed to enumerate removable drives for provisioning");
             }
         }
 
@@ -1481,8 +1486,9 @@ namespace PhantomVault.UI.ViewModels
                 var json = File.ReadAllText(path);
                 return System.Text.Json.JsonSerializer.Deserialize<VaultDatabase>(json);
             }
-            catch
+            catch (Exception ex)
             {
+                Serilog.Log.Warning(ex, "Failed to read plaintext vault database at {Path}", path);
                 return null;
             }
         }

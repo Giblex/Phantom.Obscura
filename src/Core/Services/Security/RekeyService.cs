@@ -57,40 +57,44 @@ namespace PhantomVault.Core.Services.Security
                 using var spCurrent = SecurePassword.FromString(currentPassphrase);
                 var manifest = _manifestService.ReadManifestSecure(manifestPath, spCurrent, currentKeyfilePath, usbSerial);
 
-                string newKeyfilePath = Path.Combine(Path.GetDirectoryName(currentKeyfilePath)!, "vault.key.new");
-                if (!string.IsNullOrEmpty(providedNewKeyfilePath) && File.Exists(providedNewKeyfilePath))
+                // If a specific keyfile path is provided, use it directly.
+                // If not, generate a new keyfile at the standard rotation name.
+                string newKeyfilePath;
+                if (!string.IsNullOrEmpty(providedNewKeyfilePath))
                 {
-
-                    progress?.Report(new RekeyProgress("Importing selected keyfile...", 10));
-                    File.Copy(providedNewKeyfilePath, newKeyfilePath, overwrite: true);
+                    newKeyfilePath = providedNewKeyfilePath;
+                    if (!File.Exists(newKeyfilePath))
+                    {
+                        progress?.Report(new RekeyProgress("Generating new keyfile...", 10));
+                        await _keyfileGenerator.GenerateKeyfileAsync(newKeyfilePath);
+                    }
+                    else
+                    {
+                        progress?.Report(new RekeyProgress("Using provided keyfile...", 10));
+                    }
                 }
                 else
                 {
+                    newKeyfilePath = Path.Combine(Path.GetDirectoryName(currentKeyfilePath)!, "vault.key.new");
                     progress?.Report(new RekeyProgress("Generating new keyfile...", 10));
-                    await _keyfileGenerator.GenerateKeyfileAsync(newKeyfilePath, 4096);
+                    await _keyfileGenerator.GenerateKeyfileAsync(newKeyfilePath);
                 }
 
                 progress?.Report(new RekeyProgress("Deriving new encryption key...", 20));
-                byte[] oldSalt = Convert.FromBase64String(manifest.SaltBase64);
-
-                string currentKeyfileContent = await File.ReadAllTextAsync(currentKeyfilePath, cancellationToken);
-                string oldCombinedSecret = (currentPassphrase ?? string.Empty) + currentKeyfileContent;
-                byte[] oldKey = _encryptionService.DeriveKey(oldCombinedSecret.AsSpan(), oldSalt);
 
                 string effectiveNewPassphrase = string.IsNullOrEmpty(newPassphrase)
                     ? (currentPassphrase ?? string.Empty)
                     : newPassphrase;
 
-                byte[] newSalt = _encryptionService.GenerateSalt(32);
-                string keyfileContent = await File.ReadAllTextAsync(newKeyfilePath, cancellationToken);
-                string combinedSecret = effectiveNewPassphrase + keyfileContent;
-                byte[] newKey = _encryptionService.DeriveKey(combinedSecret.AsSpan(), newSalt);
-
                 progress?.Report(new RekeyProgress("Re-encrypting vault database...", 40));
-                await RekeyVaultDatabaseAsync(vaultPath, oldKey, newKey, progress, cancellationToken);
+                await RekeyVaultDatabaseAsync(
+                    vaultPath,
+                    currentPassphrase, currentKeyfilePath,
+                    effectiveNewPassphrase, newKeyfilePath,
+                    progress, cancellationToken);
 
                 progress?.Report(new RekeyProgress("Updating manifest...", 90));
-                manifest.SaltBase64 = Convert.ToBase64String(newSalt);
+                manifest.KeyfilePath = newKeyfilePath;
                 manifest.LastKeyRotation = DateTimeOffset.UtcNow;
                 manifest.KeyRotationCount += 1;
                 manifest.KeyRotationPending = false;
@@ -113,42 +117,62 @@ namespace PhantomVault.Core.Services.Security
             return result;
         }
 
+        /// <summary>
+        /// Re-encrypts a PhantomContainer vault file by decrypting with the old credentials
+        /// and re-creating it with the new credentials. Uses PhantomContainerService to
+        /// correctly handle the container format rather than treating it as a raw blob.
+        /// </summary>
         private async Task RekeyVaultDatabaseAsync(
             string vaultPath,
-            byte[] oldKey,
-            byte[] newKey,
+            string? oldPassphrase, string oldKeyfilePath,
+            string? newPassphrase, string newKeyfilePath,
             IProgress<RekeyProgress>? progress,
             CancellationToken cancellationToken)
         {
+            using var containerService = new PhantomContainerService(_encryptionService);
 
-            byte[] encryptedVault = await File.ReadAllBytesAsync(vaultPath, cancellationToken);
-
-            int metadataSize = 12 + 16;
-            byte[] nonce = new byte[12];
-            byte[] tag = new byte[16];
-            Array.Copy(encryptedVault, 0, nonce, 0, 12);
-            Array.Copy(encryptedVault, 12, tag, 0, 16);
-            byte[] ciphertext = new byte[encryptedVault.Length - metadataSize];
-            Array.Copy(encryptedVault, metadataSize, ciphertext, 0, ciphertext.Length);
-
-            byte[] plainVault = _encryptionService.Decrypt(ciphertext, nonce, tag, oldKey);
+            // 1. Decrypt the existing container payload into a temporary stream
+            await using var plaintextStream = new System.IO.MemoryStream();
+            await containerService.OpenContainerToStreamAsync(
+                vaultPath,
+                plaintextStream,
+                oldPassphrase,
+                oldKeyfilePath,
+                cancellationToken);
 
             progress?.Report(new RekeyProgress("Encrypting with new key...", 70));
 
-            var newEncResult = _encryptionService.Encrypt(plainVault, newKey);
+            long payloadSize = plaintextStream.Length;
+            plaintextStream.Position = 0;
 
-            string tempPath = vaultPath + ".new";
-            await using (var fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None))
+            // 2. Atomically replace the container file with a new one encrypted under new credentials
+            string tempPath = vaultPath + ".rekey";
+            try
             {
-                await fs.WriteAsync(newEncResult.Nonce, cancellationToken);
-                await fs.WriteAsync(newEncResult.Tag, cancellationToken);
-                await fs.WriteAsync(newEncResult.Ciphertext, cancellationToken);
-                await fs.FlushAsync(cancellationToken);
+                await containerService.CreateContainerFromStreamAsync(
+                    tempPath,
+                    plaintextStream,
+                    payloadSize,
+                    newPassphrase,
+                    newKeyfilePath,
+                    manifest: null,
+                    progress: null,
+                    cancellationToken);
+
+                File.Move(tempPath, vaultPath, overwrite: true);
             }
-
-            File.Move(tempPath, vaultPath, overwrite: true);
-
-            CryptographicOperations.ZeroMemory(plainVault);
+            catch
+            {
+                if (File.Exists(tempPath))
+                    try { File.Delete(tempPath); } catch { }
+                throw;
+            }
+            finally
+            {
+                // Zero the decrypted payload
+                var buf = plaintextStream.GetBuffer();
+                CryptographicOperations.ZeroMemory(buf.AsSpan(0, (int)payloadSize));
+            }
         }
 
         public bool RekeyVault(

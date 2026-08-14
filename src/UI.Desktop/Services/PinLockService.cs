@@ -84,6 +84,34 @@ namespace PhantomVault.UI.Services
                    && settings.PinPbkdf2Iterations > 0;
         }
 
+        /// <summary>
+        /// The EnablePinLock / UsePinLockForAutoLock flags are only meaningful when
+        /// a PIN actually exists. Older builds could persist them without ever
+        /// writing a salt+hash (neither in settings nor in the manifest), which left
+        /// auto-lock demanding a PIN the user had never set. Clear the flags whenever
+        /// no PIN material is stored, and persist the correction.
+        /// Returns true when a PIN is genuinely configured.
+        /// </summary>
+        public static bool SyncPinFlags(string? manifestPath = null)
+        {
+            UserSettings settings;
+            try { settings = SettingsService.Load(); }
+            catch { return false; }
+
+            bool configured;
+            try { configured = HasPinConfigured(settings, manifestPath); }
+            catch { configured = false; }
+
+            if (!configured && (settings.EnablePinLock || settings.UsePinLockForAutoLock))
+            {
+                settings.EnablePinLock = false;
+                settings.UsePinLockForAutoLock = false;
+                try { SettingsService.Save(settings); } catch { /* best-effort */ }
+            }
+
+            return configured;
+        }
+
         private static bool HasManifestPinConfigured(VaultManifest manifest)
         {
             return !string.IsNullOrWhiteSpace(manifest.PinSaltBase64)

@@ -52,14 +52,14 @@ namespace PhantomVault.Core.Tests
             harness.Service.UpdateManifestInContainer(
                 harness.ContainerPath,
                 new VaultManifest { VaultName = "Test Vault" },
-                "UnitTestPassword!23",
-                null);
+                ContainerHarness.Password,
+                harness.KeyfilePath);
 
             long footerOffset = harness.FindFooterOffset();
             harness.WriteInt32AtOffset(footerOffset + 5, 10_000);
 
             var ex = Assert.Throws<InvalidOperationException>(() =>
-                harness.Service.ReadManifestFromContainer(harness.ContainerPath, "UnitTestPassword!23", null));
+                harness.Service.ReadManifestFromContainer(harness.ContainerPath, ContainerHarness.Password, harness.KeyfilePath));
 
             Assert.Contains("footer", ex.Message, StringComparison.OrdinalIgnoreCase);
         }
@@ -92,8 +92,8 @@ namespace PhantomVault.Core.Tests
 
             long payloadSize = await harness.Service.GetPayloadSizeAsync(
                 harness.ContainerPath,
-                "UnitTestPassword!23",
-                null);
+                ContainerHarness.Password,
+                harness.KeyfilePath);
 
             Assert.Equal(4096, payloadSize);
         }
@@ -102,14 +102,23 @@ namespace PhantomVault.Core.Tests
         {
             private readonly string _tempDirectory;
 
-            private ContainerHarness(string tempDirectory, string containerPath, PhantomContainerService service)
+            private ContainerHarness(string tempDirectory, string containerPath, string keyfilePath, PhantomContainerService service)
             {
                 _tempDirectory = tempDirectory;
                 ContainerPath = containerPath;
+                KeyfilePath = keyfilePath;
                 Service = service;
             }
 
             public string ContainerPath { get; }
+
+            /// <summary>
+            /// The keyfile is the mandatory unlock factor, so every container in
+            /// these tests has one. The password is the optional extra factor.
+            /// </summary>
+            public string KeyfilePath { get; }
+
+            public const string Password = "UnitTestPassword!23";
 
             public PhantomContainerService Service { get; }
 
@@ -118,10 +127,16 @@ namespace PhantomVault.Core.Tests
                 var tempDirectory = Path.Combine(Path.GetTempPath(), "phantom-container-tests", Guid.NewGuid().ToString("N"));
                 Directory.CreateDirectory(tempDirectory);
 
+                // KeyfileGuard rejects password-only access, so the harness has to
+                // provision a real keyfile before creating the container. These tests
+                // predate the guard and used to pass keyfilePath: null.
+                var keyfilePath = Path.Combine(tempDirectory, "vault.key");
+                new KeyfileGeneratorService().GenerateKeyfile(keyfilePath, sizeKB: 1);
+
                 var containerPath = Path.Combine(tempDirectory, "vault.pcv");
                 var service = new PhantomContainerService(new EncryptionService());
-                await service.CreateContainerAsync(containerPath, sizeBytes: 4096, password: "UnitTestPassword!23", keyfilePath: null);
-                return new ContainerHarness(tempDirectory, containerPath, service);
+                await service.CreateContainerAsync(containerPath, sizeBytes: 4096, password: Password, keyfilePath: keyfilePath);
+                return new ContainerHarness(tempDirectory, containerPath, keyfilePath, service);
             }
 
             public void WriteInt32AtOffset(long offset, int value)
@@ -167,6 +182,13 @@ namespace PhantomVault.Core.Tests
                 {
                     if (Directory.Exists(_tempDirectory))
                     {
+                        // The generated keyfile is marked read-only, which would
+                        // otherwise make the recursive delete fail and leak temp dirs.
+                        foreach (var file in Directory.EnumerateFiles(_tempDirectory, "*", SearchOption.AllDirectories))
+                        {
+                            File.SetAttributes(file, FileAttributes.Normal);
+                        }
+
                         Directory.Delete(_tempDirectory, recursive: true);
                     }
                 }

@@ -1,0 +1,99 @@
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+        xmlns:views="clr-namespace:PhantomVault.UI.Views"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PhantomVault.UI.Views.Autofill.AutofillIconBadge"
+        ShowInTaskbar="False"
+        Topmost="True"
+        CanResize="False"
+        SystemDecorations="None"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent"
+        Width="60" Height="60"
+        WindowStartupLocation="Manual"
+        AutomationProperties.Name="PhantomObscura AutoFill — click to fill credentials">
+
+    <views:ThemeAwareWindow.Resources>
+        <!-- The same three stops the overlay stroke uses, so the drawn ring and the
+             badge's own border are the same line and the handoff is invisible.
+             Deep and desaturated on purpose — these are drawn edges, not glows. -->
+        <LinearGradientBrush x:Key="RingBrush" StartPoint="100%,0%" EndPoint="0%,100%">
+            <GradientStop Offset="0.0" Color="#FF1D4E96"/>
+            <GradientStop Offset="0.5" Color="#FF146B8C"/>
+            <GradientStop Offset="1.0" Color="#FF0F7A6E"/>
+        </LinearGradientBrush>
+    </views:ThemeAwareWindow.Resources>
+
+    <views:ThemeAwareWindow.Styles>
+        <!-- Easing names must match Avalonia.Animation.Easings exactly. There is no
+             "QuadraticOut" — the correct name is QuadraticEaseOut. An invalid name is
+             not a compile error; it throws when the window is constructed. -->
+        <Style Selector="Button#IconButton">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform"
+                                                   Duration="0:0:0.16"
+                                                   Easing="QuadraticEaseOut"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button#IconButton:pointerover">
+            <Setter Property="RenderTransform" Value="scale(1.09)"/>
+        </Style>
+        <Style Selector="Button#IconButton:pressed">
+            <Setter Property="RenderTransform" Value="scale(0.93)"/>
+        </Style>
+
+        <!-- Strip default button chrome; the inner Border is the whole visual. -->
+        <Style Selector="Button#IconButton /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+    </views:ThemeAwareWindow.Styles>
+
+    <Grid x:Name="Root" RenderTransformOrigin="50%,50%">
+        <Grid.Transitions>
+            <Transitions>
+                <TransformOperationsTransition Property="RenderTransform"
+                                               Duration="0:0:0.34"
+                                               Easing="BackEaseOut"/>
+                <DoubleTransition Property="Opacity"
+                                  Duration="0:0:0.18"
+                                  Easing="QuadraticEaseOut"/>
+            </Transitions>
+        </Grid.Transitions>
+
+        <Button x:Name="IconButton"
+                Width="46" Height="46"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Padding="0"
+                Background="Transparent"
+                BorderThickness="0"
+                Cursor="Hand"
+                ToolTip.Tip="Fill a saved credential"
+                AutomationProperties.Name="Open AutoFill suggestions"
+                RenderTransformOrigin="50%,50%">
+
+            <Border Width="46" Height="46"
+                    CornerRadius="23"
+                    BorderThickness="2"
+                    BorderBrush="{StaticResource RingBrush}"
+                    ClipToBounds="True">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0" Color="#FF16233A"/>
+                        <GradientStop Offset="1" Color="#FF0D1524"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+
+                <!-- PNG rather than ok.svg: that SVG is a single 314KB path authored
+                     at 2000x2000 and is wasteful to rasterise at 18px. -->
+                <Image Source="avares://PhantomVault.UI/Assets/ok.png"
+                       Width="26" Height="26"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"/>
+            </Border>
+        </Button>
+    </Grid>
+
+</views:ThemeAwareWindow>

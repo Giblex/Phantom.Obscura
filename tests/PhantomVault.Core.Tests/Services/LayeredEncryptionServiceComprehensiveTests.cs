@@ -163,8 +163,9 @@ namespace PhantomVault.Core.Tests.Services
 
             // Assert
             Assert.Equal(SecurityLevel.Sensitive, result.Level);
-            Assert.NotNull(result.IV3);
-            // Layer 3 uses CBC, so has IV instead of nonce+tag
+            Assert.NotNull(result.Nonce3);
+            Assert.NotNull(result.Tag3);
+            // Layer 3 is ChaCha20-Poly1305: nonce + authentication tag.
         }
 
         [Fact]
@@ -188,8 +189,8 @@ namespace PhantomVault.Core.Tests.Services
                 Tag1 = encrypted.Tag1,
                 Nonce2 = (byte[])encrypted.Nonce2.Clone(),
                 Tag2 = (byte[])encrypted.Tag2.Clone(),
-                // Nonce3 removed - Layer 3 only has IV3
-                IV3 = encrypted.IV3,
+                Nonce3 = encrypted.Nonce3,
+                Tag3 = encrypted.Tag3,
                 Level = encrypted.Level
             };
             tamperedResult.Tag2[0] ^= 0xFF;
@@ -242,9 +243,12 @@ namespace PhantomVault.Core.Tests.Services
             Assert.NotNull(result.Tag1);
             Assert.NotNull(result.Nonce2);
             Assert.NotNull(result.Tag2);
-            Assert.NotNull(result.IV3);
-            Assert.NotNull(result.IV4);
-            Assert.NotNull(result.IV5);
+            Assert.NotNull(result.Nonce3);
+            Assert.NotNull(result.Tag3);
+            Assert.NotNull(result.Nonce4);
+            Assert.NotNull(result.Tag4);
+            Assert.NotNull(result.Nonce5);
+            Assert.NotNull(result.Tag5);
         }
 
         [Fact]
@@ -271,10 +275,12 @@ namespace PhantomVault.Core.Tests.Services
                 Tag1 = encrypted.Tag1,
                 Nonce2 = encrypted.Nonce2,
                 Tag2 = encrypted.Tag2,
-                // Nonce3 removed - Layer 3 only has IV3
-                IV3 = encrypted.IV3,
-                IV4 = encrypted.IV4,
-                IV5 = encrypted.IV5,
+                Nonce3 = encrypted.Nonce3,
+                Tag3 = encrypted.Tag3,
+                Nonce4 = encrypted.Nonce4,
+                Tag4 = encrypted.Tag4,
+                Nonce5 = encrypted.Nonce5,
+                Tag5 = encrypted.Tag5,
                 Level = encrypted.Level
             };
 
@@ -712,9 +718,11 @@ namespace PhantomVault.Core.Tests.Services
             // Act
             var result = service.EncryptLayered(plaintext, masterKey, SecurityLevel.Sensitive, salt);
 
-            // Assert - AES-CBC uses 16-byte IV, no separate tag
-            Assert.NotNull(result.IV3);
-            Assert.Equal(16, result.IV3.Length);
+            // Assert - ChaCha20-Poly1305 uses a 12-byte nonce and a 16-byte tag
+            Assert.NotNull(result.Nonce3);
+            Assert.NotNull(result.Tag3);
+            Assert.Equal(12, result.Nonce3.Length);
+            Assert.Equal(16, result.Tag3.Length);
         }
 
         #endregion

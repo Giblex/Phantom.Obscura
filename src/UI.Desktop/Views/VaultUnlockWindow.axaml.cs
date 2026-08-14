@@ -21,6 +21,16 @@ namespace PhantomVault.UI.Views
                 throw;
             }
             Serilog.Log.Information("[VaultUnlockWindow] after InitializeComponent");
+
+            // The window is undecorated, so there is no title bar to drag by.
+            // Dragging anywhere on the circle keeps it movable.
+            PointerPressed += (_, e) =>
+            {
+                if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+                {
+                    try { BeginMoveDrag(e); } catch (InvalidOperationException) { }
+                }
+            };
         }
 
         public VaultUnlockWindow(VaultUnlockViewModel viewModel) : this()

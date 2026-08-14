@@ -17,7 +17,7 @@ namespace PhantomVault.Core.Services
         private static readonly TimeSpan HardwareTokenCheckDelay = TimeSpan.FromMilliseconds(140);
         private static readonly TimeSpan BiometricCheckDelay = TimeSpan.FromMilliseconds(140);
         private static readonly TimeSpan AntiTamperCheckDelay = TimeSpan.FromMilliseconds(160);
-        private static readonly TimeSpan CheckTransitionDelay = TimeSpan.FromMilliseconds(55);
+        private static readonly TimeSpan CheckTransitionDelay = TimeSpan.FromMilliseconds(500);
 
         private readonly ManifestService _manifestService;
         private readonly YubiKeyService? _yubiKeyService;

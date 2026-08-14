@@ -11,7 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace PhantomVault.UI.Views
 {
-    public partial class SecurityCheckScreen : Window
+    public partial class SecurityCheckScreen : ThemeAwareWindow
     {
         private SecurityCheckScreenViewModel? _currentViewModel;
 

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Window xmlns="https://github.com/avaloniaui"
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+        xmlns:views="clr-namespace:PhantomVault.UI.Views"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:PhantomVault.UI.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -185,7 +186,7 @@
                                          Watermark="Re-enter password"
                                          IsVisible="{Binding ShowConfirmPassword}"
                                          HorizontalAlignment="Stretch"/>
-                                <Button Content="👁"
+                                <Button AutomationProperties.Name="Toggle password visibility" Content="👁"
                                         Classes="liquid-glass"
                                         Width="36"
                                         Height="36"
@@ -630,5 +631,5 @@
             </StackPanel>
         </Border>
     </Grid>
-</Window>
+</views:ThemeAwareWindow>
 

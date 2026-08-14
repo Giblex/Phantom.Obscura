@@ -9,9 +9,15 @@ namespace PhantomVault.Core.Services.Security
     public sealed class ExportGuard : IExportGuard
     {
         private readonly IDefenceEngine? _defenceEngine;
+        private readonly IDefenceSettingsService? _defenceSettings;
         private readonly ILogger<ExportGuard>? _logger;
         private readonly List<ExportEvent> _exportEvents = new();
         private readonly object _lock = new();
+
+        // Rule id shared with SecuritySettingsViewModel.IsExportGuardEnabled, which is
+        // what the Security Settings toggle writes. Without consulting it here the
+        // toggle changes nothing.
+        private const string RuleId = "excessive-exports";
 
         private const int MaxExportsPerHour = 3;
         private static readonly TimeSpan SlidingWindow = TimeSpan.FromHours(1);
@@ -19,14 +25,22 @@ namespace PhantomVault.Core.Services.Security
 
         private DateTimeOffset? _cooldownUntil;
 
-        public ExportGuard(IDefenceEngine? defenceEngine = null, ILogger<ExportGuard>? logger = null)
+        public ExportGuard(
+            IDefenceEngine? defenceEngine = null,
+            IDefenceSettingsService? defenceSettings = null,
+            ILogger<ExportGuard>? logger = null)
         {
             _defenceEngine = defenceEngine;
+            _defenceSettings = defenceSettings;
             _logger = logger;
         }
 
+        private bool IsEnabled => _defenceSettings?.GetRuleEnabled(RuleId) ?? true;
+
         public bool CanExport(string exportType)
         {
+            if (!IsEnabled) return true;
+
             lock (_lock)
             {
                 if (_cooldownUntil.HasValue && DateTimeOffset.UtcNow < _cooldownUntil.Value)
@@ -42,6 +56,8 @@ namespace PhantomVault.Core.Services.Security
 
         public void RegisterExport(string exportType)
         {
+            if (!IsEnabled) return;
+
             lock (_lock)
             {
                 var now = DateTimeOffset.UtcNow;

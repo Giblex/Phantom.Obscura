@@ -36,8 +36,8 @@
     <SolidColorBrush x:Key="AccentBrush" Color="#6EA8FF"/>
     <SolidColorBrush x:Key="AccentHoverBrush" Color="#93BEFF"/>
     <SolidColorBrush x:Key="SecondaryAccentBrush" Color="#4D75B2"/>
-    <SolidColorBrush x:Key="Brush.Accent" Color="{StaticResource Color.Accent}"/>
-    <SolidColorBrush x:Key="Brush.AccentHover" Color="{StaticResource Color.AccentHover}"/>
+    <SolidColorBrush x:Key="Brush.Accent" Color="{DynamicResource Color.Accent}"/>
+    <SolidColorBrush x:Key="Brush.AccentHover" Color="{DynamicResource Color.AccentHover}"/>
     <SolidColorBrush x:Key="Brush.BorderSoft" Color="#1E2A40"/>
 
     <Color x:Key="PrimaryTextColor">#E9EDF2</Color>
@@ -155,5 +155,121 @@
         <GradientStop Color="#186EA8FF" Offset="0"/>
         <GradientStop Color="#00000000" Offset="1"/>
     </LinearGradientBrush>
+
+    <!-- ==========================================================================
+         Glass + dashboard layer derived from this theme's palette.
+
+         These 56 keys were previously absent from every Theme.Web* dictionary, so
+         they fell through to the app-level PhantomTheme overlay. Nothing visibly
+         broke, but the glass surfaces, dashboard tiles and liquid-glass buttons
+         kept the generic dark values regardless of the selected theme - so picking
+         Ember or Arctic changed the palette everywhere except the surfaces that
+         actually carry the brand.
+
+         Every value below is derived from this theme's own Navy ramp and accent,
+         so the glass layer now re-tints with the rest of the theme.
+         ========================================================================== -->
+
+    <!-- Glass tint ramp -->
+    <Color x:Key="Glass.Tint.Deepest">#06080D</Color>
+    <Color x:Key="Glass.Tint.Dark">#080C13</Color>
+    <Color x:Key="Glass.Tint.Mid">#0B1019</Color>
+    <Color x:Key="Glass.Tint.Light">#10182A</Color>
+
+    <!-- Sheen ramp (neutral white highlights over the tinted ground) -->
+    <SolidColorBrush x:Key="Glass.Sheen.Bright" Color="#33FFFFFF"/>
+    <SolidColorBrush x:Key="Glass.Sheen.Mid" Color="#1FFFFFFF"/>
+    <SolidColorBrush x:Key="Glass.Sheen.Soft" Color="#12FFFFFF"/>
+
+    <!-- Glass body fills -->
+    <LinearGradientBrush x:Key="Brush.Glass.BaseFill" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Color="#6610182A" Offset="0"/>
+        <GradientStop Color="#4D0B1019" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="Brush.Glass.BaseFillHover" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Color="#80172135" Offset="0"/>
+        <GradientStop Color="#6610182A" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="Brush.Glass.BaseFillPressed" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Color="#990B1019" Offset="0"/>
+        <GradientStop Color="#80080C13" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="Brush.Glass.BaseFillChecked" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Color="#596EA8FF" Offset="0"/>
+        <GradientStop Color="#3D6EA8FF" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- Glass edges -->
+    <SolidColorBrush x:Key="Brush.Glass.Border" Color="#1FFFFFFF"/>
+    <SolidColorBrush x:Key="Brush.Glass.BorderHover" Color="#666EA8FF"/>
+    <SolidColorBrush x:Key="Brush.Glass.BorderPressed" Color="#8C6EA8FF"/>
+    <SolidColorBrush x:Key="Brush.Glass.BorderFocus" Color="#B393BEFF"/>
+    <SolidColorBrush x:Key="Brush.Glass.EdgeHighlightBorder" Color="#26FFFFFF"/>
+    <Color x:Key="Brush.Glass.EdgeHighlight.Start">#38FFFFFF</Color>
+    <Color x:Key="Brush.Glass.EdgeHighlight.Mid">#1AFFFFFF</Color>
+    <Color x:Key="Brush.Glass.EdgeHighlight.End">#00FFFFFF</Color>
+
+    <!-- Glass depth -->
+    <SolidColorBrush x:Key="Brush.Glass.Sheen" Color="#1FFFFFFF"/>
+    <SolidColorBrush x:Key="Brush.Glass.InnerShadow" Color="#4006080D"/>
+    <SolidColorBrush x:Key="Brush.Glass.BottomShadow" Color="#5906080D"/>
+
+    <!-- Liquid-glass button treatment -->
+    <SolidColorBrush x:Key="LiquidGlassButtonForeground" Color="#E9EDF2"/>
+    <DropShadowEffect x:Key="LiquidGlassButtonEffect" BlurRadius="18" OffsetX="0" OffsetY="4" Color="#4D06080D"/>
+    <DropShadowEffect x:Key="LiquidGlassButtonEffectHover" BlurRadius="26" OffsetX="0" OffsetY="6" Color="#596EA8FF"/>
+    <DropShadowEffect x:Key="LiquidGlassButtonEffectPressed" BlurRadius="12" OffsetX="0" OffsetY="2" Color="#6606080D"/>
+    <DropShadowEffect x:Key="LiquidGlassDropShadow" BlurRadius="18" OffsetX="0" OffsetY="4" Color="#4D06080D"/>
+    <DropShadowEffect x:Key="LiquidGlassDropShadowHover" BlurRadius="26" OffsetX="0" OffsetY="6" Color="#596EA8FF"/>
+    <DropShadowEffect x:Key="LiquidGlassDropShadowPressed" BlurRadius="12" OffsetX="0" OffsetY="2" Color="#6606080D"/>
+
+    <!-- Dashboard chrome -->
+    <SolidColorBrush x:Key="DashboardPanelBg" Color="#CC080C13"/>
+    <SolidColorBrush x:Key="DashboardPanelBorderBrush" Color="#1FFFFFFF"/>
+    <SolidColorBrush x:Key="DashboardSectionBg" Color="#B30B1019"/>
+    <SolidColorBrush x:Key="DashboardSectionBorderBrush" Color="#1AFFFFFF"/>
+    <SolidColorBrush x:Key="DashboardSectionHoverBg" Color="#CC10182A"/>
+    <SolidColorBrush x:Key="DashboardSectionHoverBorderBrush" Color="#596EA8FF"/>
+    <SolidColorBrush x:Key="DashboardCardBg" Color="#B310182A"/>
+    <SolidColorBrush x:Key="DashboardCardHoverBg" Color="#CC172135"/>
+    <SolidColorBrush x:Key="DashboardCardPressedBg" Color="#CC0B1019"/>
+    <SolidColorBrush x:Key="DashboardNavBg" Color="#990B1019"/>
+    <SolidColorBrush x:Key="DashboardNavHoverBg" Color="#B3172135"/>
+    <SolidColorBrush x:Key="DashboardNavPressedBg" Color="#CC080C13"/>
+    <SolidColorBrush x:Key="DashboardNavPrimaryBg" Color="#596EA8FF"/>
+    <SolidColorBrush x:Key="DashboardNavPrimaryBorderBrush" Color="#8C6EA8FF"/>
+    <LinearGradientBrush x:Key="DashboardTileBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#B310182A" Offset="0"/>
+        <GradientStop Color="#990B1019" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DashboardTileHoverBg" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#CC172135" Offset="0"/>
+        <GradientStop Color="#B310182A" Offset="1"/>
+    </LinearGradientBrush>
+    <Color x:Key="DashboardTileBorderColor">#33FFFFFF</Color>
+    <Color x:Key="DashboardTileHoverBorderColor">#666EA8FF</Color>
+    <Color x:Key="DashboardAcrylicTint">#0B1019</Color>
+    <Color x:Key="DashboardAcrylicFallback">#140B1019</Color>
+
+    <!-- Misc keys the shared views expect -->
+    <SolidColorBrush x:Key="HeaderBorderBrush" Color="Transparent"/>
+    <SolidColorBrush x:Key="ErrorTextBrush" Color="#F48771"/>
+    <SolidColorBrush x:Key="SuccessTextBrush" Color="#58D68D"/>
+    <SolidColorBrush x:Key="ComboBoxItemBackground" Color="Transparent"/>
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver" Color="#80172135"/>
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundPressed" Color="#9910182A"/>
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundSelected" Color="#596EA8FF"/>
+
+    <!-- Surface overlay + header tokens derived from this theme's own palette.
+
+         These were previously defined only in the app-level PhantomTheme fallback, so
+         they never re-tinted with the selected skin — and because that fallback is
+         chosen by the light/dark variant rather than by the skin, a light skin could
+         receive dark-theme overlay values and render hover states invisibly. -->
+    <SolidColorBrush x:Key="SubtleBrush" Color="#18FFFFFF"/>
+    <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#22FFFFFF"/>
+    <SolidColorBrush x:Key="SurfaceActiveBrush" Color="#33FFFFFF"/>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#080C13"/>
+    <SolidColorBrush x:Key="HeaderPrimaryBrush" Color="#0B1019"/>
 
 </ResourceDictionary>

@@ -20,7 +20,27 @@ namespace PhantomVault.Core.Services.AutoInject
 
         Task TriggerAutoInjectAsync();
 
-        Task AutoFillAsync(string credentialId, bool autoSubmit);
+        /// <summary>
+        /// Types part or all of a credential into the focused window.
+        ///
+        /// <paramref name="autoSubmit"/> should normally be false: the user is
+        /// expected to review what was entered and press Enter themselves. Submitting
+        /// for them removes the chance to correct a wrong match.
+        /// </summary>
+        Task AutoFillAsync(string credentialId, bool autoSubmit, AutoFillField field = AutoFillField.Both);
+
+        /// <summary>
+        /// Copies one field to the clipboard, excluded from clipboard history and
+        /// cleared automatically after <paramref name="clearAfterSeconds"/>.
+        /// Returns false if the credential or field is unavailable.
+        /// </summary>
+        Task<bool> CopyFieldAsync(string credentialId, AutoFillField field, int clearAfterSeconds = 30);
+
+        /// <summary>
+        /// Current TOTP code and its remaining lifetime, or null if this credential
+        /// has no TOTP secret configured.
+        /// </summary>
+        Task<TotpSnapshot?> GetTotpAsync(string credentialId);
     }
 
     public class AutoInjectPromptEventArgs : EventArgs

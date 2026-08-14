@@ -1,0 +1,220 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:PhantomVault.UI.ViewModels"
+             xmlns:controls="clr-namespace:PhantomVault.UI.Views.Controls"
+             x:Class="PhantomVault.UI.Views.EditForms.SectionsEditForm">
+
+    <StackPanel Spacing="10">
+
+        <TextBlock Text="{Binding SectionsSummary}"
+                   Classes="field-hint"/>
+
+        <Border Classes="section-tile">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Start from a template" Classes="field-label"/>
+
+                <Grid ColumnDefinitions="*,Auto">
+                    <ComboBox Grid.Column="0"
+                              ItemsSource="{Binding SectionTemplates}"
+                              SelectedItem="{Binding SelectedSectionTemplate, Mode=TwoWay}"
+                              PlaceholderText="Choose a set of sections"
+                              Classes="form-field"
+                              AutomationProperties.Name="Section template"/>
+
+                    <Button Grid.Column="1"
+                            Classes="liquid-glass"
+                            Margin="6,0,0,0"
+                            Padding="12,6"
+                            Content="Apply"
+                            IsEnabled="{Binding HasSelectedSectionTemplate}"
+                            Command="{Binding ApplySectionTemplateCommand}"
+                            AutomationProperties.Name="Apply section template"
+                            ToolTip.Tip="Add this template's sections to the entry"/>
+                </Grid>
+
+                <TextBlock Text="{Binding SelectedSectionTemplateDescription}"
+                           IsVisible="{Binding HasSelectedSectionTemplate}"
+                           Classes="field-hint"/>
+            </StackPanel>
+        </Border>
+
+        <Grid ColumnDefinitions="*,Auto,Auto" >
+            <ComboBox Grid.Column="0"
+                      ItemsSource="{Binding AvailableSectionKinds}"
+                      SelectedItem="{Binding NewSectionKind, Mode=TwoWay}"
+                      Classes="form-field"
+                      AutomationProperties.Name="Section type to add"
+                      ToolTip.Tip="Pick the type of section to add">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Converter={StaticResource SectionKindDisplayConverter}}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+
+            <Button Grid.Column="1"
+                    Classes="liquid-glass"
+                    Margin="6,0,0,0"
+                    Padding="10,6"
+                    Content="Add"
+                    Command="{Binding AddSectionCommand}"
+                    AutomationProperties.Name="Add section with a stored value"
+                    ToolTip.Tip="Add a section that stores its own value"/>
+
+            <Button Grid.Column="2"
+                    Classes="liquid-glass"
+                    Margin="6,0,0,0"
+                    Padding="10,6"
+                    Content="Link entry"
+                    Command="{Binding AddLinkedSectionCommand}"
+                    AutomationProperties.Name="Add section linked to another entry"
+                    ToolTip.Tip="Add a section that mirrors another vault entry"/>
+        </Grid>
+
+        <ItemsControl ItemsSource="{Binding SectionEditors}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:SectionEditorItemViewModel">
+
+                    <Border Classes="section-tile liquid-glass">
+                        <StackPanel Spacing="10">
+
+                            <Border Classes="section-chip" HorizontalAlignment="Left">
+                                <TextBlock Text="Section"/>
+                            </Border>
+
+                            <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                                <ComboBox Grid.Column="0"
+                                          ItemsSource="{Binding Source={x:Static vm:SectionEditorItemViewModel.AllKinds}}"
+                                          SelectedItem="{Binding Kind, Mode=TwoWay}"
+                                          Classes="form-field"
+                                          AutomationProperties.Name="Section type">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Converter={StaticResource SectionKindDisplayConverter}}"/>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+
+                                <Button Grid.Column="1" Classes="liquid-glass"
+                                        Width="30" Height="30" MinWidth="0" Padding="0" Margin="6,0,0,0"
+                                        Command="{Binding MoveUpCommand}"
+                                        AutomationProperties.Name="Move section up"
+                                        ToolTip.Tip="Move up">
+                                    <TextBlock Text="&#x2191;" FontSize="13"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Button>
+
+                                <Button Grid.Column="2" Classes="liquid-glass"
+                                        Width="30" Height="30" MinWidth="0" Padding="0" Margin="4,0,0,0"
+                                        Command="{Binding MoveDownCommand}"
+                                        AutomationProperties.Name="Move section down"
+                                        ToolTip.Tip="Move down">
+                                    <TextBlock Text="&#x2193;" FontSize="13"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Button>
+
+                                <Button Grid.Column="3" Classes="liquid-glass"
+                                        Width="30" Height="30" MinWidth="0" Padding="0" Margin="4,0,0,0"
+                                        Command="{Binding RemoveCommand}"
+                                        AutomationProperties.Name="Remove section"
+                                        ToolTip.Tip="Remove this section">
+                                    <TextBlock Text="&#x2715;" FontSize="12"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Button>
+                            </Grid>
+
+                            <TextBox Text="{Binding Label, Mode=TwoWay}"
+                                     Classes="form-field"
+                                     Watermark="Section label"
+                                     AutomationProperties.Name="Section label"/>
+
+                            <StackPanel Orientation="Horizontal" Spacing="14">
+                                <CheckBox IsChecked="{Binding IsLinkMode, Mode=TwoWay}"
+                                          Content="Link to another entry"
+                                          FontSize="12"
+                                          AutomationProperties.Name="Link this section to another vault entry"/>
+                                <CheckBox IsChecked="{Binding IsSecret, Mode=TwoWay}"
+                                          Content="Hide by default"
+                                          FontSize="12"
+                                          AutomationProperties.Name="Mask this section value by default"/>
+                            </StackPanel>
+
+                            <ComboBox IsVisible="{Binding IsLinkMode}"
+                                      ItemsSource="{Binding LinkCandidates}"
+                                      SelectedItem="{Binding SelectedLinkCandidate, Mode=TwoWay}"
+                                      DisplayMemberBinding="{Binding Display}"
+                                      Classes="form-field"
+                                      AutomationProperties.Name="Entry to link"
+                                      ToolTip.Tip="The linked entry supplies this section's value"/>
+
+                            <TextBox IsVisible="{Binding IsSecurityQuestionKind}"
+                                     Text="{Binding SecurityQuestion, Mode=TwoWay}"
+                                     Classes="form-field"
+                                     Watermark="What was your first pet's name?"
+                                     AutomationProperties.Name="Security question"/>
+
+                            <StackPanel IsVisible="{Binding IsInlineMode}" Spacing="8">
+
+                                <controls:PinDigitBoxes IsVisible="{Binding IsPinKind}"
+                                                        Pin="{Binding Value, Mode=TwoWay}"
+                                                        PinLength="{Binding PinLength, Mode=TwoWay}"
+                                                        ShowLengthSelector="True"/>
+
+                                <TextBox IsVisible="{Binding !IsPinKind}"
+                                         Text="{Binding Value, Mode=TwoWay}"
+                                         Watermark="{Binding ValueWatermark}"
+                                         AcceptsReturn="{Binding IsMultiline}"
+                                         TextWrapping="Wrap"
+                                         Classes="form-field"
+                                         MaxHeight="160"
+                                         AutomationProperties.Name="Section value"/>
+                            </StackPanel>
+
+                            <Grid ColumnDefinitions="*,*" IsVisible="{Binding IsTotpKind}">
+                                <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,6,0">
+                                    <TextBlock Text="Issuer"
+                                               Classes="field-label"/>
+                                    <TextBox Text="{Binding TotpIssuer, Mode=TwoWay}" Classes="form-field"
+                                             Watermark="GitHub"
+                                             AutomationProperties.Name="TOTP issuer"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Spacing="4" Margin="6,0,0,0">
+                                    <TextBlock Text="Account"
+                                               Classes="field-label"/>
+                                    <TextBox Text="{Binding TotpAccount, Mode=TwoWay}" Classes="form-field"
+                                             Watermark="you@example.com"
+                                             AutomationProperties.Name="TOTP account name"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <Grid ColumnDefinitions="*,*" IsVisible="{Binding IsTotpKind}">
+                                <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,6,0">
+                                    <TextBlock Text="Digits"
+                                               Classes="field-label"/>
+                                    <ComboBox ItemsSource="{Binding TotpDigitOptions}"
+                                              SelectedItem="{Binding TotpDigits, Mode=TwoWay}"
+                                              Classes="form-field"
+                                              AutomationProperties.Name="TOTP digit count"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Spacing="4" Margin="6,0,0,0">
+                                    <TextBlock Text="Period (seconds)"
+                                               Classes="field-label"/>
+                                    <ComboBox ItemsSource="{Binding TotpPeriodOptions}"
+                                              SelectedItem="{Binding TotpPeriod, Mode=TwoWay}"
+                                              Classes="form-field"
+                                              AutomationProperties.Name="TOTP period"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock Text="{Binding ValidationMessage}"
+                                       IsVisible="{Binding HasValidationMessage}"
+                                       TextWrapping="Wrap"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource WarningBrush}"/>
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
+</UserControl>

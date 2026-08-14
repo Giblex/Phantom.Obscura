@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
 using PhantomVault.Core.Models;
+using PhantomVault.Core.Services;
 using ReactiveUI;
 
 namespace PhantomVault.UI.ViewModels
@@ -26,7 +27,44 @@ namespace PhantomVault.UI.ViewModels
         private int _actionableDuplicateCount;
 
         public ObservableCollection<DuplicateGroupItem> Groups { get; } = new();
+        public ObservableCollection<DuplicateSiteGroup> SiteGroups { get; } = new();
         public ObservableCollection<DuplicateIssueItem> BlockedItems { get; } = new();
+
+        /// <summary>
+        /// Organises the flat group list into one card per website, the way a password
+        /// manager's site list reads. Entries with no website (PINs, bank accounts) fall
+        /// into a trailing "Other entries" card rather than being hidden.
+        /// </summary>
+        private void BuildSiteGroups()
+        {
+            SiteGroups.Clear();
+
+            var bySite = Groups
+                .GroupBy(g => g.SiteFamily, StringComparer.Ordinal)
+                .Select(g => new DuplicateSiteGroup(
+                    g.Key,
+                    string.IsNullOrEmpty(g.Key) ? "Other entries" : g.First().SiteDisplayName,
+                    g.OrderBy(x => x.Strength).ThenBy(x => x.DisplayName, StringComparer.OrdinalIgnoreCase).ToList()))
+
+                .OrderBy(s => string.IsNullOrEmpty(s.SiteFamily) ? 1 : 0)
+                .ThenBy(s => s.DisplayName, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var site in bySite)
+            {
+                SiteGroups.Add(site);
+            }
+
+            this.RaisePropertyChanged(nameof(SiteCount));
+            this.RaisePropertyChanged(nameof(SiteSummary));
+        }
+
+        public int SiteCount => SiteGroups.Count(s => s.HasSite);
+
+        public string SiteSummary => SiteCount == 0
+            ? string.Empty
+            : SiteCount == 1
+                ? "Across 1 website"
+                : $"Across {SiteCount} websites";
 
         public string Summary
         {
@@ -91,9 +129,11 @@ namespace PhantomVault.UI.ViewModels
         public ICommand SelectAllCommand { get; }
         public ICommand ClearSelectionCommand { get; }
         public ICommand DeleteSelectedCommand { get; }
+        public ICommand ConsolidateSelectedCommand { get; }
         public ICommand CancelCommand { get; }
 
         public event Action<List<Credential>>? DeleteRequested;
+        public event Action<List<ConsolidationPlan>>? ConsolidateRequested;
         public event Action? CloseRequested;
 
         public DuplicateScanViewModel(IEnumerable<Credential> credentials)
@@ -104,6 +144,7 @@ namespace PhantomVault.UI.ViewModels
             SelectAllCommand = ReactiveCommand.Create(() => ToggleAll(true));
             ClearSelectionCommand = ReactiveCommand.Create(() => ToggleAll(false));
             DeleteSelectedCommand = ReactiveCommand.Create(DeleteSelected);
+            ConsolidateSelectedCommand = ReactiveCommand.Create(ConsolidateSelected);
             CancelCommand = ReactiveCommand.Create(() => CloseRequested?.Invoke());
 
             RecalculateSelection();
@@ -114,7 +155,7 @@ namespace PhantomVault.UI.ViewModels
             var credentialList = credentials.ToList();
             ScannedCredentialCount = credentialList.Count;
 
-            var keyed = new List<(Credential Credential, DuplicateCandidateKey Key)>();
+            var keyed = new List<(Credential Credential, DuplicateKey Key)>();
             var duplicateIds = new HashSet<string>(StringComparer.Ordinal);
 
             foreach (var credential in credentialList)
@@ -132,20 +173,41 @@ namespace PhantomVault.UI.ViewModels
                     continue;
                 }
 
-                keyed.Add((credential, DuplicateCandidateKey.From(credential)));
+                var key = DuplicateMatchKeyBuilder.Build(credential);
+                if (!key.IsUsable)
+                {
+                    BlockedItems.Add(new DuplicateIssueItem(credential, MissingLocatorReason));
+                    continue;
+                }
+
+                keyed.Add((credential, key));
             }
 
-            foreach (var group in keyed.GroupBy(k => k.Key).Where(g => g.Count() > 1))
+            var grouped = keyed
+                .GroupBy(k => k.Key)
+                .Where(g => g.Count() > 1)
+                .Select(g => new
+                {
+                    g.Key,
+                    Members = g.Select(k => k.Credential).ToList(),
+                    Strength = DuplicateMatchKeyBuilder.DetermineStrength(g.Select(k => k.Credential).ToList())
+                })
+
+                .OrderBy(g => g.Strength)
+                .ThenBy(g => g.Key.Display, StringComparer.Ordinal);
+
+            foreach (var group in grouped)
             {
-                var candidates = group
-                    .Select(k => new DuplicateEntryItem(k.Credential, OnEntrySelectionChanged))
+                var candidates = group.Members
+                    .Select(c => new DuplicateEntryItem(c, OnEntrySelectionChanged))
                     .OrderBy(e => e.Credential.LastUpdatedUtc)
                     .ThenBy(e => e.Credential.Id, StringComparer.Ordinal)
                     .ToList();
 
-                var item = DuplicateGroupItem.Create(group.Key, candidates);
-                Groups.Add(item);
+                Groups.Add(DuplicateGroupItem.Create(group.Key, candidates, group.Strength));
             }
+
+            BuildSiteGroups();
 
             HasDuplicates = Groups.Count > 0;
             this.RaisePropertyChanged(nameof(HasBlockedItems));
@@ -200,7 +262,7 @@ namespace PhantomVault.UI.ViewModels
         }
 
         public static string BuildCandidateKey(Credential credential)
-            => DuplicateCandidateKey.From(credential).Display;
+            => DuplicateMatchKeyBuilder.Build(credential).Display;
 
         public static int GetInformationScore(Credential credential)
             => DuplicateEntryItem.CalculateInformationScore(credential);
@@ -242,6 +304,12 @@ namespace PhantomVault.UI.ViewModels
                     continue;
                 }
 
+                if (group.NeedsReview)
+                {
+
+                    continue;
+                }
+
                 var best = group.Entries
                     .OrderByDescending(e => e.InformationScore)
                     .ThenByDescending(e => e.Credential.LastUpdatedUtc)
@@ -258,7 +326,11 @@ namespace PhantomVault.UI.ViewModels
             }
 
             RecalculateSelection();
-            ReviewStatus = "Smart selection chose older or less-detailed duplicate items. Review and override before sending anything to the secure bin.";
+
+            var skipped = Groups.Count(g => !g.IsBlocked && g.NeedsReview);
+            ReviewStatus = skipped == 0
+                ? "Smart selection chose older or less-detailed duplicate items. Review and override before sending anything to the secure bin."
+                : $"Smart selection chose older or less-detailed duplicate items in the exact and strong matches. {skipped} likely-match group(s) were left untouched for you to decide on.";
         }
 
         private static string SmartDeleteReason(DuplicateEntryItem entry, DuplicateEntryItem best)
@@ -313,6 +385,66 @@ namespace PhantomVault.UI.ViewModels
             DeleteRequested?.Invoke(selected.Select(e => e.Credential).ToList());
         }
 
+        private void ConsolidateSelected()
+        {
+            var selected = Groups.SelectMany(g => g.Entries).Where(e => e.IsSelected).ToList();
+            if (selected.Count == 0)
+            {
+                ReviewStatus = "Select the duplicate items you want folded into the retained entry.";
+                return;
+            }
+
+            var validationError = ValidateDeletionSelection(selected);
+            if (!string.IsNullOrEmpty(validationError))
+            {
+                ReviewStatus = validationError;
+                return;
+            }
+
+            var plans = new List<ConsolidationPlan>();
+
+            foreach (var group in Groups)
+            {
+                if (group.IsBlocked)
+                {
+                    continue;
+                }
+
+                var absorbed = group.Entries.Where(e => e.IsSelected).ToList();
+                if (absorbed.Count == 0)
+                {
+                    continue;
+                }
+
+                var keepers = group.Entries.Where(e => !e.IsSelected).ToList();
+                if (keepers.Count == 0)
+                {
+
+                    ReviewStatus = $"Consolidation blocked for {group.DisplayName}: at least one item must remain unselected to receive the merged data.";
+                    return;
+                }
+
+                var primary = keepers
+                    .OrderByDescending(e => e.InformationScore)
+                    .ThenByDescending(e => e.Credential.LastUpdatedUtc)
+                    .ThenBy(e => e.Credential.Id, StringComparer.Ordinal)
+                    .First();
+
+                plans.Add(new ConsolidationPlan(
+                    group.DisplayName,
+                    primary.Credential,
+                    absorbed.Select(e => e.Credential).ToList()));
+            }
+
+            if (plans.Count == 0)
+            {
+                ReviewStatus = "Nothing to consolidate in the current selection.";
+                return;
+            }
+
+            ConsolidateRequested?.Invoke(plans);
+        }
+
         private string? ValidateDeletionSelection(IReadOnlyCollection<DuplicateEntryItem> selected)
         {
             foreach (var group in Groups)
@@ -358,54 +490,21 @@ namespace PhantomVault.UI.ViewModels
             SelectedCount = Groups.SelectMany(g => g.Entries).Count(e => e.IsSelected);
         }
 
-        private sealed record DuplicateCandidateKey(
-            EntryType EntryType,
-            string Title,
-            string Username,
-            string Url,
-            string TypeSpecificLocator)
-        {
-            public string Display => $"{EntryType} | {Title} | {Username} | {Url} | {TypeSpecificLocator}";
-
-            public static DuplicateCandidateKey From(Credential credential)
-            {
-                return new DuplicateCandidateKey(
-                    credential.EntryType,
-                    Normalize(credential.Title),
-                    Normalize(credential.Username),
-                    Normalize(credential.Url),
-                    Normalize(BuildTypeSpecificLocator(credential)));
-            }
-
-            private static string BuildTypeSpecificLocator(Credential credential)
-            {
-                return credential.EntryType switch
-                {
-                    EntryType.WiFi => First(credential.WiFiSSID, credential.WiFiBSSID),
-                    EntryType.Identity => First(credential.IdDocumentType, credential.IdNumber, credential.IdCardNumber),
-                    EntryType.ApiKey => First(credential.ApiEndpoint, credential.ApiEnvironment, credential.ApiDocumentationUrl),
-                    EntryType.Contact => First(credential.ContactEmail, credential.ContactPhone, credential.ContactFullName),
-                    EntryType.CreditCard => First(credential.CardholderName, credential.CardType),
-                    EntryType.BankAccount => First(credential.BankName, credential.BankAccountType),
-                    EntryType.TotpGenerator => First(credential.TotpIssuer, credential.TotpAccountName),
-                    EntryType.PinCode => First(credential.PinIssuer, credential.PinLabel),
-                    _ => string.Empty
-                };
-            }
-
-            private static string First(params string?[] values)
-                => string.Join("|", values.Where(v => !string.IsNullOrWhiteSpace(v)).Select(v => v!.Trim()));
-
-            private static string Normalize(string? value)
-                => (value ?? string.Empty).Trim().ToUpperInvariant();
-        }
     }
 
     public sealed class DuplicateGroupItem : ReactiveObject
     {
-        private DuplicateGroupItem(string key, List<DuplicateEntryItem> entries)
+        private DuplicateGroupItem(
+            string key,
+            List<DuplicateEntryItem> entries,
+            DuplicateMatchStrength strength,
+            string siteFamily,
+            string siteDisplayName)
         {
             Key = key;
+            Strength = strength;
+            SiteFamily = siteFamily;
+            SiteDisplayName = siteDisplayName;
             foreach (var entry in entries)
             {
                 Entries.Add(entry);
@@ -424,22 +523,53 @@ namespace PhantomVault.UI.ViewModels
         public string KeyMetadata { get; }
         public bool IsBlocked { get; }
         public string BlockReason { get; }
+        public DuplicateMatchStrength Strength { get; }
+        public string SiteFamily { get; }
+        public string SiteDisplayName { get; }
         public ObservableCollection<DuplicateEntryItem> Entries { get; } = new();
 
-        public static DuplicateGroupItem Create(object key, List<DuplicateEntryItem> entries)
+        public string AccountLabel
+        {
+            get
+            {
+                var account = Entries.FirstOrDefault()?.Username ?? string.Empty;
+                return string.IsNullOrWhiteSpace(account) || account == "(missing)"
+                    ? "No account name"
+                    : account;
+            }
+        }
+
+        public string CopiesLabel => Entries.Count == 2
+            ? "2 copies"
+            : $"{Entries.Count} copies";
+
+        public string StrengthLabel => Strength switch
+        {
+            DuplicateMatchStrength.Exact => "EXACT",
+            DuplicateMatchStrength.Strong => "STRONG",
+            _ => "LIKELY"
+        };
+
+        public string StrengthDescription => DuplicateMatchKeyBuilder.DescribeStrength(Strength);
+
+        public bool NeedsReview => Strength == DuplicateMatchStrength.Likely;
+
+        public static DuplicateGroupItem Create(
+            DuplicateKey key,
+            List<DuplicateEntryItem> entries,
+            DuplicateMatchStrength strength)
         {
             if (entries == null || entries.Count < 2)
             {
                 throw new ArgumentException("Duplicate groups require at least two entries.", nameof(entries));
             }
 
-            var keyDisplay = key?.ToString() ?? string.Empty;
-            if (key is not null && key.GetType().GetProperty("Display")?.GetValue(key) is string display)
-            {
-                keyDisplay = display;
-            }
-
-            return new DuplicateGroupItem(keyDisplay, entries);
+            return new DuplicateGroupItem(
+                key?.Display ?? string.Empty,
+                entries,
+                strength,
+                key?.SiteFamily ?? string.Empty,
+                key?.SiteDisplayName ?? string.Empty);
         }
 
         private static string DetermineBlockReason(IEnumerable<DuplicateEntryItem> entries)
@@ -505,71 +635,72 @@ namespace PhantomVault.UI.ViewModels
             set => this.RaiseAndSetIfChanged(ref _selectionReason, value);
         }
 
+        /// <summary>
+        /// Delegates to the same scorer the merge uses, so the entry the UI shows as
+        /// richest is the entry consolidation would pick as primary. Keeping two copies of
+        /// this logic let them drift — the UI one never counted sections.
+        /// </summary>
         public static int CalculateInformationScore(Credential credential)
-        {
-            var score = 0;
-            Count(credential.Title);
-            Count(credential.Username);
-            Count(credential.Url);
-            Count(credential.Notes);
-            Count(credential.Category);
-            Count(credential.Icon);
-            Count(credential.IconColor);
-            Count(credential.AutoTypeSequence);
-            if (credential.IsFavorite) score++;
-            if (credential.IsPasskey) score++;
-            if (credential.ExpiryUtc.HasValue) score++;
-            if (credential.Tags?.Count > 0) score += Math.Min(credential.Tags.Count, 5);
-            if (credential.CustomFields?.Count > 0) score += Math.Min(credential.CustomFields.Count, 5);
-
-            Count(credential.WiFiSSID);
-            Count(credential.WiFiSecurityType);
-            Count(credential.WiFiBSSID);
-            Count(credential.IdDocumentType);
-            Count(credential.IdNumber);
-            Count(credential.IdCardNumber);
-            Count(credential.IdIssuingCountry);
-            Count(credential.IdIssuingState);
-            if (credential.IdIssueDate.HasValue) score++;
-            if (credential.IdExpiryDate.HasValue) score++;
-            Count(credential.ApiEndpoint);
-            Count(credential.ApiEnvironment);
-            Count(credential.ApiDocumentationUrl);
-            Count(credential.ContactFullName);
-            Count(credential.ContactEmail);
-            Count(credential.ContactPhone);
-            Count(credential.ContactAddress);
-            Count(credential.ContactCompany);
-            Count(credential.ContactJobTitle);
-            Count(credential.CardholderName);
-            Count(credential.CardType);
-            Count(credential.CardExpiryMonth);
-            Count(credential.CardExpiryYear);
-            Count(credential.CardBillingAddress);
-            Count(credential.BankName);
-            Count(credential.BankAccountType);
-            Count(credential.BankBranchCode);
-            Count(credential.BankBranchAddress);
-            Count(credential.TotpIssuer);
-            Count(credential.TotpAccountName);
-            Count(credential.TotpAlgorithm);
-            Count(credential.PinLabel);
-            Count(credential.PinCategory);
-            Count(credential.PinIssuer);
-
-            return score;
-
-            void Count(string? value)
-            {
-                if (!string.IsNullOrWhiteSpace(value))
-                {
-                    score++;
-                }
-            }
-        }
+            => DuplicateConsolidationService.InformationScore(credential);
 
         private static string EmptyAsPlaceholder(string? value)
             => string.IsNullOrWhiteSpace(value) ? "(missing)" : value.Trim();
+    }
+
+    /// <summary>
+    /// One website's worth of duplicate groups, so the review list is organised by site
+    /// rather than presenting every group as an unrelated row.
+    /// </summary>
+    public sealed class DuplicateSiteGroup
+    {
+        public DuplicateSiteGroup(string siteFamily, string displayName, List<DuplicateGroupItem> groups)
+        {
+            SiteFamily = siteFamily;
+            DisplayName = displayName;
+            Groups = new ObservableCollection<DuplicateGroupItem>(groups);
+        }
+
+        public string SiteFamily { get; }
+
+        public string DisplayName { get; }
+
+        public bool HasSite => !string.IsNullOrEmpty(SiteFamily);
+
+        public ObservableCollection<DuplicateGroupItem> Groups { get; }
+
+        public int AccountCount => Groups.Count;
+
+        public int DuplicateCount => Groups.Sum(g => Math.Max(0, g.Entries.Count - 1));
+
+        public string Summary => AccountCount == 1
+            ? $"1 account · {DuplicateCount} duplicate{(DuplicateCount == 1 ? string.Empty : "s")}"
+            : $"{AccountCount} accounts · {DuplicateCount} duplicate{(DuplicateCount == 1 ? string.Empty : "s")}";
+    }
+
+    public sealed class ConsolidationPlan
+    {
+        public ConsolidationPlan(string groupName, Credential primary, List<Credential> absorbed)
+        {
+            GroupName = groupName;
+            Primary = primary ?? throw new ArgumentNullException(nameof(primary));
+            Absorbed = absorbed ?? throw new ArgumentNullException(nameof(absorbed));
+        }
+
+        public string GroupName { get; }
+
+        public Credential Primary { get; }
+
+        public List<Credential> Absorbed { get; }
+
+        public List<Credential> AllMembers
+        {
+            get
+            {
+                var all = new List<Credential> { Primary };
+                all.AddRange(Absorbed);
+                return all;
+            }
+        }
     }
 
     public sealed class DuplicateIssueItem

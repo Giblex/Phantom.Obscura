@@ -1,61 +1,49 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:PhantomVault.UI.Views.Controls"
              x:Class="PhantomVault.UI.Views.EditForms.IdentityEditForm">
 
-    <UserControl.Styles>
-
-        <Style Selector="DatePicker:focus /template/ Border#Background">
-            <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrush}"/>
-        </Style>
-        <Style Selector="DatePicker:pointerover /template/ Border#Background">
-            <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrushPointerOver}"/>
-        </Style>
-
-        <Style Selector="DatePicker /template/ Button#PART_PickerPresenter">
-            <Setter Property="HorizontalContentAlignment" Value="Center"/>
-        </Style>
-        <Style Selector="DatePicker /template/ Button#PART_PickerPresenter TextBlock">
-            <Setter Property="TextAlignment" Value="Center"/>
-        </Style>
-    </UserControl.Styles>
-
     <Border x:Name="IdentityPanelBorder" Background="Transparent" IsVisible="{Binding IsIdentityEntry}">
-        <StackPanel x:Name="IdentityPanel" Spacing="12">
-        <TextBlock Text="Identity Document" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-        <StackPanel Spacing="6">
-            <TextBlock Text="ID Type" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <ComboBox ItemsSource="{Binding IdentityTypeOptions}"
-                      SelectedItem="{Binding IdDocumentType}"
-                      Height="40"
-                      FontSize="{StaticResource Type.Body.Size}"/>
-        </StackPanel>
-        <StackPanel Spacing="6">
-            <TextBlock Text="{Binding IdNumberLabel}" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding IdNumber}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="{Binding IdNumberWatermark}"/>
-        </StackPanel>
-        <StackPanel Spacing="6">
-            <TextBlock Text="Card Number" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding IdCardNumber}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="Enter card or document number"/>
-        </StackPanel>
-        <StackPanel Spacing="6" IsVisible="{Binding ShowIdIssuingCountry}">
-            <TextBlock Text="{Binding IdIssuingCountryLabel}" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding IdIssuingCountry}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="{Binding IdIssuingCountryWatermark}"/>
-        </StackPanel>
-        <StackPanel Spacing="6" IsVisible="{Binding ShowIdIssuingState}">
-            <TextBlock Text="{Binding IdIssuingStateLabel}" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding IdIssuingState}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="{Binding IdIssuingStateWatermark}"/>
-        </StackPanel>
-        <Grid ColumnDefinitions="*,16,*">
-            <StackPanel Grid.Column="0" Spacing="6" IsVisible="{Binding ShowIdIssueDate}">
-                <TextBlock Text="Issue Date" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                <DatePicker SelectedDate="{Binding IdIssueDate}" Height="40" FontSize="{StaticResource Type.Body.Size}"/>
+        <StackPanel x:Name="IdentityPanel" Spacing="14">
+
+            <TextBlock Text="Identity Document" Classes="form-section-title"/>
+
+            <StackPanel Classes="field-group">
+                <TextBlock Text="ID Type" Classes="field-label"/>
+                <ComboBox ItemsSource="{Binding IdentityTypeOptions}"
+                          SelectedItem="{Binding IdDocumentType}"
+                          Classes="form-field"/>
             </StackPanel>
-            <StackPanel Grid.Column="2" Spacing="6" IsVisible="{Binding ShowIdExpiryDate}">
-                <TextBlock Text="Expiration Date" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-                <DatePicker SelectedDate="{Binding IdExpiryDate}" Height="40" FontSize="{StaticResource Type.Body.Size}"/>
+
+            <StackPanel Classes="field-group">
+                <TextBlock Text="{Binding IdNumberLabel}" Classes="field-label"/>
+                <TextBox Text="{Binding IdNumber}" Classes="form-field" Watermark="{Binding IdNumberWatermark}"/>
             </StackPanel>
-        </Grid>
+
+            <StackPanel Classes="field-group">
+                <TextBlock Text="Card Number" Classes="field-label"/>
+                <TextBox Text="{Binding IdCardNumber}" Classes="form-field" Watermark="Enter card or document number"/>
+            </StackPanel>
+
+            <StackPanel Classes="field-group" IsVisible="{Binding ShowIdIssuingCountry}">
+                <TextBlock Text="{Binding IdIssuingCountryLabel}" Classes="field-label"/>
+                <TextBox Text="{Binding IdIssuingCountry}" Classes="form-field" Watermark="{Binding IdIssuingCountryWatermark}"/>
+            </StackPanel>
+
+            <StackPanel Classes="field-group" IsVisible="{Binding ShowIdIssuingState}">
+                <TextBlock Text="{Binding IdIssuingStateLabel}" Classes="field-label"/>
+                <TextBox Text="{Binding IdIssuingState}" Classes="form-field" Watermark="{Binding IdIssuingStateWatermark}"/>
+            </StackPanel>
+
+            <StackPanel Classes="field-group" IsVisible="{Binding ShowIdIssueDate}">
+                <TextBlock Text="Issue Date" Classes="field-label"/>
+                <controls:DateField Mode="DayMonthYear" SelectedDate="{Binding IdIssueDate, Mode=TwoWay}"/>
+            </StackPanel>
+
+            <StackPanel Classes="field-group" IsVisible="{Binding ShowIdExpiryDate}">
+                <TextBlock Text="Expiration Date" Classes="field-label"/>
+                <controls:DateField Mode="DayMonthYear" SelectedDate="{Binding IdExpiryDate, Mode=TwoWay}"/>
+            </StackPanel>
         </StackPanel>
     </Border>
 </UserControl>
-

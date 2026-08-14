@@ -15,6 +15,17 @@
             <FontFamily x:Key="MonoFontFamily">Consolas</FontFamily>
             <x:Double x:Key="ToolTipFontSize">12</x:Double>
             <x:Boolean x:Key="ScrollBarAllowAutoHide">True</x:Boolean>
+
+            <!-- Was previously declared in a second <Application.Resources> element after
+                 <Application.Styles>. Two property elements for the same property is
+                 ambiguous — depending on loader behaviour the later one can replace the
+                 earlier, which would have silently dropped the Strings and VectorIcons
+                 merges above. Folded in here so there is exactly one declaration. -->
+            <ExperimentalAcrylicMaterial x:Key="LiquidAcrylic"
+                                         TintColor="#9FD8FF"
+                                         TintOpacity="0.18"
+                                         MaterialOpacity="0.38"
+                                         FallbackColor="#66FFFFFF"/>
         </ResourceDictionary>
     </Application.Resources>
 
@@ -37,6 +48,8 @@
         <StyleInclude Source="avares://PhantomVault.UI/Styles/Animations.axaml" />
 
         <StyleInclude Source="avares://PhantomVault.UI/Assets/Styles/GlobalStyles.axaml" />
+
+        <StyleInclude Source="avares://PhantomVault.UI/Styles/EntryFormStyles.axaml" />
 
         <Style Selector="Window.animated-window">
             <Setter Property="Opacity" Value="0"/>
@@ -95,6 +108,71 @@
         </Style>
         <Style Selector="Window.reduce-motion Control.fade-toggle[IsVisible=True]">
             <Setter Property="Opacity" Value="1"/>
+        </Style>
+
+        <!-- Reduce Transparency (accessibility). The liquid-glass look is intentional
+             brand identity, so this does not remove it — it replaces the translucent
+             glass fills and sheen with opaque equivalents drawn from the active theme,
+             which keeps the shape and depth language while removing the see-through
+             layering that causes legibility problems. Applied as a window class by
+             ThemeAwareWindow whenever AccessibilityService.ReduceTransparency is on. -->
+        <!-- Implemented with direct property Setters rather than by overriding the
+             Brush.Glass.* keys in Style.Resources. A Setter value resolves through the
+             normal control -> window -> application lookup chain, which is reliable;
+             a DynamicResource used as the Color of a brush declared inside Style.Resources
+             is a far more fragile lookup and fails to an invisible surface, which is worse
+             than the problem being solved. -->
+
+        <!-- Liquid-glass buttons: opaque body, solid border, no sheen/blur. -->
+        <Style Selector="Window.reduce-transparency Button.liquid-glass">
+            <Setter Property="Effect" Value="{x:Null}"/>
+        </Style>
+        <Style Selector="Window.reduce-transparency Button.liquid-glass /template/ Border#BaseBorder">
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <Style Selector="Window.reduce-transparency Button.liquid-glass:pointerover /template/ Border#BaseBorder">
+            <Setter Property="Background" Value="{DynamicResource SurfaceHoverBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource UserAccentBrush}"/>
+        </Style>
+        <Style Selector="Window.reduce-transparency Button.liquid-glass:pressed /template/ Border#BaseBorder">
+            <Setter Property="Background" Value="{DynamicResource SurfaceActiveBrush}"/>
+        </Style>
+        <Style Selector="Window.reduce-transparency Button.liquid-glass /template/ Border#Sheen">
+            <Setter Property="IsVisible" Value="False"/>
+            <Setter Property="Opacity" Value="0"/>
+        </Style>
+
+        <!-- Glass and surface cards drop to their opaque card equivalents. -->
+        <Style Selector="Window.reduce-transparency Border.glass-card">
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+            <Setter Property="BoxShadow" Value="{DynamicResource Shadow.Soft}"/>
+        </Style>
+        <Style Selector="Window.reduce-transparency Border.surface-card">
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
+        </Style>
+        <Style Selector="Window.reduce-transparency Border.panel">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+        </Style>
+        <Style Selector="Window.reduce-transparency Border.nav-bar">
+            <Setter Property="Background" Value="{DynamicResource HeaderBackgroundBrush}"/>
+        </Style>
+        <Style Selector="Window.reduce-transparency Border.hero">
+            <Setter Property="Background" Value="{DynamicResource HeaderPrimaryBrush}"/>
+        </Style>
+
+        <!-- Acrylic composites against whatever sits behind the window, which is the
+             single largest source of see-through. Force it off. -->
+        <Style Selector="Window.reduce-transparency ExperimentalAcrylicBorder">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+
+        <!-- Window chrome itself must not be transparent in this mode. -->
+        <Style Selector="Window.reduce-transparency">
+            <Setter Property="TransparencyLevelHint" Value="None"/>
+            <Setter Property="Background" Value="{DynamicResource WindowBackgroundBrush}"/>
         </Style>
 
         <Style Selector="Window.flat-buttons Button.liquid-glass">
@@ -167,13 +245,5 @@
         </Style>
 
     </Application.Styles>
-
-    <Application.Resources>
-    <ExperimentalAcrylicMaterial x:Key="LiquidAcrylic"
-                     TintColor="#9FD8FF"
-                                     TintOpacity="0.18"
-                                     MaterialOpacity="0.38"
-                                     FallbackColor="#66FFFFFF"/>
-    </Application.Resources>
 </Application>
 

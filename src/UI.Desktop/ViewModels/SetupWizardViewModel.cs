@@ -199,9 +199,40 @@ namespace PhantomVault.UI.ViewModels
         [ObservableProperty]
         private string _remainingUsbSpaceDisplay = string.Empty;
 
-        public bool IsAuthenticationStep => CurrentStep == 6;
+        /// <summary>
+        /// Named step indices for the setup wizard.
+        ///
+        /// CurrentStep stays an <see cref="int"/> because the progress indicator in
+        /// SetupWizardWindow.axaml binds it through converters with numeric
+        /// ConverterParameters — changing the type would break every one of those.
+        /// These constants remove the magic numbers from the logic instead, so the
+        /// step map has a single definition that the switches, predicates, titles and
+        /// validators all refer to.
+        ///
+        /// Note the tail of the wizard is conditional: when USB remnants are detected an
+        /// extra step is inserted before Review, so Review is always <see cref="TotalSteps"/>
+        /// rather than a fixed index.
+        /// </summary>
+        internal static class Step
+        {
+            public const int Welcome = 1;
+            public const int SecurityLevel = 2;
+            public const int PhantomKeyBridge = 3;
+            public const int StorageLocation = 4;
+            public const int KeyfileAndPassword = 5;
+            public const int Authentication = 6;
+            public const int Remnants = 7;   // only present when HasRemnants
 
-        public bool IsRemnantStep => HasRemnants && CurrentStep == 7;
+            /// <summary>Step count without the conditional remnants step.</summary>
+            public const int BaseTotal = 7;
+
+            /// <summary>Step count including the conditional remnants step.</summary>
+            public const int TotalWithRemnants = 8;
+        }
+
+        public bool IsAuthenticationStep => CurrentStep == Step.Authentication;
+
+        public bool IsRemnantStep => HasRemnants && CurrentStep == Step.Remnants;
 
         public bool IsReviewStep => CurrentStep == TotalSteps;
 
@@ -476,7 +507,7 @@ namespace PhantomVault.UI.ViewModels
         [RelayCommand]
         private void PreviousStep()
         {
-            if (CurrentStep > 1)
+            if (CurrentStep > Step.Welcome)
             {
                 CurrentStep--;
                 UpdateStepInfo();
@@ -490,7 +521,7 @@ namespace PhantomVault.UI.ViewModels
             if (stepParameter is string stepStr && int.TryParse(stepStr, out int targetStep))
             {
 
-                if (targetStep >= 1 && targetStep < CurrentStep)
+                if (targetStep >= Step.Welcome && targetStep < CurrentStep)
                 {
                     CurrentStep = targetStep;
                     UpdateStepInfo();
@@ -499,7 +530,7 @@ namespace PhantomVault.UI.ViewModels
             else if (stepParameter is int targetStepInt)
             {
 
-                if (targetStepInt >= 1 && targetStepInt < CurrentStep)
+                if (targetStepInt >= Step.Welcome && targetStepInt < CurrentStep)
                 {
                     CurrentStep = targetStepInt;
                     UpdateStepInfo();
@@ -507,28 +538,28 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
-        public bool CanGoToStep(int targetStep) => targetStep >= 1 && targetStep < CurrentStep;
+        public bool CanGoToStep(int targetStep) => targetStep >= Step.Welcome && targetStep < CurrentStep;
 
         [RelayCommand]
         private async Task LoadStepDataAsync()
         {
             switch (CurrentStep)
             {
-                case 3:
+                case Step.PhantomKeyBridge:
                     OnPropertyChanged(nameof(IsBlackSecureSelected));
                     break;
 
-                case 4:
+                case Step.StorageLocation:
                     await DetectUsbDrivesAsync();
 
                     await DetectUsbSerialAsync();
                     break;
 
-                case 5:
+                case Step.KeyfileAndPassword:
                     PrepareGeneratedKeyfileFlow();
                     break;
 
-                case 6:
+                case Step.Authentication:
                     TotpOnboarding.VaultName = EffectiveVaultName;
                     await DetectWindowsHelloAsync();
                     await DetectPasskeysAsync();
@@ -546,7 +577,7 @@ namespace PhantomVault.UI.ViewModels
         {
             switch (CurrentStep)
             {
-                case 1:
+                case Step.Welcome:
                     if (string.IsNullOrWhiteSpace(VaultName))
                     {
                         StatusMessage = "Please enter a vault name to continue.";
@@ -560,7 +591,7 @@ namespace PhantomVault.UI.ViewModels
                     }
                     break;
 
-                case 2:
+                case Step.SecurityLevel:
                     if (string.IsNullOrEmpty(SelectedSecurityLevel))
                     {
                         StatusMessage = "Please select a security level.";
@@ -568,7 +599,7 @@ namespace PhantomVault.UI.ViewModels
                     }
                     break;
 
-                case 4:
+                case Step.StorageLocation:
                     if (string.IsNullOrEmpty(SelectedUsbPath))
                     {
                         StatusMessage = "Please select a USB drive for your vault.";
@@ -576,7 +607,7 @@ namespace PhantomVault.UI.ViewModels
                     }
                     break;
 
-                case 5:
+                case Step.KeyfileAndPassword:
                     if (SupportsExternalKeyfile && UseExistingKeyfile && !KeyfileSelected)
                     {
                         StatusMessage = "Please select an existing keyfile before continuing.";
@@ -609,7 +640,7 @@ namespace PhantomVault.UI.ViewModels
                     }
                     break;
 
-                case 6:
+                case Step.Authentication:
                     if (EnableWindowsHello && !WindowsHelloOnboarding.IsBiometricEnrolled)
                     {
                         StatusMessage = "Complete Windows Hello enrollment or switch it off before continuing.";
@@ -637,12 +668,12 @@ namespace PhantomVault.UI.ViewModels
         {
             CurrentStepTitle = CurrentStep switch
             {
-                1 => string.Empty,
-                2 => "Choose Security Level",
-                3 => "PhantomKey Bridge Setup",
-                4 => "Select Storage Location",
-                5 => "Keyfile & Password",
-                6 => "Additional Authentication",
+                Step.Welcome => "Welcome to Phantom Obscura",
+                Step.SecurityLevel => "Choose Security Level",
+                Step.PhantomKeyBridge => "PhantomKey Bridge Setup",
+                Step.StorageLocation => "Select Storage Location",
+                Step.KeyfileAndPassword => "Keyfile & Password",
+                Step.Authentication => "Additional Authentication",
                 _ when IsRemnantStep => "Remnant Actions",
                 _ when IsReviewStep => "Review and Complete",
                 _ => "Setup"
@@ -652,7 +683,7 @@ namespace PhantomVault.UI.ViewModels
             OnPropertyChanged(nameof(IsRemnantStep));
             OnPropertyChanged(nameof(IsReviewStep));
 
-            CanGoBack = CurrentStep > 1;
+            CanGoBack = CurrentStep > Step.Welcome;
             CanGoNext = true;
             NextButtonText = CurrentStep == TotalSteps ? "Create Vault" : "Next";
         }
@@ -889,7 +920,7 @@ namespace PhantomVault.UI.ViewModels
                     DetectedRemnants.Add(remnant);
 
                 HasRemnants = DetectedRemnants.Count > 0;
-                TotalSteps = HasRemnants ? 8 : 7;
+                TotalSteps = HasRemnants ? Step.TotalWithRemnants : Step.BaseTotal;
                 RemainingUsbSpaceDisplay = scanResults.remainingUsbSpace;
 
                 if (CurrentStep > TotalSteps)
@@ -1300,51 +1331,6 @@ namespace PhantomVault.UI.ViewModels
                         volumePath = PhantomDeviceLayout.GetSystemVolumePath(driveRoot);
                         cleanupFiles.Add(volumePath);
                     }
-
-                    // Suite-wide readiness probes. Run BEFORE vault creation so a
-                    // broken install surfaces immediately, not mid-provisioning.
-                    var bootstrap = new Phantom.Sync.Usb.SuiteBootstrapService();
-
-                    // Shared-sync integrity — refuse to proceed if the shared DLLs
-                    // aren't next to us. Indicates a corrupt or partial install
-                    // that the Giblex installer should have staged.
-                    var syncProbe = bootstrap.ProbeSharedSync();
-                    if (!syncProbe.AllPresent)
-                    {
-                        throw new InvalidOperationException(
-                            "Cannot create vault: required shared libraries are missing (" +
-                            string.Join(", ", syncProbe.MissingAssemblies) +
-                            "). Reinstall Phantom Obscura via the Giblex installer to restore them.");
-                    }
-
-                    // PhantomKey availability — if the user's setup enables it but
-                    // the portable exe wasn't staged by the installer, warn (not
-                    // fatal: we still provision the partition; PhantomKey can be
-                    // installed later and pick it up).
-                    var pkProbe = bootstrap.ProbePhantomKey();
-                    if (!pkProbe.IsInstalled)
-                        Log.Warning("PhantomKey.Portable not found next to Obscura. Provisioning the partition anyway; install PhantomKey to unlock it.");
-                    else
-                        Log.Information("PhantomKey detected at {Path}", pkProbe.ExecutablePath);
-
-                    // Suite-shared PhantomKey partition provisioning. Idempotent —
-                    // if Attestor's wizard already created it (or we're re-running
-                    // this wizard), the existing marker is honoured and we skip.
-                    // Best-effort: never fail Obscura setup because PhantomKey's
-                    // side-partition couldn't be created.
-                    try
-                    {
-                        var provisioner = new Phantom.Sync.Usb.PhantomVolumeProvisioner();
-                        var result = provisioner.Provision(driveRoot, callingAppId: "obscura");
-                        if (result.Created)
-                            Log.Information("Provisioned PhantomKey partition at {Path} ({Size} bytes)", result.ContainerPath, result.Marker.SizeBytes);
-                        else
-                            Log.Information("PhantomKey partition already provisioned by {App} on {Utc}", result.Marker.CreatedByApp, result.Marker.CreatedUtc);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Warning(ex, "PhantomKey partition provisioning skipped: {Message}", ex.Message);
-                    }
                 }
                 else
                 {
@@ -1548,7 +1534,7 @@ namespace PhantomVault.UI.ViewModels
                 {
                     keyfilePath = KeyfilePath;
                     ReportProvisioningStage(2, 34, "Using existing keyfile...", "Reusing the operator-supplied keyfile for container provisioning.");
-                    Log.Information("Using existing keyfile: {KeyfilePath}", keyfilePath);
+                    Log.Debug("Using existing keyfile: {KeyfileName}", System.IO.Path.GetFileName(keyfilePath));
                 }
                 else if (usesExternalKeyfile)
                 {
@@ -1577,7 +1563,7 @@ namespace PhantomVault.UI.ViewModels
                     keyfilePath = CompositeKeyfilePath.Compose(primaryKeyfilePath, hostCompanionKeyfilePath);
                     KeyfilePath = keyfilePath;
                     StatusMessage = "Generated and encrypted keyfile...";
-                    Log.Information("Generated key material with USB keyfile {PrimaryKeyfilePath} and companion keyfile {HostCompanionKeyfilePath}", primaryKeyfilePath, hostCompanionKeyfilePath);
+                    Log.Debug("Generated key material with USB keyfile {PrimaryKeyfileName} and companion keyfile {HostCompanionKeyfileName}", System.IO.Path.GetFileName(primaryKeyfilePath), System.IO.Path.GetFileName(hostCompanionKeyfilePath));
                 }
                 else
                 {
@@ -1758,10 +1744,6 @@ namespace PhantomVault.UI.ViewModels
                     Guuid = GuuidValue,
                     RequiresHardwareToken = EnablePhantomKey,
                     PhantomKeyBridgeEnabled = EnablePhantomKey,
-                    PhantomKeyBindingTokenEnabled = EnablePhantomKey,
-                    PhantomKeyBindingTokenPath = EnablePhantomKey
-                        ? Path.Combine(PhantomDeviceLayout.PhantomFolderName, PhantomDeviceLayout.PhantomKeyBindingTokenFileName).Replace('\\', '/')
-                        : null,
                     PhantomKeyBridgeWorkspacePath = EnablePhantomKey ? PhantomKeyBridgeContract.WorkspaceRelativePath : null,
                     PhantomKeyBridgeManifestPath = EnablePhantomKey ? PhantomKeyBridgeContract.BridgeManifestRelativePath : null,
                     PhantomKeyBridgeContinuityPath = EnablePhantomKey ? PhantomKeyBridgeContract.ContinuityRelativePath : null,
@@ -1776,24 +1758,6 @@ namespace PhantomVault.UI.ViewModels
                     SupportsReversibleTierMigration = true,
                     PremiumLicenseToken = PendingLicenseToken
                 };
-
-                if (EnablePhantomKey)
-                {
-                    string phantomKeyTokenRoot = !string.IsNullOrWhiteSpace(driveRoot)
-                        ? driveRoot
-                        : vaultPath;
-                    var phantomKeyBindingTokenService = new PhantomKeyBindingTokenService();
-                    ReportProvisioningStage(4, 54, "Sealing PhantomKey binding token...", "Binding the vault, USB, computer, manifest, and keyfile into the PhantomKey authentication token.");
-                    phantomKeyBindingTokenService.CreateOrRotate(
-                        phantomKeyTokenRoot,
-                        manifest,
-                        passphrase,
-                        keyfilePath,
-                        GuuidValue);
-                    cleanupFiles.Add(phantomKeyBindingTokenService.GetDefaultTokenPath(phantomKeyTokenRoot));
-                    StatusMessage = "PhantomKey binding token sealed...";
-                    Log.Information("PhantomKey binding token created at {TokenPath}", phantomKeyBindingTokenService.GetDefaultTokenPath(phantomKeyTokenRoot));
-                }
 
                 if (EnableTotp)
                 {
@@ -2286,8 +2250,10 @@ namespace PhantomVault.UI.ViewModels
                     usbRoot.TrimEnd('\\', '/'),
                     StringComparison.OrdinalIgnoreCase);
             }
-            catch
+            catch (Exception ex)
             {
+                // Unresolvable path: assume same-volume, the conservative answer.
+                Log.Warning(ex, "Could not compare destination {Destination} against USB root {UsbRoot}", destinationPath, usbRoot);
                 return false;
             }
         }
@@ -2587,7 +2553,7 @@ namespace PhantomVault.UI.ViewModels
 
             ReportProvisioningStage(2, 40, "Provisioned host companion keyfile...",
                 "Host companion keyfile and USB locator were sealed successfully.");
-            Log.Information("Host companion keyfile provisioned at: {SecondaryKeyfilePath}", secondaryPath);
+            Log.Debug("Host companion keyfile provisioned: {SecondaryKeyfileName}", System.IO.Path.GetFileName(secondaryPath));
             StatusMessage = "Host companion keyfile sealed successfully.";
             return secondaryPath;
         }
@@ -2673,8 +2639,9 @@ namespace PhantomVault.UI.ViewModels
                 VaultFileProtection.StripFileProtection(filePath);
                 await SecureDeletionService.BestEffortDeleteAsync(filePath, SecureDeletionService.DeletionMethod.StandardSecure).ConfigureAwait(false);
             }
-            catch
+            catch (Exception ex)
             {
+                Log.Warning(ex, "Secure delete of provisioning file failed, falling back to a plain delete: {Path}", filePath);
                 try
                 {
                     if (File.Exists(filePath))
@@ -2683,9 +2650,10 @@ namespace PhantomVault.UI.ViewModels
                         File.Delete(filePath);
                     }
                 }
-                catch
+                catch (Exception fallbackEx)
                 {
-
+                    // Worth surfacing: a provisioning artefact is left on disk.
+                    Log.Error(fallbackEx, "Failed to delete provisioning file: {Path}", filePath);
                 }
             }
         }
@@ -2723,9 +2691,9 @@ namespace PhantomVault.UI.ViewModels
                 new DirectoryInfo(directoryPath).Attributes = FileAttributes.Normal;
                 Directory.Delete(directoryPath, true);
             }
-            catch
+            catch (Exception ex)
             {
-
+                Log.Warning(ex, "Failed to remove the provisioning directory: {Dir}", directoryPath);
             }
         }
 

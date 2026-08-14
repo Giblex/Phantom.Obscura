@@ -6,6 +6,7 @@ using Avalonia.Input.Platform;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
 using PhantomVault.UI.ViewModels;
+using PhantomVault.UI.Views;
 
 namespace PhantomVault.UI.Views.Dialogs
 {
@@ -13,7 +14,7 @@ namespace PhantomVault.UI.Views.Dialogs
     /// Mandatory post-provisioning step: requires at least one concrete recovery action
     /// (save file, save PDF, or copy codes) before setup can continue.
     /// </summary>
-    public partial class RecoveryExportDialog : Window
+    public partial class RecoveryExportDialog : ThemeAwareWindow
     {
         private SetupWizardViewModel? _wizard;
         private bool _completed;

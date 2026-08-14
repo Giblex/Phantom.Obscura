@@ -82,7 +82,7 @@
                          Watermark="Search icons... (e.g., 'social', 'finance', 'security')"
                          Height="40"
                          FontSize="{StaticResource Type.Body.Size}"/>
-                <Button Grid.Column="1"
+                <Button AutomationProperties.Name="Clear search" Grid.Column="1"
                         Content="✕"
                         Command="{Binding ClearSearchCommand}"
                         Classes="liquid-glass"
@@ -139,7 +139,7 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Button Command="{Binding Path=DataContext.SelectIconCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                <Button AutomationProperties.Name="Select icon" Command="{Binding Path=DataContext.SelectIconCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                         CommandParameter="{Binding}"
                                         Classes="liquid-glass"
                                         Width="56"
@@ -175,7 +175,7 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Button Command="{Binding Path=DataContext.SelectIconCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                <Button AutomationProperties.Name="Select icon" Command="{Binding Path=DataContext.SelectIconCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                         CommandParameter="{Binding}"
                                         Classes="liquid-glass"
                                         Width="48"

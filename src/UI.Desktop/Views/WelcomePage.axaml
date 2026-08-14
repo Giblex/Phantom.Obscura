@@ -161,18 +161,28 @@
                 </Border.Background>
             </Border>
 
-            <!-- Dot-grid overlay matching giblex.com body::after —
-                 8×8 tile, 1px white dot, ~4% opacity. -->
-            <Border HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <Border.Background>
-                    <ImageBrush Source="avares://PhantomVault.UI/Assets/dot_pattern.png"
-                                TileMode="Tile"
-                                Stretch="None"
-                                SourceRect="0,0,8,8"
-                                DestinationRect="0,0,8,8"/>
-                </Border.Background>
-            </Border>
         </Panel>
+
+        <!-- Dot-grid overlay matching giblex.com body::after — 8×8 tile, 2×2 dot.
+             Deliberately a direct Grid child spanning rows 0-1 only, rather than a
+             child of the decorative Panel above: that Panel spans all three rows,
+             and row 2 is the action footer, so the dots used to tile straight over
+             the button bar. The glow blobs still run full-bleed behind the footer;
+             only the dot grid stops short of it.
+             Nearest-neighbour sampling keeps the dots crisp instead of blurring
+             them into the background above 100% display scaling. -->
+        <Border Grid.Row="0" Grid.RowSpan="2"
+                IsHitTestVisible="False"
+                HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                RenderOptions.BitmapInterpolationMode="None">
+            <Border.Background>
+                <ImageBrush Source="avares://PhantomVault.UI/Assets/dot_pattern_light.png"
+                            TileMode="Tile"
+                            Stretch="None"
+                            SourceRect="0,0,8,8"
+                            DestinationRect="0,0,8,8"/>
+            </Border.Background>
+        </Border>
 
         <Border Grid.Row="0" Background="{DynamicResource HeaderBackgroundBrush}" Padding="14,6">
             <TextBlock Text="{Binding WelcomeMessage}"
@@ -287,7 +297,7 @@
                                        FontSize="{StaticResource Type.Label.Size}"
                                        Foreground="{DynamicResource PrimaryTextBrush}"
                                        HorizontalAlignment="Center"/>
-                            <Border Background="#33091724"
+                            <Border Background="{DynamicResource DashboardSectionBg}"
                                     BorderBrush="{DynamicResource Brush.Glass.Border}"
                                     BorderThickness="1"
                                     CornerRadius="14"
@@ -298,7 +308,7 @@
                                     <!-- Slot 1 -->
                                     <Grid Height="56">
                                         <Border Padding="16,10"
-                                                Background="#22B0C4D8"
+                                                Background="{DynamicResource DashboardCardBg}"
                                                 BoxShadow="inset 0 2 6 0 #60000000, inset 0 -1 0 0 #30FFFFFF"
                                                 IsVisible="{Binding !Slot1HasVault}">
                                             <Grid ColumnDefinitions="52,1,14,*" VerticalAlignment="Center">
@@ -321,7 +331,7 @@
                                                 HorizontalAlignment="Stretch"
                                                 HorizontalContentAlignment="Stretch">
                                             <Border Padding="16,10"
-                                                    Background="#55050C18"
+                                                    Background="{DynamicResource DashboardPanelBg}"
                                                     BoxShadow="inset 0 2 6 0 #80000000, inset 0 -1 0 0 #40FFFFFF">
                                                 <Grid ColumnDefinitions="52,1,14,*" VerticalAlignment="Center">
                                                     <TextBlock Grid.Column="0" Text="Slot 1"
@@ -348,7 +358,7 @@
                                     <!-- Slot 2 -->
                                     <Grid Height="56">
                                         <Border Padding="16,10"
-                                                Background="#22B0C4D8"
+                                                Background="{DynamicResource DashboardCardBg}"
                                                 BoxShadow="inset 0 2 6 0 #60000000, inset 0 -1 0 0 #30FFFFFF"
                                                 IsVisible="{Binding !Slot2HasVault}">
                                             <Grid ColumnDefinitions="52,1,14,*" VerticalAlignment="Center">
@@ -371,7 +381,7 @@
                                                 HorizontalAlignment="Stretch"
                                                 HorizontalContentAlignment="Stretch">
                                             <Border Padding="16,10"
-                                                    Background="#55050C18"
+                                                    Background="{DynamicResource DashboardPanelBg}"
                                                     BoxShadow="inset 0 2 6 0 #80000000, inset 0 -1 0 0 #40FFFFFF">
                                                 <Grid ColumnDefinitions="52,1,14,*" VerticalAlignment="Center">
                                                     <TextBlock Grid.Column="0" Text="Slot 2"
@@ -398,7 +408,7 @@
                                     <!-- Slot 3 -->
                                     <Grid Height="56">
                                         <Border Padding="16,10"
-                                                Background="#22B0C4D8"
+                                                Background="{DynamicResource DashboardCardBg}"
                                                 BoxShadow="inset 0 2 6 0 #60000000, inset 0 -1 0 0 #30FFFFFF"
                                                 IsVisible="{Binding !Slot3HasVault}">
                                             <Grid ColumnDefinitions="52,1,14,*" VerticalAlignment="Center">
@@ -421,7 +431,7 @@
                                                 HorizontalAlignment="Stretch"
                                                 HorizontalContentAlignment="Stretch">
                                             <Border Padding="16,10"
-                                                    Background="#55050C18"
+                                                    Background="{DynamicResource DashboardPanelBg}"
                                                     BoxShadow="inset 0 2 6 0 #80000000, inset 0 -1 0 0 #40FFFFFF">
                                                 <Grid ColumnDefinitions="52,1,14,*" VerticalAlignment="Center">
                                                     <TextBlock Grid.Column="0" Text="Slot 3"
@@ -474,7 +484,7 @@
                         HorizontalAlignment="Center"
                         IsVisible="False">
                     <Border x:Name="DetectionTraceLine"
-                            Background="#6A88BC"
+                            Background="{DynamicResource AccentBrush}"
                             Width="3"
                             Height="0"
                             CornerRadius="2"

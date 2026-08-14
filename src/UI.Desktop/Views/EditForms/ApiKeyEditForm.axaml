@@ -3,30 +3,29 @@
              x:Class="PhantomVault.UI.Views.EditForms.ApiKeyEditForm">
 
     <Border x:Name="ApiKeyPanelBorder" Background="Transparent" IsVisible="{Binding IsApiKeyEntry}">
-        <StackPanel x:Name="ApiKeyPanel" Spacing="12">
-        <TextBlock Text="API Credential" FontSize="{StaticResource Type.Body.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-        <StackPanel Spacing="6">
-            <TextBlock Text="Key Type" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
+        <StackPanel x:Name="ApiKeyPanel" Spacing="14">
+        <TextBlock Text="API Credential" Classes="form-section-title"/>
+        <StackPanel Classes="field-group">
+            <TextBlock Text="Key Type" Classes="field-label"/>
             <ComboBox ItemsSource="{Binding ApiKeyTypeOptions}"
                       SelectedItem="{Binding ApiKeyType}"
-                      Height="40"
-                      FontSize="{StaticResource Type.Body.Size}"/>
+                      Classes="form-field"/>
         </StackPanel>
-        <StackPanel Spacing="6">
-            <TextBlock Text="API Key" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding ApiKeyValue}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="sk_live_..."/>
+        <StackPanel Classes="field-group">
+            <TextBlock Text="API Key" Classes="field-label"/>
+            <TextBox Text="{Binding ApiKeyValue}" Classes="form-field" Watermark="sk_live_..."/>
         </StackPanel>
-        <StackPanel Spacing="6">
-            <TextBlock Text="Endpoint" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding ApiEndpoint}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="https://api.example.com"/>
+        <StackPanel Classes="field-group">
+            <TextBlock Text="Endpoint" Classes="field-label"/>
+            <TextBox Text="{Binding ApiEndpoint}" Classes="form-field" Watermark="https://api.example.com"/>
         </StackPanel>
-        <StackPanel Spacing="6">
-            <TextBlock Text="Environment" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding ApiEnvironment}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="Production"/>
+        <StackPanel Classes="field-group">
+            <TextBlock Text="Environment" Classes="field-label"/>
+            <TextBox Text="{Binding ApiEnvironment}" Classes="form-field" Watermark="Production"/>
         </StackPanel>
-        <StackPanel Spacing="6">
-            <TextBlock Text="Documentation URL" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            <TextBox Text="{Binding ApiDocumentationUrl}" Height="40" FontSize="{StaticResource Type.Body.Size}" Watermark="https://docs.example.com"/>
+        <StackPanel Classes="field-group">
+            <TextBlock Text="Documentation URL" Classes="field-label"/>
+            <TextBox Text="{Binding ApiDocumentationUrl}" Classes="form-field" Watermark="https://docs.example.com"/>
         </StackPanel>
         </StackPanel>
     </Border>

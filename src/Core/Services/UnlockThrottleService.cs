@@ -14,11 +14,51 @@ namespace PhantomVault.Core.Services
     {
         private const string ThrottleDataFolder = "PhantomVault";
         private const string ThrottleDataFile = "unlock_throttle.bin";
-        private const int MaxAttemptsBeforeLockout = 5;
+        private const int DefaultMaxAttemptsBeforeLockout = 5;
         private const int LockoutDurationMinutes = 10;
         private const int MaxLockoutDurationMinutes = 60;
 
         private readonly object _lock = new();
+        private readonly Func<int?>? _maxAttemptsProvider;
+
+        /// <summary>
+        /// Local unlock throttle.
+        ///
+        /// Scope note: the backing file is DPAPI-sealed, so it cannot be edited — but it
+        /// can still be deleted, which clears the counter. This is a speed-bump against
+        /// casual repeated attempts on a live machine, NOT a defence against offline
+        /// brute force. An attacker who has copied the vault is not running this code at
+        /// all; the only thing standing between them and the key is Argon2id hardness
+        /// (see SecurityTuning.Calibrate). Do not present this as offline protection.
+        /// </summary>
+        /// <param name="maxAttemptsProvider">
+        /// Supplies the user's configured attempt limit (UserSettings.MaxFailedUnlockAttempts);
+        /// null result means unlimited. Previously hardcoded to 5, which silently ignored
+        /// the choice offered in Security Settings.
+        /// </param>
+        public UnlockThrottleService(Func<int?>? maxAttemptsProvider = null)
+        {
+            _maxAttemptsProvider = maxAttemptsProvider;
+        }
+
+        private int? ResolveMaxAttempts()
+        {
+            if (_maxAttemptsProvider == null) return DefaultMaxAttemptsBeforeLockout;
+
+            try
+            {
+                return _maxAttemptsProvider();
+            }
+            catch
+            {
+                return DefaultMaxAttemptsBeforeLockout;
+            }
+        }
+
+        // Sentinel entry written when the throttle store cannot be read. It applies to
+        // every manifest, since a damaged store means we do not know which vaults were
+        // mid-lockout.
+        private const string CorruptStateKey = "__throttle_state_unreadable__";
 
         public bool IsThrottled(string manifestPath, out TimeSpan remainingLockout)
         {
@@ -26,6 +66,15 @@ namespace PhantomVault.Core.Services
 
             var manifestKey = ComputeManifestKey(manifestPath);
             var throttleData = LoadThrottleData();
+
+            // A protective lockout from an unreadable store applies regardless of manifest.
+            if (throttleData.TryGetValue(CorruptStateKey, out var corruptRecord)
+                && corruptRecord.LockedUntilUtc.HasValue
+                && DateTimeOffset.UtcNow < corruptRecord.LockedUntilUtc.Value)
+            {
+                remainingLockout = corruptRecord.LockedUntilUtc.Value - DateTimeOffset.UtcNow;
+                return true;
+            }
 
             if (!throttleData.TryGetValue(manifestKey, out var record))
             {
@@ -67,10 +116,13 @@ namespace PhantomVault.Core.Services
                 record.FailedAttempts++;
                 record.LastAttemptUtc = DateTimeOffset.UtcNow;
 
-                if (record.FailedAttempts >= MaxAttemptsBeforeLockout)
-                {
+                var maxAttempts = ResolveMaxAttempts();
 
-                    int excessAttempts = record.FailedAttempts - MaxAttemptsBeforeLockout + 1;
+                // null == the user chose "unlimited attempts"; record the attempt for
+                // reporting but never lock out.
+                if (maxAttempts.HasValue && record.FailedAttempts >= maxAttempts.Value)
+                {
+                    int excessAttempts = record.FailedAttempts - maxAttempts.Value + 1;
                     int lockoutMinutes = LockoutDurationMinutes * (int)Math.Pow(2, excessAttempts - 1);
                     lockoutMinutes = Math.Min(lockoutMinutes, MaxLockoutDurationMinutes);
 
@@ -146,10 +198,25 @@ namespace PhantomVault.Core.Services
                 return JsonSerializer.Deserialize<Dictionary<string, ThrottleRecord>>(json)
                     ?? new Dictionary<string, ThrottleRecord>();
             }
-            catch
+            catch (Exception ex)
             {
+                // The file exists but will not unseal or parse — it has been tampered with,
+                // truncated, or sealed under a different Windows profile. Returning an empty
+                // dictionary here treated that as "no failed attempts on record", which made
+                // corrupting the file equivalent to clearing the throttle. Fail closed with a
+                // fresh lockout instead, so damaging the file costs an attacker time rather
+                // than saving them time.
+                Serilog.Log.Warning(ex, "Unlock throttle data could not be read; applying a protective lockout");
 
-                return new Dictionary<string, ThrottleRecord>();
+                return new Dictionary<string, ThrottleRecord>
+                {
+                    [CorruptStateKey] = new ThrottleRecord
+                    {
+                        FailedAttempts = ResolveMaxAttempts() ?? DefaultMaxAttemptsBeforeLockout,
+                        LastAttemptUtc = DateTimeOffset.UtcNow,
+                        LockedUntilUtc = DateTimeOffset.UtcNow.AddMinutes(LockoutDurationMinutes)
+                    }
+                };
             }
         }
 

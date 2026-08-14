@@ -413,14 +413,19 @@ half4 main(float2 fragCoord) {
 
     private static SKImage CreateNoiseTile()
     {
-        var random = new Random(1234);
+        // Purely decorative grain for the gel highlight. System.Random is banned
+        // repo-wide, and the crypto RNG is more than fast enough for one 128x128
+        // tile generated once per process.
+        var noise = new byte[128 * 128];
+        System.Security.Cryptography.RandomNumberGenerator.Fill(noise);
+
         using var bitmap = new SKBitmap(new SKImageInfo(128, 128, SKColorType.Rgba8888, SKAlphaType.Premul));
         for (var y = 0; y < 128; y++)
         {
             for (var x = 0; x < 128; x++)
             {
-                var noise = (byte)random.Next(0, 255);
-                bitmap.SetPixel(x, y, new SKColor(noise, noise, noise, 255));
+                var value = noise[(y * 128) + x];
+                bitmap.SetPixel(x, y, new SKColor(value, value, value, 255));
             }
         }
 

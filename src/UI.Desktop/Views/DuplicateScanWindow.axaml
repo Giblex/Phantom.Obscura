@@ -78,6 +78,11 @@
                                FontSize="{StaticResource Type.Small.Size}"
                                Foreground="{DynamicResource SecondaryTextBrush}"
                                TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding SiteSummary}"
+                               IsVisible="{Binding HasDuplicates}"
+                               FontSize="{StaticResource Type.Small.Size}"
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               TextWrapping="Wrap"/>
                     <TextBlock Text="{Binding ReviewStatus}"
                                FontSize="{StaticResource Type.Small.Size}"
                                Foreground="{DynamicResource WarningBrush}"
@@ -90,9 +95,47 @@
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled">
             <StackPanel Spacing="12">
-                <ItemsControl ItemsSource="{Binding Groups}" IsVisible="{Binding HasDuplicates}">
+                <ItemsControl ItemsSource="{Binding SiteGroups}" IsVisible="{Binding HasDuplicates}">
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="vm:DuplicateGroupItem">
+                        <DataTemplate x:DataType="vm:DuplicateSiteGroup">
+
+                            <StackPanel Spacing="8" Margin="0,0,0,18">
+
+                                <Grid ColumnDefinitions="Auto,*,Auto" Margin="2,0,2,2">
+                                    <Border Grid.Column="0"
+                                            Width="30" Height="30"
+                                            CornerRadius="8"
+                                            Margin="0,0,10,0"
+                                            Background="{DynamicResource SurfaceBrush}"
+                                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                                            BorderThickness="1">
+                                        <TextBlock Text="&#x1F310;"
+                                                   FontSize="14"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                    </Border>
+
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding DisplayName}"
+                                               VerticalAlignment="Center"
+                                               FontSize="16"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+                                    <TextBlock Grid.Column="2"
+                                               Text="{Binding Summary}"
+                                               VerticalAlignment="Center"
+                                               FontSize="{StaticResource Type.Tiny.Size}"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                </Grid>
+
+                                <Border Height="1"
+                                        Background="{DynamicResource ControlBorderBrush}"
+                                        Margin="0,0,0,4"/>
+
+                                <ItemsControl ItemsSource="{Binding Groups}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:DuplicateGroupItem">
                             <Border Background="{DynamicResource CardBackgroundBrush}"
                                     BorderBrush="{DynamicResource ControlBorderBrush}"
                                     BorderThickness="1"
@@ -100,17 +143,34 @@
                                     Padding="14,12"
                                     Margin="0,0,0,10">
                                 <StackPanel Spacing="10">
-                                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
-                                        <TextBlock Grid.Row="0" Grid.Column="0"
-                                                   Text="{Binding DisplayName}"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
-                                        <TextBlock Grid.Row="0" Grid.Column="1"
+                                    <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto">
+                                        <Border Grid.Row="0" Grid.Column="0"
+                                                Classes="section-chip"
+                                                Margin="0,0,8,0">
+                                            <TextBlock Text="{Binding StrengthLabel}"/>
+                                        </Border>
+                                        <StackPanel Grid.Row="0" Grid.Column="1" Spacing="1">
+                                            <TextBlock Text="{Binding AccountLabel}"
+                                                       FontWeight="SemiBold"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                            <TextBlock Text="{Binding CopiesLabel}"
+                                                       FontSize="{StaticResource Type.Tiny.Size}"
+                                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Row="0" Grid.Column="2"
                                                    Text="Blocked"
                                                    IsVisible="{Binding IsBlocked}"
+                                                   VerticalAlignment="Center"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource ErrorBrush}"/>
-                                        <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+                                                   Text="{Binding StrengthDescription}"
+                                                   Margin="0,4,0,0"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                                   FontSize="{StaticResource Type.Tiny.Size}"
+                                                   TextWrapping="Wrap"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
                                                    Text="{Binding KeyMetadata}"
                                                    Foreground="{DynamicResource MutedTextBrush}"
                                                    FontSize="{StaticResource Type.Tiny.Size}"
@@ -188,6 +248,10 @@
                                     </ItemsControl>
                                 </StackPanel>
                             </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
@@ -257,6 +321,12 @@
                         Command="{Binding ClearSelectionCommand}"
                         Classes="liquid-glass"
                         IsVisible="{Binding HasDuplicates}"/>
+                <Button Content="Consolidate Selected"
+                        Command="{Binding ConsolidateSelectedCommand}"
+                        IsEnabled="{Binding CanDeleteSelected}"
+                        Classes="liquid-glass"
+                        IsVisible="{Binding HasDuplicates}"
+                        ToolTip.Tip="Fold the checked duplicates into the retained entry in each group, keeping every field, tag, custom field and section, then bin the absorbed copies"/>
                 <Button Content="Send Selected to Secure Bin"
                         Command="{Binding DeleteSelectedCommand}"
                         IsEnabled="{Binding CanDeleteSelected}"

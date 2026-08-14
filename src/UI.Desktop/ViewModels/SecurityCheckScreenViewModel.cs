@@ -38,6 +38,14 @@ namespace PhantomVault.UI.ViewModels
         private Window? _ownerWindow;
         private int _completedCheckCount;
 
+        // Per-check live outcomes — set from progress callbacks so each bar
+        // reaches 100% as its check completes, not all at once at the very end.
+        private bool? _manifestOutcome;
+        private bool? _usbHealthOutcome;
+        private bool? _hardwareOutcome;
+        private bool? _biometricOutcome;
+        private bool? _antiTamperOutcome;
+
         public event EventHandler<DetectedVaultLaunchRequest>? NavigateToVault;
 
         public SecurityCheckScreenViewModel(SecurityCheckService securityCheckService, DetectedVaultLaunchRequest launchRequest)
@@ -236,35 +244,35 @@ namespace PhantomVault.UI.ViewModels
                 ? SuccessProgressBrush
                 : FailureProgressBrush;
 
-        public double ManifestProgress => GetProgressForCheck("Manifest Integrity", CheckResult?.ManifestValid);
-        public double UsbHealthProgress => GetProgressForCheck("USB Health", CheckResult?.UsbHealthy);
-        public double HardwareProgress => GetProgressForCheck("Hardware Tokens", CheckResult != null);
-        public double BiometricProgress => GetProgressForCheck("Biometric Availability", CheckResult != null);
-        public double AntiTamperProgress => GetProgressForCheck("Anti-Tamper Check", CheckResult?.NoTampering);
+        public double ManifestProgress   => GetProgressForCheck("Manifest Integrity", _manifestOutcome);
+        public double UsbHealthProgress  => GetProgressForCheck("USB Health",          _usbHealthOutcome);
+        public double HardwareProgress   => GetProgressForCheck("Hardware Tokens",     _hardwareOutcome);
+        public double BiometricProgress  => GetProgressForCheck("Biometric Availability", _biometricOutcome);
+        public double AntiTamperProgress => GetProgressForCheck("Anti-Tamper Check",   _antiTamperOutcome);
 
-        public bool ManifestIsActive => IsCheckActive("Manifest Integrity");
+        public bool ManifestIsActive  => IsCheckActive("Manifest Integrity");
         public bool UsbHealthIsActive => IsCheckActive("USB Health");
-        public bool HardwareIsActive => IsCheckActive("Hardware Tokens");
+        public bool HardwareIsActive  => IsCheckActive("Hardware Tokens");
         public bool BiometricIsActive => IsCheckActive("Biometric Availability");
         public bool AntiTamperIsActive => IsCheckActive("Anti-Tamper Check");
 
-        public IBrush ManifestProgressBrush => GetBrushForCheck(CheckResult?.ManifestValid, ManifestIsActive);
-        public IBrush UsbHealthProgressBrush => GetBrushForCheck(CheckResult?.UsbHealthy, UsbHealthIsActive);
-        public IBrush HardwareProgressBrush => GetBrushForCheck(CheckResult != null ? true : null, HardwareIsActive);
-        public IBrush BiometricProgressBrush => GetBrushForCheck(CheckResult != null ? true : null, BiometricIsActive);
-        public IBrush AntiTamperProgressBrush => GetBrushForCheck(CheckResult?.NoTampering, AntiTamperIsActive);
+        public IBrush ManifestProgressBrush   => GetBrushForCheck(_manifestOutcome,    ManifestIsActive);
+        public IBrush UsbHealthProgressBrush  => GetBrushForCheck(_usbHealthOutcome,   UsbHealthIsActive);
+        public IBrush HardwareProgressBrush   => GetBrushForCheck(_hardwareOutcome,    HardwareIsActive);
+        public IBrush BiometricProgressBrush  => GetBrushForCheck(_biometricOutcome,   BiometricIsActive);
+        public IBrush AntiTamperProgressBrush => GetBrushForCheck(_antiTamperOutcome,  AntiTamperIsActive);
 
-        public string ManifestGlyph => GetGlyphForCheck(CheckResult?.ManifestValid, ManifestIsActive);
-        public string UsbHealthGlyph => GetGlyphForCheck(CheckResult?.UsbHealthy, UsbHealthIsActive);
-        public string HardwareGlyph => GetGlyphForCheck(CheckResult != null ? true : null, HardwareIsActive);
-        public string BiometricGlyph => GetGlyphForCheck(CheckResult != null ? true : null, BiometricIsActive);
-        public string AntiTamperGlyph => GetGlyphForCheck(CheckResult?.NoTampering, AntiTamperIsActive);
+        public string ManifestGlyph   => GetGlyphForCheck(_manifestOutcome,    ManifestIsActive);
+        public string UsbHealthGlyph  => GetGlyphForCheck(_usbHealthOutcome,   UsbHealthIsActive);
+        public string HardwareGlyph   => GetGlyphForCheck(_hardwareOutcome,    HardwareIsActive);
+        public string BiometricGlyph  => GetGlyphForCheck(_biometricOutcome,   BiometricIsActive);
+        public string AntiTamperGlyph => GetGlyphForCheck(_antiTamperOutcome,  AntiTamperIsActive);
 
-        public IBrush ManifestGlyphBrush => GetGlyphBrushForCheck(CheckResult?.ManifestValid, ManifestIsActive);
-        public IBrush UsbHealthGlyphBrush => GetGlyphBrushForCheck(CheckResult?.UsbHealthy, UsbHealthIsActive);
-        public IBrush HardwareGlyphBrush => GetGlyphBrushForCheck(CheckResult != null ? true : null, HardwareIsActive);
-        public IBrush BiometricGlyphBrush => GetGlyphBrushForCheck(CheckResult != null ? true : null, BiometricIsActive);
-        public IBrush AntiTamperGlyphBrush => GetGlyphBrushForCheck(CheckResult?.NoTampering, AntiTamperIsActive);
+        public IBrush ManifestGlyphBrush   => GetGlyphBrushForCheck(_manifestOutcome,    ManifestIsActive);
+        public IBrush UsbHealthGlyphBrush  => GetGlyphBrushForCheck(_usbHealthOutcome,   UsbHealthIsActive);
+        public IBrush HardwareGlyphBrush   => GetGlyphBrushForCheck(_hardwareOutcome,    HardwareIsActive);
+        public IBrush BiometricGlyphBrush  => GetGlyphBrushForCheck(_biometricOutcome,   BiometricIsActive);
+        public IBrush AntiTamperGlyphBrush => GetGlyphBrushForCheck(_antiTamperOutcome,  AntiTamperIsActive);
 
         private static string BuildStatusText(bool? status, string successText, string failureText)
         {
@@ -329,9 +337,9 @@ namespace PhantomVault.UI.ViewModels
             return string.Equals(CurrentCheckName, expectedName, StringComparison.OrdinalIgnoreCase);
         }
 
-        private double GetProgressForCheck(string expectedName, bool? completedStatus)
+        private double GetProgressForCheck(string expectedName, bool? liveOutcome)
         {
-            if (completedStatus.HasValue || (expectedName is "Hardware Tokens" or "Biometric Availability" && CheckResult != null))
+            if (liveOutcome.HasValue)
                 return 100;
 
             return IsCheckActive(expectedName) ? 72 : 0;
@@ -413,11 +421,17 @@ namespace PhantomVault.UI.ViewModels
             PercentComplete = 0;
             StatusMessage = "Starting security checks...";
 
+            // Reset per-check live outcomes
+            _manifestOutcome = null;
+            _usbHealthOutcome = null;
+            _hardwareOutcome = null;
+            _biometricOutcome = null;
+            _antiTamperOutcome = null;
+
             try
             {
                 var progress = new Progress<SecurityCheckProgress>(update =>
                 {
-
                     Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
                         CurrentCheckName = update.CurrentCheck;
@@ -430,29 +444,43 @@ namespace PhantomVault.UI.ViewModels
                             CurrentCheckPassed = false;
                             CurrentCheckFailed = false;
                         }
-                        else if (update.CheckFailed)
+                        else if (update.CheckFailed || (update.CheckPassed && update.PercentComplete > 0))
                         {
+                            bool passed = update.CheckPassed && !update.CheckFailed;
+
+                            // Record individual outcome so its bar animates to 100 immediately
+                            switch (update.CurrentCheck)
+                            {
+                                case "Manifest Integrity":    _manifestOutcome    = passed; break;
+                                case "USB Health":            _usbHealthOutcome   = passed; break;
+                                case "Hardware Tokens":       _hardwareOutcome    = passed; break;
+                                case "Biometric Availability": _biometricOutcome  = passed; break;
+                                case "Anti-Tamper Check":     _antiTamperOutcome  = passed; break;
+                            }
+
                             _completedCheckCount = Math.Min(5, _completedCheckCount + 1);
                             PercentComplete = _completedCheckCount * 20;
-                            CurrentCheckDisplay = $"{update.CurrentCheck}: Failed";
-                            StatusMessage = $"Check failed: {update.CurrentCheck}";
-                            CurrentCheckPassed = false;
-                            CurrentCheckFailed = true;
-                        }
-                        else if (update.CheckPassed && update.PercentComplete > 0)
-                        {
-                            _completedCheckCount = Math.Min(5, _completedCheckCount + 1);
-                            PercentComplete = _completedCheckCount * 20;
-                            CurrentCheckDisplay = $"{update.CurrentCheck}: Passed";
-                            StatusMessage = $"Running check: {update.CurrentCheck}...";
-                            CurrentCheckPassed = true;
-                            CurrentCheckFailed = false;
+
+                            if (passed)
+                            {
+                                CurrentCheckDisplay = $"{update.CurrentCheck}: Passed";
+                                StatusMessage = $"✓ {update.CurrentCheck} passed";
+                                CurrentCheckPassed = true;
+                                CurrentCheckFailed = false;
+                            }
+                            else
+                            {
+                                CurrentCheckDisplay = $"{update.CurrentCheck}: Failed";
+                                StatusMessage = $"✗ {update.CurrentCheck} failed";
+                                CurrentCheckPassed = false;
+                                CurrentCheckFailed = true;
+                            }
                         }
                         else
                         {
                             PercentComplete = _completedCheckCount * 20;
                             CurrentCheckDisplay = $"{update.CurrentCheck}...";
-                            StatusMessage = $"Running check: {update.CurrentCheck}...";
+                            StatusMessage = $"Checking: {update.CurrentCheck}...";
                             CurrentCheckPassed = false;
                             CurrentCheckFailed = false;
                         }

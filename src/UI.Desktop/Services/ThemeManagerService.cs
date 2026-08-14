@@ -135,6 +135,13 @@ namespace PhantomVault.UI.Services
             // (Hover/Scale/LiquidGlass/SmoothScroll/LoadingSpinner) actually read. Without
             // this, the toggle only flipped a resource flag and animations kept running.
             AccessibilityService.Instance.ReduceMotion = reduceAnimations;
+
+            // Same bridge for "Reduce Transparency". Setting the resource above is not
+            // enough on its own — nothing binds it. AccessibilityService raises
+            // SettingsChanged, which makes every ThemeAwareWindow re-apply its
+            // "reduce-transparency" class, and the App.axaml styles under that class
+            // swap the translucent glass fills for opaque ones.
+            AccessibilityService.Instance.ReduceTransparency = reduceTransparency;
         }
 
         public void SetAppFont(string family)

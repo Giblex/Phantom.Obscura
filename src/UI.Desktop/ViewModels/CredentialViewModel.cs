@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
 using ReactiveUI;
@@ -110,6 +111,7 @@ namespace PhantomVault.UI.ViewModels
         public bool IsBankAccountEntry => EntryType == EntryType.BankAccount;
         public bool IsTotpEntry => EntryType == EntryType.TotpGenerator;
         public bool IsPinCodeEntry => EntryType == EntryType.PinCode;
+        public bool IsBlankEntry => EntryType == EntryType.Blank;
         public bool HasUsername => !string.IsNullOrWhiteSpace(Username);
         public bool HasPassword => !string.IsNullOrWhiteSpace(Password);
 
@@ -206,6 +208,94 @@ namespace PhantomVault.UI.ViewModels
         public bool HasGroup => !string.IsNullOrEmpty(Group);
         public bool HasUrl => !string.IsNullOrEmpty(Url);
         public bool HasNotes => !string.IsNullOrEmpty(Notes);
+
+        public static Func<string, Credential?>? LinkedEntryResolver { get; set; }
+
+        public static Action<string, string>? SectionCopyHandler { get; set; }
+
+        public static Action<string>? SectionOpenLinkedHandler { get; set; }
+
+        public static Action<Credential>? SectionPersistHandler { get; set; }
+
+        private System.Collections.ObjectModel.ObservableCollection<EntrySectionViewModel>? _sections;
+
+        public System.Collections.ObjectModel.ObservableCollection<EntrySectionViewModel> Sections
+            => _sections ??= BuildSections();
+
+        public bool HasSections => _credential.Sections is { Count: > 0 };
+
+        public int SectionCount => _credential.Sections?.Count ?? 0;
+
+        public string SectionsHeader => SectionCount == 1 ? "1 linked section" : $"{SectionCount} linked sections";
+
+        private System.Collections.ObjectModel.ObservableCollection<EntrySectionViewModel> BuildSections()
+        {
+            var collection = new System.Collections.ObjectModel.ObservableCollection<EntrySectionViewModel>();
+
+            if (_credential.Sections is not { Count: > 0 })
+                return collection;
+
+            var service = new EntrySectionService();
+            var resolver = LinkedEntryResolver ?? (_ => null);
+
+            foreach (var resolved in service.ResolveAll(_credential, resolver))
+            {
+                var vm = new EntrySectionViewModel(resolved);
+                vm.CopyRequested += (value, label) => SectionCopyHandler?.Invoke(value, label);
+                vm.OpenLinkedEntryRequested += id => SectionOpenLinkedHandler?.Invoke(id);
+                vm.SectionChanged += _ => SectionPersistHandler?.Invoke(_credential);
+                collection.Add(vm);
+            }
+
+            return collection;
+        }
+
+        /// <summary>
+        /// Text from sections that search is allowed to see. Labels are always searchable;
+        /// values only when the section is not marked secret, so a hidden PIN or TOTP seed
+        /// is never matched by typing it into the search box.
+        /// </summary>
+        public string SectionSearchText
+        {
+            get
+            {
+                if (_credential.Sections is not { Count: > 0 })
+                    return string.Empty;
+
+                var parts = new List<string>();
+
+                foreach (var section in _credential.Sections)
+                {
+                    if (section == null)
+                        continue;
+
+                    if (!string.IsNullOrWhiteSpace(section.Label))
+                        parts.Add(section.Label);
+
+                    if (!section.IsSecret && !string.IsNullOrWhiteSpace(section.Value))
+                        parts.Add(section.Value);
+                }
+
+                return string.Join(" ", parts);
+            }
+        }
+
+        public void RefreshSections()
+        {
+            if (_sections != null)
+            {
+                foreach (var section in _sections)
+                {
+                    section.Dispose();
+                }
+            }
+
+            _sections = null;
+            this.RaisePropertyChanged(nameof(Sections));
+            this.RaisePropertyChanged(nameof(HasSections));
+            this.RaisePropertyChanged(nameof(SectionCount));
+            this.RaisePropertyChanged(nameof(SectionsHeader));
+        }
         public string DetailLine1 => GetDetailLines().line1;
         public string DetailLine2 => GetDetailLines().line2;
         public bool HasDetailLine2 => !string.IsNullOrWhiteSpace(DetailLine2);
@@ -287,12 +377,19 @@ namespace PhantomVault.UI.ViewModels
         public bool HasApiEndpoint => !string.IsNullOrWhiteSpace(ApiEndpoint);
 
         public string TotpSecret => _credential.TotpSecret;
+
+        /// <summary>
+        /// The seed actually in force for this entry: its own, or the first usable TOTP
+        /// section. Resolved fresh so it tracks edits to the sections.
+        /// </summary>
+        private EffectiveTotp? EffectiveTotp
+            => CredentialTotpResolver.Resolve(_credential, LinkedEntryResolver ?? (_ => null));
         public int TotpDigits => _credential.TotpDigits;
         public int TotpTimeStep => _credential.TotpTimeStep;
         public string TotpAlgorithm => _credential.TotpAlgorithm;
         public string TotpIssuer => _credential.TotpIssuer;
         public string TotpAccountName => _credential.TotpAccountName;
-        public bool HasTotpSecret => !string.IsNullOrWhiteSpace(TotpSecret);
+        public bool HasTotpSecret => EffectiveTotp != null;
         public bool HasTotpIssuer => !string.IsNullOrWhiteSpace(TotpIssuer);
         public bool HasTotpAccountName => !string.IsNullOrWhiteSpace(TotpAccountName);
 
@@ -589,6 +686,7 @@ namespace PhantomVault.UI.ViewModels
             this.RaisePropertyChanged(nameof(HasPinValue));
             this.RaisePropertyChanged(nameof(HasPinCategory));
             this.RaisePropertyChanged(nameof(HasPinIssuer));
+            RefreshSections();
         }
 
         private void UpdatePasswordFlagState()
@@ -777,7 +875,8 @@ namespace PhantomVault.UI.ViewModels
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(_credential.TotpSecret))
+                var totp = EffectiveTotp;
+                if (totp == null)
                 {
                     Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
@@ -789,14 +888,15 @@ namespace PhantomVault.UI.ViewModels
 
                 var totpService = new TotpService();
                 var code = totpService.GenerateCode(
-                    _credential.TotpSecret,
+                    totp.Secret,
+                    totp.ParsedAlgorithm,
                     DateTimeOffset.UtcNow,
-                    _credential.TotpDigits,
-                    _credential.TotpTimeStep
+                    totp.Digits,
+                    totp.Period
                 );
 
                 var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                var timeStep = _credential.TotpTimeStep;
+                var timeStep = totp.Period;
                 var secondsElapsed = (int)(now % timeStep);
                 var remaining = timeStep - secondsElapsed;
 

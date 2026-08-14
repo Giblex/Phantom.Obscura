@@ -107,6 +107,16 @@
                               OffContent="Disabled"
                               ToolTip.Tip="When enabled, Phantom Obscura stays alive in the notification tray and auto-fills login portals on USB insertion"/>
 
+                <!-- Preview the beam + icon animation without a USB device -->
+                <Button x:Name="PreviewAnimationBtn"
+                        Content="▶  Preview AutoFill animation"
+                        Classes="liquid-glass"
+                        Padding="16,8"
+                        HorizontalAlignment="Left"
+                        Click="PreviewAnimation_Click"
+                        ToolTip.Tip="Opens a demo window showing the USB beam → field trace → icon → menu flow"
+                        AutomationProperties.Name="Preview AutoFill animation"/>
+
                 <StackPanel Spacing="10"
                             IsEnabled="{Binding AutoFillModeEnabled}">
                     <CheckBox IsChecked="{Binding AutoFillAutoInputTotp}"

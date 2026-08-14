@@ -1,6 +1,8 @@
 using System;
 using System.Security.Cryptography;
-using Org.BouncyCastle.Pqc.Crypto.Crystals.Kyber;
+using Org.BouncyCastle.Crypto.Generators;
+using Org.BouncyCastle.Crypto.Kems;
+using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
 
 namespace PhantomVault.Core.Services
@@ -27,13 +29,13 @@ namespace PhantomVault.Core.Services
         {
             try
             {
-                var keyGenParams = new KyberKeyGenerationParameters(_secureRandom, KyberParameters.kyber768);
-                var keyGen = new KyberKeyPairGenerator();
+                var keyGenParams = new MLKemKeyGenerationParameters(_secureRandom, MLKemParameters.ml_kem_768);
+                var keyGen = new MLKemKeyPairGenerator();
                 keyGen.Init(keyGenParams);
 
                 var keyPair = keyGen.GenerateKeyPair();
-                var publicKey = ((KyberPublicKeyParameters)keyPair.Public).GetEncoded();
-                var privateKey = ((KyberPrivateKeyParameters)keyPair.Private).GetEncoded();
+                var publicKey = ((MLKemPublicKeyParameters)keyPair.Public).GetEncoded();
+                var privateKey = ((MLKemPrivateKeyParameters)keyPair.Private).GetEncoded();
 
                 return (publicKey, privateKey);
             }
@@ -51,12 +53,13 @@ namespace PhantomVault.Core.Services
 
             try
             {
-                var publicKeyParams = new KyberPublicKeyParameters(KyberParameters.kyber768, publicKey);
-                var kemGenerator = new KyberKemGenerator(_secureRandom);
-                var encapsulation = kemGenerator.GenerateEncapsulated(publicKeyParams);
+                var publicKeyParams = MLKemPublicKeyParameters.FromEncoding(MLKemParameters.ml_kem_768, publicKey);
+                var encapsulator = new MLKemEncapsulator(MLKemParameters.ml_kem_768);
+                encapsulator.Init(publicKeyParams);
 
-                var ciphertext = encapsulation.GetEncapsulation();
-                var sharedSecret = encapsulation.GetSecret();
+                byte[] ciphertext = new byte[encapsulator.EncapsulationLength];
+                byte[] sharedSecret = new byte[encapsulator.SecretLength];
+                encapsulator.Encapsulate(ciphertext, sharedSecret);
 
                 if (ciphertext.Length != MLKEM768_CIPHERTEXT_SIZE)
                     throw new InvalidOperationException($"Unexpected ciphertext size: {ciphertext.Length}, expected {MLKEM768_CIPHERTEXT_SIZE}");
@@ -82,9 +85,12 @@ namespace PhantomVault.Core.Services
 
             try
             {
-                var privateKeyParams = new KyberPrivateKeyParameters(KyberParameters.kyber768, privateKey);
-                var kemExtractor = new KyberKemExtractor(privateKeyParams);
-                var sharedSecret = kemExtractor.ExtractSecret(ciphertext);
+                var privateKeyParams = MLKemPrivateKeyParameters.FromEncoding(MLKemParameters.ml_kem_768, privateKey);
+                var decapsulator = new MLKemDecapsulator(MLKemParameters.ml_kem_768);
+                decapsulator.Init(privateKeyParams);
+
+                byte[] sharedSecret = new byte[decapsulator.SecretLength];
+                decapsulator.Decapsulate(ciphertext.AsSpan(), sharedSecret.AsSpan());
 
                 if (sharedSecret.Length != 32)
                     throw new InvalidOperationException($"Unexpected shared secret size: {sharedSecret.Length}");
@@ -108,7 +114,6 @@ namespace PhantomVault.Core.Services
             byte[]? symmetricKey = null;
             try
             {
-
                 var (kemCiphertext, sharedSecret) = EncapsulateSecret(kemPublicKey);
                 symmetricKey = sharedSecret;
 
@@ -119,11 +124,8 @@ namespace PhantomVault.Core.Services
             }
             finally
             {
-
                 if (symmetricKey != null)
-                {
                     CryptographicOperations.ZeroMemory(symmetricKey);
-                }
             }
         }
 
@@ -140,7 +142,6 @@ namespace PhantomVault.Core.Services
             byte[]? symmetricKey = null;
             try
             {
-
                 symmetricKey = DecapsulateSecret(kemCiphertext, kemPrivateKey);
 
                 byte[] aadBytes = System.Text.Encoding.UTF8.GetBytes(aad ?? string.Empty);
@@ -155,11 +156,8 @@ namespace PhantomVault.Core.Services
             }
             finally
             {
-
                 if (symmetricKey != null)
-                {
                     CryptographicOperations.ZeroMemory(symmetricKey);
-                }
             }
         }
     }

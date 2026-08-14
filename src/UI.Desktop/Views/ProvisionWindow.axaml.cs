@@ -12,7 +12,7 @@ using Serilog;
 
 namespace PhantomVault.UI.Views
 {
-    public partial class ProvisionWindow : Window
+    public partial class ProvisionWindow : ThemeAwareWindow
     {
         public ProvisionWindow()
         {

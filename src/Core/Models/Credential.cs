@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security;
 using System.Text.Json.Serialization;
 using PhantomVault.Core.Utils;
@@ -17,7 +18,9 @@ namespace PhantomVault.Core.Models
         CreditCard = 5,
         BankAccount = 6,
         TotpGenerator = 7,
-        PinCode = 8
+        PinCode = 8,
+
+        Blank = 9
     }
 
     public enum CredentialType
@@ -31,7 +34,8 @@ namespace PhantomVault.Core.Models
         CreditCard = 6,
         BankAccount = 7,
         TotpGenerator = 8,
-        PinCode = 9
+        PinCode = 9,
+        Blank = 10
     }
 
     public sealed class Credential : IDisposable
@@ -53,6 +57,7 @@ namespace PhantomVault.Core.Models
                 EntryType.BankAccount => CredentialType.BankAccount,
                 EntryType.TotpGenerator => CredentialType.TotpGenerator,
                 EntryType.PinCode => CredentialType.PinCode,
+                EntryType.Blank => CredentialType.Blank,
                 EntryType.Password => CredentialType.Password,
                 _ => CredentialType.Password
             };
@@ -66,6 +71,7 @@ namespace PhantomVault.Core.Models
                 CredentialType.BankAccount => EntryType.BankAccount,
                 CredentialType.TotpGenerator => EntryType.TotpGenerator,
                 CredentialType.PinCode => EntryType.PinCode,
+                CredentialType.Blank => EntryType.Blank,
                 CredentialType.Login => EntryType.Password,
                 CredentialType.Password => EntryType.Password,
                 _ => EntryType.Password
@@ -116,6 +122,8 @@ namespace PhantomVault.Core.Models
         public bool IsPasskey { get; set; } = false;
         public Dictionary<string, string> CustomFields { get; set; } = new();
         public List<string> Tags { get; set; } = new();
+
+        public List<EntrySection> Sections { get; set; } = new();
         public DateTimeOffset CreatedUtc { get; set; } = DateTimeOffset.UtcNow;
         public DateTimeOffset LastUpdatedUtc { get; set; } = DateTimeOffset.UtcNow;
         public DateTimeOffset? ExpiryUtc { get; set; }
@@ -361,6 +369,122 @@ namespace PhantomVault.Core.Models
             }
         }
 
+        /// <summary>
+        /// Copies every value from <paramref name="source"/> onto this credential,
+        /// deep-copying the collections.
+        ///
+        /// This exists because hand-written field lists were scattered across cloning,
+        /// merging and export code, and each one silently dropped whichever fields its
+        /// author forgot — type-specific data and, later, sections. Anything that copies a
+        /// credential should call this so a new field is picked up everywhere at once.
+        /// </summary>
+        public void CopyValuesFrom(Credential source, bool copyId = true)
+        {
+            ArgumentNullException.ThrowIfNull(source);
+
+            if (copyId)
+                Id = source.Id;
+
+            EntryType = source.EntryType;
+
+            Title = source.Title;
+            Username = source.Username;
+            Password = source.Password;
+            Url = source.Url;
+            Notes = source.Notes;
+            Group = source.Group;
+            Icon = source.Icon;
+            IconColor = source.IconColor;
+            IsFavorite = source.IsFavorite;
+            IsPasskey = source.IsPasskey;
+            AutoTypeSequence = source.AutoTypeSequence;
+            PasskeyId = source.PasskeyId;
+
+            CreatedUtc = source.CreatedUtc;
+            LastUpdatedUtc = source.LastUpdatedUtc;
+            ExpiryUtc = source.ExpiryUtc;
+            LastUsedUtc = source.LastUsedUtc;
+
+            Tags = source.Tags == null ? new List<string>() : new List<string>(source.Tags);
+            CustomFields = source.CustomFields == null
+                ? new Dictionary<string, string>()
+                : new Dictionary<string, string>(source.CustomFields);
+            Sections = source.Sections == null
+                ? new List<EntrySection>()
+                : source.Sections.Where(s => s != null).Select(s => s.Clone()).ToList();
+
+            WiFiSSID = source.WiFiSSID;
+            WiFiSecurityType = source.WiFiSecurityType;
+            WiFiBSSID = source.WiFiBSSID;
+            WiFiPassword = source.WiFiPassword;
+
+            IdDocumentType = source.IdDocumentType;
+            IdNumber = source.IdNumber;
+            IdCardNumber = source.IdCardNumber;
+            IdIssuingCountry = source.IdIssuingCountry;
+            IdIssuingState = source.IdIssuingState;
+            IdIssueDate = source.IdIssueDate;
+            IdExpiryDate = source.IdExpiryDate;
+
+            ApiKeyValue = source.ApiKeyValue;
+            ApiKeyType = source.ApiKeyType;
+            ApiEndpoint = source.ApiEndpoint;
+            ApiEnvironment = source.ApiEnvironment;
+            ApiDocumentationUrl = source.ApiDocumentationUrl;
+
+            ContactFullName = source.ContactFullName;
+            ContactEmail = source.ContactEmail;
+            ContactPhone = source.ContactPhone;
+            ContactAddress = source.ContactAddress;
+            ContactCompany = source.ContactCompany;
+            ContactJobTitle = source.ContactJobTitle;
+
+            CardNumber = source.CardNumber;
+            CardholderName = source.CardholderName;
+            CardType = source.CardType;
+            CardCVV = source.CardCVV;
+            CardExpiryMonth = source.CardExpiryMonth;
+            CardExpiryYear = source.CardExpiryYear;
+            CardPIN = source.CardPIN;
+            CardBillingAddress = source.CardBillingAddress;
+
+            BankName = source.BankName;
+            BankAccountNumber = source.BankAccountNumber;
+            BankRoutingNumber = source.BankRoutingNumber;
+            BankIBAN = source.BankIBAN;
+            BankSWIFT = source.BankSWIFT;
+            BankAccountType = source.BankAccountType;
+            BankBranchCode = source.BankBranchCode;
+            BankBranchAddress = source.BankBranchAddress;
+
+            TotpSecret = source.TotpSecret;
+            TotpDigits = source.TotpDigits;
+            TotpTimeStep = source.TotpTimeStep;
+            TotpAlgorithm = source.TotpAlgorithm;
+            TotpIssuer = source.TotpIssuer;
+            TotpAccountName = source.TotpAccountName;
+
+            PinLabel = source.PinLabel;
+            PinValue = source.PinValue;
+            PinCategory = source.PinCategory;
+            PinIssuer = source.PinIssuer;
+        }
+
+        /// <summary>
+        /// A complete independent copy. Pass <paramref name="newId"/> to give the copy its
+        /// own identity, for a "keep both" style duplicate.
+        /// </summary>
+        public Credential Clone(bool newId = false)
+        {
+            var clone = new Credential();
+            clone.CopyValuesFrom(this, copyId: !newId);
+
+            if (newId)
+                clone.Id = Guid.NewGuid().ToString();
+
+            return clone;
+        }
+
         public void DisposeSecure()
         {
             _secureUsername?.Dispose();
@@ -391,6 +515,14 @@ namespace PhantomVault.Core.Models
             _secureBankSwift = null;
             _secureTotpSecret = null;
             _securePinValue = null;
+
+            if (Sections != null)
+            {
+                foreach (var section in Sections)
+                {
+                    section?.Dispose();
+                }
+            }
         }
 
         public void Dispose() => DisposeSecure();

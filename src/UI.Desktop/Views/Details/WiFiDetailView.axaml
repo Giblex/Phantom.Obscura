@@ -52,7 +52,7 @@
                         <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
                     </TextBox.Effect>
                 </TextBox>
-                <Button Grid.Column="1"
+                <Button AutomationProperties.Name="Copy password" Grid.Column="1"
                         Command="{Binding CopyPasswordCommand}"
                         CommandParameter="{Binding SelectedCredential}"
                         Classes="copy-btn"
