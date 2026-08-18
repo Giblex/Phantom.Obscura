@@ -38,7 +38,7 @@
     <PackageReference Include="Avalonia.Skia" Version="11.3.11" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.9" />
     <PackageReference Include="Avalonia.Markup.Xaml.Loader" Version="11.3.11" />
-    <PackageReference Include="Avalonia.Svg.Skia" Version="11.0.0" />
+    <PackageReference Include="Avalonia.Svg.Skia" Version="11.3.0" />
     <PackageReference Include="Avalonia.Xaml.Interactivity" Version="11.3.0.6" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
     <PackageReference Include="Isopoh.Cryptography.Argon2" Version="2.0.0" />

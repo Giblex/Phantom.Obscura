@@ -17,7 +17,18 @@ public sealed class ObscuraVolumeCommitRecoveryTests : IDisposable
     private readonly string _dir = Path.Combine(Path.GetTempPath(), "obscura_recovery_" + Guid.NewGuid().ToString("N"));
     private readonly ObscuraVolumeService _svc = new();
 
-    public ObscuraVolumeCommitRecoveryTests() => Directory.CreateDirectory(_dir);
+    /// <summary>
+    /// The volume header is encrypted under this, so every create/extract needs it. The vault
+    /// password is deliberately not involved — see ObscuraVolumeFormat.DeriveHeaderKey.
+    /// </summary>
+    private readonly string _keyfile;
+
+    public ObscuraVolumeCommitRecoveryTests()
+    {
+        Directory.CreateDirectory(_dir);
+        _keyfile = Path.Combine(_dir, "vault.key");
+        File.WriteAllBytes(_keyfile, System.Security.Cryptography.RandomNumberGenerator.GetBytes(64));
+    }
     public void Dispose() { try { Directory.Delete(_dir, true); } catch { } }
 
     private static ObscuraVolumeSource Src(string path, string content)
@@ -27,7 +38,7 @@ public sealed class ObscuraVolumeCommitRecoveryTests : IDisposable
     public async Task SuccessfulCommit_LeavesNoJournalTempOrBackupArtifacts()
     {
         string vol = Path.Combine(_dir, "system.bin");
-        await _svc.CreateVolumeFromSourcesAsync(vol, new[] { Src("a.txt", "hello") });
+        await _svc.CreateVolumeFromSourcesAsync(vol, new[] { Src("a.txt", "hello") }, _keyfile);
 
         Assert.True(File.Exists(vol));
         Assert.False(File.Exists(vol + ".tmp"));
@@ -56,7 +67,7 @@ public sealed class ObscuraVolumeCommitRecoveryTests : IDisposable
 
         // Produce a real, valid volume to use as the backup copy.
         string good = Path.Combine(_dir, "good.bin");
-        await _svc.CreateVolumeFromSourcesAsync(good, new[] { Src("keep.txt", "important-data") });
+        await _svc.CreateVolumeFromSourcesAsync(good, new[] { Src("keep.txt", "important-data") }, _keyfile);
         File.Copy(good, vol + ".bak");
 
         // Simulate a crash mid-File.Replace: live file is garbage, journal still present.
@@ -72,7 +83,7 @@ public sealed class ObscuraVolumeCommitRecoveryTests : IDisposable
 
         // Restored volume must be readable and contain the backed-up data.
         string outDir = Path.Combine(_dir, "out");
-        await _svc.ExtractVolumeAsync(vol, outDir, progress: null, verify: true);
+        await _svc.ExtractVolumeAsync(vol, outDir, _keyfile, progress: null, verify: true);
         Assert.Equal("important-data", File.ReadAllText(Path.Combine(outDir, "keep.txt")));
     }
 
@@ -80,7 +91,7 @@ public sealed class ObscuraVolumeCommitRecoveryTests : IDisposable
     public async Task Recover_KeepsLiveVolume_WhenValidAndJournalPresent()
     {
         string vol = Path.Combine(_dir, "system.bin");
-        await _svc.CreateVolumeFromSourcesAsync(vol, new[] { Src("live.txt", "current") });
+        await _svc.CreateVolumeFromSourcesAsync(vol, new[] { Src("live.txt", "current") }, _keyfile);
 
         // Stale backup + journal from an interrupted commit that actually completed the swap.
         File.Copy(vol, vol + ".bak");
@@ -94,7 +105,78 @@ public sealed class ObscuraVolumeCommitRecoveryTests : IDisposable
         Assert.False(File.Exists(vol + ".bak"));
 
         string outDir = Path.Combine(_dir, "out");
-        await _svc.ExtractVolumeAsync(vol, outDir, progress: null, verify: true);
+        await _svc.ExtractVolumeAsync(vol, outDir, _keyfile, progress: null, verify: true);
         Assert.Equal("current", File.ReadAllText(Path.Combine(outDir, "live.txt")));
+    }
+
+    [Fact]
+    public async Task Volume_round_trips_through_the_encrypted_header()
+    {
+        string vol = Path.Combine(_dir, "system.bin");
+        await _svc.CreateVolumeFromSourcesAsync(vol,
+            new[] { Src("root/a.txt", "alpha"), Src("decoy/b.txt", "beta") }, _keyfile);
+
+        string outDir = Path.Combine(_dir, "rt");
+        await _svc.ExtractVolumeAsync(vol, outDir, _keyfile, progress: null, verify: true);
+
+        Assert.Equal("alpha", File.ReadAllText(Path.Combine(outDir, "root", "a.txt")));
+        Assert.Equal("beta", File.ReadAllText(Path.Combine(outDir, "decoy", "b.txt")));
+    }
+
+    [Fact]
+    public async Task The_header_no_longer_exposes_entry_paths_in_plaintext()
+    {
+        // The whole point of the change: "decoy" must not be legible to anyone who opens
+        // system.bin in a text editor, because naming the decoy destroys its deniability.
+        string vol = Path.Combine(_dir, "system.bin");
+        await _svc.CreateVolumeFromSourcesAsync(vol,
+            new[] { Src("decoy/decoy.database.pmeta", "x"), Src("root/root.pvault", "y") }, _keyfile);
+
+        byte[] raw = File.ReadAllBytes(vol);
+        string asText = Encoding.ASCII.GetString(raw);
+
+        Assert.DoesNotContain("decoy", asText, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("pvault", asText, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("PayloadHash", asText, StringComparison.Ordinal);
+        Assert.DoesNotContain("OBSCUR01", asText, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task A_wrong_keyfile_cannot_open_the_volume()
+    {
+        string vol = Path.Combine(_dir, "system.bin");
+        await _svc.CreateVolumeFromSourcesAsync(vol, new[] { Src("a.txt", "secret") }, _keyfile);
+
+        string wrong = Path.Combine(_dir, "wrong.key");
+        File.WriteAllBytes(wrong, System.Security.Cryptography.RandomNumberGenerator.GetBytes(64));
+
+        await Assert.ThrowsAsync<System.Security.Cryptography.CryptographicException>(
+            () => _svc.ReadManifestAsync(vol, wrong));
+    }
+
+    [Fact]
+    public async Task ResolveKeyfile_picks_the_one_that_works_and_reports_failure_otherwise()
+    {
+        string vol = Path.Combine(_dir, "system.bin");
+        await _svc.CreateVolumeFromSourcesAsync(vol, new[] { Src("a.txt", "secret") }, _keyfile);
+
+        string wrong = Path.Combine(_dir, "wrong.key");
+        File.WriteAllBytes(wrong, System.Security.Cryptography.RandomNumberGenerator.GetBytes(64));
+
+        Assert.Equal(_keyfile, await _svc.ResolveKeyfileAsync(vol, new[] { wrong, _keyfile }));
+        Assert.Null(await _svc.ResolveKeyfileAsync(vol, new[] { wrong }));
+    }
+
+    [Fact]
+    public async Task Volume_size_is_padded_to_a_bucket()
+    {
+        // A tiny vault and a larger one must not be tellable apart by file size.
+        string small = Path.Combine(_dir, "small.bin");
+        string larger = Path.Combine(_dir, "larger.bin");
+        await _svc.CreateVolumeFromSourcesAsync(small, new[] { Src("a.txt", "x") }, _keyfile);
+        await _svc.CreateVolumeFromSourcesAsync(larger, new[] { Src("a.txt", new string('y', 200_000)) }, _keyfile);
+
+        Assert.Equal(new FileInfo(small).Length, new FileInfo(larger).Length);
+        Assert.Equal(0, new FileInfo(small).Length % (64L * 1024 * 1024));
     }
 }

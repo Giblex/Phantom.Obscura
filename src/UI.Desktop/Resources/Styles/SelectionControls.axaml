@@ -1,0 +1,195 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ============================================================================
+         Explicit templates for CheckBox and RadioButton.
+
+         Why these exist rather than styling the Fluent defaults:
+
+         The app previously restyled these controls by reaching into Fluent's template
+         with selectors like `CheckBox:checked /template/ Border#NormalRectangle`. That
+         only works while Fluent keeps that exact part name, and it is unverifiable from
+         our side — compiled XAML does not expose part names in a way we can check. The
+         result was checkboxes whose box never rendered: the accent fill never applied,
+         and the unchecked outline fell back to whatever the theme *variant* supplied,
+         which is invisible when a light skin runs under the dark variant.
+
+         Owning the template makes the appearance deterministic and driven entirely by
+         our own theme tokens, so it cannot silently break on an Avalonia upgrade or a
+         skin/variant mismatch.
+         ============================================================================ -->
+
+    <Style Selector="CheckBox">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+        <Setter Property="Padding" Value="8,0,0,0"/>
+        <Setter Property="MinHeight" Value="24"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid ColumnDefinitions="Auto,*" Background="Transparent">
+
+                    <!-- The box. Named parts are ours, so the selectors below are safe. -->
+                    <Border x:Name="Box"
+                            Grid.Column="0"
+                            Width="19" Height="19"
+                            CornerRadius="4"
+                            ClipToBounds="True"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource ControlBackgroundBrush}"
+                            BorderBrush="{DynamicResource SecondaryTextBrush}"
+                            BorderThickness="1.5">
+                        <Panel>
+                            <!-- The checked fill is a separate layer revealed by opacity,
+                                 NOT a Background swapped on Box by the :checked selector.
+                                 That swap pointed at UserAccentBrush, which is defined in
+                                 no theme file (SetAccentColor is its only source) and kept
+                                 resolving to null in windows opened after startup — and a
+                                 null Background renders as nothing, so the box vanished and
+                                 left the tick floating. AccentBrush is defined by every
+                                 theme file, and toggling opacity on our own element is the
+                                 same mechanism the tick already uses, which works. -->
+                            <Border x:Name="Fill"
+                                    Opacity="0"
+                                    Background="{DynamicResource AccentBrush}"/>
+
+                            <!-- Stroke only, and no Stretch.
+                                 A Fill on an open path implicitly closes it, so the tick
+                                 rendered as a filled wedge with the stroke drawn over it.
+                                 Stretch also rescaled the stroke width away from 2px. The
+                                 geometry is authored at final size instead. -->
+                            <Path x:Name="Tick"
+                                  Opacity="0"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  Data="M 0,3.6 L 3.4,7 L 9.4,0.6"
+                                  Stroke="{DynamicResource ButtonAccentForegroundBrush}"
+                                  StrokeThickness="2"
+                                  StrokeLineCap="Round"
+                                  StrokeJoin="Round"/>
+                        </Panel>
+                    </Border>
+
+                    <ContentPresenter Grid.Column="1"
+                                      Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      Margin="{TemplateBinding Padding}"
+                                      VerticalAlignment="Center"
+                                      TextBlock.Foreground="{TemplateBinding Foreground}"
+                                      TextWrapping="Wrap"/>
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+    <Style Selector="CheckBox:pointerover /template/ Border#Box">
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+    </Style>
+
+    <Style Selector="CheckBox:checked /template/ Border#Fill">
+        <Setter Property="Opacity" Value="1"/>
+    </Style>
+    <Style Selector="CheckBox:checked /template/ Border#Box">
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+    </Style>
+    <Style Selector="CheckBox:checked /template/ Path#Tick">
+        <Setter Property="Opacity" Value="1"/>
+    </Style>
+
+    <!-- Indeterminate reads as a filled box with a dash rather than a tick. -->
+    <Style Selector="CheckBox:indeterminate /template/ Border#Fill">
+        <Setter Property="Opacity" Value="1"/>
+    </Style>
+    <Style Selector="CheckBox:indeterminate /template/ Border#Box">
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+    </Style>
+    <Style Selector="CheckBox:indeterminate /template/ Path#Tick">
+        <Setter Property="Opacity" Value="1"/>
+        <Setter Property="Data" Value="M 0,3.6 L 9.4,3.6"/>
+    </Style>
+
+    <Style Selector="CheckBox:disabled">
+        <Setter Property="Opacity" Value="0.45"/>
+    </Style>
+
+    <!-- ==================================== RadioButton ==================================== -->
+
+    <Style Selector="RadioButton">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+        <Setter Property="Padding" Value="8,0,0,0"/>
+        <Setter Property="MinHeight" Value="24"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid ColumnDefinitions="Auto,*" Background="Transparent">
+                    <Border x:Name="Ring"
+                            Grid.Column="0"
+                            Width="19" Height="19"
+                            CornerRadius="10"
+                            VerticalAlignment="Center"
+                            Background="{DynamicResource ControlBackgroundBrush}"
+                            BorderBrush="{DynamicResource SecondaryTextBrush}"
+                            BorderThickness="1.5">
+                        <Ellipse x:Name="Dot"
+                                 Width="9" Height="9"
+                                 Opacity="0"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center"
+                                 Fill="{DynamicResource AccentBrush}"/>
+                    </Border>
+
+                    <ContentPresenter Grid.Column="1"
+                                      Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      Margin="{TemplateBinding Padding}"
+                                      VerticalAlignment="Center"
+                                      TextBlock.Foreground="{TemplateBinding Foreground}"
+                                      TextWrapping="Wrap"/>
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+    <Style Selector="RadioButton:pointerover /template/ Border#Ring">
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+    </Style>
+    <Style Selector="RadioButton:checked /template/ Border#Ring">
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+    </Style>
+    <Style Selector="RadioButton:checked /template/ Ellipse#Dot">
+        <Setter Property="Opacity" Value="1"/>
+    </Style>
+    <Style Selector="RadioButton:disabled">
+        <Setter Property="Opacity" Value="0.45"/>
+    </Style>
+
+    <!-- ==================================== ToggleSwitch ====================================
+
+         Deliberately NOT retemplated.
+
+         ToggleSwitch drives its own knob travel: it resolves PART_SwitchKnob and
+         PART_MovingKnobs in OnApplyTemplate and animates them against measurements it
+         takes from the template. A hand-rolled track/knob has to reproduce that geometry
+         exactly or the knob lands outside the pill — which is what happened here. The
+         indeterminate value is not worth the risk when Avalonia's own template already
+         gets the mechanics right.
+
+         So only properties that need no template parts are set. The reason the switch
+         looked wrong before was the skin/variant mismatch making its colours resolve
+         against the wrong palette, and that is fixed at the source now.
+         ==================================================================================== -->
+
+    <Style Selector="ToggleSwitch">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+        <Setter Property="MinHeight" Value="28"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="ToggleSwitch:disabled">
+        <Setter Property="Opacity" Value="0.45"/>
+    </Style>
+
+</Styles>

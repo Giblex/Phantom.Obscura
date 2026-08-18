@@ -243,6 +243,19 @@ namespace PhantomVault.Core.Services
 
     public static class PinLengthRange
     {
+        /// <summary>
+        /// Length range for a PIN *stored as credential data* — a card PIN, a door code,
+        /// an alarm code — entered on the add/edit entry form or in a PIN section.
+        ///
+        /// This is recorded data, not an authentication factor: the vault does not verify
+        /// anything against it, so its length carries no security weight here and the
+        /// range simply has to represent whatever the real-world PIN is. Four-digit card
+        /// PINs and single-digit codes both exist, so the floor is 1.
+        ///
+        /// This was briefly raised to 6 after the vault's own unlock PIN was made to defer
+        /// to this range. That conflated two unrelated things; the vault unlock PIN now has
+        /// its own floor in <c>PinLockService.MinVaultPinLength</c>.
+        /// </summary>
         public const int Min = 1;
         public const int Max = 32;
 

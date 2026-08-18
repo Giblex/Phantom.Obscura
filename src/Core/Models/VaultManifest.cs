@@ -280,8 +280,17 @@ namespace PhantomVault.Core.Models
         [JsonPropertyName("pinHashBase64")]
         public string? PinHashBase64 { get; set; } = null;
 
+        /// <summary>
+        /// PBKDF2-HMAC-SHA256 iteration count for the PIN hash.
+        ///
+        /// Raised from 150,000 to meet current OWASP guidance for PBKDF2-SHA256. A PIN
+        /// has very little entropy, so the work factor is the only thing standing
+        /// between a stolen manifest and an offline enumeration of the whole PIN space.
+        /// Existing vaults keep their stored value — this default applies to new ones,
+        /// so raising it does not invalidate any current PIN.
+        /// </summary>
         [JsonPropertyName("pinPbkdf2Iterations")]
-        public int PinPbkdf2Iterations { get; set; } = 150_000;
+        public int PinPbkdf2Iterations { get; set; } = 600_000;
 
         [JsonPropertyName("recoveryCodes")]
         public RecoveryCode[]? RecoveryCodes { get; set; } = null;

@@ -31,6 +31,7 @@ namespace PhantomVault.UI.ViewModels.Settings
 
             UpgradeCommand = ReactiveCommand.CreateFromTask(UpgradeAsync);
             RefreshCommand = ReactiveCommand.Create(RaiseAll);
+            RedeemCommand = ReactiveCommand.CreateFromTask(RedeemAsync);
 
             if (_entitlements != null)
                 _entitlements.Changed += (_, _) => RaiseAll();
@@ -38,6 +39,32 @@ namespace PhantomVault.UI.ViewModels.Settings
 
         public ReactiveCommand<Unit, Unit> UpgradeCommand { get; }
         public ReactiveCommand<Unit, Unit> RefreshCommand { get; }
+
+        /// <summary>
+        /// Redeems a licence code pasted by the user.
+        ///
+        /// The in-app checkout can only auto-activate when the licensing backend returns
+        /// a signed token. When checkout happens through a Stripe payment link instead,
+        /// the code arrives by email and there was previously no way to enter it — the
+        /// user could pay and still have no route to Premium. This closes that path.
+        /// </summary>
+        public ReactiveCommand<Unit, Unit> RedeemCommand { get; }
+
+        private string _licenseCodeInput = string.Empty;
+        public string LicenseCodeInput
+        {
+            get => _licenseCodeInput;
+            set => this.RaiseAndSetIfChanged(ref _licenseCodeInput, value);
+        }
+
+        private string _redeemMessage = string.Empty;
+        public string RedeemMessage
+        {
+            get => _redeemMessage;
+            private set => this.RaiseAndSetIfChanged(ref _redeemMessage, value);
+        }
+
+        public bool HasRedeemMessage => !string.IsNullOrWhiteSpace(RedeemMessage);
 
         private LicenseStatus Status => _entitlements?.Status ?? LicenseStatus.Free(LicenseFailureReason.Empty);
 
@@ -131,6 +158,63 @@ namespace PhantomVault.UI.ViewModels.Settings
             {
                 _host.StatusMessage = "Checkout was not completed.";
             }
+        }
+
+        /// <summary>
+        /// Verifies a pasted licence token and, if it is genuine and current, stores it
+        /// on the vault manifest so the app treats this device as Premium.
+        ///
+        /// Verification is the entitlement service's job — it checks the Ed25519
+        /// signature, the expiry and the USB binding. Nothing here trusts the input,
+        /// and a bad code changes no state.
+        /// </summary>
+        private async Task RedeemAsync()
+        {
+            var code = (LicenseCodeInput ?? string.Empty).Trim();
+
+            if (string.IsNullOrWhiteSpace(code))
+            {
+                RedeemMessage = "Paste the licence code from your confirmation email.";
+                this.RaisePropertyChanged(nameof(HasRedeemMessage));
+                return;
+            }
+
+            try
+            {
+                // Persist first, then re-apply: PersistLicenseTokenAsync writes the token
+                // to the manifest and the entitlement service re-evaluates it. If the
+                // token is invalid the status simply stays Free and we report that,
+                // rather than silently appearing to succeed.
+                await _host.PersistLicenseTokenAsync(code);
+                RaiseAll();
+
+                if (IsPremium)
+                {
+                    RedeemMessage = "Licence accepted — Premium is active on this device.";
+                    LicenseCodeInput = string.Empty;
+                    _host.StatusMessage = "Premium activated successfully.";
+                }
+                else
+                {
+                    var reason = Status.Reason switch
+                    {
+                        LicenseFailureReason.Expired => "That licence code has expired. Renew to get a new one.",
+                        LicenseFailureReason.BadSignature => "That code is not a valid Phantom Obscura licence.",
+                        LicenseFailureReason.BindingMismatch => "That licence was issued for a different USB key.",
+                        LicenseFailureReason.MalformedToken => "That code is not a complete licence code — check it copied fully.",
+                        LicenseFailureReason.ClockRollback => "Your system clock looks incorrect. Fix the date and time, then try again.",
+                        _ => "That licence code could not be verified."
+                    };
+                    RedeemMessage = reason;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Licence redemption failed");
+                RedeemMessage = "The licence code could not be saved. Please try again.";
+            }
+
+            this.RaisePropertyChanged(nameof(HasRedeemMessage));
         }
     }
 }

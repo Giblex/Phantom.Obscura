@@ -7,8 +7,8 @@
         x:Class="PhantomVault.UI.Views.VaultUnlockWindow"
         x:DataType="vm:VaultUnlockViewModel"
         Title="Unlocking Vault"
-        Width="320"
-        Height="320"
+        Width="500"
+        Height="500"
         CanResize="False"
         SystemDecorations="None"
         Background="Transparent"
@@ -16,6 +16,8 @@
         WindowStartupLocation="CenterScreen"
         AutomationProperties.Name="Vault Unlock Progress Window"
         AutomationProperties.HelpText="This window shows the progress of unlocking your secure vault"
+        RenderOptions.BitmapInterpolationMode="HighQuality"
+        RenderOptions.EdgeMode="Antialias"
         Classes="animated-window">
 
     <views:ThemeAwareWindow.Resources>
@@ -37,19 +39,90 @@
         <Style Selector="Ellipse.unlock-ring">
             <Setter Property="Opacity" Value="0.95"/>
         </Style>
+
+        <!-- The two hardware bands counter-rotate, like a dial being worked.
+             Deliberately slow — 48s and 66s per revolution — so it reads as mechanism
+             rather than as a spinner competing with the progress arc. The differing
+             periods stop the bands from ever locking into a fixed relative position.
+
+             Gated on :not(.reduce-motion): ThemeAwareWindow applies that class from the
+             accessibility setting, so this stops entirely when the user asks for less
+             motion. The bands stay put at their authored angle rather than disappearing. -->
+        <Style Selector="Window:not(.reduce-motion) Canvas.tumbler-cw">
+            <Style.Animations>
+                <Animation Duration="0:0:48" IterationCount="INFINITE">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="(RotateTransform.Angle)" Value="0"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="(RotateTransform.Angle)" Value="360"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+
+        <Style Selector="Window:not(.reduce-motion) Canvas.tumbler-ccw">
+            <Style.Animations>
+                <Animation Duration="0:1:06" IterationCount="INFINITE">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="(RotateTransform.Angle)" Value="0"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="(RotateTransform.Angle)" Value="-360"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+
+        <!-- Deepest plate: 94s, slower than either band above it. Things further away
+             appear to move less, so the slower sweep reinforces the depth rather than
+             competing with the outer hardware. Its period is also coprime-ish with the
+             other two so the three never settle into a fixed relative position. -->
+        <Style Selector="Window:not(.reduce-motion) Canvas.tumbler-deep">
+            <Style.Animations>
+                <Animation Duration="0:1:34" IterationCount="INFINITE">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="(RotateTransform.Angle)" Value="0"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="(RotateTransform.Angle)" Value="360"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
     </views:ThemeAwareWindow.Styles>
 
     <!-- Circular shell. The window itself is transparent and undecorated; this Border
-         is the entire visible dialog, sized a little beyond the 196px progress ring so
-         the ring stays the subject rather than floating in a large panel.
+         is the entire visible dialog. The whole dial is built as concentric bands so it
+         reads as a vault door rather than a generic spinner:
+
+           500  shell edge, with a heavy 14px bevelled rim (the vault door frame)
+           448  outer tumbler blocks (chunky, vault-door bolts)
+           392  inner tick ring (fine graduations)
+           368  step edge down to the deepest plate
+           344  deep tick plate (finest graduations, lowest contrast)
+           300  progress arc, recessed into its channel
+           196  logo
+
          The title, subtitle, progress bar and footer that used to sit around it are
-         gone: the ring already encodes progress, and the status line carries the rest. -->
+         gone: the arc already encodes progress and the status line carries the rest. -->
+    <!-- The rim is lit as a bevel falling AWAY from the viewer: highlight on the
+         upper-left where a light from above would catch the outer lip, shadow on the
+         lower-right where the wall turns under. Reversing those two stops is what
+         makes a bevel read as raised instead, so the order matters. -->
     <Border x:Name="Shell"
-            Width="320" Height="320"
-            CornerRadius="160"
+            Width="500" Height="500"
+            CornerRadius="250"
             ClipToBounds="True"
-            BorderThickness="1"
-            BorderBrush="#3A5A7A">
+            BorderThickness="14">
+        <Border.BorderBrush>
+            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Offset="0"    Color="#FF3E566E"/>
+                <GradientStop Offset="0.35" Color="#FF243448"/>
+                <GradientStop Offset="0.72" Color="#FF16202D"/>
+                <GradientStop Offset="1"    Color="#FF0A1119"/>
+            </LinearGradientBrush>
+        </Border.BorderBrush>
         <Border.Background>
             <RadialGradientBrush Center="50%,38%" GradientOrigin="50%,38%" RadiusX="72%" RadiusY="72%">
                 <GradientStop Offset="0"   Color="#FF16273A"/>
@@ -59,20 +132,150 @@
 
         <!-- Grid, not a StackPanel. In a stack the ring's position depends on the
              height of the status text below it, so a message wrapping to a second
-             line shifted the ring and logo. Here the ring is centred in the circle
-             and the status is anchored to the bottom, so the logo never moves no
-             matter what the status says. -->
+             line shifted the ring and logo. Here every band is centred in the circle
+             and the status is placed by offset, so the logo never moves no matter
+             what the status says. -->
         <Grid>
 
-            <Grid Width="196" Height="196"
+            <!-- Seated ring the tumbler blocks sit against, so the blocks read as
+                 mounted hardware rather than floating marks. -->
+            <Ellipse Width="420" Height="420"
+                     Stroke="#1F4A6B84"
+                     StrokeThickness="1"
+                     HorizontalAlignment="Center"
+                     VerticalAlignment="Center"/>
+
+            <!-- Vault-door hardware. Both bands are generated in code-behind so the
+                 block count, radius and angle stay in one place instead of being
+                 hand-unrolled across dozens of near-identical XAML elements. -->
+            <Canvas x:Name="TumblerRingOuter"
+                    Classes="tumbler-cw"
+                    Width="448" Height="448"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    IsHitTestVisible="False"
+                    RenderTransformOrigin="50%,50%">
+                <Canvas.RenderTransform>
+                    <RotateTransform Angle="0"/>
+                </Canvas.RenderTransform>
+            </Canvas>
+
+            <Canvas x:Name="TumblerRingInner"
+                    Classes="tumbler-ccw"
+                    Width="392" Height="392"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    IsHitTestVisible="False"
+                    RenderTransformOrigin="50%,50%">
+                <Canvas.RenderTransform>
+                    <RotateTransform Angle="0"/>
+                </Canvas.RenderTransform>
+            </Canvas>
+
+            <!-- ── Step down to the deepest plate ──────────────────────────────
+                 The terrace edge, drawn as a pair of concentric strokes. The wall of
+                 the step catches light on its lower-right and falls into shadow on its
+                 upper-left — the inverse of a raised lip, which is what makes the
+                 surface inside read as lower than the ring above it.
+
+                 Drawn BEFORE the plate's ticks so the ticks sit on the new floor
+                 rather than on top of the step wall. -->
+            <Ellipse Width="368" Height="368" StrokeThickness="3">
+                <Ellipse.Stroke>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Offset="0"   Color="#C0000000"/>
+                        <GradientStop Offset="0.55" Color="#40000000"/>
+                        <GradientStop Offset="1"   Color="#00000000"/>
+                    </LinearGradientBrush>
+                </Ellipse.Stroke>
+            </Ellipse>
+
+            <Ellipse Width="362" Height="362" StrokeThickness="1">
+                <Ellipse.Stroke>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Offset="0"   Color="#00000000"/>
+                        <GradientStop Offset="0.6" Color="#22000000"/>
+                        <GradientStop Offset="1"   Color="#553E566E"/>
+                    </LinearGradientBrush>
+                </Ellipse.Stroke>
+            </Ellipse>
+
+            <!-- Deepest tick plate. Finer and darker than the collar above it: detail
+                 shrinks and contrast drops with distance, so this reads as further in
+                 without needing a literal drop shadow. -->
+            <Canvas x:Name="TumblerRingDeep"
+                    Classes="tumbler-deep"
+                    Width="344" Height="344"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    IsHitTestVisible="False"
+                    RenderTransformOrigin="50%,50%">
+                <Canvas.RenderTransform>
+                    <RotateTransform Angle="0"/>
+                </Canvas.RenderTransform>
+            </Canvas>
+
+            <Grid Width="300" Height="300"
                   HorizontalAlignment="Center"
                   VerticalAlignment="Center">
 
+                <!-- Dot grid filling the dial face, matching the header banner and the
+                     welcome page. Drawn as an Ellipse FILL rather than a Border with a
+                     background: the fill clips to the circle for free, so the pattern
+                     cannot spill past the arc and no clip geometry is needed.
+                     Sized to 284 — the arc is 300 with an 8px stroke centred on the
+                     path, so its inner edge is at 292; this leaves a small gap.
+                     Nearest-neighbour sampling keeps the dots crisp above 100% display
+                     scaling instead of smearing them into the background. -->
+                <Ellipse Width="284" Height="284"
+                         IsHitTestVisible="False"
+                         RenderOptions.BitmapInterpolationMode="None">
+                    <Ellipse.Fill>
+                        <ImageBrush Source="avares://PhantomVault.UI/Assets/dot_pattern.png"
+                                    TileMode="Tile"
+                                    Stretch="None"
+                                    SourceRect="0,0,8,8"
+                                    DestinationRect="0,0,8,8"/>
+                    </Ellipse.Fill>
+                </Ellipse>
+
+                <!-- Channel the arc sits in. Three concentric strokes fake a recess:
+                     a dark shadow line on the upper-left inner edge, the flat track
+                     itself, and a lighter catch-light on the lower-right. With light
+                     read as coming from above, that ordering makes the groove appear
+                     cut INTO the face rather than raised off it. -->
+                <Ellipse Width="308" Height="308" StrokeThickness="1.5">
+                    <Ellipse.Stroke>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                            <GradientStop Offset="0"   Color="#00000000"/>
+                            <GradientStop Offset="1"   Color="#4A8FB5DF"/>
+                        </LinearGradientBrush>
+                    </Ellipse.Stroke>
+                </Ellipse>
+
+                <Ellipse Width="300" Height="300"
+                         Stroke="{DynamicResource UnlockTrackBrush}"
+                         StrokeThickness="8"/>
+
+                <Ellipse Width="292" Height="292" StrokeThickness="1.5">
+                    <Ellipse.Stroke>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                            <GradientStop Offset="0"   Color="#B0000000"/>
+                            <GradientStop Offset="0.6" Color="#30000000"/>
+                            <GradientStop Offset="1"   Color="#00000000"/>
+                        </LinearGradientBrush>
+                    </Ellipse.Stroke>
+                </Ellipse>
+
+                <!-- Bound to DisplayProgress, not ProgressPercent. The real value moves
+                     in stage-sized jumps (5, 25, 40, 55...), which the arc used to snap
+                     between; DisplayProgress chases it at a constant rate so the sweep
+                     is even the whole way round. -->
                 <Ellipse Classes="unlock-ring"
-                         Width="196" Height="196"
-                         StrokeThickness="7"
+                         Width="300" Height="300"
+                         StrokeThickness="6"
                          StrokeLineCap="Round"
-                         StrokeDashArray="{Binding ProgressPercent, Converter={StaticResource PercentToRingDashConverter}, ConverterParameter='196|7'}"
+                         StrokeDashArray="{Binding DisplayProgress, Converter={StaticResource PercentToRingDashConverter}, ConverterParameter='292|6'}"
                          RenderTransformOrigin="50%,50%">
                     <Ellipse.RenderTransform>
                         <RotateTransform Angle="-90"/>
@@ -85,30 +288,94 @@
                         </LinearGradientBrush>
                     </Ellipse.Stroke>
                 </Ellipse>
-
-                <!-- Logo sits inside the loading ring — no circular tile behind it. -->
-                <Image Source="avares://PhantomVault.UI/Assets/ok.png"
-                       Width="104" Height="104"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center"/>
             </Grid>
 
-            <!-- Anchored to the bottom of the circle and constrained to the chord
-                 width at that height, so wrapped text cannot spill past the curve
-                 or push the ring around. -->
-            <TextBlock Text="{Binding Status}"
-                       VerticalAlignment="Bottom"
-                       HorizontalAlignment="Center"
-                       Margin="0,0,0,26"
-                       FontSize="11.5"
-                       MaxWidth="200"
-                       Foreground="{DynamicResource SecondaryTextBrush}"
-                       TextAlignment="Center"
-                       TextWrapping="Wrap"
-                       MaxLines="2"
-                       TextTrimming="CharacterEllipsis"
-                       AutomationProperties.Name="Unlock Status"
-                       AutomationProperties.LiveSetting="Assertive"/>
+            <!-- Logo and status are both centred and then displaced with a render
+                 transform rather than a margin.
+                 A margin on a centre-aligned child is halved by the centring maths —
+                 Margin="0,192,0,0" lands the content ~96px down, not 192 — and the
+                 offset then shifts again when the status wraps to a second line.
+                 A translate happens after layout, so each element's centre sits at an
+                 exact distance from the dial's centre no matter how tall it is. -->
+            <!-- The mark is two layers on ONE shared 4000x4000 canvas, so stacking them
+                 at the same size re-forms the original artwork with no manual offset —
+                 and stays correct if either file is re-exported.
+
+                 topg  shield + ghost — fixed
+                 cent  key            — turns about its vertical axis
+
+                 Both carry the same -34 translate; drop it from either and the two
+                 halves separate. -->
+
+            <!-- Static half. -->
+            <Image Source="avares://PhantomVault.UI/Assets/topg.png"
+                   Width="196" Height="196"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   RenderTransformOrigin="50%,50%">
+                <Image.RenderTransform>
+                    <TranslateTransform Y="-34"/>
+                </Image.RenderTransform>
+            </Image>
+
+            <!-- Spinning half. The transform is built in code-behind rather than
+                 declared here because it has to track unlock progress — a slow turn
+                 while working, then a decelerating settle with a detent overshoot at
+                 100% — which a static XAML animation cannot express.
+
+                 RenderTransformOrigin stays at 50% horizontally on purpose: the key's
+                 ink is centred at 49.98% of the canvas, so scaling X about the image
+                 centre already turns it about the key's OWN axis. Moving the origin to
+                 the key's vertical centre (69.8%) would change nothing for an X scale
+                 and would only matter if this ever became a Y-axis tumble. -->
+            <Image x:Name="CentreLogoKey"
+                   Source="avares://PhantomVault.UI/Assets/cent.png"
+                   Width="196" Height="196"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   RenderTransformOrigin="50%,50%">
+                <Image.RenderTransform>
+                    <TranslateTransform Y="-34"/>
+                </Image.RenderTransform>
+            </Image>
+
+            <!-- Sits BELOW the progress arc, not across it.
+                 The arc's outer edge is at radius 154 (300/2 + 8/2); at 116px down the
+                 text ran straight through it. Centred at 186px the text clears the arc
+                 by ~32px, and the chord there is 2*sqrt(250² - 195²) ≈ 313px, so a 250px
+                 block still has ~30px either side. It crosses only the faint graduation
+                 ticks, which is intended — those read as the dial face behind the text. -->
+            <!-- Backing plate, tucked just under the logo and wholly inside the
+                 progress arc.
+                 Centred 72px below the dial centre: the logo's lower edge is at +41,
+                 and the arc's inner edge at that height is x = ±sqrt(150² - 86²) ≈ ±123,
+                 so a 238px plate clears the arc on both sides even when the status wraps
+                 to a second line. The plate keeps it legible against the dial face
+                 without needing to mask anything behind it. -->
+            <Border HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    CornerRadius="11"
+                    Padding="13,5"
+                    MaxWidth="238"
+                    Background="#CC0C1622"
+                    BorderBrush="#2A3F55"
+                    BorderThickness="1"
+                    RenderTransformOrigin="50%,50%">
+                <Border.RenderTransform>
+                    <TranslateTransform Y="72"/>
+                </Border.RenderTransform>
+                <TextBlock Text="{Binding Status}"
+                           FontSize="12.5"
+                           MaxWidth="210"
+                           LineHeight="17"
+                           Foreground="{DynamicResource SecondaryTextBrush}"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           MaxLines="2"
+                           TextTrimming="CharacterEllipsis"
+                           AutomationProperties.Name="Unlock Status"
+                           AutomationProperties.LiveSetting="Assertive"/>
+            </Border>
         </Grid>
     </Border>
 </views:ThemeAwareWindow>

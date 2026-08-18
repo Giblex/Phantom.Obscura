@@ -1897,6 +1897,18 @@
                                                   MaxLength="8"
                                                   IsVisible="{Binding PinUnlockAvailable}"/>
 
+                        <Button Content="Unlock with keyfile"
+                                Command="{Binding UnlockWithPasswordCommand}"
+                                Classes="liquid-glass"
+                                HorizontalAlignment="Center"
+                                IsVisible="{Binding KeyfileUnlockAvailable}"
+                                Height="44"
+                                Width="240"
+                                FontSize="{StaticResource Type.H5.Size}"
+                                FontWeight="SemiBold"
+                                AutomationProperties.Name="Unlock using the vault keyfile"
+                                ToolTip.Tip="Unlock with your keyfile. A passphrase is only needed if you added one."/>
+
                         <Button Content="Use passphrase instead"
                                 Command="{Binding ShowPassphraseFallbackCommand}"
                                 Classes="liquid-glass"

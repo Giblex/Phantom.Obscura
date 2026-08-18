@@ -1,6 +1,21 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
+    <!-- Bitmap logos are authored far larger than they are displayed: ok.png is
+         1024x1024 shown at 150px, and the Giblex icon is 1563x1563 shown at 236px —
+         roughly a 7x downscale. At that ratio the default sampling aliases badly, which
+         is what made every logo look chewed up. HighQuality resampling plus antialiased
+         edges is the right default for photographic/vector-exported art.
+
+         This targets Image elements only. The dot-grid backdrops in HeaderView and
+         WelcomePage deliberately use nearest-neighbour to keep an 8x8 tile crisp, and
+         they are ImageBrush on a Border, so they are unaffected. Any Image needing
+         nearest-neighbour can still opt out locally — a local value beats this setter. -->
+    <!-- NOTE: RenderOptions cannot be set from a Style in Avalonia 11 — it is a struct
+         on Visual, not a set of styleable AvaloniaProperties, so a Setter fails to
+         compile. It is applied as a direct attribute at window level instead, where it
+         inherits down the visual tree. See VaultUnlockWindow / VaultCreationLoadingWindow. -->
+
     <Style Selector="TextBlock">
         <Setter Property="FontFamily" Value="{DynamicResource MainFontFamily}"/>
         <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
@@ -369,104 +384,13 @@
         <Setter Property="BorderThickness" Value="2"/>
     </Style>
 
-    <Style Selector="CheckBox">
-        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
-        <Setter Property="Padding" Value="8,6"/>
-        <Setter Property="MinHeight" Value="24"/>
-    </Style>
+    <!-- CheckBox / RadioButton / ToggleSwitch appearance now lives in
+         Resources/Styles/SelectionControls.axaml, which supplies their templates
+         outright. The selectors that used to sit here targeted Fluent template parts
+         (Border#NormalRectangle and friends) that Avalonia 11.3 does not expose, so
+         they silently did nothing — which is why the checkbox box never rendered. -->
 
-    <Style Selector="CheckBox:pointerover /template/ Border#NormalRectangle">
-        <Setter Property="BorderBrush" Value="{DynamicResource Brush.AccentHover}"/>
-    </Style>
 
-    <Style Selector="CheckBox:focus-visible /template/ Border#NormalRectangle">
-        <Setter Property="BorderBrush" Value="{DynamicResource Brush.FocusRing}"/>
-        <Setter Property="BorderThickness" Value="2"/>
-    </Style>
-
-    <!-- Checked state uses UserAccentBrush (the live custom-accent-picker resource), same as
-         Button.dull-blue/Save/ToggleSwitch, so it responds when the user picks a colour from
-         Theme Settings' accent dropdown — Brush.Accent only changes on a theme/skin switch. -->
-    <Style Selector="CheckBox:checked /template/ Border#NormalRectangle">
-        <Setter Property="Background" Value="{DynamicResource UserAccentBrush}"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource UserAccentBrush}"/>
-    </Style>
-
-    <Style Selector="CheckBox:checked:pointerover /template/ Border#NormalRectangle">
-        <Setter Property="Background" Value="{DynamicResource UserAccentBrush}"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource UserAccentBrush}"/>
-        <Setter Property="Opacity" Value="0.88"/>
-    </Style>
-
-    <Style Selector="RadioButton">
-        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
-        <Setter Property="Padding" Value="8,6"/>
-        <Setter Property="MinHeight" Value="24"/>
-    </Style>
-
-    <Style Selector="RadioButton:pointerover /template/ Border#OuterBorder">
-        <Setter Property="BorderBrush" Value="{DynamicResource Brush.AccentHover}"/>
-    </Style>
-
-    <Style Selector="RadioButton:focus-visible /template/ Border#OuterBorder">
-        <Setter Property="BorderBrush" Value="{DynamicResource Brush.FocusRing}"/>
-        <Setter Property="BorderThickness" Value="2"/>
-    </Style>
-
-    <!-- Checked state uses UserAccentBrush (the live custom-accent-picker resource) for the
-         same reason as CheckBox/ToggleSwitch above. -->
-    <Style Selector="RadioButton:checked /template/ Ellipse#CheckGlyph">
-        <Setter Property="Fill" Value="{DynamicResource UserAccentBrush}"/>
-    </Style>
-
-    <Style Selector="RadioButton:checked /template/ Border#OuterBorder">
-        <Setter Property="BorderBrush" Value="{DynamicResource UserAccentBrush}"/>
-    </Style>
-
-    <Style Selector="RadioButton:checked:pointerover /template/ Border#OuterBorder">
-        <Setter Property="BorderBrush" Value="{DynamicResource UserAccentBrush}"/>
-        <Setter Property="Opacity" Value="0.88"/>
-    </Style>
-
-    <Style Selector="RadioButton:checked:pointerover /template/ Ellipse#CheckGlyph">
-        <Setter Property="Fill" Value="{DynamicResource UserAccentBrush}"/>
-        <Setter Property="Opacity" Value="0.88"/>
-    </Style>
-
-    <Style Selector="ToggleSwitch">
-        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
-        <Setter Property="MinHeight" Value="32"/>
-        <Setter Property="MinWidth" Value="52"/>
-    </Style>
-
-    <Style Selector="ToggleSwitch:pointerover /template/ Border#SwitchKnob">
-        <Setter Property="Background" Value="{DynamicResource Brush.AccentHover}"/>
-    </Style>
-
-    <Style Selector="ToggleSwitch:focus-visible /template/ Border#OuterBorder">
-        <Setter Property="BorderBrush" Value="{DynamicResource Brush.FocusRing}"/>
-        <Setter Property="BorderThickness" Value="2"/>
-    </Style>
-
-    <!-- Unchecked track was relying on Avalonia's built-in Fluent default, which reads as a
-         near-invisible hairline against this app's darker window backgrounds. Give it an
-         explicit, always-available border colour so the Off state is clearly visible. -->
-    <Style Selector="ToggleSwitch /template/ Border#SwitchKnobBounds">
-        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
-        <Setter Property="BorderThickness" Value="1.5"/>
-    </Style>
-
-    <!-- Checked state uses UserAccentBrush (the live custom-accent-picker resource) for the
-         same reason as CheckBox/RadioButton above. -->
-    <Style Selector="ToggleSwitch:checked /template/ Border#SwitchKnobBounds">
-        <Setter Property="Background" Value="{DynamicResource UserAccentBrush}"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource UserAccentBrush}"/>
-    </Style>
-
-    <Style Selector="ToggleSwitch:checked:pointerover /template/ Border#SwitchKnobBounds">
-        <Setter Property="Background" Value="{DynamicResource UserAccentBrush}"/>
-        <Setter Property="Opacity" Value="0.88"/>
-    </Style>
 
     <Style Selector="Border.nav-bar">
         <Setter Property="Background" Value="{DynamicResource Brush.NavGradient}"/>

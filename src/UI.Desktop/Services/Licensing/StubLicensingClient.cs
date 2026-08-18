@@ -24,7 +24,8 @@ namespace PhantomVault.UI.Services.Licensing
 
         public bool IsConfigured => DevLicenseAuthority.IsEnabled;
 
-        public Task<LicensingResult> ActivateAsync(PremiumTier tier, string? usbBindingId, CancellationToken ct = default)
+        public Task<LicensingResult> ActivateAsync(PremiumTier tier, string? usbBindingId,
+            BillingInterval interval = BillingInterval.Monthly, CancellationToken ct = default)
         {
             if (!DevLicenseAuthority.IsEnabled)
             {
@@ -38,6 +39,6 @@ namespace PhantomVault.UI.Services.Licensing
         }
 
         public Task<LicensingResult> RenewAsync(string? currentToken, string? usbBindingId, CancellationToken ct = default)
-            => ActivateAsync(PremiumTier.Premium, usbBindingId, ct);
+            => ActivateAsync(PremiumTier.Premium, usbBindingId, BillingInterval.Monthly, ct);
     }
 }

@@ -153,11 +153,34 @@ namespace PhantomVault.Core.Tests
         [Fact]
         public void PinLengthRange_clamps_to_one_through_thirty_two()
         {
+            // This range is for a PIN stored as credential data — a card PIN, a door
+            // code — not the vault's unlock PIN. It is never verified against anything,
+            // so its length carries no security weight and it simply has to be able to
+            // represent the real-world PIN, including short ones.
+            //
+            // The floor was briefly raised to 6 when the vault unlock PIN was made to
+            // defer to this range. That floor now lives in PinLockService.MinVaultPinLength
+            // where it belongs.
+            Assert.Equal(1, PinLengthRange.Min);
             Assert.Equal(1, PinLengthRange.Clamp(0));
             Assert.Equal(1, PinLengthRange.Clamp(-5));
+
             Assert.Equal(32, PinLengthRange.Clamp(99));
-            Assert.Equal(6, PinLengthRange.Clamp(6));
+            Assert.Equal(4, PinLengthRange.Clamp(4));
+
+            // 1..32 inclusive.
             Assert.Equal(32, PinLengthRange.All.Count);
+        }
+
+        [Fact]
+        public void A_four_digit_card_pin_is_a_valid_stored_pin()
+        {
+            // The regression this guards: raising the shared floor to 6 made an ordinary
+            // bank card PIN fail validation on the add-credential form.
+            var section = EntrySection.CreateInline(EntrySectionKind.PinCode, "Card PIN", "1234");
+            section.SetMeta(EntrySection.MetaPinLength, "4");
+
+            Assert.Empty(EntrySectionService.Validate(section));
         }
 
         [Fact]

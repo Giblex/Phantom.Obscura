@@ -43,7 +43,15 @@ namespace PhantomVault.UI.Services.Licensing
         bool IsConfigured { get; }
 
         /// <summary>Purchase/activate a subscription and obtain a signed token.</summary>
-        Task<LicensingResult> ActivateAsync(PremiumTier tier, string? usbBindingId, CancellationToken ct = default);
+        /// <param name="interval">
+        /// Billing cadence the user chose. Defaults to Monthly so existing callers keep
+        /// their behaviour; implementations map it to the matching price/checkout link.
+        /// </param>
+        Task<LicensingResult> ActivateAsync(
+            PremiumTier tier,
+            string? usbBindingId,
+            BillingInterval interval = BillingInterval.Monthly,
+            CancellationToken ct = default);
 
         /// <summary>Renew an existing subscription before expiry, obtaining a fresh token.</summary>
         Task<LicensingResult> RenewAsync(string? currentToken, string? usbBindingId, CancellationToken ct = default);

@@ -122,3 +122,16 @@ jobs:
             echo "::error::UpdateVerifier.cs no longer references UpdatePublicKey.IsProvisioned — provisioning gate has been removed"
             exit 1
           fi
+
+      - name: Runtime-parsed XAML is valid
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Some AXAML attributes (BoxShadow colours, Easing names) are parsed when
+          # the control is CONSTRUCTED, not when it is compiled. A malformed value
+          # therefore builds perfectly and then throws on first open. Two such
+          # crashes have shipped from this repo:
+          #   BoxShadow="... #9000000000"  (10 hex digits)
+          #   Easing="QuadraticOut"        (no such easing)
+          # dotnet build cannot catch either, so it is checked explicitly here.
+          python3 tools/validate-runtime-xaml.py src/UI.Desktop

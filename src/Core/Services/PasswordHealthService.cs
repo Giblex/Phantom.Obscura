@@ -43,33 +43,45 @@ namespace PhantomVault.Core.Services
             var report = new PasswordHealthReport { TotalCredentials = list.Count };
             if (list.Count == 0) return report;
 
+            // Every secret worth auditing, not just the entry's own password. A password
+            // kept in a secret section — including one preserved from a duplicate merge —
+            // protects an account just as much and was previously invisible here.
+            var secrets = CollectSecrets(list);
+            report.AnalyzedSecretCount = secrets.Count;
+
             double totalEntropy = 0;
             var passwordCounts = new Dictionary<string, int>(StringComparer.Ordinal);
-            foreach (var cred in list)
+
+            foreach (var secret in secrets)
             {
                 // Use guess-resistance (charset entropy capped by Shannon, minus penalties
                 // for dictionary words, sequences and repeats) rather than raw Shannon
                 // entropy, which only measures character variety and rates "Password1!"
                 // as strong.
-                double entropy = EstimateStrengthBits(cred.Password);
+                double entropy = EstimateStrengthBits(secret.Value);
                 totalEntropy += entropy;
                 if (entropy < entropyThreshold)
                 {
                     report.WeakCount++;
-                    report.WeakTitles.Add(cred.Title);
+                    report.WeakTitles.Add(secret.Label);
                 }
+
+                if (!passwordCounts.TryAdd(secret.Value, 1))
+                {
+                    passwordCounts[secret.Value]++;
+                }
+            }
+
+            foreach (var cred in list)
+            {
                 if ((DateTimeOffset.UtcNow - cred.LastUpdatedUtc).TotalDays > ageThreshold)
                 {
                     report.OldCount++;
                     report.OldTitles.Add(cred.Title);
                 }
-
-                if (!passwordCounts.TryAdd(cred.Password, 1))
-                {
-                    passwordCounts[cred.Password]++;
-                }
             }
-            report.AverageEntropy = totalEntropy / list.Count;
+
+            report.AverageEntropy = secrets.Count == 0 ? 0 : totalEntropy / secrets.Count;
 
             foreach (var kvp in passwordCounts)
             {
@@ -77,31 +89,79 @@ namespace PhantomVault.Core.Services
                 {
                     report.ReusedCount++;
 
-                    report.ReusedTitles.AddRange(list.Where(c => c.Password == kvp.Key).Select(c => c.Title));
+                    report.ReusedTitles.AddRange(
+                        secrets.Where(s => string.Equals(s.Value, kvp.Key, StringComparison.Ordinal))
+                               .Select(s => s.Label));
                 }
             }
 
             if (_checkBreaches && _hibpLookup != null)
             {
                 report.BreachCheckPerformed = true;
-                foreach (var cred in list)
+                foreach (var secret in secrets)
                 {
-                    if (string.IsNullOrEmpty(cred.Password)) continue;
-                    if (await IsBreachedAsync(cred.Password).ConfigureAwait(false))
+                    if (string.IsNullOrEmpty(secret.Value)) continue;
+                    if (await IsBreachedAsync(secret.Value).ConfigureAwait(false))
                     {
                         report.BreachedCount++;
-                        report.BreachedTitles.Add(cred.Title);
+                        report.BreachedTitles.Add(secret.Label);
 
                         // A breached password is also weak regardless of its entropy.
-                        if (!report.WeakTitles.Contains(cred.Title))
+                        if (!report.WeakTitles.Contains(secret.Label))
                         {
-                            report.WeakTitles.Add(cred.Title);
+                            report.WeakTitles.Add(secret.Label);
                             report.WeakCount++;
                         }
                     }
                 }
             }
             return report;
+        }
+
+        /// <summary>
+        /// One auditable secret and the name to report it under.
+        /// </summary>
+        private readonly record struct AuditableSecret(string Label, string Value);
+
+        /// <summary>
+        /// Gathers the secrets to audit: each entry's own password, plus the value of any
+        /// section explicitly typed as a secret.
+        ///
+        /// Deliberately excludes PIN, TOTP and recovery-code sections. A PIN is numeric by
+        /// design and would be reported weak every time, TOTP holds a seed rather than a
+        /// password, and recovery codes are issued by the provider — flagging any of them
+        /// would bury the findings that can actually be acted on.
+        /// </summary>
+        private static List<AuditableSecret> CollectSecrets(IEnumerable<Credential> credentials)
+        {
+            var secrets = new List<AuditableSecret>();
+
+            foreach (var cred in credentials)
+            {
+                secrets.Add(new AuditableSecret(cred.Title, cred.Password));
+
+                if (cred.Sections is not { Count: > 0 })
+                    continue;
+
+                foreach (var section in cred.Sections.OrderBy(s => s.SortOrder))
+                {
+                    if (section is null || section.Kind != EntrySectionKind.Secret)
+                        continue;
+
+                    // A linked section's value belongs to the entry it points at, which is
+                    // audited in its own right; auditing it here would double-count it.
+                    if (section.IsLinked || string.IsNullOrEmpty(section.Value))
+                        continue;
+
+                    var label = string.IsNullOrWhiteSpace(section.Label)
+                        ? cred.Title
+                        : $"{cred.Title} › {section.Label}";
+
+                    secrets.Add(new AuditableSecret(label, section.Value));
+                }
+            }
+
+            return secrets;
         }
 
         public static double ComputeEntropy(string password)

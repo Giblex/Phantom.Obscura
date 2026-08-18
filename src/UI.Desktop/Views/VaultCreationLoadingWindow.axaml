@@ -11,7 +11,9 @@
                         WindowStartupLocation="CenterScreen"
                         Background="{DynamicResource WindowBackgroundBrush}"
                         Classes="animated-window"
-                        SystemDecorations="Full">
+                        RenderOptions.BitmapInterpolationMode="HighQuality"
+        RenderOptions.EdgeMode="Antialias"
+        SystemDecorations="Full">
 
     <Window.Resources>
         <ResourceDictionary>
@@ -190,7 +192,7 @@
                             CornerRadius="150"
                             BorderBrush="#1A6BB3AE"
                             BorderThickness="1.5"
-                            RenderTransformOrigin="0.5,0.5"
+                            RenderTransformOrigin="50%,50%"
                             HorizontalAlignment="Center" VerticalAlignment="Center">
                         <Border.RenderTransform>
                             <ScaleTransform ScaleX="0.95" ScaleY="0.95"/>
@@ -203,7 +205,7 @@
                             CornerRadius="130"
                             BorderBrush="#2A6BB3AE"
                             BorderThickness="1.5"
-                            RenderTransformOrigin="0.5,0.5"
+                            RenderTransformOrigin="50%,50%"
                             HorizontalAlignment="Center" VerticalAlignment="Center">
                         <Border.RenderTransform>
                             <ScaleTransform ScaleX="0.9" ScaleY="0.9"/>
@@ -216,7 +218,7 @@
                             CornerRadius="108"
                             BorderBrush="#406BB3AE"
                             BorderThickness="2"
-                            RenderTransformOrigin="0.5,0.5"
+                            RenderTransformOrigin="50%,50%"
                             HorizontalAlignment="Center" VerticalAlignment="Center">
                         <Border.RenderTransform>
                             <ScaleTransform ScaleX="0.85" ScaleY="0.85"/>
@@ -225,7 +227,7 @@
 
                     <Canvas x:Name="SegmentedRing"
                             Width="280" Height="280"
-                            RenderTransformOrigin="0.5,0.5"
+                            RenderTransformOrigin="50%,50%"
                             HorizontalAlignment="Center" VerticalAlignment="Center">
                         <Canvas.RenderTransform>
                             <RotateTransform Angle="0"/>
@@ -235,7 +237,7 @@
 
                     <Canvas x:Name="SegmentedRingInner"
                             Width="224" Height="224"
-                            RenderTransformOrigin="0.5,0.5"
+                            RenderTransformOrigin="50%,50%"
                             HorizontalAlignment="Center" VerticalAlignment="Center">
                         <Canvas.RenderTransform>
                             <RotateTransform Angle="0"/>
@@ -244,7 +246,7 @@
 
                     <Border x:Name="OrbitDot1"
                             Width="240" Height="240"
-                            RenderTransformOrigin="0.5,0.5"
+                            RenderTransformOrigin="50%,50%"
                             HorizontalAlignment="Center" VerticalAlignment="Center">
                         <Border.RenderTransform>
                             <RotateTransform Angle="0"/>
@@ -257,7 +259,7 @@
 
                     <Border x:Name="OrbitDot2"
                             Width="272" Height="272"
-                            RenderTransformOrigin="0.5,0.5"
+                            RenderTransformOrigin="50%,50%"
                             HorizontalAlignment="Center" VerticalAlignment="Center">
                         <Border.RenderTransform>
                             <RotateTransform Angle="0"/>
@@ -270,7 +272,7 @@
 
                     <Border x:Name="OrbitDot3"
                             Width="306" Height="306"
-                            RenderTransformOrigin="0.5,0.5"
+                            RenderTransformOrigin="50%,50%"
                             HorizontalAlignment="Center" VerticalAlignment="Center">
                         <Border.RenderTransform>
                             <RotateTransform Angle="180"/>
@@ -293,7 +295,7 @@
                             Background="#2A4CAF50"
                             HorizontalAlignment="Center" VerticalAlignment="Center"
                             Margin="0,0,-60,-60"
-                            RenderTransformOrigin="0.5,0.5"
+                            RenderTransformOrigin="50%,50%"
                             IsVisible="False">
                         <TextBlock Text="✓"
                                    FontSize="20"

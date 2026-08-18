@@ -842,12 +842,16 @@ namespace PhantomVault.UI.ViewModels
                 // user files are never picked up.
                 try
                 {
-                    foreach (var name in VaultFileProtection.KnownObscuraArtifactNames)
+                    // Scannable (not Known) so interrupted-commit leftovers — system.bin.tmp,
+                    // system.bin.bak, the journal — are surfaced too. A stranded .bak is a
+                    // whole previous vault, so a drive reported "clean" while one sat there
+                    // was reporting something false.
+                    foreach (var name in VaultFileProtection.ScannableObscuraArtifactNames)
                         AddRemnantIfExists(Path.Combine(driveRoot, name));
 
                     foreach (var dir in SafeEnumerateImmediateDirectories(driveRoot, phantomRoot))
                     {
-                        foreach (var name in VaultFileProtection.KnownObscuraArtifactNames)
+                        foreach (var name in VaultFileProtection.ScannableObscuraArtifactNames)
                             AddRemnantIfExists(Path.Combine(dir, name));
                     }
                 }
@@ -1586,36 +1590,66 @@ namespace PhantomVault.UI.ViewModels
 
                     if (!string.IsNullOrEmpty(driveRoot))
                     {
-                        string probeFile = Path.Combine(driveRoot, $".phantom_probe_{Guid.NewGuid():N}");
+                        // Write-probe: prove the drive is writable before we start binding.
+                        //
+                        // The name is deliberately anonymous. It used to be
+                        // ".phantom_probe_<guid>", which announced the product at the root of
+                        // the user's drive — the one thing a vault with a decoy tier must not
+                        // do. The contents ("probe") were never sensitive; the *filename* was.
+                        //
+                        // The delete is in a finally rather than trailing the write. Previously
+                        // an exception between the two — or the write-protect retry path, which
+                        // rewrites the same file — could leave the probe behind permanently,
+                        // and nothing ever swept it: probe files are not in
+                        // VaultFileProtection.KnownObscuraArtifactNames, so neither the remnant
+                        // scanner nor the wipe guard would ever see them again.
+                        string probeFile = Path.Combine(driveRoot, $".~{Guid.NewGuid():N}.tmp");
                         try
                         {
-                            File.WriteAllText(probeFile, "probe");
-                            File.Delete(probeFile);
-                        }
-                        catch (UnauthorizedAccessException)
-                        {
-
-                            Log.Warning("USB drive {DriveRoot} appears write-protected — attempting to lift protection before binding", driveRoot);
                             try
                             {
-                                var wpLifter = new UsbWriteProtectionService();
-                                wpLifter.EnableWriteAccess(driveRoot);
                                 File.WriteAllText(probeFile, "probe");
-                                File.Delete(probeFile);
-                                Log.Information("Write-protect lifted on {DriveRoot} — proceeding with binding", driveRoot);
                             }
-                            catch
+                            catch (UnauthorizedAccessException)
+                            {
+
+                                Log.Warning("USB drive {DriveRoot} appears write-protected — attempting to lift protection before binding", driveRoot);
+                                try
+                                {
+                                    var wpLifter = new UsbWriteProtectionService();
+                                    wpLifter.EnableWriteAccess(driveRoot);
+                                    File.WriteAllText(probeFile, "probe");
+                                    Log.Information("Write-protect lifted on {DriveRoot} — proceeding with binding", driveRoot);
+                                }
+                                catch
+                                {
+                                    throw new InvalidOperationException(
+                                        $"The selected USB drive ({driveRoot.TrimEnd('\\')}) is write-protected and the protection could not be removed automatically. " +
+                                        "Remove write protection manually and try again, or choose a different drive.");
+                                }
+                            }
+                            catch (IOException ioEx)
                             {
                                 throw new InvalidOperationException(
-                                    $"The selected USB drive ({driveRoot.TrimEnd('\\')}) is write-protected and the protection could not be removed automatically. " +
-                                    "Remove write protection manually and try again, or choose a different drive.");
+                                    $"The selected USB drive ({driveRoot.TrimEnd('\\')}) could not be written to: {ioEx.Message} " +
+                                    "Ensure the drive is connected and not full.");
                             }
                         }
-                        catch (IOException ioEx)
+                        finally
                         {
-                            throw new InvalidOperationException(
-                                $"The selected USB drive ({driveRoot.TrimEnd('\\')}) could not be written to: {ioEx.Message} " +
-                                "Ensure the drive is connected and not full.");
+                            // A probe we cannot delete is a residue we will never find again,
+                            // so this is warned about rather than swallowed. Removable media
+                            // fails deletes far more often than a fixed disk does.
+                            try
+                            {
+                                if (File.Exists(probeFile)) File.Delete(probeFile);
+                            }
+                            catch (Exception cleanupEx)
+                            {
+                                Log.Warning(cleanupEx,
+                                    "Could not remove the write-probe file left on {DriveRoot} — it will remain on the drive",
+                                    driveRoot);
+                            }
                         }
                     }
 
@@ -2123,7 +2157,10 @@ namespace PhantomVault.UI.ViewModels
                 {
                     ReportProvisioningStage(5, 84, "Packing master Obscura volume...", "Packing the canonical staged layout into the concealed transport volume.");
                     var obscuraVolumeService = new ObscuraVolumeService();
-                    await obscuraVolumeService.CreateVolumeFromDirectoryAsync(volumePath!, stagingRoot!, CancellationToken.None);
+                    await obscuraVolumeService.CreateVolumeFromDirectoryAsync(
+                        volumePath!, stagingRoot!,
+                        keyfilePath ?? throw new InvalidOperationException("A keyfile is required to pack the master volume."),
+                        CancellationToken.None);
                     Directory.Delete(stagingRoot!, true);
                     stagingRoot = null;
                 }
@@ -3480,10 +3517,37 @@ namespace PhantomVault.UI.ViewModels
             };
 
         /// <summary>
+        /// Suffixes appended to a volume name by <c>ObscuraVolumeService</c>'s atomic
+        /// commit — the staging copy, the rollback copy, and the intent journal.
+        ///
+        /// These must be recognised as Obscura-owned. A commit that is interrupted (stick
+        /// pulled, power lost) or whose cleanup delete fails leaves one of these next to the
+        /// vault. The <c>.bak</c> in particular is a complete previous vault, encrypted under
+        /// the same keyfile, so it is an openable snapshot containing credentials the user
+        /// may have since deleted. Recovery sweeps them on the next open of THAT vault — but
+        /// a stranded artifact from an abandoned provisioning attempt has no next open, and
+        /// without these suffixes the remnant scanner walked straight past it and offered the
+        /// user a "clean" drive that still held an old vault.
+        /// </summary>
+        public static readonly IReadOnlyList<string> ObscuraCommitArtifactSuffixes =
+            new[] { ".tmp", ".bak", ".commit-journal" };
+
+        /// <summary>
+        /// Every filename the remnant scanner should look for at the drive root: the vault
+        /// artifacts themselves plus each one's interrupted-commit leftovers.
+        /// </summary>
+        public static readonly IReadOnlySet<string> ScannableObscuraArtifactNames =
+            new HashSet<string>(
+                KnownObscuraArtifactNames.Concat(
+                    KnownObscuraArtifactNames.SelectMany(
+                        name => ObscuraCommitArtifactSuffixes.Select(suffix => name + suffix))),
+                StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
         /// True when a path is definitively Obscura-owned: either it lives inside a
         /// <c>.phantom</c> container, or its filename is one of the well-known
-        /// Obscura artifact names. Used by both remnant detection and the wipe
-        /// guard so the two stay perfectly consistent.
+        /// Obscura artifact names (including interrupted-commit leftovers). Used by both
+        /// remnant detection and the wipe guard so the two stay perfectly consistent.
         /// </summary>
         public static bool IsObscuraOwnedArtifact(string filePath)
         {
@@ -3491,7 +3555,7 @@ namespace PhantomVault.UI.ViewModels
                 return false;
             if (FindPhantomAncestor(filePath) != null)
                 return true;
-            return KnownObscuraArtifactNames.Contains(Path.GetFileName(filePath));
+            return ScannableObscuraArtifactNames.Contains(Path.GetFileName(filePath));
         }
     }
 

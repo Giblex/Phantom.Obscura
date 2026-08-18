@@ -174,7 +174,8 @@ namespace PhantomVault.UI
                     var dev = sp.GetRequiredService<PhantomVault.UI.Services.Licensing.DevLicenseAuthority>();
                     return new PhantomVault.UI.Services.Licensing.StubLicensingClient(dev);
                 }
-                return new PhantomVault.UI.Services.Licensing.StripeLicensingClient();
+                return new PhantomVault.UI.Services.Licensing.StripeLicensingClient(
+                    sp.GetRequiredService<PhantomVault.Core.Services.Network.IInternetGateway>());
             });
 
             services.AddSingleton<IAuthController, AuthController>();

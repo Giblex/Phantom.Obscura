@@ -27,8 +27,8 @@ namespace PhantomVault.Core.Services.Licensing
         // this pair on an air-gapped box; this value pairs the bundled Stripe backend.
         private static readonly byte[] Placeholder = new byte[]
         {
-            180, 54, 31, 42, 28, 49, 99, 185, 233, 95, 170, 157, 45, 129, 253, 147,
-            196, 213, 4, 75, 178, 34, 234, 116, 20, 122, 62, 150, 133, 103, 254, 229
+            199, 211, 78, 228, 92, 178, 14, 219, 239, 124, 101, 100, 77, 132, 96, 141,
+            167, 24, 194, 62, 200, 248, 151, 71, 146, 105, 101, 56, 141, 220, 31, 209
         };
 
         /// <summary>

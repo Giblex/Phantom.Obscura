@@ -172,13 +172,39 @@ namespace PhantomVault.UI.Services
             }
         }
 
+        /// <summary>Accent used when the persisted value is missing or unparseable.</summary>
+        private const string FallbackAccentHex = "#3A5E94";
+
+        /// <summary>
+        /// Last accent applied by <see cref="SetAccentColor"/>.
+        ///
+        /// Windows opened after startup are not covered by the per-window stamping below,
+        /// and UserAccentBrush is deliberately absent from every theme file, so a window
+        /// created later had to rely on Application.Resources resolving — which did not
+        /// hold in practice for controls inside a themed window, leaving the brush null.
+        /// ThemeAwareWindow reads this on open and stamps its own Resources instead.
+        /// </summary>
+        public static (Color Color, IBrush Brush)? CurrentAccent { get; private set; }
+
         public void SetAccentColor(string hex)
         {
-            if (Application.Current == null || string.IsNullOrWhiteSpace(hex)) return;
+            if (Application.Current == null) return;
             try
             {
-                var color = Color.Parse(hex);
+                // UserAccentBrush/UserAccentColor are deliberately defined in no theme
+                // file (see below), which means this method is their ONLY source. Bailing
+                // out on a blank or unparseable value therefore left them undefined, and
+                // every consumer resolved to a null brush — invisible rather than wrong,
+                // which is how a checked checkbox rendered as a bare tick with no box.
+                // Fall back to a known-good accent instead of returning early.
+                Color color;
+                if (string.IsNullOrWhiteSpace(hex) || !Color.TryParse(hex, out color))
+                {
+                    Log($"SetAccentColor: '{hex}' unusable, falling back to {FallbackAccentHex}");
+                    color = Color.Parse(FallbackAccentHex);
+                }
                 var brush = new SolidColorBrush(color);
+                CurrentAccent = (color, brush);
                 Application.Current.Resources["AccentColor"] = color;
                 Application.Current.Resources["AccentBrush"] = brush;
                 Application.Current.Resources["Brush.Accent"] = brush;

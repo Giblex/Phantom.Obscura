@@ -30,6 +30,7 @@ namespace PhantomVault.UI.ViewModels.Settings
                 new("Software updates", "Consent-gated", "Only after you click Check for updates; signed manifest is verified before anything downloads."),
                 new("Breach check (HIBP)", "Consent-gated", "k-anonymity range query — only the first 5 chars of a password hash ever leave the device, and only if you start a check."),
                 new("Website icons", "Consent-gated", "Optional favicon fetch; can be disabled entirely. Never sends credential data."),
+                new("Premium licensing", "Consent-gated", "Stripe checkout API on giblex.com — only when you upgrade; SPKI-pinned through the internet gateway."),
                 new("Browser auto-fill", "Local only", "Talks to the extension over a local pipe (native messaging). Never uses the network."),
             };
 

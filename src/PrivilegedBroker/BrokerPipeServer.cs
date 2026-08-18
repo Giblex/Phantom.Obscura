@@ -65,15 +65,29 @@ namespace PhantomVault.PrivilegedBroker
 
             var system = new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null);
             var admins = new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null);
-            var authedUsers = new SecurityIdentifier(WellKnownSidType.AuthenticatedUserSid, null);
 
             security.AddAccessRule(new PipeAccessRule(system, PipeAccessRights.FullControl, AccessControlType.Allow));
             security.AddAccessRule(new PipeAccessRule(admins, PipeAccessRights.FullControl, AccessControlType.Allow));
-            // The non-elevated UI needs to connect and exchange messages.
-            security.AddAccessRule(new PipeAccessRule(
-                authedUsers,
-                PipeAccessRights.ReadWrite | PipeAccessRights.CreateNewInstance,
-                AccessControlType.Allow));
+
+            // Prefer the installing user's SID (recorded at service install) instead of
+            // AuthenticatedUsers — any logged-on user could otherwise connect and rely
+            // on path verification alone.
+            var allowedUserSid = BrokerConfig.LoadAllowedClientUserSid();
+            if (!string.IsNullOrWhiteSpace(allowedUserSid))
+            {
+                try
+                {
+                    var userSid = new SecurityIdentifier(allowedUserSid);
+                    security.AddAccessRule(new PipeAccessRule(
+                        userSid,
+                        PipeAccessRights.ReadWrite | PipeAccessRights.CreateNewInstance,
+                        AccessControlType.Allow));
+                }
+                catch
+                {
+                    // Fall through — path verification still gates requests.
+                }
+            }
 
             return NamedPipeServerStreamAcl.Create(
                 BrokerProtocol.PipeName,

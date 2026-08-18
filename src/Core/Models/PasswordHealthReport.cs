@@ -7,6 +7,14 @@ namespace PhantomVault.Core.Models
     public sealed class PasswordHealthReport
     {
         public int TotalCredentials { get; set; }
+
+        /// <summary>
+        /// How many individual secrets were audited. This is at least
+        /// <see cref="TotalCredentials"/>, because an entry contributes its own password
+        /// plus any secret sections it carries — so weak/reused/breached counts are
+        /// measured against this, not against the entry count.
+        /// </summary>
+        public int AnalyzedSecretCount { get; set; }
         public int WeakCount { get; set; }
         public int ReusedCount { get; set; }
         public int OldCount { get; set; }

@@ -71,6 +71,29 @@ namespace PhantomVault.UI.ViewModels
             _preferredVaultPath = preferredVaultPath;
         }
 
+        /// <summary>
+        /// Picks the keyfile that actually opens this volume, out of the candidates present on
+        /// the drive. Returns null when none of them do.
+        ///
+        /// Legacy (plaintext-header) volumes need no key, and ResolveKeyfileAsync reports the
+        /// first candidate for them, so this stays correct across both on-disk versions.
+        /// </summary>
+        private async Task<string?> ResolveVolumeKeyfileAsync(
+            ObscuraVolumeService volumeService, string volumePath, string? driveRoot)
+        {
+            if (string.IsNullOrWhiteSpace(driveRoot))
+                return null;
+
+            var primary = FindKeyfileOnDrive(driveRoot);
+            if (string.IsNullOrWhiteSpace(primary))
+                return null;
+
+            var usbKeyfilePath = PhantomVault.Core.Utils.CompositeKeyfilePath.GetPrimaryPath(primary) ?? primary;
+            var candidates = BuildKeyfileCandidates(driveRoot, usbKeyfilePath);
+
+            return await volumeService.ResolveKeyfileAsync(volumePath, candidates).ConfigureAwait(false);
+        }
+
         private string? FindKeyfileOnDrive(string drivePath)
         {
             if (_blackSecureRawVolumeService.IsRawSelection(drivePath))
@@ -186,10 +209,87 @@ namespace PhantomVault.UI.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _status, value);
         }
 
+        /// <summary>
+        /// Where the unlock actually is. Advances in discrete jumps as each stage
+        /// completes (5, 25, 40, 55, 70, 82, 90, 95, 100), because those are the only
+        /// points at which real progress is known.
+        ///
+        /// Bind UI to <see cref="DisplayProgress"/>, not this — an arc driven straight
+        /// from these values snaps between them and reads as choppy.
+        /// </summary>
         public int ProgressPercent
         {
             get => _progressPercent;
-            private set => this.RaiseAndSetIfChanged(ref _progressPercent, value);
+            private set
+            {
+                this.RaiseAndSetIfChanged(ref _progressPercent, value);
+                StartProgressAnimator();
+            }
+        }
+
+        private double _displayProgress;
+
+        /// <summary>
+        /// Smoothed progress for display. Chases <see cref="ProgressPercent"/> at a
+        /// constant rate so the arc sweeps evenly instead of jumping stage to stage.
+        ///
+        /// Deliberately linear rather than eased: the target moves unpredictably, and
+        /// an ease-out restarted on every stage would visibly surge then stall. A fixed
+        /// rate looks consistent no matter how the stages land.
+        /// </summary>
+        public double DisplayProgress
+        {
+            get => _displayProgress;
+            private set => this.RaiseAndSetIfChanged(ref _displayProgress, value);
+        }
+
+        /// <summary>Percent per second the arc is allowed to travel.</summary>
+        private const double ProgressSweepRate = 26.0;
+
+        private DispatcherTimer? _progressAnimator;
+        private DateTime _lastProgressTick;
+
+        /// <summary>
+        /// Drives <see cref="DisplayProgress"/> toward the real value. Runs only while
+        /// there is a gap to close, and stops itself once caught up, so an idle dialog
+        /// costs nothing.
+        /// </summary>
+        private void StartProgressAnimator()
+        {
+            if (_progressAnimator != null) return;
+
+            _lastProgressTick = DateTime.UtcNow;
+            _progressAnimator = new DispatcherTimer(DispatcherPriority.Render)
+            {
+                Interval = TimeSpan.FromMilliseconds(16) // ~60fps
+            };
+
+            _progressAnimator.Tick += (_, _) =>
+            {
+                var now = DateTime.UtcNow;
+                var dt = (now - _lastProgressTick).TotalSeconds;
+                _lastProgressTick = now;
+
+                double target = _progressPercent;
+                double current = DisplayProgress;
+                double delta = target - current;
+
+                if (Math.Abs(delta) < 0.05)
+                {
+                    DisplayProgress = target;
+                    _progressAnimator?.Stop();
+                    _progressAnimator = null;
+                    return;
+                }
+
+                // Constant speed, capped so a large jump cannot overshoot the target.
+                double step = ProgressSweepRate * dt;
+                DisplayProgress = delta > 0
+                    ? Math.Min(target, current + step)
+                    : Math.Max(target, current - step);
+            };
+
+            _progressAnimator.Start();
         }
 
         public void SetOwnerWindow(Window window)
@@ -257,6 +357,8 @@ namespace PhantomVault.UI.ViewModels
                 // Track the source we extracted from so we can run a deferred integrity
                 // verification in the background after the unlock UI is open.
                 string? extractedFromVolumePath = null;
+                // Kept so the deferred post-unlock integrity check can reopen the same volume.
+                string? volumeKeyfilePath = null;
                 bool extractedFromBlackSecure = false;
                 string? extractedFromRawDevice = null;
 
@@ -265,9 +367,35 @@ namespace PhantomVault.UI.ViewModels
                     Status = "Extracting vault volume…";
                     extractedVolumeRoot = Path.Combine(Path.GetTempPath(), "PhantomObscuraSessions", Guid.NewGuid().ToString("N"));
                     var obscuraVolumeService = new ObscuraVolumeService();
+
+                    // The volume header is encrypted under the keyfile, so the keyfile has to
+                    // be resolved BEFORE extraction — it used to be discovered further down,
+                    // after the volume had already been opened. That ordering worked only
+                    // while the header was plaintext.
+                    //
+                    // Which keyfile is not known up front: unlock has a candidate list (the
+                    // USB keyfile alone, and composed with each host companion). The header's
+                    // GCM tag decides, and is far cheaper to test than the manifest's Argon2.
+                    volumeKeyfilePath = await ResolveVolumeKeyfileAsync(
+                        obscuraVolumeService, masterVolumePath, selectedDriveRoot).ConfigureAwait(false);
+
+                    if (volumeKeyfilePath == null)
+                    {
+                        Log.Error("[VaultUnlock] no keyfile candidate could open the volume header");
+                        Status = "The vault keyfile for this drive could not be found.";
+                        await _dialogService.ShowErrorAsync(
+                            "Keyfile Required",
+                            "This drive's vault could not be opened with any keyfile found on it. "
+                            + "If the keyfile lives on another device, connect it and try again.",
+                            _ownerWindow);
+                        CloseAndReturnToWelcome();
+                        return;
+                    }
+
                     // verify:false — integrity check runs as a background task after unlock so the
                     // extraction step finishes in ~half the time. See post-unlock verifier below.
-                    await obscuraVolumeService.ExtractVolumeAsync(masterVolumePath, extractedVolumeRoot, extractProgress, verify: false).ConfigureAwait(false);
+                    await obscuraVolumeService.ExtractVolumeAsync(
+                        masterVolumePath, extractedVolumeRoot, volumeKeyfilePath, extractProgress, verify: false).ConfigureAwait(false);
                     extractedFromVolumePath = masterVolumePath;
 
                     rootPath = Path.Combine(extractedVolumeRoot, "root");
@@ -448,9 +576,14 @@ namespace PhantomVault.UI.ViewModels
 
                 VaultManifest? testManifest = null;
                 (string? RootContainerPath, string? ContainerPath, string? ObjectContainerPath) preResolvePaths = default;
-                Log.Information("[VaultUnlock] final ReadManifest password='{Pass}' keyfile={Keyfile} reuseAuthenticated={Reuse}",
+                // Neither value is logged in the clear. The password was already
+                // redacted, but the keyfile PATH was not — it names the removable drive
+                // and key filename, which is exactly the location an attacker reading
+                // logs would want. The placeholder is renamed too: "password='{Pass}'"
+                // read like a plaintext password log and tripped every audit.
+                Log.Information("[VaultUnlock] final ReadManifest passwordState={PassState} keyfileState={KeyfileState} reuseAuthenticated={Reuse}",
                     password == null ? "<null>" : (password.Length == 0 ? "<empty>" : "<set>"),
-                    keyfilePath ?? "<null>",
+                    keyfilePath == null ? "<null>" : "<present>",
                     authenticatedManifest != null);
 
                 try
@@ -748,6 +881,7 @@ namespace PhantomVault.UI.ViewModels
                 {
                     var verifyExtractedRoot = extractedVolumeRoot;
                     var verifyMasterVolume = extractedFromVolumePath;
+                    var verifyVolumeKeyfile = volumeKeyfilePath;
                     var verifyBlackSecure = extractedFromBlackSecure;
                     var verifyRawDevice = extractedFromRawDevice;
                     _ = Task.Run(async () =>
@@ -755,10 +889,11 @@ namespace PhantomVault.UI.ViewModels
                         try
                         {
                             bool ok = true;
-                            if (verifyMasterVolume != null && !string.IsNullOrWhiteSpace(verifyExtractedRoot))
+                            if (verifyMasterVolume != null && !string.IsNullOrWhiteSpace(verifyExtractedRoot)
+                                && !string.IsNullOrWhiteSpace(verifyVolumeKeyfile))
                             {
                                 ok = await new ObscuraVolumeService()
-                                    .VerifyExtractedVolumeAsync(verifyMasterVolume, verifyExtractedRoot)
+                                    .VerifyExtractedVolumeAsync(verifyMasterVolume, verifyExtractedRoot, verifyVolumeKeyfile)
                                     .ConfigureAwait(false);
                             }
                             // BlackSecure raw-device verification path is not yet implemented in

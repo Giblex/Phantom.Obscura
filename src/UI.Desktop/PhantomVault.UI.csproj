@@ -129,6 +129,8 @@
     <AvaloniaResource Include="Assets\Logo Transparent.svg" />
     <AvaloniaResource Include="Assets\ok.svg" />
     <AvaloniaResource Include="Assets\ok.png" />
+    <AvaloniaResource Include="Assets\topg.png" />
+    <AvaloniaResource Include="Assets\cent.png" />
     <AvaloniaResource Include="Assets\dot_pattern.png" />
     <AvaloniaResource Include="Assets\dot_pattern_light.png" />
     <!-- Include SVG icons for UI elements -->

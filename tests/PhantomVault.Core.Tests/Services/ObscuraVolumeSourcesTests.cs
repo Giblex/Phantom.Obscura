@@ -18,7 +18,14 @@ public sealed class ObscuraVolumeSourcesTests : IDisposable
     private readonly string _dir = Path.Combine(Path.GetTempPath(), "obscura_src_tests_" + Guid.NewGuid().ToString("N"));
     private readonly ObscuraVolumeService _svc = new();
 
-    public ObscuraVolumeSourcesTests() => Directory.CreateDirectory(_dir);
+    private readonly string _keyfile;
+
+    public ObscuraVolumeSourcesTests()
+    {
+        Directory.CreateDirectory(_dir);
+        _keyfile = Path.Combine(_dir, "vault.key");
+        File.WriteAllBytes(_keyfile, System.Security.Cryptography.RandomNumberGenerator.GetBytes(64));
+    }
     public void Dispose() { try { Directory.Delete(_dir, true); } catch { } }
 
     private static ObscuraVolumeSource Src(string path, string content)
@@ -34,11 +41,11 @@ public sealed class ObscuraVolumeSourcesTests : IDisposable
             Src("dir/beta.txt", "beta-content-longer"),
         };
 
-        await _svc.CreateVolumeFromSourcesAsync(vol, sources);
+        await _svc.CreateVolumeFromSourcesAsync(vol, sources, _keyfile);
 
-        Assert.True(await _svc.IsObscuraVolumeAsync(vol));
+        Assert.True(await _svc.IsPlausibleObscuraVolumeAsync(vol));
         string outDir = Path.Combine(_dir, "out");
-        await _svc.ExtractVolumeAsync(vol, outDir, progress: null, verify: true);
+        await _svc.ExtractVolumeAsync(vol, outDir, _keyfile, progress: null, verify: true);
 
         Assert.Equal("alpha-content", File.ReadAllText(Path.Combine(outDir, "alpha.txt")));
         Assert.Equal("beta-content-longer", File.ReadAllText(Path.Combine(outDir, "dir", "beta.txt")));
@@ -53,9 +60,9 @@ public sealed class ObscuraVolumeSourcesTests : IDisposable
             Src("zeta.txt", "z"),
             Src("alpha.txt", "a"),
             Src("mid/file.txt", "m"),
-        });
+        }, _keyfile);
 
-        var manifest = await _svc.ReadManifestAsync(vol);
+        var manifest = await _svc.ReadManifestAsync(vol, _keyfile);
         var paths = manifest.Entries.Select(e => e.Path).ToArray();
         var sorted = paths.OrderBy(p => p, StringComparer.OrdinalIgnoreCase).ToArray();
         Assert.Equal(sorted, paths);
@@ -69,21 +76,21 @@ public sealed class ObscuraVolumeSourcesTests : IDisposable
         {
             Src("one.bin", new string('x', 5000)),
             Src("two.bin", new string('y', 1)),
-        });
+        }, _keyfile);
 
         string outDir = Path.Combine(_dir, "out");
-        await _svc.ExtractVolumeAsync(vol, outDir, progress: null, verify: true);
-        Assert.True(await _svc.VerifyExtractedVolumeAsync(vol, outDir));
+        await _svc.ExtractVolumeAsync(vol, outDir, _keyfile, progress: null, verify: true);
+        Assert.True(await _svc.VerifyExtractedVolumeAsync(vol, outDir, _keyfile));
     }
 
     [Fact]
     public async Task CreateFromSources_Empty_ProducesValidEmptyVolume()
     {
         string vol = Path.Combine(_dir, "system.bin");
-        await _svc.CreateVolumeFromSourcesAsync(vol, Array.Empty<ObscuraVolumeSource>());
+        await _svc.CreateVolumeFromSourcesAsync(vol, Array.Empty<ObscuraVolumeSource>(), _keyfile);
 
-        Assert.True(await _svc.IsObscuraVolumeAsync(vol));
-        var manifest = await _svc.ReadManifestAsync(vol);
+        Assert.True(await _svc.IsPlausibleObscuraVolumeAsync(vol));
+        var manifest = await _svc.ReadManifestAsync(vol, _keyfile);
         Assert.Empty(manifest.Entries);
     }
 }

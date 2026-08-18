@@ -341,6 +341,12 @@ namespace PhantomVault.UI.Views.Autofill
                 // strip reads as a set rather than three unrelated controls.
                 Width = wide ? 94 : 26,
                 Height = 24,
+                // MinWidth/MinHeight must be cleared explicitly. The app-level Button
+                // style in GlobalStyles.axaml sets MinHeight=40 / MinWidth=100, and the
+                // effective size is max(Min*, Width/Height) — so without these the 26x24
+                // chips rendered at 100x40 and swallowed the row they sit on.
+                MinWidth = 0,
+                MinHeight = 0,
                 Padding = new Thickness(0),
                 CornerRadius = new CornerRadius(6),
                 Background = new SolidColorBrush(Color.Parse("#18FFFFFF")),

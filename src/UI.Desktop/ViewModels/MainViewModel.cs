@@ -113,7 +113,27 @@ namespace PhantomVault.UI.ViewModels
                 {
                     extractedVolumeRoot = Path.Combine(Path.GetTempPath(), "PhantomObscuraSessions", Guid.NewGuid().ToString("N"));
                     var volumeService = new ObscuraVolumeService();
-                    await volumeService.ExtractVolumeAsync(masterVolumePath, extractedVolumeRoot).ConfigureAwait(false);
+
+                    // A v2 volume's header is encrypted under the keyfile, so it has to be
+                    // resolved before extraction. This code used to take the keyfile from
+                    // manifest.KeyfilePath further down — but the manifest lives inside the
+                    // volume, so by then it is far too late.
+                    var keyfileCandidates = PhantomVault.UI.Services.ObscuraKeyfileLocator.BuildCandidates(selectedDriveRoot);
+                    var volumeKeyfile = await volumeService
+                        .ResolveKeyfileAsync(masterVolumePath, keyfileCandidates).ConfigureAwait(false);
+
+                    if (volumeKeyfile == null)
+                    {
+                        await _dialogService.ShowErrorAsync(
+                            "Keyfile Required",
+                            "This drive's vault could not be opened with any keyfile found on it. "
+                            + "If the keyfile lives on another device, connect it and try again.",
+                            _ownerWindow);
+                        Status = "Vault keyfile not found.";
+                        return;
+                    }
+
+                    await volumeService.ExtractVolumeAsync(masterVolumePath, extractedVolumeRoot, volumeKeyfile).ConfigureAwait(false);
 
                     var extractedRootContainer = Path.Combine(extractedVolumeRoot, "root", "root.pvault");
                     if (File.Exists(extractedRootContainer))

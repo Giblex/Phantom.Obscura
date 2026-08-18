@@ -55,5 +55,50 @@
                 </StackPanel>
             </StackPanel>
         </Border>
+
+        <!-- Licence redemption.
+             Checkout can only auto-activate when the licensing backend returns a signed
+             token. When payment goes through a Stripe payment link instead, the code
+             arrives by email — without this there was no way to enter it, so a paying
+             customer could be left with no route to Premium. -->
+        <Border Background="{DynamicResource CardBackgroundBrush}"
+                BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="12"
+                Padding="20,16"
+                Margin="0,14,0,0">
+            <StackPanel Spacing="10">
+                <TextBlock Text="Have a licence code?"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                <TextBlock Text="Paste the code from your subscription confirmation email. It is checked on this device — no account or personal details are sent anywhere."
+                           FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
+
+                <TextBox Text="{Binding LicenseCodeInput, Mode=TwoWay}"
+                         Watermark="Paste licence code"
+                         AcceptsReturn="False"
+                         FontFamily="{DynamicResource MonoFontFamily}"
+                         FontSize="12"
+                         TextWrapping="Wrap"
+                         MinHeight="60"
+                         MaxHeight="110"
+                         VerticalContentAlignment="Top"/>
+
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Button Content="Apply licence"
+                            Command="{Binding RedeemCommand}"
+                            Background="{DynamicResource AccentBrush}"
+                            Foreground="#FFFFFFFF"/>
+                </StackPanel>
+
+                <TextBlock Text="{Binding RedeemMessage}"
+                           IsVisible="{Binding HasRedeemMessage}"
+                           FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource SecondaryTextBrush}"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
     </StackPanel>
 </UserControl>

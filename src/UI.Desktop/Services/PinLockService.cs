@@ -14,6 +14,13 @@ namespace PhantomVault.UI.Services
         private const int SaltSizeBytes = 16;
         private const int HashSizeBytes = 32;
 
+        /// <summary>
+        /// Work factor for new PINs, taken from the manifest model so the value lives
+        /// in exactly one place. Verification always uses the iteration count stored
+        /// alongside the hash, so changing this never invalidates an existing PIN.
+        /// </summary>
+        private static int DefaultPinIterations => new VaultManifest().PinPbkdf2Iterations;
+
         // PIN salt/hash at rest are DPAPI-sealed (CurrentUser) and stored with this
         // prefix. Values without the prefix are legacy plaintext and are migrated
         // opportunistically on first successful load.
@@ -119,16 +126,32 @@ namespace PhantomVault.UI.Services
                    && manifest.PinPbkdf2Iterations > 0;
         }
 
+        /// <summary>
+        /// Minimum length for the vault's own unlock PIN.
+        ///
+        /// This is an authentication factor — it is verified against a stored hash, so its
+        /// length is the only thing bounding an offline search, and six is the floor used
+        /// by platform authenticators. It is deliberately NOT shared with
+        /// <see cref="PinLengthRange"/>, which describes PINs stored as credential data
+        /// (a card PIN, a door code) and has no security role.
+        /// </summary>
+        public const int MinVaultPinLength = 6;
+
         public static void SetPin(string pin, string? manifestPath = null)
         {
             if (string.IsNullOrWhiteSpace(pin))
                 throw new ArgumentException("PIN cannot be empty", nameof(pin));
 
-            if (pin.Length < 4)
-                throw new ArgumentException("PIN must be at least 4 digits/characters", nameof(pin));
+            if (pin.Length < MinVaultPinLength)
+                throw new ArgumentException(
+                    $"PIN must be at least {MinVaultPinLength} digits/characters", nameof(pin));
 
             byte[] salt = RandomNumberGenerator.GetBytes(SaltSizeBytes);
-            int iterations = 150_000;
+
+            // Read the work factor from the manifest model's default rather than
+            // inlining it. This literal was 150_000 and silently overrode the
+            // VaultManifest default, so raising that default alone changed nothing.
+            int iterations = DefaultPinIterations;
 
             byte[] hash = Rfc2898DeriveBytes.Pbkdf2(
                 password: pin,
@@ -256,7 +279,7 @@ namespace PhantomVault.UI.Services
                 return false;
             }
 
-            if (iterations <= 0) iterations = 150_000;
+            if (iterations <= 0) iterations = DefaultPinIterations;
 
             byte[] actualHash = Rfc2898DeriveBytes.Pbkdf2(
                 password: pin,

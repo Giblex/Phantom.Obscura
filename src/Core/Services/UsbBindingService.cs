@@ -10,6 +10,24 @@ using System.Text.Json;
 namespace PhantomVault.Core.Services
 {
 
+    /// <summary>
+    /// Derives a stable identifier for a removable device and checks that a vault is
+    /// being opened from the device it was provisioned on.
+    ///
+    /// IMPORTANT — this is identifier checking, not hardware binding. Every value in
+    /// the fallback chain (GPT GUID, disk serial, volume serial, and the size/format/
+    /// label heuristic) is a value READ FROM the device, not a secret the device proves
+    /// it holds. None involves a challenge-response, so a byte-for-byte copy of the
+    /// drive with the volume serial set to match reproduces the identity.
+    ///
+    /// The real possession factor is the keyfile, which is mandatory. The device ID
+    /// only contributes to the KDF salt. Anyone holding a copy of the USB therefore
+    /// holds everything needed to open the vault, and callers must not describe this
+    /// as tying the vault to a specific piece of hardware.
+    ///
+    /// Genuine hardware binding requires an authenticator that can hold a key and
+    /// answer a challenge — see the YubiKey and PhantomKey paths.
+    /// </summary>
     public sealed class UsbBindingService
     {
         private static byte[] DeriveHmacKeyFromVaultSalt(byte[] vaultSalt)

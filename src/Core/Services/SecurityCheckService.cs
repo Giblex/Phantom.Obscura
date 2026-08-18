@@ -168,10 +168,17 @@ namespace PhantomVault.Core.Services
                 try
                 {
                     var obscuraVolumeService = new ObscuraVolumeService();
-                    if (!await obscuraVolumeService.IsObscuraVolumeAsync(masterVolumePath).ConfigureAwait(false))
+                    // Structural check only. This runs before unlock, so there is no keyfile
+                    // in hand, and a v2 volume carries no signature to recognise — proving a
+                    // volume is genuinely ours requires authenticating its header, which
+                    // requires the keyfile. What this can still catch is a truncated or
+                    // obviously malformed container. The wording below no longer claims more
+                    // than that; a header that is structurally sane but foreign will be
+                    // rejected at unlock, when the keyfile is available.
+                    if (!await obscuraVolumeService.IsPlausibleObscuraVolumeAsync(masterVolumePath).ConfigureAwait(false))
                     {
                         result.ManifestValid = false;
-                        result.Errors.Add("Master Obscura volume header is invalid");
+                        result.Errors.Add("Master Obscura volume is missing or structurally malformed");
                         return false;
                     }
 

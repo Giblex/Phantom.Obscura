@@ -20,7 +20,14 @@ namespace PhantomVault.Core.Services
             WriteIndented = false
         };
 
-        public async Task CreateVolumeFromDirectoryAsync(string volumePath, string sourceRoot, CancellationToken cancellationToken = default)
+        /// <summary>Upper bound on a manifest, so a corrupt length cannot drive a huge allocation.</summary>
+        private const int MaxHeaderBytes = 1024 * 1024;
+
+        public async Task CreateVolumeFromDirectoryAsync(
+            string volumePath,
+            string sourceRoot,
+            string keyfilePath,
+            CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(volumePath))
                 throw new ArgumentException("Volume path is required", nameof(volumePath));
@@ -73,7 +80,7 @@ namespace PhantomVault.Core.Services
             // Crash-safe atomic write: journal marker + write-through temp + backup-keeping
             // replace. Prevents truncated/corrupt volumes when the process or power is lost
             // mid-write (root cause of "Unexpected end of volume" on next unlock).
-            await CommitVolumeAtomicAsync(volumePath, headerBytes, async (output, ct) =>
+            await CommitVolumeAtomicAsync(volumePath, headerBytes, keyfilePath, async (output, ct) =>
             {
                 foreach (var file in files)
                 {
@@ -94,6 +101,7 @@ namespace PhantomVault.Core.Services
         public async Task CreateVolumeFromSourcesAsync(
             string volumePath,
             IReadOnlyList<ObscuraVolumeSource> sources,
+            string keyfilePath,
             CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(volumePath))
@@ -157,7 +165,7 @@ namespace PhantomVault.Core.Services
             // Crash-safe atomic write (see CommitVolumeAtomicAsync): journal + write-through
             // temp + backup-keeping replace, so an interrupted commit can never corrupt the
             // live container — it is recovered on the next open.
-            await CommitVolumeAtomicAsync(volumePath, headerBytes, async (output, ct) =>
+            await CommitVolumeAtomicAsync(volumePath, headerBytes, keyfilePath, async (output, ct) =>
             {
                 foreach (var source in ordered)
                 {
@@ -186,15 +194,19 @@ namespace PhantomVault.Core.Services
         private static async Task CommitVolumeAtomicAsync(
             string volumePath,
             byte[] headerBytes,
+            string keyfilePath,
             Func<FileStream, CancellationToken, Task> writePayload,
             CancellationToken cancellationToken)
         {
+            if (string.IsNullOrWhiteSpace(keyfilePath))
+                throw new ArgumentException("A keyfile is required to write an Obscura volume.", nameof(keyfilePath));
+
             string tempPath = TempPathFor(volumePath);
             string backupPath = BackupPathFor(volumePath);
             string journalPath = JournalPathFor(volumePath);
 
             // Drop any stale temp from a previously aborted attempt.
-            try { if (File.Exists(tempPath)) File.Delete(tempPath); } catch { }
+            TryDeleteArtifact(tempPath, "stale staging file from a previous attempt");
 
             // 1) Journal the intent and flush it before touching the live file.
             var journal = new CommitJournal
@@ -212,13 +224,42 @@ namespace PhantomVault.Core.Services
                 await using (var output = new FileStream(
                     tempPath, FileMode.Create, FileAccess.Write, FileShare.None, 81920, FileOptions.WriteThrough))
                 {
-                    await output.WriteAsync(Magic, cancellationToken).ConfigureAwait(false);
-                    byte[] headerLengthBytes = new byte[4];
-                    BinaryPrimitives.WriteInt32LittleEndian(headerLengthBytes, headerBytes.Length);
-                    await output.WriteAsync(headerLengthBytes, cancellationToken).ConfigureAwait(false);
-                    await output.WriteAsync(headerBytes, cancellationToken).ConfigureAwait(false);
+                    // v2 header: salt | nonce | tag | int32 cipherLength | ciphertext.
+                    // No magic — see ObscuraVolumeFormat for why a "random-looking" constant
+                    // would still be a perfect fingerprint.
+                    byte[] salt = RandomNumberGenerator.GetBytes(ObscuraVolumeFormat.SaltLength);
+                    byte[] plaintext = ObscuraVolumeFormat.PackHeaderPlaintext(headerBytes);
+                    byte[] key = ObscuraVolumeFormat.DeriveHeaderKey(salt, keyfilePath);
+
+                    EncryptionResult encrypted;
+                    try
+                    {
+                        encrypted = new EncryptionService().Encrypt(
+                            plaintext, key, ObscuraVolumeFormat.BuildHeaderAad(salt));
+                    }
+                    finally
+                    {
+                        CryptographicOperations.ZeroMemory(key);
+                        CryptographicOperations.ZeroMemory(plaintext);
+                    }
+
+                    byte[] cipherLengthBytes = new byte[4];
+                    BinaryPrimitives.WriteInt32LittleEndian(cipherLengthBytes, encrypted.Ciphertext.Length);
+
+                    await output.WriteAsync(salt, cancellationToken).ConfigureAwait(false);
+                    await output.WriteAsync(encrypted.Nonce, cancellationToken).ConfigureAwait(false);
+                    await output.WriteAsync(encrypted.Tag, cancellationToken).ConfigureAwait(false);
+                    await output.WriteAsync(cipherLengthBytes, cancellationToken).ConfigureAwait(false);
+                    await output.WriteAsync(encrypted.Ciphertext, cancellationToken).ConfigureAwait(false);
 
                     await writePayload(output, cancellationToken).ConfigureAwait(false);
+
+                    // Pad the file out to a size bucket with random bytes. Encrypting the
+                    // header hides every per-entry length, but the file's own size still
+                    // approximated how much was stored — a 268 MB volume announced itself as
+                    // a well-used vault. Readers are bounded by the entry offsets in the
+                    // manifest, so trailing bytes are never interpreted.
+                    await WriteRandomPaddingAsync(output, cancellationToken).ConfigureAwait(false);
 
                     await output.FlushAsync(cancellationToken).ConfigureAwait(false);
                     output.Flush(flushToDisk: true);
@@ -227,7 +268,7 @@ namespace PhantomVault.Core.Services
                 // 3) Atomic swap, keeping the previous good copy as a recoverable backup.
                 if (File.Exists(volumePath))
                 {
-                    try { if (File.Exists(backupPath)) File.Delete(backupPath); } catch { }
+                    TryDeleteArtifact(backupPath, "previous backup superseded by this commit");
                     File.Replace(tempPath, volumePath, backupPath, ignoreMetadataErrors: true);
                 }
                 else
@@ -236,14 +277,43 @@ namespace PhantomVault.Core.Services
                 }
 
                 // 4) Success — discard backup and journal.
-                try { if (File.Exists(backupPath)) File.Delete(backupPath); } catch { }
-                try { if (File.Exists(journalPath)) File.Delete(journalPath); } catch { }
+                //
+                // The backup is the PREVIOUS volume, encrypted under the same keyfile. Leaving
+                // it behind is not a plaintext leak, but it is a rollback artifact: anyone who
+                // can open the live vault can open the backup, and the backup still holds
+                // credentials the user has since deleted or rotated. That makes a failed delete
+                // a revocation failure, which is why it is no longer swallowed silently.
+                TryDeleteArtifact(backupPath, "rollback copy of the previous vault");
+                TryDeleteArtifact(journalPath, "commit journal");
             }
             catch
             {
                 // Leave journal (+ backup, if any) so recovery can run; clear the partial temp.
-                try { if (File.Exists(tempPath)) File.Delete(tempPath); } catch { }
+                TryDeleteArtifact(tempPath, "partial staging file from the failed commit");
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// Deletes a commit artifact, reporting rather than swallowing a failure.
+        ///
+        /// Every one of these deletes used to be <c>try { … } catch { }</c>. On a fixed disk
+        /// that is nearly always harmless; on removable media — the primary target for this
+        /// volume — deletes fail far more often (exFAT quirks, write-protect, the stick pulled
+        /// mid-operation), and a silent failure left an artifact nobody would ever look for
+        /// again. Cleanup still must never fail the commit, so this reports and returns.
+        /// </summary>
+        private static void TryDeleteArtifact(string path, string what)
+        {
+            try
+            {
+                if (File.Exists(path)) File.Delete(path);
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Warning(ex,
+                    "[ObscuraVolume] Could not remove the {What} at {Path} — it remains on the volume's drive",
+                    what, path);
             }
         }
 
@@ -281,41 +351,106 @@ namespace PhantomVault.Core.Services
                         File.Move(backupPath, volumePath);
                         backupRestored = true;
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Serilog.Log.Warning(ex, "[ObscuraVolume] Could not restore {VolumePath} from its backup", volumePath);
+                    }
                 }
 
-                try { if (File.Exists(tempPath)) { File.Delete(tempPath); staleTempRemoved = true; } } catch { }
-                try { if (File.Exists(backupPath)) File.Delete(backupPath); } catch { }
-                try { File.Delete(journalPath); } catch { }
+                if (File.Exists(tempPath)) staleTempRemoved = true;
+                TryDeleteArtifact(tempPath, "staging file from the interrupted commit");
+                TryDeleteArtifact(backupPath, "rollback copy of the previous vault");
+                TryDeleteArtifact(journalPath, "commit journal");
             }
-            else if (File.Exists(tempPath))
+            else
             {
-                // Legacy abort with no journal: sweep the orphaned temp.
-                try { File.Delete(tempPath); staleTempRemoved = true; } catch { }
+                // No journal. Either a legacy abort or a commit whose cleanup deletes failed
+                // silently before they were made observable. Both leave artifacts that nothing
+                // else will ever look for, so sweep them here.
+                //
+                // The orphaned BACKUP used to be missed entirely: the old code only looked for
+                // a temp file in this branch, so a .bak that outlived its commit sat next to
+                // the vault indefinitely — an openable snapshot of an older vault state.
+                if (File.Exists(tempPath)) staleTempRemoved = true;
+                TryDeleteArtifact(tempPath, "orphaned staging file");
+                TryDeleteArtifact(backupPath, "orphaned rollback copy of a previous vault");
             }
 
             return new VolumeRecoveryResult(recoveryPerformed, backupRestored, staleTempRemoved);
         }
 
+        /// <summary>
+        /// Structural sanity check used by recovery to decide whether the live file is intact
+        /// or should be replaced from the backup.
+        ///
+        /// Deliberately keyless and deliberately weak. Recovery runs before anything has a
+        /// keyfile, and it only has to answer "is this file complete enough to keep?" — a
+        /// question about truncation, not authenticity. Authenticity is settled later, when
+        /// the header is actually opened.
+        ///
+        /// This previously insisted on the v1 signature. Left that way it would have judged
+        /// every v2 volume invalid and "recovered" a perfectly good vault by overwriting it
+        /// with an older backup — data loss caused by the repair path.
+        /// </summary>
         private static bool VolumeHeaderLooksValid(string volumePath)
         {
             try
             {
                 var info = new FileInfo(volumePath);
-                if (!info.Exists || info.Length < 12) return false;
+                if (!info.Exists || info.Length < ObscuraVolumeFormat.V2FixedPrefixLength) return false;
 
-                Span<byte> head = stackalloc byte[12];
+                byte[] head = new byte[ObscuraVolumeFormat.V2FixedPrefixLength];
                 using var fs = new FileStream(volumePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-                if (fs.Read(head) != 12) return false;
-                if (!head.Slice(0, 8).SequenceEqual(Magic)) return false;
+                int total = 0;
+                while (total < head.Length)
+                {
+                    int read = fs.Read(head, total, head.Length - total);
+                    if (read == 0) break;
+                    total += read;
+                }
+                if (total < 12) return false;
 
-                int headerLen = BinaryPrimitives.ReadInt32LittleEndian(head.Slice(8, 4));
-                if (headerLen <= 0) return false;
-                return info.Length >= 12 + headerLen;
+                if (ObscuraVolumeFormat.IsLegacyHeader(head))
+                {
+                    int legacyLength = BinaryPrimitives.ReadInt32LittleEndian(head.AsSpan(8, 4));
+                    return legacyLength > 0 && legacyLength <= MaxHeaderBytes
+                        && info.Length >= Magic.Length + 4 + (long)legacyLength;
+                }
+
+                if (total < ObscuraVolumeFormat.V2FixedPrefixLength) return false;
+                int cipherLength = BinaryPrimitives.ReadInt32LittleEndian(
+                    head.AsSpan(ObscuraVolumeFormat.V2FixedPrefixLength - 4, 4));
+                return cipherLength > 0 && cipherLength <= MaxHeaderBytes
+                    && cipherLength % ObscuraVolumeFormat.HeaderPaddingGranularity == 0
+                    && info.Length >= ObscuraVolumeFormat.V2FixedPrefixLength + (long)cipherLength;
             }
             catch
             {
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// Appends random bytes until the stream reaches the next size bucket. Random rather
+        /// than zeroed: a long zero run at the tail of an otherwise-opaque file is itself a
+        /// signal, and would let an observer subtract the padding back off to recover the
+        /// true payload size.
+        /// </summary>
+        private static async Task WriteRandomPaddingAsync(FileStream output, CancellationToken cancellationToken)
+        {
+            long actual = output.Position;
+            long target = ObscuraVolumeFormat.BucketedSize(actual);
+            long remaining = target - actual;
+            if (remaining <= 0) return;
+
+            const int ChunkSize = 1024 * 1024;
+            byte[] chunk = new byte[(int)Math.Min(ChunkSize, remaining)];
+            while (remaining > 0)
+            {
+                int count = (int)Math.Min(chunk.Length, remaining);
+                RandomNumberGenerator.Fill(chunk.AsSpan(0, count));
+                await output.WriteAsync(chunk.AsMemory(0, count), cancellationToken).ConfigureAwait(false);
+                remaining -= count;
             }
         }
 
@@ -336,15 +471,18 @@ namespace PhantomVault.Core.Services
             public long StartedUnix { get; init; }
         }
 
-        public Task<string> ExtractVolumeAsync(string volumePath, string destinationRoot, CancellationToken cancellationToken = default)
-            => ExtractVolumeAsync(volumePath, destinationRoot, progress: null, verify: true, cancellationToken);
+        public Task<string> ExtractVolumeAsync(
+            string volumePath, string destinationRoot, string keyfilePath,
+            CancellationToken cancellationToken = default)
+            => ExtractVolumeAsync(volumePath, destinationRoot, keyfilePath, progress: null, verify: true, cancellationToken);
 
         public Task<string> ExtractVolumeAsync(
             string volumePath,
             string destinationRoot,
+            string keyfilePath,
             IProgress<double>? progress,
             CancellationToken cancellationToken = default)
-            => ExtractVolumeAsync(volumePath, destinationRoot, progress, verify: true, cancellationToken);
+            => ExtractVolumeAsync(volumePath, destinationRoot, keyfilePath, progress, verify: true, cancellationToken);
 
         /// <summary>
         /// Extract the master volume to <paramref name="destinationRoot"/>.
@@ -364,6 +502,7 @@ namespace PhantomVault.Core.Services
         public async Task<string> ExtractVolumeAsync(
             string volumePath,
             string destinationRoot,
+            string keyfilePath,
             IProgress<double>? progress,
             bool verify,
             CancellationToken cancellationToken = default)
@@ -376,18 +515,16 @@ namespace PhantomVault.Core.Services
             // Repair any interrupted prior commit before reading the container.
             RecoverPendingCommit(volumePath);
 
-            var manifest = await ReadManifestAsync(volumePath, cancellationToken).ConfigureAwait(false);
-            Directory.CreateDirectory(destinationRoot);
+            // One header read, not two. This used to parse the header twice — once for the
+            // manifest and once for the payload offset — leaving two places that had to agree
+            // about the layout. With two on-disk versions that duplication is a latent bug, so
+            // the offset now comes back from the same read that produced the manifest.
+            var header = await ReadHeaderAsync(volumePath, keyfilePath, cancellationToken).ConfigureAwait(false);
+            var manifest = header.Manifest;
+            long payloadStart = header.PayloadStart;
 
-            int headerLength;
+            Directory.CreateDirectory(destinationRoot);
             const int IoBuffer = 1024 * 1024;
-            await using (var headerStream = new FileStream(
-                volumePath, FileMode.Open, FileAccess.Read, FileShare.Read,
-                bufferSize: 4096, useAsync: true))
-            {
-                headerLength = await ReadAndValidateHeaderAsync(headerStream, cancellationToken).ConfigureAwait(false);
-            }
-            long payloadStart = Magic.Length + sizeof(int) + headerLength;
 
             long totalBytes = 0;
             foreach (var entry in manifest.Entries) totalBytes += entry.Length;
@@ -501,9 +638,10 @@ namespace PhantomVault.Core.Services
         public async Task<bool> VerifyExtractedVolumeAsync(
             string volumePath,
             string destinationRoot,
+            string keyfilePath,
             CancellationToken cancellationToken = default)
         {
-            var manifest = await ReadManifestAsync(volumePath, cancellationToken).ConfigureAwait(false);
+            var manifest = await ReadManifestAsync(volumePath, keyfilePath, cancellationToken).ConfigureAwait(false);
             using var payloadHasher = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
 
             foreach (var entry in manifest.Entries)
@@ -521,48 +659,238 @@ namespace PhantomVault.Core.Services
             return string.Equals(computed, manifest.PayloadHash, StringComparison.Ordinal);
         }
 
-        public async Task<bool> IsObscuraVolumeAsync(string volumePath, CancellationToken cancellationToken = default)
+        /// <summary>
+        /// Keyless structural plausibility check — "could this be a volume?", not "is it one?".
+        ///
+        /// Under v2 the real question cannot be answered without the keyfile, by design: a
+        /// volume carries no signature, so authentication IS identification. This remains for
+        /// pre-unlock callers that hold no keyfile (see SecurityCheckService), and it is
+        /// deliberately named for what it can actually prove — the old name claimed a
+        /// certainty it never had, since it only ever compared eight constant bytes. A caller
+        /// needing a real answer must open the header with <see cref="ReadManifestAsync"/> and
+        /// handle the CryptographicException a foreign or corrupt volume produces.
+        /// </summary>
+        public async Task<bool> IsPlausibleObscuraVolumeAsync(string volumePath, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(volumePath) || !File.Exists(volumePath))
                 return false;
 
+            var info = new FileInfo(volumePath);
+            if (info.Length < ObscuraVolumeFormat.V2FixedPrefixLength) return false;
+
             await using var input = new FileStream(volumePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            var magicBuffer = new byte[Magic.Length];
-            int read = await input.ReadAsync(magicBuffer.AsMemory(0, magicBuffer.Length), cancellationToken).ConfigureAwait(false);
-            return read == Magic.Length && magicBuffer.SequenceEqual(Magic);
+            byte[] head = new byte[ObscuraVolumeFormat.V2FixedPrefixLength];
+            int read = await ReadExactlyAsync(input, head, cancellationToken).ConfigureAwait(false);
+            if (read < 12) return false;
+
+            if (ObscuraVolumeFormat.IsLegacyHeader(head))
+            {
+                int legacyLength = BinaryPrimitives.ReadInt32LittleEndian(head.AsSpan(8, 4));
+                return legacyLength > 0 && legacyLength <= MaxHeaderBytes
+                    && info.Length >= Magic.Length + 4 + (long)legacyLength;
+            }
+
+            if (read < ObscuraVolumeFormat.V2FixedPrefixLength) return false;
+            int cipherLength = BinaryPrimitives.ReadInt32LittleEndian(
+                head.AsSpan(ObscuraVolumeFormat.V2FixedPrefixLength - 4, 4));
+            return cipherLength > 0 && cipherLength <= MaxHeaderBytes
+                && cipherLength % ObscuraVolumeFormat.HeaderPaddingGranularity == 0
+                && info.Length >= ObscuraVolumeFormat.V2FixedPrefixLength + (long)cipherLength;
         }
 
-        public async Task<ObscuraVolumeManifest> ReadManifestAsync(string volumePath, CancellationToken cancellationToken = default)
-        {
-            await using var input = new FileStream(volumePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            int headerLength = await ReadAndValidateHeaderAsync(input, cancellationToken).ConfigureAwait(false);
-            byte[] headerBytes = new byte[headerLength];
-            int read = await input.ReadAsync(headerBytes.AsMemory(0, headerLength), cancellationToken).ConfigureAwait(false);
-            if (read != headerLength)
-                throw new EndOfStreamException("Failed to read Obscura volume header");
+        public async Task<ObscuraVolumeManifest> ReadManifestAsync(
+            string volumePath, string keyfilePath, CancellationToken cancellationToken = default)
+            => (await ReadHeaderAsync(volumePath, keyfilePath, cancellationToken).ConfigureAwait(false)).Manifest;
 
-            return JsonSerializer.Deserialize<ObscuraVolumeManifest>(headerBytes, JsonOptions)
-                ?? throw new InvalidOperationException("Failed to parse Obscura volume manifest");
+        /// <summary>
+        /// Finds which of <paramref name="candidates"/> opens this volume, or null if none do.
+        ///
+        /// The unlock flow does not know a single keyfile — it knows a list (USB-only, and
+        /// USB composed with each host companion). The header's GCM tag is the cheapest
+        /// possible test of "is this the right one", far cheaper than the manifest's Argon2
+        /// pass, so resolving here costs almost nothing and saves the caller guessing.
+        ///
+        /// A legacy volume needs no key at all, so the first candidate is returned unchanged.
+        /// </summary>
+        public async Task<string?> ResolveKeyfileAsync(
+            string volumePath, IReadOnlyList<string> candidates, CancellationToken cancellationToken = default)
+        {
+            if (candidates == null || candidates.Count == 0) return null;
+
+            if (await IsLegacyVolumeAsync(volumePath, cancellationToken).ConfigureAwait(false))
+                return candidates[0];
+
+            foreach (var candidate in candidates)
+            {
+                if (string.IsNullOrWhiteSpace(candidate)) continue;
+                try
+                {
+                    await ReadHeaderAsync(volumePath, candidate, cancellationToken).ConfigureAwait(false);
+                    return candidate;
+                }
+                catch (CryptographicException) { /* wrong candidate — try the next */ }
+                catch (ArgumentException) { /* unusable candidate path */ }
+            }
+
+            return null;
         }
 
-        private static async Task<int> ReadAndValidateHeaderAsync(Stream input, CancellationToken cancellationToken)
+        /// <summary>
+        /// Manifest plus the offset at which the payload begins.
+        ///
+        /// Exposed because callers that read entries directly (the WinFsp mount) need the
+        /// offset too, and were each recomputing it from format constants. PhantomMountService
+        /// had its own copy that assumed the v1 layout and never checked the signature, so a
+        /// v2 volume would have mounted at a garbage offset and served corrupt bytes. One
+        /// accessor, one place that knows the layout.
+        /// </summary>
+        public async Task<ObscuraVolumeHeaderInfo> ReadHeaderInfoAsync(
+            string volumePath, string keyfilePath, CancellationToken cancellationToken = default)
         {
-            byte[] magicBuffer = new byte[Magic.Length];
-            int magicRead = await input.ReadAsync(magicBuffer.AsMemory(0, magicBuffer.Length), cancellationToken).ConfigureAwait(false);
-            if (magicRead != Magic.Length || !magicBuffer.SequenceEqual(Magic))
-                throw new InvalidOperationException("Invalid Obscura volume format");
+            var header = await ReadHeaderAsync(volumePath, keyfilePath, cancellationToken).ConfigureAwait(false);
+            return new ObscuraVolumeHeaderInfo(header.Manifest, header.PayloadStart, header.IsLegacy);
+        }
 
-            byte[] headerLengthBytes = new byte[4];
-            int headerLengthRead = await input.ReadAsync(headerLengthBytes.AsMemory(0, 4), cancellationToken).ConfigureAwait(false);
-            if (headerLengthRead != 4)
-                throw new EndOfStreamException("Failed to read Obscura volume header length");
+        /// <summary>True when the volume is still in the legacy plaintext-header format.</summary>
+        public async Task<bool> IsLegacyVolumeAsync(string volumePath, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(volumePath) || !File.Exists(volumePath)) return false;
 
-            int headerLength = BinaryPrimitives.ReadInt32LittleEndian(headerLengthBytes);
-            if (headerLength <= 0 || headerLength > 1024 * 1024)
+            await using var input = new FileStream(volumePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            byte[] head = new byte[8];
+            int read = await ReadExactlyAsync(input, head, cancellationToken).ConfigureAwait(false);
+            return read == 8 && ObscuraVolumeFormat.IsLegacyHeader(head);
+        }
+
+        /// <summary>
+        /// Reads a volume header, transparently handling both on-disk versions.
+        ///
+        /// v1 volumes open with the ASCII signature and carry a plaintext manifest; v2
+        /// volumes open with a random salt and carry an encrypted one. The absence of the v1
+        /// signature is the only discriminator needed — see <see cref="ObscuraVolumeFormat"/>
+        /// for why v2 deliberately has no signature of its own.
+        ///
+        /// Returns the manifest together with the offset at which the payload begins, so
+        /// callers never have to recompute that from format constants. Getting that
+        /// arithmetic wrong silently misreads every entry, so it is derived in exactly one
+        /// place.
+        /// </summary>
+        private static async Task<VolumeHeader> ReadHeaderAsync(
+            string volumePath,
+            string keyfilePath,
+            CancellationToken cancellationToken)
+        {
+            await using var input = new FileStream(
+                volumePath, FileMode.Open, FileAccess.Read, FileShare.Read,
+                bufferSize: 4096, useAsync: true);
+
+            byte[] head = new byte[ObscuraVolumeFormat.V2FixedPrefixLength];
+            int headRead = await ReadExactlyAsync(input, head, cancellationToken).ConfigureAwait(false);
+            if (headRead < 12)
+                throw new InvalidOperationException("Obscura volume is truncated.");
+
+            if (ObscuraVolumeFormat.IsLegacyHeader(head))
+                return await ReadLegacyHeaderAsync(input, head, cancellationToken).ConfigureAwait(false);
+
+            if (headRead < ObscuraVolumeFormat.V2FixedPrefixLength)
+                throw new InvalidOperationException("Obscura volume is truncated.");
+
+            return await ReadV2HeaderAsync(input, head, keyfilePath, cancellationToken).ConfigureAwait(false);
+        }
+
+        private static async Task<VolumeHeader> ReadLegacyHeaderAsync(
+            FileStream input, byte[] head, CancellationToken cancellationToken)
+        {
+            int headerLength = BinaryPrimitives.ReadInt32LittleEndian(head.AsSpan(8, 4));
+            if (headerLength <= 0 || headerLength > MaxHeaderBytes)
                 throw new InvalidOperationException("Invalid Obscura volume header length");
 
-            return headerLength;
+            input.Position = Magic.Length + 4;
+            byte[] headerBytes = new byte[headerLength];
+            if (await ReadExactlyAsync(input, headerBytes, cancellationToken).ConfigureAwait(false) != headerLength)
+                throw new EndOfStreamException("Failed to read Obscura volume header");
+
+            var manifest = JsonSerializer.Deserialize<ObscuraVolumeManifest>(headerBytes, JsonOptions)
+                ?? throw new InvalidOperationException("Failed to parse Obscura volume manifest");
+
+            return new VolumeHeader(manifest, Magic.Length + 4 + headerLength, IsLegacy: true);
         }
+
+        private static async Task<VolumeHeader> ReadV2HeaderAsync(
+            FileStream input, byte[] head, string keyfilePath, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(keyfilePath))
+                throw new ArgumentException("A keyfile is required to open this Obscura volume.", nameof(keyfilePath));
+
+            byte[] salt = head.AsSpan(0, ObscuraVolumeFormat.SaltLength).ToArray();
+            byte[] nonce = head.AsSpan(ObscuraVolumeFormat.SaltLength, ObscuraVolumeFormat.NonceLength).ToArray();
+            byte[] tag = head.AsSpan(
+                ObscuraVolumeFormat.SaltLength + ObscuraVolumeFormat.NonceLength,
+                ObscuraVolumeFormat.TagLength).ToArray();
+            int cipherLength = BinaryPrimitives.ReadInt32LittleEndian(
+                head.AsSpan(ObscuraVolumeFormat.V2FixedPrefixLength - 4, 4));
+
+            if (cipherLength <= 0 || cipherLength > MaxHeaderBytes)
+                throw new InvalidOperationException("Invalid Obscura volume header length");
+
+            byte[] ciphertext = new byte[cipherLength];
+            if (await ReadExactlyAsync(input, ciphertext, cancellationToken).ConfigureAwait(false) != cipherLength)
+                throw new EndOfStreamException("Failed to read Obscura volume header");
+
+            byte[] key = ObscuraVolumeFormat.DeriveHeaderKey(salt, keyfilePath);
+            byte[] plaintext;
+            try
+            {
+                // A failed tag is how a wrong keyfile presents. It is also how "this is not
+                // one of our volumes" presents — under v2 those are the same question, which
+                // is the point: only a keyfile holder can tell the difference.
+                plaintext = new EncryptionService().Decrypt(
+                    ciphertext, nonce, tag, key, ObscuraVolumeFormat.BuildHeaderAad(salt));
+            }
+            catch (CryptographicException ex)
+            {
+                throw new CryptographicException(
+                    "The Obscura volume header could not be authenticated with this keyfile.", ex);
+            }
+            finally
+            {
+                CryptographicOperations.ZeroMemory(key);
+            }
+
+            try
+            {
+                byte[] json = ObscuraVolumeFormat.UnpackHeaderPlaintext(plaintext);
+                var manifest = JsonSerializer.Deserialize<ObscuraVolumeManifest>(json, JsonOptions)
+                    ?? throw new InvalidOperationException("Failed to parse Obscura volume manifest");
+
+                return new VolumeHeader(manifest, ObscuraVolumeFormat.V2FixedPrefixLength + cipherLength, IsLegacy: false);
+            }
+            finally
+            {
+                CryptographicOperations.ZeroMemory(plaintext);
+            }
+        }
+
+        /// <summary>
+        /// Reads until the buffer is full or the stream ends, returning the count actually
+        /// read. A single ReadAsync is allowed to return fewer bytes than asked for, and the
+        /// original code treated a short read as a format error — which turned an ordinary
+        /// slow read off removable media into "invalid volume".
+        /// </summary>
+        private static async Task<int> ReadExactlyAsync(Stream input, byte[] buffer, CancellationToken cancellationToken)
+        {
+            int total = 0;
+            while (total < buffer.Length)
+            {
+                int read = await input.ReadAsync(buffer.AsMemory(total, buffer.Length - total), cancellationToken).ConfigureAwait(false);
+                if (read == 0) break;
+                total += read;
+            }
+            return total;
+        }
+
+        private sealed record VolumeHeader(ObscuraVolumeManifest Manifest, long PayloadStart, bool IsLegacy);
+
     }
 
     public sealed class ObscuraVolumeManifest
@@ -580,6 +908,9 @@ namespace PhantomVault.Core.Services
         public long Length { get; set; }
         public string Sha256 { get; set; } = string.Empty;
     }
+
+    /// <summary>Manifest of an Obscura volume together with where its payload starts.</summary>
+    public sealed record ObscuraVolumeHeaderInfo(ObscuraVolumeManifest Manifest, long PayloadStart, bool IsLegacy);
 
     /// <summary>
     /// Outcome of <see cref="ObscuraVolumeService.RecoverPendingCommit"/>. When

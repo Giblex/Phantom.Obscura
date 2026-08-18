@@ -29,24 +29,60 @@
                        FontSize="22"
                        FontWeight="SemiBold"
                        Foreground="{DynamicResource PrimaryTextBrush}"/>
-            <StackPanel Orientation="Horizontal" Spacing="6">
-                <TextBlock Text="$4.99"
-                           FontSize="28"
-                           FontWeight="Bold"
-                           Foreground="{DynamicResource AccentBrush}"/>
-                <TextBlock Text="/ month"
-                           VerticalAlignment="Bottom"
-                           Margin="0,0,0,4"
-                           Foreground="{DynamicResource MutedTextBrush}"/>
-            </StackPanel>
             <TextBlock Text="Billed locally to this vault. Your subscription unlocks the full premium toolset on this device."
                        FontSize="{StaticResource Type.Small.Size}"
                        Foreground="{DynamicResource MutedTextBrush}"
                        TextWrapping="Wrap"/>
         </StackPanel>
 
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="28,0">
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      Padding="28,0">
             <StackPanel Spacing="14">
+
+                <!-- Plan chooser. Both cadences are real Stripe prices; the selection is
+                     carried into ActivateAsync so the correct checkout opens. Prices are
+                     shown as A$ because the Stripe prices are in AUD — a bare "$" reads
+                     as USD to overseas buyers. -->
+                <Border Background="{DynamicResource CardBackgroundBrush}"
+                        BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        Padding="20,16"
+                        BoxShadow="0 4 16 0 #40000000">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Choose your plan"
+                                   FontWeight="SemiBold"
+                                   FontSize="{StaticResource Type.H4.Size}"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+
+                        <RadioButton x:Name="MonthlyOption"
+                                     GroupName="BillingPlan"
+                                     IsChecked="True">
+                            <StackPanel Spacing="1">
+                                <TextBlock Text="Monthly — A$4.99 / month"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                <TextBlock Text="Cancel any time."
+                                           FontSize="{StaticResource Type.Small.Size}"
+                                           Foreground="{DynamicResource MutedTextBrush}"/>
+                            </StackPanel>
+                        </RadioButton>
+
+                        <RadioButton x:Name="YearlyOption"
+                                     GroupName="BillingPlan">
+                            <StackPanel Spacing="1">
+                                <TextBlock Text="Yearly — A$44.99 / year"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                <TextBlock Text="Save A$14.89 a year compared with monthly."
+                                           FontSize="{StaticResource Type.Small.Size}"
+                                           Foreground="{DynamicResource SuccessBrush}"/>
+                            </StackPanel>
+                        </RadioButton>
+                    </StackPanel>
+                </Border>
 
                 <Border Background="{DynamicResource CardBackgroundBrush}"
                         BorderBrush="{DynamicResource SettingsPanelBorderBrush}"
@@ -89,11 +125,17 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Foreground is set from code per message kind (info / success /
+                     error). It used to be hardcoded to AccentBrush, so a failure was
+                     reported in the same low-contrast teal as an informational note —
+                     hard to read against the dark panel and semantically wrong. -->
                 <TextBlock x:Name="StatusText"
-                           Margin="2,0,0,0"
+                           Margin="2,8,4,0"
+                           FontSize="13"
+                           LineHeight="19"
                            TextWrapping="Wrap"
                            IsVisible="False"
-                           Foreground="{DynamicResource AccentBrush}"/>
+                           Foreground="{DynamicResource PrimaryTextBrush}"/>
             </StackPanel>
         </ScrollViewer>
 

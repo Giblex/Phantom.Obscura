@@ -82,6 +82,19 @@ namespace PhantomVault.UI.ViewModels
         private string? _vaultKeyfilePath;
         /// <summary>Extracts vault password as a transient string for APIs that require <c>string?</c>.
         /// The returned string is not stored — it is GC-eligible immediately after use.</summary>
+        /// <summary>
+        /// The keyfile this session was unlocked with, or a hard failure.
+        ///
+        /// Reading or rewriting a volume needs the keyfile — it is the mandatory factor, and
+        /// there is no password-only path to fall back to. Throwing here rather than passing
+        /// null means a bug that loses the keyfile surfaces as an immediate, obvious failure
+        /// instead of a container written under the wrong key.
+        /// </summary>
+        private string RequireVaultKeyfile()
+            => string.IsNullOrWhiteSpace(_vaultKeyfilePath)
+                ? throw new InvalidOperationException("The vault keyfile is not available in this session.")
+                : _vaultKeyfilePath;
+
         private string? GetVaultPasswordString()
             => _vaultPassword == null || _vaultPassword.IsEmpty ? null : new string(_vaultPassword.AsSpan());
         // Cached runtime manifest from the unlock flow — lets SetManifestContext + LoadAsync skip
@@ -1004,6 +1017,9 @@ namespace PhantomVault.UI.ViewModels
                 this.RaiseAndSetIfChanged(ref _isLockscreenVisible, value);
                 this.RaisePropertyChanged(nameof(PinUnlockAvailable));
                 this.RaisePropertyChanged(nameof(PasswordUnlockAvailable));
+                this.RaisePropertyChanged(nameof(KeyfileUnlockAvailable));
+                this.RaisePropertyChanged(nameof(ShowPassphraseFallbackSection));
+                this.RaisePropertyChanged(nameof(ShowPassphraseFallbackLink));
                 this.RaisePropertyChanged(nameof(ShowPassphraseFallbackSection));
                 this.RaisePropertyChanged(nameof(ShowPassphraseFallbackLink));
                 this.RaisePropertyChanged(nameof(ShowLockscreenDismiss));
@@ -1067,30 +1083,51 @@ namespace PhantomVault.UI.ViewModels
 
         public bool PasswordUnlockAvailable => IsLockscreenVisible && !string.IsNullOrWhiteSpace(_manifestPath);
 
+        /// <summary>
+        /// The keyfile is the mandatory unlock factor and a passphrase is optional, so a
+        /// vault with no passphrase must still be re-openable from the lockscreen. Without
+        /// this the lockscreen offered only a passphrase box, rejected the empty input a
+        /// keyfile-only vault legitimately has, and — with no PIN configured — left no way
+        /// past the lock at all.
+        /// </summary>
+        public bool KeyfileUnlockAvailable =>
+            IsLockscreenVisible
+            && !string.IsNullOrWhiteSpace(_manifestPath)
+            && !string.IsNullOrWhiteSpace(_reauthKeyfilePath);
+
         public bool IsDeveloperBypassMode => _isDeveloperBypassMode;
 
         public bool ShowLockscreenDismiss =>
             IsLockscreenVisible
             && IsDeveloperBypassMode
             && !PinUnlockAvailable
+            && !KeyfileUnlockAvailable
             && !PasswordUnlockAvailable;
 
         public ReactiveCommand<Unit, Unit> DismissLockscreenCommand { get; }
         public ReactiveCommand<Unit, Unit> SetupPinLockCommand { get; }
+
+        /// <summary>
+        /// Whether the lockscreen already offers a way in without typing anything — a PIN
+        /// pad or a keyfile. The passphrase is an optional additive factor, so it sits
+        /// behind a link when one of these exists and is shown outright when neither does.
+        /// </summary>
+        private bool HasPrimaryUnlockFactor => PinUnlockAvailable || KeyfileUnlockAvailable;
 
         public bool ShowPassphraseFallbackSection
         {
             get
             {
 
-                if (PinUnlockAvailable)
+                if (HasPrimaryUnlockFactor)
                     return _showPassphraseFallback && PasswordUnlockAvailable;
 
                 return PasswordUnlockAvailable;
             }
         }
 
-        public bool ShowPassphraseFallbackLink => PinUnlockAvailable && PasswordUnlockAvailable && !_showPassphraseFallback;
+        public bool ShowPassphraseFallbackLink =>
+            HasPrimaryUnlockFactor && PasswordUnlockAvailable && !_showPassphraseFallback;
 
         private void ShowPassphraseFallback()
         {
@@ -1107,6 +1144,9 @@ namespace PhantomVault.UI.ViewModels
             _reauthKeyfilePath = keyfilePath;
 
             this.RaisePropertyChanged(nameof(PasswordUnlockAvailable));
+            this.RaisePropertyChanged(nameof(KeyfileUnlockAvailable));
+            this.RaisePropertyChanged(nameof(ShowPassphraseFallbackSection));
+            this.RaisePropertyChanged(nameof(ShowPassphraseFallbackLink));
             this.RaisePropertyChanged(nameof(PinUnlockAvailable));
             this.RaisePropertyChanged(nameof(ShowPassphraseFallbackSection));
             this.RaisePropertyChanged(nameof(ShowPassphraseFallbackLink));
@@ -3727,7 +3767,8 @@ namespace PhantomVault.UI.ViewModels
             if (!string.IsNullOrWhiteSpace(_masterVolumePath))
             {
                 var obscuraVolumeService = new ObscuraVolumeService();
-                await obscuraVolumeService.CreateVolumeFromDirectoryAsync(_masterVolumePath, _transportLayoutRoot).ConfigureAwait(false);
+                await obscuraVolumeService.CreateVolumeFromDirectoryAsync(
+                    _masterVolumePath, _transportLayoutRoot, RequireVaultKeyfile()).ConfigureAwait(false);
             }
         }
 
@@ -4835,9 +4876,10 @@ namespace PhantomVault.UI.ViewModels
             password = null!;
 
             this.RaisePropertyChanged(nameof(PasswordUnlockAvailable));
-            this.RaisePropertyChanged(nameof(PinUnlockAvailable));
+            this.RaisePropertyChanged(nameof(KeyfileUnlockAvailable));
             this.RaisePropertyChanged(nameof(ShowPassphraseFallbackSection));
             this.RaisePropertyChanged(nameof(ShowPassphraseFallbackLink));
+            this.RaisePropertyChanged(nameof(PinUnlockAvailable));
 
             LoadCategoryColorsFromManifest();
         }
@@ -4964,9 +5006,10 @@ namespace PhantomVault.UI.ViewModels
                 _mountService ??= new PhantomVault.UI.Services.Mount.PhantomMountService();
 
                 string? mountPoint = writable
-                    ? await _mountService.MountWritableAsync(volumePath, driveLetter: null,
+                    ? await _mountService.MountWritableAsync(volumePath, RequireVaultKeyfile(),
+                        driveLetter: null,
                         onCommitted: OnMountCommitted)
-                    : await _mountService.MountReadOnlyAsync(volumePath);
+                    : await _mountService.MountReadOnlyAsync(volumePath, RequireVaultKeyfile());
 
                 IsDriveMounted = _mountService.IsMounted;
                 MountedDriveLetter = mountPoint;
@@ -5325,6 +5368,9 @@ namespace PhantomVault.UI.ViewModels
             {
                 _manifestPath = inferredManifestPath;
                 this.RaisePropertyChanged(nameof(PasswordUnlockAvailable));
+                this.RaisePropertyChanged(nameof(KeyfileUnlockAvailable));
+                this.RaisePropertyChanged(nameof(ShowPassphraseFallbackSection));
+                this.RaisePropertyChanged(nameof(ShowPassphraseFallbackLink));
             }
 
             _showPassphraseFallback = false;
@@ -5333,6 +5379,53 @@ namespace PhantomVault.UI.ViewModels
 
             IsSoftLocked = softLock;
             IsLockscreenVisible = true;
+
+            // Locking must revoke the vault's capabilities, not just cover them with a
+            // screen. Previously the autofill surface stayed live for the whole session
+            // because VaultAutofillContext.SetLocked() was only reached when the vault
+            // WINDOW closed — so an idle-locked machine would still hand full plaintext
+            // passwords to the browser extension, and getVaultState even reported
+            // locked=false. The lockscreen was security theatre for that surface.
+            RevokeUnlockedCapabilities();
+        }
+
+        /// <summary>
+        /// Drops every capability that should only exist while the vault is genuinely
+        /// unlocked: the autofill pipe's credential provider, the reported unlock state,
+        /// and the suite presence signal.
+        ///
+        /// Deliberately separate from <see cref="ClearSensitiveState"/>: this runs on
+        /// every lock, whereas ClearSensitiveState also tears down subscriptions and is
+        /// only appropriate when the session is ending.
+        /// </summary>
+        private void RevokeUnlockedCapabilities()
+        {
+            try
+            {
+                var services = (Avalonia.Application.Current as App)?.Services;
+                if (services != null)
+                {
+                    (services.GetService(typeof(PhantomVault.UI.Services.AutoFill.VaultAutofillContext))
+                        as PhantomVault.UI.Services.AutoFill.VaultAutofillContext)?.SetLocked();
+
+                    (services.GetService(typeof(PhantomVault.UI.Services.AutoFill.INativeHostPipeServer))
+                        as PhantomVault.UI.Services.AutoFill.INativeHostPipeServer)?.ClearCredentialProvider();
+
+                    (services.GetService(typeof(PhantomVault.UI.Services.Sync.TotpSyncVaultContext))
+                        as PhantomVault.UI.Services.Sync.TotpSyncVaultContext)?.SetLocked();
+                }
+            }
+            catch (Exception ex)
+            {
+                // Never let a teardown failure leave the vault appearing locked while
+                // still serving credentials — log loudly rather than swallowing.
+                Debug.WriteLine($"[VaultViewModel] Failed to revoke unlocked capabilities: {ex.Message}");
+                RecentIssuesLog.Instance.Record(IssueSeverity.Warning,
+                    "Lock incomplete",
+                    "Auto-fill access may not have been revoked on lock. Close the vault window to be certain.");
+            }
+
+            try { _suiteSession?.ReportLocked(); } catch { /* presence only */ }
         }
 
         private void ExitLockedState()
@@ -5350,9 +5443,45 @@ namespace PhantomVault.UI.ViewModels
             IsSoftLocked = false;
             IsLockscreenVisible = false;
 
+            // Mirror of RevokeUnlockedCapabilities. Only reached after a successful
+            // re-authentication, so restoring autofill here does not widen access.
+            RestoreUnlockedCapabilities();
+
             // Re-entered the unlocked state (e.g. PIN/password dismiss of a soft lock):
             // re-assert suite presence so the suite session reflects this app as unlocked.
             try { _suiteSession?.ReportUnlocked(); } catch { /* best-effort */ }
+        }
+
+        /// <summary>
+        /// Re-grants what <see cref="RevokeUnlockedCapabilities"/> withdrew.
+        ///
+        /// The credential provider is re-registered on the pipe so browser autofill
+        /// works again, but only once the user has proved they can unlock.
+        /// </summary>
+        private void RestoreUnlockedCapabilities()
+        {
+            try
+            {
+                var services = (Avalonia.Application.Current as App)?.Services;
+                if (services == null) return;
+
+                // Without a manifest there is nothing to authorise against, so leave
+                // autofill revoked rather than guessing.
+                var manifest = _cachedRuntimeManifest;
+                if (manifest == null) return;
+
+                (services.GetService(typeof(PhantomVault.UI.Services.AutoFill.VaultAutofillContext))
+                    as PhantomVault.UI.Services.AutoFill.VaultAutofillContext)?.SetUnlocked(manifest);
+
+                (services.GetService(typeof(PhantomVault.UI.Services.AutoFill.INativeHostPipeServer))
+                    as PhantomVault.UI.Services.AutoFill.INativeHostPipeServer)
+                    ?.SetCredentialProvider(new VaultViewModelCredentialProvider(this), manifest);
+            }
+            catch (Exception ex)
+            {
+                // Failing closed here only costs autofill until the next full unlock.
+                Debug.WriteLine($"[VaultViewModel] Failed to restore unlocked capabilities: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -5489,8 +5618,13 @@ namespace PhantomVault.UI.ViewModels
 
             if (string.IsNullOrEmpty(_mountPath))
             {
-
-                EnterLockedState("Vault Locked", "Vault locked.", softLock: true);
+                // Nothing is mounted, so there is no volume to unmount — but the lock
+                // still has to match the factors that actually exist. A soft lock IS the
+                // PIN lock screen, and this branch entered one unconditionally, so a
+                // vault with no PIN configured auto-locked into a PIN screen the user had
+                // never set up. Without a PIN this is a full lock and re-authentication
+                // goes through the normal unlock flow.
+                EnterLockedState("Vault Locked", "Vault locked.", softLock: pinConfigured);
                 ClearVaultUiState();
                 return;
             }
@@ -5506,6 +5640,21 @@ namespace PhantomVault.UI.ViewModels
 
                 EnterLockedState("Vault Locked", reason == LockReason.AutoLock ? "Vault auto-locked due to inactivity." : "Vault locked.", softLock: false);
                 ClearVaultUiState();
+
+                // Hard lock: the only way back in is a full re-authentication, so the
+                // master password has no further use and is zeroized now rather than
+                // lingering until the window closes. ClearVaultUiState drops the
+                // decrypted credentials; this drops the key material that could
+                // regenerate them.
+                //
+                // NOTE: this is deliberately NOT done for a soft (PIN) lock. PIN unlock
+                // verifies a stored hash and resumes the session without re-deriving
+                // anything, so the password must survive for that path to work. Making
+                // a soft lock zeroize as well requires the PIN to wrap the master key
+                // instead of merely being compared — see RevokeUnlockedCapabilities.
+                _vaultPassword?.Dispose();
+                _vaultPassword = null;
+
                 StatusMessage = "Vault locked.";
             }
             catch (Exception ex)
@@ -5725,11 +5874,15 @@ namespace PhantomVault.UI.ViewModels
             }
 
             var password = LockscreenPassword;
-            if (string.IsNullOrWhiteSpace(password))
+            if (string.IsNullOrWhiteSpace(password) && !KeyfileUnlockAvailable)
             {
                 LockscreenError = "Enter your passphrase.";
                 return;
             }
+
+            // A keyfile-only vault has no passphrase to type; the empty string is the
+            // correct input and the keyfile carries the unlock.
+            password ??= string.Empty;
 
             IsBusy = true;
             try

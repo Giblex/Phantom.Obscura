@@ -34,7 +34,8 @@ namespace PhantomVault.UI.Services.Mount
         /// Mounts <paramref name="volumePath"/> read-only at <paramref name="driveLetter"/>
         /// (e.g. "P:") or the next free letter. Returns the actual mount point.
         /// </summary>
-        public async Task<string?> MountReadOnlyAsync(string volumePath, string? driveLetter = null,
+        public async Task<string?> MountReadOnlyAsync(string volumePath, string keyfilePath,
+            string? driveLetter = null,
             CancellationToken cancellationToken = default)
         {
 #if WINFSP
@@ -45,8 +46,12 @@ namespace PhantomVault.UI.Services.Mount
             if (string.IsNullOrWhiteSpace(volumePath) || !File.Exists(volumePath))
                 throw new FileNotFoundException("Encrypted volume not found.", volumePath);
 
-            var manifest = await _volumeService.ReadManifestAsync(volumePath, cancellationToken).ConfigureAwait(false);
-            long payloadStart = await ComputePayloadStartAsync(volumePath, cancellationToken).ConfigureAwait(false);
+            // Manifest and payload offset from one authenticated read. The offset used to
+            // come from a private helper here that assumed the v1 layout and never checked
+            // the signature — under v2 it would have mounted at a garbage offset.
+            var header = await _volumeService.ReadHeaderInfoAsync(volumePath, keyfilePath, cancellationToken).ConfigureAwait(false);
+            var manifest = header.Manifest;
+            long payloadStart = header.PayloadStart;
 
             lock (_gate)
             {
@@ -69,7 +74,8 @@ namespace PhantomVault.UI.Services.Mount
         /// container atomically on unmount; <paramref name="onCommitted"/> fires after a
         /// successful repack so the caller can bump the rollback save-sequence and anchor.
         /// </summary>
-        public async Task<string?> MountWritableAsync(string volumePath, string? driveLetter = null,
+        public async Task<string?> MountWritableAsync(string volumePath, string keyfilePath,
+            string? driveLetter = null,
             Action? onCommitted = null, CancellationToken cancellationToken = default)
         {
 #if WINFSP
@@ -80,15 +86,16 @@ namespace PhantomVault.UI.Services.Mount
             if (string.IsNullOrWhiteSpace(volumePath) || !File.Exists(volumePath))
                 throw new FileNotFoundException("Encrypted volume not found.", volumePath);
 
-            var manifest = await _volumeService.ReadManifestAsync(volumePath, cancellationToken).ConfigureAwait(false);
-            long payloadStart = await ComputePayloadStartAsync(volumePath, cancellationToken).ConfigureAwait(false);
+            var header = await _volumeService.ReadHeaderInfoAsync(volumePath, keyfilePath, cancellationToken).ConfigureAwait(false);
+            var manifest = header.Manifest;
+            long payloadStart = header.PayloadStart;
 
             lock (_gate)
             {
                 if (IsMounted)
                     return MountPoint;
 
-                var fs = new PhantomWritableFileSystem(volumePath, manifest, payloadStart, onCommitted);
+                var fs = new PhantomWritableFileSystem(volumePath, manifest, payloadStart, keyfilePath, onCommitted);
                 return MountHost(fs, driveLetter, readOnly: false);
             }
 #else
@@ -148,17 +155,6 @@ namespace PhantomVault.UI.Services.Mount
 
         public void Dispose() => Unmount();
 
-        private static async Task<long> ComputePayloadStartAsync(string volumePath, CancellationToken cancellationToken)
-        {
-            // OBSCUR01 layout: 8-byte magic + 4-byte LE header length + header JSON + payload.
-            await using var stream = new FileStream(volumePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            byte[] head = new byte[12];
-            int read = await stream.ReadAsync(head.AsMemory(0, 12), cancellationToken).ConfigureAwait(false);
-            if (read != 12)
-                throw new InvalidDataException("Volume is too small to be a valid container.");
-            int headerLength = BinaryPrimitives.ReadInt32LittleEndian(head.AsSpan(8, 4));
-            return 12L + headerLength;
-        }
 
         private static string NextFreeDriveLetter()
         {

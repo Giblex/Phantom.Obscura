@@ -24,14 +24,27 @@ namespace PhantomVault.UI.Services
         // rest are Pro. Non-website themes leave this false.
         public bool IsPremium { get; }
 
+        /// <summary>
+        /// Whether this skin is a light palette.
+        ///
+        /// The skin and the dark/light variant used to be fully independent, so a light
+        /// skin could run under the dark variant. That matters because the variant picks
+        /// the app-level PhantomTheme fallback for every key a skin does not define, and
+        /// it drives Fluent's own control defaults — which is how a light theme ended up
+        /// with invisible checkbox outlines and dark fallback surfaces.
+        /// </summary>
+        public bool IsLight { get; }
+
         public ThemeDescriptor(string id, string displayName, Uri uri,
-            IReadOnlyList<string>? previewColors = null, bool isPremium = false)
+            IReadOnlyList<string>? previewColors = null, bool isPremium = false,
+            bool isLight = false)
         {
             Id = id;
             DisplayName = displayName;
             Uri = uri;
             PreviewColors = previewColors ?? Array.Empty<string>();
             IsPremium = isPremium;
+            IsLight = isLight;
         }
     }
 
@@ -133,16 +146,16 @@ namespace PhantomVault.UI.Services
                     "GiblexWebsite",
                     "Giblex Light",
                     new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.GiblexWebsite.axaml"),
-                    new[] { "#DEF2F6", "#138A9C", "#55C3CF" }, isPremium: false),
+                    new[] { "#DEF2F6", "#138A9C", "#55C3CF" }, isPremium: false, isLight: true),
                 new ThemeDescriptor(
                     "GiblexWebPurple",
                     "Giblex Web Purple",
                     new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.GiblexWebPurple.axaml"),
-                    new[] { "#F6F8FF", "#7C5CFF", "#55E6FF" }, isPremium: false),
+                    new[] { "#F6F8FF", "#7C5CFF", "#55E6FF" }, isPremium: false, isLight: true),
                 new ThemeDescriptor(
                     "ClassicLight",
                     "Classic Light",
-                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.ClassicLight.axaml")),
+                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.ClassicLight.axaml"), isLight: true),
                 new ThemeDescriptor(
                     "CharcoalPastel",
                     "Charcoal Pastel",
@@ -166,7 +179,7 @@ namespace PhantomVault.UI.Services
                 new ThemeDescriptor(
                     "ArcticFrost",
                     "Arctic Frost",
-                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.ArcticFrost.axaml")),
+                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.ArcticFrost.axaml"), isLight: true),
                 new ThemeDescriptor(
                     "SunsetEmber",
                     "Sunset Ember",

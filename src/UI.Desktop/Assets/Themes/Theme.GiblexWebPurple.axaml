@@ -398,7 +398,6 @@
     <SolidColorBrush x:Key="SubtleBrush" Color="#14000000"/>
     <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#1A000000"/>
     <SolidColorBrush x:Key="SurfaceActiveBrush" Color="#26000000"/>
-    <SolidColorBrush x:Key="SurfaceBrush" Color="#F6F8FF"/>
     <SolidColorBrush x:Key="HeaderPrimaryBrush" Color="#F8FAFF"/>
 
 </ResourceDictionary>

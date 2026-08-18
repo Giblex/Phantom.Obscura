@@ -26,6 +26,7 @@ namespace PhantomVault.UI.Views
         private void OnOpened(object? sender, EventArgs e)
         {
             RegisterAndApplyTheme();
+            ApplyAccentResources();
             ApplyAccessibilityClasses();
 
             _accessibilityHandler = (_, __) => ApplyAccessibilityClasses();
@@ -55,6 +56,35 @@ namespace PhantomVault.UI.Views
             catch
             {
 
+            }
+        }
+
+        /// <summary>
+        /// Stamps the live accent into this window's own Resources.
+        ///
+        /// UserAccentBrush is intentionally defined in no theme file — SetAccentColor is
+        /// its only source — but ThemeManagerService only stamps windows that were already
+        /// open when it ran. A window created later was left resolving the key through
+        /// Application.Resources, which did not reliably reach controls inside a themed
+        /// window: the brush came back null, and a null brush renders as nothing. That is
+        /// what made a checked checkbox show its tick with no box behind it.
+        ///
+        /// Window.Resources sits above the app-level theme styles in the lookup, so
+        /// stamping here resolves it for every window without reintroducing a theme-level
+        /// definition that would shadow the user's chosen accent.
+        /// </summary>
+        private void ApplyAccentResources()
+        {
+            try
+            {
+                if (ThemeManagerService.CurrentAccent is not { } accent) return;
+
+                Resources["UserAccentBrush"] = accent.Brush;
+                Resources["UserAccentColor"] = accent.Color;
+            }
+            catch
+            {
+                // Never let accent stamping stop a window from opening.
             }
         }
 

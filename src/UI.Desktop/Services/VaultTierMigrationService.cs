@@ -180,7 +180,8 @@ namespace PhantomVault.UI.Services
                 string targetRoot = NormalizeDriveRoot(plan.TargetFilesystemRoot!);
                 PhantomDeviceLayout.EnsurePhantomRoot(targetRoot);
                 masterVolumePath = PhantomDeviceLayout.GetSystemVolumePath(targetRoot);
-                await _obscuraVolumeService.CreateVolumeFromDirectoryAsync(masterVolumePath, context.TransportLayoutRoot, cancellationToken).ConfigureAwait(false);
+                await _obscuraVolumeService.CreateVolumeFromDirectoryAsync(
+                    masterVolumePath, context.TransportLayoutRoot, RequireKeyfile(context), cancellationToken).ConfigureAwait(false);
             }
 
             return new VaultTierMigrationResult(
@@ -193,6 +194,17 @@ namespace PhantomVault.UI.Services
                 rollbackDirectory,
                 $"Vault migrated to {targetTier}. Rollback snapshot saved to {rollbackDirectory}");
         }
+
+        /// <summary>
+        /// The migration's keyfile, or a hard failure.
+        ///
+        /// A migration writes a fresh volume, and a volume cannot be written without the
+        /// keyfile. Failing loudly beats writing a container nobody can open afterwards.
+        /// </summary>
+        private static string RequireKeyfile(VaultTierMigrationContext context)
+            => string.IsNullOrWhiteSpace(context.KeyfilePath)
+                ? throw new InvalidOperationException("A keyfile is required to migrate the vault.")
+                : context.KeyfilePath;
 
         private async Task CreateRollbackSnapshotAsync(
             VaultTierMigrationContext context,
@@ -212,7 +224,8 @@ namespace PhantomVault.UI.Services
             else
             {
                 artifactPath = Path.Combine(rollbackDirectory, "rollback.obscura");
-                await _obscuraVolumeService.CreateVolumeFromDirectoryAsync(artifactPath, context.TransportLayoutRoot, cancellationToken).ConfigureAwait(false);
+                await _obscuraVolumeService.CreateVolumeFromDirectoryAsync(
+                    artifactPath, context.TransportLayoutRoot, RequireKeyfile(context), cancellationToken).ConfigureAwait(false);
             }
 
             var metadata = new

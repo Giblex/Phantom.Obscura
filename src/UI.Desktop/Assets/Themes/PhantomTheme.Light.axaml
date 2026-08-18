@@ -137,7 +137,6 @@
             <Color x:Key="LiquidGlassDropShadowHover">#00000000</Color>
             <Color x:Key="LiquidGlassDropShadowPressed">#00000000</Color>
 
-            <SolidColorBrush x:Key="OverlayBackgroundBrush">#80000000</SolidColorBrush>
             <SolidColorBrush x:Key="ReadOnlyFieldBackgroundBrush">#E6ECF0</SolidColorBrush>
             <SolidColorBrush x:Key="ReadOnlyFieldForegroundBrush">#10202A</SolidColorBrush>
             <SolidColorBrush x:Key="ButtonWhiteBackgroundBrush">#FFFFFF</SolidColorBrush>
@@ -149,8 +148,6 @@
             <SolidColorBrush x:Key="QuickFilterGlassHoverBrush">#0C10202A</SolidColorBrush>
             <SolidColorBrush x:Key="QuickFilterGlassActiveBrush">#14138A9C</SolidColorBrush>
             <SolidColorBrush x:Key="QuickFilterGlassActiveHoverBrush">#1C138A9C</SolidColorBrush>
-            <SolidColorBrush x:Key="QuickFilterGlassBorderBrush">#1810202A</SolidColorBrush>
-            <SolidColorBrush x:Key="QuickFilterGlassActiveBorderBrush">#28138A9C</SolidColorBrush>
 
             <LinearGradientBrush x:Key="FilterHoverGradient" StartPoint="0%,0%" EndPoint="0%,100%">
                 <GradientStop Color="#1810202A" Offset="0"/>

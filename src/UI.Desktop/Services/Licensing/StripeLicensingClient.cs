@@ -1,4 +1,5 @@
 using System;
+using Serilog;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -7,6 +8,7 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using PhantomVault.Core.Models.Licensing;
+using PhantomVault.Core.Services.Network;
 
 namespace PhantomVault.UI.Services.Licensing
 {
@@ -16,6 +18,9 @@ namespace PhantomVault.UI.Services.Licensing
     /// polls for the signed license token the backend mints from the Stripe
     /// webhook. No card data is ever handled in-app (PCI scope stays on Stripe).
     ///
+    /// All HTTP to giblex.com passes through <see cref="IInternetGateway"/> with
+    /// SPKI pinning and respects <see cref="IInternetGateway.OfflineMode"/>.
+    ///
     /// Backend contract (see worker/licensing.js on the Giblex site):
     ///   POST {Base}/api/checkout  { tier, usbBindingId? } -> { url, claimId }
     ///   GET  {Base}/api/license?claim=ID -> { status: pending|ready|expired, token? }
@@ -23,7 +28,7 @@ namespace PhantomVault.UI.Services.Licensing
     public sealed class StripeLicensingClient : ILicensingClient
     {
         // Override at runtime with PHANTOM_LICENSING_BASEURL for staging/self-host.
-        private const string DefaultBaseUrl = "https://giblex.com.au";
+        private const string DefaultBaseUrl = "https://giblex.com";
 
         // Fallback Stripe Payment Link — opened when the licensing backend
         // isn't reachable (e.g. the /api/checkout endpoint isn't deployed yet).
@@ -38,12 +43,12 @@ namespace PhantomVault.UI.Services.Licensing
             PropertyNameCaseInsensitive = true
         };
 
-        private readonly HttpClient _http;
+        private readonly IInternetGateway _gateway;
         private readonly Uri? _baseUri;
 
-        public StripeLicensingClient(HttpClient? http = null)
+        public StripeLicensingClient(IInternetGateway gateway)
         {
-            _http = http ?? new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+            _gateway = gateway ?? throw new ArgumentNullException(nameof(gateway));
 
             var configured = Environment.GetEnvironmentVariable("PHANTOM_LICENSING_BASEURL");
             var raw = string.IsNullOrWhiteSpace(configured) ? DefaultBaseUrl : configured.Trim();
@@ -54,21 +59,38 @@ namespace PhantomVault.UI.Services.Licensing
             _baseUri is not null &&
             (_baseUri.Scheme == Uri.UriSchemeHttp || _baseUri.Scheme == Uri.UriSchemeHttps);
 
-        public async Task<LicensingResult> ActivateAsync(PremiumTier tier, string? usbBindingId, CancellationToken ct = default)
+        public async Task<LicensingResult> ActivateAsync(PremiumTier tier, string? usbBindingId,
+            BillingInterval interval = BillingInterval.Monthly, CancellationToken ct = default)
         {
             if (!IsConfigured)
-                return TryDirectPaymentLinkFallback("Licensing endpoint is not configured for this build.");
+                return TryDirectPaymentLinkFallback("Licensing endpoint is not configured for this build.", interval);
+
+            if (_gateway.OfflineMode)
+                return LicensingResult.Failed(
+                    "Premium checkout is blocked while offline mode is on. Turn off offline mode in Privacy settings, then try again.");
+
+            var grant = await _gateway.RequestAccessAsync(LicensingGatewayPolicy.CreateRequest(), ct)
+                .ConfigureAwait(false);
+            if (grant is null)
+                return LicensingResult.Failed("Internet access for licensing was not granted.");
+
+            using var http = _gateway.CreateClient(grant);
 
             CheckoutResponse? checkout;
             try
             {
-                var resp = await _http.PostAsJsonAsync(
+                var resp = await http.PostAsJsonAsync(
                     new Uri(_baseUri!, "/api/checkout"),
-                    new CheckoutRequest { Tier = (int)tier, UsbBindingId = usbBindingId },
+                    new CheckoutRequest
+                    {
+                        Tier = (int)tier,
+                        UsbBindingId = usbBindingId,
+                        Interval = interval == BillingInterval.Yearly ? "yearly" : "monthly",
+                    },
                     ct).ConfigureAwait(false);
 
                 if (!resp.IsSuccessStatusCode)
-                    return TryDirectPaymentLinkFallback($"Checkout API returned {(int)resp.StatusCode}.");
+                    return TryDirectPaymentLinkFallback($"Checkout API returned {(int)resp.StatusCode}.", interval);
 
                 checkout = await resp.Content.ReadFromJsonAsync<CheckoutResponse>(JsonOpts, ct).ConfigureAwait(false);
             }
@@ -78,16 +100,16 @@ namespace PhantomVault.UI.Services.Licensing
             }
             catch (Exception ex)
             {
-                return TryDirectPaymentLinkFallback($"Could not reach the licensing service: {ex.Message}");
+                return TryDirectPaymentLinkFallback($"Could not reach the licensing service: {ex.Message}", interval);
             }
 
             if (checkout is null || string.IsNullOrWhiteSpace(checkout.Url) || string.IsNullOrWhiteSpace(checkout.ClaimId))
-                return TryDirectPaymentLinkFallback("The licensing service returned an invalid checkout session.");
+                return TryDirectPaymentLinkFallback("The licensing service returned an invalid checkout session.", interval);
 
             if (!TryOpenBrowser(checkout.Url))
                 return LicensingResult.Failed("Could not open the checkout page in your browser.");
 
-            return await PollForTokenAsync(checkout.ClaimId, ct).ConfigureAwait(false);
+            return await PollForTokenAsync(http, checkout.ClaimId, ct).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -97,18 +119,26 @@ namespace PhantomVault.UI.Services.Licensing
         /// after Stripe emails the receipt. Returns NotConfigured so the UI shows
         /// a friendly "checkout opened in your browser" message instead of an error.
         /// </summary>
-        private LicensingResult TryDirectPaymentLinkFallback(string reason)
+        private LicensingResult TryDirectPaymentLinkFallback(string reason, BillingInterval interval)
         {
-            var configuredLink = Environment.GetEnvironmentVariable("PHANTOM_STRIPE_PAYMENT_LINK");
+            var intervalVar = interval == BillingInterval.Yearly
+                ? "PHANTOM_STRIPE_PAYMENT_LINK_YEARLY"
+                : "PHANTOM_STRIPE_PAYMENT_LINK_MONTHLY";
+
+            var configuredLink = Environment.GetEnvironmentVariable(intervalVar);
+            if (string.IsNullOrWhiteSpace(configuredLink))
+                configuredLink = Environment.GetEnvironmentVariable("PHANTOM_STRIPE_PAYMENT_LINK");
+
             var link = string.IsNullOrWhiteSpace(configuredLink) ? DefaultStripePaymentLink : configuredLink.Trim();
 
             if (string.IsNullOrWhiteSpace(link) || !Uri.TryCreate(link, UriKind.Absolute, out var linkUri))
-                return LicensingResult.Failed($"{reason} No fallback checkout URL is configured.");
+            {
+                Log.Warning("[Licensing] Checkout unavailable and no fallback link set. Reason: {Reason}", reason);
+                return LicensingResult.Failed(
+                    "Premium checkout is unavailable right now — the licensing service could not be reached. "
+                    + "Your vault and existing features are unaffected. Please try again later.");
+            }
 
-            // The link comes from an environment variable, so anything that can set
-            // the process environment could otherwise redirect the user to an
-            // arbitrary page that looks like checkout. Only Stripe's own hosted
-            // checkout hosts are acceptable, and only over HTTPS.
             if (!IsStripeCheckoutUri(linkUri))
                 return LicensingResult.Failed($"{reason} The configured fallback checkout URL is not a Stripe checkout link.");
 
@@ -119,10 +149,6 @@ namespace PhantomVault.UI.Services.Licensing
                 "Opened Stripe checkout in your browser. Complete payment there — your activation code will arrive by email.");
         }
 
-        /// <summary>
-        /// True only for an HTTPS URL on a Stripe-hosted checkout domain
-        /// (buy.stripe.com, checkout.stripe.com, or a *.stripe.com subdomain).
-        /// </summary>
         private static bool IsStripeCheckoutUri(Uri uri)
         {
             if (!string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.Ordinal))
@@ -134,9 +160,9 @@ namespace PhantomVault.UI.Services.Licensing
         }
 
         public Task<LicensingResult> RenewAsync(string? currentToken, string? usbBindingId, CancellationToken ct = default)
-            => ActivateAsync(PremiumTier.Premium, usbBindingId, ct);
+            => ActivateAsync(PremiumTier.Premium, usbBindingId, BillingInterval.Monthly, ct);
 
-        private async Task<LicensingResult> PollForTokenAsync(string claimId, CancellationToken ct)
+        private async Task<LicensingResult> PollForTokenAsync(HttpClient http, string claimId, CancellationToken ct)
         {
             var deadline = DateTime.UtcNow + PollTimeout;
             var pollUri = new Uri(_baseUri!, "/api/license?claim=" + Uri.EscapeDataString(claimId));
@@ -146,7 +172,7 @@ namespace PhantomVault.UI.Services.Licensing
                 try
                 {
                     await Task.Delay(PollInterval, ct).ConfigureAwait(false);
-                    var status = await _http.GetFromJsonAsync<LicenseStatusResponse>(pollUri, JsonOpts, ct).ConfigureAwait(false);
+                    var status = await http.GetFromJsonAsync<LicenseStatusResponse>(pollUri, JsonOpts, ct).ConfigureAwait(false);
 
                     if (status is null) continue;
                     if (string.Equals(status.Status, "ready", StringComparison.OrdinalIgnoreCase) &&
@@ -158,7 +184,6 @@ namespace PhantomVault.UI.Services.Licensing
                     {
                         return LicensingResult.Failed("The checkout session expired before payment completed.");
                     }
-                    // "pending" — keep polling.
                 }
                 catch (OperationCanceledException)
                 {
@@ -191,6 +216,9 @@ namespace PhantomVault.UI.Services.Licensing
         {
             [JsonPropertyName("tier")] public int Tier { get; set; }
             [JsonPropertyName("usbBindingId")] public string? UsbBindingId { get; set; }
+
+            /// <summary>"monthly" or "yearly" — selects which Stripe price the backend uses.</summary>
+            [JsonPropertyName("interval")] public string? Interval { get; set; }
         }
 
         private sealed class CheckoutResponse

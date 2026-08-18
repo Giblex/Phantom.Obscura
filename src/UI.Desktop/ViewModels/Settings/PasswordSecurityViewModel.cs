@@ -132,10 +132,18 @@ namespace PhantomVault.UI.ViewModels.Settings
 
                 int score = 100;
 
-                double weakRatio = (double)Report.WeakCount / Report.TotalCredentials;
+                // Weak/reused/breached are counted per secret, and an entry can hold more
+                // than one (its password plus any secret sections), so these must be
+                // measured against the secret count. Dividing by the entry count could
+                // exceed 1.0 and drive the score negative. Age is per entry.
+                int secretCount = Report.AnalyzedSecretCount > 0
+                    ? Report.AnalyzedSecretCount
+                    : Report.TotalCredentials;
+
+                double weakRatio = (double)Report.WeakCount / secretCount;
                 score -= (int)(weakRatio * 40);
 
-                double reuseRatio = (double)Report.ReusedCount / Report.TotalCredentials;
+                double reuseRatio = (double)Report.ReusedCount / secretCount;
                 score -= (int)(reuseRatio * 30);
 
                 double oldRatio = (double)Report.OldCount / Report.TotalCredentials;

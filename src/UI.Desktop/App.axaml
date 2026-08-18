@@ -49,6 +49,9 @@
 
         <StyleInclude Source="avares://PhantomVault.UI/Assets/Styles/GlobalStyles.axaml" />
 
+        <!-- After GlobalStyles so these templates win for CheckBox/RadioButton/ToggleSwitch. -->
+        <StyleInclude Source="avares://PhantomVault.UI/Resources/Styles/SelectionControls.axaml" />
+
         <StyleInclude Source="avares://PhantomVault.UI/Styles/EntryFormStyles.axaml" />
 
         <Style Selector="Window.animated-window">
@@ -169,9 +172,13 @@
             <Setter Property="IsVisible" Value="False"/>
         </Style>
 
-        <!-- Window chrome itself must not be transparent in this mode. -->
-        <Style Selector="Window.reduce-transparency">
-            <Setter Property="TransparencyLevelHint" Value="None"/>
+        <!-- Deliberately NOT forcing TransparencyLevelHint/Background on the window
+             itself. Some windows use window transparency for their *shape* rather than
+             for decoration — the unlock dialog is an undecorated circle that relies on
+             a transparent background to not be a square — so blanket-disabling it turns
+             a shaped dialog into an opaque rectangle. Reduce Transparency is about
+             see-through *surfaces*, which the acrylic and glass rules above handle. -->
+        <Style Selector="Window.reduce-transparency:not(.shaped-window) Border.app-chrome">
             <Setter Property="Background" Value="{DynamicResource WindowBackgroundBrush}"/>
         </Style>
 

@@ -413,7 +413,6 @@
     <SolidColorBrush x:Key="SubtleBrush" Color="#18FFFFFF"/>
     <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#22FFFFFF"/>
     <SolidColorBrush x:Key="SurfaceActiveBrush" Color="#33FFFFFF"/>
-    <SolidColorBrush x:Key="SurfaceBrush" Color="#0C1620"/>
     <SolidColorBrush x:Key="HeaderPrimaryBrush" Color="#101E2B"/>
 
     <!-- ComboBox item + status-text tokens derived from this theme's palette. Previously these fell through to the

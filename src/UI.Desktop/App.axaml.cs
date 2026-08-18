@@ -12,6 +12,7 @@ using PhantomVault.UI.Services.TrayBackground;
 using PhantomVault.UI.ViewModels;
 using PhantomVault.UI.Views;
 using System;
+using System.Linq;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -100,9 +101,22 @@ namespace PhantomVault.UI
                     runtimeThemeService.Apply(persistedSettings.SelectedThemeId);
                 }
 
+                // The dark/light variant follows the selected skin unless high contrast
+                // overrides both. The variant chooses the app-level PhantomTheme fallback
+                // for every key a skin does not define, and it drives Fluent's control
+                // defaults — so a light skin under the dark variant produced dark fallback
+                // surfaces and near-invisible checkbox outlines. Persisted IsDarkTheme is
+                // only the fallback for skins with no declared polarity.
+                var selectedSkin = runtimeThemeService.GetThemes()
+                    .FirstOrDefault(t => string.Equals(t.Id, persistedSettings.SelectedThemeId, StringComparison.OrdinalIgnoreCase));
+
+                var wantsDark = selectedSkin is null
+                    ? persistedSettings.IsDarkTheme
+                    : !selectedSkin.IsLight;
+
                 var theme = persistedSettings.EnableHighContrast
                     ? AppTheme.HighContrast
-                    : persistedSettings.IsDarkTheme ? AppTheme.Dark : AppTheme.Light;
+                    : wantsDark ? AppTheme.Dark : AppTheme.Light;
                 themeManager.SetTheme(theme);
 
                 themeManager.SetSkin(persistedSettings.ThemeSkin);
@@ -258,6 +272,9 @@ namespace PhantomVault.UI
 
                 try
                 {
+                    // CredentialSubmitted is consumed by VaultViewModel (see
+                    // InitializeAutoInject): it owns both the credential list needed to
+                    // decide save-vs-update and the write path used to store the result.
                     var pipeServer = _serviceProvider.GetRequiredService<INativeHostPipeServer>();
                     pipeServer.Start();
                 }

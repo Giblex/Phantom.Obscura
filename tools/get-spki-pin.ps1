@@ -1,0 +1,7 @@
+$tcp = New-Object System.Net.Sockets.TcpClient('giblex.com', 443)
+$ssl = New-Object System.Net.Security.SslStream($tcp.GetStream(), $false, [System.Net.Security.RemoteCertificateValidationCallback]{ $true })
+$ssl.AuthenticateAsClient('giblex.com')
+$cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($ssl.RemoteCertificate)
+$spki = $cert.PublicKey.ExportSubjectPublicKeyInfo()
+$hash = [System.Security.Cryptography.SHA256]::Create().ComputeHash($spki)
+Write-Output ([Convert]::ToBase64String($hash))

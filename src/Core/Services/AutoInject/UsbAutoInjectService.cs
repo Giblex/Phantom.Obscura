@@ -121,7 +121,7 @@ namespace PhantomVault.Core.Services.AutoInject
             catch (Exception ex)
             {
 
-                Console.WriteLine($"Auto-inject error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Auto-inject error: {ex.Message}");
             }
         }
 
@@ -173,7 +173,7 @@ namespace PhantomVault.Core.Services.AutoInject
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Auto-fill error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Auto-fill error: {ex.Message}");
             }
         }
 
@@ -201,7 +201,7 @@ namespace PhantomVault.Core.Services.AutoInject
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Copy field error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Copy field error: {ex.Message}");
                 return false;
             }
         }
@@ -215,7 +215,7 @@ namespace PhantomVault.Core.Services.AutoInject
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"TOTP read error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"TOTP read error: {ex.Message}");
                 return Task.FromResult<TotpSnapshot?>(null);
             }
         }
@@ -264,7 +264,7 @@ namespace PhantomVault.Core.Services.AutoInject
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"USB insert handler error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"USB insert handler error: {ex.Message}");
             }
         }
 

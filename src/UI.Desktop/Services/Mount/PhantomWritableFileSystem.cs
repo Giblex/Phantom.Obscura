@@ -49,6 +49,10 @@ namespace PhantomVault.UI.Services.Mount
         }
 
         private readonly string _volumePath;
+
+        // Repacking rewrites the container, which means re-encrypting its header, which needs
+        // the same keyfile the mount was opened with. Held for the lifetime of the mount.
+        private readonly string _keyfilePath;
         private readonly long _payloadStart;
         private readonly Node _root;
         private readonly object _lock = new();
@@ -59,9 +63,10 @@ namespace PhantomVault.UI.Services.Mount
         private bool _committed;
 
         public PhantomWritableFileSystem(string volumePath, ObscuraVolumeManifest manifest,
-            long payloadStart, Action? onCommitted)
+            long payloadStart, string keyfilePath, Action? onCommitted)
         {
             _volumePath = volumePath;
+            _keyfilePath = keyfilePath;
             _payloadStart = payloadStart;
             _onCommitted = onCommitted;
 
@@ -432,7 +437,7 @@ namespace PhantomVault.UI.Services.Mount
                 _handle = null;
 
                 new ObscuraVolumeService()
-                    .CreateVolumeFromSourcesAsync(_volumePath, sources)
+                    .CreateVolumeFromSourcesAsync(_volumePath, sources, _keyfilePath)
                     .GetAwaiter().GetResult();
             }
 
