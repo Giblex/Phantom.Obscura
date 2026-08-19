@@ -19,6 +19,7 @@ namespace PhantomVault.UI.Services
         public bool PrivacyModeEnabled { get; set; }
         public bool RedactDiagnosticLogs { get; set; } = true;
         public bool EnableDebugLogging { get; set; } = false;
+        public bool EnableSuiteCredentialIndex { get; set; } = false;
 
         public bool UpdateAutoCheckEnabled { get; set; } = false;
         public bool StartWithWindows { get; set; } = false;
@@ -46,7 +47,7 @@ namespace PhantomVault.UI.Services
 
         public string AppFontFamily { get; set; } = "Segoe UI";
         public double AppFontSize { get; set; } = 14.0;
-        public string AccentColorHex { get; set; } = "#2B4A7A";
+        public string AccentColorHex { get; set; } = "#5A7AB0";
 
         public int LanguageIndex { get; set; } = 0;
 

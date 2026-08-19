@@ -175,8 +175,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Failed to sync TOTP entries: {ex.Message}");
-                RecentIssuesLog.Instance.Record(IssueSeverity.Warning, "TOTP sync failed", $"Incoming authenticator codes could not be applied: {ex.Message}");
+                Serilog.Log.Error(ex, "[TotpSync] Incoming authenticator codes could not be applied.");
+                RecentIssuesLog.Instance.Record(IssueSeverity.Warning, "TOTP sync failed", "Incoming authenticator codes could not be applied. Lock and reopen the vault to retry.");
             }
         }
 

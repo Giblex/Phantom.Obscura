@@ -2,6 +2,8 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Text.Json;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using PhantomVault.Core.Services;
 using Xunit;
@@ -33,6 +35,40 @@ public sealed class ObscuraVolumeCommitRecoveryTests : IDisposable
 
     private static ObscuraVolumeSource Src(string path, string content)
         => new(path, () => new MemoryStream(Encoding.UTF8.GetBytes(content), writable: false));
+
+    private static void WriteLegacyVolume(string path, params (string Path, byte[] Content)[] files)
+    {
+        long offset = 0;
+        using var payloadHasher = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+        var entries = new System.Collections.Generic.List<ObscuraVolumeEntry>();
+        foreach (var file in files)
+        {
+            byte[] hash = SHA256.HashData(file.Content);
+            entries.Add(new ObscuraVolumeEntry
+            {
+                Path = file.Path,
+                Offset = offset,
+                Length = file.Content.Length,
+                Sha256 = Convert.ToBase64String(hash)
+            });
+            offset += file.Content.Length;
+            payloadHasher.AppendData(hash);
+        }
+
+        var manifest = new ObscuraVolumeManifest
+        {
+            Version = 1,
+            CreatedUtc = DateTimeOffset.UtcNow,
+            Entries = entries,
+            PayloadHash = Convert.ToBase64String(payloadHasher.GetHashAndReset())
+        };
+        byte[] json = JsonSerializer.SerializeToUtf8Bytes(manifest);
+        using var output = File.Create(path);
+        output.Write(Encoding.ASCII.GetBytes("OBSCUR01"));
+        output.Write(BitConverter.GetBytes(json.Length));
+        output.Write(json);
+        foreach (var file in files) output.Write(file.Content);
+    }
 
     [Fact]
     public async Task SuccessfulCommit_LeavesNoJournalTempOrBackupArtifacts()
@@ -178,5 +214,48 @@ public sealed class ObscuraVolumeCommitRecoveryTests : IDisposable
 
         Assert.Equal(new FileInfo(small).Length, new FileInfo(larger).Length);
         Assert.Equal(0, new FileInfo(small).Length % (64L * 1024 * 1024));
+    }
+
+    [Fact]
+    public async Task Legacy_upgrade_rewrites_only_the_header_and_round_trips_payload()
+    {
+        string vol = Path.Combine(_dir, "legacy.bin");
+        WriteLegacyVolume(vol,
+            ("root/a.txt", Encoding.UTF8.GetBytes("alpha")),
+            ("decoy/decoy.database.pmeta", Encoding.UTF8.GetBytes("beta")));
+
+        Assert.True(await _svc.IsLegacyVolumeAsync(vol));
+        Assert.True(await _svc.UpgradeLegacyVolumeAsync(vol, _keyfile));
+        Assert.False(await _svc.IsLegacyVolumeAsync(vol));
+        Assert.False(await _svc.UpgradeLegacyVolumeAsync(vol, _keyfile));
+
+        string rawText = Encoding.ASCII.GetString(File.ReadAllBytes(vol));
+        Assert.DoesNotContain("OBSCUR01", rawText, StringComparison.Ordinal);
+        Assert.DoesNotContain("decoy", rawText, StringComparison.OrdinalIgnoreCase);
+
+        string extracted = Path.Combine(_dir, "upgraded");
+        await _svc.ExtractVolumeAsync(vol, extracted, _keyfile, progress: null, verify: true);
+        Assert.Equal("alpha", File.ReadAllText(Path.Combine(extracted, "root", "a.txt")));
+        Assert.Equal("beta", File.ReadAllText(Path.Combine(extracted, "decoy", "decoy.database.pmeta")));
+        Assert.False(File.Exists(vol + ".tmp"));
+        Assert.False(File.Exists(vol + ".bak"));
+        Assert.False(File.Exists(vol + ".commit-journal"));
+    }
+
+    [Fact]
+    public async Task Legacy_upgrade_refuses_corrupt_payload_and_preserves_original()
+    {
+        string vol = Path.Combine(_dir, "corrupt-legacy.bin");
+        WriteLegacyVolume(vol, ("root/a.txt", Encoding.UTF8.GetBytes("original")));
+        byte[] before = File.ReadAllBytes(vol);
+        before[^1] ^= 0x7f;
+        File.WriteAllBytes(vol, before);
+
+        await Assert.ThrowsAsync<CryptographicException>(
+            () => _svc.UpgradeLegacyVolumeAsync(vol, _keyfile));
+
+        Assert.True(await _svc.IsLegacyVolumeAsync(vol));
+        Assert.Equal(before, File.ReadAllBytes(vol));
+        Assert.False(File.Exists(vol + ".commit-journal"));
     }
 }

@@ -344,6 +344,8 @@ namespace PhantomVault.Core.Services
 
         public static ErrorMessageInfo GetErrorMessageFromException(Exception ex)
         {
+            ArgumentNullException.ThrowIfNull(ex);
+
             return ex switch
             {
                 CryptographicException when ex.Message.Contains("authentication tag") =>
@@ -363,8 +365,8 @@ namespace PhantomVault.Core.Services
 
                 _ => new ErrorMessageInfo
                 {
-                    Title = "Error",
-                    Message = ex.Message,
+                    Title = "Operation Failed",
+                    Message = "The operation could not be completed. No vault data was exposed. Check Recent Issues for a diagnostic reference and try again.",
                     TroubleshootingSteps = new[]
                     {
                         "Check the application logs for more details",
@@ -378,6 +380,14 @@ namespace PhantomVault.Core.Services
                 }
             };
         }
+
+        /// <summary>
+        /// Returns text safe for dialogs, status labels, and lock screens. Exception
+        /// messages are deliberately never returned because they commonly contain
+        /// paths, device identifiers, provider responses, or cryptographic details.
+        /// </summary>
+        public static string GetUserSafeMessage(Exception ex)
+            => GetErrorMessageFromException(ex).Message;
     }
 
     public class ErrorMessageInfo

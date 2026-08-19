@@ -132,7 +132,8 @@ namespace PhantomVault.UI.Views.Dialogs
             catch (Exception ex)
             {
                 Log.Error(ex, "[PayWindow] ActivateAsync threw");
-                ShowStatus($"Subscription failed: {ex.Message}", StatusKind.Error);
+                Serilog.Log.Error(ex, "[Subscription] Subscription operation failed.");
+                ShowStatus("The subscription operation could not be completed. Check the connection and try again.", StatusKind.Error);
             }
             finally
             {

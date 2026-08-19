@@ -19,6 +19,7 @@ using Avalonia.Input.Platform;
 using Avalonia.Layout;
 using Avalonia.Threading;
 using ReactiveUI;
+using Serilog;
 using PhantomVault.Core.Models;
 using PhantomVault.Core.Models.AutoInject;
 using PhantomVault.Core.Services;
@@ -401,13 +402,13 @@ namespace PhantomVault.UI.ViewModels
             // Surface silently-swallowed ReactiveCommand exceptions so the user sees why a Recovery click did nothing.
             OpenPhantomRecoveryCommand.ThrownExceptions.Subscribe(ex =>
             {
-                Debug.WriteLine($"[Recovery] OpenPhantomRecoveryCommand threw: {ex}");
-                StatusMessage = $"Phantom Recovery failed: {ex.Message}";
+                Log.Error(ex, "[Recovery] Failed to open Phantom Recovery.");
+                StatusMessage = "Phantom Recovery could not be opened. Try again or review Recent Issues.";
             });
             ToggleRecoveryPanelCommand.ThrownExceptions.Subscribe(ex =>
             {
-                Debug.WriteLine($"[Recovery] ToggleRecoveryPanelCommand threw: {ex}");
-                StatusMessage = $"Recovery panel failed: {ex.Message}";
+                Log.Error(ex, "[Recovery] Failed to toggle the recovery panel.");
+                StatusMessage = "The recovery panel could not be opened. Try again.";
             });
             OpenSecurityOptionsCommand = ReactiveCommand.Create(OpenSecurityOptions);
             OpenPasswordHealthPanelCommand = ReactiveCommand.Create(OpenPasswordHealthPanel);
@@ -1308,8 +1309,8 @@ namespace PhantomVault.UI.ViewModels
                             }
                             catch (Exception ex)
                             {
-                                System.Diagnostics.Debug.WriteLine($"[Settings] DashboardEnabled commit failed: {ex}");
-                                RecentIssuesLog.Instance.Record(IssueSeverity.Warning, "Couldn't save setting", $"Dashboard preference may not persist: {ex.Message}");
+                                Log.Warning(ex, "[Settings] DashboardEnabled commit failed.");
+                                RecentIssuesLog.Instance.Record(IssueSeverity.Warning, "Couldn't save setting", "The dashboard preference may not persist. Try saving it again.");
                             }
                         },
                         discard: () =>
@@ -1351,8 +1352,8 @@ namespace PhantomVault.UI.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[Settings] GlobalHotkeyEnabled persist failed: {ex}");
-                    RecentIssuesLog.Instance.Record(IssueSeverity.Warning, "Couldn't save setting", $"Global hotkey preference may not persist: {ex.Message}");
+                    Log.Warning(ex, "[Settings] GlobalHotkeyEnabled persist failed.");
+                    RecentIssuesLog.Instance.Record(IssueSeverity.Warning, "Couldn't save setting", "The global hotkey preference may not persist. Try saving it again.");
                 }
             }
         }
@@ -1384,8 +1385,8 @@ namespace PhantomVault.UI.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[Settings] StartWithWindows persist failed: {ex}");
-                    RecentIssuesLog.Instance.Record(IssueSeverity.Warning, "Couldn't save setting", $"Start-with-Windows preference may not persist: {ex.Message}");
+                    Log.Warning(ex, "[Settings] StartWithWindows persist failed.");
+                    RecentIssuesLog.Instance.Record(IssueSeverity.Warning, "Couldn't save setting", "The start-with-Windows preference may not persist. Try saving it again.");
                 }
             }
         }
@@ -3458,6 +3459,7 @@ namespace PhantomVault.UI.ViewModels
                 OnCredentialSaved(credential);
                 CloseEditPanel();
             });
+            EditViewModel.Categories = new ObservableCollection<CategoryViewModel>(Categories);
 
             IsEditPanelVisible = true;
 
@@ -3496,6 +3498,7 @@ namespace PhantomVault.UI.ViewModels
                 OnCredentialSaved(credential);
                 CloseEditPanel();
             });
+            EditViewModel.Categories = new ObservableCollection<CategoryViewModel>(Categories);
 
             IsEditPanelVisible = true;
 
@@ -3520,6 +3523,10 @@ namespace PhantomVault.UI.ViewModels
 
         private void OnCredentialSaved(Credential credential)
         {
+
+            AccountConsolidationService.Consolidate(
+                credential,
+                _credentials.Select(item => item.GetCredential()));
 
             var existing = _credentials.FirstOrDefault(c => c.GetCredential() == credential);
 
@@ -3717,7 +3724,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("Save Failed", $"Failed to save vault: {ex.Message}", _ownerWindow);
+                Log.Error(ex, "Vault save failed");
+                await _dialogService.ShowErrorAsync("Save Failed", ErrorMessageService.GetUserSafeMessage(ex), _ownerWindow);
                 StatusMessage = "Failed to save vault";
             }
         }
@@ -3730,6 +3738,12 @@ namespace PhantomVault.UI.ViewModels
             _isPersistingCredentialIndex = true;
             try
             {
+                if (!SettingsService.Load().EnableSuiteCredentialIndex)
+                {
+                    _obscuraCredentialIndexService.Delete(_mountPath);
+                    return;
+                }
+
                 await _obscuraCredentialIndexService.ExportAsync(
                     _mountPath,
                     _vaultName,
@@ -3742,8 +3756,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[VaultViewModel] Failed to persist Obscura credential index: {ex.Message}");
-                RecentIssuesLog.Instance.Record(IssueSeverity.Warning, "Credential index not updated", $"Browser auto-fill data may be stale: {ex.Message}");
+                Log.Warning(ex, "[VaultViewModel] Failed to persist the Obscura credential index.");
+                RecentIssuesLog.Instance.Record(IssueSeverity.Warning, "Credential index not updated", "Browser auto-fill data may be stale. Lock and reopen the vault to retry.");
             }
             finally
             {
@@ -3867,9 +3881,10 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
+                Log.Warning(ex, "[Clipboard] Failed to copy a password.");
                 await _dialogService.ShowErrorAsync(
                     "Copy Failed",
-                    $"Failed to copy password: {ex.Message}",
+                    "The password could not be copied. Confirm clipboard access is allowed, then try again.",
                     _ownerWindow);
             }
         }
@@ -3942,9 +3957,10 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
+                Log.Warning(ex, "[Clipboard] Failed to copy a username.");
                 await _dialogService.ShowErrorAsync(
                     "Copy Failed",
-                    $"Failed to copy username: {ex.Message}",
+                    "The username could not be copied. Confirm clipboard access is allowed, then try again.",
                     _ownerWindow);
             }
         }
@@ -4012,9 +4028,10 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
+                Log.Warning(ex, "[Clipboard] Failed to copy a TOTP code.");
                 await _dialogService.ShowErrorAsync(
                     "Copy Failed",
-                    $"Failed to copy TOTP code: {ex.Message}",
+                    "The authentication code could not be copied. Confirm clipboard access is allowed, then try again.",
                     _ownerWindow);
             }
         }
@@ -4076,9 +4093,10 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "[TOTP] Failed to add TOTP to the selected credential.");
                 await _dialogService.ShowErrorAsync(
                     "Add TOTP Failed",
-                    $"Failed to add TOTP: {ex.Message}",
+                    "TOTP could not be added. Verify the secret or QR code and try again.",
                     _ownerWindow);
             }
         }
@@ -4147,9 +4165,10 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "[TOTP] Failed to edit TOTP for the selected credential.");
                 await _dialogService.ShowErrorAsync(
                     "Edit TOTP Failed",
-                    $"Failed to edit TOTP: {ex.Message}",
+                    "The TOTP settings could not be updated. Verify the values and try again.",
                     _ownerWindow);
             }
         }
@@ -4218,9 +4237,10 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "[TOTP] Failed to save a TOTP secret.");
                 await _dialogService.ShowErrorAsync(
                     "Save TOTP Failed",
-                    $"Failed to save TOTP secret: {ex.Message}",
+                    "The TOTP secret could not be saved. Verify it and try again.",
                     _ownerWindow);
             }
         }
@@ -4257,9 +4277,10 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "[TOTP] Failed to remove TOTP from the selected credential.");
                 await _dialogService.ShowErrorAsync(
                     "Remove TOTP Failed",
-                    $"Failed to remove TOTP: {ex.Message}",
+                    "TOTP could not be removed. Try again.",
                     _ownerWindow);
             }
         }
@@ -4281,9 +4302,10 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
+                Log.Warning(ex, "[Navigation] Failed to open a credential URL.");
                 await _dialogService.ShowErrorAsync(
                     "Open Failed",
-                    $"Failed to open URL: {ex.Message}",
+                    "The URL could not be opened. Verify it is a supported web address and try again.",
                     _ownerWindow);
             }
         }
@@ -4951,6 +4973,21 @@ namespace PhantomVault.UI.ViewModels
 
         private string? ResolveSystemVolumePath()
         {
+            if (!string.IsNullOrWhiteSpace(_masterVolumePath))
+            {
+                if (File.Exists(_masterVolumePath))
+                    return _masterVolumePath;
+
+                // Older manifests may store the transport path relative to the
+                // canonical .phantom layout rather than as an absolute path.
+                if (!Path.IsPathRooted(_masterVolumePath) && !string.IsNullOrWhiteSpace(_mountPath))
+                {
+                    var resolved = Path.GetFullPath(Path.Combine(_mountPath, _masterVolumePath));
+                    if (File.Exists(resolved))
+                        return resolved;
+                }
+            }
+
             if (string.IsNullOrEmpty(_usbRootPath) && string.IsNullOrEmpty(_mountPath))
                 return null;
             string driveRoot = !string.IsNullOrEmpty(_usbRootPath) ? _usbRootPath : _mountPath;
@@ -4961,8 +4998,14 @@ namespace PhantomVault.UI.ViewModels
             {
                 driveRoot = Path.GetDirectoryName(driveRoot.TrimEnd(Path.DirectorySeparatorChar)) ?? driveRoot;
             }
-            var path = PhantomVault.Core.Services.PhantomDeviceLayout.GetSystemVolumePath(driveRoot);
-            return File.Exists(path) ? path : null;
+            var usbVolume = PhantomVault.Core.Services.PhantomDeviceLayout.GetSystemVolumePath(driveRoot);
+            if (File.Exists(usbVolume))
+                return usbVolume;
+
+            // Local packed vaults are provisioned inside .phantom as obscura.vol.
+            var manifestDirectory = !string.IsNullOrWhiteSpace(_mountPath) ? _mountPath : driveRoot;
+            var localVolume = Path.Combine(manifestDirectory, "obscura.vol");
+            return File.Exists(localVolume) ? localVolume : null;
         }
 
         /// <summary>
@@ -5024,8 +5067,9 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "[Mount] Failed to mount the encrypted drive.");
                 await _dialogService.ShowErrorAsync("Mount Failed",
-                    $"Could not mount the encrypted drive: {ex.Message}", _ownerWindow);
+                    "The encrypted drive could not be mounted. Verify the vault is available and try again.", _ownerWindow);
                 StatusMessage = "Mount failed.";
             }
             finally
@@ -5117,8 +5161,8 @@ namespace PhantomVault.UI.ViewModels
                     }
                     catch (Exception innerEx)
                     {
-                        System.Diagnostics.Debug.WriteLine($"[CategoryManager] Failed to read manifest with cached credentials: {innerEx.Message}");
-                        await _dialogService.ShowErrorAsync("Category Manager", $"Failed to read manifest: {innerEx.Message}", _ownerWindow);
+                        Log.Error(innerEx, "[CategoryManager] Failed to read the manifest with cached credentials.");
+                        await _dialogService.ShowErrorAsync("Category Manager", "The vault categories could not be read. Lock and reopen the vault, then try again.", _ownerWindow);
                         StatusMessage = "Category manager error";
                     }
                 }
@@ -5134,7 +5178,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("Manage Categories", $"Unable to open category manager: {ex.Message}\n\nStack Trace:\n{ex.StackTrace}", _ownerWindow);
+                Log.Error(ex, "[CategoryManager] Failed to open the category manager.");
+                await _dialogService.ShowErrorAsync("Manage Categories", "The category manager could not be opened. Try again or review Recent Issues.", _ownerWindow);
                 StatusMessage = "Category manager error";
             }
         }
@@ -5242,7 +5287,8 @@ namespace PhantomVault.UI.ViewModels
                 ZeroizeSensitiveData = ClearSensitiveState,
                 OnCleanupFailed = ex => Dispatcher.UIThread.Post(() =>
                 {
-                    StatusMessage = $"Lock cleanup issue: {ex.Message}";
+                    Log.Error(ex, "[Lock] Sensitive-session cleanup did not complete.");
+                    StatusMessage = "Vault cleanup did not complete. Close the vault window to ensure access is revoked.";
                 })
             };
 
@@ -5586,8 +5632,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"PIN setup failed: {ex.Message}");
-                RecentIssuesLog.Instance.Record(IssueSeverity.Error, "PIN setup failed", $"Your PIN may not have been saved: {ex.Message}");
+                Log.Error(ex, "[PIN] PIN setup failed.");
+                RecentIssuesLog.Instance.Record(IssueSeverity.Error, "PIN setup failed", "Your PIN may not have been saved. Try setting it again.");
             }
         }
 
@@ -5659,11 +5705,13 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "Vault lock failed");
+                var safeMessage = ErrorMessageService.GetUserSafeMessage(ex);
                 await _dialogService.ShowErrorAsync(
                     "Lock Failed",
-                    $"Failed to lock vault: {ex.Message}",
+                    safeMessage,
                     _ownerWindow);
-                StatusMessage = ex.Message;
+                StatusMessage = "Vault lock did not complete.";
             }
             finally
             {
@@ -5739,7 +5787,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                LockscreenError = $"Invalid passphrase: {ex.Message}";
+                Log.Warning(ex, "Lock-screen passphrase verification failed");
+                LockscreenError = "The passphrase was not accepted or the vault could not be verified.";
                 return false;
             }
 
@@ -5830,7 +5879,8 @@ namespace PhantomVault.UI.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    LockscreenError = $"Device-authenticator verification error: {ex.Message}";
+                    Log.Warning(ex, "Lock-screen device-authenticator verification failed");
+                    LockscreenError = "Device-authenticator verification could not be completed.";
                     return false;
                 }
             }
@@ -5933,7 +5983,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                RegisterFailedLockscreenAttempt(ex.Message);
+                Log.Warning(ex, "Lock-screen unlock attempt failed");
+                RegisterFailedLockscreenAttempt("Unlock failed. Verify your credentials and connected security devices.");
             }
             finally
             {
@@ -6128,6 +6179,7 @@ namespace PhantomVault.UI.ViewModels
 
                 if (database.Groups != null)
                 {
+                    var loadedAccounts = new List<Credential>();
                     foreach (var group in database.Groups)
                     {
                         if (group.Entries != null)
@@ -6136,6 +6188,11 @@ namespace PhantomVault.UI.ViewModels
                             {
 
                                 credential.Group = group.Name;
+                                // Apply the same service identity pass used for newly saved
+                                // entries to the full existing vault. Entries stay separate
+                                // tiles; only their canonical service title/icon is shared.
+                                AccountConsolidationService.Consolidate(credential, loadedAccounts);
+                                loadedAccounts.Add(credential);
                                 _credentials.Add(new CredentialViewModel(credential));
                             }
                         }
@@ -6204,7 +6261,7 @@ namespace PhantomVault.UI.ViewModels
                 Serilog.Log.Error(ex, "[VaultLoad] LoadAsync threw {ExType} — mountPath={MountPath}", ex.GetType().Name, mountPath);
                 await _dialogService.ShowErrorAsync(
                     "Load Failed",
-                    $"Failed to load vault database: {ex.Message}",
+                    "The vault database could not be loaded. Verify the vault is available and unlock it again.",
                     _ownerWindow);
                 StatusMessage = "Failed to load vault";
             }
@@ -6459,12 +6516,13 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "[Recovery] Failed to resolve the Phantom Recovery workspace.");
                 return new RecoveryVaultResolution(
                     false,
                     string.Empty,
                     false,
                     false,
-                    $"Failed to resolve the PhantomRecovery workspace from this vault: {ex.Message}");
+                    "The Phantom Recovery workspace could not be resolved from this vault. Lock and reopen the vault, then try again.");
             }
         }
 
@@ -6731,8 +6789,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"!!! ERROR: {ex.Message}\n{ex.StackTrace}");
-                StatusMessage = $"❌ ERROR: {ex.Message}";
+                Log.Error(ex, "[SecurityDashboard] Failed to open the dashboard window.");
+                StatusMessage = "The Security Dashboard could not be opened. Try again.";
             }
         }
 
@@ -7198,7 +7256,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("Import Error", $"Failed to open import window: {ex.Message}", _ownerWindow);
+                Log.Error(ex, "[Import] Failed to open the import window.");
+                await _dialogService.ShowErrorAsync("Import Error", "The import window could not be opened. Try again.", _ownerWindow);
             }
         }
 
@@ -7226,7 +7285,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("Export Error", $"Failed to open export window: {ex.Message}", _ownerWindow);
+                Log.Error(ex, "[Export] Failed to open the export window.");
+                await _dialogService.ShowErrorAsync("Export Error", "The export window could not be opened. Try again.", _ownerWindow);
             }
         }
 
@@ -7384,7 +7444,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Failed to lock after USB removal: {ex.Message}";
+                Log.Fatal(ex, "[Lock] Failed to lock the vault after USB removal.");
+                StatusMessage = "The vault could not confirm it locked after USB removal. Close the vault immediately.";
             }
         }
 
@@ -7487,9 +7548,10 @@ namespace PhantomVault.UI.ViewModels
             {
                 await _dialogService.ShowErrorAsync(
                     "Rotation Failed",
-                    $"Failed to rotate encryption keys: {ex.Message}",
+                    "Encryption keys could not be rotated. The existing vault keys remain in use.",
                     _ownerWindow);
-                StatusMessage = $"Rotation failed: {ex.Message}";
+                Log.Error(ex, "Encryption-key rotation failed");
+                StatusMessage = "Encryption-key rotation failed.";
             }
             finally
             {
@@ -7570,7 +7632,8 @@ namespace PhantomVault.UI.ViewModels
             catch (Exception ex)
             {
                 Serilog.Log.Error(ex, "[VaultViewModel] RekeyManifestForFastUnlockAsync failed");
-                await _dialogService.ShowErrorAsync("Re-key Failed", $"Failed to re-key the vault manifest: {ex.Message}", _ownerWindow);
+                Log.Error(ex, "Vault manifest re-key failed");
+                await _dialogService.ShowErrorAsync("Re-key Failed", ErrorMessageService.GetUserSafeMessage(ex), _ownerWindow);
                 StatusMessage = "Re-key failed";
                 return false;
             }
@@ -7618,7 +7681,8 @@ namespace PhantomVault.UI.ViewModels
             catch (Exception ex)
             {
                 Serilog.Log.Error(ex, "[VaultViewModel] PersistLicenseTokenAsync failed");
-                await _dialogService.ShowErrorAsync("Activation Failed", $"Failed to apply the subscription: {ex.Message}", _ownerWindow);
+                Log.Error(ex, "Subscription activation failed");
+                await _dialogService.ShowErrorAsync("Activation Failed", ErrorMessageService.GetUserSafeMessage(ex), _ownerWindow);
                 StatusMessage = "Activation failed";
                 return false;
             }
@@ -7758,7 +7822,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("Backup Failed", $"Could not back up the keyfile: {ex.Message}", _ownerWindow);
+                Log.Error(ex, "Keyfile backup failed");
+                await _dialogService.ShowErrorAsync("Backup Failed", "The keyfile backup could not be created. Your current keyfile was not changed.", _ownerWindow);
             }
         }
 
@@ -7819,8 +7884,9 @@ namespace PhantomVault.UI.ViewModels
             catch (Exception ex)
             {
                 await _dialogService.ShowErrorAsync("Keyfile Update Failed",
-                    $"Failed to update the keyfile: {ex.Message}", _ownerWindow);
-                StatusMessage = $"Keyfile update failed: {ex.Message}";
+                    "The keyfile could not be updated. The existing keyfile remains required.", _ownerWindow);
+                Log.Error(ex, "Keyfile update failed");
+                StatusMessage = "Keyfile update failed.";
             }
             finally
             {
@@ -7923,9 +7989,10 @@ namespace PhantomVault.UI.ViewModels
             {
                 await _dialogService.ShowErrorAsync(
                     "Change Failed",
-                    $"Failed to change the master password: {ex.Message}",
+                    "The master password could not be changed. Your previous password remains valid.",
                     _ownerWindow);
-                StatusMessage = $"Master password change failed: {ex.Message}";
+                Log.Error(ex, "Master-password change failed");
+                StatusMessage = "Master-password change failed.";
             }
             finally
             {

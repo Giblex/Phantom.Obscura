@@ -6,6 +6,7 @@ using ReactiveUI;
 using Avalonia.Controls;
 using PhantomVault.Core.Services;
 using PhantomVault.UI.Services;
+using Serilog;
 
 namespace PhantomVault.UI.ViewModels
 {
@@ -125,7 +126,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Error checking availability: {ex.Message}";
+                Log.Warning(ex, "[Passkey] Availability check failed.");
+                StatusMessage = "Passkey availability could not be checked. Try again.";
                 IsPasskeyAvailable = false;
             }
             finally
@@ -178,11 +180,13 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (InvalidOperationException ex)
             {
-                StatusMessage = $"Authenticator registration failed: {ex.Message}";
+                Log.Warning(ex, "[Passkey] Authenticator registration was rejected.");
+                StatusMessage = "Authenticator registration could not be completed. Check device authentication and try again.";
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Authenticator registration failed: {ex.Message}";
+                Log.Error(ex, "[Passkey] Authenticator registration failed.");
+                StatusMessage = "Authenticator registration could not be completed. Try again.";
             }
             finally
             {
@@ -205,7 +209,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Failed to remove stored authenticator credentials: {ex.Message}";
+                Log.Error(ex, "[Passkey] Failed to remove stored authenticator credentials.");
+                StatusMessage = "Stored authenticator credentials could not be removed. Try again.";
             }
             finally
             {
@@ -257,7 +262,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Authenticator test failed: {ex.Message}";
+                Log.Warning(ex, "[Passkey] Authenticator test failed.");
+                StatusMessage = "Authenticator verification failed. Confirm device authentication and try again.";
             }
             finally
             {

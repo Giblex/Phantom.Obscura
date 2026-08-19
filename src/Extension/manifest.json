@@ -12,14 +12,12 @@
   "permissions": [
     "nativeMessaging",
     "activeTab",
-    "storage"
+    "storage",
+    "scripting"
   ],
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "run_at": "document_end"
-    }
+  "optional_host_permissions": [
+    "https://*/*",
+    "http://*/*"
   ],
   "background": {
     "service_worker": "background.js",

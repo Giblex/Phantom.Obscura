@@ -2,7 +2,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:Giblex.Controls">
 
-<Style Selector="Button.liquid-glass">
+<!-- Every standard Button is glass by default. Specialised controls such as tiles and
+     copy buttons replace this template later with their own purpose-built templates. -->
+<Style Selector="Button">
   <Setter Property="CornerRadius" Value="10"/>
   <Setter Property="BorderThickness" Value="1"/>
   <Setter Property="FontWeight" Value="SemiBold"/>
@@ -39,7 +41,8 @@
           </Border.Transitions>
         </Border>
 
-        <Border CornerRadius="{TemplateBinding CornerRadius}"
+        <Border Name="InnerShadow"
+                CornerRadius="{TemplateBinding CornerRadius}"
                 Opacity="0.3"
                 Margin="0"
                 IsHitTestVisible="False"
@@ -81,7 +84,8 @@
           </Border.Transitions>
         </Border>
 
-        <local:BorderEnergyTrace IsHitTestVisible="False"
+        <local:BorderEnergyTrace Name="BorderTrace"
+                                 IsHitTestVisible="False"
                                  Progress="{Binding $parent[Button].(local:LiquidGlassScrollChrome.BorderTraceProgress)}"
                                  SecondaryProgress="{Binding $parent[Button].(local:LiquidGlassScrollChrome.SecondaryBorderTraceProgress)}"
                                  Direction="{Binding $parent[Button].(local:LiquidGlassScrollChrome.BorderTraceDirection)}"
@@ -92,7 +96,8 @@
                                  CounterTraceColor="#182434"
                                  CounterTraceOpacity="0.62"/>
 
-        <Border CornerRadius="{TemplateBinding CornerRadius}"
+        <Border Name="BottomShadow"
+                CornerRadius="{TemplateBinding CornerRadius}"
                 Opacity="0.65"
                 Margin="0"
                 IsHitTestVisible="False"
@@ -118,65 +123,65 @@
   </Setter>
 </Style>
 
-<Style Selector="Button.liquid-glass /template/ Panel">
+<Style Selector="Button /template/ Panel">
   <Setter Property="ClipToBounds" Value="True"/>
 </Style>
 
-<Style Selector="Button.liquid-glass:pointerover">
+<Style Selector="Button:pointerover">
   <Setter Property="CornerRadius" Value="10"/>
   <Setter Property="Effect" Value="{DynamicResource LiquidGlassButtonEffectHover}"/>
 </Style>
 
-<Style Selector="Button.liquid-glass:pointerover /template/ Border#BaseBorder">
+<Style Selector="Button:pointerover /template/ Border#BaseBorder">
   <Setter Property="CornerRadius" Value="10"/>
   <Setter Property="BorderBrush" Value="{DynamicResource Brush.Glass.BorderHover}"/>
   <Setter Property="Background" Value="{DynamicResource Brush.Glass.BaseFillHover}"/>
 </Style>
 
-<Style Selector="Button.liquid-glass:pointerover /template/ Border#Sheen">
+<Style Selector="Button:pointerover /template/ Border#Sheen">
   <Setter Property="Opacity" Value="0.8"/>
 </Style>
 
-<Style Selector="Button.liquid-glass:pressed /template/ Border#BaseBorder">
+<Style Selector="Button:pressed /template/ Border#BaseBorder">
   <Setter Property="CornerRadius" Value="10"/>
   <Setter Property="BorderBrush" Value="{DynamicResource Brush.Glass.BorderPressed}"/>
   <Setter Property="Background" Value="{DynamicResource Brush.Glass.BaseFillPressed}"/>
 </Style>
 
-<Style Selector="Button.liquid-glass:pressed /template/ Border#Sheen">
+<Style Selector="Button:pressed /template/ Border#Sheen">
   <Setter Property="Opacity" Value="0.4"/>
 </Style>
 
-<Style Selector="Button.liquid-glass:pressed">
+<Style Selector="Button:pressed">
   <Setter Property="RenderTransform">
     <TranslateTransform Y="1"/>
   </Setter>
   <Setter Property="Effect" Value="{DynamicResource LiquidGlassButtonEffectPressed}"/>
 </Style>
 
-<Style Selector="Button.liquid-glass:disabled">
+<Style Selector="Button:disabled">
   <Setter Property="Opacity" Value="0.5"/>
   <Setter Property="Cursor" Value="Arrow"/>
 </Style>
 
-<Style Selector="Button.liquid-glass:disabled /template/ Border#DisabledMask">
+<Style Selector="Button:disabled /template/ Border#DisabledMask">
   <Setter Property="IsVisible" Value="True"/>
 </Style>
 
-<Style Selector="Button.liquid-glass:focus-visible">
+<Style Selector="Button:focus-visible">
   <Setter Property="Opacity" Value="1.0"/>
   <Setter Property="BorderBrush" Value="{DynamicResource Brush.Glass.BorderFocus}"/>
   <Setter Property="BorderThickness" Value="2"/>
   <Setter Property="CornerRadius" Value="10"/>
 </Style>
 
-<Style Selector="Button.liquid-glass:focus-visible /template/ Border#BaseBorder">
+<Style Selector="Button:focus-visible /template/ Border#BaseBorder">
   <Setter Property="BorderBrush" Value="{DynamicResource Brush.Glass.BorderFocus}"/>
   <Setter Property="BorderThickness" Value="2"/>
   <Setter Property="CornerRadius" Value="10"/>
 </Style>
 
-<Style Selector="Button.liquid-glass.primary /template/ Border#BaseBorder">
+<Style Selector="Button.primary /template/ Border#BaseBorder">
   <Setter Property="BorderBrush" Value="#60C8D5E0"/>
   <Setter Property="Background">
     <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
@@ -186,7 +191,7 @@
   </Setter>
 </Style>
 
-<Style Selector="Button.liquid-glass.primary:pointerover /template/ Border#BaseBorder">
+<Style Selector="Button.primary:pointerover /template/ Border#BaseBorder">
   <Setter Property="BorderBrush" Value="#70C8D5E0"/>
   <Setter Property="Background">
     <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
@@ -196,7 +201,7 @@
   </Setter>
 </Style>
 
-<Style Selector="Button.liquid-glass.danger /template/ Border#BaseBorder">
+<Style Selector="Button.danger /template/ Border#BaseBorder">
   <Setter Property="BorderBrush" Value="#70DC3545"/>
   <Setter Property="Background">
     <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
@@ -206,7 +211,7 @@
   </Setter>
 </Style>
 
-<Style Selector="Button.liquid-glass.danger:pointerover /template/ Border#BaseBorder">
+<Style Selector="Button.danger:pointerover /template/ Border#BaseBorder">
   <Setter Property="BorderBrush" Value="#80DC3545"/>
   <Setter Property="Background">
     <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
@@ -216,14 +221,14 @@
   </Setter>
 </Style>
 
-<Style Selector="Button.liquid-glass.compact">
+<Style Selector="Button.compact">
   <Setter Property="CornerRadius" Value="8"/>
   <Setter Property="MinHeight" Value="32"/>
   <Setter Property="Padding" Value="12,6"/>
   <Setter Property="FontSize" Value="13"/>
 </Style>
 
-<Style Selector="Button.liquid-glass.icon">
+<Style Selector="Button.icon">
   <Setter Property="CornerRadius" Value="10"/>
   <Setter Property="MinHeight" Value="36"/>
   <Setter Property="MinWidth" Value="36"/>
@@ -232,13 +237,13 @@
   <Setter Property="VerticalContentAlignment" Value="Center"/>
 </Style>
 
-<Style Selector="Button.liquid-glass.sidebar">
+<Style Selector="Button.sidebar">
   <Setter Property="CornerRadius" Value="16"/>
   <Setter Property="Padding" Value="14,10"/>
   <Setter Property="HorizontalContentAlignment" Value="Left"/>
 </Style>
 
-<Style Selector="Button.liquid-glass.sidebar /template/ Border#BaseBorder">
+<Style Selector="Button.sidebar /template/ Border#BaseBorder">
   <Setter Property="Background">
     <RadialGradientBrush Center="35%,40%" RadiusX="80%" RadiusY="80%">
       <GradientStop Color="#06FFFFFF" Offset="0"/>
@@ -250,7 +255,7 @@
   <Setter Property="BorderBrush" Value="#18FFFFFF"/>
 </Style>
 
-<Style Selector="Button.liquid-glass.sidebar:pointerover /template/ Border#BaseBorder">
+<Style Selector="Button.sidebar:pointerover /template/ Border#BaseBorder">
   <Setter Property="Background">
     <RadialGradientBrush Center="35%,40%" RadiusX="80%" RadiusY="80%">
       <GradientStop Color="#0CFFFFFF" Offset="0"/>
@@ -262,7 +267,7 @@
   <Setter Property="BorderBrush" Value="#28FFFFFF"/>
 </Style>
 
-<Style Selector="Button.liquid-glass.sidebar:pressed /template/ Border#BaseBorder">
+<Style Selector="Button.sidebar:pressed /template/ Border#BaseBorder">
   <Setter Property="Background">
     <RadialGradientBrush Center="35%,40%" RadiusX="80%" RadiusY="80%">
       <GradientStop Color="#04FFFFFF" Offset="0"/>

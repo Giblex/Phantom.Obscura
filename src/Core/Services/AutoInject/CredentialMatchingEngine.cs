@@ -24,14 +24,15 @@ namespace PhantomVault.Core.Services.AutoInject
                 {
                     matches.Add(new CredentialMatch
                     {
-                        CredentialId = cred.Title,
+                        CredentialId = cred.Id,
                         DisplayName = GetDisplayName(cred),
                         Username = cred.Username ?? string.Empty,
                         Domain = ExtractDomain(cred.Url),
                         ConfidenceScore = score,
                         LastUsed = cred.LastUsedUtc,
-                        IsPasskey = !string.IsNullOrEmpty(cred.PasskeyId),
+                        IsPasskey = !string.IsNullOrEmpty(cred.PasskeyId) || !string.IsNullOrEmpty(cred.AttestorPasskeyReference),
                         PasskeyId = cred.PasskeyId,
+                        AttestorPasskeyReference = cred.AttestorPasskeyReference,
                         RelyingPartyId = ExtractDomain(cred.Url),
                         HasTotp = CredentialTotpResolver.HasTotp(cred),
                         Tags = cred.Tags?.ToArray() ?? Array.Empty<string>()
@@ -104,7 +105,7 @@ namespace PhantomVault.Core.Services.AutoInject
                     score += 5;
             }
 
-            if (!string.IsNullOrEmpty(credential.PasskeyId))
+            if (!string.IsNullOrEmpty(credential.PasskeyId) || !string.IsNullOrEmpty(credential.AttestorPasskeyReference))
             {
                 score += 5;
             }

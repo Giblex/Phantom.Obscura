@@ -257,7 +257,7 @@ namespace PhantomVault.Core.Services
         /// its own floor in <c>PinLockService.MinVaultPinLength</c>.
         /// </summary>
         public const int Min = 1;
-        public const int Max = 32;
+        public const int Max = 8;
 
         public static int Clamp(int value) => value < Min ? Min : value > Max ? Max : value;
 

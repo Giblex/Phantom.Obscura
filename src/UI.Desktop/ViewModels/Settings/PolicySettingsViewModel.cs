@@ -188,7 +188,8 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Error loading policy: {ex.Message}";
+                Serilog.Log.Error(ex, "[PolicySettings] Failed to load policy settings.");
+                StatusMessage = "Policy settings could not be loaded. Try again.";
             }
         }
 
@@ -223,7 +224,8 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Error saving policy: {ex.Message}";
+                Serilog.Log.Error(ex, "[PolicySettings] Failed to save policy settings.");
+                StatusMessage = "Policy settings could not be saved. Review the values and try again.";
             }
         }
 

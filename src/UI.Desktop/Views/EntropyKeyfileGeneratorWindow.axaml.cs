@@ -82,7 +82,8 @@ public partial class EntropyKeyfileGeneratorWindow : ThemeAwareWindow
         }
         catch (Exception ex)
         {
-            FooterStatusText.Text = ex.Message;
+            Serilog.Log.Error(ex, "[EntropyKeyfile] Keyfile generation failed.");
+            FooterStatusText.Text = "The keyfile could not be generated. Verify the destination is writable and try again.";
         }
     }
 

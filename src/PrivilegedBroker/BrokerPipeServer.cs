@@ -27,10 +27,12 @@ namespace PhantomVault.PrivilegedBroker
         private readonly UsbWriteProtectionService _writeProtection = new();
         private readonly BlackSecureRawVolumeService _rawVolume = new();
         private readonly PhantomVolumeService _phantomVolume = new();
+        private readonly IntegrityWatchdogWorker _watchdog;
 
-        public BrokerPipeServer(Action<string> log)
+        public BrokerPipeServer(Action<string> log, IntegrityWatchdogWorker watchdog)
         {
             _log = log;
+            _watchdog = watchdog;
             // This process is the elevated authority; never broker back to itself.
             PrivilegedExecution.ForceInProcess = true;
         }
@@ -151,10 +153,24 @@ namespace PhantomVault.PrivilegedBroker
 
             try
             {
-                return string.Equals(
+                if (!string.Equals(
                     Path.GetFullPath(clientPath).TrimEnd('\\'),
                     Path.GetFullPath(allowed).TrimEnd('\\'),
-                    StringComparison.OrdinalIgnoreCase);
+                    StringComparison.OrdinalIgnoreCase))
+                    return false;
+
+                var expectedSigner = BrokerConfig.LoadAllowedClientSignerSha256();
+#if DEBUG
+                // Unsigned local Debug builds are allowed only when installation did
+                // not record a signer. If a signer was recorded, always enforce it.
+                if (string.IsNullOrWhiteSpace(expectedSigner))
+                    return true;
+#else
+                if (string.IsNullOrWhiteSpace(expectedSigner))
+                    return false;
+#endif
+                return AuthenticodeTrust.TryGetTrustedSignerSha256(clientPath, out var actualSigner)
+                    && string.Equals(actualSigner, expectedSigner, StringComparison.OrdinalIgnoreCase);
             }
             catch
             {
@@ -243,6 +259,32 @@ namespace PhantomVault.PrivilegedBroker
                     WriteMessage(writer, writeGate, BoolResult(
                         _phantomVolume.Unmount(Require(request.ContainerPath, "containerPath"))));
                     break;
+
+                case BrokerOperation.GetIntegrityVerdict:
+                    WriteMessage(writer, writeGate, new BrokerMessage
+                    {
+                        Type = BrokerMessageType.Result,
+                        BoolResult = true,
+                        StringResult = _watchdog.GetVerdict(Require(request.Challenge, "challenge"))
+                    });
+                    break;
+
+                case BrokerOperation.AuthorizeIntegrityWrite:
+                {
+                    string authorizationId = _watchdog.AuthorizeWrite(
+                        Require(request.RelativePath, "relativePath"),
+                        request.ChangeKind,
+                        request.ExpectedOldHash,
+                        request.ExpectedNewHash,
+                        request.MaximumLength);
+                    WriteMessage(writer, writeGate, new BrokerMessage
+                    {
+                        Type = BrokerMessageType.Result,
+                        BoolResult = true,
+                        StringResult = authorizationId
+                    });
+                    break;
+                }
 
                 default:
                     WriteMessage(writer, writeGate, Error($"Unknown operation {request.Operation}."));

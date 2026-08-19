@@ -77,10 +77,11 @@ namespace PhantomVault.UI.Views
                             }
                             catch (Exception ex)
                             {
+                                Serilog.Log.Error(ex, "[MainWindow] Failed to load vault contents.");
                                 var dialogService = serviceProvider.GetRequiredService<DialogService>();
                                 await dialogService.ShowErrorAsync(
                                     "Vault Open Failed",
-                                    $"Unable to load the vault contents:\n{ex.Message}",
+                                    "The vault contents could not be loaded. Return to the welcome screen and unlock the vault again.",
                                     vaultWindow);
                                 vaultWindow.Close();
                                 return;

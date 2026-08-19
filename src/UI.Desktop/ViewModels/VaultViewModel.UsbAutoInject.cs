@@ -13,6 +13,7 @@ using Avalonia.Threading;
 using PhantomVault.Core.Services;
 using PhantomVault.Core.Services.AutoInject;
 using PhantomVault.UI.Desktop.Services;
+using PhantomVault.UI.Services;
 using PhantomVault.UI.Views;
 using PhantomVault.UI.Views.Autofill;
 
@@ -59,8 +60,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[VaultViewModel] Failed to initialize auto-inject: {ex.Message}");
-                RecentIssuesLog.Instance.Record(IssueSeverity.Warning, "Auto-fill unavailable", $"USB auto-inject could not start; browser auto-fill may not work this session: {ex.Message}");
+                Serilog.Log.Error(ex, "[UsbAutoInject] USB auto-inject could not start.");
+                RecentIssuesLog.Instance.Record(IssueSeverity.Warning, "Auto-fill unavailable", "USB auto-inject could not start. Browser auto-fill may not work until the vault is reopened.");
             }
         }
 
@@ -147,9 +148,7 @@ namespace PhantomVault.UI.ViewModels
                                     // still be corrected.
                                     await autoInjectSvc.AutoFillAsync(id, autoSubmit: false, action.Field);
                                 },
-                                totpProvider: id => autoInjectSvc is null
-                                    ? System.Threading.Tasks.Task.FromResult<TotpSnapshot?>(null)
-                                    : autoInjectSvc.GetTotpAsync(id));
+                                totpProvider: id => GetTotpSnapshotAsync(id, autoInjectSvc));
 
                             // Retire the badge whenever the menu goes away, whatever the
                             // reason. Doing it here only — not also in the fill callback —
@@ -259,10 +258,10 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[AutoFill] Failed to store submitted credential: {ex.Message}");
+                Serilog.Log.Error(ex, "[AutoFill] Failed to store a submitted credential for {Domain}.", e.Domain);
                 RecentIssuesLog.Instance.Record(IssueSeverity.Warning,
                     "Could not save credential",
-                    $"The submitted credential for {e.Domain} was not saved: {ex.Message}");
+                    $"The submitted credential for {e.Domain} was not saved. Unlock the vault and try again.");
             }
         }
 
@@ -289,6 +288,28 @@ namespace PhantomVault.UI.ViewModels
         {
             try
             {
+                var rpId = ResolveRelyingPartyId(match);
+                if (rpId == null)
+                {
+                    RecentIssuesLog.Instance.Record(IssueSeverity.Warning,
+                        "Passkey blocked",
+                        "The stored relying party for this passkey does not match the site requesting it.");
+                    return;
+                }
+
+                if (!string.IsNullOrWhiteSpace(match.AttestorPasskeyReference))
+                {
+                    var broker = (Avalonia.Application.Current as PhantomVault.UI.App)?
+                        .Services?.GetService(typeof(AttestorCredentialBrokerClient)) as AttestorCredentialBrokerClient;
+                    if (broker == null || !await broker.AssertPasskeyAsync(match.AttestorPasskeyReference, rpId))
+                    {
+                        RecentIssuesLog.Instance.Record(IssueSeverity.Warning,
+                            "Passkey unavailable",
+                            "Phantom Attestor did not approve this passkey request.");
+                    }
+                    return;
+                }
+
                 var passkeys = (Avalonia.Application.Current as PhantomVault.UI.App)?
                     .Services?.GetService(typeof(IPasskeyService)) as IPasskeyService;
 
@@ -319,17 +340,6 @@ namespace PhantomVault.UI.ViewModels
                 // against the domain we actually observed rather than trusted outright —
                 // otherwise a mismatched record could drive an assertion scoped to a
                 // different site.
-                var rpId = ResolveRelyingPartyId(match);
-                if (rpId == null)
-                {
-                    Debug.WriteLine($"[AutoFill] Refusing passkey assertion: stored RP ID " +
-                                    $"'{match.RelyingPartyId}' is not valid for domain '{match.Domain}'");
-                    RecentIssuesLog.Instance.Record(IssueSeverity.Warning,
-                        "Passkey blocked",
-                        "The stored relying party for this passkey does not match the site requesting it.");
-                    return;
-                }
-
                 bool ok = await passkeys.AuthenticateAsync(handle, rpId, challenge);
                 Debug.WriteLine($"[AutoFill] Passkey assertion for '{rpId}': {(ok ? "succeeded" : "failed")}");
 
@@ -342,10 +352,33 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[AutoFill] Passkey authentication failed: {ex.Message}");
+                Serilog.Log.Warning(ex, "[AutoFill] Passkey authentication failed.");
                 RecentIssuesLog.Instance.Record(IssueSeverity.Warning,
-                    "Passkey error", ex.Message);
+                    "Passkey error", "Passkey authentication could not be completed. Verify device authentication and try again.");
             }
+        }
+
+        private async System.Threading.Tasks.Task<TotpSnapshot?> GetTotpSnapshotAsync(
+            string credentialId, IUsbAutoInjectService? legacyService)
+        {
+            var credential = _credentials.FirstOrDefault(c =>
+                string.Equals(c.Id, credentialId, StringComparison.Ordinal) ||
+                string.Equals(c.Title, credentialId, StringComparison.Ordinal));
+            var reference = credential?.AttestorTotpReference;
+            if (!string.IsNullOrWhiteSpace(reference))
+            {
+                var broker = (Avalonia.Application.Current as PhantomVault.UI.App)?
+                    .Services?.GetService(typeof(AttestorCredentialBrokerClient)) as AttestorCredentialBrokerClient;
+                var code = broker == null ? null : await broker.GetTotpCodeAsync(reference);
+                return code == null ? null : new TotpSnapshot
+                {
+                    Code = code.Code,
+                    SecondsRemaining = (int)code.ValidForSeconds,
+                    StepSeconds = code.Period
+                };
+            }
+
+            return legacyService == null ? null : await legacyService.GetTotpAsync(credentialId);
         }
 
         /// <summary>

@@ -11,6 +11,7 @@ using PhantomVault.UI.Services;
 using PhantomVault.UI.Desktop.Services;
 using PhantomVault.UI.Views.Dialogs;
 using PhantomVault.UI.Views;
+using Serilog;
 
 namespace PhantomVault.UI.ViewModels
 {
@@ -28,6 +29,8 @@ namespace PhantomVault.UI.ViewModels
         private bool _isBusy;
         private string _saveButtonText = "Save";
         private bool _enablePinLock;
+        private bool _pinSetupRequested;
+        private bool _revealCurrentKeyfile;
         private bool _usePinLockForAutoLock;
         private bool _autoCopyTotpWithPassword;
         private int _clipboardClearTimeIndex;
@@ -109,10 +112,17 @@ namespace PhantomVault.UI.ViewModels
                 this.WhenAnyValue(vm => vm.IsBusy).Select(b => !b));
 
             SetOrChangePinCommand = ReactiveCommand.CreateFromTask(SetOrChangePinAsync,
-                this.WhenAnyValue(vm => vm.IsBusy).Select(b => !b));
+                this.WhenAnyValue(vm => vm.IsBusy, vm => vm.PinSetupEnabled,
+                    (busy, enabled) => !busy && enabled));
 
             ClearPinCommand = ReactiveCommand.CreateFromTask(ClearPinAsync,
-                this.WhenAnyValue(vm => vm.IsBusy).Select(b => !b));
+                this.WhenAnyValue(vm => vm.IsBusy, vm => vm.HasPinConfigured,
+                    (busy, hasPin) => !busy && hasPin));
+
+            ToggleCurrentKeyfileVisibilityCommand = ReactiveCommand.Create(() =>
+            {
+                RevealCurrentKeyfile = !RevealCurrentKeyfile;
+            });
 
             // Fast Unlock state: load persisted user preference; the "needs re-key" flag is
             // derived against the host VM's current manifest KDF tier.
@@ -149,6 +159,7 @@ namespace PhantomVault.UI.ViewModels
             if (e.PropertyName == nameof(VaultViewModel.CurrentKeyfileDisplay))
             {
                 this.RaisePropertyChanged(nameof(CurrentKeyfileDisplay));
+                this.RaisePropertyChanged(nameof(CurrentKeyfileProtectedDisplay));
             }
             else if (e.PropertyName == nameof(VaultViewModel.CurrentManifestKdfDisplay)
                   || e.PropertyName == nameof(VaultViewModel.IsManifestKdfFast))
@@ -159,6 +170,12 @@ namespace PhantomVault.UI.ViewModels
             else if (e.PropertyName == nameof(VaultViewModel.PrivacyModeEnabled))
             {
                 this.RaisePropertyChanged(nameof(PrivacyModeEnabled));
+            }
+            else if (e.PropertyName == nameof(VaultViewModel.IsDriveMounted)
+                  || e.PropertyName == nameof(VaultViewModel.MountedDriveLetter)
+                  || e.PropertyName == nameof(VaultViewModel.IsMountSupported))
+            {
+                this.RaisePropertyChanged(e.PropertyName);
             }
         }
 
@@ -190,10 +207,11 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "[SecuritySettings] Failed to save security settings.");
                 SaveButtonText = "Save";
                 await _dialogService.ShowErrorAsync(
                     "Save Failed",
-                    $"Failed to save security settings: {ex.Message}",
+                    "Security settings could not be saved. Review the values and try again.",
                     null);
             }
             finally
@@ -258,7 +276,14 @@ namespace PhantomVault.UI.ViewModels
                 else if (PrivacyShield.PrivacyModeEnabled != value)
                 {
                     PrivacyShield.PrivacyModeEnabled = value;
-                    try { SettingsService.Update(s => s.PrivacyModeEnabled = value); } catch { }
+                    try
+                    {
+                        SettingsService.Update(s => s.PrivacyModeEnabled = value);
+                    }
+                    catch (Exception ex)
+                    {
+                        Serilog.Log.Warning(ex, "Failed to persist privacy mode; runtime kill-switch remains active");
+                    }
                 }
 
                 this.RaisePropertyChanged();
@@ -283,12 +308,39 @@ namespace PhantomVault.UI.ViewModels
 
         public ReactiveCommand<Unit, Unit> SetOrChangePinCommand { get; }
         public ReactiveCommand<Unit, Unit> ClearPinCommand { get; }
+        public ReactiveCommand<Unit, Unit> ToggleCurrentKeyfileVisibilityCommand { get; }
+
+        // The encrypted-drive implementation belongs to the live vault host. Expose it
+        // through this settings VM so the embedded settings card binds to real commands
+        // instead of silently resolving missing properties to disabled controls.
+        public ReactiveCommand<Unit, Unit>? MountDriveReadOnlyCommand => _hostViewModel?.MountDriveReadOnlyCommand;
+        public ReactiveCommand<Unit, Unit>? MountDriveWritableCommand => _hostViewModel?.MountDriveWritableCommand;
+        public ReactiveCommand<Unit, Unit>? UnmountDriveCommand => _hostViewModel?.UnmountDriveCommand;
+        public bool IsDriveMounted => _hostViewModel?.IsDriveMounted ?? false;
+        public string? MountedDriveLetter => _hostViewModel?.MountedDriveLetter;
+        public bool IsMountSupported => _hostViewModel?.IsMountSupported ?? false;
 
         public ReactiveCommand<Unit, Unit>? BackupKeyfileCommand => _hostViewModel?.BackupKeyfileCommand;
         public ReactiveCommand<Unit, Unit>? RegenerateKeyfileCommand => _hostViewModel?.RegenerateKeyfileCommand;
         public ReactiveCommand<Unit, Unit>? ChangeKeyfileCommand => _hostViewModel?.ChangeKeyfileCommand;
         public ReactiveCommand<Unit, Unit>? ChangeMasterPasswordCommand => _hostViewModel?.ChangeMasterPasswordCommand;
         public string CurrentKeyfileDisplay => _hostViewModel?.CurrentKeyfileDisplay ?? "No keyfile on record";
+        public string CurrentKeyfileProtectedDisplay => RevealCurrentKeyfile
+            ? CurrentKeyfileDisplay
+            : "••••••••••••••••••••  Keyfile details hidden";
+        public string CurrentKeyfileVisibilityText => RevealCurrentKeyfile ? "Hide" : "Reveal";
+
+        public bool RevealCurrentKeyfile
+        {
+            get => _revealCurrentKeyfile;
+            set
+            {
+                if (_revealCurrentKeyfile == value) return;
+                this.RaiseAndSetIfChanged(ref _revealCurrentKeyfile, value);
+                this.RaisePropertyChanged(nameof(CurrentKeyfileProtectedDisplay));
+                this.RaisePropertyChanged(nameof(CurrentKeyfileVisibilityText));
+            }
+        }
 
         // === Fast Unlock ===
         // Setting flips the user's preference. The actual KDF change requires a re-key,
@@ -349,7 +401,33 @@ namespace PhantomVault.UI.ViewModels
         public bool HasPinConfigured
         {
             get => _hasPinConfigured;
-            private set => this.RaiseAndSetIfChanged(ref _hasPinConfigured, value);
+            private set
+            {
+                if (_hasPinConfigured == value) return;
+                this.RaiseAndSetIfChanged(ref _hasPinConfigured, value);
+                this.RaisePropertyChanged(nameof(PinSetupEnabled));
+            }
+        }
+
+        /// <summary>
+        /// UI intent for PIN setup. With no PIN, switching this on enables the setup
+        /// action without persisting an unusable PIN-lock flag. Once a PIN exists it
+        /// becomes the real enable/disable setting.
+        /// </summary>
+        public bool PinSetupEnabled
+        {
+            get => HasPinConfigured ? EnablePinLock : _pinSetupRequested;
+            set
+            {
+                if (HasPinConfigured)
+                {
+                    EnablePinLock = value;
+                    this.RaisePropertyChanged(nameof(PinSetupEnabled));
+                    return;
+                }
+
+                this.RaiseAndSetIfChanged(ref _pinSetupRequested, value);
+            }
         }
 
         public bool EnablePinLock
@@ -505,12 +583,15 @@ namespace PhantomVault.UI.ViewModels
                     // A PIN now exists — unblock the toggles before arming them.
                     HasPinConfigured = true;
                     EnablePinLock = true;
+                    _pinSetupRequested = false;
+                    this.RaisePropertyChanged(nameof(PinSetupEnabled));
                     await _dialogService.ShowSuccessAsync("PIN Set", "Your PIN lock has been enabled.", owner);
                 }
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("PIN Setup Failed", ex.Message, GetOwnerWindow());
+                Log.Error(ex, "[SecuritySettings] PIN setup failed.");
+                await _dialogService.ShowErrorAsync("PIN Setup Failed", "The PIN could not be configured. Verify the vault is unlocked and try again.", GetOwnerWindow());
             }
         }
 
@@ -521,11 +602,14 @@ namespace PhantomVault.UI.ViewModels
                 PinLockService.ClearPin(_manifestPath);
                 EnablePinLock = false;
                 HasPinConfigured = false;
+                _pinSetupRequested = false;
+                this.RaisePropertyChanged(nameof(PinSetupEnabled));
                 await _dialogService.ShowSuccessAsync("PIN Disabled", "PIN lock has been disabled.", GetOwnerWindow());
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("PIN Disable Failed", ex.Message, GetOwnerWindow());
+                Log.Error(ex, "[SecuritySettings] Failed to disable PIN lock.");
+                await _dialogService.ShowErrorAsync("PIN Disable Failed", "PIN lock could not be disabled. Verify the vault is unlocked and try again.", GetOwnerWindow());
             }
         }
 
@@ -853,9 +937,10 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "[SecuritySettings] Failed to generate a decoy-vault preview.");
                 await _dialogService.ShowErrorAsync(
                     "Preview Failed",
-                    $"Failed to generate decoy vault preview: {ex.Message}",
+                    "The decoy-vault preview could not be generated. Check the configuration and try again.",
                     GetOwnerWindow());
             }
             finally
@@ -896,9 +981,10 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "[SecuritySettings] Failed to deactivate the decoy vault.");
                 await _dialogService.ShowErrorAsync(
                     "Deactivation Failed",
-                    $"Failed to deactivate decoy vault: {ex.Message}",
+                    "The decoy vault could not be deactivated. Try again while the vault is unlocked.",
                     GetOwnerWindow());
             }
             finally

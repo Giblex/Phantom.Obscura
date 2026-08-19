@@ -1,44 +1,44 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <Color x:Key="Color.Navy900">#0D0D12</Color>
-    <Color x:Key="Color.Navy800">#12121A</Color>
-    <Color x:Key="Color.Navy700">#1A1A26</Color>
-    <Color x:Key="Color.Navy600">#1E1E2E</Color>
-    <Color x:Key="Color.Navy500">#2A2A3C</Color>
-    <Color x:Key="Color.Navy400">#36364A</Color>
+    <Color x:Key="Color.Navy900">#0B0D0F</Color>
+    <Color x:Key="Color.Navy800">#111315</Color>
+    <Color x:Key="Color.Navy700">#171A1D</Color>
+    <Color x:Key="Color.Navy600">#1D2125</Color>
+    <Color x:Key="Color.Navy500">#272C31</Color>
+    <Color x:Key="Color.Navy400">#343A40</Color>
 
     <Color x:Key="Color.TextPrimary">#FFFFFF</Color>
     <Color x:Key="Color.TextMuted">#B8AED8</Color>
     <Color x:Key="Color.TextOnDark">#FFFFFF</Color>
     <Color x:Key="Color.TextOnLight">#0D0D12</Color>
 
-    <Color x:Key="Color.Accent">#FF2D95</Color>
-    <Color x:Key="Color.AccentHover">#FF5CAF</Color>
-    <Color x:Key="Color.AccentDim">#B833FF</Color>
+    <Color x:Key="Color.Accent">#A970FF</Color>
+    <Color x:Key="Color.AccentHover">#C19AFF</Color>
+    <Color x:Key="Color.AccentDim">#57E6FF</Color>
 
     <Color x:Key="Color.Success">#39FF9F</Color>
     <Color x:Key="Color.Warning">#FFD600</Color>
     <Color x:Key="Color.Danger">#FF4757</Color>
     <Color x:Key="Color.Info">#00D4FF</Color>
 
-    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#1A1A26"/>
-    <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#0D0D12"/>
+    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#171A1D"/>
+    <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#0B0D0F"/>
     <SolidColorBrush x:Key="HeaderBorderBrush" Color="Transparent"/>
     <SolidColorBrush x:Key="FooterBackgroundBrush" Color="#0D0D12"/>
-    <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#1E1E2E"/>
-    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#22223A"/>
-    <SolidColorBrush x:Key="SettingsPanelBackgroundBrush" Color="#1E1E2E"/>
-    <SolidColorBrush x:Key="SettingsPanelBorderBrush" Color="#3A2050"/>
-    <SolidColorBrush x:Key="TileGlassBrush" Color="#22223A"/>
-    <SolidColorBrush x:Key="TileGapBrush" Color="#1A1A2E"/>
+    <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#1D2125"/>
+    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#22272C"/>
+    <SolidColorBrush x:Key="SettingsPanelBackgroundBrush" Color="#1D2125"/>
+    <SolidColorBrush x:Key="SettingsPanelBorderBrush" Color="#57E6FF"/>
+    <SolidColorBrush x:Key="TileGlassBrush" Color="#22272C"/>
+    <SolidColorBrush x:Key="TileGapBrush" Color="#171A1D"/>
 
-    <SolidColorBrush x:Key="AccentBrush" Color="#FF2D95"/>
-    <SolidColorBrush x:Key="AccentHoverBrush" Color="#FF5CAF"/>
-    <SolidColorBrush x:Key="SecondaryAccentBrush" Color="#B833FF"/>
+    <SolidColorBrush x:Key="AccentBrush" Color="#A970FF"/>
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#C19AFF"/>
+    <SolidColorBrush x:Key="SecondaryAccentBrush" Color="#57E6FF"/>
     <SolidColorBrush x:Key="Brush.Accent" Color="{DynamicResource Color.Accent}"/>
     <SolidColorBrush x:Key="Brush.AccentHover" Color="{DynamicResource Color.AccentHover}"/>
-    <SolidColorBrush x:Key="Brush.BorderSoft" Color="#3A2050"/>
+    <SolidColorBrush x:Key="Brush.BorderSoft" Color="#57E6FF"/>
 
     <Color x:Key="PrimaryTextColor">#FFFFFF</Color>
     <SolidColorBrush x:Key="PrimaryTextBrush" Color="#FFFFFF"/>
@@ -62,8 +62,8 @@
     <SolidColorBrush x:Key="InputBackgroundBrush" Color="#12121A"/>
     <SolidColorBrush x:Key="InputForegroundBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="TextSelectionBrush" Color="#60FF2D95"/>
-    <SolidColorBrush x:Key="TextCaretBrush" Color="#FF2D95"/>
-    <SolidColorBrush x:Key="ControlBorderBrush" Color="#3A2050"/>
+    <SolidColorBrush x:Key="TextCaretBrush" Color="#A970FF"/>
+    <SolidColorBrush x:Key="ControlBorderBrush" Color="#57E6FF"/>
     <SolidColorBrush x:Key="OverlayBackgroundBrush">#B00D0D12</SolidColorBrush>
     <SolidColorBrush x:Key="ReadOnlyFieldBackgroundBrush" Color="#22223A"/>
     <SolidColorBrush x:Key="ReadOnlyFieldForegroundBrush" Color="#D0C8E8"/>
@@ -74,13 +74,13 @@
     <SolidColorBrush x:Key="TextBoxBackgroundHoverBrush" Color="#36364A"/>
     <SolidColorBrush x:Key="TextBoxBackgroundFocusedBrush" Color="#36364A"/>
     <SolidColorBrush x:Key="TextBoxBackgroundDisabledBrush" Color="#22223A"/>
-    <SolidColorBrush x:Key="TextBoxBorderBrush" Color="#3A2050"/>
-    <SolidColorBrush x:Key="TextBoxBorderHoverBrush" Color="#FF2D95"/>
-    <SolidColorBrush x:Key="TextBoxBorderFocusedBrush" Color="#FF2D95"/>
+    <SolidColorBrush x:Key="TextBoxBorderBrush" Color="#57E6FF"/>
+    <SolidColorBrush x:Key="TextBoxBorderHoverBrush" Color="#A970FF"/>
+    <SolidColorBrush x:Key="TextBoxBorderFocusedBrush" Color="#57E6FF"/>
     <SolidColorBrush x:Key="TextBrush" Color="#FFFFFF"/>
 
     <SolidColorBrush x:Key="DialogBackgroundBrush" Color="#12121A"/>
-    <SolidColorBrush x:Key="DialogBorderBrush" Color="#3A2050"/>
+    <SolidColorBrush x:Key="DialogBorderBrush" Color="#57E6FF"/>
 
     <SolidColorBrush x:Key="ButtonForegroundBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="ButtonAccentForegroundBrush" Color="#FFFFFF"/>

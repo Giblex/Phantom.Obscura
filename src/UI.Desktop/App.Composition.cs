@@ -50,6 +50,7 @@ namespace PhantomVault.UI
             services.AddSingleton<IPasskeyService>(sp => sp.GetRequiredService<PasskeyService>());
             services.AddSingleton<SuiteWorkspaceService>();
             services.AddSingleton<IntegratedAttestorService>();
+            services.AddSingleton<AttestorCredentialBrokerClient>();
             services.AddSingleton<IntegratedRecoveryService>();
             services.AddSingleton<ScopedRecoveryService>(sp => new ScopedRecoveryService(
                 sp.GetRequiredService<EncryptionService>()));
@@ -193,6 +194,7 @@ namespace PhantomVault.UI
             services.AddSingleton<RekeyService>();
             services.AddSingleton<IReadOnlyList<DefenceRule>>(provider => CreateDefaultDefenceRules());
             services.AddSingleton<IDefenceEngine, DefenceEngine>();
+            services.AddSingleton<PhantomVault.UI.Services.Security.IntegrityWatchdogStatusService>();
             services.AddSingleton<IDefenceSettingsService, DefenceSettingsService>();
 
             services.AddSingleton<IconManager>(provider =>

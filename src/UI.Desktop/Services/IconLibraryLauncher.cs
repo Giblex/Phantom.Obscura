@@ -73,7 +73,8 @@ namespace PhantomVault.UI.Services
                 await CloseLoadingWindowAsync(loadingWindow);
                 loadingWindow = null;
 
-                await DialogService.ShowErrorAsync(title, $"Failed to open icon library: {ex.Message}", ownerToUse);
+                Serilog.Log.Error(ex, "[IconLibrary] Failed to open the icon library.");
+                await DialogService.ShowErrorAsync(title, "The icon library could not be opened. Try again.", ownerToUse);
             }
             finally
             {

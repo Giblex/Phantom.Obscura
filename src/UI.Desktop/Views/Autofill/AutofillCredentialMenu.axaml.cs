@@ -40,8 +40,8 @@ namespace PhantomVault.UI.Views.Autofill
         private Border? _shell;
         private TextBlock? _toast;
 
-        private readonly List<CredentialMatch> _matches;
-        private readonly Action<MenuAction> _onAction;
+        private readonly List<CredentialMatch> _matches = new();
+        private readonly Action<MenuAction> _onAction = _ => { };
         private readonly Func<string, Task<TotpSnapshot?>>? _totpProvider;
         private readonly List<RowVisual> _rows = new();
 
@@ -67,11 +67,7 @@ namespace PhantomVault.UI.Views.Autofill
         private static readonly Color Accent = Color.Parse("#3E8C86");
         private static readonly Color Muted = Color.Parse("#8497AC");
 
-        public AutofillCredentialMenu(
-            string domain,
-            IReadOnlyList<CredentialMatch> matches,
-            Action<MenuAction> onAction,
-            Func<string, Task<TotpSnapshot?>>? totpProvider = null)
+        public AutofillCredentialMenu()
         {
             AvaloniaXamlLoader.Load(this);
             _domainHeader = this.FindControl<TextBlock>("DomainHeader");
@@ -80,20 +76,29 @@ namespace PhantomVault.UI.Views.Autofill
             _shell = this.FindControl<Border>("Shell");
             _toast = this.FindControl<TextBlock>("Toast");
 
-            _matches = matches.Take(3).ToList();
-            _onAction = onAction;
+            // Window-level focus loss. Deliberately not an OnLostFocus override:
+            // LostFocus is routed, so it also fires when focus moves between this
+            // window's own children, which closed the menu mid-interaction.
+            Deactivated += (_, _) => CloseOnce();
+            Opened += (_, _) => { PlayEntrance(); StartTotpTicker(); };
+
+        }
+
+        public AutofillCredentialMenu(
+            string domain,
+            IReadOnlyList<CredentialMatch> matches,
+            Action<MenuAction> onAction,
+            Func<string, Task<TotpSnapshot?>>? totpProvider = null)
+            : this()
+        {
+            _matches = (matches ?? throw new ArgumentNullException(nameof(matches))).Take(3).ToList();
+            _onAction = onAction ?? throw new ArgumentNullException(nameof(onAction));
             _totpProvider = totpProvider;
 
             if (_domainHeader != null)
                 _domainHeader.Text = string.IsNullOrWhiteSpace(domain) ? "This site" : domain;
             if (_countBadge != null)
                 _countBadge.Text = _matches.Count == 1 ? "1 match" : $"{_matches.Count} matches";
-
-            // Window-level focus loss. Deliberately not an OnLostFocus override:
-            // LostFocus is routed, so it also fires when focus moves between this
-            // window's own children, which closed the menu mid-interaction.
-            Deactivated += (_, _) => CloseOnce();
-            Opened += (_, _) => { PlayEntrance(); StartTotpTicker(); };
 
             BuildRows();
         }

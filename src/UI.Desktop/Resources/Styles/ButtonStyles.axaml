@@ -86,7 +86,8 @@
         <Setter Property="Background" Value="{DynamicResource HeaderButtonBackgroundBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource HeaderButtonBorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="MinHeight" Value="40" />
         <Setter Property="TextElement.Foreground" Value="{DynamicResource HeaderButtonForegroundBrush}" />
         <Setter Property="Effect" Value="{x:Null}" />
         <Setter Property="Padding" Value="12,6" />
@@ -119,6 +120,7 @@
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
         <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="MinHeight" Value="40" />
         <Setter Property="Padding" Value="14,8" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />

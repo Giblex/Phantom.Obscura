@@ -159,6 +159,10 @@ namespace PhantomVault.Core.Models
         public string? AutoTypeSequence { get; set; }
         public DateTime? LastUsedUtc { get; set; }
         public string? PasskeyId { get; set; }
+        /// <summary>Opaque handle owned by Phantom Attestor; never contains key material.</summary>
+        public string? AttestorPasskeyReference { get; set; }
+        /// <summary>Opaque handle for an Attestor-owned TOTP seed.</summary>
+        public string? AttestorTotpReference { get; set; }
 
         public string WiFiSSID { get; set; } = string.Empty;
         public string WiFiSecurityType { get; set; } = string.Empty;
@@ -399,6 +403,8 @@ namespace PhantomVault.Core.Models
             IsPasskey = source.IsPasskey;
             AutoTypeSequence = source.AutoTypeSequence;
             PasskeyId = source.PasskeyId;
+            AttestorPasskeyReference = source.AttestorPasskeyReference;
+            AttestorTotpReference = source.AttestorTotpReference;
 
             CreatedUtc = source.CreatedUtc;
             LastUpdatedUtc = source.LastUpdatedUtc;

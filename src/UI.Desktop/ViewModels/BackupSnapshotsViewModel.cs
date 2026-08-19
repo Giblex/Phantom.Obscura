@@ -117,7 +117,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Error loading snapshots: {ex.Message}";
+                Serilog.Log.Warning(ex, "Failed to load backup snapshots");
+                StatusMessage = "Backup snapshots could not be loaded.";
             }
         }
 
@@ -147,7 +148,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Snapshot creation failed: {ex.Message}";
+                Serilog.Log.Error(ex, "Backup snapshot creation failed");
+                StatusMessage = "Snapshot creation failed.";
             }
         }
 
@@ -187,7 +189,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Restore failed: {ex.Message}";
+                Serilog.Log.Error(ex, "Backup snapshot restore failed");
+                StatusMessage = "Snapshot restore failed. Your current vault was not replaced.";
             }
         }
 
@@ -218,8 +221,9 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Delete failed: {ex.Message}";
-                await _dialogService.ShowErrorAsync("Delete Failed", ex.Message, null);
+                Serilog.Log.Warning(ex, "Backup snapshot deletion failed");
+                StatusMessage = "Snapshot deletion failed.";
+                await _dialogService.ShowErrorAsync("Delete Failed", ErrorMessageService.GetUserSafeMessage(ex), null);
             }
         }
 

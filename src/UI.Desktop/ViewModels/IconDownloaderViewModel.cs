@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using ReactiveUI;
 using PhantomVault.Core.Services;
+using Serilog;
 
 namespace PhantomVault.UI.ViewModels
 {
@@ -142,7 +143,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Failed to save API key: {ex.Message}";
+                Log.Error(ex, "[IconDownloader] Failed to save the API key.");
+                StatusMessage = "The API key could not be saved securely. Try again.";
             }
         }
 
@@ -172,7 +174,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Failed to open internet access: {ex.Message}";
+                Log.Warning(ex, "[IconDownloader] Failed to enable temporary internet access.");
+                StatusMessage = "Temporary internet access could not be enabled. Review the API key and try again.";
                 IsInternetEnabled = false;
             }
         }
@@ -189,7 +192,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Failed to disable internet: {ex.Message}";
+                Log.Error(ex, "[IconDownloader] Failed to disable temporary internet access.");
+                StatusMessage = "Temporary internet access could not be confirmed as disabled. Close the downloader and retry.";
             }
         }
 
@@ -223,7 +227,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Search failed: {ex.Message}";
+                Log.Warning(ex, "[IconDownloader] Search failed.");
+                StatusMessage = "The icon search failed. Check temporary internet access and try again.";
 
                 DisableInternet();
             }
@@ -248,7 +253,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Download failed: {ex.Message}";
+                Log.Warning(ex, "[IconDownloader] Download failed.");
+                StatusMessage = "The icon download failed. Check temporary internet access and try again.";
 
                 DisableInternet();
             }
@@ -267,7 +273,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Failed to clear cache: {ex.Message}";
+                Log.Error(ex, "[IconDownloader] Failed to clear the icon cache.");
+                StatusMessage = "The icon cache could not be cleared. Close open icon views and try again.";
             }
         }
 
@@ -325,7 +332,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Download failed: {ex.Message}";
+                Log.Warning(ex, "[IconDownloader] Download failed.");
+                StatusMessage = "The icon download failed. Check temporary internet access and try again.";
 
                 DisableInternet();
             }

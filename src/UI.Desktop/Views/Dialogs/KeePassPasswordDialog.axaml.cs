@@ -57,7 +57,8 @@ namespace PhantomVault.UI.Views.Dialogs
             }
             catch (Exception ex)
             {
-                StatusTextBlock.Text = $"Error selecting keyfile: {ex.Message}";
+                Serilog.Log.Warning(ex, "[KeePassImport] Keyfile selection failed.");
+                StatusTextBlock.Text = "The keyfile could not be selected. Verify it is accessible and try again.";
             }
         }
 

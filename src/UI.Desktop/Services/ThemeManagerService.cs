@@ -173,7 +173,7 @@ namespace PhantomVault.UI.Services
         }
 
         /// <summary>Accent used when the persisted value is missing or unparseable.</summary>
-        private const string FallbackAccentHex = "#3A5E94";
+        private const string FallbackAccentHex = "#5A7AB0";
 
         /// <summary>
         /// Last accent applied by <see cref="SetAccentColor"/>.

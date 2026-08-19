@@ -22,7 +22,7 @@ namespace PhantomVault.Core.Services.Privileged
         public const string ServiceDisplayName = "Phantom Obscura Privileged Helper";
 
         /// <summary>Protocol revision; bumped on breaking changes to fail closed.</summary>
-        public const int ProtocolVersion = 1;
+        public const int ProtocolVersion = 2;
     }
 
     public enum BrokerOperation
@@ -41,7 +41,9 @@ namespace PhantomVault.Core.Services.Privileged
         // the user sees zero per-launch UAC prompts across the whole suite.
         ProvisionPhantomVolume = 8,
         MountPhantomVolume = 9,
-        UnmountPhantomVolume = 10
+        UnmountPhantomVolume = 10,
+        GetIntegrityVerdict = 11,
+        AuthorizeIntegrityWrite = 12
     }
 
     public enum BrokerMessageType
@@ -86,6 +88,24 @@ namespace PhantomVault.Core.Services.Privileged
         /// <summary>Size in bytes for ProvisionPhantomVolume (ignored otherwise).</summary>
         [JsonPropertyName("sizeBytes")]
         public long SizeBytes { get; set; }
+
+        [JsonPropertyName("challenge")]
+        public string? Challenge { get; set; }
+
+        [JsonPropertyName("relativePath")]
+        public string? RelativePath { get; set; }
+
+        [JsonPropertyName("expectedOldHash")]
+        public string? ExpectedOldHash { get; set; }
+
+        [JsonPropertyName("expectedNewHash")]
+        public string? ExpectedNewHash { get; set; }
+
+        [JsonPropertyName("maxLength")]
+        public long MaximumLength { get; set; }
+
+        [JsonPropertyName("changeKind")]
+        public int ChangeKind { get; set; }
     }
 
     /// <summary>Response envelope (one JSON line per message).</summary>

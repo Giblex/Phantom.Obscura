@@ -38,6 +38,15 @@ namespace PhantomVault.UI.Views.Controls
         public static readonly StyledProperty<bool> AllowLettersProperty =
             AvaloniaProperty.Register<PinDigitBoxes, bool>(nameof(AllowLetters), defaultValue: false);
 
+        public static readonly StyledProperty<bool> ShowHeaderProperty =
+            AvaloniaProperty.Register<PinDigitBoxes, bool>(nameof(ShowHeader), defaultValue: true);
+
+        public static readonly StyledProperty<bool> IsSecretProperty =
+            AvaloniaProperty.Register<PinDigitBoxes, bool>(nameof(IsSecret), defaultValue: true);
+
+        public static readonly StyledProperty<int> MaximumLengthProperty =
+            AvaloniaProperty.Register<PinDigitBoxes, int>(nameof(MaximumLength), defaultValue: PinLengthRange.Max);
+
         private bool _suppressSync;
         private bool _initialized;
 
@@ -71,17 +80,18 @@ namespace PhantomVault.UI.Views.Controls
             set => SetValue(AllowLettersProperty, value);
         }
 
+        public bool ShowHeader { get => GetValue(ShowHeaderProperty); set => SetValue(ShowHeaderProperty, value); }
+        public bool IsSecret { get => GetValue(IsSecretProperty); set => SetValue(IsSecretProperty, value); }
+        public int MaximumLength { get => GetValue(MaximumLengthProperty); set => SetValue(MaximumLengthProperty, value); }
+
         public PinDigitBoxes()
         {
             InitializeComponent();
 
-            foreach (var length in PinLengthRange.All)
-            {
-                LengthSelector.Items.Add(length);
-            }
+            PopulateLengths();
 
             _suppressSync = true;
-            LengthSelector.SelectedItem = PinLengthRange.Clamp(PinLength);
+            LengthSelector.SelectedItem = ClampLength(PinLength);
             _suppressSync = false;
 
             _initialized = true;
@@ -97,7 +107,7 @@ namespace PhantomVault.UI.Views.Controls
 
             if (change.Property == PinLengthProperty)
             {
-                var clamped = PinLengthRange.Clamp(PinLength);
+                var clamped = ClampLength(PinLength);
                 if (clamped != PinLength)
                 {
                     PinLength = clamped;
@@ -118,6 +128,20 @@ namespace PhantomVault.UI.Views.Controls
                 if (_suppressSync)
                     return;
 
+                // Values loaded from older free-form fields may contain spaces or
+                // separators (for example "4111 1111 …"). Normalise them once so
+                // every box always represents exactly one accepted character.
+                var normalized = new string((Pin ?? string.Empty)
+                    .Where(IsAccepted)
+                    .Take(ClampLength(PinLength))
+                    .ToArray());
+                if (!string.Equals(normalized, Pin, StringComparison.Ordinal))
+                {
+                    _suppressSync = true;
+                    Pin = normalized;
+                    _suppressSync = false;
+                }
+
                 SyncBoxesFromPin();
             }
             else if (change.Property == IsRevealedProperty)
@@ -133,13 +157,37 @@ namespace PhantomVault.UI.Views.Controls
             {
                 RebuildBoxes();
             }
+            else if (change.Property == ShowHeaderProperty)
+            {
+                HeaderRow.IsVisible = ShowHeader;
+            }
+            else if (change.Property == IsSecretProperty)
+            {
+                ApplyMasking();
+            }
+            else if (change.Property == MaximumLengthProperty)
+            {
+                MaximumLength = Math.Max(1, MaximumLength);
+                PopulateLengths();
+                PinLength = ClampLength(PinLength);
+                RebuildBoxes();
+            }
+        }
+
+        private int ClampLength(int value) => Math.Clamp(value, 1, Math.Max(1, MaximumLength));
+
+        private void PopulateLengths()
+        {
+            LengthSelector.Items.Clear();
+            for (var length = 1; length <= Math.Max(1, MaximumLength); length++)
+                LengthSelector.Items.Add(length);
         }
 
         private void RebuildBoxes()
         {
             DigitHost.Children.Clear();
 
-            var count = PinLengthRange.Clamp(PinLength);
+            var count = ClampLength(PinLength);
 
             // Long PINs are unreadable as one undifferentiated run, so add a wider gap
             // after every fourth box once the PIN is long enough to need it.
@@ -160,7 +208,7 @@ namespace PhantomVault.UI.Views.Controls
                     VerticalContentAlignment = VerticalAlignment.Center,
                     FontSize = 18,
                     Tag = i,
-                    PasswordChar = IsRevealed ? '\0' : MaskChar
+                    PasswordChar = !IsSecret || IsRevealed ? '\0' : MaskChar
                 };
 
                 AutomationProperties.SetName(box, $"PIN digit {i + 1} of {count}");
@@ -196,7 +244,7 @@ namespace PhantomVault.UI.Views.Controls
         {
             foreach (var box in DigitHost.Children.OfType<TextBox>())
             {
-                box.PasswordChar = IsRevealed ? '\0' : MaskChar;
+                box.PasswordChar = !IsSecret || IsRevealed ? '\0' : MaskChar;
             }
         }
 
@@ -345,7 +393,7 @@ namespace PhantomVault.UI.Views.Controls
         private void UpdateCountLabel()
         {
             var entered = (Pin ?? string.Empty).Length;
-            var total = PinLengthRange.Clamp(PinLength);
+            var total = ClampLength(PinLength);
             CountLabel.Text = $"{entered}/{total}";
         }
 
@@ -358,7 +406,7 @@ namespace PhantomVault.UI.Views.Controls
                 return;
 
             if (LengthSelector.SelectedItem is int selected)
-                PinLength = PinLengthRange.Clamp(selected);
+                PinLength = ClampLength(selected);
         }
 
         private void OnRevealClick(object? sender, RoutedEventArgs e)

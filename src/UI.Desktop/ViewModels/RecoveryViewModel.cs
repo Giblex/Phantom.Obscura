@@ -321,13 +321,15 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (UnauthorizedAccessException ex)
             {
-                ErrorMessage = ex.Message;
+                Serilog.Log.Error(ex, "[Recovery] Recovery operation failed.");
+                ErrorMessage = "The recovery operation could not be completed. Verify the recovery material and try again.";
                 HasError = true;
                 CurrentStep = RecoveryStep.Error;
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"Failed to enter recovery mode: {ex.Message}";
+                Serilog.Log.Error(ex, "[Recovery] Failed to enter recovery mode.");
+                ErrorMessage = "Recovery mode could not be started. Verify the recovery material and try again.";
                 HasError = true;
                 CurrentStep = RecoveryStep.Error;
             }
@@ -384,7 +386,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"Validation failed: {ex.Message}";
+                Serilog.Log.Warning(ex, "[Recovery] Recovery-material validation failed unexpectedly.");
+                ErrorMessage = "The recovery material could not be validated. Check it and try again.";
                 HasError = true;
             }
             finally
@@ -442,7 +445,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"Domain recovery failed: {ex.Message}";
+                Serilog.Log.Error(ex, "[Recovery] Domain recovery failed.");
+                ErrorMessage = "Domain recovery could not be completed. Verify the recovery material and try again.";
                 HasError = true;
             }
             finally

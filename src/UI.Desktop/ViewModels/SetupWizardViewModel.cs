@@ -27,6 +27,7 @@ using PhantomVault.Core.Utils;
 using PhantomVault.UI.Services;
 using PhantomVault.UI.Services.Licensing;
 using PhantomVault.UI.Services.Mount;
+using PhantomVault.UI.Services.Entitlements;
 using PhantomVault.UI.Views.Dialogs;
 using Serilog;
 
@@ -340,6 +341,7 @@ namespace PhantomVault.UI.ViewModels
             new SecurityLevelOption
             {
                 Name = "Phantom Secured",
+                IsPremiumOnly = true,
                 Description = "Maximum concealment. Binds the vault to a raw-device USB transport with a mandatory keyfile, device binding, and provisioning metadata.",
                 Features = new[]
                 {
@@ -417,11 +419,30 @@ namespace PhantomVault.UI.ViewModels
                 VaultName = EffectiveVaultName
             };
 
+            WindowsHelloOnboarding.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(WindowsHelloSettingsViewModel.IsBiometricEnrolled))
+                    EnableWindowsHello = WindowsHelloOnboarding.IsBiometricEnrolled;
+            };
+            PasskeyOnboarding.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(PasskeySettingsViewModel.HasRegisteredPasskey))
+                    EnablePasskeys = PasskeyOnboarding.HasRegisteredPasskey;
+            };
+            TotpOnboarding.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(TotpSettingsViewModel.IsTotpEnabled))
+                    EnableTotp = TotpOnboarding.IsTotpEnabled;
+            };
+
             var settings = PhantomVault.UI.Services.SettingsService.Load();
+            var services = (Avalonia.Application.Current as PhantomVault.UI.App)?.Services;
+            IsPremiumActivated =
+                (services?.GetService(typeof(IEntitlementService)) as IEntitlementService)?.IsPremium == true;
             SelectedSecurityLevel = settings.DefaultVaultProtectionTier switch
             {
                 nameof(VaultProtectionTier.StandardSecure) => "Standard Secure",
-                nameof(VaultProtectionTier.BlackSecure) => "Phantom Secured",
+                nameof(VaultProtectionTier.BlackSecure) when IsPremiumActivated => "Phantom Secured",
                 _ => "Ghost Secured"
             };
 
@@ -967,7 +988,8 @@ namespace PhantomVault.UI.ViewModels
                     }
                     catch (Exception ex)
                     {
-                        errorMessage = $"Could not detect USB serial: {ex.Message}";
+                        Log.Warning(ex, "[Setup] Could not detect the USB serial number.");
+                        errorMessage = "The USB device identifier could not be read. Reconnect the device and try again.";
                     }
                 });
             }
@@ -1141,7 +1163,7 @@ namespace PhantomVault.UI.ViewModels
         private void GenerateSummary()
         {
             var selectedTier = GetSelectedProtectionTier();
-            var effectiveTransport = GetEffectiveStorageTransport(selectedTier);
+            var effectiveTransport = GetEffectiveStorageTransport(selectedTier, EnableEncryptedContainer);
             var requestedTransport = GetRequestedStorageTransport(selectedTier);
 
             var summary = "Your Phantom Obscura vault will be created with the following settings:\n\n";
@@ -1257,11 +1279,11 @@ namespace PhantomVault.UI.ViewModels
             catch (Exception ex)
             {
                 Log.Error(ex, "VaultReadyForCreation handler threw an exception");
-                StatusMessage = $"Vault creation failed: {ex.Message}";
+                StatusMessage = "Vault creation could not start. Review the setup choices and try again.";
             }
         }
 
-        public async Task ExecuteVaultCreationAsync()
+        public async Task ExecuteVaultCreationAsync(CancellationToken cancellationToken = default)
         {
             if (IsCompleting)
             {
@@ -1283,10 +1305,11 @@ namespace PhantomVault.UI.ViewModels
                 StatusMessage = "Creating your vault...";
                 Log.Information("ExecuteVaultCreationAsync starting");
                 ReportProvisioningStage(0, 5, "Initializing secure provisioning...", "Validating selected protection tier and storage targets.");
+                cancellationToken.ThrowIfCancellationRequested();
 
                 string? driveRoot = null;
                 var selectedTier = GetSelectedProtectionTier();
-                var effectiveTransport = GetEffectiveStorageTransport(selectedTier);
+                var effectiveTransport = GetEffectiveStorageTransport(selectedTier, EnableEncryptedContainer);
                 var requestedTransport = GetRequestedStorageTransport(selectedTier);
                 bool usePackedMasterVolume = effectiveTransport == VaultStorageTransport.PackedVolume;
                 // Both the packed-volume and raw-device (BlackSecure) tiers stage the
@@ -1400,6 +1423,7 @@ namespace PhantomVault.UI.ViewModels
 
                         foreach (var remnant in remnantsSnapshot)
                         {
+                            cancellationToken.ThrowIfCancellationRequested();
                             try
                             {
                                 // Defense-in-depth: never wipe anything that is not a
@@ -1477,6 +1501,7 @@ namespace PhantomVault.UI.ViewModels
                 }
 
                 ReportProvisioningStage(1, 22, "Creating canonical vault structure...", "Preparing staged root, vault, object, and recovery paths.");
+                cancellationToken.ThrowIfCancellationRequested();
 
                 if (Directory.Exists(vaultPath))
                 {
@@ -1714,7 +1739,7 @@ namespace PhantomVault.UI.ViewModels
                         Log.Error(ex, "[Setup] USB binding failed for drive {DriveRoot}", driveRoot);
                         string bindMsg = ex.InnerException is UnauthorizedAccessException || ex is UnauthorizedAccessException
                             ? $"The USB drive ({driveRoot?.TrimEnd('\\')}) is write-protected. Remove write protection and try again."
-                            : $"Provisioning aborted because the selected USB device could not be bound securely. {ex.Message}";
+                            : "Provisioning stopped because the selected USB device could not be bound securely. Reconnect it and try again.";
                         throw new InvalidOperationException(bindMsg, ex);
                     }
                 }
@@ -1813,12 +1838,14 @@ namespace PhantomVault.UI.ViewModels
 
                 manifest.ContainerSizeBytes = containerSpecs[1].SizeBytes;
                 ReportProvisioningStage(4, 68, "Creating encrypted container set...", "Provisioning root, vault, object, and recovery containers.");
+                cancellationToken.ThrowIfCancellationRequested();
 
                 await using var initialVaultPayload = await BuildInitialVaultPayloadAsync(manifest, passphrase, keyfilePath)
                     .ConfigureAwait(false);
 
-                foreach (var containerSpec in containerSpecs)
+                async Task CreateContainerSpecAsync((string Path, long SizeBytes, VaultManifest? EmbeddedManifest) containerSpec)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     StatusMessage = $"Creating {Path.GetFileNameWithoutExtension(containerSpec.Path)} container...";
                     Log.Information("Creating encrypted container: {Size} bytes at {Path}", containerSpec.SizeBytes, containerSpec.Path);
 
@@ -1833,7 +1860,7 @@ namespace PhantomVault.UI.ViewModels
                             keyfilePath,
                             manifest: null,
                             progress: null,
-                            cancellationToken: CancellationToken.None);
+                            cancellationToken: cancellationToken);
                     }
                     else
                     {
@@ -1844,8 +1871,29 @@ namespace PhantomVault.UI.ViewModels
                             keyfilePath,
                             manifest: containerSpec.EmbeddedManifest,
                             progress: null,
-                            cancellationToken: CancellationToken.None);
+                            cancellationToken: cancellationToken);
                     }
+                }
+
+                if (useStagingRoot)
+                {
+                    // Staged tiers write to the local temp drive first. Two-at-a-time keeps
+                    // Argon2 memory bounded at 512 MiB while overlapping KDF, encryption and
+                    // disk work; running all four together would need more than 1 GiB.
+                    using var gate = new SemaphoreSlim(2, 2);
+                    await Task.WhenAll(containerSpecs.Select(async spec =>
+                    {
+                        await gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+                        try { await CreateContainerSpecAsync(spec).ConfigureAwait(false); }
+                        finally { gate.Release(); }
+                    })).ConfigureAwait(false);
+                }
+                else
+                {
+                    // Direct removable-media writes stay sequential to avoid seek/write
+                    // contention on USB flash devices.
+                    foreach (var containerSpec in containerSpecs)
+                        await CreateContainerSpecAsync(containerSpec).ConfigureAwait(false);
                 }
 
                 StatusMessage = "Container layout created...";
@@ -2145,22 +2193,24 @@ namespace PhantomVault.UI.ViewModels
 
                 if (selectedTier == VaultProtectionTier.BlackSecure)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     ReportProvisioningStage(5, 84, "Writing Phantom Secured raw-device volume...", "Projecting the staged canonical layout directly to the physical device.");
                     await _blackSecureRawVolumeService.CreateVolumeFromDirectoryAsync(
                         blackSecurePhysicalDevicePath!,
                         stagingRoot!,
-                        CancellationToken.None);
+                        cancellationToken);
                     Directory.Delete(stagingRoot!, true);
                     stagingRoot = null;
                 }
                 else if (usePackedMasterVolume)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     ReportProvisioningStage(5, 84, "Packing master Obscura volume...", "Packing the canonical staged layout into the concealed transport volume.");
                     var obscuraVolumeService = new ObscuraVolumeService();
                     await obscuraVolumeService.CreateVolumeFromDirectoryAsync(
                         volumePath!, stagingRoot!,
                         keyfilePath ?? throw new InvalidOperationException("A keyfile is required to pack the master volume."),
-                        CancellationToken.None);
+                        cancellationToken);
                     Directory.Delete(stagingRoot!, true);
                     stagingRoot = null;
                 }
@@ -2198,7 +2248,7 @@ namespace PhantomVault.UI.ViewModels
             catch (Exception ex)
             {
                 Log.Error(ex, "Vault creation failed");
-                StatusMessage = $"Error creating vault: {ex.Message}";
+                StatusMessage = "The vault could not be created. Verify the destination and security options, then try again.";
                 await CleanupFailedProvisioningAsync(
                     cleanupFiles,
                     cleanupDirectories,
@@ -2740,6 +2790,27 @@ namespace PhantomVault.UI.ViewModels
             SelectedSecurityLevel = level;
         }
 
+        public async Task TrySelectSecurityLevelAsync(string level)
+        {
+            if (!string.Equals(level, "Phantom Secured", StringComparison.Ordinal)
+                || IsPremiumActivated)
+            {
+                SelectedSecurityLevel = level;
+                return;
+            }
+
+            // Keep the last free tier selected while checkout is pending. A cancelled or
+            // failed purchase can never leave the premium raw-device tier armed.
+            SelectedPlanIsPremium = true;
+            SubscriptionStatusText = "Phantom Secured requires Premium. Complete checkout to unlock it.";
+            await UpgradeToPremiumAsync();
+
+            if (IsPremiumActivated)
+            {
+                SelectedSecurityLevel = level;
+            }
+        }
+
         partial void OnSelectedSecurityLevelChanged(string value)
         {
             var selected = SecurityLevels.FirstOrDefault(s => s.Name == value);
@@ -2831,13 +2902,21 @@ namespace PhantomVault.UI.ViewModels
                 _ => VaultProtectionTier.StealthSecure
             };
 
-        private static VaultStorageTransport GetEffectiveStorageTransport(VaultProtectionTier protectionTier)
-            => protectionTier switch
-            {
-                VaultProtectionTier.StandardSecure => VaultStorageTransport.FileSystem,
-                VaultProtectionTier.BlackSecure => VaultStorageTransport.RawDevice,
-                _ => VaultStorageTransport.PackedVolume
-            };
+        private static VaultStorageTransport GetEffectiveStorageTransport(
+            VaultProtectionTier protectionTier,
+            bool encryptedContainerEnabled)
+        {
+            // Phantom Secured owns the physical device and therefore always uses its
+            // mandatory raw-device transport. For every other tier, the operator's
+            // encrypted-container choice must be authoritative; previously this UI
+            // checkbox was ignored and the tier silently selected the transport.
+            if (protectionTier == VaultProtectionTier.BlackSecure)
+                return VaultStorageTransport.RawDevice;
+
+            return encryptedContainerEnabled
+                ? VaultStorageTransport.PackedVolume
+                : VaultStorageTransport.FileSystem;
+        }
 
         private static VaultStorageTransport? GetRequestedStorageTransport(VaultProtectionTier protectionTier)
             => protectionTier == VaultProtectionTier.BlackSecure
@@ -3345,6 +3424,7 @@ namespace PhantomVault.UI.ViewModels
         public string SecurityHelpText { get; set; } = string.Empty;
         public string FriendlySummary { get; set; } = string.Empty;
         public int SecurityIncreasePercent { get; set; }
+        public bool IsPremiumOnly { get; set; }
 
         [ObservableProperty]
         private bool _isSelected;

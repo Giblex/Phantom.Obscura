@@ -7,6 +7,7 @@ using PhantomVault.Core.Services;
 using PhantomVault.UI.Models;
 using PhantomVault.UI.Services;
 using ReactiveUI;
+using Serilog;
 using CoreSecurityCheckResult = PhantomVault.Core.Services.SecurityCheckResult;
 
 namespace PhantomVault.UI.ViewModels
@@ -523,17 +524,18 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "[SecurityCheck] Security checks failed unexpectedly.");
 
                 await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
                 {
                     ChecksComplete = true;
                     ChecksSuccessful = false;
-                    StatusMessage = $"Error during security checks: {ex.Message}";
+                    StatusMessage = "Security checks could not be completed. Try again.";
                     NotifyCheckVisuals();
 
                     await _dialogService.ShowErrorAsync(
                         "Security Check Error",
-                        $"An error occurred while running security checks: {ex.Message}",
+                        "Security checks could not be completed. Confirm the vault device is available and try again.",
                         _ownerWindow);
                 });
             }

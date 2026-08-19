@@ -89,7 +89,8 @@ namespace PhantomVault.UI.ViewModels.Dialogs
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"Copy failed: {ex.Message}";
+                Serilog.Log.Warning(ex, "[RecoveryPin] Failed to copy the recovery PIN.");
+                ErrorMessage = "The recovery PIN could not be copied. Confirm clipboard access is allowed and try again.";
             }
         }
 

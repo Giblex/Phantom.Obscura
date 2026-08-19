@@ -1,0 +1,32 @@
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:PhantomVault.UI.Views"
+        x:Class="PhantomVault.UI.Views.Dialogs.CancelVaultCreationWindow"
+        Title="Cancel vault creation?"
+        Width="440"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource WindowBackgroundBrush}">
+    <StackPanel Margin="26" Spacing="18">
+        <StackPanel Spacing="6">
+            <TextBlock Text="Cancel vault creation?"
+                       FontSize="{StaticResource Type.H3.Size}"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+            <TextBlock Text="The current operation will stop and all partially created vault files will be securely removed."
+                       Foreground="{DynamicResource SecondaryTextBrush}"
+                       TextWrapping="Wrap"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+            <Button Content="Continue creating"
+                    Classes="liquid-glass primary"
+                    Padding="18,9"
+                    Click="OnContinue"/>
+            <Button Content="Cancel and wipe"
+                    Classes="liquid-glass danger"
+                    Padding="18,9"
+                    Click="OnConfirmCancel"/>
+        </StackPanel>
+    </StackPanel>
+</views:ThemeAwareWindow>

@@ -149,7 +149,7 @@ namespace PhantomVault.UI.Views
                     var errorDialogService = new DialogService();
                     await errorDialogService.ShowErrorAsync(
                         "Navigation Error",
-                        $"Failed to open vault:\n\n{ex.Message}\n\n{ex.GetType().Name}\n{ex.StackTrace}",
+                        "The vault could not be opened after security checks. Return to the welcome screen and unlock it again.",
                         this);
                 }
             });

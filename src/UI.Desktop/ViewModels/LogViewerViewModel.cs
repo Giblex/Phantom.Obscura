@@ -222,7 +222,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Error clearing logs: {ex.Message}";
+                Serilog.Log.Error(ex, "[LogViewer] Failed to clear logs.");
+                StatusMessage = "Logs could not be cleared. Close other log viewers and try again.";
             }
 
             await Task.CompletedTask;
@@ -255,7 +256,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Export failed: {ex.Message}";
+                Serilog.Log.Error(ex, "[LogViewer] Log export failed.");
+                StatusMessage = "Logs could not be exported. Verify the destination is writable and try again.";
             }
         }
 
@@ -279,7 +281,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Error opening log folder: {ex.Message}";
+                Serilog.Log.Warning(ex, "[LogViewer] Failed to open the log folder.");
+                StatusMessage = "The log folder could not be opened. Verify it is accessible and try again.";
             }
         }
     }

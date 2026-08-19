@@ -105,12 +105,15 @@ namespace PhantomVault.UI.ViewModels
                 QrCodeData = $"otpauth://totp/PhantomVault:{VaultName}?secret={TotpSecret}&issuer=PhantomVault";
 
                 HasTotpSecret = true;
-                IsTotpEnabled = true;
-                StatusMessage = "TOTP secret generated successfully! Scan the QR code with your authenticator app.";
+                // Generating a seed is not enrollment. It becomes enabled only after a
+                // code from the authenticator has been verified below.
+                IsTotpEnabled = false;
+                StatusMessage = "TOTP secret generated. Scan it, then verify a 6-digit code.";
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Failed to generate secret: {ex.Message}";
+                Serilog.Log.Error(ex, "[TotpSettings] Failed to generate a TOTP secret.");
+                StatusMessage = "A TOTP secret could not be generated. Try again.";
             }
             finally
             {
@@ -135,7 +138,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Failed to remove TOTP: {ex.Message}";
+                Serilog.Log.Error(ex, "[TotpSettings] Failed to remove TOTP.");
+                StatusMessage = "TOTP could not be removed. Try again.";
             }
             finally
             {
@@ -181,7 +185,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Verification failed: {ex.Message}";
+                Serilog.Log.Warning(ex, "[TotpSettings] TOTP verification failed unexpectedly.");
+                StatusMessage = "The authentication code could not be verified. Check the code and device time, then try again.";
             }
             finally
             {
@@ -233,7 +238,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Failed to copy: {ex.Message}";
+                Serilog.Log.Warning(ex, "[TotpSettings] Failed to copy a TOTP value.");
+                StatusMessage = "The authentication value could not be copied. Confirm clipboard access is allowed and try again.";
                 System.Diagnostics.Debug.WriteLine($"Clipboard copy failed: {ex}");
             }
         }

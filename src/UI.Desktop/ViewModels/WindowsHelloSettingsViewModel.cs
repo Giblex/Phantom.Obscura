@@ -8,6 +8,7 @@ using ReactiveUI;
 using Avalonia.Controls;
 using PhantomVault.Core.Services;
 using PhantomVault.UI.Services;
+using Serilog;
 
 namespace PhantomVault.UI.ViewModels
 {
@@ -132,7 +133,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Error checking availability: {ex.Message}";
+                Log.Warning(ex, "[WindowsHello] Availability check failed.");
+                StatusMessage = "Windows Hello availability could not be checked. Try again.";
                 IsWindowsHelloAvailable = false;
             }
             finally
@@ -185,11 +187,13 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (InvalidOperationException ex)
             {
-                StatusMessage = $"Enrollment failed: {ex.Message}";
+                Log.Warning(ex, "[WindowsHello] Enrollment was rejected.");
+                StatusMessage = "Windows Hello enrollment could not be completed. Check Windows Hello and try again.";
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Enrollment failed: {ex.Message}";
+                Log.Error(ex, "[WindowsHello] Enrollment failed.");
+                StatusMessage = "Windows Hello enrollment could not be completed. Try again.";
             }
             finally
             {
@@ -212,7 +216,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Failed to remove credentials: {ex.Message}";
+                Log.Error(ex, "[WindowsHello] Failed to remove stored credentials.");
+                StatusMessage = "Stored Windows Hello credentials could not be removed. Try again.";
             }
             finally
             {
@@ -264,7 +269,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Windows Hello authentication test failed: {ex.Message}";
+                Log.Warning(ex, "[WindowsHello] Authentication test failed.");
+                StatusMessage = "Windows Hello verification failed. Confirm device authentication and try again.";
             }
             finally
             {

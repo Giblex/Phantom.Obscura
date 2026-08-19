@@ -362,10 +362,30 @@ namespace PhantomVault.UI.Views
                 await AnimateDimensionAsync(_traceLeftEdge, true, 0, 38, 190, 1);
                 await AnimateDimensionAsync(_traceBottomEdge, false, 0, 540, 420, 1);
                 await AnimateDimensionAsync(_traceRightEdge, true, 0, 38, 190, 1);
+                await Task.Delay(260);
+
+                const int fadeDurationMs = 360;
+                const int fadeFrameMs = 16;
+                var fade = Stopwatch.StartNew();
+                while (fade.ElapsedMilliseconds < fadeDurationMs)
+                {
+                    var opacity = 1d - (fade.ElapsedMilliseconds / (double)fadeDurationMs);
+                    _detectionTraceLine.Opacity = opacity;
+                    _traceTopEdge.Opacity = opacity;
+                    _traceLeftEdge.Opacity = opacity;
+                    _traceBottomEdge.Opacity = opacity;
+                    _traceRightEdge.Opacity = opacity;
+                    await Task.Delay(fadeFrameMs);
+                }
             }
             catch (Exception ex)
             {
                 Log.Warning(ex, "Failed to animate vault detection trace");
+            }
+            finally
+            {
+                if (_detectionTraceCanvas != null)
+                    _detectionTraceCanvas.IsVisible = false;
             }
         }
 
@@ -467,6 +487,14 @@ namespace PhantomVault.UI.Views
                                 }
                             };
                             loadingWindow.CreationCompleted += completedHandler;
+                            loadingWindow.CreationCancelled += (_, _) =>
+                            {
+                                loadingWindow.Close();
+                                setupWizard.Close();
+                                if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+                                    desktop.MainWindow = this;
+                                this.Show();
+                            };
 
                             await loadingWindow.RunCreationAsync(wizardVm);
                         }
@@ -501,7 +529,7 @@ namespace PhantomVault.UI.Views
                 var dialogService = new DialogService();
                 _ = dialogService.ShowErrorAsync(
                     "Setup Wizard Error",
-                    $"Unable to open the setup wizard: {ex.Message}",
+                    "The setup wizard could not be opened. Try again.",
                     this);
             }
         }
@@ -554,6 +582,14 @@ namespace PhantomVault.UI.Views
                                 this.Show();
                             }
                         };
+                        loadingWindow.CreationCancelled += (_, _) =>
+                        {
+                            loadingWindow.Close();
+                            quickWindow.Close();
+                            if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+                                desktop.MainWindow = this;
+                            this.Show();
+                        };
 
                         await loadingWindow.RunCreationAsync(quickVm);
                     }
@@ -581,7 +617,7 @@ namespace PhantomVault.UI.Views
                 var dialogService = new DialogService();
                 _ = dialogService.ShowErrorAsync(
                     "Default Setup Error",
-                    $"Unable to open default setup: {ex.Message}",
+                    "Default setup could not be opened. Try again.",
                     this);
             }
         }
@@ -946,7 +982,8 @@ namespace PhantomVault.UI.Views
                 var dialogService = new DialogService();
                 try
                 {
-                    await dialogService.ShowErrorAsync("Error", $"An error occurred: {ex.Message}", this);
+                    Log.Error(ex, "[WelcomePage] Command failed unexpectedly.");
+                    await dialogService.ShowErrorAsync("Error", "The operation could not be completed. Try again.", this);
                 }
                 catch
                 {

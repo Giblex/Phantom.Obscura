@@ -5,12 +5,12 @@
                         xmlns:controls="clr-namespace:PhantomVault.UI.Desktop.Controls"
                         x:Class="PhantomVault.UI.Views.VaultCreationLoadingWindow"
                         Title="Phantom Obscura — Creating Your Vault"
-                        Width="720" Height="680"
-                        MinWidth="720" MinHeight="680"
+                        Width="720" Height="460"
+                        MinWidth="660" MinHeight="430"
                         CanResize="False"
                         WindowStartupLocation="CenterScreen"
                         Background="{DynamicResource WindowBackgroundBrush}"
-                        Classes="animated-window"
+                        Classes="animated-window native-dot-grid"
                         RenderOptions.BitmapInterpolationMode="HighQuality"
         RenderOptions.EdgeMode="Antialias"
         SystemDecorations="Full">
@@ -135,10 +135,41 @@
     <Grid RowDefinitions="*">
         <Panel>
 
+            <!-- Client-area texture only: sits behind every loading element and
+                 does not enter the native title bar or participate in animation. -->
+            <Border IsHitTestVisible="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <Border.Background>
+                    <DrawingBrush TileMode="Tile" Stretch="None" SourceRect="0,0,8,8" DestinationRect="0,0,8,8">
+                        <DrawingBrush.Drawing>
+                            <GeometryDrawing Brush="#24FFFFFF">
+                                <GeometryDrawing.Geometry><EllipseGeometry Rect="0,0,1.5,1.5"/></GeometryDrawing.Geometry>
+                            </GeometryDrawing>
+                        </DrawingBrush.Drawing>
+                    </DrawingBrush>
+                </Border.Background>
+            </Border>
+            <Border IsHitTestVisible="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <Border.Background>
+                    <DrawingBrush TileMode="Tile" Stretch="None" SourceRect="0,0,40,40" DestinationRect="0,0,40,40">
+                        <DrawingBrush.Drawing>
+                            <GeometryDrawing>
+                                <GeometryDrawing.Pen><Pen Brush="#08FFFFFF" Thickness="1"/></GeometryDrawing.Pen>
+                                <GeometryDrawing.Geometry>
+                                    <GeometryGroup>
+                                        <LineGeometry StartPoint="0.5,0" EndPoint="0.5,40"/>
+                                        <LineGeometry StartPoint="0,0.5" EndPoint="40,0.5"/>
+                                    </GeometryGroup>
+                                </GeometryDrawing.Geometry>
+                            </GeometryDrawing>
+                        </DrawingBrush.Drawing>
+                    </DrawingBrush>
+                </Border.Background>
+            </Border>
+
             <TextBlock x:Name="HexColumnLeft"
                        FontFamily="Consolas,Courier New,monospace"
                        FontSize="10"
-                       Foreground="#0CFFFFFF"
+                       Foreground="#1CFFFFFF"
                        LineHeight="14"
                        HorizontalAlignment="Left"
                        VerticalAlignment="Stretch"
@@ -151,7 +182,7 @@
             <TextBlock x:Name="HexColumnRight"
                        FontFamily="Consolas,Courier New,monospace"
                        FontSize="10"
-                       Foreground="#0CFFFFFF"
+                       Foreground="#1CFFFFFF"
                        LineHeight="14"
                        HorizontalAlignment="Right"
                        VerticalAlignment="Stretch"
@@ -181,10 +212,10 @@
 
             <ScrollViewer VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled"
-                          Padding="0,20">
-            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="24">
+                          Padding="0,6">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="9">
 
-                <Panel Width="310" Height="310" HorizontalAlignment="Center">
+                <Panel Width="310" Height="235" HorizontalAlignment="Center">
 
                     <Border x:Name="PulseRing3"
                             Classes="pulse-ring-delay2"
@@ -283,10 +314,46 @@
                                  HorizontalAlignment="Center"/>
                     </Border>
 
+                    <!-- Cool upper rim and deep lower shadow make the mark read as
+                         raised above the deliberately subdued vault surface. -->
                     <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
                            Width="236" Height="236"
+                           Opacity="0.18"
                            Stretch="Uniform"
-                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                           IsHitTestVisible="False"
+                           HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Image.Effect>
+                            <DropShadowEffect BlurRadius="18"
+                                              OffsetY="-4"
+                                              Color="#8FB5DF"
+                                              Opacity="0.62"/>
+                        </Image.Effect>
+                    </Image>
+
+                    <Image Source="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Icon Transparent background.png"
+                           Width="236" Height="236"
+                           Opacity="0.56"
+                           Stretch="Uniform"
+                           IsHitTestVisible="False"
+                           HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Image.Effect>
+                            <DropShadowEffect BlurRadius="24"
+                                              OffsetY="11"
+                                              Color="#02070D"
+                                              Opacity="0.92"/>
+                        </Image.Effect>
+                    </Image>
+
+                    <TextBlock Text="Creating Your Vault"
+                               x:Name="LoadingTitle"
+                               FontSize="25"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"
+                               TextAlignment="Center"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               TextWrapping="Wrap"
+                               MaxWidth="230"/>
 
                     <Border x:Name="CompletionCheck"
                             Classes="check-appear"
@@ -305,28 +372,6 @@
                                    VerticalAlignment="Center"/>
                     </Border>
                 </Panel>
-
-                <TextBlock Text="Creating Your Vault"
-                           x:Name="LoadingTitle"
-                           FontSize="26"
-                           FontWeight="SemiBold"
-                           Foreground="{DynamicResource PrimaryTextBrush}"
-                           HorizontalAlignment="Center"/>
-
-                <TextBlock x:Name="StatusText"
-                           Text="Initializing secure environment..."
-                           Classes="fade-status"
-                           FontSize="14"
-                           Foreground="{DynamicResource SecondaryTextBrush}"
-                           HorizontalAlignment="Center"/>
-
-                <TextBlock x:Name="StepDetailText"
-                           Text=""
-                           FontFamily="Consolas,Courier New,monospace"
-                           FontSize="11"
-                           Foreground="#6B8FB5DF"
-                           HorizontalAlignment="Center"
-                           Opacity="0.8"/>
 
                 <Grid Width="400" HorizontalAlignment="Center" RowDefinitions="Auto,8,Auto">
 
@@ -369,18 +414,47 @@
                     </Border>
                 </Grid>
 
-                <StackPanel x:Name="PhaseChecklist" Spacing="4" HorizontalAlignment="Center" Margin="0,4,0,0">
+                <Border Width="430"
+                        MinHeight="54"
+                        CornerRadius="27"
+                        Padding="22,9"
+                        BorderBrush="{DynamicResource Brush.Glass.Border}"
+                        BorderThickness="1"
+                        Margin="0,6,0,0"
+                        BoxShadow="0 8 18 0 #4402080F, inset 0 1 0 0 #38FFFFFF">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                            <GradientStop Color="#C5283B50" Offset="0"/>
+                            <GradientStop Color="#D01B2D42" Offset="0.48"/>
+                            <GradientStop Color="#E0122234" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <StackPanel Spacing="2" VerticalAlignment="Center">
+                        <TextBlock x:Name="StatusText"
+                                   Text="Initializing secure environment..."
+                                   Classes="fade-status"
+                                   FontSize="13"
+                                   FontWeight="SemiBold"
+                                   Foreground="#E8F2F7"
+                                   TextAlignment="Center"
+                                   TextWrapping="Wrap"/>
+                        <TextBlock x:Name="StepDetailText"
+                                   Text=""
+                                   FontSize="10.5"
+                                   Foreground="#B8CBD6"
+                                   TextAlignment="Center"
+                                   TextWrapping="Wrap"
+                                   Opacity="0.85"/>
+                    </StackPanel>
+                </Border>
 
-                </StackPanel>
-
-                <TextBlock x:Name="HashReadout"
-                           Text=""
-                           FontFamily="Consolas,Courier New,monospace"
-                           FontSize="9"
-                           Foreground="#1AFFFFFF"
-                           HorizontalAlignment="Center"
-                           LetterSpacing="1"
-                           Margin="0,4,0,0"/>
+                <Button x:Name="CancelCreationButton"
+                        Content="Cancel"
+                        Classes="liquid-glass danger"
+                        Padding="24,9"
+                        Margin="0,5,0,0"
+                        HorizontalAlignment="Center"
+                        Click="OnCancelCreation"/>
 
             </StackPanel>
             </ScrollViewer>

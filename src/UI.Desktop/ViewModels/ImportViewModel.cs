@@ -290,7 +290,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Format detection failed: {ex.Message}. Please select manually.";
+                Serilog.Log.Warning(ex, "Import format detection failed");
+                StatusMessage = "Format detection failed. Select the source format manually.";
             }
         }
 
@@ -351,9 +352,10 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
+                Serilog.Log.Warning(ex, "Import preview failed");
                 await _dialogService.ShowErrorAsync(
                     "Import Preview Error",
-                    $"Failed to preview file:\n{ex.Message}",
+                    "The selected file could not be previewed. Verify that it is a supported export file and try again.",
                     _ownerWindow
                 );
                 PreviewCount = 0;
@@ -468,12 +470,13 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
+                Serilog.Log.Error(ex, "Credential import failed");
                 await _dialogService.ShowErrorAsync(
                     "Import Failed",
-                    $"Failed to import credentials:\n{ex.Message}\n\nPlease verify the file format and try again.",
+                    "The credentials could not be imported. Verify the selected format and file, then try again.",
                     _ownerWindow
                 );
-                StatusMessage = "Import failed. Please check the error message.";
+                StatusMessage = "Import failed. Verify the file and selected format.";
             }
             finally
             {

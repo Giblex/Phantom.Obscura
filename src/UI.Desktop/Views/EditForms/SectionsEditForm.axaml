@@ -4,39 +4,22 @@
              xmlns:controls="clr-namespace:PhantomVault.UI.Views.Controls"
              x:Class="PhantomVault.UI.Views.EditForms.SectionsEditForm">
 
+    <!-- DataTemplate static-resource lookup is resolved from this control's own
+         resource scope when the template is materialized. Do not rely on the
+         parent VaultWindow dictionary: that caused Add Entry > Login to crash
+         during layout when this converter could not be found. -->
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://PhantomVault.UI/Resources/Converters/ConverterResources.axaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
     <StackPanel Spacing="10">
 
         <TextBlock Text="{Binding SectionsSummary}"
                    Classes="field-hint"/>
-
-        <Border Classes="section-tile">
-            <StackPanel Spacing="8">
-                <TextBlock Text="Start from a template" Classes="field-label"/>
-
-                <Grid ColumnDefinitions="*,Auto">
-                    <ComboBox Grid.Column="0"
-                              ItemsSource="{Binding SectionTemplates}"
-                              SelectedItem="{Binding SelectedSectionTemplate, Mode=TwoWay}"
-                              PlaceholderText="Choose a set of sections"
-                              Classes="form-field"
-                              AutomationProperties.Name="Section template"/>
-
-                    <Button Grid.Column="1"
-                            Classes="liquid-glass"
-                            Margin="6,0,0,0"
-                            Padding="12,6"
-                            Content="Apply"
-                            IsEnabled="{Binding HasSelectedSectionTemplate}"
-                            Command="{Binding ApplySectionTemplateCommand}"
-                            AutomationProperties.Name="Apply section template"
-                            ToolTip.Tip="Add this template's sections to the entry"/>
-                </Grid>
-
-                <TextBlock Text="{Binding SelectedSectionTemplateDescription}"
-                           IsVisible="{Binding HasSelectedSectionTemplate}"
-                           Classes="field-hint"/>
-            </StackPanel>
-        </Border>
 
         <Grid ColumnDefinitions="*,Auto,Auto" >
             <ComboBox Grid.Column="0"

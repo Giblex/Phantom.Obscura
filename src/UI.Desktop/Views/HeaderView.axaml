@@ -194,7 +194,8 @@
                 </Border>
             </Canvas>
 
-            <!-- Dot-grid overlay (matches welcome page / giblex.com). -->
+            <!-- Header texture: the same 8px rhythm as the welcome page, at a
+                 quieter opacity so it never competes with navigation controls. -->
             <Border Grid.Column="0" Grid.ColumnSpan="3"
                     IsHitTestVisible="False"
                     HorizontalAlignment="Stretch"
@@ -202,11 +203,35 @@
                     Margin="-24,-16,-24,-16"
                     RenderOptions.BitmapInterpolationMode="None">
                 <Border.Background>
-                    <ImageBrush Source="avares://PhantomVault.UI/Assets/dot_pattern.png"
-                                TileMode="Tile"
-                                Stretch="None"
-                                SourceRect="0,0,8,8"
-                                DestinationRect="0,0,8,8"/>
+                    <DrawingBrush TileMode="Tile" Stretch="None"
+                                  SourceRect="0,0,8,8" DestinationRect="0,0,8,8">
+                        <DrawingBrush.Drawing>
+                            <GeometryDrawing Brush="#24FFFFFF">
+                                <GeometryDrawing.Geometry><EllipseGeometry Rect="0,0,1.5,1.5"/></GeometryDrawing.Geometry>
+                            </GeometryDrawing>
+                        </DrawingBrush.Drawing>
+                    </DrawingBrush>
+                </Border.Background>
+            </Border>
+
+            <Border Grid.Column="0" Grid.ColumnSpan="3"
+                    IsHitTestVisible="False"
+                    Margin="-24,-16,-24,-16">
+                <Border.Background>
+                    <DrawingBrush TileMode="Tile" Stretch="None"
+                                  SourceRect="0,0,40,40" DestinationRect="0,0,40,40">
+                        <DrawingBrush.Drawing>
+                            <GeometryDrawing>
+                                <GeometryDrawing.Pen><Pen Brush="#08FFFFFF" Thickness="1"/></GeometryDrawing.Pen>
+                                <GeometryDrawing.Geometry>
+                                    <GeometryGroup>
+                                        <LineGeometry StartPoint="0.5,0" EndPoint="0.5,40"/>
+                                        <LineGeometry StartPoint="0,0.5" EndPoint="40,0.5"/>
+                                    </GeometryGroup>
+                                </GeometryDrawing.Geometry>
+                            </GeometryDrawing>
+                        </DrawingBrush.Drawing>
+                    </DrawingBrush>
                 </Border.Background>
             </Border>
 

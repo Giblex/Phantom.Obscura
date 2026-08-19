@@ -13,6 +13,37 @@ let port = null;
 let pendingRequests = new Map(); // requestId → { resolve, reject }
 let requestCounter = 0;
 
+/** Injects only into a tab covered by activeTab or an explicitly granted origin. */
+async function injectContentScript(tabId) {
+  await chrome.scripting.executeScript({
+    target: { tabId },
+    files: ['content.js']
+  });
+}
+
+// Persistent site grants are optional and exact-origin scoped. Re-inject after
+// navigation only when the browser confirms the user still grants that origin.
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status !== 'complete' || !tab?.url) return;
+
+  let originPattern;
+  try {
+    const url = new URL(tab.url);
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') return;
+    originPattern = `${url.origin}/*`;
+  } catch {
+    return;
+  }
+
+  chrome.permissions.contains({ origins: [originPattern] }, (granted) => {
+    if (!granted || chrome.runtime.lastError) return;
+    injectContentScript(tabId).catch(() => {
+      // Restricted/internal pages and tabs that disappear during navigation
+      // are intentionally ignored.
+    });
+  });
+});
+
 
 function getOrOpenPort() {
   if (port) return port;
@@ -127,6 +158,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 async function handleMessage(message, sender) {
+  const pageContext = () => {
+    const raw = sender?.tab?.url || sender?.url;
+    const url = new URL(raw);
+    if (url.protocol !== 'https:' && url.protocol !== 'http:')
+      throw new Error('Autofill is available only on HTTP and HTTPS pages.');
+    return { url: url.href, domain: url.hostname, origin: url.origin };
+  };
+
   switch (message.type) {
     case 'ping': {
       try {
@@ -135,6 +174,13 @@ async function handleMessage(message, sender) {
       } catch {
         return { success: false, connected: false };
       }
+    }
+
+    case 'injectActiveTab': {
+      if (!sender?.url?.startsWith(chrome.runtime.getURL('')))
+        return { success: false, error: 'Only the extension UI may request script injection.' };
+      await injectContentScript(message.tabId);
+      return { success: true };
     }
 
     case 'getVaultState': {
@@ -149,7 +195,11 @@ async function handleMessage(message, sender) {
 
     case 'detectForm': {
       try {
-        const resp = await sendToNativeHost({ type: 'detectForm', data: message.data });
+        const context = pageContext();
+        const resp = await sendToNativeHost({
+          type: 'detectForm',
+          data: { ...message.data, url: context.url, domain: context.domain, pageOrigin: context.origin }
+        });
         return resp;
       } catch (err) {
         return { success: false, error: err.message };
@@ -158,7 +208,11 @@ async function handleMessage(message, sender) {
 
     case 'getCredentials': {
       try {
-        const resp = await sendToNativeHost({ type: 'getCredentials', data: message.data });
+        const context = pageContext();
+        const resp = await sendToNativeHost({
+          type: 'getCredentials',
+          data: { domain: context.domain, url: context.url, pageOrigin: context.origin }
+        });
         return resp;
       } catch (err) {
         return { success: false, error: err.message };
@@ -167,7 +221,11 @@ async function handleMessage(message, sender) {
 
     case 'submitForm': {
       try {
-        const resp = await sendToNativeHost({ type: 'submitForm', data: message.data });
+        const context = pageContext();
+        const resp = await sendToNativeHost({
+          type: 'submitForm',
+          data: { ...message.data, url: context.url, domain: context.domain, pageOrigin: context.origin }
+        });
         return resp;
       } catch (err) {
         return { success: false, error: err.message };

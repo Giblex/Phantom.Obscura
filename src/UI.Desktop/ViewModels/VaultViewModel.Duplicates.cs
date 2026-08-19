@@ -84,7 +84,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Copy failed: {ex.Message}";
+                Serilog.Log.Warning(ex, "[Duplicates] Failed to copy a credential value.");
+                StatusMessage = "The value could not be copied. Confirm clipboard access is allowed and try again.";
             }
         }
 

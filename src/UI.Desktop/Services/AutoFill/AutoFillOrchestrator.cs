@@ -40,6 +40,7 @@ namespace PhantomVault.UI.Services.AutoFill
         private readonly TotpService _totpService;
         private readonly WindowsNativeLoginDetector _nativeDetector;
         private readonly IntegratedAttestorService _integratedAttestorService;
+        private readonly AttestorCredentialBrokerClient _attestorBroker;
 
         private ICredentialProvider? _credentialProvider;
 
@@ -65,7 +66,8 @@ namespace PhantomVault.UI.Services.AutoFill
         ITotpFieldPoller totpPoller,
         TotpService totpService,
         WindowsNativeLoginDetector nativeDetector,
-        IntegratedAttestorService integratedAttestorService)
+        IntegratedAttestorService integratedAttestorService,
+        AttestorCredentialBrokerClient attestorBroker)
     {
         _windowDetector = windowDetector;
         _matchingEngine = matchingEngine;
@@ -75,6 +77,7 @@ namespace PhantomVault.UI.Services.AutoFill
         _totpService = totpService;
         _nativeDetector = nativeDetector;
         _integratedAttestorService = integratedAttestorService;
+        _attestorBroker = attestorBroker;
     }
 
         public void SetVaultContext(ICredentialProvider provider, VaultManifest manifest)
@@ -91,6 +94,7 @@ namespace PhantomVault.UI.Services.AutoFill
             CredentialMatch? bestMatch = null;
             Credential? credential = null;
             EffectiveTotp? effectiveTotp = null;
+            string? attestorTotpReference = null;
             bool isBrowser = false;
 
             Log.Information("[AutoFill] Flow started for USB path: {Path}", usbDrivePath);
@@ -259,8 +263,10 @@ namespace PhantomVault.UI.Services.AutoFill
                         // The seed may be held in a TOTP section (inline or linked to a
                         // separate authenticator entry) rather than on the entry itself.
                         effectiveTotp = CredentialTotpResolver.Resolve(credential, LookupCredentialById);
+                        attestorTotpReference = credential.AttestorTotpReference;
 
-                        state = (settings.AutoFillAutoInputTotp && effectiveTotp is not null)
+                        state = (settings.AutoFillAutoInputTotp &&
+                                 (effectiveTotp is not null || !string.IsNullOrWhiteSpace(attestorTotpReference)))
                             ? State.WaitForTotp
                             : State.Done;
                         break;
@@ -295,12 +301,27 @@ namespace PhantomVault.UI.Services.AutoFill
 
                     case State.FillTotp:
                     {
-                        var code = _totpService.GenerateCode(
-                            effectiveTotp!.Secret,
-                            effectiveTotp.ParsedAlgorithm,
-                            DateTimeOffset.UtcNow,
-                            effectiveTotp.Digits,
-                            effectiveTotp.Period);
+                        string code;
+                        if (!string.IsNullOrWhiteSpace(attestorTotpReference))
+                        {
+                            var snapshot = await _attestorBroker.GetTotpCodeAsync(attestorTotpReference, ct);
+                            if (snapshot == null)
+                            {
+                                Log.Warning("[AutoFill] Attestor did not release a TOTP code");
+                                state = State.Done;
+                                break;
+                            }
+                            code = snapshot.Code;
+                        }
+                        else
+                        {
+                            code = _totpService.GenerateCode(
+                                effectiveTotp!.Secret,
+                                effectiveTotp.ParsedAlgorithm,
+                                DateTimeOffset.UtcNow,
+                                effectiveTotp.Digits,
+                                effectiveTotp.Period);
+                        }
                         bool filled = false;
 
                         if (!isBrowser && nativeContext?.TotpAutomationId is not null)

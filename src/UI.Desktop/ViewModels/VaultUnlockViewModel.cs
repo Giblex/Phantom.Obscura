@@ -299,6 +299,24 @@ namespace PhantomVault.UI.ViewModels
 
         public async Task UnlockVaultAsync()
         {
+            var integrityGate = (Application.Current as PhantomVault.UI.App)?.Services?
+                .GetService<PhantomVault.UI.Services.Security.IntegrityWatchdogStatusService>();
+            if (integrityGate is not null)
+            {
+                var verdict = await integrityGate.IsUnlockAllowedAsync().ConfigureAwait(false);
+                if (!verdict.Allowed)
+                {
+                    Log.Warning("[VaultUnlock] Unlock blocked by integrity gate: {Reason}", verdict.Reason);
+                    await Dispatcher.UIThread.InvokeAsync(async () =>
+                    {
+                        Status = "Integrity verification required";
+                        await _dialogService.ShowWarningAsync("Integrity Verification Required",
+                            verdict.Reason + "\n\nThe vault remains locked. Recovery and evidence export remain available.", _ownerWindow);
+                        CloseAndReturnToWelcome();
+                    });
+                    return;
+                }
+            }
             if (IsBusy) return;
             IsBusy = true;
             string? extractedVolumeRoot = null;
@@ -673,6 +691,30 @@ namespace PhantomVault.UI.ViewModels
                     return;
                 }
 
+                // A v1 header exposes the vault layout in plaintext. Upgrade only after the
+                // inner manifest has authenticated, because legacy headers themselves cannot
+                // tell us which composite keyfile candidate is correct. Failure is non-fatal:
+                // read-only or failing removable media must not turn a valid unlock into a
+                // lockout, and the original volume remains intact through the atomic journal.
+                if (extractedFromVolumePath != null && !string.IsNullOrWhiteSpace(keyfilePath))
+                {
+                    try
+                    {
+                        Status = "Securing legacy vault header...";
+                        var upgradeService = new ObscuraVolumeService();
+                        if (await upgradeService.UpgradeLegacyVolumeAsync(extractedFromVolumePath, keyfilePath).ConfigureAwait(false))
+                        {
+                            volumeKeyfilePath = keyfilePath;
+                            Log.Information("[VaultUnlock] upgraded legacy Obscura volume header to v2 at {Path}", extractedFromVolumePath);
+                        }
+                    }
+                    catch (Exception upgradeEx)
+                    {
+                        Log.Warning(upgradeEx,
+                            "[VaultUnlock] legacy header upgrade failed; continuing with the authenticated vault");
+                    }
+                }
+
                 var vaultOptions = new Core.Options.VaultOptions();
                 var vaultService = new VaultService(vaultOptions, _encryptionService);
                 // Resolve the app-scope watchdog rather than constructing a second one.
@@ -972,7 +1014,10 @@ namespace PhantomVault.UI.ViewModels
                                       ?.ReportLocked();
                         }
                     }
-                    catch {  }
+                    catch (Exception ex)
+                    {
+                        Log.Warning(ex, "Failed to clear unlocked integration state while closing the vault window");
+                    }
 
                     try
                     {
@@ -1011,12 +1056,11 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                System.Console.Error.WriteLine($"[VaultUnlock] ERROR: {ex.GetType().Name}: {ex.Message}");
-                System.Console.Error.WriteLine(ex.StackTrace);
+                Log.Error(ex, "Vault unlock failed");
                 Status = "Error during vault unlock";
                 await _dialogService.ShowErrorAsync(
                     "Vault Unlock Failed",
-                    $"An error occurred while unlocking the vault: {ex.Message}",
+                    ErrorMessageService.GetUserSafeMessage(ex),
                     _ownerWindow);
                 CloseAndReturnToWelcome();
             }

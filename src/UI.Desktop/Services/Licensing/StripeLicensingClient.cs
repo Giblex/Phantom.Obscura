@@ -57,17 +57,20 @@ namespace PhantomVault.UI.Services.Licensing
 
         public bool IsConfigured =>
             _baseUri is not null &&
-            (_baseUri.Scheme == Uri.UriSchemeHttp || _baseUri.Scheme == Uri.UriSchemeHttps);
+            _baseUri.Scheme == Uri.UriSchemeHttps;
 
         public async Task<LicensingResult> ActivateAsync(PremiumTier tier, string? usbBindingId,
             BillingInterval interval = BillingInterval.Monthly, CancellationToken ct = default)
         {
-            if (!IsConfigured)
-                return TryDirectPaymentLinkFallback("Licensing endpoint is not configured for this build.", interval);
-
+            // Check the master kill-switch before every path, including the direct
+            // Stripe fallback used when the backend URL is missing or invalid.
+            // Opening a browser is still outbound activity initiated by Obscura.
             if (_gateway.OfflineMode)
                 return LicensingResult.Failed(
                     "Premium checkout is blocked while offline mode is on. Turn off offline mode in Privacy settings, then try again.");
+
+            if (!IsConfigured)
+                return TryDirectPaymentLinkFallback("Licensing endpoint is not configured for this build.", interval);
 
             var grant = await _gateway.RequestAccessAsync(LicensingGatewayPolicy.CreateRequest(), ct)
                 .ConfigureAwait(false);
@@ -100,7 +103,8 @@ namespace PhantomVault.UI.Services.Licensing
             }
             catch (Exception ex)
             {
-                return TryDirectPaymentLinkFallback($"Could not reach the licensing service: {ex.Message}", interval);
+                Log.Warning(ex, "[Licensing] Checkout request failed.");
+                return TryDirectPaymentLinkFallback("Could not reach the licensing service.", interval);
             }
 
             if (checkout is null || string.IsNullOrWhiteSpace(checkout.Url) || string.IsNullOrWhiteSpace(checkout.ClaimId))

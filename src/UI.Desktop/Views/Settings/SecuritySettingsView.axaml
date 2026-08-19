@@ -77,9 +77,8 @@
                                    TextWrapping="Wrap"/>
 
                         <CheckBox Content="Enable PIN lock"
-                                  IsChecked="{Binding EnablePinLock, Mode=TwoWay}"
-                                  IsEnabled="{Binding HasPinConfigured}"
-                                  ToolTip.Tip="Set a PIN first — there is nothing to enable until then."/>
+                                  IsChecked="{Binding PinSetupEnabled, Mode=TwoWay}"
+                                  ToolTip.Tip="Turn this on, then set a PIN to enable quick re-authentication."/>
 
                         <CheckBox Content="Use PIN lock for auto-lock (do not dismount)"
                                   IsChecked="{Binding UsePinLockForAutoLock, Mode=TwoWay}"
@@ -97,11 +96,13 @@
                             <Button Content="Set / Change PIN"
                                     Command="{Binding SetOrChangePinCommand}"
                                     Classes="liquid-glass"
+                                    IsEnabled="{Binding PinSetupEnabled}"
                                     Width="170"/>
 
                             <Button Content="Disable PIN"
                                     Command="{Binding ClearPinCommand}"
                                     Classes="liquid-glass"
+                                    IsEnabled="{Binding HasPinConfigured}"
                                     Width="120"/>
                         </StackPanel>
                     </StackPanel>
@@ -353,20 +354,28 @@
                            Foreground="{DynamicResource MutedTextBrush}"
                            TextWrapping="Wrap"/>
 
-                <Border Background="{DynamicResource WindowBackgroundBrush}"
+                <Border Background="{DynamicResource DashboardCardBg}"
                         BorderBrush="{DynamicResource ControlBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="{StaticResource Radius.Md}"
                         Padding="12,10">
-                    <StackPanel Spacing="3">
-                        <TextBlock Text="Current keyfile"
-                                   FontSize="{StaticResource Type.Tiny.Size}"
-                                   Foreground="{DynamicResource MutedTextBrush}"/>
-                        <TextBlock Text="{Binding CurrentKeyfileDisplay}"
-                                   FontSize="{StaticResource Type.Small.Size}"
-                                   Foreground="{DynamicResource PrimaryTextBrush}"
-                                   TextWrapping="Wrap"/>
-                    </StackPanel>
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <StackPanel Grid.Column="0" Spacing="3" VerticalAlignment="Center">
+                            <TextBlock Text="Current keyfile"
+                                       FontSize="{StaticResource Type.Tiny.Size}"
+                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                            <TextBlock Text="{Binding CurrentKeyfileProtectedDisplay}"
+                                       FontSize="{StaticResource Type.Small.Size}"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <Button Grid.Column="1"
+                                Content="{Binding CurrentKeyfileVisibilityText}"
+                                Command="{Binding ToggleCurrentKeyfileVisibilityCommand}"
+                                Classes="liquid-glass compact"
+                                MinWidth="82"
+                                VerticalAlignment="Center"/>
+                    </Grid>
                 </Border>
 
                 <WrapPanel Orientation="Horizontal">

@@ -87,14 +87,16 @@ namespace PhantomVault.UI.ViewModels
             UpdatePasswordFlagState();
             UpdatePasswordStrengthState();
 
-            if (!string.IsNullOrWhiteSpace(_credential.TotpSecret))
+            if (!string.IsNullOrWhiteSpace(_credential.TotpSecret) || !string.IsNullOrWhiteSpace(_credential.AttestorTotpReference))
             {
-                UpdateTotpCode();
-                _totpTimer = new Timer(_ => UpdateTotpCode(), null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
+                _ = UpdateTotpCodeAsync();
+                _totpTimer = new Timer(_ => _ = UpdateTotpCodeAsync(), null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
             }
         }
 
         public string Title => _credential.Title;
+        public string Id => _credential.Id;
+        public string? AttestorTotpReference => _credential.AttestorTotpReference;
         public string Username => _credential.Username;
         public string Password => _credential.Password;
         public string Url => _credential.Url;
@@ -389,7 +391,7 @@ namespace PhantomVault.UI.ViewModels
         public string TotpAlgorithm => _credential.TotpAlgorithm;
         public string TotpIssuer => _credential.TotpIssuer;
         public string TotpAccountName => _credential.TotpAccountName;
-        public bool HasTotpSecret => EffectiveTotp != null;
+        public bool HasTotpSecret => EffectiveTotp != null || !string.IsNullOrWhiteSpace(_credential.AttestorTotpReference);
         public bool HasTotpIssuer => !string.IsNullOrWhiteSpace(TotpIssuer);
         public bool HasTotpAccountName => !string.IsNullOrWhiteSpace(TotpAccountName);
 
@@ -871,10 +873,26 @@ namespace PhantomVault.UI.ViewModels
             return value?.ToString("MMM dd, yyyy") ?? string.Empty;
         }
 
-        private void UpdateTotpCode()
+        private async System.Threading.Tasks.Task UpdateTotpCodeAsync()
         {
             try
             {
+                if (!string.IsNullOrWhiteSpace(_credential.AttestorTotpReference))
+                {
+                    var broker = (Application.Current as App)?.Services?
+                        .GetService(typeof(AttestorCredentialBrokerClient)) as AttestorCredentialBrokerClient;
+                    var snapshot = broker == null
+                        ? null
+                        : await broker.GetTotpCodeAsync(_credential.AttestorTotpReference);
+
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        CurrentTotpCode = snapshot?.Code ?? "------";
+                        TotpSecondsRemaining = snapshot == null ? 0 : (int)snapshot.ValidForSeconds;
+                    });
+                    return;
+                }
+
                 var totp = EffectiveTotp;
                 if (totp == null)
                 {

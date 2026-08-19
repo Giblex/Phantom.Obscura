@@ -7,6 +7,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
 using PhantomVault.Core.Services.Network;
+using PhantomVault.UI.Views.Dialogs;
 
 namespace PhantomVault.UI.Services
 {
@@ -17,11 +18,9 @@ namespace PhantomVault.UI.Services
     /// </summary>
     public sealed class DialogConsentProvider : IInternetConsentProvider
     {
-        private readonly DialogService _dialogService;
-
         public DialogConsentProvider(DialogService dialogService)
         {
-            _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
+            ArgumentNullException.ThrowIfNull(dialogService);
         }
 
         public async Task<InternetConsentDecision> RequestConsentAsync(
@@ -30,30 +29,16 @@ namespace PhantomVault.UI.Services
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var hosts = request.AllowedHosts is { Count: > 0 }
-                ? string.Join("\n  • ", request.AllowedHosts)
-                : "(none)";
-
-            var ttlMinutes = (int)Math.Round(request.Ttl.TotalMinutes);
-            var sessionNote = request.AllowSessionGrant
-                ? "\n\nYou can revoke this grant at any time from Settings → Privacy → Network Activity."
-                : string.Empty;
-
-            var message =
-                $"\"{request.UserVisibleReason}\"\n\n" +
-                $"Feature: {request.FeatureId}\n" +
-                $"Hosts it will reach:\n  • {hosts}\n\n" +
-                $"Grant duration: {ttlMinutes} minute(s)\n" +
-                $"All traffic is HTTPS, certificate-pinned, and logged." +
-                sessionNote;
-
             var owner = TryGetActiveWindow();
+            if (owner is null)
+                return new InternetConsentDecision(InternetConsentChoice.Deny, "No active window available for consent.");
 
-            var allowed = await Dispatcher.UIThread.InvokeAsync(() =>
-                _dialogService.ShowConfirmationAsync(
-                    title: "Allow Internet Access?",
-                    message: message,
-                    owner: owner)).ConfigureAwait(false);
+            var allowed = await Dispatcher.UIThread.InvokeAsync(async () =>
+            {
+                var dialog = new InternetConsentWindow(request.AllowedHosts, request.Ttl);
+                await dialog.ShowDialog(owner);
+                return dialog.Allowed;
+            }).ConfigureAwait(false);
 
             if (!allowed)
                 return new InternetConsentDecision(InternetConsentChoice.Deny, "User denied.");

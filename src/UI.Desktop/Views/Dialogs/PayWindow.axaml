@@ -114,11 +114,15 @@
                         <TextBlock Text="Secure checkout"
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
-                        <TextBlock Text="Payment is handled by Stripe. When you continue, your browser opens Stripe's secure checkout page — no card details are entered or stored in Phantom Obscura."
+                        <TextBlock Text="• Stripe handles payment in your browser."
                                    FontSize="{StaticResource Type.Small.Size}"
                                    Foreground="{DynamicResource SecondaryTextBrush}"
                                    TextWrapping="Wrap"/>
-                        <TextBlock Text="After you pay, keep this window open — Premium activates here automatically within a few seconds."
+                        <TextBlock Text="• Phantom Obscura never sees or stores your card details."
+                                   FontSize="{StaticResource Type.Small.Size}"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   TextWrapping="Wrap"/>
+                        <TextBlock Text="• Keep this window open; Premium activates automatically after payment."
                                    FontSize="{StaticResource Type.Small.Size}"
                                    Foreground="{DynamicResource MutedTextBrush}"
                                    TextWrapping="Wrap"/>
@@ -143,12 +147,15 @@
                     Spacing="10" Margin="28,18,28,28">
             <Button x:Name="CancelButton"
                     Content="Cancel"
+                    Classes="liquid-glass"
+                    Padding="22,11"
                     Click="OnCancel"/>
             <Button x:Name="SubscribeButton"
                     Content="Continue to secure checkout"
+                    Classes="liquid-glass primary"
+                    Padding="22,11"
                     Click="OnSubscribe"
-                    Background="{DynamicResource AccentBrush}"
-                    Foreground="#FFFFFFFF"/>
+                    />
         </StackPanel>
     </Grid>
 </views:ThemeAwareWindow>

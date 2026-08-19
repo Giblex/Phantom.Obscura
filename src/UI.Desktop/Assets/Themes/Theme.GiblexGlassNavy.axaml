@@ -29,8 +29,12 @@
     <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#162235"/>
     <SolidColorBrush x:Key="HeaderBorderBrush" Color="Transparent"/>
     <SolidColorBrush x:Key="FooterBackgroundBrush" Color="#0D1420"/>
-    <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#162235"/>
-    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#111B2A"/>
+    <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#A01A2A3F"/>
+    <LinearGradientBrush x:Key="CardBackgroundBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="#92263B55" Offset="0"/>
+        <GradientStop Color="#8620344B" Offset="0.55"/>
+        <GradientStop Color="#781A2B40" Offset="1"/>
+    </LinearGradientBrush>
     <SolidColorBrush x:Key="SettingsPanelBackgroundBrush" Color="#1C2D42"/>
     <SolidColorBrush x:Key="SettingsPanelBorderBrush" Color="#2A3E54"/>
     <SolidColorBrush x:Key="TileGlassBrush">#AA0D1420</SolidColorBrush>
@@ -62,12 +66,12 @@
     <SolidColorBrush x:Key="HeaderButtonForegroundBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="HeaderButtonBorderBrush">#55162235</SolidColorBrush>
 
-    <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#162235"/>
+    <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#A81C2D42"/>
     <SolidColorBrush x:Key="ControlBorderBrush" Color="#2A3E54"/>
     <SolidColorBrush x:Key="ControlFocusBorderBrush" Color="#004258"/>
 
     <SolidColorBrush x:Key="ControlHoverBrush" Color="#182638"/>
-    <SolidColorBrush x:Key="InputBackgroundBrush" Color="#162235"/>
+    <SolidColorBrush x:Key="InputBackgroundBrush" Color="#A81C2D42"/>
     <SolidColorBrush x:Key="InputForegroundBrush" Color="#FFFFFF"/>
 
     <SolidColorBrush x:Key="TextSelectionBrush" Color="#60FFFFFF"/>

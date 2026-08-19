@@ -10,20 +10,20 @@
     </LinearGradientBrush>
     <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#0F1A2E"/>
     <SolidColorBrush x:Key="FooterBackgroundBrush" Color="#0B1422"/>
-    <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#0C1620"/>
+    <SolidColorBrush x:Key="ContentBackgroundBrush" Color="#98182B40"/>
     <!-- Card fill matches the acrylic wash on welcome/setup tiles. -->
     <LinearGradientBrush x:Key="CardBackgroundBrush" StartPoint="0%,0%" EndPoint="100%,100%">
-        <GradientStop Color="#551B2846" Offset="0"/>
-        <GradientStop Color="#55214247" Offset="0.5"/>
-        <GradientStop Color="#55193A42" Offset="1"/>
+        <GradientStop Color="#501F3550" Offset="0"/>
+        <GradientStop Color="#4826414B" Offset="0.5"/>
+        <GradientStop Color="#401E3B48" Offset="1"/>
     </LinearGradientBrush>
     <SolidColorBrush x:Key="SurfaceBrush" Color="#152838"/>
-    <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#0A1420"/>
-    <SolidColorBrush x:Key="ControlBorderBrush" Color="#395264"/>
+    <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#98182A3E"/>
+    <SolidColorBrush x:Key="ControlBorderBrush" Color="#57748A"/>
     <SolidColorBrush x:Key="FooterBorderBrush" Color="Transparent"/>
 
-    <SolidColorBrush x:Key="AccentBrush" Color="#5B93E0"/>
-    <SolidColorBrush x:Key="LogoTitleBrush" Color="#5B93E0"/>
+    <SolidColorBrush x:Key="AccentBrush" Color="#5A7AB0"/>
+    <SolidColorBrush x:Key="LogoTitleBrush" Color="#5A7AB0"/>
 
     <SolidColorBrush x:Key="PrimaryTextBrush" Color="#ECF7FB"/>
     <SolidColorBrush x:Key="HeaderTextBrush" Color="#ECF7FB"/>
@@ -40,16 +40,16 @@
     <DropShadowEffect x:Key="FrontPageTileBaseShadow" Color="#071018" Opacity="0.25" BlurRadius="16"/>
 
     <Color x:Key="Glass.Tint.Light">#0C1620</Color>
-    <Color x:Key="Glass.Tint.Mid">#5B93E0</Color>
+    <Color x:Key="Glass.Tint.Mid">#5A7AB0</Color>
     <Color x:Key="Glass.Tint.Dark">#071018</Color>
     <Color x:Key="Glass.Tint.Deepest">#071018</Color>
     <Color x:Key="Glass.Sheen.Bright">#162435</Color>
     <Color x:Key="Glass.Sheen.Mid">#101E2B</Color>
     <Color x:Key="Glass.Sheen.Soft">#0C1620</Color>
-    <SolidColorBrush x:Key="Brush.Glass.Border" Color="#305B93E0"/>
-    <SolidColorBrush x:Key="Brush.Glass.BorderHover" Color="#505B93E0"/>
+    <SolidColorBrush x:Key="Brush.Glass.Border" Color="#485A7AB0"/>
+    <SolidColorBrush x:Key="Brush.Glass.BorderHover" Color="#705A7AB0"/>
     <SolidColorBrush x:Key="Brush.Glass.BorderPressed" Color="#40071018"/>
-    <SolidColorBrush x:Key="Brush.Glass.BorderFocus" Color="#5B93E0"/>
+    <SolidColorBrush x:Key="Brush.Glass.BorderFocus" Color="#5A7AB0"/>
     <SolidColorBrush x:Key="LiquidGlassButtonForeground" Color="#ECF7FB"/>
     <SolidColorBrush x:Key="TileGlassBrush">#AA0C1620</SolidColorBrush>
 

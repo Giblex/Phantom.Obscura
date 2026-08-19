@@ -15,7 +15,7 @@
                           Height="32"
                           SelectionChanged="OnLengthSelectionChanged"
                           AutomationProperties.Name="PIN length"
-                          ToolTip.Tip="Number of digits in this PIN (1-32)"/>
+                          ToolTip.Tip="Number of digits"/>
             </StackPanel>
 
             <TextBlock Grid.Column="1"

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -60,7 +61,10 @@ namespace PhantomVault.UI.Views
         private readonly List<(string icon, string label, Border border, TextBlock iconText, TextBlock labelText)> _phaseItems = new();
 
         public event EventHandler? CreationCompleted;
+        public event EventHandler? CreationCancelled;
         private SetupWizardViewModel? _wizardViewModel;
+        private readonly CancellationTokenSource _creationCancellation = new();
+        private bool _cancellationRequested;
 
         private static readonly (string Icon, string Label)[] Phases =
         {
@@ -388,7 +392,7 @@ namespace PhantomVault.UI.Views
             {
                 ApplyProvisioningProgress(0, 3, "Initializing secure provisioning...", "Handing off the validated setup plan to the provisioning engine.");
                 _wizardViewModel.ProvisioningProgressChanged += OnProvisioningProgressChanged;
-                await _wizardViewModel.ExecuteVaultCreationAsync();
+                await _wizardViewModel.ExecuteVaultCreationAsync(_creationCancellation.Token);
 
                 if (_wizardViewModel.HasStagedRecovery)
                 {
@@ -401,6 +405,15 @@ namespace PhantomVault.UI.Views
 
                 CreationCompleted?.Invoke(this, EventArgs.Empty);
             }
+            catch (OperationCanceledException) when (_creationCancellation.IsCancellationRequested)
+            {
+                Log.Information("Vault creation cancelled by the user; partial provisioning data was cleaned up");
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    StopAnimationTimer();
+                    CreationCancelled?.Invoke(this, EventArgs.Empty);
+                });
+            }
             catch (Exception ex)
             {
                 Log.Error(ex, "Vault creation failed during loading");
@@ -410,7 +423,8 @@ namespace PhantomVault.UI.Views
 
                     if (_statusText != null)
                     {
-                        _statusText.Text = $"Error: {ex.Message}";
+                        Serilog.Log.Error(ex, "[VaultCreation] Vault creation failed.");
+                        _statusText.Text = "Vault creation failed. Review the setup choices and try again.";
                         _statusText.Classes.Remove("fade-status");
                         _statusText.Foreground = new SolidColorBrush(Color.Parse("#FF5252"));
                     }
@@ -432,6 +446,25 @@ namespace PhantomVault.UI.Views
                 if (_wizardViewModel != null)
                     _wizardViewModel.ProvisioningProgressChanged -= OnProvisioningProgressChanged;
             }
+        }
+
+        private async void OnCancelCreation(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            if (_cancellationRequested) return;
+
+            var confirmation = new Views.Dialogs.CancelVaultCreationWindow();
+            await confirmation.ShowDialog(this);
+            if (!confirmation.CancellationConfirmed) return;
+
+            _cancellationRequested = true;
+            if (sender is Button button)
+            {
+                button.IsEnabled = false;
+                button.Content = "Stopping and wiping…";
+            }
+            if (_statusText != null)
+                _statusText.Text = "Stopping safely and removing partial vault files…";
+            _creationCancellation.Cancel();
         }
 
         private void OnProvisioningProgressChanged(object? sender, ProvisioningProgressEventArgs e)
@@ -585,6 +618,7 @@ namespace PhantomVault.UI.Views
         protected override void OnClosed(EventArgs e)
         {
             StopAnimationTimer();
+            _creationCancellation.Dispose();
             base.OnClosed(e);
         }
 

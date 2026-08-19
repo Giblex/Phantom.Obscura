@@ -51,13 +51,13 @@ namespace PhantomVault.UI.Views
             }
         }
 
-        private void SecurityLevelCard_Tapped(object? sender, TappedEventArgs e)
+        private async void SecurityLevelCard_Tapped(object? sender, TappedEventArgs e)
         {
             if (sender is Control control
                 && control.DataContext is SecurityLevelOption option
                 && DataContext is SetupWizardViewModel vm)
             {
-                vm.SelectedSecurityLevel = option.Name;
+                await vm.TrySelectSecurityLevelAsync(option.Name);
             }
         }
 
@@ -116,15 +116,29 @@ namespace PhantomVault.UI.Views
             {
                 if (currentStep > targetStep)
                 {
-                    return new SolidColorBrush(Color.Parse("#0E1D2E"));
+                    return new SolidColorBrush(Color.Parse("#183A56"));
                 }
                 else if (currentStep == targetStep)
                 {
-                    return new SolidColorBrush(Color.Parse("#152638"));
+                    // Active state is expressed as reflected glass, not an accent fill.
+                    // The broad translucent stops soften the navy surface while the
+                    // narrow upper-left highlight reads as a sheen across the rim.
+                    return new LinearGradientBrush
+                    {
+                        StartPoint = new RelativePoint(0.08, 0.05, RelativeUnit.Relative),
+                        EndPoint = new RelativePoint(0.92, 0.95, RelativeUnit.Relative),
+                        GradientStops = new GradientStops
+                        {
+                            new(Color.Parse("#B8FFFFFF"), 0.00),
+                            new(Color.Parse("#52FFFFFF"), 0.13),
+                            new(Color.Parse("#281D2B38"), 0.38),
+                            new(Color.Parse("#B00A1725"), 1.00)
+                        }
+                    };
                 }
                 else
                 {
-                    return new SolidColorBrush(Color.Parse("#0B1725"));
+                    return new SolidColorBrush(Color.Parse("#0D1C2B"));
                 }
             }
             return new SolidColorBrush(Colors.Transparent);

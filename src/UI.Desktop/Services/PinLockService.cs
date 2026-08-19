@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -136,6 +137,7 @@ namespace PhantomVault.UI.Services
         /// (a card PIN, a door code) and has no security role.
         /// </summary>
         public const int MinVaultPinLength = 6;
+        public const int MaxVaultPinLength = 8;
 
         public static void SetPin(string pin, string? manifestPath = null)
         {
@@ -145,6 +147,10 @@ namespace PhantomVault.UI.Services
             if (pin.Length < MinVaultPinLength)
                 throw new ArgumentException(
                     $"PIN must be at least {MinVaultPinLength} digits/characters", nameof(pin));
+
+            if (pin.Length > MaxVaultPinLength || pin.Any(c => !char.IsDigit(c)))
+                throw new ArgumentException(
+                    $"PIN must contain {MinVaultPinLength}-{MaxVaultPinLength} digits", nameof(pin));
 
             byte[] salt = RandomNumberGenerator.GetBytes(SaltSizeBytes);
 

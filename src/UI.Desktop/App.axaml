@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Giblex.Controls"
              x:Class="PhantomVault.UI.App"
              RequestedThemeVariant="Dark">
 
@@ -127,22 +128,22 @@
              than the problem being solved. -->
 
         <!-- Liquid-glass buttons: opaque body, solid border, no sheen/blur. -->
-        <Style Selector="Window.reduce-transparency Button.liquid-glass">
+        <Style Selector="Window.reduce-transparency Button">
             <Setter Property="Effect" Value="{x:Null}"/>
         </Style>
-        <Style Selector="Window.reduce-transparency Button.liquid-glass /template/ Border#BaseBorder">
+        <Style Selector="Window.reduce-transparency Button /template/ Border#BaseBorder">
             <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
-        <Style Selector="Window.reduce-transparency Button.liquid-glass:pointerover /template/ Border#BaseBorder">
+        <Style Selector="Window.reduce-transparency Button:pointerover /template/ Border#BaseBorder">
             <Setter Property="Background" Value="{DynamicResource SurfaceHoverBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource UserAccentBrush}"/>
         </Style>
-        <Style Selector="Window.reduce-transparency Button.liquid-glass:pressed /template/ Border#BaseBorder">
+        <Style Selector="Window.reduce-transparency Button:pressed /template/ Border#BaseBorder">
             <Setter Property="Background" Value="{DynamicResource SurfaceActiveBrush}"/>
         </Style>
-        <Style Selector="Window.reduce-transparency Button.liquid-glass /template/ Border#Sheen">
+        <Style Selector="Window.reduce-transparency Button /template/ Border#Sheen">
             <Setter Property="IsVisible" Value="False"/>
             <Setter Property="Opacity" Value="0"/>
         </Style>
@@ -182,24 +183,25 @@
             <Setter Property="Background" Value="{DynamicResource WindowBackgroundBrush}"/>
         </Style>
 
-        <Style Selector="Window.flat-buttons Button.liquid-glass">
+        <Style Selector="Window.flat-buttons Button">
             <Setter Property="Effect" Value="{x:Null}"/>
             <Setter Property="Foreground" Value="#FFFFFFFF"/>
+            <Setter Property="Background" Value="{DynamicResource UserAccentBrush}"/>
         </Style>
-        <Style Selector="Window.flat-buttons Button.liquid-glass /template/ Border#BaseBorder">
+        <Style Selector="Window.flat-buttons Button /template/ Border#BaseBorder">
             <Setter Property="Background" Value="{DynamicResource UserAccentBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource UserAccentBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
         </Style>
-        <Style Selector="Window.flat-buttons Button.liquid-glass /template/ Border#Sheen">
+        <Style Selector="Window.flat-buttons Button /template/ Border#Sheen">
             <Setter Property="IsVisible" Value="False"/>
         </Style>
-        <Style Selector="Window.flat-buttons Button.liquid-glass:pointerover /template/ Border#BaseBorder">
+        <Style Selector="Window.flat-buttons Button:pointerover /template/ Border#BaseBorder">
             <Setter Property="Background" Value="{DynamicResource UserAccentBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource UserAccentBrush}"/>
             <Setter Property="Opacity" Value="0.85"/>
         </Style>
-        <Style Selector="Window.flat-buttons Button.liquid-glass:pressed /template/ Border#BaseBorder">
+        <Style Selector="Window.flat-buttons Button:pressed /template/ Border#BaseBorder">
             <Setter Property="Background" Value="{DynamicResource UserAccentBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource UserAccentBrush}"/>
             <Setter Property="Opacity" Value="0.7"/>
@@ -211,41 +213,40 @@
              animated border-trace runner) and remove the colour-transition animations so
              hover state changes happen instantly. UseFlatButtons takes precedence when
              both are on. -->
-        <Style Selector="Window.flat-button-borders">
-            <Style.Resources>
-                <!-- Neutralise the glass-depth brushes only for the scope of windows with
-                     the flat-button-borders class. Hides InnerShadow + BottomShadow +
-                     Sheen without needing to name those Borders in the template. -->
-                <SolidColorBrush x:Key="Brush.Glass.InnerShadow" Color="Transparent"/>
-                <SolidColorBrush x:Key="Brush.Glass.BottomShadow" Color="Transparent"/>
-                <SolidColorBrush x:Key="Brush.Glass.Sheen" Color="Transparent"/>
-            </Style.Resources>
-        </Style>
-        <Style Selector="Window.flat-button-borders Button.liquid-glass">
+        <Style Selector="Window.flat-button-borders Button">
             <Setter Property="Effect" Value="{x:Null}"/>
             <Setter Property="Transitions" Value="{x:Null}"/>
         </Style>
-        <Style Selector="Window.flat-button-borders Button.liquid-glass /template/ Border#BaseBorder">
+        <Style Selector="Window.flat-button-borders Button /template/ Border#BaseBorder">
             <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Transitions" Value="{x:Null}"/>
         </Style>
-        <Style Selector="Window.flat-button-borders Button.liquid-glass /template/ Border#Sheen">
+        <Style Selector="Window.flat-button-borders Button /template/ Border#Sheen">
             <Setter Property="IsVisible" Value="False"/>
             <Setter Property="Opacity" Value="0"/>
             <Setter Property="Transitions" Value="{x:Null}"/>
         </Style>
-        <Style Selector="Window.flat-button-borders Button.liquid-glass:pointerover">
+        <Style Selector="Window.flat-button-borders Button /template/ Border#InnerShadow">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+        <Style Selector="Window.flat-button-borders Button /template/ Border#BottomShadow">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+        <Style Selector="Window.flat-button-borders Button /template/ local|BorderEnergyTrace#BorderTrace">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+        <Style Selector="Window.flat-button-borders Button:pointerover">
             <Setter Property="Effect" Value="{x:Null}"/>
         </Style>
-        <Style Selector="Window.flat-button-borders Button.liquid-glass:pointerover /template/ Border#BaseBorder">
+        <Style Selector="Window.flat-button-borders Button:pointerover /template/ Border#BaseBorder">
             <Setter Property="BorderBrush" Value="{DynamicResource UserAccentBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
-        <Style Selector="Window.flat-button-borders Button.liquid-glass:pressed">
+        <Style Selector="Window.flat-button-borders Button:pressed">
             <Setter Property="Effect" Value="{x:Null}"/>
         </Style>
-        <Style Selector="Window.flat-button-borders Button.liquid-glass:pressed /template/ Border#BaseBorder">
+        <Style Selector="Window.flat-button-borders Button:pressed /template/ Border#BaseBorder">
             <Setter Property="BorderBrush" Value="{DynamicResource UserAccentBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Opacity" Value="0.85"/>

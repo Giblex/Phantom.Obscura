@@ -15,7 +15,10 @@
 
             <StackPanel Classes="field-group">
                 <TextBlock Text="Card Number" Classes="field-label"/>
-                <TextBox Text="{Binding CardNumber}" Classes="form-field" Watermark="1234 5678 9012 3456"/>
+                <controls:PinDigitBoxes Pin="{Binding CardNumber, Mode=TwoWay}"
+                                        PinLength="16" MaximumLength="16"
+                                        ShowHeader="False" ShowLengthSelector="False"
+                                        IsSecret="False"/>
             </StackPanel>
 
             <StackPanel Classes="field-group">
@@ -25,20 +28,35 @@
 
             <StackPanel Classes="field-group">
                 <TextBlock Text="Expiry" Classes="field-label"/>
-                <controls:DateField Mode="MonthYear"
-                                    MonthText="{Binding CardExpiryMonth, Mode=TwoWay}"
-                                    YearText="{Binding CardExpiryYear, Mode=TwoWay}"/>
+                <Grid ColumnDefinitions="Auto,12,*">
+                    <controls:PinDigitBoxes Grid.Column="0"
+                                            Pin="{Binding CardExpiryMonth, Mode=TwoWay}"
+                                            PinLength="2" MaximumLength="2"
+                                            ShowHeader="False" ShowLengthSelector="False"
+                                            IsSecret="False"/>
+                    <controls:PinDigitBoxes Grid.Column="2"
+                                            Pin="{Binding CardExpiryYear, Mode=TwoWay}"
+                                            PinLength="4" MaximumLength="4"
+                                            ShowHeader="False" ShowLengthSelector="False"
+                                            IsSecret="False"/>
+                </Grid>
                 <TextBlock Text="Pick the month and year printed on the card." Classes="field-hint"/>
             </StackPanel>
 
             <Grid ColumnDefinitions="*,14,*">
                 <StackPanel Grid.Column="0" Classes="field-group">
                     <TextBlock Text="CVV" Classes="field-label"/>
-                    <TextBox Text="{Binding CardCVVSecure}" Classes="form-field" Watermark="123" PasswordChar="•"/>
+                    <controls:PinDigitBoxes Pin="{Binding CardCVVSecure, Mode=TwoWay}"
+                                            PinLength="4" MaximumLength="4"
+                                            ShowHeader="False" ShowLengthSelector="False"
+                                            IsSecret="True"/>
                 </StackPanel>
                 <StackPanel Grid.Column="2" Classes="field-group">
                     <TextBlock Text="PIN" Classes="field-label"/>
-                    <TextBox Text="{Binding CardPINSecure}" Classes="form-field" Watermark="0000" PasswordChar="•"/>
+                    <controls:PinDigitBoxes Pin="{Binding CardPINSecure, Mode=TwoWay}"
+                                            PinLength="4" MaximumLength="4"
+                                            ShowHeader="False" ShowLengthSelector="False"
+                                            IsSecret="True"/>
                 </StackPanel>
             </Grid>
 

@@ -310,10 +310,11 @@ namespace PhantomVault.UI.ViewModels
             {
                 await _dialogService.ShowErrorAsync(
                     "Vault Detection Error",
-                    $"An error occurred while checking for USB devices and vaults:\n\n{ex.Message}",
+                    "USB devices and vaults could not be checked. Reconnect the device and scan again.",
                     _ownerWindow);
                 ApplyNoUsbState();
-                StatusMessage = $"Detection error: {ex.Message}";
+                Serilog.Log.Warning(ex, "[Welcome] Vault-device detection failed.");
+                StatusMessage = "Vault devices could not be detected. Reconnect the device and scan again.";
             }
             finally
             {

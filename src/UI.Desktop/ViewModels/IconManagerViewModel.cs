@@ -15,6 +15,7 @@ using PhantomVault.Core.Services;
 using PhantomVault.UI.Services;
 using PhantomVault.UI.Views;
 using ReactiveUI;
+using Serilog;
 
 namespace PhantomVault.UI.ViewModels
 {
@@ -213,8 +214,8 @@ namespace PhantomVault.UI.ViewModels
                 _ => { },
                 ex =>
                 {
-                    Debug.WriteLine($"[ICON-MANAGER] Error during initial refresh: {ex.Message}");
-                    StatusMessage = $"Error loading icons: {ex.Message}";
+                    Log.Error(ex, "[IconManager] Initial refresh failed.");
+                    StatusMessage = "Icons could not be loaded. Verify the icon library is accessible and try again.";
                     IsBusy = false;
                 });
         }
@@ -369,7 +370,8 @@ namespace PhantomVault.UI.ViewModels
                     }
                     catch (Exception ex)
                     {
-                        StatusMessage = $"Cannot access icon directory: {ex.Message}";
+                        Log.Warning(ex, "[IconManager] Icon directory is inaccessible.");
+                        StatusMessage = "The icon directory cannot be accessed. Verify its permissions and try again.";
                         IsBusy = false;
                         return;
                     }
@@ -382,8 +384,8 @@ namespace PhantomVault.UI.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"[ICON-MANAGER] Error scanning categories: {ex.Message}");
-                    StatusMessage = $"Error scanning icons: {ex.Message}";
+                    Log.Error(ex, "[IconManager] Failed to scan icon categories.");
+                    StatusMessage = "The icon library could not be scanned. Try refreshing it.";
                     IsBusy = false;
                     return;
                 }
@@ -432,10 +434,9 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[ICON-MANAGER] ERROR: {ex.Message}");
-                Debug.WriteLine($"[ICON-MANAGER] Stack trace: {ex.StackTrace}");
+                Log.Error(ex, "[IconManager] Refresh failed.");
                 StatusMessage = "Failed to refresh icons.";
-                await _dialogService.ShowErrorAsync("Icon Manager", ex.Message, _ownerWindow);
+                await _dialogService.ShowErrorAsync("Icon Manager", "The icon library could not be refreshed. Verify it is accessible and try again.", _ownerWindow);
             }
             finally
             {
@@ -566,7 +567,8 @@ namespace PhantomVault.UI.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    await _dialogService.ShowWarningAsync("Icon Import", $"Failed to import '{storageFile.Name}': {ex.Message}", _ownerWindow);
+                    Log.Warning(ex, "[IconManager] Failed to import icon {IconName}.", storageFile.Name);
+                    await _dialogService.ShowWarningAsync("Icon Import", $"'{storageFile.Name}' could not be imported. Verify it is a supported image and try again.", _ownerWindow);
                 }
             }
 
@@ -668,7 +670,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("Delete Icon", ex.Message, _ownerWindow);
+                Log.Error(ex, "[IconManager] Failed to delete an icon.");
+                await _dialogService.ShowErrorAsync("Delete Icon", "The icon could not be deleted. Verify the icon library is writable and try again.", _ownerWindow);
             }
         }
 
@@ -697,7 +700,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                _ = _dialogService.ShowErrorAsync("Reveal Icon", ex.Message, _ownerWindow);
+                Log.Warning(ex, "[IconManager] Failed to reveal an icon in the file manager.");
+                _ = _dialogService.ShowErrorAsync("Reveal Icon", "The icon location could not be opened. Verify the file still exists and try again.", _ownerWindow);
             }
         }
 
@@ -714,7 +718,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                _ = _dialogService.ShowErrorAsync("Icon Manager", ex.Message, _ownerWindow);
+                Log.Error(ex, "[IconManager] Failed to open the icon library location.");
+                _ = _dialogService.ShowErrorAsync("Icon Manager", "The icon library location could not be opened. Verify it is accessible and try again.", _ownerWindow);
             }
         }
 
@@ -996,7 +1001,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("Apply Icon", ex.Message, _ownerWindow);
+                Log.Error(ex, "[IconManager] Failed to apply an icon.");
+                await _dialogService.ShowErrorAsync("Apply Icon", "The selected icon could not be applied. Verify the vault is unlocked and try again.", _ownerWindow);
             }
         }
 
@@ -1043,7 +1049,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("Icon Manager", $"Failed to open icon downloader: {ex.Message}", _ownerWindow);
+                Log.Error(ex, "[IconManager] Failed to open the icon downloader.");
+                await _dialogService.ShowErrorAsync("Icon Manager", "The icon downloader could not be opened. Try again.", _ownerWindow);
             }
         }
     }

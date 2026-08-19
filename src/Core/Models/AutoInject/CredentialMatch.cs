@@ -26,6 +26,9 @@ namespace PhantomVault.Core.Models.AutoInject
         /// </summary>
         public string? PasskeyId { get; set; }
 
+        /// <summary>Opaque Attestor-owned passkey handle.</summary>
+        public string? AttestorPasskeyReference { get; set; }
+
         /// <summary>
         /// Relying-party id for the passkey ceremony, normally the site's domain.
         /// </summary>

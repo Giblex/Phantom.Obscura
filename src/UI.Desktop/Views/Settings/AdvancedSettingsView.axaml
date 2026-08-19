@@ -390,6 +390,15 @@
                            TextWrapping="Wrap"
                            Foreground="{DynamicResource SecondaryTextBrush}"/>
 
+                <CheckBox Content="Allow Phantom suite apps to search vault metadata"
+                          IsChecked="{Binding EnableSuiteCredentialIndex, Mode=TwoWay}"
+                          ToolTip.Tip="Creates a current-user encrypted index containing titles, usernames, URLs, and categories. Off by default."/>
+
+                <TextBlock Text="Off by default. When enabled, metadata is encrypted for your Windows account and can be read by Phantom Attestor while the USB is mounted. Disabling it removes both encrypted and legacy plaintext indexes on the next vault save."
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           FontSize="{StaticResource Type.Small.Size}"/>
+
                 <Button Content="Clear Cache"
                         Width="150"
                         HorizontalAlignment="Left"

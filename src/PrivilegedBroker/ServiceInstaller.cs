@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using PhantomVault.Core.Services.Privileged;
+using System.Security.Cryptography;
 
 namespace PhantomVault.PrivilegedBroker
 {
@@ -26,8 +27,54 @@ namespace PhantomVault.PrivilegedBroker
                 return 4;
             }
 
-            Log($"Install starting. broker='{brokerExe}' client='{allowedClientExePath}'");
-            BrokerConfig.SaveAllowedClientPath(allowedClientExePath);
+            string canonicalClientPath;
+            try
+            {
+                canonicalClientPath = System.IO.Path.GetFullPath(allowedClientExePath);
+            }
+            catch
+            {
+                Log("Install received an invalid client executable path.");
+                return 5;
+            }
+
+            if (!System.IO.File.Exists(canonicalClientPath))
+            {
+                Log("Install could not find the allow-listed UI executable.");
+                return 5;
+            }
+
+            bool signatureTrusted = AuthenticodeTrust.TryGetTrustedSignerSha256(
+                canonicalClientPath, out string? signerSha256);
+#if !DEBUG
+            if (!signatureTrusted || string.IsNullOrWhiteSpace(signerSha256))
+            {
+                Log("Install rejected the UI executable because its Authenticode signature is missing or untrusted.");
+                return 577; // ERROR_INVALID_IMAGE_HASH
+            }
+#else
+            // Local Debug builds are normally unsigned. They remain usable, but a
+            // signed Debug client is pinned and verified exactly like Release.
+            signerSha256 ??= string.Empty;
+#endif
+
+            Log($"Install starting. broker='{brokerExe}' client='{canonicalClientPath}'");
+            BrokerConfig.SaveAllowedClient(canonicalClientPath, signerSha256!);
+            string publicKeyPath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(canonicalClientPath)!, "integrity-public-key.pem");
+            if (System.IO.File.Exists(publicKeyPath))
+            {
+                using var integrityKey = ECDsa.Create();
+                integrityKey.ImportFromPem(System.IO.File.ReadAllText(publicKeyPath));
+                string integrityKeyId = Convert.ToHexString(SHA256.HashData(integrityKey.ExportSubjectPublicKeyInfo())).ToLowerInvariant();
+                BrokerConfig.SaveManifestKeyPin(integrityKeyId);
+            }
+#if !DEBUG
+            else
+            {
+                Log("Install rejected because the integrity public key is missing.");
+                return 577;
+            }
+#endif
 
             // Remove any stale registration first so re-install is idempotent.
             RunSc($"stop {BrokerProtocol.ServiceName}", ignoreFailure: true);
@@ -43,7 +90,7 @@ namespace PhantomVault.PrivilegedBroker
                 return create;
             }
 
-            RunSc($"description {BrokerProtocol.ServiceName} \"Performs USB write-protection and raw-volume operations for Phantom Obscura so the app can run without an administrator prompt.\"", ignoreFailure: true);
+            RunSc($"description {BrokerProtocol.ServiceName} \"Performs privileged volume operations and independently monitors Phantom Obscura release integrity.\"", ignoreFailure: true);
             // Restart on failure (1s), keep trying.
             RunSc($"failure {BrokerProtocol.ServiceName} reset= 86400 actions= restart/1000/restart/1000/restart/1000", ignoreFailure: true);
 
@@ -81,6 +128,20 @@ namespace PhantomVault.PrivilegedBroker
             int delete = RunSc($"delete {BrokerProtocol.ServiceName}", ignoreFailure: true);
             Log("Phantom Obscura privileged helper removed.");
             return delete;
+        }
+
+        public static int Start()
+        {
+            Log("Starting installed privileged helper.");
+            int start = RunSc($"start {BrokerProtocol.ServiceName}", ignoreFailure: true);
+            if (start == 0)
+            {
+                Log("Installed privileged helper started.");
+                return 0;
+            }
+
+            Log($"Installed privileged helper could not be started (sc start exit {start}).");
+            return start;
         }
 
         private static int RunSc(string arguments, bool ignoreFailure = false)

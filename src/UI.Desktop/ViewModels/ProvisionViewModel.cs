@@ -1199,7 +1199,8 @@ namespace PhantomVault.UI.ViewModels
                 Status = $"Failed to open import dialog: {ex.Message}";
                 try
                 {
-                    await _dialogService.ShowErrorAsync("Import", $"Unable to open import dialog: {ex.Message}", _ownerWindow);
+                    Serilog.Log.Error(ex, "[Provision] Failed to open the import dialog.");
+                    await _dialogService.ShowErrorAsync("Import", "The import dialog could not be opened. Try again.", _ownerWindow);
                 }
                 catch { }
             }

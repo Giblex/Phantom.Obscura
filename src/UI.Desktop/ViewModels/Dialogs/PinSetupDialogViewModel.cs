@@ -65,9 +65,15 @@ namespace PhantomVault.UI.ViewModels.Dialogs
                     return;
                 }
 
-                if (Pin.Length < 4)
+                if (Pin.Length < PinLockService.MinVaultPinLength)
                 {
-                    ErrorMessage = "PIN must be at least 4 characters.";
+                    ErrorMessage = $"PIN must be {PinLockService.MinVaultPinLength}-{PinLockService.MaxVaultPinLength} digits.";
+                    return;
+                }
+
+                if (Pin.Length > PinLockService.MaxVaultPinLength || !System.Linq.Enumerable.All(Pin, char.IsDigit))
+                {
+                    ErrorMessage = $"PIN must be {PinLockService.MinVaultPinLength}-{PinLockService.MaxVaultPinLength} digits.";
                     return;
                 }
 
@@ -91,7 +97,8 @@ namespace PhantomVault.UI.ViewModels.Dialogs
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"Failed to set PIN: {ex.Message}";
+                Serilog.Log.Error(ex, "[PinSetup] Failed to set the vault PIN.");
+                ErrorMessage = "The PIN could not be set. Verify the vault is unlocked and try again.";
             }
         }
 

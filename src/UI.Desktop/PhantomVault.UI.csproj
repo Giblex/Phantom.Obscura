@@ -202,7 +202,25 @@
     <PropertyGroup>
       <_AssetShieldToolProject>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '..', '..', '..', 'Phantom.Root', 'Giblex.AssetShield', 'Tool', 'Giblex.AssetShield.Tool.csproj'))</_AssetShieldToolProject>
     </PropertyGroup>
-    <Exec Command="dotnet run --project &quot;$(_AssetShieldToolProject)&quot; -c $(Configuration) -- &quot;$(PublishDir)&quot; &quot;$(AssemblyName).exe&quot;" />
+    <!-- PublishDir ends with a backslash on Windows. Quoting that path directly can
+         consume the closing quote when forwarded through dotnet run, collapsing the
+         two tool arguments. Appending '.' preserves the directory while making the
+         quoted argument unambiguous. -->
+    <Exec Command="dotnet run --project &quot;$(_AssetShieldToolProject)&quot; -c $(Configuration) -- &quot;$(PublishDir).&quot; &quot;$(AssemblyName).exe&quot;" />
+  </Target>
+
+  <!-- Signed release inventory. The private key path is an input only and is
+       never copied. CI should set RequireIntegritySigning=true for production. -->
+  <Target Name="CreateSignedIntegrityManifest" AfterTargets="EncryptPublishedAssets">
+    <PropertyGroup>
+      <_IntegrityToolProject>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '..', '..', 'tools', 'PhantomVault.IntegrityTool', 'PhantomVault.IntegrityTool.csproj'))</_IntegrityToolProject>
+    </PropertyGroup>
+    <Error Condition="'$(RequireIntegritySigning)' == 'true' and (!Exists('$(IntegritySigningPrivateKey)') or !Exists('$(IntegrityPublicKey)'))"
+           Text="Production integrity signing requires IntegritySigningPrivateKey and IntegrityPublicKey." />
+    <Copy Condition="Exists('$(IntegritySigningPrivateKey)') and Exists('$(IntegrityPublicKey)')"
+          SourceFiles="$(IntegrityPublicKey)" DestinationFiles="$(PublishDir)integrity-public-key.pem" />
+    <Exec Condition="Exists('$(IntegritySigningPrivateKey)') and Exists('$(IntegrityPublicKey)')"
+          Command="dotnet run --project &quot;$(_IntegrityToolProject)&quot; -c Release -- sign &quot;$(PublishDir).&quot; &quot;$(IntegritySigningPrivateKey)&quot; &quot;$(PublishDir)integrity-manifest.json&quot;" />
   </Target>
 
   <!-- Opt-in Authenticode signing for Release publish. See the .targets file

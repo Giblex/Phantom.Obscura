@@ -228,14 +228,16 @@
                      Nearest-neighbour sampling keeps the dots crisp above 100% display
                      scaling instead of smearing them into the background. -->
                 <Ellipse Width="284" Height="284"
-                         IsHitTestVisible="False"
-                         RenderOptions.BitmapInterpolationMode="None">
+                         IsHitTestVisible="False">
                     <Ellipse.Fill>
-                        <ImageBrush Source="avares://PhantomVault.UI/Assets/dot_pattern.png"
-                                    TileMode="Tile"
-                                    Stretch="None"
-                                    SourceRect="0,0,8,8"
-                                    DestinationRect="0,0,8,8"/>
+                        <DrawingBrush TileMode="Tile"
+                                      Stretch="None"
+                                      SourceRect="0,0,12,12"
+                                      DestinationRect="0,0,12,12">
+                            <DrawingBrush.Drawing>
+                                <GeometryDrawing Brush="#42A4C9EA" Geometry="M 1,1 A 1,1 0 1 1 3,1 A 1,1 0 1 1 1,1"/>
+                            </DrawingBrush.Drawing>
+                        </DrawingBrush>
                     </Ellipse.Fill>
                 </Ellipse>
 
@@ -313,6 +315,10 @@
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center"
                    RenderTransformOrigin="50%,50%">
+                <Image.Effect>
+                    <DropShadowEffect BlurRadius="20" OffsetX="0" OffsetY="9"
+                                      Color="#02070D" Opacity="0.92"/>
+                </Image.Effect>
                 <Image.RenderTransform>
                     <TranslateTransform Y="-34"/>
                 </Image.RenderTransform>
@@ -334,6 +340,10 @@
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center"
                    RenderTransformOrigin="50%,50%">
+                <Image.Effect>
+                    <DropShadowEffect BlurRadius="18" OffsetX="0" OffsetY="8"
+                                      Color="#02070D" Opacity="0.9"/>
+                </Image.Effect>
                 <Image.RenderTransform>
                     <TranslateTransform Y="-34"/>
                 </Image.RenderTransform>

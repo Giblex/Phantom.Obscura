@@ -106,7 +106,8 @@ namespace PhantomVault.UI.ViewModels
                 }
             }
 
-            if (IsTotp && !string.IsNullOrWhiteSpace(_resolved.Value))
+            if (IsTotp && (!string.IsNullOrWhiteSpace(_resolved.Value) ||
+                           !string.IsNullOrWhiteSpace(Section.AttestorReference)))
             {
                 _totpSubscription = TotpTicker.Subscribe(UpdateTotpCode);
             }
@@ -177,7 +178,8 @@ namespace PhantomVault.UI.ViewModels
 
         public bool IsPlainValue => !IsTotp && !IsRecoveryCodes && !IsQrSection && !IsNote;
 
-        public bool HasValue => !string.IsNullOrWhiteSpace(_resolved.Value);
+        public bool HasValue => !string.IsNullOrWhiteSpace(_resolved.Value) ||
+                                (IsTotp && !string.IsNullOrWhiteSpace(Section.AttestorReference));
 
         public bool CanShowQr => !string.IsNullOrWhiteSpace(_resolved.QrPayload);
 
@@ -350,10 +352,25 @@ namespace PhantomVault.UI.ViewModels
             SectionChanged?.Invoke(Section);
         }
 
-        private void UpdateTotpCode()
+        private async void UpdateTotpCode()
         {
             try
             {
+                if (!string.IsNullOrWhiteSpace(Section.AttestorReference))
+                {
+                    var broker = (Avalonia.Application.Current as App)?.Services?
+                        .GetService(typeof(AttestorCredentialBrokerClient)) as AttestorCredentialBrokerClient;
+                    var reading = broker == null
+                        ? null
+                        : await broker.GetTotpCodeAsync(Section.AttestorReference);
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        CurrentTotpCode = reading?.Code ?? string.Empty;
+                        TotpSecondsRemaining = reading == null ? 0 : (int)reading.ValidForSeconds;
+                    });
+                    return;
+                }
+
                 if (string.IsNullOrWhiteSpace(_resolved.Value))
                 {
                     Dispatcher.UIThread.Post(() =>

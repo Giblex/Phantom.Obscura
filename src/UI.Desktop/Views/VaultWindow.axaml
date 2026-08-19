@@ -5,6 +5,7 @@
     xmlns:controls="clr-namespace:PhantomVault.UI.Controls"
     xmlns:dcontrols="clr-namespace:PhantomVault.UI.Desktop.Controls"
     xmlns:views="clr-namespace:PhantomVault.UI.Views"
+    xmlns:vm="clr-namespace:PhantomVault.UI.ViewModels"
     xmlns:details="clr-namespace:PhantomVault.UI.Views.Details"
     xmlns:editforms="clr-namespace:PhantomVault.UI.Views.EditForms"
     xmlns:overlays="clr-namespace:PhantomVault.UI.Views.Overlays"
@@ -991,7 +992,7 @@
                     Grid.ColumnSpan="3"
                     ZIndex="999"
                     Classes="overlay-fade"
-                    Background="{DynamicResource OverlayBackgroundLightBrush}"
+                    Background="#B8000000"
                     Opacity="1"
                     IsVisible="{Binding IsEditPanelVisible}"
                     IsHitTestVisible="{Binding IsEditPanelVisible}"
@@ -1017,7 +1018,7 @@
                                 Background="{DynamicResource HeaderBackgroundBrush}"
                                 BorderBrush="{DynamicResource ControlBorderBrush}"
                                 BorderThickness="1,0,0,0"
-                                BoxShadow="{DynamicResource SlideOutPanelShadow}">
+                                BoxShadow="-34 0 110 -12 #F0000000">
 
                         <Border.Styles>
 
@@ -1066,7 +1067,7 @@
                             </Style>
                         </Border.Styles>
 
-                        <Grid RowDefinitions="Auto,*,Auto" DataContext="{Binding EditViewModel}">
+                        <Grid RowDefinitions="Auto,Auto,*,Auto" DataContext="{Binding EditViewModel}">
 
                             <Border Grid.Row="0"
                                     Background="{DynamicResource WindowBackgroundBrush}"
@@ -1103,8 +1104,76 @@
                                 </Grid>
                             </Border>
 
+                            <!-- Compact persistent template launcher. It sits outside the
+                                 form scroller so section templates remain available while
+                                 editing long entries. -->
+                            <Border Grid.Row="1"
+                                    Background="#F019344D"
+                                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                                    BorderThickness="0,0,0,1"
+                                    Padding="30,7">
+                                <Grid ColumnDefinitions="Auto,10,*" MaxWidth="590"
+                                      HorizontalAlignment="Stretch">
+                                    <TextBlock Grid.Column="0" Text="Start from template"
+                                               FontSize="12" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               VerticalAlignment="Center"/>
+                                    <ComboBox Grid.Column="2"
+                                              x:Name="SectionTemplateSelector"
+                                              Height="34"
+                                              ItemsSource="{Binding SectionTemplates}"
+                                              SelectedItem="{Binding SelectedSectionTemplate, Mode=TwoWay}"
+                                              SelectionChanged="SectionTemplateSelector_SelectionChanged"
+                                              PlaceholderText="Choose sections"
+                                              Classes="form-field"
+                                              AutomationProperties.Name="Section template">
+                                        <FlyoutBase.AttachedFlyout>
+                                            <Flyout Placement="BottomEdgeAlignedRight">
+                                                <Border MinWidth="300" MaxWidth="380"
+                                                        Padding="16"
+                                                        CornerRadius="12"
+                                                        Background="{DynamicResource WindowBackgroundBrush}"
+                                                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                                                        BorderThickness="1">
+                                                    <StackPanel Spacing="12">
+                                                        <StackPanel Spacing="3">
+                                                            <TextBlock Text="Choose sections"
+                                                                       FontWeight="SemiBold"
+                                                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                            <TextBlock Text="Changes are applied as you tick or untick each item."
+                                                                       TextWrapping="Wrap"
+                                                                       FontSize="11"
+                                                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                                            <TextBlock Text="{Binding SelectedSectionTemplateDescription}"
+                                                                       TextWrapping="Wrap"
+                                                                       FontSize="11"
+                                                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                                                        </StackPanel>
+                                                        <ItemsControl ItemsSource="{Binding TemplateSectionOptions}">
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate x:DataType="vm:TemplateSectionOptionViewModel">
+                                                                    <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                                              Content="{Binding Label}"
+                                                                              Margin="0,3"/>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                        <Grid ColumnDefinitions="Auto,*">
+                                                            <Button Grid.Column="0" Content="Select all"
+                                                                    Classes="liquid-glass"
+                                                                    Height="34" Padding="12,0"
+                                                                    Command="{Binding SelectAllTemplateSectionsCommand}"/>
+                                                        </Grid>
+                                                    </StackPanel>
+                                                </Border>
+                                            </Flyout>
+                                        </FlyoutBase.AttachedFlyout>
+                                    </ComboBox>
+                                </Grid>
+                            </Border>
+
                             <ScrollViewer x:Name="EditFormScrollViewer"
-                                          Grid.Row="1"
+                                          Grid.Row="2"
                                           VerticalScrollBarVisibility="Auto"
                                           HorizontalScrollBarVisibility="Disabled"
                                           HorizontalContentAlignment="Stretch"
@@ -1394,20 +1463,33 @@
                                         </StackPanel>
                                     </Border>
 
-                                    <Border IsVisible="{Binding !HasTotpSecret}"
+                                    <Expander IsVisible="{Binding !HasTotpSecret}"
+                                              IsExpanded="False"
+                                              HorizontalAlignment="Stretch"
+                                              HorizontalContentAlignment="Stretch"
                                             CornerRadius="12"
                                             Padding="16,14"
                                             BorderThickness="1">
-                                        <Border.BorderBrush>
+                                        <Expander.Header>
+                                            <Border Classes="liquid-glass" CornerRadius="10"
+                                                    MinHeight="40" Padding="14,8"
+                                                    HorizontalAlignment="Stretch">
+                                                <TextBlock Text="＋  Add TOTP"
+                                                           FontWeight="SemiBold"
+                                                           HorizontalAlignment="Center"
+                                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                            </Border>
+                                        </Expander.Header>
+                                        <Expander.BorderBrush>
                                             <SolidColorBrush Color="#FFFFFF" Opacity="0.08"/>
-                                        </Border.BorderBrush>
-                                        <Border.Background>
+                                        </Expander.BorderBrush>
+                                        <Expander.Background>
                                             <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
                                                 <GradientStop Color="#0CFFFFFF" Offset="0"/>
                                                 <GradientStop Color="#06FFFFFF" Offset="0.5"/>
                                                 <GradientStop Color="#03FFFFFF" Offset="1"/>
                                             </LinearGradientBrush>
-                                        </Border.Background>
+                                        </Expander.Background>
                                         <StackPanel Spacing="12">
 
                                             <Grid ColumnDefinitions="Auto,10,*">
@@ -1494,7 +1576,7 @@
                                                 </Button>
                                             </Grid>
                                         </StackPanel>
-                                    </Border>
+                                    </Expander>
 
                                     <StackPanel Spacing="8" IsVisible="{Binding ShowCategorySelector}">
                                         <TextBlock Text="Category"
@@ -1623,68 +1705,59 @@
 
                                     <editforms:PinCodeEditForm DataContext="{Binding}" />
 
-                                    <editforms:SectionsEditForm DataContext="{Binding}" />
-
-                                    <StackPanel Spacing="8" Margin="0,0,0,0">
-                                        <TextBlock Text="Tags"
-                                                   FontSize="{StaticResource Type.Label.Size}"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                        <TextBox Text="{Binding TagsText}"
-                                                 Watermark="work, personal, important (comma-separated)"
-                                                 Height="40"
-                                                 FontSize="{StaticResource Type.Body.Size}"
-                                                 Foreground="{DynamicResource PrimaryTextBrush}"
-                                                 Background="{DynamicResource ControlBackgroundBrush}"/>
-                                        <TextBlock Text="Add tags to organize and search credentials easily"
-                                                   FontSize="{StaticResource Type.Tiny.Size}"
-                                                   Foreground="{DynamicResource MutedTextBrush}"/>
-                                    </StackPanel>
-
-                                    <StackPanel Spacing="8">
-                                        <Grid ColumnDefinitions="Auto,*">
-                                            <CheckBox Grid.Column="0"
-                                                      IsChecked="{Binding HasExpiryDate}"
-                                                      VerticalAlignment="Center"
-                                                      Margin="0,0,10,0"/>
-                                            <TextBlock Grid.Column="1"
-                                                       Text="Set expiration date (e.g., for temporary passwords)"
-                                                       FontSize="{StaticResource Type.Label.Size}"
-                                                       FontWeight="SemiBold"
-                                                       Foreground="{DynamicResource SecondaryTextBrush}"
-                                                       VerticalAlignment="Center"/>
-                                        </Grid>
-                                        <DatePicker SelectedDate="{Binding ExpiryDate}"
-                                                    Height="40"
-                                                    FontSize="{StaticResource Type.Body.Size}"
-                                                    IsVisible="{Binding HasExpiryDate}"/>
-                                    </StackPanel>
-
                                     <Border Background="{DynamicResource ControlBackgroundBrush}"
-                                            CornerRadius="{DynamicResource Radius.Md}"
-                                            Padding="15,12">
-                                        <Grid ColumnDefinitions="Auto,*">
-                                            <CheckBox Grid.Column="0"
-                                                      IsChecked="{Binding IsFavorite}"
-                                                      VerticalAlignment="Center"
-                                                      Margin="0,0,12,0"/>
-                                            <StackPanel Grid.Column="1">
-                                                <TextBlock Text="⭐ Mark as Favorite"
-                                                           FontSize="{StaticResource Type.Label.Size}"
-                                                           FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
-                                                <TextBlock Text="Quick access from favorites list"
-                                                           FontSize="{StaticResource Type.Tiny.Size}"
-                                                           Foreground="{DynamicResource MutedTextBrush}"
-                                                           Margin="0,2,0,0"/>
+                                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="12"
+                                            HorizontalAlignment="Stretch">
+                                      <Expander IsExpanded="False"
+                                                HorizontalAlignment="Stretch"
+                                                HorizontalContentAlignment="Stretch"
+                                                Padding="0">
+                                        <Expander.Header>
+                                            <Grid Height="48" ColumnDefinitions="*,Auto" Margin="16,0">
+                                                <TextBlock Text="Advanced" FontWeight="SemiBold"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                <TextBlock Grid.Column="1" Text="Tags · links · expiry · favorites"
+                                                           FontSize="11" VerticalAlignment="Center"
+                                                           Foreground="{DynamicResource MutedTextBrush}"/>
+                                            </Grid>
+                                        </Expander.Header>
+                                        <StackPanel Spacing="18" Margin="18,8,18,18"
+                                                    MinHeight="260"
+                                                    HorizontalAlignment="Stretch">
+                                            <StackPanel Spacing="8">
+                                                <TextBlock Text="Linked entries and extra fields" Classes="field-label"/>
+                                                <editforms:SectionsEditForm DataContext="{Binding}" />
                                             </StackPanel>
-                                        </Grid>
+
+                                            <StackPanel Spacing="8">
+                                                <TextBlock Text="Tags" Classes="field-label"/>
+                                                <TextBox Text="{Binding TagsText}"
+                                                         Watermark="work, personal, important"
+                                                         Classes="form-field"/>
+                                                <TextBlock Text="Separate multiple tags with commas." Classes="field-hint"/>
+                                            </StackPanel>
+
+                                            <StackPanel Spacing="8">
+                                                <CheckBox Content="Set an expiration date"
+                                                          IsChecked="{Binding HasExpiryDate}"/>
+                                                <DatePicker SelectedDate="{Binding ExpiryDate}"
+                                                            Height="40"
+                                                            IsVisible="{Binding HasExpiryDate}"/>
+                                            </StackPanel>
+
+                                            <CheckBox IsChecked="{Binding IsFavorite}"
+                                                      Content="Add to Favorites"/>
+                                        </StackPanel>
+                                      </Expander>
                                     </Border>
 
                                 </StackPanel>
                             </ScrollViewer>
 
-                            <Border Grid.Row="2"
+                            <Border Grid.Row="3"
                                     Background="{DynamicResource FooterBackgroundBrush}"
                                     Padding="25,15"
                                     BorderBrush="{DynamicResource ControlBorderBrush}"

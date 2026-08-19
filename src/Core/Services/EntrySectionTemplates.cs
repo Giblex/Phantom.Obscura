@@ -41,6 +41,20 @@ namespace PhantomVault.Core.Services
     {
         public static IReadOnlyList<EntrySectionTemplate> All { get; } = new List<EntrySectionTemplate>
         {
+            new("Login", "Username, password and website fields.", Array.Empty<EntrySectionKind>()),
+            new("Credit card", "Card number, expiry, CVC and billing fields.", Array.Empty<EntrySectionKind>()),
+            new("Bank account", "Account, routing and banking details.", Array.Empty<EntrySectionKind>()),
+            new("Medicare card", "Australian Medicare number and document details.", Array.Empty<EntrySectionKind>()),
+            new("Identity document", "Passport, licence, certificate or identity card.", Array.Empty<EntrySectionKind>()),
+            new("Wi-Fi network", "Network name, security type and password.", Array.Empty<EntrySectionKind>()),
+            new("API key", "Service, key type, secret and endpoint fields.", Array.Empty<EntrySectionKind>()),
+            new("Contact", "Personal contact and address fields.", Array.Empty<EntrySectionKind>()),
+            new("Authenticator", "A standalone TOTP authenticator entry.", Array.Empty<EntrySectionKind>()),
+            new("Passkey", "A passkey stored and asserted by Phantom Attestor.", Array.Empty<EntrySectionKind>()),
+            new("PIN code", "A segmented numeric PIN entry.", Array.Empty<EntrySectionKind>()),
+            new("Secure note", "A private free-text note.", Array.Empty<EntrySectionKind>()),
+            new("Blank entry", "Start without any fixed fields.", Array.Empty<EntrySectionKind>()),
+
             new(
                 "Account with 2FA",
                 "Authenticator secret, recovery codes and a recovery email.",

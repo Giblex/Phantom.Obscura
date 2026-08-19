@@ -17,7 +17,13 @@
 
             <StackPanel Classes="field-group">
                 <TextBlock Text="{Binding IdNumberLabel}" Classes="field-label"/>
-                <TextBox Text="{Binding IdNumber}" Classes="form-field" Watermark="{Binding IdNumberWatermark}"/>
+                <TextBox Text="{Binding IdNumber}" Classes="form-field" Watermark="{Binding IdNumberWatermark}"
+                         IsVisible="{Binding !IsMedicareIdentity}"/>
+                <controls:PinDigitBoxes Pin="{Binding IdNumber, Mode=TwoWay}"
+                                        PinLength="10" MaximumLength="10"
+                                        ShowHeader="False" ShowLengthSelector="False"
+                                        IsSecret="False"
+                                        IsVisible="{Binding IsMedicareIdentity}"/>
             </StackPanel>
 
             <StackPanel Classes="field-group">

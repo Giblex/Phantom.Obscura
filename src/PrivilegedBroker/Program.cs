@@ -14,6 +14,7 @@ namespace PhantomVault.PrivilegedBroker
     ///
     /// Usage:
     ///   PhantomVault.PrivilegedBroker.exe --install "C:\path\to\PhantomVault.UI.exe"   (elevated)
+    ///   PhantomVault.PrivilegedBroker.exe --start                                       (elevated)
     ///   PhantomVault.PrivilegedBroker.exe --uninstall                                   (elevated)
     ///   PhantomVault.PrivilegedBroker.exe --run | --console
     /// </summary>
@@ -31,6 +32,8 @@ namespace PhantomVault.PrivilegedBroker
                             return ServiceInstaller.Install(args.Length > 1 ? args[1] : null);
                         case "--uninstall":
                             return ServiceInstaller.Uninstall();
+                        case "--start":
+                            return ServiceInstaller.Start();
                         case "--console":
                             await RunConsoleAsync().ConfigureAwait(false);
                             return 0;
@@ -59,6 +62,8 @@ namespace PhantomVault.PrivilegedBroker
             {
                 options.ServiceName = BrokerProtocol.ServiceName;
             });
+            builder.Services.AddSingleton<IntegrityWatchdogWorker>();
+            builder.Services.AddHostedService(sp => sp.GetRequiredService<IntegrityWatchdogWorker>());
             builder.Services.AddHostedService<BrokerWorker>();
             await builder.Build().RunAsync().ConfigureAwait(false);
         }
@@ -68,7 +73,7 @@ namespace PhantomVault.PrivilegedBroker
             Console.WriteLine("Phantom Obscura privileged helper (console mode). Ctrl+C to exit.");
             using var cts = new CancellationTokenSource();
             Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); };
-            var server = new BrokerPipeServer(Console.WriteLine);
+            var server = new BrokerPipeServer(Console.WriteLine, new IntegrityWatchdogWorker());
             try
             {
                 await server.RunAsync(cts.Token).ConfigureAwait(false);

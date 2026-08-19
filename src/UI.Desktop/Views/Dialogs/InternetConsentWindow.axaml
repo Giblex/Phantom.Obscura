@@ -1,0 +1,75 @@
+<views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:PhantomVault.UI.Views"
+        x:Class="PhantomVault.UI.Views.Dialogs.InternetConsentWindow"
+        Title="Internet access"
+        Width="520"
+        MinWidth="440"
+        MinHeight="370"
+        MaxWidth="760"
+        MaxHeight="680"
+        SizeToContent="Height"
+        CanResize="True"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource WindowBackgroundBrush}">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="28">
+        <StackPanel Grid.Row="0" Spacing="6" Margin="0,0,0,18">
+            <TextBlock Text="Allow internet access?"
+                       FontSize="{StaticResource Type.H3.Size}"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+            <TextBlock Text="Phantom Obscura needs a short, limited connection to start secure checkout."
+                       FontSize="{StaticResource Type.Small.Size}"
+                       Foreground="{DynamicResource MutedTextBrush}"
+                       TextWrapping="Wrap"/>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <Border Background="{DynamicResource SettingsPanelBackgroundBrush}"
+                    BorderBrush="{DynamicResource Brush.Glass.Border}"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    Padding="20,18">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="This connection will:"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    <TextBlock Text="• Open Stripe's secure checkout page"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock Text="• Retrieve your signed Premium licence"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <TextBlock x:Name="HostsText"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               TextWrapping="Wrap"/>
+                    <TextBlock x:Name="DurationText"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    <Border Height="1" Background="{DynamicResource Brush.Glass.Border}" Margin="0,2"/>
+                    <TextBlock Text="Card details stay on Stripe. The connection uses HTTPS and can be revoked from Privacy settings."
+                               FontSize="{StaticResource Type.Small.Size}"
+                               Foreground="{DynamicResource MutedTextBrush}"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="10"
+                    Margin="0,20,0,0">
+            <Button x:Name="DenyButton"
+                    Content="Not now"
+                    Classes="liquid-glass"
+                    Padding="20,10"
+                    Click="OnDeny"/>
+            <Button x:Name="AllowButton"
+                    Content="Allow once"
+                    Classes="liquid-glass primary"
+                    Padding="20,10"
+                    Click="OnAllow"/>
+        </StackPanel>
+    </Grid>
+</views:ThemeAwareWindow>

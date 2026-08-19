@@ -35,7 +35,7 @@ namespace PhantomVault.UI.Views.Autofill
             public bool IsUpdate { get; init; }
         }
 
-        private readonly SavePromptDecision _decision;
+        private readonly SavePromptDecision _decision = SavePromptDecision.None;
         private TextBox? _usernameBox;
         private TextBox? _passwordBox;
         private TextBlock? _hint;
@@ -43,16 +43,31 @@ namespace PhantomVault.UI.Views.Autofill
         private bool _revealed;
         private bool _completed;
 
-        public AutofillSavePrompt(SavePromptDecision decision)
+        public AutofillSavePrompt()
         {
             AvaloniaXamlLoader.Load(this);
-            _decision = decision ?? throw new ArgumentNullException(nameof(decision));
-
             _usernameBox = this.FindControl<TextBox>("UsernameBox");
             _passwordBox = this.FindControl<TextBox>("PasswordBox");
             _hint = this.FindControl<TextBlock>("HintText");
             _shell = this.FindControl<Border>("Shell");
 
+            Wire("RevealButton", ToggleReveal);
+            Wire("GenerateButton", GenerateInPlace);
+            Wire("SaveButton", () => Complete(PromptResult.Saved));
+            Wire("DismissButton", () => Complete(PromptResult.Dismissed));
+            Wire("NeverButton", () => Complete(PromptResult.NeverForSite));
+
+            Opened += (_, _) => PlayEntrance();
+
+            // Unlike the suggestion menu, this prompt does NOT close on deactivate:
+            // the user has just submitted a form, so focus is legitimately elsewhere
+            // and auto-dismissing would throw away the only chance to save.
+        }
+
+        public AutofillSavePrompt(SavePromptDecision decision)
+            : this()
+        {
+            _decision = decision ?? throw new ArgumentNullException(nameof(decision));
             bool isUpdate = decision.Kind == SavePromptKind.UpdateExisting;
 
             var title = this.FindControl<TextBlock>("TitleText");
@@ -71,18 +86,6 @@ namespace PhantomVault.UI.Views.Autofill
             SetHint(isUpdate
                 ? "The stored password for this account is different."
                 : "This account is not in your vault yet.");
-
-            Wire("RevealButton", ToggleReveal);
-            Wire("GenerateButton", GenerateInPlace);
-            Wire("SaveButton", () => Complete(PromptResult.Saved));
-            Wire("DismissButton", () => Complete(PromptResult.Dismissed));
-            Wire("NeverButton", () => Complete(PromptResult.NeverForSite));
-
-            Opened += (_, _) => PlayEntrance();
-
-            // Unlike the suggestion menu, this prompt does NOT close on deactivate:
-            // the user has just submitted a form, so focus is legitimately elsewhere
-            // and auto-dismissing would throw away the only chance to save.
         }
 
         private void Wire(string name, Action handler)

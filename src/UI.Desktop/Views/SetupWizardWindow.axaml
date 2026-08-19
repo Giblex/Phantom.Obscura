@@ -16,7 +16,7 @@
         Icon="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Parent Icon.ico"
         Background="{DynamicResource WindowBackgroundBrush}"
         FontFamily="{DynamicResource DefaultFontFamily}"
-        Classes="animated-window">
+        Classes="animated-window native-dot-grid">
 
     <views:ThemeAwareWindow.Resources>
         <ResourceDictionary>
@@ -26,7 +26,7 @@
 
             <!-- Remove the Fluent ComboBox popup's default light background/border
                  that showed as white strips on each end of the dropdown list. -->
-            <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#0C1620"/>
+            <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#182A3E"/>
             <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="#4C6170"/>
             <SolidColorBrush x:Key="ComboBoxDropDownForeground" Color="#ECF7FB"/>
             <Thickness x:Key="ComboBoxDropdownBorderPadding">0</Thickness>
@@ -39,6 +39,20 @@
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="0"/>
+            <Setter Property="MinWidth" Value="0"/>
+            <Setter Property="MinHeight" Value="0"/>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <ContentPresenter Name="PART_ContentPresenter"
+                                      Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                      VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="Button.step-btn:disabled">
+            <Setter Property="Opacity" Value="1"/>
         </Style>
         <Style Selector="Button.nav-button">
             <Setter Property="Width" Value="156"/>
@@ -48,7 +62,7 @@
             <Setter Property="CornerRadius" Value="12"/>
         </Style>
         <Style Selector="ComboBox">
-            <Setter Property="Background" Value="#0C1620"/>
+            <Setter Property="Background" Value="#C00C1B2B"/>
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
             <Setter Property="BorderBrush" Value="#4C6170"/>
             <Setter Property="BorderThickness" Value="1"/>
@@ -56,47 +70,49 @@
         </Style>
         <Style Selector="ComboBox:pointerover">
             <Setter Property="BorderBrush" Value="#5C7080"/>
-            <Setter Property="Background" Value="#101C28"/>
+            <Setter Property="Background" Value="#D020354C"/>
         </Style>
         <Style Selector="ComboBox:focus">
             <Setter Property="BorderBrush" Value="#5C7080"/>
-            <Setter Property="Background" Value="#101C28"/>
+            <Setter Property="Background" Value="#D020354C"/>
         </Style>
         <Style Selector="ComboBox /template/ Border">
-            <Setter Property="Background" Value="#0C1620"/>
+            <Setter Property="Background" Value="#C00C1B2B"/>
             <Setter Property="BorderBrush" Value="#4C6170"/>
             <Setter Property="CornerRadius" Value="10"/>
         </Style>
         <Style Selector="ComboBox:pointerover /template/ Border">
-            <Setter Property="Background" Value="#101C28"/>
+            <Setter Property="Background" Value="#D020354C"/>
             <Setter Property="BorderBrush" Value="#5C7080"/>
         </Style>
         <Style Selector="ComboBox:focus /template/ Border">
-            <Setter Property="Background" Value="#101C28"/>
+            <Setter Property="Background" Value="#D020354C"/>
             <Setter Property="BorderBrush" Value="#5C7080"/>
         </Style>
         <Style Selector="ComboBoxItem">
-            <Setter Property="Background" Value="#0C1620"/>
+            <Setter Property="Background" Value="#182A3E"/>
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
         </Style>
         <Style Selector="ComboBoxItem /template/ ContentPresenter">
-            <Setter Property="Background" Value="#0C1620"/>
+            <Setter Property="Background" Value="#182A3E"/>
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
             <Setter Property="Padding" Value="10,8"/>
         </Style>
         <Style Selector="ComboBoxItem:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#162432"/>
+            <Setter Property="Background" Value="#243B52"/>
         </Style>
         <Style Selector="ComboBoxItem:selected /template/ ContentPresenter">
-            <Setter Property="Background" Value="#1C2C3C"/>
+            <Setter Property="Background" Value="#2A425B"/>
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
         </Style>
         <Style Selector="TextBox">
-            <Setter Property="Background" Value="#0A1420"/>
+            <Setter Property="Background" Value="#C00C1B2B"/>
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
             <Setter Property="BorderBrush" Value="#446074"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="MinHeight" Value="44"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
         <Style Selector="Button.step-btn /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="Transparent"/>
@@ -139,9 +155,12 @@
         <Style Selector="RadioButton:pointerover /template/ Border#OuterBorder">
             <Setter Property="BorderBrush" Value="#7FA1B8"/>
         </Style>
+        <Style Selector="RadioButton /template/ Border#OuterBorder">
+            <Setter Property="BorderBrush" Value="#EAF3F8"/>
+        </Style>
 
         <Style Selector="CheckBox /template/ Border#NormalRectangle">
-            <Setter Property="BorderBrush" Value="#738897"/>
+            <Setter Property="BorderBrush" Value="#EAF3F8"/>
             <Setter Property="Background" Value="#0A1420"/>
         </Style>
         <Style Selector="CheckBox:checked /template/ Border#NormalRectangle">
@@ -160,31 +179,10 @@
             <Setter Property="Fill" Value="#EAF3F8"/>
         </Style>
 
-        <Style Selector="Button.solid-primary">
-            <Setter Property="Background" Value="#173042"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="#55C3CF"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="12"/>
-            <Setter Property="HorizontalContentAlignment" Value="Center"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-        </Style>
-        <Style Selector="Button.solid-primary /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#173042"/>
-            <Setter Property="BorderBrush" Value="#55C3CF"/>
-            <Setter Property="CornerRadius" Value="12"/>
-        </Style>
-        <Style Selector="Button.solid-primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#1E3C52"/>
-            <Setter Property="BorderBrush" Value="#8AD6DE"/>
-        </Style>
-        <Style Selector="Button.solid-primary:pressed /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#102838"/>
-            <Setter Property="BorderBrush" Value="#55C3CF"/>
-        </Style>
-        <Style Selector="Button.solid-primary:disabled /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#111B2A"/>
-            <Setter Property="BorderBrush" Value="#20FFFFFF"/>
+        <!-- Legacy solid-primary actions now use the shared refractive glass template. -->
+        <Style Selector="Button.solid-primary /template/ Border#BaseBorder">
+            <Setter Property="Background" Value="{DynamicResource Brush.Glass.BaseFill}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Glass.BorderHover}"/>
         </Style>
     </views:ThemeAwareWindow.Styles>
 
@@ -200,16 +198,61 @@
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch">
             <Border.Background>
-                <ImageBrush Source="avares://PhantomVault.UI/Assets/dot_pattern_light.png"
-                            TileMode="Tile"
-                            Stretch="None"
-                            SourceRect="0,0,8,8"
-                            DestinationRect="0,0,8,8"/>
+                <DrawingBrush TileMode="Tile" Stretch="None"
+                               SourceRect="0,0,8,8"
+                               DestinationRect="0,0,8,8">
+                    <DrawingBrush.Drawing>
+                        <GeometryDrawing Brush="#24FFFFFF">
+                            <GeometryDrawing.Geometry>
+                                <EllipseGeometry Rect="0,0,1.5,1.5"/>
+                            </GeometryDrawing.Geometry>
+                        </GeometryDrawing>
+                    </DrawingBrush.Drawing>
+                </DrawingBrush>
+            </Border.Background>
+        </Border>
+        <Border Grid.Row="0" Grid.RowSpan="3" IsHitTestVisible="False">
+            <Border.Background>
+                <DrawingBrush TileMode="Tile" Stretch="None" SourceRect="0,0,40,40" DestinationRect="0,0,40,40">
+                    <DrawingBrush.Drawing>
+                        <GeometryDrawing>
+                            <GeometryDrawing.Pen><Pen Brush="#08FFFFFF" Thickness="1"/></GeometryDrawing.Pen>
+                            <GeometryDrawing.Geometry>
+                                <GeometryGroup>
+                                    <LineGeometry StartPoint="0.5,0" EndPoint="0.5,40"/>
+                                    <LineGeometry StartPoint="0,0.5" EndPoint="40,0.5"/>
+                                </GeometryGroup>
+                            </GeometryDrawing.Geometry>
+                        </GeometryDrawing>
+                    </DrawingBrush.Drawing>
+                </DrawingBrush>
             </Border.Background>
         </Border>
 
-        <Border Grid.Row="0" Background="{DynamicResource DashboardPanelBg}" Padding="24,6,24,6">
-            <Grid Margin="8,0,8,0" HorizontalAlignment="Center">
+        <Border Grid.Row="0" Padding="24,6,24,6">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                    <GradientStop Color="#F00B1726" Offset="0"/>
+                    <GradientStop Color="#F00D2234" Offset="0.55"/>
+                    <GradientStop Color="#F00B1B2A" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+            <Grid>
+                <Border IsHitTestVisible="False">
+                    <Border.Background>
+                        <DrawingBrush TileMode="Tile" Stretch="None"
+                                      SourceRect="0,0,8,8" DestinationRect="0,0,8,8">
+                            <DrawingBrush.Drawing>
+                                <GeometryDrawing Brush="#18FFFFFF">
+                                    <GeometryDrawing.Geometry>
+                                        <EllipseGeometry Rect="0,0,1.5,1.5"/>
+                                    </GeometryDrawing.Geometry>
+                                </GeometryDrawing>
+                            </DrawingBrush.Drawing>
+                        </DrawingBrush>
+                    </Border.Background>
+                </Border>
+                <Grid Margin="8,0,8,0" HorizontalAlignment="Center">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
@@ -383,6 +426,7 @@
                                    HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Grid>
+            </Grid>
         </Border>
 
         <Border Grid.Row="1" ClipToBounds="True">
@@ -401,11 +445,28 @@
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="16">
 
-                                <Image Source="avares://PhantomVault.UI/Assets/ok.png"
-                                       Width="140"
-                                       Height="140"
-                                       Stretch="Uniform"
-                                       HorizontalAlignment="Center"/>
+                                <Panel Width="150" Height="150" HorizontalAlignment="Center">
+                                    <!-- Two restrained shadow passes lift the mark toward the
+                                         viewer while keeping the underlying card visually sunk. -->
+                                    <Image Source="avares://PhantomVault.UI/Assets/ok.png"
+                                           Width="140" Height="140" Opacity="0.26"
+                                           Stretch="Uniform"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <Image.Effect>
+                                            <DropShadowEffect BlurRadius="14" OffsetY="-3"
+                                                              Color="#B9E8F2" Opacity="0.55"/>
+                                        </Image.Effect>
+                                    </Image>
+                                    <Image Source="avares://PhantomVault.UI/Assets/ok.png"
+                                           Width="140" Height="140"
+                                           Stretch="Uniform"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <Image.Effect>
+                                            <DropShadowEffect BlurRadius="20" OffsetY="9"
+                                                              Color="#02070D" Opacity="0.88"/>
+                                        </Image.Effect>
+                                    </Image>
+                                </Panel>
 
                                 <TextBlock Text="Welcome to Phantom Obscura"
                                            FontSize="{StaticResource Type.H2.Size}"
@@ -561,7 +622,7 @@
                                 <RadioButton GroupName="WizardPlan"
                                              IsChecked="{Binding SelectedPlanIsPremium}">
                                     <StackPanel Spacing="2">
-                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                             <TextBlock Text="Premium"
                                                        FontWeight="SemiBold"
                                                        Foreground="{DynamicResource PrimaryTextBrush}"/>
@@ -616,20 +677,24 @@
                                 Padding="24,20"
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="12">
-                                <StackPanel Orientation="Horizontal" Spacing="14">
-                                    <Border Width="56" Height="56" CornerRadius="28" Background="{DynamicResource DashboardSectionBg}">
-                                        <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Password Strength.svg" IconColor="White" IconSize="34"
-                                                          Width="34" Height="34"
-                                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <StackPanel>
+                                <StackPanel Spacing="10" HorizontalAlignment="Center">
+                                    <Canvas Width="38" Height="34" HorizontalAlignment="Center">
+                                        <Border Canvas.Left="3" Canvas.Top="20" Width="7" Height="11" CornerRadius="2" Background="{DynamicResource PrimaryTextBrush}"/>
+                                        <Border Canvas.Left="15" Canvas.Top="12" Width="7" Height="19" CornerRadius="2" Background="{DynamicResource PrimaryTextBrush}"/>
+                                        <Border Canvas.Left="27" Canvas.Top="3" Width="7" Height="28" CornerRadius="2" Background="{DynamicResource PrimaryTextBrush}"/>
+                                    </Canvas>
+                                    <StackPanel HorizontalAlignment="Center">
                                         <TextBlock Text="Choose Your Protection Tier"
                                                    FontSize="{StaticResource Type.H3.Size}"
                                                    FontWeight="Normal"
+                                                   TextAlignment="Center"
+                                                   HorizontalAlignment="Center"
                                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
                                         <TextBlock Text="Select the storage and privacy tier that matches your threat model"
                                                    FontSize="{StaticResource Type.Small.Size}"
                                                    TextWrapping="Wrap"
+                                                   TextAlignment="Center"
+                                                   HorizontalAlignment="Center"
                                                    Foreground="{DynamicResource MutedTextBrush}"/>
                                     </StackPanel>
                                 </StackPanel>
@@ -655,12 +720,25 @@
                                             <StackPanel Grid.Column="1" Spacing="6">
                                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                                                     <WrapPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                                                        <TextBlock Text="{Binding Name}"
+                                                         <TextBlock Text="{Binding Name}"
                                                                    FontSize="{StaticResource Type.H4.Size}"
                                                                    FontWeight="Normal"
                                                                    VerticalAlignment="Center"
                                                                    Margin="0,0,10,0"
-                                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                        <Border IsVisible="{Binding IsPremiumOnly}"
+                                                                Background="{DynamicResource Brush.Glass.BaseFill}"
+                                                                BorderBrush="{DynamicResource Brush.Glass.BorderHover}"
+                                                                BorderThickness="1"
+                                                                CornerRadius="6"
+                                                                Padding="7,2"
+                                                                Margin="0,0,8,4"
+                                                                VerticalAlignment="Center">
+                                                            <TextBlock Text="PREMIUM"
+                                                                       FontSize="10"
+                                                                       FontWeight="Bold"
+                                                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                        </Border>
                                                         <Border IsVisible="{Binding RecommendedFor, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                                                 Background="{DynamicResource DashboardSectionBg}"
                                                                 CornerRadius="4"
@@ -1080,7 +1158,8 @@
                                             <controls:SvgIcon Preset="Check" IconColor="White" IconSize="20"
                                                               Width="20" Height="20" VerticalAlignment="Center"/>
                                             <TextBlock FontSize="{StaticResource Type.Small.Size}"
-                                                       Foreground="White">
+                                                       Foreground="White"
+                                                       VerticalAlignment="Center">
                                                 <Run Text="Device ID: "/>
                                                 <Run Text="{Binding DisplayUsbDeviceId}" FontFamily="{StaticResource MonoFontFamily}"/>
                                             </TextBlock>
@@ -1106,8 +1185,8 @@
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
                                     <Border Width="40" Height="40" CornerRadius="20" Background="{DynamicResource DashboardSectionBg}">
-                                        <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Link.svg" IconColor="White" IconSize="24"
-                                                          Width="24" Height="24"
+                                        <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Link.svg" IconColor="White" IconSize="28"
+                                                          Width="28" Height="28"
                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <StackPanel>
@@ -1150,8 +1229,8 @@
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
                                     <Border Width="40" Height="40" CornerRadius="20" Background="{DynamicResource DashboardSectionBg}">
-                                        <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Encrypted Container.svg" IconColor="White" IconSize="24"
-                                                          Width="24" Height="24"
+                                        <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Encrypted Container.svg" IconColor="White" IconSize="28"
+                                                          Width="28" Height="28"
                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <StackPanel>
@@ -1190,11 +1269,18 @@
 
                                 <Border Margin="0,8,0,0"
                                         Padding="14,12"
-                                        CornerRadius="10"
-                                        Background="{DynamicResource DashboardNavPrimaryBg}"
-                                        BorderBrush="{DynamicResource AccentBrush}"
+                                        CornerRadius="12"
+                                        BorderBrush="{DynamicResource Brush.Glass.Border}"
                                         BorderThickness="1"
-                                        IsVisible="{Binding EnableEncryptedContainer}">
+                                        IsVisible="{Binding EnableEncryptedContainer}"
+                                        BoxShadow="0 10 26 0 #52000000, inset 0 1 0 0 #20FFFFFF">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                            <GradientStop Color="#B0183044" Offset="0"/>
+                                            <GradientStop Color="#A3163541" Offset="0.52"/>
+                                            <GradientStop Color="#98112638" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
                                     <StackPanel Spacing="6">
                                         <StackPanel Orientation="Horizontal" Spacing="8">
                                             <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Encrypted Container.svg"
@@ -1300,7 +1386,7 @@
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
                                     <Border Width="40" Height="40" CornerRadius="20" Background="{DynamicResource DashboardSectionBg}">
-                                        <controls:SvgIcon IconName="Assets/Visuals/App Icons/SVG/Keyfile.svg" IconColor="White" IconSize="24"
+                                        <controls:SvgIcon Preset="Key" IconColor="White" IconSize="24"
                                                           Width="24" Height="24"
                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
@@ -1710,7 +1796,7 @@
                                 Padding="24,20"
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="14">
-                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                <Grid RowDefinitions="Auto,Auto">
                                     <StackPanel Spacing="4">
                                         <TextBlock Text="Windows Hello"
                                                    FontSize="{StaticResource Type.H4.Size}"
@@ -1721,8 +1807,11 @@
                                                    Foreground="{DynamicResource MutedTextBrush}"
                                                    TextWrapping="Wrap"/>
                                     </StackPanel>
-                                    <CheckBox IsChecked="{Binding EnableWindowsHello}"
-                                              VerticalAlignment="Center">
+                                    <CheckBox Grid.Row="1"
+                                               IsChecked="{Binding EnableWindowsHello}"
+                                               IsEnabled="{Binding WindowsHelloOnboarding.IsWindowsHelloAvailable}"
+                                               HorizontalAlignment="Left"
+                                               Margin="0,10,0,0">
                                         <TextBlock Text="Require this factor"
                                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
                                     </CheckBox>
@@ -1738,10 +1827,11 @@
                                                    FontSize="{StaticResource Type.Body.Size}"
                                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
                                         <StackPanel Orientation="Horizontal" Spacing="10">
-                                            <Button Command="{Binding WindowsHelloOnboarding.EnrollBiometricCommand}"
-                                                    Classes="liquid-glass"
-                                                    Height="40"
-                                                    IsVisible="{Binding !WindowsHelloOnboarding.IsBiometricEnrolled}">
+                                             <Button Command="{Binding WindowsHelloOnboarding.EnrollBiometricCommand}"
+                                                     Classes="liquid-glass"
+                                                     Height="40"
+                                                     IsEnabled="{Binding WindowsHelloOnboarding.IsWindowsHelloAvailable}"
+                                                     IsVisible="{Binding !WindowsHelloOnboarding.IsBiometricEnrolled}">
                                                 <TextBlock Text="Set Up Windows Hello"/>
                                             </Button>
                                             <Button Command="{Binding WindowsHelloOnboarding.TestBiometricCommand}"
@@ -1767,7 +1857,7 @@
                                 Padding="24,20"
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="14">
-                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                <Grid RowDefinitions="Auto,Auto">
                                     <StackPanel Spacing="4">
                                         <TextBlock Text="Passkey"
                                                    FontSize="{StaticResource Type.H4.Size}"
@@ -1778,8 +1868,11 @@
                                                    Foreground="{DynamicResource MutedTextBrush}"
                                                    TextWrapping="Wrap"/>
                                     </StackPanel>
-                                    <CheckBox IsChecked="{Binding EnablePasskeys}"
-                                              VerticalAlignment="Center">
+                                    <CheckBox Grid.Row="1"
+                                               IsChecked="{Binding EnablePasskeys}"
+                                               IsEnabled="{Binding PasskeysAvailable}"
+                                               HorizontalAlignment="Left"
+                                               Margin="0,10,0,0">
                                         <TextBlock Text="Require this factor"
                                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
                                     </CheckBox>
@@ -1798,10 +1891,11 @@
                                                    FontSize="{StaticResource Type.Small.Size}"
                                                    Foreground="{DynamicResource MutedTextBrush}"/>
                                         <StackPanel Orientation="Horizontal" Spacing="10">
-                                            <Button Command="{Binding PasskeyOnboarding.RegisterPasskeyCommand}"
-                                                    Classes="liquid-glass"
-                                                    Height="40"
-                                                    IsVisible="{Binding !PasskeyOnboarding.HasRegisteredPasskey}">
+                                             <Button Command="{Binding PasskeyOnboarding.RegisterPasskeyCommand}"
+                                                     Classes="liquid-glass"
+                                                     Height="40"
+                                                     IsEnabled="{Binding PasskeysAvailable}"
+                                                     IsVisible="{Binding !PasskeyOnboarding.HasRegisteredPasskey}">
                                                 <TextBlock Text="Register on This Device"/>
                                             </Button>
                                             <Button Command="{Binding PasskeyOnboarding.TestPasskeyCommand}"
@@ -1827,7 +1921,7 @@
                                 Padding="24,20"
                                 BoxShadow="0 4 16 0 #40000000">
                             <StackPanel Spacing="14">
-                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                <Grid RowDefinitions="Auto,Auto">
                                     <StackPanel Spacing="4">
                                         <TextBlock Text="TOTP"
                                                    FontSize="{StaticResource Type.H4.Size}"
@@ -1838,8 +1932,10 @@
                                                    Foreground="{DynamicResource MutedTextBrush}"
                                                    TextWrapping="Wrap"/>
                                     </StackPanel>
-                                    <CheckBox IsChecked="{Binding EnableTotp}"
-                                              VerticalAlignment="Center">
+                                    <CheckBox Grid.Row="1"
+                                               IsChecked="{Binding EnableTotp}"
+                                               HorizontalAlignment="Left"
+                                               Margin="0,10,0,0">
                                         <TextBlock Text="Require this factor"
                                                    Foreground="{DynamicResource PrimaryTextBrush}"/>
                                     </CheckBox>
@@ -1905,7 +2001,7 @@
                             <StackPanel Spacing="12">
                                 <StackPanel Orientation="Horizontal" Spacing="12">
                                     <Border Width="44" Height="44" CornerRadius="22" Background="{DynamicResource DashboardSectionBg}">
-                                        <controls:SvgIcon Preset="AlertTriangle" IconColor="{DynamicResource AccentBrush}" IconSize="24"
+                                        <controls:SvgIcon Preset="AlertTriangle" IconColor="White" IconSize="24"
                                                           Width="28" Height="28"
                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>

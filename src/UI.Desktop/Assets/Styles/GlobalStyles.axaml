@@ -59,10 +59,10 @@
 
     <Style Selector="Button">
         <Setter Property="FontFamily" Value="{DynamicResource MainFontFamily}"/>
-        <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+        <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Padding" Value="{DynamicResource Thickness.ButtonPadding}"/>
-        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Md}"/>
+        <Setter Property="CornerRadius" Value="10"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>

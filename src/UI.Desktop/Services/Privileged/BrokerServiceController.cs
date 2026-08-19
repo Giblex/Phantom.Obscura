@@ -74,6 +74,50 @@ namespace PhantomVault.UI.Services.Privileged
         }
 
         /// <summary>
+        /// Restarts an already-installed helper without rewriting its registration or
+        /// changing its allow-listed client. Returns false when the service is absent,
+        /// elevation is declined, or SCM cannot start it.
+        /// </summary>
+        public async Task<bool> StartInstalledAsync()
+        {
+            if (IsRunning())
+                return true;
+            if (!IsInstalled())
+                return false;
+
+            string? brokerExe = ResolveBrokerExe();
+            if (brokerExe is null)
+                return false;
+
+            try
+            {
+                var psi = new ProcessStartInfo(brokerExe, "--start")
+                {
+                    UseShellExecute = true,
+                    Verb = "runas",
+                    CreateNoWindow = true
+                };
+
+                using var process = Process.Start(psi);
+                if (process is null)
+                    return false;
+
+                await process.WaitForExitAsync().ConfigureAwait(false);
+                // SCM can report "already running" if another caller won the race;
+                // the observed final service state is authoritative.
+                return IsRunning();
+            }
+            catch (Win32Exception)
+            {
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Serialized, retry-friendly "enable the helper" flow used when a privileged
         /// call fails because the broker isn't running. Concurrent callers collapse onto
         /// a single confirmation + elevation prompt. <paramref name="confirmAsync"/> is

@@ -98,7 +98,8 @@ namespace PhantomVault.UI.Views
                 var dialogService = new DialogService();
                 try
                 {
-                    await dialogService.ShowErrorAsync("Error", $"An error occurred: {ex.Message}", this);
+                    Log.Error(ex, "[ProvisionWindow] Command failed unexpectedly.");
+                    await dialogService.ShowErrorAsync("Error", "The operation could not be completed. Review the setup choices and try again.", this);
                 }
                 catch
                 {

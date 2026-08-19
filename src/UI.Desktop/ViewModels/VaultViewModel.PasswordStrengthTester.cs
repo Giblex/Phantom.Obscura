@@ -78,7 +78,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Failed to copy: {ex.Message}";
+                Serilog.Log.Warning(ex, "[PasswordStrengthTester] Failed to copy a generated password.");
+                StatusMessage = "The password could not be copied. Confirm clipboard access is allowed and try again.";
             }
         }
 

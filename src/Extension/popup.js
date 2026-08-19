@@ -2,6 +2,40 @@ document.addEventListener('DOMContentLoaded', () => {
   const dot = document.getElementById('status-dot');
   const statusText = document.getElementById('status-text');
   const btnFill = document.getElementById('btn-fill');
+  const btnSiteAccess = document.getElementById('btn-site-access');
+  const siteAccessText = document.getElementById('site-access-text');
+  let activeTab = null;
+  let activeOriginPattern = null;
+  let hasPersistentAccess = false;
+
+  function resolveOriginPattern(urlValue) {
+    try {
+      const url = new URL(urlValue);
+      if (url.protocol !== 'https:' && url.protocol !== 'http:') return null;
+      return `${url.origin}/*`;
+    } catch {
+      return null;
+    }
+  }
+
+  function refreshSiteAccess() {
+    if (!activeOriginPattern) {
+      siteAccessText.textContent = 'Site access unavailable on this page';
+      btnSiteAccess.disabled = true;
+      return;
+    }
+
+    chrome.permissions.contains({ origins: [activeOriginPattern] }, (granted) => {
+      hasPersistentAccess = Boolean(granted) && !chrome.runtime.lastError;
+      siteAccessText.textContent = hasPersistentAccess
+        ? 'Site access: always allowed'
+        : 'Site access: one-time only';
+      btnSiteAccess.textContent = hasPersistentAccess
+        ? 'Remove access for this site'
+        : 'Always allow on this site';
+      btnSiteAccess.disabled = false;
+    });
+  }
 
   // Apply the cached, non-secret theme/UI prefs (mirrored from the desktop app).
   try {
@@ -35,11 +69,33 @@ document.addEventListener('DOMContentLoaded', () => {
     .catch(() => setStatus('disconnected', 'PhantomVault not running'));
 
   btnFill.addEventListener('click', () => {
-    // Ask the content script on the active tab to trigger credential fill
-    chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
-      if (!tab?.id) return;
-      chrome.tabs.sendMessage(tab.id, { type: 'triggerFill' });
-      window.close();
+    if (!activeTab?.id || !activeOriginPattern) return;
+
+    // activeTab is granted by this direct user gesture. Inject only now; no
+    // page receives the content script merely because the extension is installed.
+    chrome.runtime.sendMessage({ type: 'injectActiveTab', tabId: activeTab.id })
+      .then(() => chrome.tabs.sendMessage(activeTab.id, { type: 'triggerFill' }))
+      .then(() => window.close())
+      .catch(() => {
+        siteAccessText.textContent = 'This browser page does not allow extensions';
+      });
+  });
+
+  btnSiteAccess.addEventListener('click', () => {
+    if (!activeOriginPattern) return;
+    const operation = hasPersistentAccess ? chrome.permissions.remove : chrome.permissions.request;
+    operation.call(chrome.permissions, { origins: [activeOriginPattern] }, (changed) => {
+      if (chrome.runtime.lastError || !changed) {
+        siteAccessText.textContent = 'Site access was not changed';
+        return;
+      }
+      refreshSiteAccess();
     });
+  });
+
+  chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
+    activeTab = tab ?? null;
+    activeOriginPattern = resolveOriginPattern(tab?.url);
+    refreshSiteAccess();
   });
 });

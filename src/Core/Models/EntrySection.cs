@@ -52,6 +52,9 @@ namespace PhantomVault.Core.Models
 
         public string? LinkedEntryId { get; set; }
 
+        /// <summary>Opaque handle for a TOTP seed owned by Phantom Attestor.</summary>
+        public string? AttestorReference { get; set; }
+
         [JsonIgnore]
         public EntrySectionSource Source =>
             string.IsNullOrWhiteSpace(LinkedEntryId) ? EntrySectionSource.Inline : EntrySectionSource.LinkedEntry;
@@ -196,6 +199,7 @@ namespace PhantomVault.Core.Models
                 Kind = Kind,
                 Label = Label,
                 LinkedEntryId = LinkedEntryId,
+                AttestorReference = AttestorReference,
                 Value = Value,
                 IsSecret = IsSecret,
                 SortOrder = SortOrder,

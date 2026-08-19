@@ -763,6 +763,117 @@ namespace PhantomVault.Core.Services
         }
 
         /// <summary>
+        /// Rewrites a legacy plaintext-header volume to v2 without decrypting or rebuilding
+        /// any entry. The legacy payload is authenticated first, then copied byte-for-byte
+        /// through the normal journalled atomic commit path. Returns <c>false</c> when the
+        /// volume was already v2, making this safe to call after every successful unlock.
+        /// </summary>
+        public async Task<bool> UpgradeLegacyVolumeAsync(
+            string volumePath,
+            string keyfilePath,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(volumePath) || !File.Exists(volumePath))
+                throw new FileNotFoundException("Obscura volume not found", volumePath);
+            if (string.IsNullOrWhiteSpace(keyfilePath))
+                throw new ArgumentException("A keyfile is required to upgrade an Obscura volume.", nameof(keyfilePath));
+
+            RecoverPendingCommit(volumePath);
+            var header = await ReadHeaderAsync(volumePath, keyfilePath, cancellationToken).ConfigureAwait(false);
+            if (!header.IsLegacy) return false;
+
+            long payloadLength = ValidateManifestLayout(header.Manifest, new FileInfo(volumePath).Length - header.PayloadStart);
+            await VerifyPayloadAsync(volumePath, header, cancellationToken).ConfigureAwait(false);
+
+            byte[] headerBytes = JsonSerializer.SerializeToUtf8Bytes(header.Manifest, JsonOptions);
+            await CommitVolumeAtomicAsync(volumePath, headerBytes, keyfilePath, async (output, ct) =>
+            {
+                await using var input = new FileStream(
+                    volumePath, FileMode.Open, FileAccess.Read, FileShare.Read,
+                    bufferSize: 1024 * 1024, useAsync: true);
+                input.Position = header.PayloadStart;
+                await CopyExactlyAsync(input, output, payloadLength, ct).ConfigureAwait(false);
+            }, cancellationToken).ConfigureAwait(false);
+
+            // Do not report success until the replacement header authenticates with the
+            // selected keyfile. The old volume remains recoverable through the commit journal
+            // if the process or media fails before the atomic swap completes.
+            var upgraded = await ReadHeaderAsync(volumePath, keyfilePath, cancellationToken).ConfigureAwait(false);
+            if (upgraded.IsLegacy)
+                throw new InvalidOperationException("The Obscura volume upgrade did not replace the legacy header.");
+            return true;
+        }
+
+        private static long ValidateManifestLayout(ObscuraVolumeManifest manifest, long availablePayloadBytes)
+        {
+            long payloadLength = 0;
+            foreach (var entry in manifest.Entries)
+            {
+                if (entry.Offset < 0 || entry.Length < 0)
+                    throw new InvalidOperationException("Obscura volume contains a negative entry offset or length.");
+
+                long end;
+                try { end = checked(entry.Offset + entry.Length); }
+                catch (OverflowException ex) { throw new InvalidOperationException("Obscura volume entry range overflows.", ex); }
+                if (end > availablePayloadBytes)
+                    throw new EndOfStreamException($"Unexpected end of volume while validating {entry.Path}");
+                payloadLength = Math.Max(payloadLength, end);
+            }
+            return payloadLength;
+        }
+
+        private static async Task VerifyPayloadAsync(
+            string volumePath, VolumeHeader header, CancellationToken cancellationToken)
+        {
+            using var payloadHasher = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+            foreach (var entry in header.Manifest.Entries)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await using var input = new FileStream(
+                    volumePath, FileMode.Open, FileAccess.Read, FileShare.Read,
+                    bufferSize: 1024 * 1024, useAsync: true);
+                input.Position = header.PayloadStart + entry.Offset;
+
+                using var entryHasher = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+                byte[] buffer = new byte[1024 * 1024];
+                long remaining = entry.Length;
+                while (remaining > 0)
+                {
+                    int read = await input.ReadAsync(
+                        buffer.AsMemory(0, (int)Math.Min(buffer.Length, remaining)), cancellationToken).ConfigureAwait(false);
+                    if (read == 0) throw new EndOfStreamException($"Unexpected end of volume while validating {entry.Path}");
+                    entryHasher.AppendData(buffer.AsSpan(0, read));
+                    remaining -= read;
+                }
+
+                byte[] hash = entryHasher.GetHashAndReset();
+                if (!string.IsNullOrWhiteSpace(entry.Sha256) &&
+                    !CryptographicOperations.FixedTimeEquals(hash, Convert.FromBase64String(entry.Sha256)))
+                    throw new CryptographicException($"Legacy volume entry integrity check failed for {entry.Path}");
+                payloadHasher.AppendData(hash);
+            }
+
+            string computed = Convert.ToBase64String(payloadHasher.GetHashAndReset());
+            if (!string.Equals(computed, header.Manifest.PayloadHash, StringComparison.Ordinal))
+                throw new CryptographicException("Legacy volume payload integrity check failed");
+        }
+
+        private static async Task CopyExactlyAsync(
+            Stream input, Stream output, long length, CancellationToken cancellationToken)
+        {
+            byte[] buffer = new byte[1024 * 1024];
+            long remaining = length;
+            while (remaining > 0)
+            {
+                int read = await input.ReadAsync(
+                    buffer.AsMemory(0, (int)Math.Min(buffer.Length, remaining)), cancellationToken).ConfigureAwait(false);
+                if (read == 0) throw new EndOfStreamException("Unexpected end of legacy volume payload during upgrade.");
+                await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken).ConfigureAwait(false);
+                remaining -= read;
+            }
+        }
+
+        /// <summary>
         /// Reads a volume header, transparently handling both on-disk versions.
         ///
         /// v1 volumes open with the ASCII signature and carry a plaintext manifest; v2

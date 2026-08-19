@@ -12,6 +12,7 @@ using Avalonia.Threading;
 using PhantomVault.Core.Services;
 using PhantomVault.UI.Services;
 using ReactiveUI;
+using Serilog;
 
 namespace PhantomVault.UI.ViewModels
 {
@@ -437,8 +438,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[ICON-PICKER] Flaticon search failed: {ex.Message}");
-                await _dialogService.ShowErrorAsync("Search Failed", $"Failed to search Flaticon: {ex.Message}", _ownerWindow);
+                Log.Warning(ex, "[IconPicker] Flaticon search failed.");
+                await _dialogService.ShowErrorAsync("Search Failed", "The icon search could not be completed. Check temporary internet access and try again.", _ownerWindow);
                 StatusMessage = "Flaticon search failed";
             }
             finally
@@ -494,8 +495,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[ICON-PICKER] Download failed: {ex.Message}");
-                await _dialogService.ShowErrorAsync("Download Failed", $"Failed to download icon: {ex.Message}", _ownerWindow);
+                Log.Warning(ex, "[IconPicker] Icon download failed.");
+                await _dialogService.ShowErrorAsync("Download Failed", "The icon could not be downloaded. Check temporary internet access and try again.", _ownerWindow);
             }
             finally
             {
@@ -512,7 +513,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("Icon Library", $"Failed to open icon library: {ex.Message}", _ownerWindow);
+                Log.Error(ex, "[IconPicker] Failed to open the icon library.");
+                await _dialogService.ShowErrorAsync("Icon Library", "The icon library could not be opened. Try again.", _ownerWindow);
             }
         }
 
@@ -555,7 +557,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("Upload Failed", $"Failed to upload icon: {ex.Message}", _ownerWindow);
+                Log.Error(ex, "[IconPicker] Local icon upload failed.");
+                await _dialogService.ShowErrorAsync("Upload Failed", "The icon could not be added. Verify it is a supported image and try again.", _ownerWindow);
             }
         }
 

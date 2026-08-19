@@ -19,6 +19,7 @@ using PhantomVault.UI.ViewModels;
 using PhantomVault.UI.Views;
 using PhantomVault.UI.Views.Dialogs;
 using ReactiveUI;
+using Serilog;
 
 namespace PhantomVault.UI.ViewModels.Settings
 {
@@ -332,12 +333,13 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "[Backup] Failed to resolve the Phantom Recovery workspace.");
                 return new RecoveryVaultResolution(
                     false,
                     string.Empty,
                     false,
                     false,
-                    $"Failed to resolve the PhantomRecovery workspace from this vault: {ex.Message}");
+                    "The Phantom Recovery workspace could not be resolved. Unlock the vault and try again.");
             }
         }
 
@@ -470,7 +472,7 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error selecting backup location: {ex.Message}");
+                Log.Warning(ex, "[Backup] Failed to select a backup location.");
             }
         }
 
@@ -529,7 +531,8 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("Backup Failed", ex.Message, _owner);
+                Log.Error(ex, "[Backup] Backup creation failed.");
+                await _dialogService.ShowErrorAsync("Backup Failed", "The backup could not be created. Verify the destination is available and has enough free space, then try again.", _owner);
             }
         }
 
@@ -592,7 +595,8 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("Restore Failed", ex.Message, _owner);
+                Log.Error(ex, "[Backup] Backup restoration failed.");
+                await _dialogService.ShowErrorAsync("Restore Failed", "The backup could not be restored. Verify the selected backup and unlock credentials, then try again.", _owner);
             }
         }
 
@@ -616,7 +620,7 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error opening backup folder: {ex.Message}");
+                Log.Warning(ex, "[Backup] Failed to open the backup folder.");
             }
         }
 
@@ -695,8 +699,9 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "[Backup] Recovery-vault backup failed.");
                 await _dialogService.ShowErrorAsync("Backup Failed",
-                    $"Failed to backup recovery vault:\n{ex.Message}", _owner);
+                    "The recovery vault could not be backed up. Verify the destination is available and try again.", _owner);
             }
         }
 
@@ -793,8 +798,9 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "[Backup] Recovery-vault restoration failed.");
                 await _dialogService.ShowErrorAsync("Restore Failed",
-                    $"Failed to restore recovery vault:\n{ex.Message}", _owner);
+                    "The recovery vault could not be restored. Verify the backup file and try again.", _owner);
             }
         }
 
@@ -857,8 +863,9 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
             catch (Exception ex)
             {
+                Log.Warning(ex, "[Backup] Recovery-container availability check failed.");
                 IsRecoveryVaultAvailable = false;
-                RecoveryVaultStatus = $"Recovery-container availability could not be verified: {ex.Message}";
+                RecoveryVaultStatus = "Recovery-container availability could not be verified. Unlock the vault and try again.";
             }
 
             this.RaisePropertyChanged(nameof(ScheduledBackupStatus));
@@ -1013,7 +1020,7 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to persist backup settings to manifest: {ex.Message}");
+                Log.Error(ex, "[Backup] Failed to persist backup settings to the manifest.");
             }
         }
 

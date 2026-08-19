@@ -51,6 +51,13 @@
 
     #status-text { color: #aaaacc; }
 
+    .site-access {
+      padding: 10px 16px;
+      border-bottom: 1px solid #1e1e3a;
+      color: #aaaacc;
+    }
+    #site-access-text { margin-bottom: 8px; }
+
     .actions {
       padding: 10px 16px 14px;
       display: flex;
@@ -95,6 +102,12 @@
 
   <div class="actions">
     <button id="btn-fill" disabled>Fill credentials on this page</button>
+    <button id="btn-site-access" disabled>Always allow on this site</button>
+  </div>
+
+  <div class="site-access">
+    <div id="site-access-text">Site access: checking…</div>
+    <small>One-time fill uses access only after you click. Persistent access is optional and limited to this exact site.</small>
   </div>
 
   <div class="footer">PhantomVault Autofill v1.0</div>

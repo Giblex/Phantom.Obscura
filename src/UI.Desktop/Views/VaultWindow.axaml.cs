@@ -363,6 +363,33 @@ namespace PhantomVault.UI.Views
             {
 
             }
+
+            // Closing an unlocked vault is navigation back to the front page, not an
+            // application exit. Reuse the hidden welcome window when possible so its USB
+            // watchers and state remain intact; create it only if this vault was opened by
+            // a route that did not retain one.
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                var frontPage = desktop.Windows.OfType<WelcomePage>().FirstOrDefault();
+                if (frontPage == null)
+                {
+                    var services = (Application.Current as App)?.Services;
+                    if (services != null)
+                    {
+                        frontPage = new WelcomePage
+                        {
+                            DataContext = services.GetRequiredService<WelcomePageViewModel>()
+                        };
+                    }
+                }
+
+                if (frontPage != null)
+                {
+                    desktop.MainWindow = frontPage;
+                    frontPage.Show();
+                    frontPage.Activate();
+                }
+            }
         }
 
         private void VaultWindow_DataContextChanged(object? sender, EventArgs e)
@@ -1023,6 +1050,21 @@ namespace PhantomVault.UI.Views
             }
         }
 
+        private void SectionTemplateSelector_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+        {
+            if (sender is not ComboBox selector || selector.SelectedItem is null)
+                return;
+
+            if (selector.DataContext is AddEditCredentialViewModel vm && vm.TemplateSectionOptions.Count == 0)
+                return;
+
+            // Let the two-way selection binding rebuild the option list before the
+            // checklist opens. The checklist itself applies every tick immediately.
+            Dispatcher.UIThread.Post(
+                () => FlyoutBase.ShowAttachedFlyout(selector),
+                DispatcherPriority.Background);
+        }
+
         private void OpenSettings_Click(object? sender, RoutedEventArgs e)
         {
             if (DataContext is not VaultViewModel vaultVm) return;
@@ -1112,7 +1154,8 @@ namespace PhantomVault.UI.Views
                 var dialogService = new DialogService();
                 try
                 {
-                    await dialogService.ShowErrorAsync("Error", $"An error occurred: {ex.Message}", this);
+                    Log.Error(ex, "[VaultWindow] Command failed unexpectedly.");
+                    await dialogService.ShowErrorAsync("Error", "The operation could not be completed. Try again.", this);
                 }
                 catch
                 {

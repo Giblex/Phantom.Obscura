@@ -102,7 +102,8 @@ namespace PhantomVault.UI.Views.Settings
                 var dialogService = new PhantomVault.UI.Services.DialogService();
                 try
                 {
-                    await dialogService.ShowErrorAsync("Error", $"An error occurred: {ex.Message}", parentWindow);
+                    Log.Error(ex, "[SecuritySettingsView] Command failed unexpectedly.");
+                    await dialogService.ShowErrorAsync("Error", "The security-settings operation could not be completed. Try again.", parentWindow);
                 }
                 catch
                 {

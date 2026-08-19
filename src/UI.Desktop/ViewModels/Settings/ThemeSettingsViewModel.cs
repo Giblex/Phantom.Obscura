@@ -72,7 +72,7 @@ namespace PhantomVault.UI.ViewModels.Settings
         private int _selectedDisplayScale = 2;
         private string _appFontFamily = "Segoe UI";
         private int _selectedFontSizeIndex = 1;
-        private string _accentColorHex = "#2B4A7A";
+        private string _accentColorHex = "#5A7AB0";
         private bool _reduceAnimations = false;
         private bool _reduceTransparency = false;
         private bool _useFlatButtons = false;
@@ -655,6 +655,8 @@ namespace PhantomVault.UI.ViewModels.Settings
             {
                 var themes = _runtimeThemeService.GetThemes();
                 var themeIdx = themes.ToList().FindIndex(t => t.Id == settings.SelectedThemeId);
+                if (themeIdx < 0)
+                    themeIdx = themes.ToList().FindIndex(t => t.Id == _runtimeThemeService.CurrentThemeId);
                 if (themeIdx >= 0)
                 {
                     _selectedRuntimeThemeIndex = themeIdx;
@@ -933,7 +935,7 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
             else
             {
-                RuntimeThemeNames = new List<string> { "Classic Dark", "Giblex Glass Navy" };
+                RuntimeThemeNames = new List<string> { "Default Navy", "Deep Dark" };
             }
         }
 

@@ -243,7 +243,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("Icon Library", $"Failed to open Icon Manager: {ex.Message}", _ownerWindow);
+                Log.Error(ex, "[VaultSettings] Failed to open Icon Manager.");
+                await _dialogService.ShowErrorAsync("Icon Library", "Icon Manager could not be opened. Try again.", _ownerWindow);
             }
         }
 
@@ -467,9 +468,10 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("Storage-Tier Migration Failed", ex.Message, _ownerWindow);
+                Log.Error(ex, "[VaultSettings] Storage-tier migration failed.");
+                await _dialogService.ShowErrorAsync("Storage-Tier Migration Failed", "The vault storage tier could not be changed. Verify the destination is available and try again.", _ownerWindow);
                 StatusMessage = "Storage-tier migration failed.";
-                MigrationSummary = ex.Message;
+                MigrationSummary = "The migration did not complete. No diagnostic details are displayed for security reasons.";
             }
             finally
             {
@@ -1353,7 +1355,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("Open Add Entry", ex.Message, _ownerWindow);
+                Log.Error(ex, "[VaultSettings] Failed to open Add Entry.");
+                await _dialogService.ShowErrorAsync("Open Add Entry", "The Add Entry window could not be opened. Try again.", _ownerWindow);
             }
         }
 
@@ -1386,7 +1389,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("Password Generator", ex.Message, _ownerWindow);
+                Log.Error(ex, "[VaultSettings] Failed to open Password Generator.");
+                await _dialogService.ShowErrorAsync("Password Generator", "The Password Generator could not be opened. Try again.", _ownerWindow);
             }
         }
 
@@ -1787,6 +1791,7 @@ namespace PhantomVault.UI.ViewModels
                     }
                     catch (Exception ex)
                     {
+                        Log.Error(ex, "[VaultSettings] Failed to unlock the manifest for passkey management.");
                         SetPasskeyStatus(
                             "Unable to read manifest",
                             "We could not decrypt the manifest to determine passkey status.",
@@ -1797,7 +1802,7 @@ namespace PhantomVault.UI.ViewModels
 
                         await _dialogService.ShowErrorAsync(
                             "Manifest Unlock Failed",
-                            $"Could not decrypt the manifest: {ex.Message}",
+                            "The vault manifest could not be unlocked. Verify the vault credentials and try again.",
                             _ownerWindow);
                         StatusMessage = "Unable to read manifest.";
                         return;
@@ -1853,37 +1858,40 @@ namespace PhantomVault.UI.ViewModels
                     }
                     catch (PlatformNotSupportedException ex)
                     {
+                        Log.Warning(ex, "[VaultSettings] Windows Hello is unavailable.");
                         SetPasskeyStatus(
                             "Windows Hello unavailable",
-                            ex.Message,
+                            "Windows Hello is not available or configured for this account.",
                             "#DC3545",
                             "Configure Windows Hello and try again.");
 
-                        await _dialogService.ShowErrorAsync("Windows Hello Unavailable", ex.Message, _ownerWindow);
+                        await _dialogService.ShowErrorAsync("Windows Hello Unavailable", "Windows Hello is not available or configured for this account.", _ownerWindow);
                         StatusMessage = "Windows Hello unavailable.";
                         return;
                     }
                     catch (InvalidOperationException ex)
                     {
+                        Log.Warning(ex, "[VaultSettings] Passkey registration was rejected.");
                         SetPasskeyStatus(
                             "Passkey registration failed",
-                            ex.Message,
+                            "The platform authenticator rejected the registration request.",
                             "#DC3545",
                             "Retry or reset Windows Hello before attempting again.");
 
-                        await _dialogService.ShowErrorAsync("Passkey Registration Failed", ex.Message, _ownerWindow);
+                        await _dialogService.ShowErrorAsync("Passkey Registration Failed", "Passkey registration could not be completed. Check Windows Hello and try again.", _ownerWindow);
                         StatusMessage = "Passkey registration failed.";
                         return;
                     }
                     catch (Exception ex)
                     {
+                        Log.Error(ex, "[VaultSettings] Passkey registration failed unexpectedly.");
                         SetPasskeyStatus(
                             "Passkey registration failed",
                             "An unexpected error occurred while invoking Windows Hello.",
                             "#DC3545",
                             "Check Windows Event Viewer for additional details and try again.");
 
-                        await _dialogService.ShowErrorAsync("Passkey Registration Failed", $"Unexpected error: {ex.Message}", _ownerWindow);
+                        await _dialogService.ShowErrorAsync("Passkey Registration Failed", "Passkey registration could not be completed. Try again.", _ownerWindow);
                         StatusMessage = "Passkey registration failed.";
                         return;
                     }
@@ -1903,6 +1911,7 @@ namespace PhantomVault.UI.ViewModels
                     }
                     catch (Exception ex)
                     {
+                        Log.Error(ex, "[VaultSettings] Failed to update the manifest after passkey registration.");
                         SetPasskeyStatus(
                             "Manifest update failed",
                             "Windows Hello was registered but the manifest could not be updated.",
@@ -1911,7 +1920,7 @@ namespace PhantomVault.UI.ViewModels
 
                         await _dialogService.ShowErrorAsync(
                             "Manifest Update Failed",
-                            $"Windows Hello registered but the manifest could not be updated: {ex.Message}",
+                            "Windows Hello was registered, but the vault manifest could not be updated. The new registration is not active; unlock the vault and try again.",
                             _ownerWindow);
                         StatusMessage = "Manifest update failed.";
                         return;
@@ -1953,15 +1962,16 @@ namespace PhantomVault.UI.ViewModels
                     }
                     catch (Exception ex)
                     {
+                        Log.Error(ex, "[VaultSettings] Failed to initialize YubiKey integration.");
                         SetYubiKeyStatus(
                             "YubiKey service unavailable",
-                            $"Unable to initialise the YubiKey integration: {ex.Message}",
+                            "The YubiKey integration could not be initialized.",
                             "#DC3545",
                             "Install or repair YubiKey Manager, then try again.");
 
                         await _dialogService.ShowErrorAsync(
                             "YubiKey Service Error",
-                            $"Unable to initialise the YubiKey integration: {ex.Message}",
+                            "The YubiKey integration could not be initialized. Install or repair YubiKey Manager, then try again.",
                             _ownerWindow);
                         StatusMessage = "YubiKey service unavailable.";
                         return;
@@ -2021,13 +2031,14 @@ namespace PhantomVault.UI.ViewModels
                     }
                     catch (InvalidOperationException ex)
                     {
+                        Log.Warning(ex, "[VaultSettings] YubiKey detection failed.");
                         SetYubiKeyStatus(
                             "YubiKey detection failed",
-                            ex.Message,
+                            "The connected YubiKey could not be detected.",
                             "#DC3545",
                             "Reconnect the device or install YubiKey Manager, then try again.");
 
-                        await _dialogService.ShowErrorAsync("YubiKey Error", ex.Message, _ownerWindow);
+                        await _dialogService.ShowErrorAsync("YubiKey Error", "The connected YubiKey could not be detected. Reconnect it and try again.", _ownerWindow);
                         StatusMessage = "YubiKey detection failed.";
                     }
                 },
@@ -2118,15 +2129,16 @@ namespace PhantomVault.UI.ViewModels
                     }
                     catch (Exception ex)
                     {
+                        Log.Error(ex, "[VaultSettings] TOTP configuration failed.");
                         SetTotpStatus(
                             "TOTP setup failed",
-                            $"Unable to configure TOTP: {ex.Message}",
+                            "TOTP could not be configured.",
                             "#DC3545",
                             "Try again or contact support if the issue persists.");
 
                         await _dialogService.ShowErrorAsync(
                             "TOTP Configuration Error",
-                            $"Unable to configure TOTP: {ex.Message}",
+                            "TOTP could not be configured. Verify the secret and try again.",
                             _ownerWindow);
                         StatusMessage = "TOTP setup failed.";
                     }
@@ -2236,9 +2248,10 @@ namespace PhantomVault.UI.ViewModels
                         }
                         catch (Exception ex)
                         {
+                            Log.Error(ex, "[VaultSettings] Failed to read the manifest for TOTP code viewing.");
                             await _dialogService.ShowErrorAsync(
                                 "Manifest Read Failed",
-                                $"Unable to read vault manifest: {ex.Message}",
+                                "The vault manifest could not be read. Lock and reopen the vault, then try again.",
                                 _ownerWindow);
                             StatusMessage = "Failed to read manifest.";
                             return;
@@ -2283,7 +2296,7 @@ namespace PhantomVault.UI.ViewModels
                         Log.Error(ex, "Error viewing TOTP codes");
                         await _dialogService.ShowErrorAsync(
                             "TOTP Error",
-                            $"Unable to retrieve TOTP codes: {ex.Message}",
+                            "Authenticator codes could not be retrieved. Lock and reopen the vault, then try again.",
                             _ownerWindow);
                         StatusMessage = "Failed to retrieve TOTP codes.";
                     }
@@ -2321,9 +2334,10 @@ namespace PhantomVault.UI.ViewModels
                         }
                         catch (Exception ex)
                         {
+                            Log.Warning(ex, "[VaultSettings] Manifest categories could not be loaded; using the in-memory list.");
                             await _dialogService.ShowWarningAsync(
                                 "Manage Categories",
-                                $"Unable to load manifest categories ({ex.Message}). Showing the in-memory list instead.",
+                                "Manifest categories could not be loaded. The current in-memory list will be shown instead.",
                                 _ownerWindow);
 
                             newViewModel = new CategoryManagerViewModel(_vaultViewModel);
@@ -2346,7 +2360,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("Error", $"Failed to open category manager: {ex.Message}", _ownerWindow);
+                Log.Error(ex, "[VaultSettings] Failed to open the category manager.");
+                await _dialogService.ShowErrorAsync("Error", "The category manager could not be opened. Try again.", _ownerWindow);
                 StatusMessage = "Failed to open category manager";
             }
         }
@@ -2418,7 +2433,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("Error", $"Failed to open extension folder: {ex.Message}", _ownerWindow);
+                Log.Error(ex, "[VaultSettings] Failed to open the browser-extension folder.");
+                await _dialogService.ShowErrorAsync("Error", "The browser-extension folder could not be opened. Verify it is installed and try again.", _ownerWindow);
                 StatusMessage = "Failed to show extension installation";
             }
         }
@@ -2456,7 +2472,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("Error", $"Failed to open extension folder: {ex.Message}", _ownerWindow);
+                Log.Error(ex, "[VaultSettings] Failed to open the browser-extension folder.");
+                await _dialogService.ShowErrorAsync("Error", "The browser-extension folder could not be opened. Verify it is installed and try again.", _ownerWindow);
                 StatusMessage = "Failed to show extension installation";
             }
         }
@@ -2513,7 +2530,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("Configuration Failed", $"Failed to configure native host: {ex.Message}", _ownerWindow);
+                Log.Error(ex, "[VaultSettings] Native-host configuration failed.");
+                await _dialogService.ShowErrorAsync("Configuration Failed", "The browser native host could not be configured. Verify application permissions and try again.", _ownerWindow);
                 StatusMessage = "Native host configuration failed";
             }
         }
@@ -2638,9 +2656,10 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "[VaultSettings] Backup creation failed.");
                 await _dialogService.ShowErrorAsync(
                     "Backup Failed",
-                    $"Could not create the backup: {ex.Message}",
+                    "The backup could not be created. Verify the destination is available and has enough free space.",
                     _ownerWindow);
                 StatusMessage = "Backup failed.";
                 return;
@@ -2776,9 +2795,10 @@ namespace PhantomVault.UI.ViewModels
                 }
                 catch (Exception ex)
                 {
+                    Log.Error(ex, "[VaultSettings] Failed to read the selected backup.");
                     await _dialogService.ShowErrorAsync(
                         "Restore Failed",
-                        $"Unable to read the selected backup file: {ex.Message}",
+                        "The selected backup could not be read. Verify it is a valid Phantom backup and try again.",
                         _ownerWindow);
                     StatusMessage = "Restore failed.";
                     if (tempCopyPath != null)
@@ -2832,9 +2852,10 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "[VaultSettings] Backup restoration failed.");
                 await _dialogService.ShowErrorAsync(
                     "Restore Failed",
-                    $"Could not restore the backup: {ex.Message}",
+                    "The backup could not be restored. Verify the backup and vault credentials, then try again.",
                     _ownerWindow);
                 StatusMessage = "Restore failed.";
                 if (tempCopyPath != null)
@@ -2953,7 +2974,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowWarningAsync("Export Failed", $"Error exporting vault: {ex.Message}", _ownerWindow);
+                Log.Error(ex, "[VaultSettings] Vault export failed.");
+                await _dialogService.ShowWarningAsync("Export Failed", "The vault could not be exported. Verify the destination is writable and try again.", _ownerWindow);
                 StatusMessage = "✗ Export failed";
             }
         }
@@ -3030,7 +3052,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowWarningAsync("Export Failed", $"Error exporting vault: {ex.Message}", _ownerWindow);
+                Log.Error(ex, "[VaultSettings] Vault export failed.");
+                await _dialogService.ShowWarningAsync("Export Failed", "The vault could not be exported. Verify the destination is writable and try again.", _ownerWindow);
                 StatusMessage = "✗ Export failed";
             }
         }
@@ -3098,9 +3121,10 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "[VaultSettings] KeePass export failed.");
                 await _dialogService.ShowErrorAsync(
                     "Export Failed",
-                    $"Failed to export vault:\n{ex.Message}",
+                    "The vault could not be exported. Verify the destination is writable and try again.",
                     _ownerWindow);
                 StatusMessage = "Export failed";
             }
@@ -3137,9 +3161,10 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "[VaultSettings] Failed to open the import window.");
                 await _dialogService.ShowErrorAsync(
                     "Error",
-                    $"Failed to open import window:\n{ex.Message}",
+                    "The import window could not be opened. Try again.",
                     _ownerWindow);
                 StatusMessage = "Failed to open import window";
             }
@@ -3256,7 +3281,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowWarningAsync("Import Failed", $"Error importing vault: {ex.Message}", _ownerWindow);
+                Log.Error(ex, "[VaultSettings] Vault import failed.");
+                await _dialogService.ShowWarningAsync("Import Failed", "The vault could not be imported. Verify the source file and try again.", _ownerWindow);
                 StatusMessage = "✗ Import failed";
             }
         }
@@ -3383,7 +3409,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowWarningAsync("Import Failed", $"Error importing vault: {ex.Message}", _ownerWindow);
+                Log.Error(ex, "[VaultSettings] Vault import failed.");
+                await _dialogService.ShowWarningAsync("Import Failed", "The vault could not be imported. Verify the source file and try again.", _ownerWindow);
                 StatusMessage = "✗ Import failed";
             }
         }
@@ -3461,7 +3488,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowWarningAsync("Import Failed", $"Error: {ex.Message}", _ownerWindow);
+                Log.Error(ex, "[VaultSettings] Vault import failed.");
+                await _dialogService.ShowWarningAsync("Import Failed", "The vault could not be imported. Verify the source file and try again.", _ownerWindow);
                 StatusMessage = "✗ Import failed";
             }
         }

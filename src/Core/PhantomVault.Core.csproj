@@ -28,6 +28,13 @@
     <InformationalVersion>$(VersionPrefix)+$(SourceRevisionId)</InformationalVersion>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Keep generated sources from isolated verification outputs out of the
+         default SDK compile glob. Without this, obj_integrity_verify produces
+         duplicate assembly and target-framework attributes. -->
+    <Compile Remove="obj_*\**\*.cs;bin_*\**\*.cs" />
+  </ItemGroup>
+
   <!-- Embed build timestamp and git commit hash as assembly metadata -->
   <Target Name="AddBuildMetadata" BeforeTargets="CoreCompile">
     <PropertyGroup>

@@ -18,7 +18,7 @@
                 <controls:PinDigitBoxes Pin="{Binding PinValue, Mode=TwoWay}"
                                         PinLength="{Binding PinLength, Mode=TwoWay}"
                                         ShowLengthSelector="True"/>
-                <TextBlock Text="Choose how many digits this PIN uses (1-32), then type into the boxes."
+                <TextBlock Text="Choose how many digits this PIN uses (1-8), then type into the boxes."
                            Classes="field-hint"/>
             </StackPanel>
 

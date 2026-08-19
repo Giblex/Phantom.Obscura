@@ -151,7 +151,7 @@ namespace PhantomVault.Core.Tests
         }
 
         [Fact]
-        public void PinLengthRange_clamps_to_one_through_thirty_two()
+        public void PinLengthRange_clamps_to_one_through_eight()
         {
             // This range is for a PIN stored as credential data — a card PIN, a door
             // code — not the vault's unlock PIN. It is never verified against anything,
@@ -165,11 +165,11 @@ namespace PhantomVault.Core.Tests
             Assert.Equal(1, PinLengthRange.Clamp(0));
             Assert.Equal(1, PinLengthRange.Clamp(-5));
 
-            Assert.Equal(32, PinLengthRange.Clamp(99));
+            Assert.Equal(8, PinLengthRange.Clamp(99));
             Assert.Equal(4, PinLengthRange.Clamp(4));
 
-            // 1..32 inclusive.
-            Assert.Equal(32, PinLengthRange.All.Count);
+            // 1..8 inclusive.
+            Assert.Equal(8, PinLengthRange.All.Count);
         }
 
         [Fact]

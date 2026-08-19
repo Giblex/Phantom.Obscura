@@ -16,13 +16,21 @@
         CanResize="True"
         Icon="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Parent Icon.ico"
         Background="{DynamicResource WindowBackgroundBrush}"
-        Classes="animated-window">
+        Classes="animated-window native-dot-grid">
 
     <views:ThemeAwareWindow.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://PhantomVault.UI/Assets/Themes/PreVaultTheme.axaml"/>
             </ResourceDictionary.MergedDictionaries>
+            <LinearGradientBrush x:Key="WelcomeVaultRowBg" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#B61A2E43" Offset="0"/>
+                <GradientStop Color="#A5102033" Offset="1"/>
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="WelcomeVaultActiveRowBg" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#C1203850" Offset="0"/>
+                <GradientStop Color="#B514273A" Offset="1"/>
+            </LinearGradientBrush>
         </ResourceDictionary>
     </views:ThemeAwareWindow.Resources>
 
@@ -176,11 +184,34 @@
                 HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                 RenderOptions.BitmapInterpolationMode="None">
             <Border.Background>
-                <ImageBrush Source="avares://PhantomVault.UI/Assets/dot_pattern_light.png"
-                            TileMode="Tile"
-                            Stretch="None"
-                            SourceRect="0,0,8,8"
-                            DestinationRect="0,0,8,8"/>
+                <DrawingBrush TileMode="Tile" Stretch="None"
+                               SourceRect="0,0,8,8"
+                               DestinationRect="0,0,8,8">
+                    <DrawingBrush.Drawing>
+                        <GeometryDrawing Brush="#24FFFFFF">
+                            <GeometryDrawing.Geometry>
+                                <EllipseGeometry Rect="0,0,1.5,1.5"/>
+                            </GeometryDrawing.Geometry>
+                        </GeometryDrawing>
+                    </DrawingBrush.Drawing>
+                </DrawingBrush>
+            </Border.Background>
+        </Border>
+        <Border Grid.Row="0" Grid.RowSpan="2" IsHitTestVisible="False">
+            <Border.Background>
+                <DrawingBrush TileMode="Tile" Stretch="None" SourceRect="0,0,40,40" DestinationRect="0,0,40,40">
+                    <DrawingBrush.Drawing>
+                        <GeometryDrawing>
+                            <GeometryDrawing.Pen><Pen Brush="#08FFFFFF" Thickness="1"/></GeometryDrawing.Pen>
+                            <GeometryDrawing.Geometry>
+                                <GeometryGroup>
+                                    <LineGeometry StartPoint="0.5,0" EndPoint="0.5,40"/>
+                                    <LineGeometry StartPoint="0,0.5" EndPoint="40,0.5"/>
+                                </GeometryGroup>
+                            </GeometryDrawing.Geometry>
+                        </GeometryDrawing>
+                    </DrawingBrush.Drawing>
+                </DrawingBrush>
             </Border.Background>
         </Border>
 
@@ -277,15 +308,37 @@
                         MaxWidth="760"
                         Width="760"
                         IsVisible="{Binding IsLandingVisible}"
-                        BoxShadow="0 8 24 0 #40000000">
+                        BoxShadow="0 20 46 0 #8A000000, 0 -1 0 0 #26FFFFFF">
                     <Border.Background>
-                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                            <GradientStop Color="#551B2846" Offset="0"/>
-                            <GradientStop Color="#55214247" Offset="0.5"/>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                            <GradientStop Color="#2CD9E9EB" Offset="0"/>
+                            <GradientStop Color="#55214247" Offset="0.35"/>
+                            <GradientStop Color="#55214247" Offset="0.65"/>
                             <GradientStop Color="#55193A42" Offset="1"/>
                         </LinearGradientBrush>
                     </Border.Background>
-                    <StackPanel Spacing="14" HorizontalAlignment="Center">
+                    <Grid>
+                        <Border Width="170" Height="105" HorizontalAlignment="Center"
+                                VerticalAlignment="Center" Margin="-210,0,0,0" IsHitTestVisible="False">
+                            <Border.Background>
+                                <RadialGradientBrush Center="50%,50%" GradientOrigin="50%,50%" RadiusX="50%" RadiusY="50%">
+                                    <GradientStop Color="#7855D5C5" Offset="0"/>
+                                    <GradientStop Color="#3455D5C5" Offset="0.48"/>
+                                    <GradientStop Color="#0055C7B9" Offset="1"/>
+                                </RadialGradientBrush>
+                            </Border.Background>
+                        </Border>
+                        <Border Width="120" Height="82" HorizontalAlignment="Center"
+                                VerticalAlignment="Center" Margin="95,16,0,0" IsHitTestVisible="False">
+                            <Border.Background>
+                                <RadialGradientBrush Center="50%,50%" GradientOrigin="50%,50%" RadiusX="50%" RadiusY="50%">
+                                    <GradientStop Color="#685ADBCB" Offset="0"/>
+                                    <GradientStop Color="#285ADBCB" Offset="0.5"/>
+                                    <GradientStop Color="#005ACFC1" Offset="1"/>
+                                </RadialGradientBrush>
+                            </Border.Background>
+                        </Border>
+                        <StackPanel Spacing="14" HorizontalAlignment="Center">
                         <!-- Vault picker — single acrylic "window" containing three
                              stacked slot rows (not three separate bubbles). Each row is
                              either a "vault loaded" row (Button) or an empty placeholder,
@@ -297,18 +350,25 @@
                                        FontSize="{StaticResource Type.Label.Size}"
                                        Foreground="{DynamicResource PrimaryTextBrush}"
                                        HorizontalAlignment="Center"/>
-                            <Border Background="{DynamicResource DashboardSectionBg}"
-                                    BorderBrush="{DynamicResource Brush.Glass.Border}"
+                            <Border BorderBrush="{DynamicResource Brush.Glass.Border}"
                                     BorderThickness="1"
                                     CornerRadius="14"
                                     Padding="0"
                                     Width="600"
-                                    HorizontalAlignment="Center">
+                                    HorizontalAlignment="Center"
+                                    BoxShadow="inset 0 7 18 0 #A0000000, inset 0 -1 0 0 #24FFFFFF">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                        <GradientStop Color="#8615253A" Offset="0"/>
+                                        <GradientStop Color="#7A101E30" Offset="0.5"/>
+                                        <GradientStop Color="#70101B2E" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Border.Background>
                                 <StackPanel Spacing="0">
                                     <!-- Slot 1 -->
                                     <Grid Height="56">
                                         <Border Padding="16,10"
-                                                Background="{DynamicResource DashboardCardBg}"
+                                                Background="{DynamicResource WelcomeVaultRowBg}"
                                                 BoxShadow="inset 0 2 6 0 #60000000, inset 0 -1 0 0 #30FFFFFF"
                                                 IsVisible="{Binding !Slot1HasVault}">
                                             <Grid ColumnDefinitions="52,1,14,*" VerticalAlignment="Center">
@@ -331,7 +391,7 @@
                                                 HorizontalAlignment="Stretch"
                                                 HorizontalContentAlignment="Stretch">
                                             <Border Padding="16,10"
-                                                    Background="{DynamicResource DashboardPanelBg}"
+                                                    Background="{DynamicResource WelcomeVaultActiveRowBg}"
                                                     BoxShadow="inset 0 2 6 0 #80000000, inset 0 -1 0 0 #40FFFFFF">
                                                 <Grid ColumnDefinitions="52,1,14,*" VerticalAlignment="Center">
                                                     <TextBlock Grid.Column="0" Text="Slot 1"
@@ -358,7 +418,7 @@
                                     <!-- Slot 2 -->
                                     <Grid Height="56">
                                         <Border Padding="16,10"
-                                                Background="{DynamicResource DashboardCardBg}"
+                                                Background="{DynamicResource WelcomeVaultRowBg}"
                                                 BoxShadow="inset 0 2 6 0 #60000000, inset 0 -1 0 0 #30FFFFFF"
                                                 IsVisible="{Binding !Slot2HasVault}">
                                             <Grid ColumnDefinitions="52,1,14,*" VerticalAlignment="Center">
@@ -381,7 +441,7 @@
                                                 HorizontalAlignment="Stretch"
                                                 HorizontalContentAlignment="Stretch">
                                             <Border Padding="16,10"
-                                                    Background="{DynamicResource DashboardPanelBg}"
+                                                    Background="{DynamicResource WelcomeVaultActiveRowBg}"
                                                     BoxShadow="inset 0 2 6 0 #80000000, inset 0 -1 0 0 #40FFFFFF">
                                                 <Grid ColumnDefinitions="52,1,14,*" VerticalAlignment="Center">
                                                     <TextBlock Grid.Column="0" Text="Slot 2"
@@ -408,7 +468,7 @@
                                     <!-- Slot 3 -->
                                     <Grid Height="56">
                                         <Border Padding="16,10"
-                                                Background="{DynamicResource DashboardCardBg}"
+                                                Background="{DynamicResource WelcomeVaultRowBg}"
                                                 BoxShadow="inset 0 2 6 0 #60000000, inset 0 -1 0 0 #30FFFFFF"
                                                 IsVisible="{Binding !Slot3HasVault}">
                                             <Grid ColumnDefinitions="52,1,14,*" VerticalAlignment="Center">
@@ -431,7 +491,7 @@
                                                 HorizontalAlignment="Stretch"
                                                 HorizontalContentAlignment="Stretch">
                                             <Border Padding="16,10"
-                                                    Background="{DynamicResource DashboardPanelBg}"
+                                                    Background="{DynamicResource WelcomeVaultActiveRowBg}"
                                                     BoxShadow="inset 0 2 6 0 #80000000, inset 0 -1 0 0 #40FFFFFF">
                                                 <Grid ColumnDefinitions="52,1,14,*" VerticalAlignment="Center">
                                                     <TextBlock Grid.Column="0" Text="Slot 3"
@@ -456,7 +516,8 @@
                                 </StackPanel>
                             </Border>
                         </StackPanel>
-                    </StackPanel>
+                        </StackPanel>
+                    </Grid>
                 </Border>
 
                 <!-- Dev Bypass — sits at the far left, below the vault-slot list. -->
@@ -654,12 +715,81 @@
         </Border>
 
 
-        <!-- Top-of-bottom-banner separator: full-width hairline above the buttons. -->
+        <Border Grid.Row="2" Background="{DynamicResource WindowBackgroundBrush}" IsHitTestVisible="False"/>
+
+        <Panel Grid.Row="2" IsHitTestVisible="False" ClipToBounds="True">
+            <Border Width="240" Height="150" HorizontalAlignment="Left" Margin="90,-45,0,0">
+                <Border.Background>
+                    <RadialGradientBrush Center="50%,50%" GradientOrigin="50%,50%" RadiusX="50%" RadiusY="50%">
+                        <GradientStop Color="#2A2DD4BF" Offset="0"/>
+                        <GradientStop Color="#102DD4BF" Offset="0.52"/>
+                        <GradientStop Color="#002DD4BF" Offset="1"/>
+                    </RadialGradientBrush>
+                </Border.Background>
+            </Border>
+            <Border Width="280" Height="160" HorizontalAlignment="Right" Margin="0,-55,70,0">
+                <Border.Background>
+                    <RadialGradientBrush Center="50%,50%" GradientOrigin="50%,50%" RadiusX="50%" RadiusY="50%">
+                        <GradientStop Color="#2806B6D4" Offset="0"/>
+                        <GradientStop Color="#1006B6D4" Offset="0.52"/>
+                        <GradientStop Color="#0006B6D4" Offset="1"/>
+                    </RadialGradientBrush>
+                </Border.Background>
+            </Border>
+        </Panel>
+
+        <!-- Same page composition, shifted darker without changing its hue. -->
+        <Border Grid.Row="2" Background="#26000000" IsHitTestVisible="False"/>
+
+        <!-- Soft footer transition: extends upward into the scroll region so content
+             appears to pass behind the footer instead of meeting a hard separator. -->
         <Border Grid.Row="2"
-                Height="1"
+                Margin="0,-58,0,0"
+                Height="58"
                 VerticalAlignment="Top"
                 HorizontalAlignment="Stretch"
-                Background="{DynamicResource Brush.Glass.Border}"/>
+                IsHitTestVisible="False">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                    <GradientStop Color="#00162D3B" Offset="0"/>
+                    <GradientStop Color="#50091A27" Offset="0.42"/>
+                    <GradientStop Color="#A00A1E2C" Offset="0.72"/>
+                    <GradientStop Color="#E00B202E" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+        </Border>
+
+        <!-- Footer-only texture: deliberately quieter and more widely spaced than
+             the main page field so the action bar remains visually grounded. -->
+        <Border Grid.Row="2" IsHitTestVisible="False">
+            <Border.Background>
+                <DrawingBrush TileMode="Tile" Stretch="None" SourceRect="0,0,8,8" DestinationRect="0,0,8,8">
+                    <DrawingBrush.Drawing>
+                        <GeometryDrawing Brush="#24FFFFFF">
+                            <GeometryDrawing.Geometry><EllipseGeometry Rect="0,0,1.5,1.5"/></GeometryDrawing.Geometry>
+                        </GeometryDrawing>
+                    </DrawingBrush.Drawing>
+                </DrawingBrush>
+            </Border.Background>
+        </Border>
+
+        <Border Grid.Row="2" IsHitTestVisible="False">
+            <Border.Background>
+                <DrawingBrush TileMode="Tile" Stretch="None" SourceRect="0,0,40,40" DestinationRect="0,0,40,40">
+                    <DrawingBrush.Drawing>
+                        <GeometryDrawing>
+                            <GeometryDrawing.Pen><Pen Brush="#08FFFFFF" Thickness="1"/></GeometryDrawing.Pen>
+                            <GeometryDrawing.Geometry>
+                                <GeometryGroup>
+                                    <LineGeometry StartPoint="0.5,0" EndPoint="0.5,40"/>
+                                    <LineGeometry StartPoint="0,0.5" EndPoint="40,0.5"/>
+                                </GeometryGroup>
+                            </GeometryDrawing.Geometry>
+                        </GeometryDrawing>
+                    </DrawingBrush.Drawing>
+                </DrawingBrush>
+            </Border.Background>
+        </Border>
 
         <Border x:Name="ActionFooterCard"
                 Grid.Row="2"

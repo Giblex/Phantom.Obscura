@@ -184,6 +184,8 @@ namespace PhantomVault.UI.ViewModels
             _isTotpEntry = entryType == EntryType.TotpGenerator;
             _isPinCodeEntry = entryType == EntryType.PinCode;
             _isBlankEntry = entryType == EntryType.Blank;
+            _isPasskeyEntry = _existingCredential?.IsPasskey == true ||
+                              !string.IsNullOrWhiteSpace(_existingCredential?.AttestorPasskeyReference);
 
             if (_isBlankEntry)
             {
@@ -230,10 +232,12 @@ namespace PhantomVault.UI.ViewModels
 
             Console.WriteLine($"[ADD/EDIT VM] After RaisePropertyChanged: IsCreditCardEntry={IsCreditCardEntry}, IsPasswordEntry={IsPasswordEntry}");
 
-            SaveCommand = ReactiveCommand.Create(Save);
+            SaveCommand = ReactiveCommand.CreateFromTask(SaveAsync);
             AddSectionCommand = ReactiveCommand.Create(AddSection);
             AddLinkedSectionCommand = ReactiveCommand.Create(AddLinkedSection);
             ApplySectionTemplateCommand = ReactiveCommand.Create(ApplySectionTemplate);
+            ApplySelectedTemplateSectionsCommand = ReactiveCommand.Create(ApplySelectedTemplateSections);
+            SelectAllTemplateSectionsCommand = ReactiveCommand.Create(SelectAllTemplateSections);
             CancelCommand = ReactiveCommand.Create(Cancel);
             TogglePasswordVisibilityCommand = ReactiveCommand.Create(TogglePasswordVisibility);
             GeneratePasswordCommand = ReactiveCommand.Create(GeneratePassword);
@@ -331,6 +335,7 @@ namespace PhantomVault.UI.ViewModels
         public string DisplayIcon => HasCustomIcon ? Icon : (Title.Length > 0 ? Title.Substring(0, Math.Min(2, Title.Length)).ToUpper() : "??");
 
         private bool _isPasswordEntry;
+        private bool _isPasskeyEntry;
         private bool _isCreditCardEntry;
         private bool _isBankAccountEntry;
         private bool _isIdentityEntry;
@@ -494,7 +499,14 @@ namespace PhantomVault.UI.ViewModels
         public ObservableCollection<CategoryViewModel> Categories
         {
             get => _categories;
-            set => this.RaiseAndSetIfChanged(ref _categories, value);
+            set
+            {
+                var selectedName = SelectedCategory?.Name ?? _existingCredential?.Group;
+                this.RaiseAndSetIfChanged(ref _categories, value);
+                SelectedCategory = _categories.FirstOrDefault(c =>
+                    string.Equals(c.Name, selectedName, StringComparison.OrdinalIgnoreCase))
+                    ?? _categories.FirstOrDefault();
+            }
         }
 
         public IReadOnlyList<string> IdentityTypeOptions => _identityTypeOptions;
@@ -503,7 +515,17 @@ namespace PhantomVault.UI.ViewModels
         public bool IsSecureNoteEntry => string.Equals(SelectedCategory?.Name ?? _existingCredential?.Group,
             "Secure Notes", StringComparison.OrdinalIgnoreCase);
 
-        public bool ShowPasswordFields => IsPasswordEntry && !IsSecureNoteEntry;
+        public bool IsPasskeyEntry
+        {
+            get => _isPasskeyEntry;
+            private set
+            {
+                this.RaiseAndSetIfChanged(ref _isPasskeyEntry, value);
+                this.RaisePropertyChanged(nameof(ShowPasswordFields));
+            }
+        }
+
+        public bool ShowPasswordFields => IsPasswordEntry && !IsSecureNoteEntry && !IsPasskeyEntry;
         public bool ShowCategorySelector => !IsSecureNoteEntry;
         public bool ShowIconSelector => !IsSecureNoteEntry;
 
@@ -751,6 +773,8 @@ namespace PhantomVault.UI.ViewModels
                     return;
 
                 this.RaiseAndSetIfChanged(ref _selectedSectionTemplate, value);
+                ApplyEntryTypeTemplate(value?.Name);
+                RebuildTemplateSectionOptions(value);
                 this.RaisePropertyChanged(nameof(SelectedSectionTemplateDescription));
                 this.RaisePropertyChanged(nameof(HasSelectedSectionTemplate));
             }
@@ -759,6 +783,139 @@ namespace PhantomVault.UI.ViewModels
         public bool HasSelectedSectionTemplate => SelectedSectionTemplate != null;
 
         public string SelectedSectionTemplateDescription => SelectedSectionTemplate?.Description ?? string.Empty;
+
+        public ObservableCollection<TemplateSectionOptionViewModel> TemplateSectionOptions { get; } = new();
+
+        private void ApplyEntryTypeTemplate(string? templateName)
+        {
+            if (_existingCredential == null || string.IsNullOrWhiteSpace(templateName))
+                return;
+
+            EntryType? targetType = templateName switch
+            {
+                "Login" => EntryType.Password,
+                "Credit card" => EntryType.CreditCard,
+                "Bank account" => EntryType.BankAccount,
+                "Medicare card" => EntryType.Identity,
+                "Identity document" => EntryType.Identity,
+                "Wi-Fi network" => EntryType.WiFi,
+                "API key" => EntryType.ApiKey,
+                "Contact" => EntryType.Contact,
+                "Authenticator" => EntryType.TotpGenerator,
+                "Passkey" => EntryType.Password,
+                "PIN code" => EntryType.PinCode,
+                "Secure note" => EntryType.Password,
+                "Blank entry" => EntryType.Blank,
+                _ => null
+            };
+
+            if (!targetType.HasValue)
+                return;
+
+            _existingCredential.EntryType = targetType.Value;
+            if (templateName == "Medicare card")
+                IdDocumentType = "Medicare Card";
+
+            if (templateName == "Secure note")
+            {
+                _existingCredential.Group = "Secure Notes";
+                SelectedCategory = Categories.FirstOrDefault(c =>
+                    string.Equals(c.Name, "Secure Notes", StringComparison.OrdinalIgnoreCase));
+            }
+
+            IsPasswordEntry = targetType == EntryType.Password;
+            IsCreditCardEntry = targetType == EntryType.CreditCard;
+            IsBankAccountEntry = targetType == EntryType.BankAccount;
+            IsIdentityEntry = targetType == EntryType.Identity;
+            IsWiFiEntry = targetType == EntryType.WiFi;
+            IsApiKeyEntry = targetType == EntryType.ApiKey;
+            IsContactEntry = targetType == EntryType.Contact;
+            IsTotpEntry = targetType == EntryType.TotpGenerator;
+            IsPinCodeEntry = targetType == EntryType.PinCode;
+            IsBlankEntry = targetType == EntryType.Blank;
+            IsPasskeyEntry = templateName == "Passkey";
+
+            this.RaisePropertyChanged(nameof(EntryType));
+            this.RaisePropertyChanged(nameof(ShowPasswordField));
+            this.RaisePropertyChanged(nameof(ShowPasswordGenerator));
+            this.RaisePropertyChanged(nameof(ShowPasswordStrength));
+            this.RaisePropertyChanged(nameof(ShowPasswordVisibilityToggle));
+            this.RaisePropertyChanged(nameof(ShowPasswordFields));
+            this.RaisePropertyChanged(nameof(ShowCategorySelector));
+            this.RaisePropertyChanged(nameof(ShowIconSelector));
+            this.RaisePropertyChanged(nameof(IsSecureNoteEntry));
+            UpdateAutoDetectedIcon();
+        }
+
+        private void RebuildTemplateSectionOptions(PhantomVault.Core.Services.EntrySectionTemplate? template)
+        {
+            TemplateSectionOptions.Clear();
+            if (template == null)
+                return;
+
+            var duplicateTotals = template.Kinds
+                .GroupBy(kind => kind)
+                .ToDictionary(group => group.Key, group => group.Count());
+            var occurrences = new Dictionary<EntrySectionKind, int>();
+
+            foreach (var kind in template.Kinds)
+            {
+                occurrences.TryGetValue(kind, out var occurrence);
+                occurrence++;
+                occurrences[kind] = occurrence;
+
+                var label = FormatSectionKind(kind);
+                if (duplicateTotals[kind] > 1)
+                    label += $" {occurrence}";
+
+                TemplateSectionOptions.Add(new TemplateSectionOptionViewModel(
+                    kind,
+                    label,
+                    OnTemplateSectionSelectionChanged));
+            }
+        }
+
+        private void OnTemplateSectionSelectionChanged(TemplateSectionOptionViewModel option, bool selected)
+        {
+            if (selected)
+            {
+                if (option.AppliedEditor != null)
+                    return;
+
+                var section = EntrySection.CreateInline(option.Kind);
+                section.SortOrder = SectionEditors.Count;
+                var editor = new SectionEditorItemViewModel(
+                    section, BuildLinkCandidates(), RemoveSectionEditor, MoveSectionEditor);
+                option.AppliedEditor = editor;
+                SectionEditors.Add(editor);
+            }
+            else if (option.AppliedEditor != null)
+            {
+                SectionEditors.Remove(option.AppliedEditor);
+                option.AppliedEditor = null;
+            }
+
+            ResequenceSections();
+            RaiseSectionCollectionChanged();
+        }
+
+        private static string FormatSectionKind(EntrySectionKind kind)
+        {
+            var text = kind.ToString();
+            return System.Text.RegularExpressions.Regex.Replace(text, "(?<!^)([A-Z])", " $1");
+        }
+
+        private void SelectAllTemplateSections()
+        {
+            foreach (var option in TemplateSectionOptions)
+                option.IsSelected = true;
+        }
+
+        private void ApplySelectedTemplateSections()
+        {
+            // Kept for command compatibility with older views. Selection is now live,
+            // so there is no deferred apply step.
+        }
 
         private void ApplySectionTemplate()
         {
@@ -973,6 +1130,7 @@ namespace PhantomVault.UI.ViewModels
                     this.RaisePropertyChanged(nameof(ShowIdIssuingState));
                     this.RaisePropertyChanged(nameof(ShowIdIssueDate));
                     this.RaisePropertyChanged(nameof(ShowIdExpiryDate));
+                    this.RaisePropertyChanged(nameof(IsMedicareIdentity));
                 }
             }
         }
@@ -1030,6 +1188,8 @@ namespace PhantomVault.UI.ViewModels
             "citizenship certificate" => "20240123456",
             _ => "ABC123456"
         };
+
+        public bool IsMedicareIdentity => GetIdentityTypeKey() == "medicare card";
 
         public string IdIssuingCountryLabel => "Issuing Country";
         public string IdIssuingStateLabel => GetIdentityTypeKey() switch
@@ -1196,6 +1356,8 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> AddSectionCommand { get; }
         public ReactiveCommand<Unit, Unit> AddLinkedSectionCommand { get; }
         public ReactiveCommand<Unit, Unit> ApplySectionTemplateCommand { get; }
+        public ReactiveCommand<Unit, Unit> ApplySelectedTemplateSectionsCommand { get; }
+        public ReactiveCommand<Unit, Unit> SelectAllTemplateSectionsCommand { get; }
         public ReactiveCommand<Unit, Unit> CancelCommand { get; }
         public ReactiveCommand<Unit, Unit> TogglePasswordVisibilityCommand { get; }
         public ReactiveCommand<Unit, Unit> GeneratePasswordCommand { get; }
@@ -1280,7 +1442,7 @@ namespace PhantomVault.UI.ViewModels
             return isValid;
         }
 
-        private void Save()
+        private async System.Threading.Tasks.Task SaveAsync()
         {
             if (!ValidateForm())
             {
@@ -1388,6 +1550,9 @@ namespace PhantomVault.UI.ViewModels
                 credential.ContactJobTitle = _existingCredential.ContactJobTitle;
 
                 credential.IsPasskey = _existingCredential.IsPasskey;
+                credential.PasskeyId = _existingCredential.PasskeyId;
+                credential.AttestorPasskeyReference = _existingCredential.AttestorPasskeyReference;
+                credential.AttestorTotpReference = _existingCredential.AttestorTotpReference;
 
                 credential.TotpSecret = _existingCredential.TotpSecret;
                 credential.TotpDigits = _existingCredential.TotpDigits;
@@ -1404,15 +1569,105 @@ namespace PhantomVault.UI.ViewModels
 
             if (!string.IsNullOrWhiteSpace(TotpSecretInput))
             {
-                credential.TotpSecret = TotpSecretInput.Trim().ToUpperInvariant();
+                var broker = (Application.Current as App)?.Services?
+                    .GetService(typeof(AttestorCredentialBrokerClient)) as AttestorCredentialBrokerClient;
+                if (broker == null)
+                {
+                    await ShowAttestorRequiredAsync("TOTP could not be stored because the Attestor broker is unavailable.");
+                    return;
+                }
+
+                try
+                {
+                    credential.AttestorTotpReference = await broker.PutTotpAsync(
+                        credential.AttestorTotpReference,
+                        credential.TotpIssuer,
+                        credential.TotpAccountName,
+                        TotpSecretInput,
+                        credential.TotpDigits,
+                        credential.TotpTimeStep,
+                        credential.TotpAlgorithm);
+                    // The seed has crossed into Attestor ownership. Do not persist a copy.
+                    credential.TotpSecret = string.Empty;
+                }
+                catch (Exception ex)
+                {
+                    Serilog.Log.Warning(ex, "[AddEditCredential] Attestor rejected TOTP storage");
+                    await ShowAttestorRequiredAsync("Open and unlock Phantom Attestor, then try saving this entry again.");
+                    return;
+                }
             }
-            else
+            else if (string.IsNullOrWhiteSpace(credential.AttestorTotpReference))
             {
 
                 credential.TotpSecret = string.Empty;
             }
 
             ApplySectionsTo(credential);
+
+            var attestor = (Application.Current as App)?.Services?
+                .GetService(typeof(AttestorCredentialBrokerClient)) as AttestorCredentialBrokerClient;
+
+            // Move every inline TOTP seed into Attestor before the credential is persisted.
+            // Existing opaque references remain untouched when the editor is reopened.
+            foreach (var section in credential.Sections.Where(s => s.Kind == EntrySectionKind.Totp && !s.IsLinked))
+            {
+                if (string.IsNullOrWhiteSpace(section.Value))
+                    continue;
+                if (attestor == null)
+                {
+                    await ShowAttestorRequiredAsync("TOTP sections require a paired Phantom Attestor.");
+                    return;
+                }
+
+                try
+                {
+                    section.AttestorReference = await attestor.PutTotpAsync(
+                        section.AttestorReference,
+                        section.GetMeta(EntrySection.MetaTotpIssuer) ?? credential.Title,
+                        section.GetMeta(EntrySection.MetaTotpAccount) ?? credential.Username,
+                        section.Value,
+                        section.GetMetaInt(EntrySection.MetaTotpDigits, 6),
+                        section.GetMetaInt(EntrySection.MetaTotpPeriod, 30),
+                        section.GetMeta(EntrySection.MetaTotpAlgorithm) ?? "SHA1");
+                    section.Value = string.Empty;
+                }
+                catch (Exception ex)
+                {
+                    Serilog.Log.Warning(ex, "[AddEditCredential] Attestor rejected section TOTP storage");
+                    await ShowAttestorRequiredAsync("Phantom Attestor could not store this authenticator. Check the pairing and try again.");
+                    return;
+                }
+            }
+
+            if (IsPasskeyEntry)
+            {
+                var rpId = ExtractRelyingPartyId(credential.Url);
+                if (string.IsNullOrWhiteSpace(rpId))
+                {
+                    await ShowAttestorRequiredAsync("Enter the website domain before creating a passkey.");
+                    return;
+                }
+                if (attestor == null)
+                {
+                    await ShowAttestorRequiredAsync("Passkeys require a paired Phantom Attestor.");
+                    return;
+                }
+
+                try
+                {
+                    credential.AttestorPasskeyReference ??= await attestor.RegisterPasskeyAsync(
+                        credential.Id, string.IsNullOrWhiteSpace(credential.Username) ? credential.Title : credential.Username, rpId);
+                    credential.IsPasskey = true;
+                    credential.Password = string.Empty;
+                }
+                catch (Exception ex)
+                {
+                    Serilog.Log.Warning(ex, "[AddEditCredential] Attestor passkey registration failed");
+                    await ShowAttestorRequiredAsync("Phantom Attestor could not create this passkey. Check the pairing and try again.");
+                    return;
+                }
+            }
 
             if (_existingCredential == null)
             {
@@ -1425,6 +1680,20 @@ namespace PhantomVault.UI.ViewModels
             ClearSensitiveFields();
 
             _ownerWindow?.Close(true);
+        }
+
+        private async System.Threading.Tasks.Task ShowAttestorRequiredAsync(string message)
+        {
+            var dialog = (Application.Current as App)?.Services?.GetService(typeof(DialogService)) as DialogService
+                         ?? new DialogService();
+            await dialog.ShowErrorAsync("Phantom Attestor required", message, _ownerWindow);
+        }
+
+        private static string ExtractRelyingPartyId(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+            var candidate = value.Contains("://", StringComparison.Ordinal) ? value : "https://" + value;
+            return Uri.TryCreate(candidate, UriKind.Absolute, out var uri) ? uri.Host.ToLowerInvariant() : string.Empty;
         }
 
         private void Cancel()
@@ -1618,8 +1887,11 @@ namespace PhantomVault.UI.ViewModels
 
             var tempCredential = new Credential
             {
-                Title = Title,
-                Url = Url
+                Title = string.IsNullOrWhiteSpace(Title)
+                    ? SelectedSectionTemplate?.Name ?? EntryType.ToString()
+                    : Title,
+                Url = Url,
+                EntryType = EntryType
             };
 
             try
@@ -1902,6 +2174,38 @@ namespace PhantomVault.UI.ViewModels
             catch (Exception ex)
             {
                 Debug.WriteLine($"[TOTP] Failed to import from otpauth:// URL: {ex.Message}");
+            }
+        }
+    }
+
+    public sealed class TemplateSectionOptionViewModel : ReactiveObject
+    {
+        private readonly Action<TemplateSectionOptionViewModel, bool> _selectionChanged;
+        private bool _isSelected;
+
+        public TemplateSectionOptionViewModel(
+            EntrySectionKind kind,
+            string label,
+            Action<TemplateSectionOptionViewModel, bool> selectionChanged)
+        {
+            Kind = kind;
+            Label = label;
+            _selectionChanged = selectionChanged;
+        }
+
+        public EntrySectionKind Kind { get; }
+        public string Label { get; }
+        public SectionEditorItemViewModel? AppliedEditor { get; set; }
+
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set
+            {
+                if (_isSelected == value)
+                    return;
+                this.RaiseAndSetIfChanged(ref _isSelected, value);
+                _selectionChanged(this, value);
             }
         }
     }

@@ -66,7 +66,8 @@ namespace PhantomVault.UI.Views.Settings
                 {
                     var parentWindow = this.FindAncestorOfType<Window>();
                     var dialogService = new PhantomVault.UI.Services.DialogService();
-                    await dialogService.ShowErrorAsync("Error", $"Could not open app permissions: {ex.Message}", parentWindow);
+                    Log.Warning(ex, "[AutoFillSettings] Failed to open application permissions.");
+                    await dialogService.ShowErrorAsync("Error", "Application permissions could not be opened. Open them from Windows Settings and try again.", parentWindow);
                 }
                 catch
                 {

@@ -37,8 +37,8 @@
                             CornerRadius="4"
                             ClipToBounds="True"
                             VerticalAlignment="Center"
-                            Background="{DynamicResource ControlBackgroundBrush}"
-                            BorderBrush="{DynamicResource SecondaryTextBrush}"
+                            Background="{DynamicResource Brush.Glass.BaseFill}"
+                            BorderBrush="#EAF3F8"
                             BorderThickness="1.5">
                         <Panel>
                             <!-- The checked fill is a separate layer revealed by opacity,
@@ -50,10 +50,6 @@
                                  left the tick floating. AccentBrush is defined by every
                                  theme file, and toggling opacity on our own element is the
                                  same mechanism the tick already uses, which works. -->
-                            <Border x:Name="Fill"
-                                    Opacity="0"
-                                    Background="{DynamicResource AccentBrush}"/>
-
                             <!-- Stroke only, and no Stretch.
                                  A Fill on an open path implicitly closes it, so the tick
                                  rendered as a filled wedge with the stroke drawn over it.
@@ -64,7 +60,7 @@
                                   HorizontalAlignment="Center"
                                   VerticalAlignment="Center"
                                   Data="M 0,3.6 L 3.4,7 L 9.4,0.6"
-                                  Stroke="{DynamicResource ButtonAccentForegroundBrush}"
+                                  Stroke="{DynamicResource PrimaryTextBrush}"
                                   StrokeThickness="2"
                                   StrokeLineCap="Round"
                                   StrokeJoin="Round"/>
@@ -84,25 +80,19 @@
     </Style>
 
     <Style Selector="CheckBox:pointerover /template/ Border#Box">
-        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Glass.BorderHover}"/>
     </Style>
 
-    <Style Selector="CheckBox:checked /template/ Border#Fill">
-        <Setter Property="Opacity" Value="1"/>
-    </Style>
     <Style Selector="CheckBox:checked /template/ Border#Box">
-        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+        <Setter Property="BorderBrush" Value="#A0DCE8F2"/>
     </Style>
     <Style Selector="CheckBox:checked /template/ Path#Tick">
         <Setter Property="Opacity" Value="1"/>
     </Style>
 
     <!-- Indeterminate reads as a filled box with a dash rather than a tick. -->
-    <Style Selector="CheckBox:indeterminate /template/ Border#Fill">
-        <Setter Property="Opacity" Value="1"/>
-    </Style>
     <Style Selector="CheckBox:indeterminate /template/ Border#Box">
-        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+        <Setter Property="BorderBrush" Value="#A0DCE8F2"/>
     </Style>
     <Style Selector="CheckBox:indeterminate /template/ Path#Tick">
         <Setter Property="Opacity" Value="1"/>
@@ -129,15 +119,15 @@
                             Width="19" Height="19"
                             CornerRadius="10"
                             VerticalAlignment="Center"
-                            Background="{DynamicResource ControlBackgroundBrush}"
-                            BorderBrush="{DynamicResource SecondaryTextBrush}"
+                            Background="{DynamicResource Brush.Glass.BaseFill}"
+                            BorderBrush="{DynamicResource Brush.Glass.Border}"
                             BorderThickness="1.5">
                         <Ellipse x:Name="Dot"
                                  Width="9" Height="9"
                                  Opacity="0"
                                  HorizontalAlignment="Center"
                                  VerticalAlignment="Center"
-                                 Fill="{DynamicResource AccentBrush}"/>
+                                 Fill="{DynamicResource PrimaryTextBrush}"/>
                     </Border>
 
                     <ContentPresenter Grid.Column="1"
@@ -153,10 +143,10 @@
     </Style>
 
     <Style Selector="RadioButton:pointerover /template/ Border#Ring">
-        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Glass.BorderHover}"/>
     </Style>
     <Style Selector="RadioButton:checked /template/ Border#Ring">
-        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+        <Setter Property="BorderBrush" Value="#A0DCE8F2"/>
     </Style>
     <Style Selector="RadioButton:checked /template/ Ellipse#Dot">
         <Setter Property="Opacity" Value="1"/>
@@ -165,27 +155,54 @@
         <Setter Property="Opacity" Value="0.45"/>
     </Style>
 
-    <!-- ==================================== ToggleSwitch ====================================
-
-         Deliberately NOT retemplated.
-
-         ToggleSwitch drives its own knob travel: it resolves PART_SwitchKnob and
-         PART_MovingKnobs in OnApplyTemplate and animates them against measurements it
-         takes from the template. A hand-rolled track/knob has to reproduce that geometry
-         exactly or the knob lands outside the pill — which is what happened here. The
-         indeterminate value is not worth the risk when Avalonia's own template already
-         gets the mechanics right.
-
-         So only properties that need no template parts are set. The reason the switch
-         looked wrong before was the skin/variant mismatch making its colours resolve
-         against the wrong palette, and that is fixed at the source now.
-         ==================================================================================== -->
+    <!-- ToggleSwitch intentionally uses the same glass-and-tick language as CheckBox.
+         There is no coloured active track: state is communicated by the white tick. -->
 
     <Style Selector="ToggleSwitch">
         <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
         <Setter Property="MinHeight" Value="28"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Padding" Value="8,0,0,0"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid ColumnDefinitions="Auto,*" Background="Transparent">
+                    <!-- Required by ToggleSwitch's control contract; deliberately hidden
+                         because the visible state indicator is the glass tick below. -->
+                    <Grid x:Name="PART_MovingKnobs" IsVisible="False" Width="1" Height="1">
+                        <Grid x:Name="PART_SwitchKnob" Width="1" Height="1"/>
+                    </Grid>
+                    <Border x:Name="ToggleBox" Grid.Column="0"
+                            Width="22" Height="22" CornerRadius="7"
+                            Background="{DynamicResource Brush.Glass.BaseFill}"
+                            BorderBrush="{DynamicResource Brush.Glass.Border}"
+                            BorderThickness="1.5">
+                        <Path x:Name="ToggleTick" Opacity="0"
+                              Data="M 0,3.6 L 3.4,7 L 9.4,0.6"
+                              Stroke="{DynamicResource PrimaryTextBrush}"
+                              StrokeThickness="2"
+                              StrokeLineCap="Round" StrokeJoin="Round"
+                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ContentPresenter Grid.Column="1"
+                                      Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      Margin="{TemplateBinding Padding}"
+                                      VerticalAlignment="Center"
+                                      TextBlock.Foreground="{TemplateBinding Foreground}"/>
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+    <Style Selector="ToggleSwitch:pointerover /template/ Border#ToggleBox">
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Glass.BorderHover}"/>
+    </Style>
+    <Style Selector="ToggleSwitch:checked /template/ Border#ToggleBox">
+        <Setter Property="BorderBrush" Value="#A0DCE8F2"/>
+    </Style>
+    <Style Selector="ToggleSwitch:checked /template/ Path#ToggleTick">
+        <Setter Property="Opacity" Value="1"/>
     </Style>
 
     <Style Selector="ToggleSwitch:disabled">

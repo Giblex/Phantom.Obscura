@@ -9,6 +9,7 @@ using Avalonia.Platform.Storage;
 using ReactiveUI;
 using PhantomVault.Core.Services;
 using PhantomVault.UI.Services;
+using Serilog;
 
 namespace PhantomVault.UI.ViewModels
 {
@@ -106,7 +107,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Error reading drive info: {ex.Message}";
+                Log.Warning(ex, "[UsbSetup] Failed to read drive information.");
+                StatusMessage = "Drive information could not be read. Reconnect the device and try again.";
                 SelectedDriveTotalSize = "N/A";
                 SelectedDriveFreeSpace = "N/A";
                 SelectedDriveFormat = "N/A";
@@ -175,7 +177,8 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Error selecting folder: {ex.Message}";
+                Log.Warning(ex, "[UsbSetup] Folder selection failed.");
+                StatusMessage = "The folder could not be selected. Verify it is accessible and try again.";
             }
         }
 
@@ -228,6 +231,7 @@ namespace PhantomVault.UI.ViewModels
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "[UsbSetup] Drive validation failed unexpectedly.");
 
                 try
                 {
@@ -241,9 +245,9 @@ namespace PhantomVault.UI.ViewModels
 
                 await _dialogService.ShowErrorAsync(
                     "Drive Validation Error",
-                    $"An error occurred while validating the drive:\n\n{ex.Message}",
+                    "The drive could not be validated. Reconnect it, confirm it is writable, and try again.",
                     _ownerWindow);
-                StatusMessage = $"Error: {ex.Message}";
+                StatusMessage = "Drive validation failed.";
             }
         }
 

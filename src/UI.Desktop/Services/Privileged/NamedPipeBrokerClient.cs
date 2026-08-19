@@ -135,6 +135,32 @@ namespace PhantomVault.UI.Services.Privileged
                 ContainerPath = containerPath
             }, progress: null, CancellationToken.None).GetAwaiter().GetResult().BoolResult;
 
+        public async Task<string> GetIntegrityVerdictAsync(string challenge, CancellationToken cancellationToken = default)
+        {
+            var result = await ExchangeAsync(new BrokerRequest
+            {
+                Operation = BrokerOperation.GetIntegrityVerdict,
+                Challenge = challenge
+            }, null, cancellationToken).ConfigureAwait(false);
+            return result.StringResult ?? throw new InvalidDataException("Watchdog returned no integrity verdict.");
+        }
+
+        public async Task<string> AuthorizeIntegrityWriteAsync(string relativePath, int changeKind,
+            string? expectedOldHash, string? expectedNewHash, long maximumLength,
+            CancellationToken cancellationToken = default)
+        {
+            var result = await ExchangeAsync(new BrokerRequest
+            {
+                Operation = BrokerOperation.AuthorizeIntegrityWrite,
+                RelativePath = relativePath,
+                ChangeKind = changeKind,
+                ExpectedOldHash = expectedOldHash,
+                ExpectedNewHash = expectedNewHash,
+                MaximumLength = maximumLength
+            }, null, cancellationToken).ConfigureAwait(false);
+            return result.StringResult ?? throw new InvalidDataException("Watchdog returned no write authorization.");
+        }
+
         private async Task<BrokerMessage> ExchangeAsync(BrokerRequest request, IProgress<double>? progress, CancellationToken ct)
         {
             try

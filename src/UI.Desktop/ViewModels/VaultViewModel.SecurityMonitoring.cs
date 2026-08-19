@@ -68,8 +68,8 @@ namespace PhantomVault.UI.ViewModels
                         }
                         catch (Exception ex)
                         {
-                            Debug.WriteLine($"[Security] Failed to lock vault: {ex.Message}");
-                            RecentIssuesLog.Instance.Record(IssueSeverity.Error, "Vault did not lock", $"A security threat was detected but the vault failed to lock automatically: {ex.Message}");
+                            Serilog.Log.Fatal(ex, "[SecurityMonitoring] Vault failed to lock after a security threat was detected.");
+                            RecentIssuesLog.Instance.Record(IssueSeverity.Error, "Vault did not lock", "A security threat was detected, but automatic locking could not be confirmed. Close the vault immediately.");
                         }
                     }
                 });

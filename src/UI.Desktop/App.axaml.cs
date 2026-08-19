@@ -65,6 +65,11 @@ namespace PhantomVault.UI
             ConfigureServices(services);
             _serviceProvider = services.BuildServiceProvider();
 
+            // Independent service health is bridged into the existing defence engine.
+            // A critical executable or manifest mismatch enters read-only mode and
+            // scrubs short-lived data through the integrity-critical rule.
+            _serviceProvider.GetRequiredService<PhantomVault.UI.Services.Security.IntegrityWatchdogStatusService>().Start();
+
 #if DEBUG
             RecoveryDeveloperMode.IsEnabled = true;
             RecoveryDeveloperMode.Log("Developer mode enabled for PhantomRecovery integration");
@@ -125,6 +130,15 @@ namespace PhantomVault.UI
 
                 themeManager.SetAppFont(persistedSettings.AppFontFamily);
                 themeManager.SetAppFontSize(persistedSettings.AppFontSize);
+                // #2B4A7A was the old implicit default. Move installations that never
+                // chose a custom accent to the Giblex Glass Navy button accent; explicit
+                // user colour choices remain untouched.
+                if (string.Equals(persistedSettings.SelectedThemeId, "GiblexGlassNavy", StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(persistedSettings.AccentColorHex, "#2B4A7A", StringComparison.OrdinalIgnoreCase))
+                {
+                    persistedSettings.AccentColorHex = "#5A7AB0";
+                    SettingsService.Update(s => s.AccentColorHex = "#5A7AB0");
+                }
                 themeManager.SetAccentColor(persistedSettings.AccentColorHex);
                 themeManager.SetFlatButtons(persistedSettings.UseFlatButtons);
                 themeManager.SetFlatButtonBorders(persistedSettings.UseFlatButtonBorders);
@@ -355,6 +369,12 @@ namespace PhantomVault.UI
                 client.EnsureAvailableAsync = async () =>
                     await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
                     {
+                        // A previously installed helper may have been stopped by an
+                        // update, reboot race, or service-management action. Recover it
+                        // directly; first-install consent must not suppress restart.
+                        if (controller.IsInstalled())
+                            return await controller.StartInstalledAsync();
+
                         var current = SettingsService.Load();
 
                         Func<Task<bool>> confirm;
@@ -477,7 +497,10 @@ namespace PhantomVault.UI
             {
                 _globalHotkey?.Dispose();
             }
-            catch {  }
+            catch (Exception ex)
+            {
+                Serilog.Log.Warning(ex, "Failed to dispose the global hotkey during shutdown");
+            }
 
             try
             {

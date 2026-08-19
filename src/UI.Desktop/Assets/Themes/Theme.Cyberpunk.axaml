@@ -13,9 +13,9 @@
     <Color x:Key="Color.TextOnDark">#FFFFFF</Color>
     <Color x:Key="Color.TextOnLight">#0A0A1A</Color>
 
-    <Color x:Key="Color.Accent">#00FF88</Color>
-    <Color x:Key="Color.AccentHover">#33FFAA</Color>
-    <Color x:Key="Color.AccentDim">#00CC6A</Color>
+    <Color x:Key="Color.Accent">#FF3CAC</Color>
+    <Color x:Key="Color.AccentHover">#FF78CA</Color>
+    <Color x:Key="Color.AccentDim">#63FF70</Color>
 
     <Color x:Key="Color.Success">#00FF88</Color>
     <Color x:Key="Color.Warning">#FFD600</Color>
@@ -33,12 +33,12 @@
     <SolidColorBrush x:Key="TileGlassBrush" Color="#1A1A40"/>
     <SolidColorBrush x:Key="TileGapBrush" Color="#141432"/>
 
-    <SolidColorBrush x:Key="AccentBrush" Color="#00FF88"/>
-    <SolidColorBrush x:Key="AccentHoverBrush" Color="#33FFAA"/>
-    <SolidColorBrush x:Key="SecondaryAccentBrush" Color="#00CC6A"/>
+    <SolidColorBrush x:Key="AccentBrush" Color="#FF3CAC"/>
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#FF78CA"/>
+    <SolidColorBrush x:Key="SecondaryAccentBrush" Color="#63FF70"/>
     <SolidColorBrush x:Key="Brush.Accent" Color="{DynamicResource Color.Accent}"/>
     <SolidColorBrush x:Key="Brush.AccentHover" Color="{DynamicResource Color.AccentHover}"/>
-    <SolidColorBrush x:Key="Brush.BorderSoft" Color="#303060"/>
+    <SolidColorBrush x:Key="Brush.BorderSoft" Color="#2DE2E6"/>
 
     <Color x:Key="PrimaryTextColor">#FFFFFF</Color>
     <SolidColorBrush x:Key="PrimaryTextBrush" Color="#FFFFFF"/>
@@ -75,8 +75,8 @@
     <SolidColorBrush x:Key="TextBoxBackgroundFocusedBrush" Color="#303060"/>
     <SolidColorBrush x:Key="TextBoxBackgroundDisabledBrush" Color="#1A1A40"/>
     <SolidColorBrush x:Key="TextBoxBorderBrush" Color="#303060"/>
-    <SolidColorBrush x:Key="TextBoxBorderHoverBrush" Color="#00FF88"/>
-    <SolidColorBrush x:Key="TextBoxBorderFocusedBrush" Color="#00FF88"/>
+    <SolidColorBrush x:Key="TextBoxBorderHoverBrush" Color="#FF3CAC"/>
+    <SolidColorBrush x:Key="TextBoxBorderFocusedBrush" Color="#63FF70"/>
     <SolidColorBrush x:Key="TextBrush" Color="#FFFFFF"/>
 
     <SolidColorBrush x:Key="DialogBackgroundBrush" Color="#10102A"/>

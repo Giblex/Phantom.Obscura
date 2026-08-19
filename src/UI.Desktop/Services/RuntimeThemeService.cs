@@ -86,108 +86,48 @@ namespace PhantomVault.UI.Services
 
         public RuntimeThemeService()
         {
+            // Default Navy and Classic Light are the two anchors. The remainder runs from
+            // light to dark. Preview values are copied from each theme's actual
+            // WindowBackgroundBrush, AccentBrush and SecondaryAccentBrush resources.
             _themes = new List<ThemeDescriptor>
             {
-                // Phantom Obscura website palettes — same six shown in the web demo's
-                // Theme Studio. All six are free; only user-created custom themes are
-                // Pro-gated (see ThemeSettingsViewModel.CanUseCustomThemes).
-                // Default Dark swapped out for Giblex Glass Navy (still selectable via "More
-                // themes" below) — Giblex Glass Navy is the app's actual default now (see
-                // SettingsService.SelectedThemeId) and the one theme that consistently reads
-                // as polished across this audit, so it belongs in the swatch grid itself.
-                new ThemeDescriptor(
-                    "WebDefaultDark",
-                    "Default Dark",
-                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.WebDefaultDark.axaml"),
-                    isPremium: false),
-                new ThemeDescriptor(
-                    "WebMidnightBlue",
-                    "Midnight Blue",
-                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.WebMidnightBlue.axaml"),
-                    new[] { "#06080D", "#6EA8FF", "#58D68D" }, isPremium: false),
-                new ThemeDescriptor(
-                    "WebEmber",
-                    "Ember",
-                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.WebEmber.axaml"),
-                    new[] { "#120B08", "#E8A054", "#7BC88A" }, isPremium: false),
-                new ThemeDescriptor(
-                    "WebArctic",
-                    "Arctic",
-                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.WebArctic.axaml"),
-                    new[] { "#080E14", "#88E0EE", "#A2E8C0" }, isPremium: false),
-                new ThemeDescriptor(
-                    "WebPhantomViolet",
-                    "Phantom Violet",
-                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.WebPhantomViolet.axaml"),
-                    new[] { "#0C0816", "#B48EF0", "#7CE8B0" }, isPremium: false),
-                // High Contrast dropped from the swatch grid (still selectable via "More
-                // themes" below) to make room for Giblex Light — swatches are meant as a
-                // representative sample, and High Contrast's accessibility-specific palette
-                // is the least representative "everyday" pick of the six.
-                new ThemeDescriptor(
-                    "WebHighContrast",
-                    "High Contrast",
-                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.WebHighContrast.axaml"),
-                    isPremium: false),
-                new ThemeDescriptor(
-                    "ClassicDark",
-                    "Classic Dark",
-                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.ClassicDark.axaml")),
-                new ThemeDescriptor(
-                    "GiblexGlassNavy",
-                    "Giblex Glass Navy",
+                new("GiblexGlassNavy", "Default Navy",
                     new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.GiblexGlassNavy.axaml"),
-                    new[] { "#0A0F18", "#004258", "#005A78" }, isPremium: false),
-                new ThemeDescriptor(
-                    "GiblexDark",
-                    "Giblex Dark",
-                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.GiblexDark.axaml")),
-                new ThemeDescriptor(
-                    "GiblexWebsite",
-                    "Giblex Light",
+                    new[] { "#0A0F18", "#004258", "#003248" }),
+                new("GiblexWebsite", "Classic Light",
                     new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.GiblexWebsite.axaml"),
-                    new[] { "#DEF2F6", "#138A9C", "#55C3CF" }, isPremium: false, isLight: true),
-                new ThemeDescriptor(
-                    "GiblexWebPurple",
-                    "Giblex Web Purple",
+                    new[] { "#DEF2F6", "#138A9C", "#55C3CF" }, isLight: true),
+
+                new("ClassicLight", "Modern Light",
+                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.ClassicLight.axaml"),
+                    new[] { "#FDFCF9", "#4A7BB8", "#7AA3D6" }, isLight: true),
+                new("ArcticFrost", "Arctic Frost",
+                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.ArcticFrost.axaml"),
+                    new[] { "#F7FAFC", "#3182CE", "#63B3ED" }, isLight: true),
+                new("GiblexWebPurple", "Blackberry White",
                     new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.GiblexWebPurple.axaml"),
-                    new[] { "#F6F8FF", "#7C5CFF", "#55E6FF" }, isPremium: false, isLight: true),
-                new ThemeDescriptor(
-                    "ClassicLight",
-                    "Classic Light",
-                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.ClassicLight.axaml"), isLight: true),
-                new ThemeDescriptor(
-                    "CharcoalPastel",
-                    "Charcoal Pastel",
-                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.CharcoalPastel.axaml")),
-                new ThemeDescriptor(
-                    "Natural",
-                    "Natural",
-                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.Natural.axaml")),
-                new ThemeDescriptor(
-                    "ModernSystem",
-                    "Modern System",
-                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.ModernSystem.axaml")),
-                new ThemeDescriptor(
-                    "Proton",
-                    "Proton",
-                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.Proton.axaml")),
-                new ThemeDescriptor(
-                    "MidnightNeon",
-                    "Midnight Neon",
-                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.MidnightNeon.axaml")),
-                new ThemeDescriptor(
-                    "ArcticFrost",
-                    "Arctic Frost",
-                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.ArcticFrost.axaml"), isLight: true),
-                new ThemeDescriptor(
-                    "SunsetEmber",
-                    "Sunset Ember",
-                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.SunsetEmber.axaml")),
-                new ThemeDescriptor(
-                    "Cyberpunk",
-                    "Cyberpunk",
-                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.Cyberpunk.axaml")),
+                    new[] { "#F6F8FF", "#7C5CFF", "#55E6FF" }, isLight: true),
+                new("SunsetEmber", "Sunset",
+                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.SunsetEmber.axaml"),
+                    new[] { "#FFF7EB", "#EF5A3C", "#F6B73C" }, isLight: true),
+                new("Proton", "Photon",
+                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.Proton.axaml"),
+                    new[] { "#E8E4F3", "#6D4AFF", "#8B6EFF" }, isLight: true),
+                new("CharcoalPastel", "Charcoal Pastel",
+                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.CharcoalPastel.axaml"),
+                    new[] { "#424250", "#89B4D9", "#B5D4F0" }),
+                new("Natural", "Natural",
+                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.Natural.axaml"),
+                    new[] { "#493B35", "#C97664", "#8FA88A" }),
+                new("MidnightNeon", "Midnight Neon",
+                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.MidnightNeon.axaml"),
+                    new[] { "#171A1D", "#A970FF", "#57E6FF" }),
+                new("Cyberpunk", "Cyberpunk",
+                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.Cyberpunk.axaml"),
+                    new[] { "#141432", "#FF3CAC", "#63FF70" }),
+                new("ClassicDark", "Deep Dark",
+                    new Uri("avares://PhantomVault.UI/Assets/Themes/Theme.ClassicDark.axaml"),
+                    new[] { "#10151C", "#556C83", "#6FA89F" }),
             };
 
             _currentThemeId = "GiblexGlassNavy";
@@ -243,6 +183,16 @@ namespace PhantomVault.UI.Services
 
         public void Apply(string themeId)
         {
+            // Keep older settings files valid after the catalogue cleanup. Retired web
+            // palettes intentionally converge on the new default instead of leaving the
+            // application half-themed when their resource is no longer selectable.
+            themeId = themeId switch
+            {
+                "WebDefaultDark" or "WebMidnightBlue" or "WebEmber" or "WebArctic"
+                    or "WebPhantomViolet" or "ModernSystem" or "GiblexDark"
+                    or "WebHighContrast" => "GiblexGlassNavy",
+                _ => themeId
+            };
             var theme = _themes.FirstOrDefault(t => t.Id == themeId);
             if (theme == null)
             {

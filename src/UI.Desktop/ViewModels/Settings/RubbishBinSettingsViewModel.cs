@@ -437,7 +437,8 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("Duplicate Scan Failed", ex.Message, _owner);
+                Serilog.Log.Error(ex, "[RubbishBin] Duplicate scan failed.");
+                await _dialogService.ShowErrorAsync("Duplicate Scan Failed", "Deleted items could not be scanned for duplicates. Try again.", _owner);
             }
         }
 
@@ -472,7 +473,8 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("Deleted Items", ex.Message, _owner);
+                Serilog.Log.Error(ex, "[RubbishBin] Failed to load deleted items.");
+                await _dialogService.ShowErrorAsync("Deleted Items", "Deleted items could not be loaded. Verify the vault is unlocked and try again.", _owner);
             }
         }
 
@@ -532,7 +534,8 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("Empty Bin Failed", ex.Message, _owner);
+                Serilog.Log.Error(ex, "[RubbishBin] Failed to empty the rubbish bin.");
+                await _dialogService.ShowErrorAsync("Empty Bin Failed", "The rubbish bin could not be emptied. Refresh it and try again.", _owner);
             }
         }
 
@@ -573,7 +576,8 @@ namespace PhantomVault.UI.ViewModels.Settings
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("Restore Snapshot Failed", ex.Message, _owner);
+                Serilog.Log.Error(ex, "[RubbishBin] Snapshot restoration failed.");
+                await _dialogService.ShowErrorAsync("Restore Snapshot Failed", "The snapshot could not be restored. Verify the vault is unlocked and try again.", _owner);
             }
         }
 

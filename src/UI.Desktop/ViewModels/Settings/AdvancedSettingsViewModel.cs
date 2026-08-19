@@ -15,6 +15,7 @@ namespace PhantomVault.UI.ViewModels.Settings
         private bool _showDiagnosticInfo = false;
         private bool _enablePrivacyMode = false;
         private bool _redactLogs = true;
+        private bool _enableSuiteCredentialIndex;
         private bool _blockRemoteDebugging = true;
         private int _sessionTimeout = 30;
         private bool _autoLockOnMinimize = false;
@@ -32,6 +33,7 @@ namespace PhantomVault.UI.ViewModels.Settings
             public bool EnableDebugLogging { get; init; }
             public bool EnablePrivacyMode { get; init; }
             public bool RedactLogs { get; init; }
+            public bool EnableSuiteCredentialIndex { get; init; }
             public bool BlockRemoteDebugging { get; init; }
             public int SessionTimeout { get; init; }
             public bool AutoLockOnMinimize { get; init; }
@@ -98,6 +100,19 @@ namespace PhantomVault.UI.ViewModels.Settings
                     this.RaiseAndSetIfChanged(ref _redactLogs, value);
                     PrivacyShield.RedactDiagnostics = value;
                     Privacy.Refresh();
+                    SaveSettings();
+                }
+            }
+        }
+
+        public bool EnableSuiteCredentialIndex
+        {
+            get => _enableSuiteCredentialIndex;
+            set
+            {
+                if (_enableSuiteCredentialIndex != value)
+                {
+                    this.RaiseAndSetIfChanged(ref _enableSuiteCredentialIndex, value);
                     SaveSettings();
                 }
             }
@@ -282,6 +297,7 @@ namespace PhantomVault.UI.ViewModels.Settings
                 _enableDebugLogging = settings.EnableDebugLogging;
                 _enablePrivacyMode = settings.PrivacyModeEnabled;
                 _redactLogs = settings.RedactDiagnosticLogs;
+                _enableSuiteCredentialIndex = SettingsService.Load().EnableSuiteCredentialIndex;
                 _blockRemoteDebugging = settings.BlockRemoteDebugging;
                 _sessionTimeout = settings.SessionTimeoutMinutes;
                 _autoLockOnMinimize = settings.AutoLockOnMinimize;
@@ -323,6 +339,7 @@ namespace PhantomVault.UI.ViewModels.Settings
                             settings.EnableDebugLogging = staged.EnableDebugLogging;
                             settings.PrivacyModeEnabled = staged.EnablePrivacyMode;
                             settings.RedactDiagnosticLogs = staged.RedactLogs;
+                            settings.EnableSuiteCredentialIndex = staged.EnableSuiteCredentialIndex;
                             settings.BlockRemoteDebugging = staged.BlockRemoteDebugging;
                             settings.SessionTimeoutMinutes = staged.SessionTimeout;
                             settings.AutoLockOnMinimize = staged.AutoLockOnMinimize;
@@ -349,6 +366,7 @@ namespace PhantomVault.UI.ViewModels.Settings
                         EnableDebugLogging = baseline.EnableDebugLogging;
                         EnablePrivacyMode = baseline.EnablePrivacyMode;
                         RedactLogs = baseline.RedactLogs;
+                        EnableSuiteCredentialIndex = baseline.EnableSuiteCredentialIndex;
                         BlockRemoteDebugging = baseline.BlockRemoteDebugging;
                         SessionTimeout = baseline.SessionTimeout;
                         AutoLockOnMinimize = baseline.AutoLockOnMinimize;
@@ -372,6 +390,7 @@ namespace PhantomVault.UI.ViewModels.Settings
             EnableDebugLogging = EnableDebugLogging,
             EnablePrivacyMode = EnablePrivacyMode,
             RedactLogs = RedactLogs,
+            EnableSuiteCredentialIndex = EnableSuiteCredentialIndex,
             BlockRemoteDebugging = BlockRemoteDebugging,
             SessionTimeout = SessionTimeout,
             AutoLockOnMinimize = AutoLockOnMinimize,
@@ -387,6 +406,7 @@ namespace PhantomVault.UI.ViewModels.Settings
             return EnableDebugLogging == b.EnableDebugLogging
                 && EnablePrivacyMode == b.EnablePrivacyMode
                 && RedactLogs == b.RedactLogs
+                && EnableSuiteCredentialIndex == b.EnableSuiteCredentialIndex
                 && BlockRemoteDebugging == b.BlockRemoteDebugging
                 && SessionTimeout == b.SessionTimeout
                 && AutoLockOnMinimize == b.AutoLockOnMinimize
