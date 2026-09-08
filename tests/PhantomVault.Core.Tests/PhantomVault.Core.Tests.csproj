@@ -14,4 +14,21 @@
     <ProjectReference Include="..\..\src\Core\PhantomVault.Core.csproj" />
     <ProjectReference Include="..\..\src\Crypto\GiblexVault.Security.ZK.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <!--
+        Flags any single test running past two minutes. Worth having on a suite that takes
+        ~37 minutes: almost all of that is real Argon2id work (256 MiB, 6 ops per derivation,
+        and the lifecycle tests derive repeatedly), so a genuine hang would otherwise be
+        invisible inside the expected slowness.
+
+        Note there is deliberately NO maxParallelThreads here. The host used to crash part-way
+        through the run, and default parallelism against a 256 MiB KDF looked like the obvious
+        cause — peak memory was measured at 3.2 GB. It was not: with the two broken tests
+        fixed, a full run at default parallelism completes clean (820 passed). Capping threads
+        would have traded real CI time for a problem that no longer exists.
+
+        The runner config only takes effect if it sits next to the test assembly.
+    -->
+    <None Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

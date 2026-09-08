@@ -575,31 +575,51 @@ namespace PhantomVault.Core.Tests.Crypto.Primitives
 
         #endregion
 
-        #region Performance Characteristic Tests
+        #region Output Length Tests
 
         [Fact]
-        public void Sha256_PerformanceScales_WithOutputLength()
+        public void Sha256_ShorterOutputIsAPrefixOfLongerOutput()
         {
-            // Arrange
+            // Replaces a wall-clock comparison of two sub-millisecond calls, which failed
+            // whenever JIT warm-up landed in the first one and asserted nothing about HKDF
+            // either way.
+            //
+            // The real property behind "output length scales" is RFC 5869 §2.3: OKM is the
+            // first L octets of the T(1) | T(2) | ... stream, so a 32-byte derivation is
+            // byte-for-byte the start of a 1024-byte derivation from the same inputs. That is
+            // deterministic, and it is what would actually break if the block loop were wrong.
             var ikm = new byte[32];
             var salt = new byte[16];
             var info = Encoding.UTF8.GetBytes("perf test");
             RandomNumberGenerator.Fill(ikm);
             RandomNumberGenerator.Fill(salt);
 
-            // Act & Measure
-            var sw1 = System.Diagnostics.Stopwatch.StartNew();
-            Hkdf.Sha256(ikm, salt, info, 32);
-            sw1.Stop();
+            var shortOutput = Hkdf.Sha256(ikm, salt, info, 32);
+            var longOutput = Hkdf.Sha256(ikm, salt, info, 1024);
 
-            var sw2 = System.Diagnostics.Stopwatch.StartNew();
-            Hkdf.Sha256(ikm, salt, info, 1024);
-            sw2.Stop();
+            Assert.Equal(32, shortOutput.Length);
+            Assert.Equal(1024, longOutput.Length);
+            Assert.Equal(shortOutput, longOutput.Take(32).ToArray());
+        }
 
-            // Assert - Longer output should take more time (with reasonable tolerance)
-            // Note: Very small difference expected for HKDF
-            Assert.True(sw2.ElapsedTicks >= sw1.ElapsedTicks * 0.5,
-                $"Large output ({sw2.ElapsedTicks} ticks) should take at least half the time of small output ({sw1.ElapsedTicks} ticks)");
+        [Fact]
+        public void Sha256_SpansMultipleBlocksCorrectly()
+        {
+            // 1024 bytes is 32 SHA-256 blocks, so any off-by-one in the counter shows up as a
+            // repeated or missing block rather than as a length error.
+            var ikm = new byte[32];
+            var salt = new byte[16];
+            RandomNumberGenerator.Fill(ikm);
+            RandomNumberGenerator.Fill(salt);
+
+            var output = Hkdf.Sha256(ikm, salt, Encoding.UTF8.GetBytes("blocks"), 1024);
+
+            var firstBlock = output.Take(32).ToArray();
+            for (int block = 1; block < 32; block++)
+            {
+                var thisBlock = output.Skip(block * 32).Take(32).ToArray();
+                Assert.NotEqual(firstBlock, thisBlock);
+            }
         }
 
         #endregion

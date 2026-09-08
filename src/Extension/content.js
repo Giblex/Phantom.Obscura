@@ -9,15 +9,30 @@
 (function () {
   'use strict';
 
-  // Per-session random tokens so page scripts cannot fingerprint our presence
-  // by probing fixed property names or element IDs.
+  // Random per execution, so page scripts cannot pick our DOM nodes out by a fixed id.
   const sessionToken = (() => {
     const bytes = new Uint8Array(16);
     (self.crypto || window.crypto).getRandomValues(bytes);
     return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
   })();
-  const injectedFlag = `__pv_${sessionToken}`;
   const chipElementId = `__pv_chip_${sessionToken}`;
+
+  // The re-injection guard, and it must be a STABLE name.
+  //
+  // It used to be `__pv_${sessionToken}`, derived from the same random token as the element
+  // ids. That cannot ever match: background.js re-injects this script (on every completed
+  // navigation, and again on injectActiveTab), each run mints a fresh token, so the lookup
+  // always missed and the script re-ran in full on a document it had already set up. The
+  // result was duplicated message listeners, duplicated MutationObservers and duplicate
+  // suggestion chips — each one repeating every native-host call the originals made.
+  //
+  // Randomising it never bought the privacy it was reaching for either:
+  // Object.getOwnPropertyNames(window) lists non-enumerable properties, so a page that cared
+  // could always enumerate and find it. The element ids above stay random because those are
+  // what a page would realistically probe for by name, and nothing depends on their value.
+  //
+  // A fresh document gets a fresh `window`, so navigation still re-runs this normally.
+  const injectedFlag = '__phantomvault_content_injected__';
 
   if (window[injectedFlag]) return;
   Object.defineProperty(window, injectedFlag, { value: true, configurable: false, enumerable: false, writable: false });
@@ -489,4 +504,69 @@
     });
   });
   observer.observe(document.body, { childList: true, subtree: true });
+})();
+// ---------------------------------------------------------------------------
+// WebAuthn bridge, isolated-world half.
+//
+// webauthn-bridge.js runs in the page world and can see navigator.credentials but has no
+// extension privileges; this half has the privileges but cannot see the page's WebAuthn API.
+// They talk over window.postMessage, which is why every field below is treated as untrusted:
+// any script on the page can post the same message. Nothing here grants authority — the
+// background worker supplies the real origin from the sender tab, and the app decides whether
+// that origin may assert for the requested relying party. The worst a hostile page can do by
+// forging one of these is ask for an assertion it is already entitled to ask for.
+// ---------------------------------------------------------------------------
+(() => {
+  const REQUEST = '__phantom_webauthn_request__';
+  const RESPONSE = '__phantom_webauthn_response__';
+  const LISTENER_FLAG = '__phantom_webauthn_listener__';
+
+  // Registered once per document, and the flag has to be a STABLE name to achieve that.
+  //
+  // The chip code above guards itself with a per-execution random property, which cannot
+  // work: background.js re-injects content.js on every navigation, and each injection picks a
+  // fresh random name, so the check never sees the previous one. That is a latent duplicate
+  // listener throughout this file; here it would be user-visible, because two listeners mean
+  // two native calls and two Windows Hello prompts for one sign-in.
+  //
+  // A stable name is not the fingerprinting regression it looks like: Object.getOwnPropertyNames
+  // reveals non-enumerable properties, so randomised names never hid anything from a page that
+  // bothered to look, and the MAIN-world bridge has already replaced navigator.credentials.get
+  // by this point, which is directly detectable.
+  if (window[LISTENER_FLAG]) return;
+  Object.defineProperty(window, LISTENER_FLAG, {
+    value: true, configurable: false, enumerable: false, writable: false
+  });
+
+  window.addEventListener('message', async (event) => {
+    if (event.source !== window) return;
+    const msg = event.data;
+    if (!msg || msg.type !== REQUEST || typeof msg.id !== 'number') return;
+
+    // Same opaque-origin caveat as the bridge: never post to a "null" targetOrigin.
+    const target = window.location.origin;
+    if (!target || target === 'null') return;
+
+    const reply = (result) =>
+      window.postMessage({ type: RESPONSE, id: msg.id, result }, target);
+
+    const payload = msg.payload;
+    if (!payload || typeof payload.clientDataJson !== 'string') {
+      reply(null);
+      return;
+    }
+
+    try {
+      const response = await chrome.runtime.sendMessage({
+        type: 'webauthnAssert',
+        rpId: typeof payload.rpId === 'string' ? payload.rpId : '',
+        clientDataJson: payload.clientDataJson
+      });
+      reply(response?.success ? response.result : null);
+    } catch {
+      // Extension context invalidated, vault locked, no passkey — the page world falls back
+      // to the browser's own authenticator.
+      reply(null);
+    }
+  });
 })();

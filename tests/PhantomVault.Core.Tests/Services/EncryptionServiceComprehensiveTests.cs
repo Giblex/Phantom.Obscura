@@ -100,15 +100,35 @@ namespace PhantomVault.Core.Tests.Services
         [Fact]
         public void GenerateSalt_NoObviousPatterns()
         {
-            // Arrange
+            // These assertions used to be sampled from a single salt: "more than 20 distinct
+            // byte values" and "first byte differs from last". The second one fails once every
+            // 256 runs on a perfectly good CSPRNG, because two independent bytes collide with
+            // probability 1/256 — a red build that says nothing about the code. Both are
+            // replaced with properties that hold for every correct implementation and fail for
+            // the ways this can actually break: a constant, a counter, or an uninitialised
+            // buffer.
             var service = new EncryptionService();
 
-            // Act
-            var salt = service.GenerateSalt(32);
+            var first = service.GenerateSalt(32);
+            var second = service.GenerateSalt(32);
 
-            // Assert - Check for sufficient entropy
-            Assert.True(salt.Distinct().Count() > 20, "Salt should have high entropy");
-            Assert.NotEqual(salt[0], salt[salt.Length - 1]);
+            Assert.Equal(32, first.Length);
+            Assert.Equal(32, second.Length);
+
+            // Two 256-bit draws colliding has probability 2^-256 — not a flake risk.
+            Assert.NotEqual(first, second);
+
+            // Rules out an all-zero (unfilled) buffer and any single-byte fill.
+            Assert.Contains(first, b => b != first[0]);
+            Assert.False(first.All(b => b == 0), "Salt must not be an unfilled buffer.");
+
+            // Rules out a counter or other monotonic sequence being passed off as random.
+            bool strictlyIncreasing = true;
+            for (int i = 1; i < first.Length; i++)
+            {
+                if (first[i] <= first[i - 1]) { strictlyIncreasing = false; break; }
+            }
+            Assert.False(strictlyIncreasing, "Salt must not be a monotonic sequence.");
         }
 
         #endregion

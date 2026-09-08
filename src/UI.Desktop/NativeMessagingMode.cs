@@ -86,7 +86,11 @@ namespace PhantomVault.UI
                 "PhantomVault");
             using var syncBridge = new FileSyncStateBridge(syncDir, origins);
 
-            var host = new NativeMessagingHostService(repo, ctx, origins, syncBridge);
+            // Passkey assertions travel the same pipe as credential lookups; the app decides
+            // whether the requesting page is entitled to the relying party it asked for.
+            var passkeyRelay = new PipeBackedPasskeyAssertionRelay(pipeClient);
+
+            var host = new NativeMessagingHostService(repo, ctx, origins, syncBridge, passkeyRelay);
 
             // Relay submitted logins to the desktop app so it can offer to save them.
             // The extension has always emitted submitForm and this host has always

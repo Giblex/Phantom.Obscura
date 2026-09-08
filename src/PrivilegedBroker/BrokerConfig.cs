@@ -12,7 +12,18 @@ namespace PhantomVault.PrivilegedBroker
     /// </summary>
     internal static class BrokerConfig
     {
+        /// <summary>
+        /// Redirects the config root, for tests only.
+        ///
+        /// Deliberately an assembly-internal property rather than an environment variable or
+        /// a config setting: this directory holds the client allow-list, so anything that
+        /// could redirect it from outside the process would let an attacker point the broker
+        /// at an allow-list they control. Nothing outside this assembly can set it.
+        /// </summary>
+        internal static string? ConfigDirectoryOverride { get; set; }
+
         private static string ConfigDirectory =>
+            ConfigDirectoryOverride ??
             Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
                 "PhantomObscura", "Broker");

@@ -88,113 +88,19 @@ namespace PhantomVault.UI.ViewModels
             if (string.IsNullOrWhiteSpace(primary))
                 return null;
 
-            var usbKeyfilePath = PhantomVault.Core.Utils.CompositeKeyfilePath.GetPrimaryPath(primary) ?? primary;
-            var candidates = BuildKeyfileCandidates(driveRoot, usbKeyfilePath);
+            var candidates = ObscuraKeyfileLocator.BuildCandidates(driveRoot, primary);
 
             return await volumeService.ResolveKeyfileAsync(volumePath, candidates).ConfigureAwait(false);
         }
 
         private string? FindKeyfileOnDrive(string drivePath)
         {
+            // A raw-volume selection has no filesystem to search; the caller falls back to
+            // its own unlock path for those.
             if (_blackSecureRawVolumeService.IsRawSelection(drivePath))
                 return null;
 
-            var searchPaths = new[]
-            {
-            Path.Combine(drivePath, ".phantom", "vaults"),
-            Path.Combine(drivePath, ".phantom"),
-            drivePath,
-            Path.Combine(drivePath, "keys")
-        };
-
-            foreach (var searchPath in searchPaths)
-            {
-                if (!Directory.Exists(searchPath))
-                    continue;
-
-                var keyFiles = Directory.GetFiles(searchPath, "*.key", SearchOption.TopDirectoryOnly);
-                if (keyFiles.Length > 0)
-                {
-                    var usbKeyfilePath = keyFiles[0];
-                    var hostCompanionPath = TryResolveHostCompanionKeyfilePath(drivePath);
-                    return string.IsNullOrWhiteSpace(hostCompanionPath)
-                        ? usbKeyfilePath
-                        : PhantomVault.Core.Utils.CompositeKeyfilePath.Compose(usbKeyfilePath, hostCompanionPath);
-                }
-            }
-
-            return null;
-        }
-
-        private static System.Collections.Generic.IReadOnlyList<string> BuildKeyfileCandidates(string drivePath, string usbKeyfilePath)
-        {
-            var seen = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var candidates = new System.Collections.Generic.List<string>();
-
-            void Add(string? value)
-            {
-                if (string.IsNullOrWhiteSpace(value))
-                    return;
-                if (seen.Add(value))
-                    candidates.Add(value);
-            }
-
-            var locatorCompanion = TryResolveHostCompanionKeyfilePath(drivePath);
-            if (!string.IsNullOrWhiteSpace(locatorCompanion))
-            {
-                Add(PhantomVault.Core.Utils.CompositeKeyfilePath.Compose(usbKeyfilePath, locatorCompanion));
-            }
-
-            try
-            {
-                var hostKeyDir = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "PhantomObscura",
-                    "HostKey");
-                if (Directory.Exists(hostKeyDir))
-                {
-                    var companionFiles = Directory.GetFiles(hostKeyDir, "*.companion.key", SearchOption.TopDirectoryOnly);
-                    foreach (var companion in companionFiles)
-                    {
-                        Add(PhantomVault.Core.Utils.CompositeKeyfilePath.Compose(usbKeyfilePath, companion));
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, "[VaultUnlock] BuildKeyfileCandidates: failed to enumerate host companions");
-            }
-
-            Add(usbKeyfilePath);
-
-            return candidates;
-        }
-
-        private static string? TryResolveHostCompanionKeyfilePath(string drivePath)
-        {
-            try
-            {
-                var locatorPath = Path.Combine(drivePath, ".phantom", "host-key", "companion.locator");
-                if (!File.Exists(locatorPath))
-                    return null;
-
-                var locator = JsonSerializer.Deserialize<HostCompanionLocator>(File.ReadAllText(locatorPath));
-                if (locator == null || string.IsNullOrWhiteSpace(locator.HostCompanionKeyfilePath))
-                    return null;
-
-                return File.Exists(locator.HostCompanionKeyfilePath)
-                    ? locator.HostCompanionKeyfilePath
-                    : null;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        private sealed class HostCompanionLocator
-        {
-            public string HostCompanionKeyfilePath { get; set; } = string.Empty;
+            return ObscuraKeyfileLocator.ComposeWithCompanion(drivePath);
         }
 
         public bool IsBusy
@@ -499,8 +405,7 @@ namespace PhantomVault.UI.ViewModels
                     ProgressPercent = 25;
                     Status = "Authenticating with keyfile...";
 
-                    var usbKeyfilePath = PhantomVault.Core.Utils.CompositeKeyfilePath.GetPrimaryPath(keyfilePath) ?? keyfilePath;
-                    var candidates = BuildKeyfileCandidates(selectedDriveRoot!, usbKeyfilePath);
+                    var candidates = ObscuraKeyfileLocator.BuildCandidates(selectedDriveRoot!, keyfilePath);
                     Log.Information("[VaultUnlock] trying {Count} keyfile candidate(s) for keyfile-only auth", candidates.Count);
 
                     for (int i = 0; i < candidates.Count; i++)

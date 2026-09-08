@@ -1,117 +1,266 @@
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
+# Desktop build + test for Phantom Obscura.
+#
+# Phantom.Obscura does not build from its own checkout alone. PhantomVault.UI and
+# PhantomVault.PrivilegedBroker carry ProjectReferences that escape the repository:
+#
+#   src/UI.Desktop/PhantomVault.UI.csproj
+#     ..\..\..\Phantom.Root\Giblex.AssetShield
+#     ..\..\..\Phantom.Root\Phantom.UI.Shared
+#     ..\..\..\Phantom.Root\Phantom.Suite.Session
+#     ..\..\..\Phantom.Root\Phantom.Sync
+#
+# Those resolve to siblings of the repository root, so the checkout below reproduces the
+# developer's on-disk layout:
+#
+#   $GITHUB_WORKSPACE/Phantom Suite/Phantom.Obscura   <- this repo
+#   $GITHUB_WORKSPACE/Phantom Suite/Phantom.Root      <- Phantom.Shared
+#
+# Phantom.Root is required. Phantom.Key is NOT: it is an optional companion, and the projects
+# reference it only when its source is present (BuildWithPhantomKey). The standalone-build job
+# below exists to keep it that way — Obscura is the product that ships on its own, so a change
+# that quietly makes PhantomKey mandatory has to fail CI rather than be discovered by a user
+# who never installed it.
+#
+# Phantom.Root is private, so a token with read access is required: set the SUITE_REPO_TOKEN
+# secret to a PAT (or GitHub App token). The repo variable SHARED_REPO overrides the default
+# if the repository moves.
 
-# This workflow will build, test, sign and package a WPF or Windows Forms desktop application
-# built on .NET Core.
-# To learn how to migrate your existing application to .NET Core,
-# refer to https://docs.microsoft.com/en-us/dotnet/desktop-wpf/migration/convert-project-from-net-framework
-#
-# To configure this workflow:
-#
-# 1. Configure environment variables
-# GitHub sets default environment variables for every workflow run.
-# Replace the variables relative to your project in the "env" section below.
-#
-# 2. Signing
-# Generate a signing certificate in the Windows Application
-# Packaging Project or add an existing signing certificate to the project.
-# Next, use PowerShell to encode the .pfx file using Base64 encoding
-# by running the following Powershell script to generate the output string:
-#
-# $pfx_cert = Get-Content '.\SigningCertificate.pfx' -Encoding Byte
-# [System.Convert]::ToBase64String($pfx_cert) | Out-File 'SigningCertificate_Encoded.txt'
-#
-# Open the output file, SigningCertificate_Encoded.txt, and copy the
-# string inside. Then, add the string to the repo as a GitHub secret
-# and name it "Base64_Encoded_Pfx."
-# For more information on how to configure your signing certificate for
-# this workflow, refer to https://github.com/microsoft/github-actions-for-desktop-apps#signing
-#
-# Finally, add the signing certificate password to the repo as a secret and name it "Pfx_Key".
-# See "Build the Windows Application Packaging project" below to see how the secret is used.
-#
-# For more information on GitHub Actions, refer to https://github.com/features/actions
-# For a complete CI/CD sample to get started with GitHub Action workflows for Desktop Applications,
-# refer to https://github.com/microsoft/github-actions-for-desktop-apps
-
-name: .NET Core Desktop
+name: Desktop Build & Test
 
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  SUITE_DIR: Phantom Suite
 
 jobs:
-
   build:
+    name: Build & test (${{ matrix.configuration }})
+    runs-on: windows-latest
 
     strategy:
+      fail-fast: false
       matrix:
         configuration: [Debug, Release]
 
-    runs-on: windows-latest  # For a list of available runner types, refer to
-                             # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
-
-    env:
-      Solution_Name: your-solution-name                         # Replace with your solution name, i.e. MyWpfApp.sln.
-      Test_Project_Path: your-test-project-path                 # Replace with the path to your test project, i.e. MyWpfApp.Tests\MyWpfApp.Tests.csproj.
-      Wap_Project_Directory: your-wap-project-directory-name    # Replace with the Wap project directory relative to the solution, i.e. MyWpfApp.Package.
-      Wap_Project_Path: your-wap-project-path                   # Replace with the path to your Wap project, i.e. MyWpf.App.Package\MyWpfApp.Package.wapproj.
-
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - name: Checkout Phantom.Obscura
+        uses: actions/checkout@v4
+        with:
+          path: ${{ env.SUITE_DIR }}/Phantom.Obscura
+          fetch-depth: 0
 
-    # Install the .NET Core workload
-    - name: Install .NET Core
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
+      - name: Checkout Phantom.Shared (as Phantom.Root)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.SHARED_REPO || 'Giblex-Pty-Ltd/Phantom.Shared' }}
+          token: ${{ secrets.SUITE_REPO_TOKEN }}
+          path: ${{ env.SUITE_DIR }}/Phantom.Root
 
-    # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
-    - name: Setup MSBuild.exe
-      uses: microsoft/setup-msbuild@v2
+      # Directory.Build.props sits beside the projects, not inside any one repository. It
+      # excludes the obj_*/bin_* verification output directories from the SDK's default
+      # globs; without it a build can sweep stale generated AssemblyInfo files back into the
+      # compile and fail with duplicate-attribute errors (CS0579).
+      - name: Restore suite-level Directory.Build.props
+        shell: bash
+        run: |
+          cat > "$SUITE_DIR/Directory.Build.props" <<'PROPS'
+          <Project>
+            <PropertyGroup>
+              <DefaultItemExcludes>$(DefaultItemExcludes);**/obj_*/**;**/bin_*/**</DefaultItemExcludes>
+            </PropertyGroup>
+          </Project>
+          PROPS
 
-    # Execute all unit tests in the solution
-    - name: Execute unit tests
-      run: |
-        dotnet test tests/PhantomVault.Core.Tests/PhantomVault.Core.Tests.csproj -p:TargetFrameworks=net9.0
-        dotnet test tests/PhantomVault.UI.Tests/PhantomVault.UI.Tests.csproj -p:TargetFrameworks=net9.0-windows10.0.19041.0
+      - name: Setup .NET 10 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
 
-    # Restore the application to populate the obj folder with RuntimeIdentifiers
-    - name: Restore the application
-      run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration
-      env:
-        Configuration: ${{ matrix.configuration }}
+      # PhantomVault.Core multi-targets net10.0;net10.0-android unconditionally, so even a
+      # desktop-only build needs the Android workload present to restore it. (Making the
+      # Android TFM conditional in Core would remove this step; until then it is required.)
+      - name: Restore workloads
+        working-directory: ${{ env.SUITE_DIR }}/Phantom.Obscura
+        run: dotnet workload restore PhantomVault.sln
 
-    # Decode the base 64 encoded pfx and save the Signing_Certificate
-    - name: Decode the pfx
-      run: |
-        $pfx_cert_byte = [System.Convert]::FromBase64String("${{ secrets.Base64_Encoded_Pfx }}")
-        $certificatePath = Join-Path -Path $env:Wap_Project_Directory -ChildPath GitHubActionsWorkflow.pfx
-        [IO.File]::WriteAllBytes("$certificatePath", $pfx_cert_byte)
+      - name: Restore
+        working-directory: ${{ env.SUITE_DIR }}/Phantom.Obscura
+        run: dotnet restore PhantomVault.sln
 
-    # Create the app package by building and packaging the Windows Application Packaging project
-    - name: Create the app package
-      run: msbuild $env:Wap_Project_Path /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:PackageCertificateKeyFile=GitHubActionsWorkflow.pfx /p:PackageCertificatePassword=${{ secrets.Pfx_Key }}
-      env:
-        Appx_Bundle: Always
-        Appx_Bundle_Platforms: x86|x64
-        Appx_Package_Build_Mode: StoreUpload
-        Configuration: ${{ matrix.configuration }}
+      - name: Build
+        working-directory: ${{ env.SUITE_DIR }}/Phantom.Obscura
+        run: dotnet build PhantomVault.sln --no-restore -c ${{ matrix.configuration }}
 
-    # Remove the pfx
-    - name: Remove the pfx
-      run: Remove-Item -path $env:Wap_Project_Directory\GitHubActionsWorkflow.pfx
+      # The test projects are in the solution, but `dotnet test` on the .sln would also try to
+      # run the non-test projects, so each is invoked directly.
+      #
+      # Core runs in Debug only. It takes ~35 minutes of genuine Argon2id work (256 MiB, 6 ops
+      # per derivation, and vault lifecycle tests derive repeatedly) — running it in both
+      # matrix legs would put over an hour of identical crypto on every push to buy nothing,
+      # because none of it is configuration-dependent. The two suites that DO differ by
+      # configuration run in both legs below: PrivilegedBroker asserts the #if DEBUG bypass is
+      # relaxed only where intended, which is exactly a Release-vs-Debug property.
+      - name: Test — Core
+        if: matrix.configuration == 'Debug'
+        working-directory: ${{ env.SUITE_DIR }}/Phantom.Obscura
+        timeout-minutes: 60
+        run: >
+          dotnet test tests/PhantomVault.Core.Tests/PhantomVault.Core.Tests.csproj
+          --no-build -c ${{ matrix.configuration }}
+          --logger "trx;LogFileName=core.trx"
+          --results-directory ${{ github.workspace }}/test-results
 
-    # Upload the MSIX package: https://github.com/marketplace/actions/upload-a-build-artifact
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: MSIX Package
-        path: ${{ env.Wap_Project_Directory }}\AppPackages
+      - name: Test — UI
+        working-directory: ${{ env.SUITE_DIR }}/Phantom.Obscura
+        run: >
+          dotnet test tests/PhantomVault.UI.Tests/PhantomVault.UI.Tests.csproj
+          --no-build -c ${{ matrix.configuration }}
+          --logger "trx;LogFileName=ui.trx"
+          --results-directory ${{ github.workspace }}/test-results
+
+      - name: Test — PrivilegedBroker
+        working-directory: ${{ env.SUITE_DIR }}/Phantom.Obscura
+        run: >
+          dotnet test tests/PhantomVault.PrivilegedBroker.Tests/PhantomVault.PrivilegedBroker.Tests.csproj
+          --no-build -c ${{ matrix.configuration }}
+          --logger "trx;LogFileName=broker.trx"
+          --results-directory ${{ github.workspace }}/test-results
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.configuration }}
+          path: ${{ github.workspace }}/test-results
+          if-no-files-found: warn
+
+      # Release builds must not contain the developer policy bypass. security-hard-rules.yml
+      # proves the source is #if DEBUG-guarded; this proves the guard survived into the binary,
+      # which is the property that actually matters at a user's machine.
+      - name: Verify the dev policy bypass is absent from Release binaries
+        if: matrix.configuration == 'Release'
+        shell: pwsh
+        working-directory: ${{ env.SUITE_DIR }}/Phantom.Obscura
+        run: |
+          $hits = Get-ChildItem -Recurse -Include *.dll,*.exe -Path src/*/bin/Release |
+            Where-Object { (Select-String -Path $_.FullName -Pattern 'PHANTOM_DEV_BYPASS_POLICY' -Encoding Byte -Quiet) }
+          if ($hits) {
+            Write-Host "::error::PHANTOM_DEV_BYPASS_POLICY is present in Release output:"
+            $hits | ForEach-Object { Write-Host "  $($_.FullName)" }
+            exit 1
+          }
+          Write-Host "Clean: no dev bypass string in Release binaries."
+
+      - name: Publish desktop app
+        if: matrix.configuration == 'Release'
+        working-directory: ${{ env.SUITE_DIR }}/Phantom.Obscura
+        run: >
+          dotnet publish src/UI.Desktop/PhantomVault.UI.csproj
+          -c Release -r win-x64 --self-contained false
+          -o ${{ github.workspace }}/publish
+
+      # Signing runs only when a certificate is configured, so forks and contributors without
+      # access to the secret still get a green build rather than a confusing failure.
+      - name: Sign the published binaries
+        if: matrix.configuration == 'Release' && secrets.SIGNING_CERT_BASE64 != ''
+        env:
+          SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
+          SIGNING_CERT_PASSWORD: ${{ secrets.SIGNING_CERT_PASSWORD }}
+        shell: pwsh
+        run: |
+          $pfx = Join-Path $env:RUNNER_TEMP 'signing.pfx'
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:SIGNING_CERT_BASE64))
+          $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter signtool.exe |
+            Where-Object FullName -like '*x64*' | Select-Object -First 1
+          & $signtool.FullName sign /f $pfx /p $env:SIGNING_CERT_PASSWORD `
+            /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 `
+            "${{ github.workspace }}\publish\PhantomVault.UI.exe"
+          Remove-Item $pfx -Force
+
+      - name: Upload desktop artifact
+        if: matrix.configuration == 'Release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: phantom-obscura-desktop
+          path: ${{ github.workspace }}/publish
+
+  standalone:
+    name: Standalone build (no PhantomKey, no Attestor)
+    runs-on: windows-latest
+
+    # Obscura ships on its own. PhantomKey and Attestor are optional companions, needed only by
+    # a vault configured to require one, so "builds without them" is a product guarantee and
+    # belongs in CI rather than in a comment. This job is what stops the hard ProjectReference
+    # that used to sit in PhantomVault.UI.csproj from creeping back in.
+    #
+    # Attestor needs no checkout to exclude: Obscura reaches it over a named pipe at runtime,
+    # never at compile time. Its absence is exercised here implicitly — nothing on this runner
+    # is listening on that pipe.
+    steps:
+      - name: Checkout Phantom.Obscura
+        uses: actions/checkout@v4
+        with:
+          path: ${{ env.SUITE_DIR }}/Phantom.Obscura
+
+      - name: Checkout Phantom.Shared (as Phantom.Root)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.SHARED_REPO || 'Giblex-Pty-Ltd/Phantom.Shared' }}
+          token: ${{ secrets.SUITE_REPO_TOKEN }}
+          path: ${{ env.SUITE_DIR }}/Phantom.Root
+
+      - name: Restore suite-level Directory.Build.props
+        shell: bash
+        run: |
+          cat > "$SUITE_DIR/Directory.Build.props" <<'PROPS'
+          <Project>
+            <PropertyGroup>
+              <DefaultItemExcludes>$(DefaultItemExcludes);**/obj_*/**;**/bin_*/**</DefaultItemExcludes>
+            </PropertyGroup>
+          </Project>
+          PROPS
+
+      - name: Setup .NET 10 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore workloads
+        working-directory: ${{ env.SUITE_DIR }}/Phantom.Obscura
+        run: dotnet workload restore PhantomVault.sln
+
+      # BuildWithPhantomKey=false is passed explicitly rather than relying on the source being
+      # absent, so this still tests the standalone configuration if someone later adds a
+      # Phantom.Key checkout to this job.
+      - name: Build without PhantomKey
+        working-directory: ${{ env.SUITE_DIR }}/Phantom.Obscura
+        run: dotnet build PhantomVault.sln -c Release -p:BuildWithPhantomKey=false
+
+      - name: Assert the PhantomKey assembly is not in the output
+        shell: pwsh
+        working-directory: ${{ env.SUITE_DIR }}/Phantom.Obscura
+        run: |
+          $leaked = Get-ChildItem -Recurse -Filter PhantomKey.Integration.dll -Path src/*/bin/Release -ErrorAction SilentlyContinue
+          if ($leaked) {
+            Write-Host "::error::A standalone build still produced PhantomKey.Integration.dll:"
+            $leaked | ForEach-Object { Write-Host "  $($_.FullName)" }
+            exit 1
+          }
+          Write-Host "Clean: standalone output carries no PhantomKey dependency."
+
+      # Core has no companion dependency at all, so it must pass in the standalone
+      # configuration exactly as it does in the full one.
+      - name: Test — Core
+        working-directory: ${{ env.SUITE_DIR }}/Phantom.Obscura
+        timeout-minutes: 60
+        run: >
+          dotnet test tests/PhantomVault.Core.Tests/PhantomVault.Core.Tests.csproj
+          -c Release -p:BuildWithPhantomKey=false

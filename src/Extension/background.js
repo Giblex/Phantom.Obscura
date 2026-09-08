@@ -19,6 +19,22 @@ async function injectContentScript(tabId) {
     target: { tabId },
     files: ['content.js']
   });
+
+  // The WebAuthn shim has to run in the page's own world to stand in front of
+  // navigator.credentials; an isolated-world patch would be invisible to the site. It is
+  // injected separately because the two worlds cannot share one executeScript call.
+  //
+  // A failure here must not break autofill: the site keeps its native passkey behaviour and
+  // password filling carries on as before.
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      files: ['webauthn-bridge.js'],
+      world: 'MAIN'
+    });
+  } catch (err) {
+    console.debug('PhantomVault: WebAuthn bridge not injected:', err?.message);
+  }
 }
 
 // Persistent site grants are optional and exact-origin scoped. Re-inject after
@@ -120,7 +136,7 @@ async function refreshSyncState() {
  * Sends a message to the native host and returns a promise that resolves
  * with the response.
  */
-function sendToNativeHost(message) {
+function sendToNativeHost(message, timeoutMs = 5000) {
   return new Promise((resolve, reject) => {
     const p = getOrOpenPort();
     if (!p) {
@@ -136,13 +152,14 @@ function sendToNativeHost(message) {
     const origin = chrome.runtime.getURL('');
     p.postMessage({ ...message, origin, _reqId: reqId });
 
-    // Timeout after 5 seconds
+    // Default 5s. Callers that wait on a human — a passkey assertion sits behind a Windows
+    // Hello prompt — pass their own budget instead of racing the user.
     setTimeout(() => {
       if (pendingRequests.has(reqId)) {
         pendingRequests.delete(reqId);
         reject(new Error('Native host timed out'));
       }
-    }, 5000);
+    }, timeoutMs);
   });
 }
 
@@ -188,6 +205,30 @@ async function handleMessage(message, sender) {
         // Use a ping to test connectivity; vault lock state comes from the native host response.
         const resp = await sendToNativeHost({ type: 'ping' });
         return { success: true, pong: resp?.data?.pong ?? false };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    }
+
+    // Relays a page's WebAuthn assertion request. The origin comes from pageContext(),
+    // i.e. from the sender tab's URL — never from the page's own claim about itself, which
+    // is what stops a site asking for an assertion scoped to someone else's domain.
+    case 'webauthnAssert': {
+      try {
+        const context = pageContext();
+        const resp = await sendToNativeHost({
+          type: 'webauthnAssert',
+          data: {
+            // NOT the top-level `origin` field — sendToNativeHost overwrites that with the
+            // extension's own URL for the host's allowlist check. This is the page origin the
+            // app uses to decide entitlement, and it comes from the sender tab.
+            pageOrigin: context.origin,
+            rpId: message.rpId || context.domain,
+            clientDataJson: message.clientDataJson
+          }
+        }, 120000);
+        if (!resp?.success || !resp?.data?.signature) return { success: false };
+        return { success: true, result: resp.data };
       } catch (err) {
         return { success: false, error: err.message };
       }

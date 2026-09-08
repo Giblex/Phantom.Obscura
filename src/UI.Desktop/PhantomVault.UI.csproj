@@ -77,8 +77,6 @@
       <Private>false</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Phantom.Root\Giblex.AssetShield\Giblex.AssetShield.csproj" />
-    <!-- PhantomKey broker client for the embedded Unlock window. -->
-    <ProjectReference Include="..\..\..\Phantom.Key\src\PhantomKey.Integration\PhantomKey.Integration.csproj" />
     <ProjectReference Include="..\..\..\Phantom.Root\Phantom.UI.Shared\Phantom.UI.Shared.csproj" />
     <!-- Keyless cross-app suite-session coordinator (carries no key material). -->
     <ProjectReference Include="..\..\..\Phantom.Root\Phantom.Suite.Session\Phantom.Suite.Session.csproj" />
@@ -226,6 +224,39 @@
   <!-- Opt-in Authenticode signing for Release publish. See the .targets file
        for docs. No effect unless SignOutput=true is passed at publish time. -->
   <Import Project="..\..\..\Phantom.Root\build\SignPublishOutput.targets" />
+
+  <!--
+      Phantom Key is an OPTIONAL companion - see the matching block in
+      PhantomVault.PrivilegedBroker.csproj for the full reasoning. Obscura is the standalone
+      product: a PhantomKey matters only to a vault configured to require one, so the desktop
+      app must build and run without the Phantom.Key source present.
+
+      Dropping out together when it is absent: the project reference, the anchor provider, and
+      the embedded PhantomKey unlock dialog (view, code-behind and view model). Nothing else
+      references any of them - the dialog is only ever constructed by its own code-behind - so
+      removing the set leaves no dangling call sites.
+
+      Set BuildWithPhantomKey=false to force the standalone build even with the source present.
+  -->
+  <PropertyGroup>
+    <PhantomKeyIntegrationProject>$(MSBuildThisFileDirectory)..\..\..\Phantom.Key\src\PhantomKey.Integration\PhantomKey.Integration.csproj</PhantomKeyIntegrationProject>
+    <BuildWithPhantomKey Condition="'$(BuildWithPhantomKey)' == '' AND Exists('$(PhantomKeyIntegrationProject)')">true</BuildWithPhantomKey>
+    <BuildWithPhantomKey Condition="'$(BuildWithPhantomKey)' == ''">false</BuildWithPhantomKey>
+    <DefineConstants Condition="'$(BuildWithPhantomKey)' == 'true'">$(DefineConstants);PHANTOMKEY</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(BuildWithPhantomKey)' == 'true'">
+    <ProjectReference Include="$(PhantomKeyIntegrationProject)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(BuildWithPhantomKey)' != 'true'">
+    <Compile Remove="Services\Security\PhantomKeyIntegrityAnchorProvider.cs" />
+    <Compile Remove="ViewModels\PhantomKey\**\*.cs" />
+    <Compile Remove="Views\PhantomKey\**\*.cs" />
+    <AvaloniaXaml Remove="Views\PhantomKey\**\*.axaml" />
+    <AvaloniaResource Remove="Views\PhantomKey\**\*" />
+    <None Remove="Views\PhantomKey\**\*" />
+  </ItemGroup>
 
 </Project>
 

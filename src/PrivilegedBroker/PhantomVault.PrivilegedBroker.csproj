@@ -36,7 +36,36 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Core\PhantomVault.Core.csproj" />
-    <ProjectReference Include="..\..\..\Phantom.Key\src\PhantomKey.Integration\PhantomKey.Integration.csproj" />
+  </ItemGroup>
+
+  <!--
+      Phantom Key is an OPTIONAL companion. Obscura is the standalone product; a PhantomKey is
+      required only by a vault that has been configured to want one, so the broker must build
+      and run on a machine that has never heard of it.
+
+      This used to be an unconditional ProjectReference into a sibling repository, which made
+      an optional companion mandatory to COMPILE — Obscura could not be built at all without
+      the Phantom.Key source on disk.
+
+      When the sibling is present the integration is compiled in and PHANTOMKEY is defined;
+      when it is absent the reference, the provider that uses it, and the code path that
+      constructs that provider all drop out together. Set BuildWithPhantomKey=false to force
+      the standalone build even when the source IS present, which is how CI can prove the
+      standalone configuration still compiles.
+  -->
+  <PropertyGroup>
+    <PhantomKeyIntegrationProject>$(MSBuildThisFileDirectory)..\..\..\Phantom.Key\src\PhantomKey.Integration\PhantomKey.Integration.csproj</PhantomKeyIntegrationProject>
+    <BuildWithPhantomKey Condition="'$(BuildWithPhantomKey)' == '' AND Exists('$(PhantomKeyIntegrationProject)')">true</BuildWithPhantomKey>
+    <BuildWithPhantomKey Condition="'$(BuildWithPhantomKey)' == ''">false</BuildWithPhantomKey>
+    <DefineConstants Condition="'$(BuildWithPhantomKey)' == 'true'">$(DefineConstants);PHANTOMKEY</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(BuildWithPhantomKey)' == 'true'">
+    <ProjectReference Include="$(PhantomKeyIntegrationProject)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(BuildWithPhantomKey)' != 'true'">
+    <Compile Remove="PhantomKeyWatchdogAnchorProvider.cs" />
   </ItemGroup>
 
   <!-- Opt-in Authenticode signing for Release publish. Critical for this

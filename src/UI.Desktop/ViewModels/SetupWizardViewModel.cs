@@ -3646,10 +3646,5 @@ namespace PhantomVault.UI.ViewModels
         public DateTimeOffset CreatedUtc { get; init; }
     }
 
-    internal sealed class HostCompanionLocator
-    {
-        public string HostCompanionKeyfilePath { get; init; } = string.Empty;
-    }
-
 }
 
