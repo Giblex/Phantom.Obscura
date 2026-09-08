@@ -16,16 +16,24 @@
   </ItemGroup>
   <ItemGroup>
     <!--
-        Flags any single test running past two minutes. Worth having on a suite that takes
-        ~37 minutes: almost all of that is real Argon2id work (256 MiB, 6 ops per derivation,
-        and the lifecycle tests derive repeatedly), so a genuine hang would otherwise be
-        invisible inside the expected slowness.
+        Two settings, both about a suite whose cost is dominated by Argon2id (256 MiB, 6 ops
+        per derivation, and the lifecycle tests derive repeatedly).
 
-        Note there is deliberately NO maxParallelThreads here. The host used to crash part-way
-        through the run, and default parallelism against a 256 MiB KDF looked like the obvious
-        cause — peak memory was measured at 3.2 GB. It was not: with the two broken tests
-        fixed, a full run at default parallelism completes clean (820 passed). Capping threads
-        would have traded real CI time for a problem that no longer exists.
+        maxParallelThreads caps memory, not CPU. xUnit defaults to one worker per core, and
+        each concurrent collection can hold a 256 MiB KDF allocation: 4 GB of KDF alone on a
+        16-core machine, and the Core suite was measured at 5 GB within a minute of starting.
+        The host has aborted mid-run more than once. 8 is chosen so CI is untouched — a
+        GitHub windows-latest runner has 4 cores and would never exceed it — while a
+        high-core developer box stays bounded.
+
+        Being straight about the evidence: a full run HAS completed clean at default
+        parallelism (820 passed), and the highest figure measured, 10.3 GB, was inflated by
+        other test runs happening at the same time. So this is a guard against a plausible and
+        cheap-to-prevent failure, not a fix for a proven one. If it ever costs real time,
+        raising it is defensible — deleting it without re-measuring is not.
+
+        longRunningTestSeconds flags any single test past two minutes: in a ~37-minute run,
+        a genuine hang would otherwise be invisible inside the expected slowness.
 
         The runner config only takes effect if it sits next to the test assembly.
     -->
