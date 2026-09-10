@@ -140,8 +140,8 @@
     const btn = document.createElement('div');
     btn.setAttribute('role', 'button');
     btn.setAttribute('tabindex', '-1');
-    btn.setAttribute('aria-label', 'PhantomVault — fill a saved credential');
-    btn.title = 'PhantomVault';
+    btn.setAttribute('aria-label', 'Fill a saved credential');
+    btn.title = 'Saved logins';
     btn.style.cssText =
       'width:22px;height:22px;border-radius:11px;display:flex;align-items:center;' +
       'justify-content:center;cursor:pointer;opacity:.72;' +
@@ -254,7 +254,8 @@
 
     const header = document.createElement('div');
     header.style.cssText = 'color:#8888cc;font-size:11px;padding:2px 8px 4px;letter-spacing:.05em;';
-    header.textContent = 'PHANTOMVAULT';
+    // Generic label: no product name in page-rendered UI, so a page cannot fingerprint the extension.
+    header.textContent = 'Saved logins';
     chip.appendChild(header);
 
     credentials.slice(0, 3).forEach(cred => {
