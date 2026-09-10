@@ -567,7 +567,10 @@ namespace PhantomVault.UI.ViewModels
                 _isGridView = userSettings.PreferGridView && _sortOption != 4;
                 _gridViewIconPath = _isGridView ? "Assets/SVG/Current/List.svg" : "Assets/SVG/Current/Grid.svg";
             }
-            catch {  }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "[Vault] Failed to load user settings; using defaults");
+            }
 
             if (_isDashboardEnabled)
             {
@@ -1445,7 +1448,10 @@ namespace PhantomVault.UI.ViewModels
                     ShowCategoryColors = e.Settings.ShowCategoryColors;
                 });
             }
-            catch {  }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "[Vault] Failed to apply changed user settings");
+            }
         }
 
         public Core.Models.EntryType? CurrentEntryType
@@ -2666,9 +2672,9 @@ namespace PhantomVault.UI.ViewModels
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-
+                Log.Warning(ex, "[Vault] Failed to apply category tile colours from the manifest");
             }
         }
 
@@ -3485,14 +3491,7 @@ namespace PhantomVault.UI.ViewModels
             SelectedCredential = credentialVm;
 
             var editingTitle = credentialVm.Title;
-            try
-            {
-                Debug.WriteLine($"[EDIT] Opening credential: {editingTitle}");
-            }
-            catch
-            {
-
-            }
+            Debug.WriteLine($"[EDIT] Opening credential: {editingTitle}");
 
             StatusMessage = string.IsNullOrWhiteSpace(editingTitle)
                 ? "Editing credential"
@@ -3876,8 +3875,12 @@ namespace PhantomVault.UI.ViewModels
                                     }
                                 });
                             }
-                            catch (OperationCanceledException) {  }
-                            catch {  }
+                            catch (OperationCanceledException) { }
+                            catch (Exception ex)
+                            {
+                                // A failed auto-clear leaves the copied value on the clipboard.
+                                Log.Warning(ex, "[Clipboard] Auto-clear failed; the copied value may still be on the clipboard.");
+                            }
                         });
                     }
 
@@ -3952,8 +3955,12 @@ namespace PhantomVault.UI.ViewModels
                                     }
                                 });
                             }
-                            catch (OperationCanceledException) {  }
-                            catch {  }
+                            catch (OperationCanceledException) { }
+                            catch (Exception ex)
+                            {
+                                // A failed auto-clear leaves the copied value on the clipboard.
+                                Log.Warning(ex, "[Clipboard] Auto-clear failed; the copied value may still be on the clipboard.");
+                            }
                         });
                     }
 
@@ -4024,8 +4031,12 @@ namespace PhantomVault.UI.ViewModels
                                 }
                             });
                         }
-                        catch (OperationCanceledException) {  }
-                        catch {  }
+                        catch (OperationCanceledException) { }
+                        catch (Exception ex)
+                        {
+                            // A failed auto-clear leaves the copied TOTP code on the clipboard.
+                            Log.Warning(ex, "[Clipboard] TOTP auto-clear failed; the code may still be on the clipboard.");
+                        }
                     });
 
                     await Task.Delay(2000);
@@ -6087,9 +6098,9 @@ namespace PhantomVault.UI.ViewModels
                             ?? _manifestService.ReadManifestSecure(_manifestPath, _vaultPassword ?? SecurePassword.Empty(), keyfilePath);
                         ApplyManifestTransportState(runtimeManifest, _manifestPath);
                     }
-                    catch
+                    catch (Exception ex)
                     {
-
+                        Log.Warning(ex, "[Vault] Failed to apply manifest transport state during load");
                     }
                 }
 
@@ -6551,9 +6562,9 @@ namespace PhantomVault.UI.ViewModels
                     keyfilePath,
                     recoveryVaultPath);
             }
-            catch
+            catch (Exception ex)
             {
-
+                Log.Warning(ex, "[Recovery] Failed to stage Phantom Recovery bootstrap artifacts");
             }
         }
 

@@ -77,8 +77,9 @@ namespace PhantomVault.Core.Services
         private const int NonceSize = 12;
         private const int TagSize = 16;
         private const int BlockSize = 1024 * 1024;
-        private const int DefaultIterations = 6;
-        private const int DefaultMemoryKb = 256 * 1024;
+        // Container defaults are the standard KDF cost; see ManifestKdfParams for the single source.
+        private const int DefaultIterations = ManifestKdfParams.StandardIterations;
+        private const int DefaultMemoryKb = ManifestKdfParams.StandardMemoryKb;
         private const int SecureWipePassCount = 3;
         private const string ManifestMarker = "MNFST";
         private const int ManifestMarkerSize = 5;

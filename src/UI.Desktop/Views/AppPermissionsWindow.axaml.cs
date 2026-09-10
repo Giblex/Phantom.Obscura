@@ -59,7 +59,10 @@ namespace PhantomVault.UI.Views
                         Permissions.Add(new PermissionItem { AppName = p.AppName, Allowed = p.Allowed });
                 }
             }
-            catch {  }
+            catch (Exception ex)
+            {
+                Serilog.Log.Warning(ex, "[AppPermissions] Failed to load saved autofill app permissions");
+            }
 
             Permissions.CollectionChanged += (_, _) => this.RaisePropertyChanged(nameof(IsEmpty));
 
@@ -98,7 +101,11 @@ namespace PhantomVault.UI.Views
                         .ToList();
                 });
             }
-            catch {  }
+            catch (Exception ex)
+            {
+                // The window still closes, so this log is the only record that the change was lost.
+                Serilog.Log.Error(ex, "[AppPermissions] Failed to save autofill app permissions; changes were not persisted");
+            }
             CloseRequested?.Invoke(this, EventArgs.Empty);
         }
 
