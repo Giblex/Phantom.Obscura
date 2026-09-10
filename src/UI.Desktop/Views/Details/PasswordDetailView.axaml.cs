@@ -48,6 +48,20 @@ public partial class PasswordDetailView : UserControl
         }
     }
 
+    /// <summary>
+    /// Reveals or re-hides the password in place.
+    ///
+    /// The state lives on the credential rather than the view, so moving to another entry and
+    /// back does not leave a password sitting exposed.
+    /// </summary>
+    private void TogglePasswordReveal_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is VaultViewModel vm)
+        {
+            vm.SelectedCredential?.TogglePasswordRevealed();
+        }
+    }
+
     private void CopyTotpCode_Tapped(object? sender, TappedEventArgs e)
     {
         if (DataContext is VaultViewModel vm && vm.SelectedCredential != null)

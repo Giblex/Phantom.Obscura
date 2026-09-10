@@ -31,6 +31,7 @@ namespace PhantomVault.UI.ViewModels
         private string _currentTotpCode = string.Empty;
         private int _totpSecondsRemaining;
         private Timer? _totpTimer;
+        private bool _isPasswordRevealed;
         private double _totpCodeOpacity = 1.0;
         private double _totpCodeScale = 1.0;
 
@@ -438,6 +439,39 @@ namespace PhantomVault.UI.ViewModels
         public double TotpProgressPercent => TotpTimeStep > 0 ? (double)TotpSecondsRemaining / TotpTimeStep * 100 : 0;
 
         public bool TotpIsExpiring => TotpSecondsRemaining > 0 && TotpSecondsRemaining <= 5;
+
+        /// <summary>
+        /// Whether the detail view is showing this entry's password in clear text.
+        ///
+        /// Per credential and defaulted to hidden, so selecting another entry never inherits
+        /// a revealed state from the last one.
+        /// </summary>
+        public bool IsPasswordRevealed
+        {
+            get => _isPasswordRevealed;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _isPasswordRevealed, value);
+                this.RaisePropertyChanged(nameof(PasswordChar));
+                this.RaisePropertyChanged(nameof(PasswordVisibilitySvgIcon));
+                this.RaisePropertyChanged(nameof(PasswordVisibilityTooltip));
+            }
+        }
+
+        /// <summary>
+        /// Mask character for the detail view's password box. NUL disables masking, which is
+        /// how Avalonia's TextBox shows clear text.
+        /// </summary>
+        public char PasswordChar => IsPasswordRevealed ? char.MinValue : '•';
+
+        /// <summary>Eye icon, matching the convention the add/edit window already uses.</summary>
+        public string PasswordVisibilitySvgIcon => IsPasswordRevealed
+            ? "Assets/SVG/Current/Hidden eye.svg"
+            : "Assets/SVG/Current/Visible eye.svg";
+
+        public string PasswordVisibilityTooltip => IsPasswordRevealed ? "Hide password" : "Show password";
+
+        public void TogglePasswordRevealed() => IsPasswordRevealed = !IsPasswordRevealed;
 
         public double TotpCodeOpacity
         {

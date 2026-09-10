@@ -137,7 +137,10 @@ namespace PhantomVault.UI.ViewModels
         private string _statusMessage = "Ready";
         private string _settingsSaveNotification = "Settings saved";
         private string _lastSyncTime = DateTime.Now.ToString("HH:mm");
-        private int _sortOption = 0;
+        // Group by category by default. The list is far easier to scan grouped than as one
+        // flat A-Z run, and the grouped view is the one the category headers were designed
+        // for. 4 is the "Category" entry of the sort ComboBox in CredentialListView.
+        private int _sortOption = 4;
         private bool _isShowingAll = false;
         private bool _isShowingPasswords = false;
         private bool _isShowingFavorites = false;
@@ -558,7 +561,10 @@ namespace PhantomVault.UI.ViewModels
                 _isDashboardEnabled = userSettings.DashboardEnabled;
                 _startWithWindows = WindowsStartupRegistration.IsEnabled();
                 _globalHotkeyEnabled = userSettings.GlobalHotkeyEnabled;
-                _isGridView = userSettings.PreferGridView;
+                // The SortOption setter forces list view when grouping by category; apply the
+                // same rule to the initial state, or a saved grid preference would start the
+                // app in the one combination that setter exists to prevent.
+                _isGridView = userSettings.PreferGridView && _sortOption != 4;
                 _gridViewIconPath = _isGridView ? "Assets/SVG/Current/List.svg" : "Assets/SVG/Current/Grid.svg";
             }
             catch {  }
