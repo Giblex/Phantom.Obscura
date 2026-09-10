@@ -53,17 +53,36 @@ namespace PhantomVault.UI.Services.AutoFill
                     {
                         using var doc = JsonDocument.Parse(resp);
                         var root = doc.RootElement;
-                        _cachedLocked = root.TryGetProperty("locked", out var l) && l.GetBoolean();
-                        _cachedAutofillEnabled = root.TryGetProperty("autofillEnabled", out var ae) && ae.GetBoolean();
+
+                        // Unlocked only when the host explicitly answers locked=false. A missing
+                        // or non-boolean field used to read as unlocked.
+                        _cachedLocked = !(root.TryGetProperty("locked", out var l) && l.ValueKind == JsonValueKind.False);
+                        _cachedAutofillEnabled = !_cachedLocked
+                            && root.TryGetProperty("autofillEnabled", out var ae)
+                            && ae.ValueKind == JsonValueKind.True;
+                    }
+                    else
+                    {
+                        FailClosed();
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-
+                    // No answer from the vault host must mean locked. This used to keep the
+                    // previous value, so a host that stopped responding while unlocked stayed
+                    // "unlocked" here indefinitely.
+                    Serilog.Log.Debug(ex, "[PipeBackedVaultContext] Vault state query failed; treating the vault as locked");
+                    FailClosed();
                 }
 
                 _cacheExpiry = DateTime.UtcNow.AddMilliseconds(500);
             }
+        }
+
+        private void FailClosed()
+        {
+            _cachedLocked = true;
+            _cachedAutofillEnabled = false;
         }
     }
 }

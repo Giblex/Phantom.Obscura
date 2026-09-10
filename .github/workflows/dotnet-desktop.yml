@@ -95,6 +95,22 @@ jobs:
         working-directory: ${{ env.SUITE_DIR }}/Phantom.Obscura
         run: dotnet restore PhantomVault.sln
 
+      # Fails the build when any direct or transitive NuGet dependency has a published
+      # advisory. Runs in the Debug leg only: the package graph does not vary by configuration.
+      - name: Scan dependencies for known vulnerabilities
+        if: matrix.configuration == 'Debug'
+        shell: pwsh
+        working-directory: ${{ env.SUITE_DIR }}/Phantom.Obscura
+        run: |
+          $report = dotnet list PhantomVault.sln package --vulnerable --include-transitive 2>&1 | Out-String
+          Write-Host $report
+          if ($LASTEXITCODE -ne 0) { Write-Host "::error::dotnet list package failed."; exit 1 }
+          if ($report -match 'has the following vulnerable packages') {
+            Write-Host "::error::Vulnerable NuGet packages found (see the report above). Upgrade, or pin a patched version of the transitive package."
+            exit 1
+          }
+          Write-Host "Clean: no known-vulnerable packages."
+
       - name: Build
         working-directory: ${{ env.SUITE_DIR }}/Phantom.Obscura
         run: dotnet build PhantomVault.sln --no-restore -c ${{ matrix.configuration }}

@@ -215,9 +215,9 @@ namespace PhantomVault.Core.Services
                         File.Delete(file);
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-
+                    Serilog.Log.Warning(ex, "[Backup] Failed to prune an expired backup; it remains in the backup directory");
                 }
             }
         }

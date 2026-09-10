@@ -85,9 +85,11 @@ namespace PhantomVault.Core.Services
 
                     _vaultService.DismountVaultAsync(mountName).GetAwaiter().GetResult();
                 }
-                catch
+                catch (Exception ex)
                 {
-
+                    // Self-destruct carries on to the secure deletes regardless, but a vault that
+                    // stayed mounted through it must not go unrecorded.
+                    Serilog.Log.Error(ex, "[Intrusion] Self-destruct could not dismount the vault before deleting it");
                 }
 
                 SecureDelete(containerAbs);

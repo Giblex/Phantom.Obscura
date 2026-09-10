@@ -595,14 +595,14 @@ namespace PhantomVault.UI.Views
             {
                 // Never auto-lock behind a PIN prompt unless a PIN really exists;
                 // SyncPinFlags also clears any stale enable flags it finds.
-                if (!PinLockService.SyncPinFlags(vm.ManifestPath))
+                if (!PinLockService.SyncPinFlags(vm.RuntimeManifest))
                 {
                     return;
                 }
             }
-            catch
+            catch (Exception ex)
             {
-
+                Serilog.Log.Warning(ex, "[VaultWindow] Could not evaluate the PIN lock state; auto-lock skipped");
                 return;
             }
 

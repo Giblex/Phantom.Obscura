@@ -131,18 +131,28 @@ namespace PhantomVault.Core.Services
 
                 if (!await VerifyFileHashAsync(destinationPath, updateInfo.Sha256Hash, cancellationToken).ConfigureAwait(false))
                 {
-
-                    try { File.Delete(destinationPath); } catch { }
+                    Serilog.Log.Warning("[Update] Downloaded update failed its SHA-256 check and was rejected");
+                    TryDeleteDownload(destinationPath);
                     return false;
                 }
 
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
-                try { File.Delete(destinationPath); } catch { }
+                Serilog.Log.Warning(ex, "[Update] Update download failed");
+                TryDeleteDownload(destinationPath);
                 return false;
+            }
+        }
+
+        private static void TryDeleteDownload(string path)
+        {
+            try { File.Delete(path); }
+            catch (Exception ex)
+            {
+                // A rejected binary left on disk is harmless only while nothing runs it.
+                Serilog.Log.Warning(ex, "[Update] Failed to delete a rejected update download");
             }
         }
 

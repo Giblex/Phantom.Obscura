@@ -27,9 +27,11 @@ public static class MerkleAuditService
                     hashes.Add(Convert.FromHexString(entry.Hash));
                 }
             }
-            catch
+            catch (Exception ex)
             {
-
+                // Skipping an entry changes the root, and a corrupted line in an audit log is
+                // exactly what someone covering their tracks would leave, so it is recorded.
+                Serilog.Log.Warning(ex, "[MerkleAudit] Skipped an unreadable audit log entry while computing the Merkle root");
             }
         }
         if (hashes.Count == 0) return null;

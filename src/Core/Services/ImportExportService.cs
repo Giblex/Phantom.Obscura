@@ -643,6 +643,95 @@ namespace PhantomVault.Core.Services
             await File.WriteAllTextAsync(filePath, json, Encoding.UTF8);
         }
 
+        /// <summary>
+        /// Bitwarden's CSV import format. Only login entries map onto it, so other entry types
+        /// (cards, identities, Wi-Fi, notes and the rest) are left out rather than written as
+        /// empty logins.
+        /// </summary>
+        /// <returns>The number of entries written.</returns>
+        public async Task<int> ExportToBitwardenCsvAsync(List<Credential> credentials, string filePath)
+        {
+            if (credentials == null) throw new ArgumentNullException(nameof(credentials));
+            if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("File path cannot be empty", nameof(filePath));
+
+            var logins = credentials.Where(c => c.EntryType == EntryType.Password).ToList();
+
+            var sb = new StringBuilder();
+            sb.AppendLine("folder,favorite,type,name,notes,fields,reprompt,login_uri,login_username,login_password,login_totp");
+
+            foreach (var cred in logins)
+            {
+                sb.AppendLine(string.Join(",",
+                    EscapeCsv(cred.Group ?? string.Empty),
+                    cred.IsFavorite ? "1" : "",
+                    "login",
+                    EscapeCsv(cred.Title ?? string.Empty),
+                    EscapeCsv(cred.Notes ?? string.Empty),
+                    "",
+                    "0",
+                    EscapeCsv(cred.Url ?? string.Empty),
+                    EscapeCsv(cred.Username ?? string.Empty),
+                    EscapeCsv(cred.Password ?? string.Empty),
+                    EscapeCsv(cred.TotpSecret ?? string.Empty)));
+            }
+
+            // No BOM: Bitwarden reads the first header as "﻿folder" otherwise.
+            await File.WriteAllTextAsync(filePath, sb.ToString(), new UTF8Encoding(false));
+            return logins.Count;
+        }
+
+        /// <summary>
+        /// Bitwarden's unencrypted JSON export format (folders + login items). As with the CSV,
+        /// only login entries are written.
+        /// </summary>
+        /// <returns>The number of entries written.</returns>
+        public async Task<int> ExportToBitwardenJsonAsync(List<Credential> credentials, string filePath)
+        {
+            if (credentials == null) throw new ArgumentNullException(nameof(credentials));
+            if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("File path cannot be empty", nameof(filePath));
+
+            var logins = credentials.Where(c => c.EntryType == EntryType.Password).ToList();
+
+            var folderIds = logins
+                .Select(c => c.Group)
+                .Where(g => !string.IsNullOrWhiteSpace(g))
+                .Distinct(StringComparer.Ordinal)
+                .ToDictionary(g => g!, _ => Guid.NewGuid().ToString(), StringComparer.Ordinal);
+
+            var export = new
+            {
+                encrypted = false,
+                folders = folderIds.Select(kv => new { id = kv.Value, name = kv.Key }).ToList(),
+                items = logins.Select(c => new
+                {
+                    id = Guid.NewGuid().ToString(),
+                    organizationId = (string?)null,
+                    folderId = string.IsNullOrWhiteSpace(c.Group) ? null : folderIds[c.Group],
+                    type = 1,
+                    reprompt = 0,
+                    name = c.Title,
+                    notes = NullIfEmpty(c.Notes),
+                    favorite = c.IsFavorite,
+                    login = new
+                    {
+                        uris = string.IsNullOrWhiteSpace(c.Url)
+                            ? Array.Empty<object>()
+                            : new object[] { new { match = (int?)null, uri = c.Url } },
+                        username = NullIfEmpty(c.Username),
+                        password = NullIfEmpty(c.Password),
+                        totp = NullIfEmpty(c.TotpSecret)
+                    },
+                    collectionIds = (string[]?)null
+                }).ToList()
+            };
+
+            var json = JsonSerializer.Serialize(export, new JsonSerializerOptions { WriteIndented = true });
+            await File.WriteAllTextAsync(filePath, json, new UTF8Encoding(false));
+            return logins.Count;
+        }
+
+        private static string? NullIfEmpty(string? value) => string.IsNullOrEmpty(value) ? null : value;
+
         public async Task<List<Credential>> ImportFromJsonAsync(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("File path cannot be empty", nameof(filePath));
@@ -1536,6 +1625,12 @@ namespace PhantomVault.Core.Services
                 case "keepass xml":
                 case "xml":
                     await ExportToKeePassXmlAsync(credentials, filePath);
+                    return;
+                case "bitwarden csv":
+                    await ExportToBitwardenCsvAsync(credentials, filePath);
+                    return;
+                case "bitwarden json":
+                    await ExportToBitwardenJsonAsync(credentials, filePath);
                     return;
                 default:
                     throw new NotSupportedException($"Export format '{format}' is not supported.");

@@ -1610,9 +1610,10 @@ namespace PhantomVault.UI.ViewModels
             {
                 Directory.Delete(extractedVolumeRoot, recursive: true);
             }
-            catch
+            catch (Exception ex)
             {
-
+                // The extracted volume holds vault data; record it if it outlives the unlock attempt.
+                Serilog.Log.Warning(ex, "[VaultUnlock] Failed to delete an extracted volume folder; vault data may remain on disk");
             }
         }
     }

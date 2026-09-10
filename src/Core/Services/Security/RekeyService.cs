@@ -164,7 +164,8 @@ namespace PhantomVault.Core.Services.Security
             catch
             {
                 if (File.Exists(tempPath))
-                    try { File.Delete(tempPath); } catch { }
+                    try { File.Delete(tempPath); }
+                    catch (Exception deleteEx) { Serilog.Log.Warning(deleteEx, "[Rekey] Failed to delete the temporary re-keyed container"); }
                 throw;
             }
             finally

@@ -459,9 +459,9 @@ namespace PhantomVault.Core.Services
                 {
                     SecureFileDelete(oldBackup);
                 }
-                catch
+                catch (Exception ex)
                 {
-
+                    Serilog.Log.Warning(ex, "[Passkey] Failed to remove an old passkey key backup");
                 }
             }
         }
@@ -489,16 +489,16 @@ namespace PhantomVault.Core.Services
 
                 System.IO.File.Delete(filePath);
             }
-            catch
+            catch (Exception ex)
             {
-
+                Serilog.Log.Warning(ex, "[Passkey] Secure overwrite of a passkey key file failed; falling back to plain delete");
                 try
                 {
                     System.IO.File.Delete(filePath);
                 }
-                catch
+                catch (Exception deleteEx)
                 {
-
+                    Serilog.Log.Error(deleteEx, "[Passkey] Failed to delete a passkey key file; it remains on disk");
                 }
             }
         }

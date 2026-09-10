@@ -35,7 +35,6 @@ namespace PhantomVault.UI.ViewModels
         private bool _autoCopyTotpWithPassword;
         private int _clipboardClearTimeIndex;
         private bool _enableScreenshotProtection;
-        private string? _manifestPath;
 
         private bool _autoActivateDecoyOnTamper = true;
         private int _decoyCredentialCount = 25;
@@ -75,7 +74,6 @@ namespace PhantomVault.UI.ViewModels
         {
             _defenceSettings = defenceSettingsService;
             _dialogService = new DialogService();
-            _manifestPath = manifestPath;
             _decoyVaultService = decoyVaultService;
             _tamperDetectionService = tamperDetectionService;
             _securityOptions = securityOptions ?? new SecurityOptions();
@@ -87,7 +85,7 @@ namespace PhantomVault.UI.ViewModels
 
             // Clears stale PIN flags before snapshotting, so the toggles can never
             // read as "on" when no PIN has actually been set.
-            _hasPinConfigured = PinLockService.SyncPinFlags(_manifestPath);
+            _hasPinConfigured = PinLockService.SyncPinFlags(_hostViewModel?.RuntimeManifest);
 
             var settings = SettingsService.LoadSecuritySnapshot();
             _enablePinLock = settings.EnablePinLock && _hasPinConfigured;
@@ -566,7 +564,17 @@ namespace PhantomVault.UI.ViewModels
             try
             {
                 var owner = GetOwnerWindow();
-                var dialog = new PinSetupDialog(_manifestPath);
+                if (_hostViewModel == null)
+                {
+                    await _dialogService.ShowErrorAsync(
+                        "PIN Setup Unavailable",
+                        "Open Settings from an unlocked vault to set a PIN. The PIN is stored inside the vault's encrypted manifest.",
+                        owner);
+                    return;
+                }
+
+                var host = _hostViewModel;
+                var dialog = new PinSetupDialog(pin => host.SetVaultPinAsync(pin));
 
                 if (owner != null)
                 {
@@ -599,7 +607,16 @@ namespace PhantomVault.UI.ViewModels
         {
             try
             {
-                PinLockService.ClearPin(_manifestPath);
+                if (_hostViewModel == null)
+                {
+                    await _dialogService.ShowErrorAsync(
+                        "PIN Unavailable",
+                        "Open Settings from an unlocked vault to change the PIN.",
+                        GetOwnerWindow());
+                    return;
+                }
+
+                await _hostViewModel.ClearVaultPinAsync();
                 EnablePinLock = false;
                 HasPinConfigured = false;
                 _pinSetupRequested = false;

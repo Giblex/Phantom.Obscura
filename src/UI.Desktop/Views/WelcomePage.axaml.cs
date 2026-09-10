@@ -686,7 +686,8 @@ namespace PhantomVault.UI.Views
 
                         if (result == "Pin")
                         {
-                            var pinDialog = new PhantomVault.UI.Views.Dialogs.PinSetupDialog();
+                            // The PIN goes into this vault's encrypted manifest.
+                            var pinDialog = new PhantomVault.UI.Views.Dialogs.PinSetupDialog(pin => vaultViewModel.SetVaultPinAsync(pin));
                             await pinDialog.ShowDialog(vaultWindow);
                             if (pinDialog.DataContext is PhantomVault.UI.ViewModels.Dialogs.PinSetupDialogViewModel pinVm
                                 && pinVm.Success)

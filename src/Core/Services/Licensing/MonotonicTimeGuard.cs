@@ -62,7 +62,11 @@ namespace PhantomVault.Core.Services.Licensing
                 if (long.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out long unix))
                     return DateTimeOffset.FromUnixTimeSeconds(unix);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                // Read as "no watermark", so a rollback in this window goes undetected.
+                Serilog.Log.Warning(ex, "[MonotonicTimeGuard] Could not read the time watermark; rollback detection is reset");
+            }
             return null;
         }
 
@@ -87,7 +91,10 @@ namespace PhantomVault.Core.Services.Licensing
                 else
                     File.Move(tmp, _statePath);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Serilog.Log.Warning(ex, "[MonotonicTimeGuard] Could not persist the time watermark");
+            }
         }
     }
 }

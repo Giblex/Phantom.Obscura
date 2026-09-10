@@ -103,6 +103,11 @@
     <PackageReference Include="Serilog" Version="4.2.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+
+    <!-- Transitive via Avalonia's FreeDesktop (D-Bus) support. 0.21.2 is affected by
+         GHSA-xrw6-gwf8-vvr9 (High: signal spoofing / fd exhaustion); 0.21.3 is the patched
+         release on the same line. Drop this pin once Avalonia references a fixed version. -->
+    <PackageReference Include="Tmds.DBus.Protocol" Version="0.21.3" />
     
     <!-- Embed policy files as resources for runtime verification -->
     <EmbeddedResource Include="Assets\Policies\root_public.json" />

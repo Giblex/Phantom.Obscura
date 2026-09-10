@@ -1087,7 +1087,7 @@ namespace PhantomVault.UI.ViewModels
                 return IsLockscreenVisible
                        && IsSoftLocked
                        && settings.EnablePinLock
-                       && PinLockService.HasPinConfigured(settings, _manifestPath);
+                       && PinLockService.HasPinConfigured(_cachedRuntimeManifest);
             }
         }
 
@@ -5351,16 +5351,16 @@ namespace PhantomVault.UI.ViewModels
 
             try
             {
-                bool pinConfigured = PinLockService.SyncPinFlags(_manifestPath)
+                bool pinConfigured = PinLockService.SyncPinFlags(_cachedRuntimeManifest)
                     && SettingsService.Load().EnablePinLock;
                 if (!pinConfigured)
                 {
                     return;
                 }
             }
-            catch
+            catch (Exception ex)
             {
-
+                Log.Warning(ex, "[Vault] Could not evaluate the PIN lock state for the idle lock");
                 return;
             }
 
@@ -5618,7 +5618,7 @@ namespace PhantomVault.UI.ViewModels
         {
             try
             {
-                var dialog = new PhantomVault.UI.Views.Dialogs.PinSetupDialog(_manifestPath);
+                var dialog = new PhantomVault.UI.Views.Dialogs.PinSetupDialog(pin => SetVaultPinAsync(pin));
 
                 if (_ownerWindow != null)
                 {
@@ -5662,7 +5662,7 @@ namespace PhantomVault.UI.ViewModels
                 : "Vault locked by user.");
 
             var settings = SettingsService.Load();
-            bool pinConfigured = settings.EnablePinLock && PinLockService.HasPinConfigured(settings, _manifestPath);
+            bool pinConfigured = settings.EnablePinLock && PinLockService.HasPinConfigured(_cachedRuntimeManifest);
             bool usePinForAutoLock = settings.UsePinLockForAutoLock && pinConfigured;
 
             if (reason == LockReason.AutoLock && usePinForAutoLock)
@@ -5920,7 +5920,8 @@ namespace PhantomVault.UI.ViewModels
                 return Task.CompletedTask;
             }
 
-            if (!PinLockService.VerifyPin(LockscreenPin, _manifestPath))
+            // Checked against the manifest decrypted at unlock, not anything re-read from disk.
+            if (!PhantomVault.Core.Security.VaultPinLock.Verify(_cachedRuntimeManifest, LockscreenPin))
             {
                 RegisterFailedLockscreenAttempt("Invalid PIN.");
                 return Task.CompletedTask;
@@ -6239,15 +6240,25 @@ namespace PhantomVault.UI.ViewModels
 
                 try
                 {
+                    // A PIN kept outside the encrypted manifest (older builds) is no longer
+                    // trusted: remove it and tell the user to set the PIN again.
+                    if (PinLockService.DiscardLegacyPinStores(_manifestPath))
+                    {
+                        Avalonia.Threading.Dispatcher.UIThread.Post(() => RecentIssuesLog.Instance.Record(
+                            IssueSeverity.Warning,
+                            "Set your PIN again",
+                            "PIN lock now keeps the PIN inside the vault's encrypted manifest. The PIN from the old storage was removed; set it again in Security settings."));
+                    }
+
                     // Drops stale EnablePinLock/UsePinLockForAutoLock flags when no PIN
                     // was ever set, so auto-lock never demands a PIN that doesn't exist.
-                    bool pinConfigured = PinLockService.SyncPinFlags(_manifestPath)
+                    bool pinConfigured = PinLockService.SyncPinFlags(_cachedRuntimeManifest)
                         && SettingsService.Load().EnablePinLock;
                     _vaultLockDurationService.AutoLockEnabled = pinConfigured;
                 }
-                catch
+                catch (Exception ex)
                 {
-
+                    Log.Warning(ex, "[Vault] Could not evaluate the PIN lock state after unlock; auto-lock disabled");
                     _vaultLockDurationService.AutoLockEnabled = false;
                 }
 
@@ -7707,6 +7718,65 @@ namespace PhantomVault.UI.ViewModels
             {
                 IsBusy = false;
             }
+        }
+
+        /// <summary>
+        /// The manifest decrypted at unlock. The soft-lock PIN is checked against this copy,
+        /// never against anything re-read from disk.
+        /// </summary>
+        internal VaultManifest? RuntimeManifest => _cachedRuntimeManifest;
+
+        /// <summary>
+        /// Stores a new soft-lock PIN inside the vault's encrypted manifest.
+        /// </summary>
+        internal Task SetVaultPinAsync(string pin)
+        {
+            if (!PhantomVault.Core.Security.VaultPinLock.IsValidFormat(pin))
+                throw new ArgumentException(
+                    $"PIN must contain {PinLockService.MinVaultPinLength}-{PinLockService.MaxVaultPinLength} digits.", nameof(pin));
+
+            return UpdateManifestPinAsync(manifest => PhantomVault.Core.Security.VaultPinLock.SetPin(manifest, pin));
+        }
+
+        /// <summary>Removes the soft-lock PIN from the vault's encrypted manifest.</summary>
+        internal Task ClearVaultPinAsync()
+            => UpdateManifestPinAsync(PhantomVault.Core.Security.VaultPinLock.ClearPin);
+
+        private async Task UpdateManifestPinAsync(Action<VaultManifest> change)
+        {
+            var manifest = _cachedRuntimeManifest;
+            var manifestPath = _manifestPath;
+            if (string.IsNullOrWhiteSpace(manifestPath) || manifest == null)
+                throw new InvalidOperationException("Unlock the vault before changing its PIN.");
+
+            var previousSalt = manifest.PinSaltBase64;
+            var previousHash = manifest.PinHashBase64;
+            var previousIterations = manifest.PinPbkdf2Iterations;
+
+            try
+            {
+                await Task.Run(() =>
+                {
+                    change(manifest);
+                    _manifestService.WriteManifestSecure(
+                        manifest,
+                        manifestPath,
+                        _vaultPassword ?? SecurePassword.Empty(),
+                        _vaultKeyfilePath,
+                        usbSerial: null,
+                        requireDualFactor: false);
+                }).ConfigureAwait(false);
+            }
+            catch
+            {
+                // Keep the in-memory copy in step with what is on disk.
+                manifest.PinSaltBase64 = previousSalt;
+                manifest.PinHashBase64 = previousHash;
+                manifest.PinPbkdf2Iterations = previousIterations;
+                throw;
+            }
+
+            PinLockService.DiscardLegacyPinStores(manifestPath);
         }
 
         public string CurrentKeyfileDisplay

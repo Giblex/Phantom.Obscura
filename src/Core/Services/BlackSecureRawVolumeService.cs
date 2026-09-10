@@ -218,9 +218,12 @@ namespace PhantomVault.Core.Services
 
                 await output.FlushAsync(cancellationToken).ConfigureAwait(false);
             }
-            catch
+            catch (Exception ex)
             {
-
+                // This is the logical destroy. Swallowing a failure here meant the broker replied
+                // "true" and callers believed a volume was wiped when its header was still intact.
+                Serilog.Log.Error(ex, "[BlackSecure] Failed to invalidate the volume header; the volume was NOT destroyed");
+                throw;
             }
         }
 

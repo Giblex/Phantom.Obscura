@@ -1,5 +1,6 @@
 using System;
 using System.Reactive;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using ReactiveUI;
 using PhantomVault.UI.Services;
@@ -9,17 +10,21 @@ namespace PhantomVault.UI.ViewModels.Dialogs
     public sealed class PinSetupDialogViewModel : ReactiveObject
     {
         private readonly Window _owner;
-        private readonly string? _manifestPath;
+        private readonly Func<string, Task>? _setPin;
         private string _pin = string.Empty;
         private string _confirmPin = string.Empty;
         private string? _errorMessage;
 
-        public PinSetupDialogViewModel(Window owner, string? manifestPath = null)
+        /// <param name="setPin">
+        /// Stores the PIN in the unlocked vault's encrypted manifest. Null when the dialog was
+        /// opened without an unlocked vault, in which case no PIN can be set.
+        /// </param>
+        public PinSetupDialogViewModel(Window owner, Func<string, Task>? setPin = null)
         {
             _owner = owner;
-            _manifestPath = manifestPath;
+            _setPin = setPin;
 
-            SetPinCommand = ReactiveCommand.Create(OnSetPin);
+            SetPinCommand = ReactiveCommand.CreateFromTask(OnSetPinAsync);
             CancelCommand = ReactiveCommand.Create(OnCancel);
         }
 
@@ -54,11 +59,10 @@ namespace PhantomVault.UI.ViewModels.Dialogs
 
         public bool Success { get; private set; }
 
-        private void OnSetPin()
+        private async Task OnSetPinAsync()
         {
             try
             {
-
                 if (string.IsNullOrWhiteSpace(Pin))
                 {
                     ErrorMessage = "PIN cannot be empty.";
@@ -83,14 +87,13 @@ namespace PhantomVault.UI.ViewModels.Dialogs
                     return;
                 }
 
-                if (!string.IsNullOrWhiteSpace(_manifestPath))
+                if (_setPin == null)
                 {
-                    PinLockService.SetPin(Pin, _manifestPath);
+                    ErrorMessage = "Open Settings from an unlocked vault to set a PIN.";
+                    return;
                 }
-                else
-                {
-                    PinLockService.SetPin(Pin);
-                }
+
+                await _setPin(Pin);
 
                 Success = true;
                 _owner.Close();
@@ -109,4 +112,3 @@ namespace PhantomVault.UI.ViewModels.Dialogs
         }
     }
 }
-

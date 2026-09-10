@@ -111,9 +111,9 @@ namespace PhantomVault.Core.Services.Security
                 });
                 File.WriteAllText(_configFilePath, json);
             }
-            catch
+            catch (Exception ex)
             {
-
+                Serilog.Log.Warning(ex, "[DefenceSettings] Failed to save defence rule states; changes will not survive a restart");
             }
         }
     }
