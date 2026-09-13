@@ -33,10 +33,12 @@ public partial class CredentialListView : UserControl
     private static readonly TimeSpan DoubleClickWindow = TimeSpan.FromMilliseconds(400);
     private const double DoubleClickSlop = 6;
 
-    // Tile press: a quick squeeze, then a spring release.
-    private const double PressScale = 0.95;
-    private static readonly TimeSpan PressDuration = TimeSpan.FromMilliseconds(80);
-    private static readonly TimeSpan ReleaseDuration = TimeSpan.FromMilliseconds(480);
+    // Tile press: a light squeeze, then a short, gentle release with only a hint of spring.
+    // (0.95 with a 1.6 overshoot over 480ms read as too bouncy.)
+    private const double PressScale = 0.97;
+    private const double ReleaseOvershoot = 0.5;
+    private static readonly TimeSpan PressDuration = TimeSpan.FromMilliseconds(70);
+    private static readonly TimeSpan ReleaseDuration = TimeSpan.FromMilliseconds(320);
 
     private ScrollViewer? _scrollViewer;
 
@@ -206,7 +208,7 @@ public partial class CredentialListView : UserControl
         var release = new Animation
         {
             Duration = ReleaseDuration,
-            Easing = new SpringOutEasing { Overshoot = 1.6 },
+            Easing = new SpringOutEasing { Overshoot = ReleaseOvershoot },
             FillMode = FillMode.Forward,
             Children = { Key(0, PressScale), Key(1, 1.0) }
         };

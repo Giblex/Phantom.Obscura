@@ -3,6 +3,7 @@
 **/obj/
 **/obj_codex/
 **/obj_uiverify/
+**/obj_integrity_verify/
 
 # Visual Studio
 .vs/

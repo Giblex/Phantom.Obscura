@@ -923,38 +923,47 @@ namespace PhantomVault.UI.Views
         }
 
         /// <summary>
-        /// The editor bounces outwards from the centre of the display card: it starts small
-        /// and transparent, overshoots slightly, then settles at full size, echoing the tile's
-        /// own click bounce in the list.
+        /// The display card turns into the editor. The editor starts at the display card's own
+        /// height and grows down to its full height, lifting in from a slightly smaller scale,
+        /// while the display card's content fades out underneath and the editor's fades in.
+        /// The two cards now look alike (same surface and backing), so a plain scale-and-fade
+        /// over the same footprint read as no animation at all; the height change is what makes
+        /// the transformation visible.
         /// </summary>
-        private static async System.Threading.Tasks.Task RunEditCardPopAnimation(Border overlay, Border card)
+        private async System.Threading.Tasks.Task RunEditCardPopAnimation(Border overlay, Border card)
         {
-            const double StartScale = 0.94;
+            const double StartScale = 0.97;
+            var duration = TimeSpan.FromMilliseconds(560);
+            var fadeDuration = TimeSpan.FromMilliseconds(300);
 
-            card.RenderTransformOrigin = Avalonia.RelativePoint.Center;
+            // Height PositionEditCard chose; the editor grows to it from the display card's height.
+            var targetHeight = double.IsNaN(card.Height) ? card.Bounds.Height : card.Height;
+            var startHeight = targetHeight;
+            if (_detailCard != null && _detailCard.Bounds.Height > 0 && !double.IsNaN(targetHeight))
+                startHeight = Math.Clamp(_detailCard.Bounds.Height, Math.Min(160, targetHeight), targetHeight);
+
+            // Grow from the top edge, where the two cards line up, not from the centre.
+            card.RenderTransformOrigin = new Avalonia.RelativePoint(0.5, 0, Avalonia.RelativeUnit.Relative);
             card.RenderTransform = new ScaleTransform(StartScale, StartScale);
             card.Opacity = 0;
-            overlay.Opacity = 0;
+            overlay.Opacity = 1;
 
-            static Animation Fade(int ms) => new()
+            static Animation Tween(AvaloniaProperty property, double from, double to, TimeSpan length, FillMode fill) => new()
             {
-                Duration = TimeSpan.FromMilliseconds(ms),
+                Duration = length,
                 Easing = new CubicEaseOut(),
-                FillMode = FillMode.Forward,
+                FillMode = fill,
                 Children =
                 {
-                    new KeyFrame { Cue = new Cue(0), Setters = { new Setter(OpacityProperty, 0.0) } },
-                    new KeyFrame { Cue = new Cue(1), Setters = { new Setter(OpacityProperty, 1.0) } }
+                    new KeyFrame { Cue = new Cue(0), Setters = { new Setter(property, from) } },
+                    new KeyFrame { Cue = new Cue(1), Setters = { new Setter(property, to) } }
                 }
             };
 
-            // A slow, smooth single spring: grows out from the card's centre from 94%, eases just
-            // past full size once and settles. A small start scale and gentle overshoot keep it
-            // calm at this longer duration; the fade runs alongside so it never pops in.
-            var pop = new Animation
+            var scale = new Animation
             {
-                Duration = TimeSpan.FromMilliseconds(900),
-                Easing = new PhantomVault.UI.Services.SpringOutEasing { Overshoot = 0.9 },
+                Duration = duration,
+                Easing = new CubicEaseOut(),
                 FillMode = FillMode.Forward,
                 Children =
                 {
@@ -979,14 +988,27 @@ namespace PhantomVault.UI.Views
                 }
             };
 
-            try
+            var running = new System.Collections.Generic.List<System.Threading.Tasks.Task>
             {
                 // Run on the card itself: the transform animator applies ScaleTransform setters
                 // to its RenderTransform (it rejects a bare transform as the target).
-                await System.Threading.Tasks.Task.WhenAll(
-                    Fade(1).RunAsync(overlay),
-                    Fade(420).RunAsync(card),
-                    pop.RunAsync(card));
+                scale.RunAsync(card),
+                Tween(OpacityProperty, 0.0, 1.0, fadeDuration, FillMode.Forward).RunAsync(card)
+            };
+
+            // Height: FillMode.None so the local Height (kept at the target) takes over when the
+            // animation ends and later resizes from PositionEditCard still apply.
+            if (!double.IsNaN(targetHeight) && startHeight < targetHeight - 1)
+                running.Add(Tween(HeightProperty, startHeight, targetHeight, duration, FillMode.None).RunAsync(card));
+
+            // The display card's content fades out as the editor fades in. FillMode.None: its
+            // opacity is then set (and later restored) as a local value.
+            if (_detailCard != null)
+                running.Add(Tween(OpacityProperty, 1.0, 0.0, fadeDuration, FillMode.None).RunAsync(_detailCard));
+
+            try
+            {
+                await System.Threading.Tasks.Task.WhenAll(running);
             }
             finally
             {
