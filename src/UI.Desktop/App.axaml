@@ -10,8 +10,95 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://PhantomVault.UI/Resources/Strings.en-US.axaml"/>
                 <ResourceInclude Source="avares://Phantom.UI.Shared/Icons/VectorIcons.axaml"/>
+                <!-- App-wide, so every window can use the shared converters. The icon picker
+                     referenced IconPathToBitmapConverter without merging this file itself,
+                     threw on layout and took the app down when adding an entry. -->
+                <ResourceInclude Source="avares://PhantomVault.UI/Resources/Converters/ConverterResources.axaml"/>
 
             </ResourceDictionary.MergedDictionaries>
+
+            <!-- Elevation that differs by light/dark. These surfaces had pure-black shadows
+                 tuned for the dark page (up to 92% black), which read as heavy grey slabs on a
+                 light background. Dark keeps the original values; Light uses faint navy-tinted
+                 shadows with a negative spread so they hug each card's rounded corners. -->
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Dark">
+                    <BoxShadows x:Key="Shadow.SettingsPanel">-46 0 150 -10 #EA000000, -22 0 60 -8 #C0000000, -8 0 22 -4 #90000000</BoxShadows>
+                    <SolidColorBrush x:Key="Brush.SettingsPanelEdge" Color="#55000000"/>
+                    <BoxShadows x:Key="Shadow.SettingsHeader">0 6 18 -4 #80000000, 0 2 6 -2 #60000000</BoxShadows>
+                    <BoxShadows x:Key="Shadow.SettingsCard">0 5 20 0 #52000000</BoxShadows>
+                    <BoxShadows x:Key="Shadow.ListTile">0 9 18 -5 #A0000000, 0 3 7 -2 #80000000</BoxShadows>
+                    <BoxShadows x:Key="Shadow.GridTile">0 10 24 -6 #B0000000, 0 3 8 -2 #80000000, inset 0 1 0 0 #35FFFFFF, inset 0 -1 0 0 #40000000</BoxShadows>
+                    <!-- Kept within the header card's 8px margin so it never reaches (and gets
+                         cut square at) the list column's edge. -->
+                    <BoxShadows x:Key="Shadow.ListHeader">0 4 10 -5 #80000000</BoxShadows>
+                    <!-- A flat inset "shadow" with a huge spread fills the panel with a faint white
+                         lift over whatever WindowBackgroundBrush the theme uses (solid or gradient),
+                         lightening the sidebar and display column without replacing the brush. -->
+                    <!-- Real layers (inset BoxShadows did not render here). PanelLift is painted
+                         as the sidebar's and detail column's scroll background, over the window
+                         brush, to lighten both panels. SearchWellShade darkens the top of the
+                         search field and fades down, so it reads as recessed. -->
+                    <!-- Blue, not white: white over the navy washed it out to grey. -->
+                    <SolidColorBrush x:Key="Brush.PanelLift" Color="#245B8FD6"/>
+                    <!-- Sidebar / detail view: the same blue lift plus a faint dot every 8px (the
+                         website pattern, fainter than the window's), as one tiled brush. -->
+                    <DrawingBrush x:Key="Brush.PanelLiftDots" TileMode="Tile" Stretch="None"
+                                  SourceRect="0,0,8,8" DestinationRect="0,0,8,8">
+                        <DrawingBrush.Drawing>
+                            <DrawingGroup>
+                                <GeometryDrawing Brush="#245B8FD6">
+                                    <GeometryDrawing.Geometry><RectangleGeometry Rect="0,0,8,8"/></GeometryDrawing.Geometry>
+                                </GeometryDrawing>
+                                <GeometryDrawing Brush="#16FFFFFF">
+                                    <GeometryDrawing.Geometry><EllipseGeometry Rect="0,0,1.5,1.5"/></GeometryDrawing.Geometry>
+                                </GeometryDrawing>
+                            </DrawingGroup>
+                        </DrawingBrush.Drawing>
+                    </DrawingBrush>
+                    <!-- Copy-on-click fields in the display view: hover is a slightly deeper blue
+                         than the resting field (not Fluent's near-black), with a faint edge. -->
+                    <SolidColorBrush x:Key="Brush.CopyFieldHover" Color="#2E3D6E9E"/>
+                    <SolidColorBrush x:Key="Brush.CopyFieldPressed" Color="#403D6E9E"/>
+                    <SolidColorBrush x:Key="Brush.CopyFieldHoverBorder" Color="#4D7FAEDC"/>
+                    <LinearGradientBrush x:Key="Brush.SearchWellShade" StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0" Color="#8C000000"/>
+                        <GradientStop Offset="0.5" Color="#33000000"/>
+                        <GradientStop Offset="1" Color="#1A000000"/>
+                    </LinearGradientBrush>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Light">
+                    <BoxShadows x:Key="Shadow.SettingsPanel">-24 0 60 -16 #33203040, -6 0 18 -6 #1A203040</BoxShadows>
+                    <SolidColorBrush x:Key="Brush.SettingsPanelEdge" Color="#1F203040"/>
+                    <BoxShadows x:Key="Shadow.SettingsHeader">0 4 12 -6 #1F203040</BoxShadows>
+                    <BoxShadows x:Key="Shadow.SettingsCard">0 6 18 -8 #24203040, 0 1 3 0 #12203040</BoxShadows>
+                    <BoxShadows x:Key="Shadow.ListTile">0 4 10 -6 #1F203040, 0 1 2 0 #10203040</BoxShadows>
+                    <BoxShadows x:Key="Shadow.GridTile">0 8 20 -10 #26203040, 0 1 3 0 #14203040, inset 0 1 0 0 #99FFFFFF</BoxShadows>
+                    <BoxShadows x:Key="Shadow.ListHeader">0 4 10 -5 #26203040</BoxShadows>
+                    <SolidColorBrush x:Key="Brush.PanelLift" Color="#33FFFFFF"/>
+                    <DrawingBrush x:Key="Brush.PanelLiftDots" TileMode="Tile" Stretch="None"
+                                  SourceRect="0,0,8,8" DestinationRect="0,0,8,8">
+                        <DrawingBrush.Drawing>
+                            <DrawingGroup>
+                                <GeometryDrawing Brush="#33FFFFFF">
+                                    <GeometryDrawing.Geometry><RectangleGeometry Rect="0,0,8,8"/></GeometryDrawing.Geometry>
+                                </GeometryDrawing>
+                                <GeometryDrawing Brush="#14203040">
+                                    <GeometryDrawing.Geometry><EllipseGeometry Rect="0,0,1.5,1.5"/></GeometryDrawing.Geometry>
+                                </GeometryDrawing>
+                            </DrawingGroup>
+                        </DrawingBrush.Drawing>
+                    </DrawingBrush>
+                    <SolidColorBrush x:Key="Brush.CopyFieldHover" Color="#1A2F6FB0"/>
+                    <SolidColorBrush x:Key="Brush.CopyFieldPressed" Color="#282F6FB0"/>
+                    <SolidColorBrush x:Key="Brush.CopyFieldHoverBorder" Color="#4D5C8FC8"/>
+                    <LinearGradientBrush x:Key="Brush.SearchWellShade" StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Offset="0" Color="#33203040"/>
+                        <GradientStop Offset="0.5" Color="#12203040"/>
+                        <GradientStop Offset="1" Color="#00203040"/>
+                    </LinearGradientBrush>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
 
             <FontFamily x:Key="MonoFontFamily">Consolas</FontFamily>
             <x:Double x:Key="ToolTipFontSize">12</x:Double>
@@ -33,6 +120,9 @@
     <Application.Styles>
 
     <FluentTheme />
+
+        <!-- Colour wheel used by the icon library. -->
+        <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />
 
         <Style Selector="ToolTip">
             <Setter Property="FontSize" Value="{DynamicResource ToolTipFontSize}"/>

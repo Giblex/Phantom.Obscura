@@ -1,0 +1,235 @@
+<!-- Shared look for every AutoFill surface (suggestion menu, save prompt, no-match card,
+     mini window). They float over other apps' windows, so they keep one dark glass look
+     whatever the app theme, and share one palette so they read as a single product.
+
+     BoxShadow colours are parsed at runtime, not by the XAML compiler: a malformed literal
+     builds clean and throws on construction. Keep every colour to #AARRGGBB. -->
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Styles.Resources>
+        <SolidColorBrush x:Key="Af.Edge" Color="#FF2E3D55"/>
+        <SolidColorBrush x:Key="Af.Hairline" Color="#14FFFFFF"/>
+        <SolidColorBrush x:Key="Af.Text" Color="#FFEAF1F7"/>
+        <SolidColorBrush x:Key="Af.TextSoft" Color="#FFA9B8C9"/>
+        <SolidColorBrush x:Key="Af.TextMuted" Color="#FF7488A0"/>
+        <SolidColorBrush x:Key="Af.Accent" Color="#FF5FC4C0"/>
+
+        <LinearGradientBrush x:Key="Af.ShellBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+            <GradientStop Offset="0" Color="#FA182339"/>
+            <GradientStop Offset="1" Color="#FA0E1626"/>
+        </LinearGradientBrush>
+
+        <!-- The website's teal-to-blue accent, as a hairline across the top of each card. -->
+        <LinearGradientBrush x:Key="Af.AccentLine" StartPoint="0%,0%" EndPoint="100%,0%">
+            <GradientStop Offset="0" Color="#0038C6B8"/>
+            <GradientStop Offset="0.3" Color="#CC5FC4C0"/>
+            <GradientStop Offset="0.7" Color="#CC6FA8F0"/>
+            <GradientStop Offset="1" Color="#006FA8F0"/>
+        </LinearGradientBrush>
+
+        <LinearGradientBrush x:Key="Af.PrimaryBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+            <GradientStop Offset="0" Color="#FF2F8A8C"/>
+            <GradientStop Offset="1" Color="#FF2D62A0"/>
+        </LinearGradientBrush>
+
+        <LinearGradientBrush x:Key="Af.LogoRing" StartPoint="100%,0%" EndPoint="0%,100%">
+            <GradientStop Offset="0" Color="#FF3A7BD5"/>
+            <GradientStop Offset="1" Color="#FF3FB6A8"/>
+        </LinearGradientBrush>
+    </Styles.Resources>
+
+    <!-- Card: the outer border carries the shadow (unclipped); af-clip inside rounds the
+         content to the same corners. -->
+    <Style Selector="Border.af-shell">
+        <Setter Property="CornerRadius" Value="16"/>
+        <Setter Property="Background" Value="{DynamicResource Af.ShellBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Af.Edge}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BoxShadow" Value="0 24 60 -18 #C0000000, 0 2 10 0 #50000000"/>
+        <Setter Property="Margin" Value="14"/>
+    </Style>
+    <Style Selector="Border.af-clip">
+        <Setter Property="CornerRadius" Value="15"/>
+        <Setter Property="ClipToBounds" Value="True"/>
+    </Style>
+    <Style Selector="Border.af-accent-line">
+        <Setter Property="Height" Value="2"/>
+        <Setter Property="Background" Value="{DynamicResource Af.AccentLine}"/>
+    </Style>
+    <Style Selector="Border.af-divider">
+        <Setter Property="Height" Value="1"/>
+        <Setter Property="Background" Value="{DynamicResource Af.Hairline}"/>
+    </Style>
+    <Style Selector="Border.af-footer">
+        <Setter Property="Background" Value="#0CFFFFFF"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Af.Hairline}"/>
+        <Setter Property="BorderThickness" Value="0,1,0,0"/>
+    </Style>
+
+    <!-- Logo in a gradient ring, the same mark as the badge. -->
+    <Style Selector="Border.af-logo">
+        <Setter Property="Width" Value="32"/>
+        <Setter Property="Height" Value="32"/>
+        <Setter Property="CornerRadius" Value="16"/>
+        <Setter Property="BorderThickness" Value="1.5"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Af.LogoRing}"/>
+        <Setter Property="Background" Value="#FF121C2E"/>
+        <Setter Property="BoxShadow" Value="0 0 12 -2 #663FB6A8"/>
+    </Style>
+
+    <Style Selector="TextBlock.af-label">
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="LetterSpacing" Value="1"/>
+        <Setter Property="Foreground" Value="{DynamicResource Af.TextMuted}"/>
+    </Style>
+    <Style Selector="TextBlock.af-title">
+        <Setter Property="FontSize" Value="13.5"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{DynamicResource Af.Text}"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+    <Style Selector="TextBlock.af-body">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Foreground" Value="{DynamicResource Af.TextSoft}"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+
+    <Style Selector="Border.af-pill">
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="9,3"/>
+        <Setter Property="Background" Value="#1AFFFFFF"/>
+        <Setter Property="BorderBrush" Value="#1FFFFFFF"/>
+        <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+
+    <Style Selector="Border.af-kbd">
+        <Setter Property="CornerRadius" Value="5"/>
+        <Setter Property="Padding" Value="5,1"/>
+        <Setter Property="Background" Value="#1AFFFFFF"/>
+        <Setter Property="BorderBrush" Value="#24FFFFFF"/>
+        <Setter Property="BorderThickness" Value="1,1,1,2"/>
+    </Style>
+    <Style Selector="TextBlock.af-kbd">
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="Foreground" Value="{DynamicResource Af.TextSoft}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- Buttons. MinWidth/MinHeight are cleared because the app-wide Button style sets
+         MinHeight 40 / MinWidth 100, which would swell these small buttons. -->
+    <Style Selector="Button.af-btn">
+        <Setter Property="Height" Value="34"/>
+        <Setter Property="MinWidth" Value="0"/>
+        <Setter Property="MinHeight" Value="0"/>
+        <Setter Property="Padding" Value="14,0"/>
+        <Setter Property="CornerRadius" Value="9"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Background" Value="#14FFFFFF"/>
+        <Setter Property="BorderBrush" Value="#24FFFFFF"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Foreground" Value="{DynamicResource Af.TextSoft}"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Button.af-btn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="#24FFFFFF"/>
+        <Setter Property="BorderBrush" Value="#33FFFFFF"/>
+        <Setter Property="Foreground" Value="{DynamicResource Af.Text}"/>
+    </Style>
+    <Style Selector="Button.af-btn:pressed">
+        <Setter Property="RenderTransform" Value="scale(0.96)"/>
+    </Style>
+
+    <Style Selector="Button.af-btn.primary">
+        <Setter Property="Background" Value="{DynamicResource Af.PrimaryBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Foreground" Value="#FFFFFFFF"/>
+    </Style>
+    <Style Selector="Button.af-btn.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Af.PrimaryBrush}"/>
+        <Setter Property="Foreground" Value="#FFFFFFFF"/>
+        <Setter Property="Opacity" Value="0.9"/>
+    </Style>
+
+    <Style Selector="Button.af-btn.ghost">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Foreground" Value="{DynamicResource Af.TextMuted}"/>
+    </Style>
+    <Style Selector="Button.af-btn.ghost:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="#12FFFFFF"/>
+        <Setter Property="Foreground" Value="{DynamicResource Af.TextSoft}"/>
+    </Style>
+
+    <!-- Row action chips (built in code). -->
+    <Style Selector="Button.af-chip">
+        <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Button.af-chip:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="#2AFFFFFF"/>
+        <Setter Property="BorderBrush" Value="#3DFFFFFF"/>
+    </Style>
+    <Style Selector="Button.af-chip:pressed">
+        <Setter Property="RenderTransform" Value="scale(0.92)"/>
+    </Style>
+
+    <!-- Sunken input wells, matching the app's search bar. -->
+    <Style Selector="TextBox.af-field">
+        <Setter Property="Height" Value="34"/>
+        <Setter Property="MinHeight" Value="0"/>
+        <Setter Property="FontSize" Value="12.5"/>
+        <Setter Property="Padding" Value="10,0"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="CornerRadius" Value="9"/>
+        <Setter Property="Foreground" Value="{DynamicResource Af.Text}"/>
+        <Setter Property="CaretBrush" Value="{DynamicResource Af.Accent}"/>
+        <Setter Property="SelectionBrush" Value="#665FC4C0"/>
+        <Setter Property="Background" Value="#38000000"/>
+        <Setter Property="BorderBrush" Value="#24FFFFFF"/>
+        <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+    <Style Selector="TextBox.af-field /template/ Border#PART_BorderElement">
+        <Setter Property="BoxShadow" Value="inset 0 2 5 0 #59000000, inset 0 -1 0 0 #0FFFFFFF"/>
+    </Style>
+    <Style Selector="TextBox.af-field:pointerover /template/ Border#PART_BorderElement">
+        <Setter Property="Background" Value="#40000000"/>
+        <Setter Property="BorderBrush" Value="#33FFFFFF"/>
+    </Style>
+    <Style Selector="TextBox.af-field:focus /template/ Border#PART_BorderElement">
+        <Setter Property="Background" Value="#40000000"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Af.Accent}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+
+    <!-- Copy confirmation pill: slides up and fades in, then back out. -->
+    <Style Selector="Border.af-toast">
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="9,3"/>
+        <Setter Property="Background" Value="#265FC4C0"/>
+        <Setter Property="BorderBrush" Value="#665FC4C0"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Opacity" Value="0"/>
+        <Setter Property="RenderTransform" Value="translateY(4px)"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.22" Easing="CubicEaseOut"/>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.26" Easing="CubicEaseOut"/>
+            </Transitions>
+        </Setter>
+    </Style>
+</Styles>

@@ -1,33 +1,37 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:dcontrols="clr-namespace:PhantomVault.UI.Desktop.Controls"
              x:Class="PhantomVault.UI.Views.EditForms.ApiKeyEditForm">
 
     <Border x:Name="ApiKeyPanelBorder" Background="Transparent" IsVisible="{Binding IsApiKeyEntry}">
-        <StackPanel x:Name="ApiKeyPanel" Spacing="14">
-        <TextBlock Text="API Credential" Classes="form-section-title"/>
-        <StackPanel Classes="field-group">
-            <TextBlock Text="Key Type" Classes="field-label"/>
-            <ComboBox ItemsSource="{Binding ApiKeyTypeOptions}"
-                      SelectedItem="{Binding ApiKeyType}"
-                      Classes="form-field"/>
-        </StackPanel>
-        <StackPanel Classes="field-group">
-            <TextBlock Text="API Key" Classes="field-label"/>
-            <TextBox Text="{Binding ApiKeyValue}" Classes="form-field" Watermark="sk_live_..."/>
-        </StackPanel>
-        <StackPanel Classes="field-group">
-            <TextBlock Text="Endpoint" Classes="field-label"/>
-            <TextBox Text="{Binding ApiEndpoint}" Classes="form-field" Watermark="https://api.example.com"/>
-        </StackPanel>
-        <StackPanel Classes="field-group">
-            <TextBlock Text="Environment" Classes="field-label"/>
-            <TextBox Text="{Binding ApiEnvironment}" Classes="form-field" Watermark="Production"/>
-        </StackPanel>
-        <StackPanel Classes="field-group">
-            <TextBlock Text="Documentation URL" Classes="field-label"/>
-            <TextBox Text="{Binding ApiDocumentationUrl}" Classes="form-field" Watermark="https://docs.example.com"/>
-        </StackPanel>
+        <StackPanel x:Name="ApiKeyPanel" Spacing="12">
+            <TextBlock Text="API Credential" Classes="form-section-title"/>
+            <dcontrols:FieldRow Spacing="12">
+                <StackPanel Classes="field-group">
+                    <TextBlock Text="Key Type" Classes="field-label"/>
+                    <ComboBox ItemsSource="{Binding ApiKeyTypeOptions}"
+                              SelectedItem="{Binding ApiKeyType}"
+                              Classes="form-field"/>
+                </StackPanel>
+                <StackPanel Classes="field-group">
+                    <TextBlock Text="Environment" Classes="field-label"/>
+                    <TextBox Text="{Binding ApiEnvironment}" Classes="form-field" Watermark="Production"/>
+                </StackPanel>
+            </dcontrols:FieldRow>
+            <StackPanel Classes="field-group">
+                <TextBlock Text="API Key" Classes="field-label"/>
+                <TextBox Text="{Binding ApiKeyValue}" Classes="form-field" Watermark="sk_live_..."/>
+            </StackPanel>
+            <dcontrols:FieldRow Spacing="12">
+                <StackPanel Classes="field-group">
+                    <TextBlock Text="Endpoint" Classes="field-label"/>
+                    <TextBox Text="{Binding ApiEndpoint}" Classes="form-field" Watermark="https://api.example.com"/>
+                </StackPanel>
+                <StackPanel Classes="field-group">
+                    <TextBlock Text="Documentation" Classes="field-label"/>
+                    <TextBox Text="{Binding ApiDocumentationUrl}" Classes="form-field" Watermark="https://docs.example.com"/>
+                </StackPanel>
+            </dcontrols:FieldRow>
         </StackPanel>
     </Border>
 </UserControl>
-

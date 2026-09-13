@@ -7,9 +7,10 @@
         forms read as one system instead of a pile of one-off TextBoxes.
     -->
 
+    <!-- 38px: close to the display card's 36px copy fields so edit and view line up. -->
     <Style Selector="TextBox.form-field">
-        <Setter Property="Height" Value="42"/>
-        <Setter Property="MinHeight" Value="42"/>
+        <Setter Property="Height" Value="38"/>
+        <Setter Property="MinHeight" Value="38"/>
         <Setter Property="CornerRadius" Value="8"/>
         <Setter Property="Padding" Value="12,0"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -49,8 +50,8 @@
     </Style>
 
     <Style Selector="ComboBox.form-field">
-        <Setter Property="Height" Value="42"/>
-        <Setter Property="MinHeight" Value="42"/>
+        <Setter Property="Height" Value="38"/>
+        <Setter Property="MinHeight" Value="38"/>
         <Setter Property="CornerRadius" Value="8"/>
         <Setter Property="Padding" Value="12,0"/>
         <Setter Property="HorizontalAlignment" Value="Stretch"/>
@@ -95,14 +96,17 @@
         <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
     </Style>
 
-    <!-- Individual section tile, used by both the section editor and the detail view. -->
+    <!-- The one tile used everywhere inside an entry: the display card's details, each
+         account on a merged card, custom sections, and the add/edit form. A shade darker than
+         the card, a hairline edge and a soft drop shadow, so every tile reads the same. -->
     <Style Selector="Border.section-tile">
-        <Setter Property="CornerRadius" Value="12"/>
-        <Setter Property="Padding" Value="14"/>
+        <Setter Property="CornerRadius" Value="14"/>
+        <Setter Property="Padding" Value="18,16"/>
         <Setter Property="Margin" Value="0,0,0,10"/>
-        <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}"/>
+        <Setter Property="Background" Value="#26000000"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+        <Setter Property="BoxShadow" Value="0 8 18 -8 #66000000, 0 1 0 0 #14FFFFFF"/>
     </Style>
 
     <!-- The small "Section" chip that sits inside each tile. -->

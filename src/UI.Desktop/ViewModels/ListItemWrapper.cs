@@ -3,6 +3,22 @@ using Avalonia.Media;
 
 namespace PhantomVault.UI.ViewModels;
 
+/// <summary>
+/// One category in the grid view when sorted by category: the same header the list view
+/// shows, followed by that category's tiles.
+/// </summary>
+public sealed class CategoryGridSection
+{
+    public CategoryGridSection(ListItemWrapper header, System.Collections.Generic.IReadOnlyList<CredentialViewModel> items)
+    {
+        Header = header;
+        Items = items;
+    }
+
+    public ListItemWrapper Header { get; }
+    public System.Collections.Generic.IReadOnlyList<CredentialViewModel> Items { get; }
+}
+
 public class ListItemWrapper
 {
     /// <summary>
@@ -53,6 +69,18 @@ public class ListItemWrapper
         Credential = credential;
 
         var color = ParseOrDefault(categoryColor);
+
+        if (Converters.CategoryColours.IsLightTheme)
+        {
+            // On a light page a 16% pastel tint is invisible and white text vanishes with it.
+            // Use the deepened hue: a stronger tint behind, the full colour on the bar, and a
+            // dark shade of the same hue for the text.
+            var deep = Converters.CategoryColours.ForSurface(color);
+            CategoryBrush = new SolidColorBrush(deep, 0.22);
+            CategoryAccentBrush = new SolidColorBrush(deep);
+            CategoryForegroundBrush = new SolidColorBrush(Converters.CategoryColours.TextOnLightTint(color));
+            return;
+        }
 
         // 0.16 keeps the hue readable against the dark page without becoming a block of
         // colour; it is the same weight the sidebar pills carry.

@@ -116,6 +116,8 @@ namespace PhantomVault.Core.Services
 
             var candidates = new[]
             {
+                // The user's own uploads first, so an uploaded logo wins auto-detection.
+                Icons.IconLibraryIndex.UserIconsDirectory,
                 Path.Combine(_iconsDirectory, "Entry Logos"),
                 Path.Combine(_iconsDirectory, "App Icons"),
                 Path.Combine(_iconsDirectory, "Cat Icons"),

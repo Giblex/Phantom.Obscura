@@ -33,7 +33,8 @@ namespace PhantomVault.UI.Converters
                         {
                             try
                             {
-                                var color = Color.Parse(vm.TileColor);
+                                // Deepened on light themes, where the pastels barely show.
+                                var color = CategoryColours.ForSurface(Color.Parse(vm.TileColor));
                                 return new SolidColorBrush(color);
                             }
                             catch {  }

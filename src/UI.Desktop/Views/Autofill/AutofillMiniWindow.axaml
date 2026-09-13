@@ -5,275 +5,232 @@
         xmlns:vm="clr-namespace:PhantomVault.UI.ViewModels.Autofill"
         xmlns:converters="clr-namespace:PhantomVault.UI.Converters"
         xmlns:views="clr-namespace:PhantomVault.UI.Views"
-        mc:Ignorable="d" d:DesignWidth="320" d:DesignHeight="400"
+        mc:Ignorable="d" d:DesignWidth="348" d:DesignHeight="428"
         x:Class="PhantomVault.UI.Views.Autofill.AutofillMiniWindow"
         x:DataType="vm:AutofillMiniWindowViewModel"
         Title="PhantomVault Autofill"
-        Width="320" Height="400"
+        Width="348" Height="428"
         CanResize="False"
         ShowInTaskbar="False"
         WindowStartupLocation="Manual"
-        SystemDecorations="BorderOnly"
+        SystemDecorations="None"
         Topmost="True"
-        Background="{DynamicResource AutofillBackgroundBrush}"
-        Foreground="{DynamicResource PrimaryTextBrush}">
+        Background="Transparent"
+        TransparencyLevelHint="Transparent">
 
     <Window.Styles>
+        <StyleInclude Source="avares://PhantomVault.UI/Views/Autofill/AutofillStyles.axaml"/>
+
+        <!-- Tabs as a quiet segmented control. -->
         <Style Selector="TabControl">
-            <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}"/>
+            <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
         </Style>
-
         <Style Selector="TabItem">
-            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
-            <Setter Property="Padding" Value="12,8"/>
-            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{DynamicResource Af.TextMuted}"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="MinHeight" Value="0"/>
         </Style>
-
         <Style Selector="TabItem:selected">
-            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
-            <Setter Property="Background" Value="{DynamicResource ControlHoverBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource Af.Text}"/>
+        </Style>
+        <Style Selector="TabItem:selected /template/ Border#PART_SelectedPipe">
+            <Setter Property="Background" Value="{DynamicResource Af.Accent}"/>
         </Style>
 
         <Style Selector="ListBox">
-            <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}"/>
+            <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="6,4"/>
         </Style>
-
         <Style Selector="ListBoxItem">
-            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Margin" Value="0,1"/>
+            <Setter Property="CornerRadius" Value="10"/>
             <Setter Property="Background" Value="Transparent"/>
         </Style>
-
-        <Style Selector="ListBoxItem:pointerover">
-            <Setter Property="Background" Value="{DynamicResource ControlHoverBrush}"/>
+        <Style Selector="ListBoxItem /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.16"/>
+                </Transitions>
+            </Setter>
         </Style>
-
-        <Style Selector="ListBoxItem:selected">
-            <Setter Property="Background" Value="{DynamicResource ControlBorderBrush}"/>
+        <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#14FFFFFF"/>
         </Style>
-
-        <Style Selector="Button.action-btn">
-            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
-            <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundBrush}"/>
-            <Setter Property="Padding" Value="16,8"/>
-            <Setter Property="Margin" Value="4"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="CornerRadius" Value="4"/>
-            <Setter Property="Cursor" Value="Hand"/>
-        </Style>
-
-        <Style Selector="Button.action-btn:pointerover">
-            <Setter Property="Background" Value="{DynamicResource AccentHoverBrush}"/>
-        </Style>
-
-        <Style Selector="Button.secondary-btn">
-            <Setter Property="Background" Value="{DynamicResource ControlHoverBrush}"/>
-            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
-            <Setter Property="Padding" Value="16,8"/>
-            <Setter Property="Margin" Value="4"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="CornerRadius" Value="4"/>
-            <Setter Property="Cursor" Value="Hand"/>
-        </Style>
-
-        <Style Selector="Button.secondary-btn:pointerover">
-            <Setter Property="Background" Value="{DynamicResource ControlBorderBrush}"/>
-        </Style>
-
-        <Style Selector="TextBox">
-            <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}"/>
-            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="4"/>
-            <Setter Property="Padding" Value="8"/>
+        <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#22FFFFFF"/>
         </Style>
     </Window.Styles>
 
-    <DockPanel>
+    <Border x:Name="Shell" Classes="af-shell" RenderTransformOrigin="50%,0%">
+        <Border Classes="af-clip">
+            <DockPanel>
+                <Border DockPanel.Dock="Top" Classes="af-accent-line"/>
 
-        <Border DockPanel.Dock="Top" Background="{DynamicResource AutofillHeaderBackgroundBrush}" Padding="12,8" BorderBrush="{DynamicResource AutofillBorderBrush}" BorderThickness="0,0,0,1">
-            <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Grid.Column="0"
-                          Text="{Binding CurrentDomain}"
-                          FontWeight="Bold"
-                          FontSize="{StaticResource Type.Body.Size}"
-                          VerticalAlignment="Center"/>
-                <Button AutomationProperties.Name="Close" Grid.Column="1"
-                       Content="✕"
-                       Command="{Binding CloseWindowCommand}"
-                       Background="Transparent"
-                       Foreground="{DynamicResource AutofillTextBrush}"
-                       BorderThickness="0"
-                       Padding="8,4"
-                       FontSize="{StaticResource Type.H4.Size}"
-                       Cursor="Hand"/>
-            </Grid>
-        </Border>
-
-        <TabControl DockPanel.Dock="Top" SelectedIndex="{Binding SelectedTab}">
-            <TabItem Header="Suggestions">
-                <DockPanel>
-
-                    <Border DockPanel.Dock="Top" Padding="12" BorderBrush="{DynamicResource AutofillBorderBrush}" BorderThickness="0,0,0,1">
-                        <TextBox Text="{Binding SearchFilter}"
-                                Watermark="Search credentials..."
-                                FontSize="{StaticResource Type.Label.Size}"/>
+                <!-- Header (drag handle) -->
+                <Grid x:Name="DragHeader" DockPanel.Dock="Top" ColumnDefinitions="Auto,12,*,Auto" Margin="14,12,10,10" Background="Transparent">
+                    <Border Grid.Column="0" Classes="af-logo">
+                        <Image Source="avares://PhantomVault.UI/Assets/ok.png"
+                               Width="16" Height="16"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
                     </Border>
+                    <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
+                        <TextBlock Text="PHANTOM OBSCURA" Classes="af-label"/>
+                        <TextBlock Text="{Binding CurrentDomain}" Classes="af-title"/>
+                    </StackPanel>
+                    <Button AutomationProperties.Name="Close" Grid.Column="3"
+                            Classes="af-btn ghost"
+                            Width="30" Height="30" Padding="0"
+                            VerticalAlignment="Top"
+                            Command="{Binding CloseWindowCommand}">
+                        <Path Data="M4 4L12 12M12 4L4 12"
+                              Stroke="{DynamicResource Af.TextSoft}"
+                              StrokeThickness="1.6"
+                              StrokeLineCap="Round"
+                              Width="12" Height="12"
+                              Stretch="Uniform"/>
+                    </Button>
+                </Grid>
 
-                    <ListBox ItemsSource="{Binding FilteredSuggestions}"
-                            SelectedItem="{Binding SelectedSuggestion}"
-                            IsVisible="{Binding HasSuggestions}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Border Padding="8" Cursor="Hand">
-                                    <StackPanel Spacing="4">
-                                        <Grid ColumnDefinitions="Auto,*,Auto">
+                <Border DockPanel.Dock="Bottom" Classes="af-footer" Padding="12,8">
+                    <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <Border Classes="af-kbd"><TextBlock Text="↵" Classes="af-kbd"/></Border>
+                            <TextBlock Text="select" Classes="af-kbd"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <Border Classes="af-kbd"><TextBlock Text="esc" Classes="af-kbd"/></Border>
+                            <TextBlock Text="close" Classes="af-kbd"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
 
+                <TabControl SelectedIndex="{Binding SelectedTab}" Margin="8,0,8,0">
+                    <TabItem Header="Suggestions">
+                        <DockPanel>
+                            <Border DockPanel.Dock="Top" Padding="6,8,6,6">
+                                <TextBox Text="{Binding SearchFilter}"
+                                         Classes="af-field"
+                                         Watermark="Search credentials..."/>
+                            </Border>
+
+                            <ListBox ItemsSource="{Binding FilteredSuggestions}"
+                                     SelectedItem="{Binding SelectedSuggestion}"
+                                     IsVisible="{Binding HasSuggestions}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid ColumnDefinitions="Auto,10,*,Auto" Cursor="Hand">
                                             <Border Grid.Column="0"
-                                                   Width="8" Height="8"
-                                                   CornerRadius="{StaticResource Radius.Sm}"
-                                                   VerticalAlignment="Center"
-                                                   Margin="0,0,8,0"
-                                                   Background="{Binding MatchType, Converter={x:Static converters:MatchTypeColorConverter.Instance}}">
-                                            </Border>
-
-                                            <StackPanel Grid.Column="1" Spacing="2">
+                                                    Width="8" Height="8"
+                                                    CornerRadius="4"
+                                                    VerticalAlignment="Center"
+                                                    Background="{Binding MatchType, Converter={x:Static converters:MatchTypeColorConverter.Instance}}"/>
+                                            <StackPanel Grid.Column="2" Spacing="2">
                                                 <TextBlock Text="{Binding Credential.Title}"
-                                                          FontWeight="SemiBold"
-                                                          FontSize="{StaticResource Type.Label.Size}"
-                                                          Foreground="{DynamicResource AutofillTextBrush}"/>
+                                                           FontWeight="SemiBold"
+                                                           FontSize="13"
+                                                           Foreground="{DynamicResource Af.Text}"
+                                                           TextTrimming="CharacterEllipsis"/>
                                                 <TextBlock Text="{Binding Credential.Username}"
-                                                          FontSize="{StaticResource Type.Small.Size}"
-                                                          Foreground="{DynamicResource AutofillTextBrush}"/>
+                                                           FontSize="11.5"
+                                                           Foreground="{DynamicResource Af.TextSoft}"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding Credential.Url}"
+                                                           FontSize="10.5"
+                                                           Foreground="{DynamicResource Af.TextMuted}"
+                                                           TextTrimming="CharacterEllipsis"/>
                                             </StackPanel>
-
-                                            <TextBlock Grid.Column="2"
-                                                      Text="{Binding MatchScore}"
-                                                      FontSize="{StaticResource Type.Tiny.Size}"
-                                                      Foreground="{DynamicResource AutofillTextSecondaryBrush}"
-                                                      VerticalAlignment="Center"/>
+                                            <Border Grid.Column="3" Classes="af-pill" VerticalAlignment="Center" Padding="7,2">
+                                                <TextBlock Text="{Binding MatchScore}"
+                                                           FontSize="10"
+                                                           Foreground="{DynamicResource Af.TextSoft}"/>
+                                            </Border>
                                         </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
 
-                                        <TextBlock Text="{Binding Credential.Url}"
-                                                  FontSize="{StaticResource Type.Tiny.Size}"
-                                                  Foreground="{DynamicResource AutofillTextTertiaryBrush}"
-                                                  TextTrimming="CharacterEllipsis"/>
-                                    </StackPanel>
-                                </Border>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-
-                    <Border IsVisible="{Binding !HasSuggestions}"
-                           Padding="20">
-                        <StackPanel Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <TextBlock Text="🔍"
-                                      FontSize="{StaticResource Type.H1.Size}"
-                                      HorizontalAlignment="Center"
-                                      Opacity="0.3"/>
-                            <TextBlock Text="No credentials found for this site"
-                                      FontSize="{StaticResource Type.Label.Size}"
-                                      Foreground="{DynamicResource AutofillTextSecondaryBrush}"
-                                      HorizontalAlignment="Center"
-                                      TextAlignment="Center"/>
-                        </StackPanel>
-                    </Border>
-                </DockPanel>
-            </TabItem>
-
-            <TabItem Header="Capture">
-                <DockPanel>
-
-                    <Border DockPanel.Dock="Top"
-                           Background="{DynamicResource AutofillSuccessBackgroundBrush}"
-                           BorderBrush="{DynamicResource SuccessBrush}"
-                           BorderThickness="1"
-                           Padding="16"
-                           Margin="12"
-                           CornerRadius="{StaticResource Radius.Md}"
-                           IsVisible="{Binding HasNewPasswordCapture}">
-                        <StackPanel Spacing="12">
-
-                            <Grid ColumnDefinitions="Auto,*">
-                                <Border Grid.Column="0"
-                                       Width="32" Height="32"
-                                       Background="{DynamicResource SuccessBrush}"
-                                       CornerRadius="{StaticResource Radius.Xxl}"
-                                       Margin="0,0,12,0">
-                                    <TextBlock Text="⌘"
-                                              FontSize="{StaticResource Type.H3.Size}"
-                                              HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
-                                </Border>
-
-                                <StackPanel Grid.Column="1" Spacing="4">
-                                    <TextBlock Text="New Password Detected"
-                                              FontWeight="Bold"
-                                              FontSize="{StaticResource Type.Body.Size}"
-                                              Foreground="White"/>
-                                    <TextBlock Text="{Binding CaptureMessage}"
-                                              FontSize="{StaticResource Type.Small.Size}"
-                                              Foreground="{DynamicResource AutofillTextBrush}"
-                                              TextWrapping="Wrap"/>
-                                </StackPanel>
-                            </Grid>
-
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-                                <Button Content="Ignore"
-                                       Command="{Binding IgnoreCaptureCommand}"
-                                       Classes="secondary-btn"/>
-
-                                <Button Content="Save"
-                                       Command="{Binding SaveCapturedPasswordCommand}"
-                                       Classes="action-btn"
-                                       IsVisible="{Binding PendingCapture, Converter={x:Static ObjectConverters.IsNotNull}}"/>
-
-                                <Button Content="Update"
-                                       Command="{Binding UpdatePasswordCommand}"
-                                       Classes="action-btn"
-                                       IsVisible="{Binding PendingChange, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                            <StackPanel IsVisible="{Binding !HasSuggestions}"
+                                        Spacing="6"
+                                        Margin="20"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center">
+                                <TextBlock Text="No credentials found for this site"
+                                           FontSize="12.5"
+                                           Foreground="{DynamicResource Af.TextSoft}"
+                                           HorizontalAlignment="Center"
+                                           TextAlignment="Center"/>
+                                <TextBlock Text="Open your vault to add one"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource Af.TextMuted}"
+                                           HorizontalAlignment="Center"/>
                             </StackPanel>
-                        </StackPanel>
-                    </Border>
+                        </DockPanel>
+                    </TabItem>
 
-                    <Border IsVisible="{Binding !HasNewPasswordCapture}"
-                           Padding="20">
-                        <StackPanel Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <TextBlock Text="•"
-                                      FontSize="{StaticResource Type.H1.Size}"
-                                      HorizontalAlignment="Center"
-                                      Opacity="0.3"/>
-                            <TextBlock Text="No new passwords detected"
-                                      FontSize="{StaticResource Type.Label.Size}"
-                                      Foreground="{DynamicResource AutofillTextSecondaryBrush}"
-                                      HorizontalAlignment="Center"
-                                      TextAlignment="Center"/>
-                            <TextBlock Text="PhantomVault will capture passwords when you register or log in to websites"
-                                      FontSize="{StaticResource Type.Tiny.Size}"
-                                      Foreground="{DynamicResource AutofillTextQuaternaryBrush}"
-                                      HorizontalAlignment="Center"
-                                      TextAlignment="Center"
-                                      TextWrapping="Wrap"
-                                      MaxWidth="250"
-                                      Margin="0,8,0,0"/>
-                        </StackPanel>
-                    </Border>
-                </DockPanel>
-            </TabItem>
-        </TabControl>
+                    <TabItem Header="Capture">
+                        <DockPanel>
+                            <Border DockPanel.Dock="Top"
+                                    Background="#1A5FC4C0"
+                                    BorderBrush="#555FC4C0"
+                                    BorderThickness="1"
+                                    CornerRadius="12"
+                                    Padding="14"
+                                    Margin="6,10,6,6"
+                                    IsVisible="{Binding HasNewPasswordCapture}">
+                                <StackPanel Spacing="12">
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="New password detected"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="13.5"
+                                                   Foreground="{DynamicResource Af.Text}"/>
+                                        <TextBlock Text="{Binding CaptureMessage}" Classes="af-body"/>
+                                    </StackPanel>
 
-        <Border DockPanel.Dock="Bottom"
-               Background="{DynamicResource AutofillHeaderBackgroundBrush}"
-               Padding="12,6"
-               BorderBrush="{DynamicResource AutofillBorderBrush}"
-               BorderThickness="0,1,0,0">
-            <TextBlock Text="Press ESC to close • Enter to select"
-                      FontSize="{StaticResource Type.Micro.Size}"
-                      Foreground="{DynamicResource AutofillTextTertiaryBrush}"
-                      HorizontalAlignment="Center"/>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                                        <Button Content="Ignore"
+                                                Command="{Binding IgnoreCaptureCommand}"
+                                                Classes="af-btn ghost"/>
+                                        <Button Content="Save"
+                                                Command="{Binding SaveCapturedPasswordCommand}"
+                                                Classes="af-btn primary"
+                                                IsVisible="{Binding PendingCapture, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                                        <Button Content="Update"
+                                                Command="{Binding UpdatePasswordCommand}"
+                                                Classes="af-btn primary"
+                                                IsVisible="{Binding PendingChange, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <StackPanel IsVisible="{Binding !HasNewPasswordCapture}"
+                                        Spacing="6"
+                                        Margin="20"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center">
+                                <TextBlock Text="No new passwords detected"
+                                           FontSize="12.5"
+                                           Foreground="{DynamicResource Af.TextSoft}"
+                                           HorizontalAlignment="Center"/>
+                                <TextBlock Text="Phantom Obscura captures passwords when you register or log in to websites"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource Af.TextMuted}"
+                                           HorizontalAlignment="Center"
+                                           TextAlignment="Center"
+                                           TextWrapping="Wrap"
+                                           MaxWidth="250"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </TabItem>
+                </TabControl>
+            </DockPanel>
         </Border>
-    </DockPanel>
+    </Border>
 </views:ThemeAwareWindow>
-

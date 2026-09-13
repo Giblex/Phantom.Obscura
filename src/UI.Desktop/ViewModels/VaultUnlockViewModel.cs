@@ -711,6 +711,14 @@ namespace PhantomVault.UI.ViewModels
                 ProgressPercent = 90;
                 Status = "Loading vault contents...";
 
+                // From here on, settings belong to this vault (seeded from the global settings the
+                // first time it is opened). Switched before the view model is built because its
+                // constructor reads settings. Keyed by the vault's salt, which is fixed for the
+                // vault's lifetime, rather than a path that changes with the drive letter.
+                PhantomVault.UI.Services.SettingsService.SetActiveVault(
+                    PhantomVault.UI.Services.SettingsService.ComputeVaultKey(
+                        !string.IsNullOrWhiteSpace(testManifest?.SaltBase64) ? testManifest!.SaltBase64 : manifestPath));
+
                 var vaultViewModel = new VaultViewModel(
                     vaultService,
                     manifestService,
@@ -786,6 +794,10 @@ namespace PhantomVault.UI.ViewModels
                     };
 
                     vaultViewModel.SetOwnerWindow(vaultWindow);
+
+                    // Back to the global settings once this vault's window is gone.
+                    vaultWindow.Closed += (_, _) => PhantomVault.UI.Services.SettingsService.SetActiveVault(null);
+
                     if (!string.IsNullOrWhiteSpace(extractedVolumeRoot))
                     {
                         var extractedRootForCleanup = extractedVolumeRoot;

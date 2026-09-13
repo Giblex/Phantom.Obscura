@@ -199,14 +199,17 @@ namespace PhantomVault.UI.Views.Controls
 
                 var box = new TextBox
                 {
-                    Width = 40,
-                    Height = 44,
+                    Width = 30,
+                    Height = 36,
+                    MinWidth = 0,
+                    MinHeight = 0,
                     MaxLength = 1,
-                    Margin = new Thickness(0, 0, isGroupEnd ? 16 : 6, 6),
+                    Padding = new Thickness(0),
+                    Margin = new Thickness(0, 0, isGroupEnd ? 12 : 4, 4),
                     TextAlignment = Avalonia.Media.TextAlignment.Center,
                     HorizontalContentAlignment = HorizontalAlignment.Center,
                     VerticalContentAlignment = VerticalAlignment.Center,
-                    FontSize = 18,
+                    FontSize = 15,
                     Tag = i,
                     PasswordChar = !IsSecret || IsRevealed ? '\0' : MaskChar
                 };
@@ -216,6 +219,9 @@ namespace PhantomVault.UI.Views.Controls
                 box.TextChanged += OnDigitTextChanged;
                 box.KeyDown += OnDigitKeyDown;
                 box.GotFocus += (_, _) => box.SelectAll();
+                // Focus selects the digit so typing replaces it; without clearing on the way out
+                // every visited box kept a grey selection highlight behind its digit.
+                box.LostFocus += (_, _) => box.ClearSelection();
                 box.AddHandler(TextBox.PastingFromClipboardEvent, OnDigitPaste, RoutingStrategies.Tunnel);
 
                 DigitHost.Children.Add(box);

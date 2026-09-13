@@ -69,6 +69,75 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
+        // Persisted values for UserSettings.DetailCardColourStyle, in the order shown.
+        private static readonly string[] DetailColourStyleKeys = { "Border", "TopBar", "None" };
+
+        /// <summary>Choices for how the selected entry's detail card shows its category colour.</summary>
+        public string[] DetailColourStyleNames { get; } = { "Full border", "Top bar", "None" };
+
+        /// <summary>Selected detail-card colour style; applied live through SettingsChanged.</summary>
+        public int DetailColourStyleIndex
+        {
+            get
+            {
+                string? current = null;
+                try { current = SettingsService.Load().DetailCardColourStyle; } catch { /* default below */ }
+                int index = Array.FindIndex(DetailColourStyleKeys, k => string.Equals(k, current, StringComparison.OrdinalIgnoreCase));
+                return index < 0 ? 0 : index;
+            }
+            set
+            {
+                if (value < 0 || value >= DetailColourStyleKeys.Length || value == DetailColourStyleIndex) return;
+
+                var key = DetailColourStyleKeys[value];
+                try
+                {
+                    SettingsService.Update(s => s.DetailCardColourStyle = key);
+                }
+                catch (Exception ex)
+                {
+                    Serilog.Log.Warning(ex, "[CategoryManager] Could not save the detail card colour style");
+                }
+                this.RaisePropertyChanged();
+            }
+        }
+
+        // Persisted values for UserSettings.EntryCardColourStyle, in the order shown.
+        private static readonly string[] CardColourStyleKeys = { "SideBar", "Border", "TopBar", "None" };
+
+        /// <summary>Choices for how entry cards show their category colour.</summary>
+        public string[] CardColourStyleNames { get; } = { "Side bar", "Border", "Top bar", "None" };
+
+        /// <summary>
+        /// Selected entry-card colour style. Saving through SettingsService raises
+        /// SettingsChanged, which the vault view applies to the cards live.
+        /// </summary>
+        public int CardColourStyleIndex
+        {
+            get
+            {
+                string? current = null;
+                try { current = SettingsService.Load().EntryCardColourStyle; } catch { /* default below */ }
+                int index = Array.FindIndex(CardColourStyleKeys, k => string.Equals(k, current, StringComparison.OrdinalIgnoreCase));
+                return index < 0 ? 0 : index;
+            }
+            set
+            {
+                if (value < 0 || value >= CardColourStyleKeys.Length || value == CardColourStyleIndex) return;
+
+                var key = CardColourStyleKeys[value];
+                try
+                {
+                    SettingsService.Update(s => s.EntryCardColourStyle = key);
+                }
+                catch (Exception ex)
+                {
+                    Serilog.Log.Warning(ex, "[CategoryManager] Could not save the entry card colour style");
+                }
+                this.RaisePropertyChanged();
+            }
+        }
+
         public CategoryManagerViewModel()
         {
             Categories = new ObservableCollection<CategoryItem>();
@@ -689,7 +758,10 @@ namespace PhantomVault.UI.ViewModels
             try
             {
 
-                var iconManagerVm = new IconManagerViewModel(GetIconManager());
+                // Opened for this category: matching line icons are suggested first.
+                var iconManagerVm = new IconManagerViewModel(
+                    GetIconManager(),
+                    PhantomVault.Core.Services.Icons.IconPickContext.ForCategory(item.Name));
                 var iconManagerWindow = new IconManagerWindow { DataContext = iconManagerVm };
                 iconManagerVm.SetOwnerWindow(iconManagerWindow, GetOwnerWindow());
 
@@ -697,10 +769,15 @@ namespace PhantomVault.UI.ViewModels
 
                 if (!string.IsNullOrEmpty(iconManagerVm.ConfirmedIconPath))
                 {
-
+                    var confirmed = iconManagerVm.ConfirmedIconPath;
                     var baseDir = AppContext.BaseDirectory;
-                    var relativePath = iconManagerVm.ConfirmedIconPath.Replace(baseDir, "").Replace("\\", "/").TrimStart('/');
-                    item.Icon = $"/{relativePath}";
+
+                    // Shipped icons are stored app-relative. The user's own and recoloured icons
+                    // live in %APPDATA% and are stored as absolute paths, which ResolveIconPath and
+                    // IconPathToBitmapConverter both accept.
+                    item.Icon = confirmed.StartsWith(baseDir, StringComparison.OrdinalIgnoreCase)
+                        ? "/" + confirmed.Substring(baseDir.Length).Replace("\\", "/").TrimStart('/')
+                        : confirmed;
 
                     var dominantColor = ExtractDominantColor(iconManagerVm.ConfirmedIconPath);
                     if (dominantColor != null)
@@ -807,9 +884,11 @@ namespace PhantomVault.UI.ViewModels
             if (!await EnsureAdvancedCategoryAccessAsync()) return;
             try
             {
+                // Browse-only (no pick is read back), so no calling owner: that would put the
+                // library in picker mode.
                 var iconManagerVm = new IconManagerViewModel(GetIconManager());
                 var iconManagerWindow = new IconManagerWindow { DataContext = iconManagerVm };
-                iconManagerVm.SetOwnerWindow(iconManagerWindow, GetOwnerWindow());
+                iconManagerVm.SetOwnerWindow(iconManagerWindow);
                 await iconManagerWindow.ShowDialog(GetOwnerWindow());
 
                 var settings = SettingsService.Load();

@@ -155,7 +155,7 @@ public partial class LiquidGlassButton : UserControl
 
     private Button? _btn;
     private ScaleTransform? _scaleTransform;
-    private DispatcherTimer? _physicsTimer;
+    private PhantomVault.UI.Services.FrameTimer? _physicsTimer; // frame-paced (see FrameTimer)
     private readonly CompositeDisposable _subscriptions = new();
 
     private double _sheenVx, _sheenVy;
@@ -225,10 +225,7 @@ public partial class LiquidGlassButton : UserControl
         _btn.PointerPressed += OnPointerPressed;
         _btn.PointerReleased += OnPointerReleased;
 
-        _physicsTimer = new DispatcherTimer
-        {
-            Interval = TimeSpan.FromMilliseconds(16)
-        };
+        _physicsTimer = new PhantomVault.UI.Services.FrameTimer(this);
         _physicsTimer.Tick += OnPhysicsTick;
 
     }
@@ -336,6 +333,10 @@ public partial class LiquidGlassButton : UserControl
 
         _targetBorderHighlightAngle = (Math.Atan2(normalizedY, normalizedX) * (180.0 / Math.PI) + 45.0) * 1.18;
         _targetBorderHighlightOpacity = 0.72 + (Math.Min(radialDistance, 1.0) * 0.45);
+
+        // The timer now stops once the hover state settles, so pointer movement restarts it
+        // for the sheen to follow the cursor.
+        EnsurePhysicsRunning();
     }
 
     private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
@@ -398,6 +399,11 @@ public partial class LiquidGlassButton : UserControl
     {
         if (_btn == null || _scaleTransform == null) return;
 
+        // The hover wobble used to loop for as long as the pointer rested on the button, which
+        // kept this timer (and a full window render) running every frame. It now fades out, so
+        // the button springs into its hover state and then goes quiet until the pointer moves.
+        const double HoverWobbleSeconds = 0.6;
+
         double sheenDx = _targetSheenX - _sheenX;
         double sheenDy = _targetSheenY - _sheenY;
 
@@ -419,10 +425,11 @@ public partial class LiquidGlassButton : UserControl
         _scaleTransform.ScaleX = _currentScale;
         _scaleTransform.ScaleY = _currentScale;
 
-        if (_isHovered && !_isPressed)
+        if (_isHovered && !_isPressed && _wobbleTime < HoverWobbleSeconds)
         {
             _wobbleTime += 0.016;
-            double wobble = Math.Sin(_wobbleTime * _physics.WobbleFrequency * 2 * Math.PI) * _physics.WobbleAmplitude;
+            double fade = Math.Max(0, 1.0 - (_wobbleTime / HoverWobbleSeconds));
+            double wobble = Math.Sin(_wobbleTime * _physics.WobbleFrequency * 2 * Math.PI) * _physics.WobbleAmplitude * fade;
 
             _scaleTransform.ScaleX = _currentScale + wobble;
             _scaleTransform.ScaleY = _currentScale - wobble * 0.5;
@@ -438,7 +445,8 @@ public partial class LiquidGlassButton : UserControl
         SetBorderHighlightAngle(_btn, _borderHighlightAngle);
         SetBorderHighlightOpacity(_btn, _borderHighlightOpacity);
 
-        if (!_isHovered && !_isPressed)
+        // Settle (and stop the timer) whenever nothing is moving, hovered or not.
+        if (!_isPressed && (!_isHovered || _wobbleTime >= HoverWobbleSeconds))
         {
             bool settled = Math.Abs(_sheenVx) < SettleEpsilon
                         && Math.Abs(_sheenVy) < SettleEpsilon

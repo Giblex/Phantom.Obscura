@@ -1,29 +1,34 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:PhantomVault.UI.Views.Controls"
+             xmlns:dcontrols="clr-namespace:PhantomVault.UI.Desktop.Controls"
              x:Class="PhantomVault.UI.Views.EditForms.IdentityEditForm">
 
     <Border x:Name="IdentityPanelBorder" Background="Transparent" IsVisible="{Binding IsIdentityEntry}">
-        <StackPanel x:Name="IdentityPanel" Spacing="14">
+        <StackPanel x:Name="IdentityPanel" Spacing="12">
 
             <TextBlock Text="Identity Document" Classes="form-section-title"/>
 
-            <StackPanel Classes="field-group">
-                <TextBlock Text="ID Type" Classes="field-label"/>
-                <ComboBox ItemsSource="{Binding IdentityTypeOptions}"
-                          SelectedItem="{Binding IdDocumentType}"
-                          Classes="form-field"/>
-            </StackPanel>
+            <dcontrols:FieldRow Spacing="12">
+                <StackPanel Classes="field-group">
+                    <TextBlock Text="ID Type" Classes="field-label"/>
+                    <ComboBox ItemsSource="{Binding IdentityTypeOptions}"
+                              SelectedItem="{Binding IdDocumentType}"
+                              Classes="form-field"/>
+                </StackPanel>
+                <StackPanel Classes="field-group" IsVisible="{Binding !IsMedicareIdentity}">
+                    <TextBlock Text="{Binding IdNumberLabel}" Classes="field-label"/>
+                    <TextBox Text="{Binding IdNumber}" Classes="form-field" Watermark="{Binding IdNumberWatermark}"/>
+                </StackPanel>
+            </dcontrols:FieldRow>
 
-            <StackPanel Classes="field-group">
+            <!-- Medicare numbers are fixed-length digits, so they get their own row of boxes. -->
+            <StackPanel Classes="field-group" IsVisible="{Binding IsMedicareIdentity}">
                 <TextBlock Text="{Binding IdNumberLabel}" Classes="field-label"/>
-                <TextBox Text="{Binding IdNumber}" Classes="form-field" Watermark="{Binding IdNumberWatermark}"
-                         IsVisible="{Binding !IsMedicareIdentity}"/>
                 <controls:PinDigitBoxes Pin="{Binding IdNumber, Mode=TwoWay}"
                                         PinLength="10" MaximumLength="10"
                                         ShowHeader="False" ShowLengthSelector="False"
-                                        IsSecret="False"
-                                        IsVisible="{Binding IsMedicareIdentity}"/>
+                                        IsSecret="False"/>
             </StackPanel>
 
             <StackPanel Classes="field-group">
@@ -31,25 +36,27 @@
                 <TextBox Text="{Binding IdCardNumber}" Classes="form-field" Watermark="Enter card or document number"/>
             </StackPanel>
 
-            <StackPanel Classes="field-group" IsVisible="{Binding ShowIdIssuingCountry}">
-                <TextBlock Text="{Binding IdIssuingCountryLabel}" Classes="field-label"/>
-                <TextBox Text="{Binding IdIssuingCountry}" Classes="form-field" Watermark="{Binding IdIssuingCountryWatermark}"/>
-            </StackPanel>
+            <dcontrols:FieldRow Spacing="12">
+                <StackPanel Classes="field-group" IsVisible="{Binding ShowIdIssuingCountry}">
+                    <TextBlock Text="{Binding IdIssuingCountryLabel}" Classes="field-label"/>
+                    <TextBox Text="{Binding IdIssuingCountry}" Classes="form-field" Watermark="{Binding IdIssuingCountryWatermark}"/>
+                </StackPanel>
+                <StackPanel Classes="field-group" IsVisible="{Binding ShowIdIssuingState}">
+                    <TextBlock Text="{Binding IdIssuingStateLabel}" Classes="field-label"/>
+                    <TextBox Text="{Binding IdIssuingState}" Classes="form-field" Watermark="{Binding IdIssuingStateWatermark}"/>
+                </StackPanel>
+            </dcontrols:FieldRow>
 
-            <StackPanel Classes="field-group" IsVisible="{Binding ShowIdIssuingState}">
-                <TextBlock Text="{Binding IdIssuingStateLabel}" Classes="field-label"/>
-                <TextBox Text="{Binding IdIssuingState}" Classes="form-field" Watermark="{Binding IdIssuingStateWatermark}"/>
-            </StackPanel>
-
-            <StackPanel Classes="field-group" IsVisible="{Binding ShowIdIssueDate}">
-                <TextBlock Text="Issue Date" Classes="field-label"/>
-                <controls:DateField Mode="DayMonthYear" SelectedDate="{Binding IdIssueDate, Mode=TwoWay}"/>
-            </StackPanel>
-
-            <StackPanel Classes="field-group" IsVisible="{Binding ShowIdExpiryDate}">
-                <TextBlock Text="Expiration Date" Classes="field-label"/>
-                <controls:DateField Mode="DayMonthYear" SelectedDate="{Binding IdExpiryDate, Mode=TwoWay}"/>
-            </StackPanel>
+            <dcontrols:FieldRow Spacing="12">
+                <StackPanel Classes="field-group" IsVisible="{Binding ShowIdIssueDate}">
+                    <TextBlock Text="Issued" Classes="field-label"/>
+                    <controls:DateField Mode="DayMonthYear" SelectedDate="{Binding IdIssueDate, Mode=TwoWay}"/>
+                </StackPanel>
+                <StackPanel Classes="field-group" IsVisible="{Binding ShowIdExpiryDate}">
+                    <TextBlock Text="Expires" Classes="field-label"/>
+                    <controls:DateField Mode="DayMonthYear" SelectedDate="{Binding IdExpiryDate, Mode=TwoWay}"/>
+                </StackPanel>
+            </dcontrols:FieldRow>
         </StackPanel>
     </Border>
 </UserControl>

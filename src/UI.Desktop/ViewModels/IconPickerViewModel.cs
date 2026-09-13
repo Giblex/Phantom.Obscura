@@ -508,7 +508,26 @@ namespace PhantomVault.UI.ViewModels
         {
             try
             {
-                await IconLibraryLauncher.ShowAsync(_ownerWindow, "Choose from Icon Library");
+                // Modal, and the pick is used (it used to be discarded). The search text is the
+                // best hint of what the icon is for, so closest matches come first.
+                var iconManager = _iconManager
+                    ?? new IconManager(System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "Visuals"));
+                var libraryViewModel = new IconManagerViewModel(
+                    iconManager,
+                    PhantomVault.Core.Services.Icons.IconPickContext.ForEntry(SearchText, null));
+                var libraryWindow = new PhantomVault.UI.Views.IconManagerWindow { DataContext = libraryViewModel };
+                libraryViewModel.SetOwnerWindow(libraryWindow, _ownerWindow);
+
+                if (_ownerWindow != null)
+                    await libraryWindow.ShowDialog(_ownerWindow);
+                else
+                    return;
+
+                if (!string.IsNullOrEmpty(libraryViewModel.ConfirmedIconPath))
+                {
+                    SelectedIcon = libraryViewModel.ConfirmedIconPath;
+                    Confirm();
+                }
 
             }
             catch (Exception ex)

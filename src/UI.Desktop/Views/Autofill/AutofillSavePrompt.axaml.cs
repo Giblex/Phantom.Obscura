@@ -94,19 +94,21 @@ namespace PhantomVault.UI.Views.Autofill
             if (btn != null) btn.Click += (_, _) => handler();
         }
 
+        /// <summary>Rises into the corner with a soft spring.</summary>
         private void PlayEntrance()
         {
             if (_shell == null) return;
-            _shell.Opacity = 0;
-            _shell.RenderTransform = TransformOperations.Parse("translateY(-10px) scale(0.97)");
+            _ = AutofillMotion.EnterAsync(_shell, fromY: 14);
+        }
 
-            // Next frame, so the start state commits before the target is set.
-            Dispatcher.UIThread.Post(() =>
+        protected override void OnKeyDown(Avalonia.Input.KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+            if (e.Key == Avalonia.Input.Key.Escape)
             {
-                if (_shell == null) return;
-                _shell.Opacity = 1;
-                _shell.RenderTransform = TransformOperations.Parse("translateY(0px) scale(1)");
-            }, DispatcherPriority.Background);
+                Complete(PromptResult.Dismissed);
+                e.Handled = true;
+            }
         }
 
         private void ToggleReveal()
@@ -150,6 +152,14 @@ namespace PhantomVault.UI.Views.Autofill
                 IsUpdate = _decision.Kind == SavePromptKind.UpdateExisting
             });
 
+            // The decision is already delivered; the card just fades out of the corner.
+            _ = CloseAfterExitAsync();
+        }
+
+        private async System.Threading.Tasks.Task CloseAfterExitAsync()
+        {
+            if (_shell != null)
+                await AutofillMotion.ExitAsync(_shell);
             try { Close(); } catch (InvalidOperationException) { }
         }
 

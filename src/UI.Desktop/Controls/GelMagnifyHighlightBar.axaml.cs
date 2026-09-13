@@ -101,7 +101,7 @@ public partial class GelMagnifyHighlightBar : UserControl
         set => SetValue(LabelProperty, value);
     }
 
-    private DispatcherTimer? _timer;
+    private PhantomVault.UI.Services.FrameTimer? _timer; // frame-paced (see FrameTimer)
     private double _velY;
     private double _offsetY;
     private double _nx = 0.5;
@@ -156,7 +156,7 @@ half4 main(float2 fragCoord) {
 
         if (_timer is null)
         {
-            _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
+            _timer = new PhantomVault.UI.Services.FrameTimer(this);
             _timer.Tick += OnTimerTick;
         }
 

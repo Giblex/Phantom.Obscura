@@ -20,7 +20,7 @@ namespace PhantomVault.UI.Behaviors
 
         private TranslateTransform? _transform;
         private bool _isHovering;
-        private DispatcherTimer? _animTimer;
+        private PhantomVault.UI.Services.FrameTimer? _animTimer; // frame-paced (see FrameTimer)
         private double _animFrom;
         private double _animTo;
         private DateTime _animStart;
@@ -101,7 +101,7 @@ namespace PhantomVault.UI.Behaviors
 
             if (_animTimer == null)
             {
-                _animTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
+                _animTimer = new PhantomVault.UI.Services.FrameTimer(AssociatedObject!);
                 _animTimer.Tick += OnAnimTick;
             }
 

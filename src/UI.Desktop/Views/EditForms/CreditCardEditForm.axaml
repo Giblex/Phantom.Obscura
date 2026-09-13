@@ -1,17 +1,26 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:PhantomVault.UI.Views.Controls"
+             xmlns:dcontrols="clr-namespace:PhantomVault.UI.Desktop.Controls"
              x:Class="PhantomVault.UI.Views.EditForms.CreditCardEditForm">
 
+    <!-- Same rows as the display card: cardholder + type, the number, then expiry, CVV and
+         PIN sharing one line (wrapping only when the editor is narrow). -->
     <Border x:Name="CreditCardPanelBorder" Background="Transparent" IsVisible="{Binding IsCreditCardEntry, FallbackValue=False}">
-        <StackPanel x:Name="CreditCardPanel" Spacing="14">
+        <StackPanel x:Name="CreditCardPanel" Spacing="12">
 
             <TextBlock Text="Card Details" Classes="form-section-title"/>
 
-            <StackPanel Classes="field-group">
-                <TextBlock Text="Cardholder Name" Classes="field-label"/>
-                <TextBox Text="{Binding CardholderName}" Classes="form-field" Watermark="Name on card"/>
-            </StackPanel>
+            <dcontrols:FieldRow Spacing="12">
+                <StackPanel Classes="field-group">
+                    <TextBlock Text="Cardholder" Classes="field-label"/>
+                    <TextBox Text="{Binding CardholderName}" Classes="form-field" Watermark="Name on card"/>
+                </StackPanel>
+                <StackPanel Classes="field-group">
+                    <TextBlock Text="Card Type" Classes="field-label"/>
+                    <TextBox Text="{Binding CardType}" Classes="form-field" Watermark="Visa"/>
+                </StackPanel>
+            </dcontrols:FieldRow>
 
             <StackPanel Classes="field-group">
                 <TextBlock Text="Card Number" Classes="field-label"/>
@@ -21,48 +30,39 @@
                                         IsSecret="False"/>
             </StackPanel>
 
-            <StackPanel Classes="field-group">
-                <TextBlock Text="Card Type" Classes="field-label"/>
-                <TextBox Text="{Binding CardType}" Classes="form-field" Watermark="Visa"/>
-            </StackPanel>
-
-            <StackPanel Classes="field-group">
-                <TextBlock Text="Expiry" Classes="field-label"/>
-                <Grid ColumnDefinitions="Auto,12,*">
-                    <controls:PinDigitBoxes Grid.Column="0"
-                                            Pin="{Binding CardExpiryMonth, Mode=TwoWay}"
-                                            PinLength="2" MaximumLength="2"
-                                            ShowHeader="False" ShowLengthSelector="False"
-                                            IsSecret="False"/>
-                    <controls:PinDigitBoxes Grid.Column="2"
-                                            Pin="{Binding CardExpiryYear, Mode=TwoWay}"
-                                            PinLength="4" MaximumLength="4"
-                                            ShowHeader="False" ShowLengthSelector="False"
-                                            IsSecret="False"/>
-                </Grid>
-                <TextBlock Text="Pick the month and year printed on the card." Classes="field-hint"/>
-            </StackPanel>
-
-            <Grid ColumnDefinitions="*,14,*">
-                <StackPanel Grid.Column="0" Classes="field-group">
+            <WrapPanel Orientation="Horizontal">
+                <StackPanel Classes="field-group" Margin="0,0,24,4">
+                    <TextBlock Text="Expiry (MM / YYYY)" Classes="field-label"/>
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <controls:PinDigitBoxes Pin="{Binding CardExpiryMonth, Mode=TwoWay}"
+                                                PinLength="2" MaximumLength="2"
+                                                ShowHeader="False" ShowLengthSelector="False"
+                                                IsSecret="False"/>
+                        <controls:PinDigitBoxes Pin="{Binding CardExpiryYear, Mode=TwoWay}"
+                                                PinLength="4" MaximumLength="4"
+                                                ShowHeader="False" ShowLengthSelector="False"
+                                                IsSecret="False"/>
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Classes="field-group" Margin="0,0,24,4">
                     <TextBlock Text="CVV" Classes="field-label"/>
                     <controls:PinDigitBoxes Pin="{Binding CardCVVSecure, Mode=TwoWay}"
                                             PinLength="4" MaximumLength="4"
                                             ShowHeader="False" ShowLengthSelector="False"
                                             IsSecret="True"/>
                 </StackPanel>
-                <StackPanel Grid.Column="2" Classes="field-group">
+                <StackPanel Classes="field-group" Margin="0,0,0,4">
                     <TextBlock Text="PIN" Classes="field-label"/>
                     <controls:PinDigitBoxes Pin="{Binding CardPINSecure, Mode=TwoWay}"
                                             PinLength="4" MaximumLength="4"
                                             ShowHeader="False" ShowLengthSelector="False"
                                             IsSecret="True"/>
                 </StackPanel>
-            </Grid>
+            </WrapPanel>
 
             <StackPanel Classes="field-group">
                 <TextBlock Text="Billing Address" Classes="field-label"/>
-                <TextBox Text="{Binding CardBillingAddress}" Classes="form-field-multiline" Height="84"/>
+                <TextBox Text="{Binding CardBillingAddress}" Classes="form-field-multiline" Height="64" MinHeight="64"/>
             </StackPanel>
         </StackPanel>
     </Border>

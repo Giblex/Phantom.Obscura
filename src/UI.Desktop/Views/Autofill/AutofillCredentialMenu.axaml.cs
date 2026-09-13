@@ -39,6 +39,7 @@ namespace PhantomVault.UI.Views.Autofill
         private StackPanel? _rowsPanel;
         private Border? _shell;
         private TextBlock? _toast;
+        private Border? _toastPill;
 
         private readonly List<CredentialMatch> _matches = new();
         private readonly Action<MenuAction> _onAction = _ => { };
@@ -48,6 +49,9 @@ namespace PhantomVault.UI.Views.Autofill
         private DispatcherTimer? _totpTimer;
         private int _selectedIndex;
         private bool _closed;
+
+        // Live TOTP code and countdown ring colour: the AutoFill accent (Af.Accent).
+        private static readonly Color Accent = Color.Parse("#FF5FC4C0");
 
         private sealed record RowVisual(
             CredentialMatch Match,
@@ -59,13 +63,6 @@ namespace PhantomVault.UI.Views.Autofill
             TextBlock? TotpCode,
             Arc? TotpRing);
 
-        // One palette for the whole menu. Rows used to be graded teal -> blue by
-        // rank, which meant borders shifted colour down the list and each row read as
-        // a different component. Rank is now conveyed by order and the accent bar
-        // alone, and every border shares a single edge colour.
-        private static readonly Color Edge = Color.Parse("#2C3B52");
-        private static readonly Color Accent = Color.Parse("#3E8C86");
-        private static readonly Color Muted = Color.Parse("#8497AC");
 
         public AutofillCredentialMenu()
         {
@@ -75,11 +72,13 @@ namespace PhantomVault.UI.Views.Autofill
             _rowsPanel = this.FindControl<StackPanel>("RowsPanel");
             _shell = this.FindControl<Border>("Shell");
             _toast = this.FindControl<TextBlock>("Toast");
+            _toastPill = this.FindControl<Border>("ToastPill");
 
             // Window-level focus loss. Deliberately not an OnLostFocus override:
             // LostFocus is routed, so it also fires when focus moves between this
             // window's own children, which closed the menu mid-interaction.
-            Deactivated += (_, _) => CloseOnce();
+            // Focus has already gone elsewhere, so the menu can fade out gracefully.
+            Deactivated += (_, _) => CloseOnce(animate: true);
             Opened += (_, _) => { PlayEntrance(); StartTotpTicker(); };
 
         }
@@ -105,20 +104,12 @@ namespace PhantomVault.UI.Views.Autofill
 
         // ── Entrance ──────────────────────────────────────────────────────────
 
+        /// <summary>The card springs open from under the badge, then the rows fade up in turn.</summary>
         private void PlayEntrance()
         {
             if (_shell == null) return;
-            _shell.Opacity = 0;
-            _shell.RenderTransform = TransformOperations.Parse("translateY(-8px) scale(0.96)");
-
-            // Next frame, so the start state is committed before the target is set —
-            // otherwise both land in one layout pass and the transition never runs.
-            Dispatcher.UIThread.Post(() =>
-            {
-                if (_shell == null) return;
-                _shell.Opacity = 1;
-                _shell.RenderTransform = TransformOperations.Parse("translateY(0px) scale(1)");
-            }, DispatcherPriority.Background);
+            _ = AutofillMotion.EnterAsync(_shell, fromY: -8);
+            AutofillMotion.StaggerIn(_rows.Select(r => (Visual)r.Container));
         }
 
         // ── Rows ──────────────────────────────────────────────────────────────
@@ -173,29 +164,34 @@ namespace PhantomVault.UI.Views.Autofill
             var accent = new Border
             {
                 Width = 3,
-                CornerRadius = new CornerRadius(0, 2, 2, 0),
-                Background = new SolidColorBrush(Accent),
+                CornerRadius = new CornerRadius(2),
+                Margin = new Thickness(5, 8, 0, 8),
+                Background = new SolidColorBrush(Color.Parse("#FF5FC4C0")),
                 Opacity = 0,
-                VerticalAlignment = VerticalAlignment.Stretch
+                VerticalAlignment = VerticalAlignment.Stretch,
+                Transitions = AutofillMotion.OpacityTransitions()
             };
 
+            // Each account gets a steady colour of its own (from its name), so the rows are
+            // easy to tell apart at a glance.
+            var tint = AvatarTint(match.DisplayName, match.Username);
             var avatar = new Border
             {
-                Width = 30,
-                Height = 30,
-                CornerRadius = new CornerRadius(15),
-                Background = new SolidColorBrush(Color.Parse("#FF1B2740")),
-                BorderThickness = new Thickness(1.5),
-                BorderBrush = new SolidColorBrush(Edge),
+                Width = 32,
+                Height = 32,
+                CornerRadius = new CornerRadius(16),
+                Background = new SolidColorBrush(Color.FromArgb(0x55, tint.R, tint.G, tint.B)),
+                BorderThickness = new Thickness(1),
+                BorderBrush = new SolidColorBrush(Color.FromArgb(0x99, tint.R, tint.G, tint.B)),
                 VerticalAlignment = VerticalAlignment.Center,
                 Child = match.IsPasskey
-                    ? PasskeyGlyph(Muted)
+                    ? PasskeyGlyph(Color.Parse("#FFE6EEF6"))
                     : new TextBlock
                     {
                         Text = InitialOf(match.DisplayName, match.Username),
-                        FontSize = 12.5,
-                        FontWeight = FontWeight.SemiBold,
-                        Foreground = new SolidColorBrush(Muted),
+                        FontSize = 13,
+                        FontWeight = FontWeight.Bold,
+                        Foreground = new SolidColorBrush(Color.Parse("#FFF2F6FA")),
                         HorizontalAlignment = HorizontalAlignment.Center,
                         VerticalAlignment = VerticalAlignment.Center
                     }
@@ -274,12 +270,17 @@ namespace PhantomVault.UI.Views.Autofill
             grid.Children.Add(info);
             grid.Children.Add(actions);
 
+            // A rounded highlight inset from the card edges; hover and keyboard selection ease
+            // in and out rather than snapping.
             var container = new Border
             {
                 Padding = new Thickness(0, 9, 0, 9),
+                Margin = new Thickness(6, 1),
+                CornerRadius = new CornerRadius(10),
                 Background = new SolidColorBrush(Colors.Transparent),
                 Cursor = new Cursor(StandardCursorType.Hand),
-                Child = grid
+                Child = grid,
+                Transitions = AutofillMotion.BackgroundTransitions()
             };
 
             container.PointerPressed += (_, e) =>
@@ -306,7 +307,8 @@ namespace PhantomVault.UI.Views.Autofill
                 Orientation = Orientation.Horizontal,
                 Spacing = 4,
                 VerticalAlignment = VerticalAlignment.Center,
-                Opacity = 0
+                Opacity = 0,
+                Transitions = AutofillMotion.OpacityTransitions()
             };
 
             if (match.IsPasskey)
@@ -353,12 +355,13 @@ namespace PhantomVault.UI.Views.Autofill
                 MinWidth = 0,
                 MinHeight = 0,
                 Padding = new Thickness(0),
-                CornerRadius = new CornerRadius(6),
-                Background = new SolidColorBrush(Color.Parse("#18FFFFFF")),
-                BorderBrush = new SolidColorBrush(Edge),
+                CornerRadius = new CornerRadius(7),
+                Background = new SolidColorBrush(Color.Parse("#16FFFFFF")),
+                BorderBrush = new SolidColorBrush(Color.Parse("#26FFFFFF")),
                 BorderThickness = new Thickness(1),
                 Cursor = new Cursor(StandardCursorType.Hand)
             };
+            btn.Classes.Add("af-chip"); // hover brighten + press squeeze (AutofillStyles.axaml)
             ToolTip.SetTip(btn, tip);
             AutomationProperties.SetName(btn, tip);
             btn.Click += (_, e) => { e.Handled = true; onClick(); };
@@ -390,7 +393,7 @@ namespace PhantomVault.UI.Views.Autofill
             {
                 bool on = i == _selectedIndex;
                 var r = _rows[i];
-                r.Container.Background = new SolidColorBrush(on ? Color.Parse("#1EFFFFFF") : Colors.Transparent);
+                r.Container.Background = new SolidColorBrush(on ? Color.Parse("#1CFFFFFF") : Color.Parse("#00FFFFFF"));
                 r.AccentBar.Opacity = on ? 1 : 0;
                 r.Actions.Opacity = on ? 1 : 0;
                 r.Actions.IsHitTestVisible = on;
@@ -464,28 +467,65 @@ namespace PhantomVault.UI.Views.Autofill
             _onAction(action);
         }
 
+        /// <summary>Slides the confirmation pill up into view, then eases it back out.</summary>
         private void ShowToast(string message)
         {
             if (_toast == null) return;
             _toast.Text = message;
-            _toast.Opacity = 1;
+
+            Control pill = _toastPill ?? (Control)_toast;
+            pill.Opacity = 1;
+            pill.RenderTransform = TransformOperations.Parse("translateY(0px)");
             DispatcherTimer.RunOnce(() =>
             {
-                if (_toast != null) _toast.Opacity = 0;
+                pill.Opacity = 0;
+                pill.RenderTransform = TransformOperations.Parse("translateY(4px)");
             }, TimeSpan.FromMilliseconds(1400));
         }
 
         /// <summary>
         /// Close guarded against re-entry — Emit, Escape, Deactivated and the owner's
         /// cleanup can all reach here, and closing an already-closed window throws.
+        ///
+        /// <paramref name="animate"/> fades the card out first. Only for Escape and focus
+        /// loss: a fill or passkey sign-in must close at once, because focus has to return
+        /// to the target app before anything is typed into it.
         /// </summary>
-        private void CloseOnce()
+        private void CloseOnce(bool animate = false)
         {
             if (_closed) return;
             _closed = true;
             _totpTimer?.Stop();
             _totpTimer = null;
+
+            if (animate && _shell != null)
+            {
+                _ = CloseAfterExitAsync(_shell);
+                return;
+            }
+
             try { Close(); } catch (InvalidOperationException) { }
+        }
+
+        private async Task CloseAfterExitAsync(Border shell)
+        {
+            await AutofillMotion.ExitAsync(shell);
+            try { Close(); } catch (InvalidOperationException) { }
+        }
+
+        /// <summary>A steady, muted colour per account, derived from its name.</summary>
+        private static Color AvatarTint(string display, string username)
+        {
+            Color[] palette =
+            {
+                Color.Parse("#FF2E7F8E"), Color.Parse("#FF3B8A6A"), Color.Parse("#FF6A5AB0"),
+                Color.Parse("#FF9A5A78"), Color.Parse("#FF8A7440"), Color.Parse("#FF3E62B0")
+            };
+            var key = string.IsNullOrWhiteSpace(display) ? username ?? string.Empty : display;
+            int hash = 17;
+            foreach (var ch in key.ToUpperInvariant())
+                hash = unchecked(hash * 31 + ch);
+            return palette[(int)((uint)hash % (uint)palette.Length)];
         }
 
         protected override void OnClosed(EventArgs e)
@@ -503,7 +543,7 @@ namespace PhantomVault.UI.Views.Autofill
 
             switch (e.Key)
             {
-                case Key.Escape: CloseOnce(); e.Handled = true; break;
+                case Key.Escape: CloseOnce(animate: true); e.Handled = true; break;
                 case Key.Down: Move(1); e.Handled = true; break;
                 case Key.Up: Move(-1); e.Handled = true; break;
                 case Key.Enter: Primary(_selectedIndex); e.Handled = true; break;

@@ -1,46 +1,51 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:dcontrols="clr-namespace:PhantomVault.UI.Desktop.Controls"
              x:Class="PhantomVault.UI.Views.EditForms.BankAccountEditForm">
 
     <Border x:Name="BankPanelBorder" Background="Transparent" IsVisible="{Binding IsBankAccountEntry}">
-        <StackPanel x:Name="BankPanel" Spacing="14">
-        <TextBlock Text="Bank Account" Classes="form-section-title"/>
-        <StackPanel Classes="field-group">
-            <TextBlock Text="Bank Name" Classes="field-label"/>
-            <TextBox Text="{Binding BankName}" Classes="form-field" Watermark="Contoso Bank"/>
-        </StackPanel>
-        <StackPanel Classes="field-group">
-            <TextBlock Text="Account Number" Classes="field-label"/>
-            <TextBox Text="{Binding BankAccountNumber}" PasswordChar="•" Classes="form-field" Watermark="000123456789"/>
-        </StackPanel>
-        <StackPanel Classes="field-group">
-            <TextBlock Text="Routing Number" Classes="field-label"/>
-            <TextBox Text="{Binding BankRoutingNumber}" PasswordChar="•" Classes="form-field" Watermark="110000000"/>
-        </StackPanel>
-        <Grid ColumnDefinitions="*,14,*">
-            <StackPanel Grid.Column="0" Classes="field-group">
-                <TextBlock Text="IBAN" Classes="field-label"/>
-                <TextBox Text="{Binding BankIBAN}" PasswordChar="•" Classes="form-field" Watermark="DE89 3704 0044 0532 0130 00"/>
-            </StackPanel>
-            <StackPanel Grid.Column="2" Classes="field-group">
-                <TextBlock Text="SWIFT / BIC" Classes="field-label"/>
-                <TextBox Text="{Binding BankSWIFT}" PasswordChar="•" Classes="form-field" Watermark="COBADEFFXXX"/>
-            </StackPanel>
-        </Grid>
-        <StackPanel Classes="field-group">
-            <TextBlock Text="Account Type" Classes="field-label"/>
-            <TextBox Text="{Binding BankAccountType}" Classes="form-field" Watermark="Checking"/>
-        </StackPanel>
-        <StackPanel Classes="field-group">
-            <TextBlock Text="Branch Code" Classes="field-label"/>
-            <TextBox Text="{Binding BankBranchCode}" Classes="form-field" Watermark="1234"/>
-        </StackPanel>
-        <StackPanel Classes="field-group">
-            <TextBlock Text="Branch Address" Classes="field-label"/>
-            <TextBox Text="{Binding BankBranchAddress}"
-                     Classes="form-field-multiline" Height="60"/>
-        </StackPanel>
+        <StackPanel x:Name="BankPanel" Spacing="12">
+            <TextBlock Text="Bank Account" Classes="form-section-title"/>
+            <dcontrols:FieldRow Spacing="12">
+                <StackPanel Classes="field-group">
+                    <TextBlock Text="Bank Name" Classes="field-label"/>
+                    <TextBox Text="{Binding BankName}" Classes="form-field" Watermark="Contoso Bank"/>
+                </StackPanel>
+                <StackPanel Classes="field-group">
+                    <TextBlock Text="Account Type" Classes="field-label"/>
+                    <TextBox Text="{Binding BankAccountType}" Classes="form-field" Watermark="Checking"/>
+                </StackPanel>
+            </dcontrols:FieldRow>
+            <dcontrols:FieldRow Spacing="12">
+                <StackPanel Classes="field-group">
+                    <TextBlock Text="Account Number" Classes="field-label"/>
+                    <TextBox Text="{Binding BankAccountNumber}" PasswordChar="•" Classes="form-field" Watermark="000123456789"/>
+                </StackPanel>
+                <StackPanel Classes="field-group">
+                    <TextBlock Text="Routing Number" Classes="field-label"/>
+                    <TextBox Text="{Binding BankRoutingNumber}" PasswordChar="•" Classes="form-field" Watermark="110000000"/>
+                </StackPanel>
+            </dcontrols:FieldRow>
+            <dcontrols:FieldRow Spacing="12">
+                <StackPanel Classes="field-group">
+                    <TextBlock Text="IBAN" Classes="field-label"/>
+                    <TextBox Text="{Binding BankIBAN}" PasswordChar="•" Classes="form-field" Watermark="DE89 3704 0044 0532 0130 00"/>
+                </StackPanel>
+                <StackPanel Classes="field-group">
+                    <TextBlock Text="SWIFT / BIC" Classes="field-label"/>
+                    <TextBox Text="{Binding BankSWIFT}" PasswordChar="•" Classes="form-field" Watermark="COBADEFFXXX"/>
+                </StackPanel>
+            </dcontrols:FieldRow>
+            <dcontrols:FieldRow Spacing="12">
+                <StackPanel Classes="field-group">
+                    <TextBlock Text="Branch Code" Classes="field-label"/>
+                    <TextBox Text="{Binding BankBranchCode}" Classes="form-field" Watermark="1234"/>
+                </StackPanel>
+                <StackPanel Classes="field-group">
+                    <TextBlock Text="Branch Address" Classes="field-label"/>
+                    <TextBox Text="{Binding BankBranchAddress}" Classes="form-field" Watermark="Street, city"/>
+                </StackPanel>
+            </dcontrols:FieldRow>
         </StackPanel>
     </Border>
 </UserControl>
-

@@ -1,36 +1,38 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:dcontrols="clr-namespace:PhantomVault.UI.Desktop.Controls"
              x:Class="PhantomVault.UI.Views.EditForms.ContactEditForm">
 
-    <StackPanel Spacing="14" IsVisible="{Binding IsContactEntry}">
+    <StackPanel Spacing="12" IsVisible="{Binding IsContactEntry}">
         <TextBlock Text="Contact" Classes="form-section-title"/>
-        <StackPanel Classes="field-group">
-            <TextBlock Text="Full Name" Classes="field-label"/>
-            <TextBox Text="{Binding ContactFullName}" Classes="form-field" Watermark="Jane Doe"/>
-        </StackPanel>
+        <dcontrols:FieldRow Spacing="12">
+            <StackPanel Classes="field-group">
+                <TextBlock Text="Full Name" Classes="field-label"/>
+                <TextBox Text="{Binding ContactFullName}" Classes="form-field" Watermark="Jane Doe"/>
+            </StackPanel>
+            <StackPanel Classes="field-group">
+                <TextBlock Text="Phone" Classes="field-label"/>
+                <TextBox Text="{Binding ContactPhone}" Classes="form-field" Watermark="+1 555 123 4567"/>
+            </StackPanel>
+        </dcontrols:FieldRow>
         <StackPanel Classes="field-group">
             <TextBlock Text="Email" Classes="field-label"/>
             <TextBox Text="{Binding ContactEmail}" Classes="form-field" Watermark="user@example.com"/>
         </StackPanel>
-        <StackPanel Classes="field-group">
-            <TextBlock Text="Phone" Classes="field-label"/>
-            <TextBox Text="{Binding ContactPhone}" Classes="form-field" Watermark="+1 555 123 4567"/>
-        </StackPanel>
-        <Grid ColumnDefinitions="*,14,*">
-            <StackPanel Grid.Column="0" Classes="field-group">
+        <dcontrols:FieldRow Spacing="12">
+            <StackPanel Classes="field-group">
                 <TextBlock Text="Company" Classes="field-label"/>
                 <TextBox Text="{Binding ContactCompany}" Classes="form-field" Watermark="Contoso"/>
             </StackPanel>
-            <StackPanel Grid.Column="2" Classes="field-group">
+            <StackPanel Classes="field-group">
                 <TextBlock Text="Job Title" Classes="field-label"/>
                 <TextBox Text="{Binding ContactJobTitle}" Classes="form-field" Watermark="CTO"/>
             </StackPanel>
-        </Grid>
+        </dcontrols:FieldRow>
         <StackPanel Classes="field-group">
             <TextBlock Text="Address" Classes="field-label"/>
             <TextBox Text="{Binding ContactAddress}"
-                     Classes="form-field-multiline" Height="80"/>
+                     Classes="form-field-multiline" Height="64" MinHeight="64"/>
         </StackPanel>
     </StackPanel>
 </UserControl>
-

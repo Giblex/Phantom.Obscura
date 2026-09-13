@@ -123,6 +123,7 @@ namespace PhantomVault.UI.ViewModels
         private ObservableCollection<CredentialViewModel> _credentials = new();
         private ObservableCollection<CredentialViewModel> _filteredCredentials = new();
         private ObservableCollection<ListItemWrapper> _groupedListItems = new();
+        private ObservableCollection<CategoryGridSection> _groupedGridSections = new();
         private ObservableCollection<CredentialViewModel> _passkeys = new();
         private ObservableCollection<CredentialViewModel> _flaggedCredentials = new();
         private ObservableCollection<CategoryViewModel> _categories = new();
@@ -497,6 +498,8 @@ namespace PhantomVault.UI.ViewModels
                 _showCategoryColorBarOnly = s.ShowCategoryColorBarOnly;
                 _showEntryIcons = s.ShowEntryIcons;
                 _showCategoryColors = s.ShowCategoryColors;
+                _entryCardColourStyle = s.EntryCardColourStyle ?? "SideBar";
+                _detailCardColourStyle = s.DetailCardColourStyle ?? "Border";
             }
             catch { _showCategoryColorBarOnly = false; }
             SettingsService.SettingsChanged += OnUserSettingsChanged;
@@ -1436,6 +1439,56 @@ namespace PhantomVault.UI.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _showCategoryColors, value);
         }
 
+        private string _entryCardColourStyle = "SideBar";
+
+        /// <summary>
+        /// How an entry card shows its category colour: "SideBar" (default), "Border",
+        /// "TopBar" or "None". Chosen in the Category Manager beside Coloured blur.
+        /// </summary>
+        public string EntryCardColourStyle
+        {
+            get => _entryCardColourStyle;
+            private set
+            {
+                if (string.Equals(_entryCardColourStyle, value, StringComparison.Ordinal)) return;
+                this.RaiseAndSetIfChanged(ref _entryCardColourStyle, value);
+                this.RaisePropertyChanged(nameof(ShowCardSideBar));
+                this.RaisePropertyChanged(nameof(ShowCardTopBar));
+                this.RaisePropertyChanged(nameof(ShowCardColourBorder));
+            }
+        }
+
+        private string _detailCardColourStyle = "Border";
+
+        /// <summary>
+        /// How the selected entry's detail card shows its category colour: "Border" (default),
+        /// "TopBar" or "None". Chosen in the Category Manager beside the card colour.
+        /// </summary>
+        public string DetailCardColourStyle
+        {
+            get => _detailCardColourStyle;
+            private set
+            {
+                if (string.Equals(_detailCardColourStyle, value, StringComparison.Ordinal)) return;
+                this.RaiseAndSetIfChanged(ref _detailCardColourStyle, value);
+                this.RaisePropertyChanged(nameof(DetailCardBorderThickness));
+            }
+        }
+
+        /// <summary>
+        /// The detail card draws its category colour as its border, so one thickness covers all
+        /// three styles: all sides for a full border, top only for a bar (it follows the card's
+        /// rounded corners), or none.
+        /// </summary>
+        public Avalonia.Thickness DetailCardBorderThickness =>
+            string.Equals(_detailCardColourStyle, "TopBar", StringComparison.OrdinalIgnoreCase) ? new Avalonia.Thickness(0, 5, 0, 0)
+            : string.Equals(_detailCardColourStyle, "None", StringComparison.OrdinalIgnoreCase) ? new Avalonia.Thickness(0)
+            : new Avalonia.Thickness(3);
+
+        public bool ShowCardSideBar => string.Equals(_entryCardColourStyle, "SideBar", StringComparison.OrdinalIgnoreCase);
+        public bool ShowCardTopBar => string.Equals(_entryCardColourStyle, "TopBar", StringComparison.OrdinalIgnoreCase);
+        public bool ShowCardColourBorder => string.Equals(_entryCardColourStyle, "Border", StringComparison.OrdinalIgnoreCase);
+
         private void OnUserSettingsChanged(object? sender, UserSettingsChangedEventArgs e)
         {
             try
@@ -1446,6 +1499,8 @@ namespace PhantomVault.UI.ViewModels
                     ShowCategoryColorBarOnly = e.Settings.ShowCategoryColorBarOnly;
                     ShowEntryIcons = e.Settings.ShowEntryIcons;
                     ShowCategoryColors = e.Settings.ShowCategoryColors;
+                    EntryCardColourStyle = e.Settings.EntryCardColourStyle ?? "SideBar";
+                    DetailCardColourStyle = e.Settings.DetailCardColourStyle ?? "Border";
                 });
             }
             catch (Exception ex)
@@ -1838,6 +1893,13 @@ namespace PhantomVault.UI.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _filteredCredentials, value);
         }
 
+        /// <summary>Category sections for the grid view when sorted by category (header + tiles).</summary>
+        public ObservableCollection<CategoryGridSection> GroupedGridSections
+        {
+            get => _groupedGridSections;
+            private set => this.RaiseAndSetIfChanged(ref _groupedGridSections, value);
+        }
+
         public ObservableCollection<ListItemWrapper> GroupedListItems
         {
             get => _groupedListItems;
@@ -1887,6 +1949,7 @@ namespace PhantomVault.UI.ViewModels
             {
                 this.RaiseAndSetIfChanged(ref _selectedCredential, value);
                 this.RaisePropertyChanged(nameof(SelectedCredentialCategoryBrush));
+                RefreshAccountTiles();
             }
         }
 
@@ -2832,6 +2895,31 @@ namespace PhantomVault.UI.ViewModels
                     Notes = "Primary GitHub account two-factor authentication",
                     CreatedUtc = DateTimeOffset.Now.AddMonths(-3)
                 },
+                // Merged-card examples: a second GitHub login (joins the GitHub card with the
+                // personal login and its authenticator) and a Google Workspace login (joins the
+                // Gmail card through the gmail -> google alias).
+                new Credential
+                {
+                    Title = "GitHub",
+                    Username = "alex@summit.io",
+                    Password = "W0rk!Git#2025",
+                    Url = "https://github.com/summit-robotics",
+                    Group = "Logins",
+                    EntryType = EntryType.Password,
+                    Notes = "Work account - Summit Robotics organisation",
+                    CreatedUtc = DateTimeOffset.Now.AddDays(-20)
+                },
+                new Credential
+                {
+                    Title = "Google Workspace",
+                    Username = "alex.rivera@summit.io",
+                    Password = "Summ!tMail88",
+                    Url = "https://mail.google.com",
+                    Group = "Logins",
+                    EntryType = EntryType.Password,
+                    Notes = "Work mail and calendar",
+                    CreatedUtc = DateTimeOffset.Now.AddMonths(-5)
+                },
                 new Credential
                 {
                     Title = "Slack",
@@ -3045,7 +3133,13 @@ namespace PhantomVault.UI.ViewModels
 
             var materializedList = filtered.ToList();
 
+            // Entries for the same service show as one tile (the first in list order); the card
+            // then shows each of them as its own account tile.
+            var serviceGroups = GroupByService(materializedList);
+            materializedList = serviceGroups.Select(g => g.Primary).ToList();
+
             var groupedItems = new List<ListItemWrapper>();
+            var gridSections = new List<CategoryGridSection>();
             if (SortOption == 4)
             {
                 var grouped = materializedList.GroupBy(c => c.Group ?? "Uncategorized");
@@ -3056,7 +3150,10 @@ namespace PhantomVault.UI.ViewModels
                         string.Equals(cat.Name, group.Key, StringComparison.OrdinalIgnoreCase));
                     var categoryColor = categoryVm?.TileColor;
 
-                    groupedItems.Add(ListItemWrapper.CreateCategoryHeader(group.Key, categoryColor, group.Count()));
+                    var header = ListItemWrapper.CreateCategoryHeader(group.Key, categoryColor, group.Count());
+                    groupedItems.Add(header);
+                    // The grid view shows the same header above that category's tiles.
+                    gridSections.Add(new CategoryGridSection(header, group.ToList()));
 
                     foreach (var cred in group)
                     {
@@ -3078,8 +3175,15 @@ namespace PhantomVault.UI.ViewModels
             Dispatcher.UIThread.Post(() =>
             {
 
+                // Group assignment raises property changes, so it happens here on the UI thread.
+                foreach (var (_, members) in serviceGroups)
+                    foreach (var member in members)
+                        member.SetAccountGroup(members);
+
                 FilteredCredentials = new ObservableCollection<CredentialViewModel>(materializedList);
                 GroupedListItems = new ObservableCollection<ListItemWrapper>(groupedItems);
+                RefreshAccountTiles();
+                GroupedGridSections = new ObservableCollection<CategoryGridSection>(gridSections);
 
                 this.RaisePropertyChanged(nameof(FilteredCount));
                 this.RaisePropertyChanged(nameof(IsEmpty));
@@ -3472,6 +3576,7 @@ namespace PhantomVault.UI.ViewModels
                 CloseEditPanel();
             });
             EditViewModel.Categories = new ObservableCollection<CategoryViewModel>(Categories);
+            EditViewModel.MergeTargetLookup = FindMergeTargetTitle;
 
             IsEditPanelVisible = true;
 
@@ -3504,6 +3609,7 @@ namespace PhantomVault.UI.ViewModels
                 CloseEditPanel();
             });
             EditViewModel.Categories = new ObservableCollection<CategoryViewModel>(Categories);
+            EditViewModel.MergeTargetLookup = FindMergeTargetTitle;
 
             IsEditPanelVisible = true;
 
@@ -3976,6 +4082,99 @@ namespace PhantomVault.UI.ViewModels
                     "The username could not be copied. Confirm clipboard access is allowed, then try again.",
                     _ownerWindow);
             }
+        }
+
+        /// <summary>
+        /// Copies one field shown in an entry detail view (see CopyableField). Uses the same
+        /// rate guard and auto-clear as the password copy: what counts as sensitive (an account
+        /// number, an address, a licence number) is not ours to second-guess per field.
+        /// </summary>
+        /// <returns>True when the value is now on the clipboard, so the caller can confirm it.</returns>
+        internal async Task<bool> CopyFieldValueAsync(string? value, string label)
+        {
+            try
+            {
+                _idleLockService.Reset();
+                try { _suiteSession?.TouchActivity(); } catch { /* best-effort */ }
+
+                if (string.IsNullOrEmpty(value))
+                {
+                    StatusMessage = "Nothing to copy";
+                    return false;
+                }
+
+                if (_clipboardGuard != null && !_clipboardGuard.CanCopy())
+                {
+                    await _dialogService.ShowWarningAsync(
+                        "Clipboard Blocked",
+                        "Too many clipboard operations detected. Please wait before copying again.",
+                        _ownerWindow);
+                    StatusMessage = "Clipboard temporarily blocked";
+                    return false;
+                }
+
+                var clipboard = TopLevel.GetTopLevel(_ownerWindow)?.Clipboard;
+                if (clipboard == null)
+                {
+                    StatusMessage = "Clipboard unavailable";
+                    return false;
+                }
+
+                await clipboard.SetTextAsync(value);
+                StatusMessage = $"{label} copied";
+                _clipboardGuard?.RegisterCopy(label);
+
+                _clipboardClearCts?.Cancel();
+                _clipboardClearCts = new CancellationTokenSource();
+                var clearToken = _clipboardClearCts.Token;
+
+                var clearDelay = SettingsService.Load().GetClipboardClearDelay();
+                if (clearDelay.HasValue)
+                {
+                    var copiedValue = value;
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await Task.Delay(clearDelay.Value, clearToken);
+                            await Dispatcher.UIThread.InvokeAsync(async () =>
+                            {
+                                var currentClip = TopLevel.GetTopLevel(_ownerWindow)?.Clipboard;
+                                if (currentClip != null)
+                                {
+                                    var currentText = await currentClip.TryGetTextAsync();
+                                    if (currentText == copiedValue)
+                                    {
+                                        await currentClip.ClearAsync();
+                                    }
+                                }
+                            });
+                        }
+                        catch (OperationCanceledException) { }
+                        catch (Exception ex)
+                        {
+                            // A failed auto-clear leaves the copied value on the clipboard.
+                            Log.Warning(ex, "[Clipboard] Auto-clear failed; the copied value may still be on the clipboard.");
+                        }
+                    });
+                }
+
+                // Not awaited: the caller shows its confirmation as soon as the copy lands.
+                _ = ResetStatusMessageSoonAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "[Clipboard] Failed to copy a detail field.");
+                StatusMessage = "The value could not be copied. Confirm clipboard access is allowed, then try again.";
+                return false;
+            }
+        }
+
+        private async Task ResetStatusMessageSoonAsync()
+        {
+            await Task.Delay(2000);
+            StatusMessage = "Ready";
         }
 
         private async Task CopyTotpCodeAsync(CredentialViewModel credential)

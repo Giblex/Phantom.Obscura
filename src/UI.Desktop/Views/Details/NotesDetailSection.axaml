@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:converters="clr-namespace:PhantomVault.UI.Converters"
+             xmlns:dcontrols="clr-namespace:PhantomVault.UI.Desktop.Controls"
              x:Class="PhantomVault.UI.Views.Details.NotesDetailSection">
 
     <UserControl.Resources>
@@ -16,18 +17,13 @@
                    FontSize="{StaticResource Type.Label.Size}"
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource MutedTextBrush}"/>
-        <TextBox Text="{Binding SelectedCredential.Notes}"
-                 IsReadOnly="True"
-                 BorderThickness="1"
-                 BorderBrush="{DynamicResource ControlBorderBrush}"
-                 Padding="10,8"
-                 MinHeight="70"
-                 AcceptsReturn="True"
-                 TextWrapping="Wrap">
-            <TextBox.Effect>
+        <dcontrols:CopyableField Value="{Binding SelectedCredential.Notes}"
+                                 CopyLabel="Notes"
+                                 IsMultiline="True"
+                                 MinHeight="70">
+            <dcontrols:CopyableField.Effect>
                 <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
-            </TextBox.Effect>
-        </TextBox>
+            </dcontrols:CopyableField.Effect>
+        </dcontrols:CopyableField>
     </StackPanel>
 </UserControl>
-

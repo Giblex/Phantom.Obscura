@@ -157,7 +157,7 @@ namespace PhantomVault.UI.Views
         // survives that; a mark containing text would not, and would need |cos|.
 
         private ScaleTransform? _logoScale;
-        private DispatcherTimer? _logoSpinTimer;
+        private PhantomVault.UI.Services.FrameTimer? _logoSpinTimer; // frame-paced (see FrameTimer)
 
         private double _logoAngle;              // radians
         private DateTime _logoLastTick;
@@ -192,10 +192,7 @@ namespace PhantomVault.UI.Views
             logo.RenderTransform = group;
 
             _logoLastTick = DateTime.UtcNow;
-            _logoSpinTimer = new DispatcherTimer(DispatcherPriority.Render)
-            {
-                Interval = TimeSpan.FromMilliseconds(16)
-            };
+            _logoSpinTimer = new PhantomVault.UI.Services.FrameTimer(this);
             _logoSpinTimer.Tick += (_, _) => OnLogoSpinTick(viewModel);
             _logoSpinTimer.Start();
         }

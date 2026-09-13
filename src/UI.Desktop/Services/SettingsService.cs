@@ -54,6 +54,12 @@ namespace PhantomVault.UI.Services
         public bool ShowEntryIcons { get; set; } = true;
         public bool ShowCategoryColors { get; set; } = true;
         public bool UseColouredCategoryBlur { get; set; } = false;
+
+        // How entry cards show their category colour: "SideBar", "Border", "TopBar" or "None".
+        public string EntryCardColourStyle { get; set; } = "SideBar";
+
+        // How the selected entry's detail card shows its category colour: "Border", "TopBar" or "None".
+        public string DetailCardColourStyle { get; set; } = "Border";
         public int AccessibilityFontSize { get; set; } = 1;
         public int AccessibilityFontFamily { get; set; } = 0;
         public bool EnableKeyboardShortcuts { get; set; } = true;
@@ -395,6 +401,79 @@ namespace PhantomVault.UI.Services
         // Unprotect throws on tamper — no separate MAC is needed. Same approach already
         // used for the autofill origin allowlist.
         private static string SealedSettingsPath => Path.Combine(SettingsDir, "settings.dat");
+
+        // Per-vault settings. While a vault is open, settings are read from and written to
+        // that vault's own sealed file, so each vault keeps its own preferences. Before unlock
+        // (and after the vault closes) the global file is used, as it always was. A vault
+        // opened for the first time starts from the global settings. The file name is a hash
+        // of a stable vault identifier, so it reveals neither a path nor the identifier.
+        private static string? _activeVaultKey;
+        private static string VaultSettingsDir => Path.Combine(SettingsDir, "vaults");
+        private static string ActiveSealedPath => _activeVaultKey == null
+            ? SealedSettingsPath
+            : Path.Combine(VaultSettingsDir, $"settings-{_activeVaultKey}.dat");
+
+        /// <summary>Key for a vault's settings file, derived from an identifier that is fixed for the vault's lifetime.</summary>
+        public static string ComputeVaultKey(string stableVaultId)
+        {
+            var bytes = System.Text.Encoding.UTF8.GetBytes("PhantomVault.vault-settings.v1|" + (stableVaultId ?? string.Empty));
+            var hash = System.Security.Cryptography.SHA256.HashData(bytes);
+            return Convert.ToHexString(hash, 0, 16).ToLowerInvariant();
+        }
+
+        /// <summary>
+        /// Switches settings to the given vault (null = the global settings). Listeners are
+        /// told so views pick up that vault's preferences.
+        /// </summary>
+        public static void SetActiveVault(string? vaultKey)
+        {
+            lock (_cacheLock)
+            {
+                if (string.Equals(_activeVaultKey, vaultKey, StringComparison.Ordinal))
+                    return;
+
+                _activeVaultKey = vaultKey;
+                _cached = null;
+            }
+
+            Log.Information(vaultKey == null
+                ? "Settings switched to global"
+                : "Settings switched to the open vault's own settings");
+            RaiseSettingsChanged(Load());
+        }
+
+        /// <summary>True when the active vault scope already has its own saved settings file.</summary>
+        public static bool ActiveVaultHasOwnSettings =>
+            _activeVaultKey != null && File.Exists(ActiveSealedPath);
+
+        private static UserSettings? ReadSealed(string path)
+        {
+            if (!File.Exists(path)) return null;
+            var json = UnsealSettings(File.ReadAllBytes(path));
+            return JsonSerializer.Deserialize<UserSettings>(json) ?? new UserSettings();
+        }
+
+        /// <summary>
+        /// Keeps the fields the welcome screen needs before any vault is open (the known vault
+        /// list) in the global file when they change while a vault is open.
+        /// </summary>
+        private static void SyncMachineWideFields(UserSettings vaultSettings)
+        {
+            try
+            {
+                var global = ReadSealed(SealedSettingsPath) ?? new UserSettings();
+                if (global.KnownLocalVaultPaths.SequenceEqual(vaultSettings.KnownLocalVaultPaths))
+                    return;
+
+                global.KnownLocalVaultPaths = new List<string>(vaultSettings.KnownLocalVaultPaths);
+                var json = JsonSerializer.Serialize(global, new JsonSerializerOptions { WriteIndented = true });
+                WriteAtomic(SealedSettingsPath, SealSettings(json));
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Failed to mirror machine-wide settings to the global file");
+            }
+        }
         private static readonly byte[] SettingsEntropy =
             System.Text.Encoding.UTF8.GetBytes("PhantomVault.user-settings.v1");
 
@@ -425,8 +504,9 @@ namespace PhantomVault.UI.Services
                     // still picked up without re-reading and decrypting the file every call.
                     try
                     {
-                        var stamp = File.Exists(SealedSettingsPath)
-                            ? File.GetLastWriteTimeUtc(SealedSettingsPath)
+                        var activePath = ActiveSealedPath;
+                        var stamp = File.Exists(activePath)
+                            ? File.GetLastWriteTimeUtc(activePath)
                             : DateTime.MinValue;
 
                         if (stamp == _cachedFileStampUtc)
@@ -448,8 +528,9 @@ namespace PhantomVault.UI.Services
                 _cached = loaded;
                 try
                 {
-                    _cachedFileStampUtc = File.Exists(SealedSettingsPath)
-                        ? File.GetLastWriteTimeUtc(SealedSettingsPath)
+                    var activePath = ActiveSealedPath;
+                    _cachedFileStampUtc = File.Exists(activePath)
+                        ? File.GetLastWriteTimeUtc(activePath)
                         : DateTime.MinValue;
                 }
                 catch
@@ -470,10 +551,18 @@ namespace PhantomVault.UI.Services
         {
             try
             {
-                if (File.Exists(SealedSettingsPath))
+                var activePath = ActiveSealedPath;
+                var active = ReadSealed(activePath);
+                if (active != null)
+                    return active;
+
+                // A vault opened for the first time has no settings of its own yet: start from
+                // the global settings. Its own file is written on the first save.
+                if (!string.Equals(activePath, SealedSettingsPath, StringComparison.Ordinal))
                 {
-                    var json = UnsealSettings(File.ReadAllBytes(SealedSettingsPath));
-                    return JsonSerializer.Deserialize<UserSettings>(json) ?? new UserSettings();
+                    var global = ReadSealed(SealedSettingsPath);
+                    if (global != null)
+                        return global;
                 }
 
                 // Legacy plaintext file: read once, re-seal, remove the plaintext copy.
@@ -505,7 +594,14 @@ namespace PhantomVault.UI.Services
                 Directory.CreateDirectory(SettingsDir);
                 var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
 
-                WriteAtomic(SealedSettingsPath, SealSettings(json));
+                var target = ActiveSealedPath;
+                if (!string.Equals(target, SealedSettingsPath, StringComparison.Ordinal))
+                {
+                    Directory.CreateDirectory(VaultSettingsDir);
+                    SyncMachineWideFields(settings);
+                }
+
+                WriteAtomic(target, SealSettings(json));
 
                 // Remove any legacy plaintext file so the old copy cannot be read or edited.
                 TryDeletePlaintextSettings();

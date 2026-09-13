@@ -9,7 +9,7 @@
             <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:EntrySectionViewModel">
 
-                    <Border Classes="section-tile liquid-glass">
+                    <Border Classes="section-tile">
                         <StackPanel Spacing="10">
 
                             <StackPanel Orientation="Horizontal" Spacing="6">

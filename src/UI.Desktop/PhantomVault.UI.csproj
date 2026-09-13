@@ -108,6 +108,9 @@
          GHSA-xrw6-gwf8-vvr9 (High: signal spoofing / fd exhaustion); 0.21.3 is the patched
          release on the same line. Drop this pin once Avalonia references a fixed version. -->
     <PackageReference Include="Tmds.DBus.Protocol" Version="0.21.3" />
+
+    <!-- Colour wheel (spectrum + hue) for recolouring line icons in the icon library. -->
+    <PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.3.11" />
     
     <!-- Embed policy files as resources for runtime verification -->
     <EmbeddedResource Include="Assets\Policies\root_public.json" />

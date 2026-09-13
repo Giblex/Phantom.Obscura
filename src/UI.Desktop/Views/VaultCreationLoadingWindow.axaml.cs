@@ -41,7 +41,7 @@ namespace PhantomVault.UI.Views
         private Canvas? _segmentedRing;
         private Canvas? _segmentedRingInner;
 
-        private DispatcherTimer? _animationTimer;
+        private PhantomVault.UI.Services.FrameTimer? _animationTimer; // frame-paced (see FrameTimer)
         private DateTime _animationStart;
         private readonly Random _rng = new();
 
@@ -219,10 +219,7 @@ namespace PhantomVault.UI.Views
         private void StartAnimationTimer()
         {
             _animationStart = DateTime.UtcNow;
-            _animationTimer = new DispatcherTimer(DispatcherPriority.Render)
-            {
-                Interval = TimeSpan.FromMilliseconds(16)
-            };
+            _animationTimer = new PhantomVault.UI.Services.FrameTimer(this);
             _animationTimer.Tick += OnAnimationTick;
             _animationTimer.Start();
         }

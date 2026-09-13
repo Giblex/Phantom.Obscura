@@ -1,0 +1,118 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:PhantomVault.UI.Desktop.Controls"
+             x:Class="PhantomVault.UI.Desktop.Controls.CopyableField">
+    <!-- The field is a button-like box, not an input: a hand pointer everywhere over it,
+         including the inner text presenter the theme gives an I-beam. -->
+    <UserControl.Styles>
+        <Style Selector="TextBox#PART_Box /template/ TextPresenter">
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="TextBox#PART_Box /template/ ScrollViewer">
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <!-- Hover/press: a slightly deeper blue than the resting field and a faint edge,
+             instead of Fluent's text-box hover (a near-black fill with a bright border),
+             which read as a heavy dark highlight on a field you only click to copy. -->
+        <Style Selector="TextBox#PART_Box /template/ Border#PART_BorderElement">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="TextBox#PART_Box:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="{DynamicResource Brush.CopyFieldHover}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.CopyFieldHoverBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <Style Selector="TextBox#PART_Box:pressed /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="{DynamicResource Brush.CopyFieldPressed}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.CopyFieldHoverBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <!-- Digit cells: the same size and spacing as the editor's digit boxes (PinDigitBoxes,
+             30x36 with a 4px gap and 12px between groups) so view and edit line up. -->
+        <Style Selector="Border.digit-cell">
+            <Setter Property="Width" Value="30"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Margin" Value="0,2,4,2"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.digit-cell.group-end">
+            <Setter Property="Margin" Value="0,2,12,2"/>
+        </Style>
+        <Style Selector="Border.digit-cell > TextBlock">
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="WrapPanel#PART_Digits:pointerover Border.digit-cell">
+            <Setter Property="Background" Value="{DynamicResource Brush.CopyFieldHover}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.CopyFieldHoverBorder}"/>
+        </Style>
+
+        <!-- Keep the text colour steady on hover (Fluent brightens it). -->
+        <Style Selector="TextBox#PART_Box:pointerover">
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+        </Style>
+    </UserControl.Styles>
+
+    <!-- Focusable=False is the point: read-only alone still gives a caret and a selection,
+         so the box looks editable and a click lands an insertion point instead of copying.
+         Editing happens through the Edit button only. -->
+    <Grid ColumnDefinitions="*,Auto">
+        <TextBox x:Name="PART_Box"
+                 Grid.Column="0"
+                 IsReadOnly="True"
+                 Focusable="False"
+                 Cursor="Hand"
+                 BorderThickness="1"
+                 BorderBrush="{DynamicResource ControlBorderBrush}"
+                 Padding="10,8"
+                 VerticalContentAlignment="Center"
+                 Tapped="OnBoxTapped"/>
+
+        <!-- DigitBoxes mode (PINs, card numbers, expiry, CVC): one small box per character,
+             bullets while hidden and the characters once revealed, with a wider gap wherever
+             the value has a separator. Cells are built in code; click anywhere to copy. -->
+        <WrapPanel x:Name="PART_Digits"
+                   Grid.Column="0"
+                   IsVisible="False"
+                   Background="Transparent"
+                   Cursor="Hand"
+                   HorizontalAlignment="Left"
+                   VerticalAlignment="Center"
+                   Tapped="OnBoxTapped"/>
+        <Button x:Name="PART_Reveal"
+                Grid.Column="1"
+                Classes="liquid-glass"
+                Width="30" Height="30"
+                MinWidth="30" MinHeight="30"
+                CornerRadius="6"
+                Padding="0"
+                Margin="8,0,0,0"
+                VerticalAlignment="Center"
+                IsVisible="False"
+                Click="OnRevealClick"
+                AutomationProperties.Name="Toggle visibility">
+            <controls:SvgIcon x:Name="PART_RevealIcon"
+                              Width="15" Height="15"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center"/>
+        </Button>
+    </Grid>
+</UserControl>

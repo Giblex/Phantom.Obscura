@@ -93,7 +93,19 @@ namespace PhantomVault.UI.Views
             _editPanelOverlay = this.FindControl<Border>("EditPanelOverlay");
             _editPanelContainer = this.FindControl<Border>("EditPanelContainer");
 
+            // Keep the editor fitted to the display column if the window or splitter moves
+            // while it is open.
+            if (_detailPanel != null)
+            {
+                _detailPanel.SizeChanged += (_, _) =>
+                {
+                    if (_editPanelOverlay?.IsVisible == true)
+                        PositionEditCard();
+                };
+            }
+
             AddHandler(PointerPressedEvent, OnWindowPointerPressed, RoutingStrategies.Tunnel);
+            AddHandler(PointerReleasedEvent, OnWindowPointerReleased, RoutingStrategies.Tunnel, handledEventsToo: true);
             AddHandler(KeyDownEvent, OnWindowKeyDown, RoutingStrategies.Tunnel, handledEventsToo: true);
 
             var addToggle = this.FindControl<ToggleButton>("AddToggle");
@@ -469,6 +481,17 @@ namespace PhantomVault.UI.Views
                 HandleEditViewModelChanged(vm.EditViewModel);
             }
 
+            // The editor hides the display card while it covers it. Whenever a different entry
+            // is selected with no editor open, make sure the card is visible again, so it can
+            // never be left hidden (e.g. an edit closed mid-animation).
+            if (sender is ViewModels.VaultViewModel vmSel &&
+                e.PropertyName == nameof(vmSel.SelectedCredential) &&
+                !vmSel.IsEditPanelVisible &&
+                _detailCard != null)
+            {
+                _detailCard.Opacity = 1;
+            }
+
             if (sender is ViewModels.VaultViewModel vmEdit && e.PropertyName == nameof(vmEdit.IsEditPanelVisible))
             {
                 if (vmEdit.IsEditPanelVisible)
@@ -483,6 +506,8 @@ namespace PhantomVault.UI.Views
 
                     if (_editPanelOverlay != null)
                         _editPanelOverlay.Opacity = 1;
+                    if (_detailCard != null)
+                        _detailCard.Opacity = 1;
                     if (_editPanelContainer != null)
                     {
                         _editPanelContainer.Opacity = 1;
@@ -762,10 +787,96 @@ namespace PhantomVault.UI.Views
             }
         }
 
+        /// <summary>
+        /// Lays the editor over the display column's entry card: the card's left edge, top
+        /// and width, running down to the bottom of the column (the form needs more room than
+        /// a short card). Returns false when there is no display column to sit in (narrow
+        /// window, dashboard); the editor then docks to the right as a side panel.
+        /// </summary>
+        private bool PositionEditCard()
+        {
+            if (_editPanelOverlay == null || _editPanelContainer == null)
+                return false;
+
+            const double ColumnInset = 20;       // DetailPanel's content margin (20,20,36,20)
+            const double ScrollbarInset = 36;
+            const double MinHeight = 360;        // room for the form on a very short card
+
+            var host = _detailPanel;
+            var hostOrigin = host != null && host.IsVisible && host.Bounds.Width > 0
+                ? host.TranslatePoint(new Avalonia.Point(0, 0), _editPanelOverlay)
+                : null;
+
+            if (host == null || hostOrigin == null)
+            {
+                _editPanelContainer.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right;
+                _editPanelContainer.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch;
+                _editPanelContainer.Margin = new Avalonia.Thickness(0);
+                _editPanelContainer.Width = Math.Min(560, Math.Max(360, _editPanelOverlay.Bounds.Width * 0.45));
+                _editPanelContainer.Height = double.NaN;
+                return false;
+            }
+
+            var columnTop = hostOrigin.Value.Y + ColumnInset;
+            var columnBottom = hostOrigin.Value.Y + host.Bounds.Height - ColumnInset;
+
+            double left = hostOrigin.Value.X + ColumnInset;
+            double width = host.Bounds.Width - ColumnInset - ScrollbarInset;
+            double top = columnTop;
+            double height = columnBottom - columnTop;
+
+            // Line up with the display card's left edge, top and width, and always run down to
+            // the bottom of the display column, so the editor spans the column's full length
+            // however short the card is (the form scrolls within). The card may be scrolled, so
+            // its top is kept inside the column.
+            if (_detailCard != null && _detailCard.IsEffectivelyVisible && _detailCard.Bounds.Width > 0)
+            {
+                var cardOrigin = _detailCard.TranslatePoint(new Avalonia.Point(0, 0), _editPanelOverlay);
+                if (cardOrigin != null)
+                {
+                    left = cardOrigin.Value.X;
+                    width = _detailCard.Bounds.Width;
+                    top = Math.Clamp(cardOrigin.Value.Y, columnTop, Math.Max(columnTop, columnBottom - MinHeight));
+
+                    // Run as far down as the card itself: a card taller than the view carries on
+                    // past the column's bottom margin, and stopping at that margin left the editor
+                    // visibly shorter than the card it replaces. Capped at the visible bottom edge
+                    // of the column; a short card still gets at least the column's margin line.
+                    var visibleBottom = hostOrigin.Value.Y + host.Bounds.Height;
+                    var cardBottom = cardOrigin.Value.Y + _detailCard.Bounds.Height;
+                    height = Math.Max(columnBottom, Math.Min(cardBottom, visibleBottom)) - top;
+                }
+            }
+
+            _editPanelContainer.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left;
+            _editPanelContainer.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top;
+            _editPanelContainer.Margin = new Avalonia.Thickness(left, top, 0, 0);
+            _editPanelContainer.Width = Math.Max(280, width);
+            _editPanelContainer.Height = Math.Max(Math.Min(MinHeight, columnBottom - top), height);
+            return true;
+        }
+
         private async System.Threading.Tasks.Task RunEditPanelOpenAnimation()
         {
             if (_editPanelOverlay == null || _editPanelContainer == null)
                 return;
+
+            var asCard = PositionEditCard();
+            Serilog.Log.Debug("[VaultWindow] Editor opening as {Mode} (detail column visible: {Visible}, width {Width:0}).",
+                asCard ? "detail card" : "side panel",
+                _detailPanel?.IsVisible == true,
+                _detailPanel?.Bounds.Width ?? 0);
+
+            if (asCard)
+            {
+                await RunEditCardPopAnimation(_editPanelOverlay, _editPanelContainer);
+
+                // The editor now covers the display card; hide the card so no part of it can
+                // show through or around the editor. Restored when the editor closes.
+                if (_detailCard != null && _editPanelOverlay.IsVisible)
+                    _detailCard.Opacity = 0;
+                return;
+            }
 
             var translate = new TranslateTransform { X = 0, Y = 0 };
             _editPanelContainer.RenderTransform = translate;
@@ -799,12 +910,90 @@ namespace PhantomVault.UI.Views
                 }
             };
 
+            // The slide runs on the container, not on the transform: Avalonia's TransformAnimator
+            // only accepts a Visual and applies the TranslateTransform.X setters to its
+            // RenderTransform. Running it on the transform threw an InvalidCastException, so
+            // the panel never slid in.
             await System.Threading.Tasks.Task.WhenAll(
                 overlayFade.RunAsync(_editPanelOverlay),
-                slideAnim.RunAsync(translate));
+                slideAnim.RunAsync(_editPanelContainer));
 
             _editPanelOverlay.Opacity = 1;
             _editPanelContainer.RenderTransform = null;
+        }
+
+        /// <summary>
+        /// The editor bounces outwards from the centre of the display card: it starts small
+        /// and transparent, overshoots slightly, then settles at full size, echoing the tile's
+        /// own click bounce in the list.
+        /// </summary>
+        private static async System.Threading.Tasks.Task RunEditCardPopAnimation(Border overlay, Border card)
+        {
+            const double StartScale = 0.94;
+
+            card.RenderTransformOrigin = Avalonia.RelativePoint.Center;
+            card.RenderTransform = new ScaleTransform(StartScale, StartScale);
+            card.Opacity = 0;
+            overlay.Opacity = 0;
+
+            static Animation Fade(int ms) => new()
+            {
+                Duration = TimeSpan.FromMilliseconds(ms),
+                Easing = new CubicEaseOut(),
+                FillMode = FillMode.Forward,
+                Children =
+                {
+                    new KeyFrame { Cue = new Cue(0), Setters = { new Setter(OpacityProperty, 0.0) } },
+                    new KeyFrame { Cue = new Cue(1), Setters = { new Setter(OpacityProperty, 1.0) } }
+                }
+            };
+
+            // A slow, smooth single spring: grows out from the card's centre from 94%, eases just
+            // past full size once and settles. A small start scale and gentle overshoot keep it
+            // calm at this longer duration; the fade runs alongside so it never pops in.
+            var pop = new Animation
+            {
+                Duration = TimeSpan.FromMilliseconds(900),
+                Easing = new PhantomVault.UI.Services.SpringOutEasing { Overshoot = 0.9 },
+                FillMode = FillMode.Forward,
+                Children =
+                {
+                    new KeyFrame
+                    {
+                        Cue = new Cue(0),
+                        Setters =
+                        {
+                            new Setter(ScaleTransform.ScaleXProperty, StartScale),
+                            new Setter(ScaleTransform.ScaleYProperty, StartScale)
+                        }
+                    },
+                    new KeyFrame
+                    {
+                        Cue = new Cue(1),
+                        Setters =
+                        {
+                            new Setter(ScaleTransform.ScaleXProperty, 1.0),
+                            new Setter(ScaleTransform.ScaleYProperty, 1.0)
+                        }
+                    }
+                }
+            };
+
+            try
+            {
+                // Run on the card itself: the transform animator applies ScaleTransform setters
+                // to its RenderTransform (it rejects a bare transform as the target).
+                await System.Threading.Tasks.Task.WhenAll(
+                    Fade(1).RunAsync(overlay),
+                    Fade(420).RunAsync(card),
+                    pop.RunAsync(card));
+            }
+            finally
+            {
+                overlay.Opacity = 1;
+                card.Opacity = 1;
+                card.RenderTransform = null;
+            }
         }
 
         private void HandleEditViewModelChanged(AddEditCredentialViewModel? newViewModel)
@@ -819,7 +1008,9 @@ namespace PhantomVault.UI.Views
             if (_currentEditViewModel != null)
             {
                 _currentEditViewModel.PropertyChanged += EditViewModel_PropertyChanged;
-                _currentEditViewModel.SetOwnerWindow(this);
+                // Owner for the editor's dialogs only: the editor is a card in this window, so
+                // finishing it must not close the vault window.
+                _currentEditViewModel.SetOwnerWindow(this, closeOwnerOnFinish: false);
             }
 
             if (_editFormStack != null)
@@ -1531,18 +1722,60 @@ namespace PhantomVault.UI.Views
 
             if (vm.SelectedCredential is null) return;
 
-            var source = e.Source as Visual;
-            while (source is not null)
+            // Only a click genuinely outside both the display card and the entry tiles closes
+            // the card. Clicking the card itself (its fields, buttons, the "Copied" bubble) or
+            // any tile must never deselect.
+            if (e.Source is not Visual source) return;
+
+            // Popups and flyouts (the "Copied" bubble, tooltips, dropdowns) live in their own
+            // top level, so a walk up from them never reaches the card: never deselect for them.
+            if (TopLevel.GetTopLevel(source) != this) return;
+
+            if (_detailCard != null && (ReferenceEquals(source, _detailCard) || _detailCard.IsVisualAncestorOf(source)))
+                return;
+
+            // Only the left button closes the card.
+            if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
+
+            // The whole detail column counts as the card's area: clicking the space around the
+            // card, or its scrollbar, keeps it open. Only clicks over in the list/sidebar close it.
+            var detailPanel = this.FindControl<Border>("DetailPanel");
+            if (detailPanel != null && detailPanel.IsVisualAncestorOf(source))
+                return;
+
+            for (Visual? v = source; v != null; v = v.GetVisualParent())
             {
-
-                if (source == _detailCard)
+                if (v is Button btn &&
+                    (btn.DataContext is PhantomVault.UI.ViewModels.CredentialViewModel ||
+                     btn.Classes.Contains("tile-button") || btn.Classes.Contains("tile-button-grid")))
                     return;
 
-                if (source is Button btn && btn.DataContext is PhantomVault.UI.ViewModels.CredentialViewModel)
+                // Any control doing its own job (a scrollbar, splitter, search box, button,
+                // dropdown) is not "clicking off": let it work without closing the card.
+                if (v is Avalonia.Controls.Primitives.ScrollBar or Avalonia.Controls.Primitives.Thumb
+                    or GridSplitter or TextBox or ComboBox or Avalonia.Controls.Primitives.ToggleButton
+                    or Button or Slider)
                     return;
-
-                source = source.GetVisualParent() as Visual;
             }
+
+            // Decide on release rather than press, so a drag or scroll gesture that starts over
+            // empty space doesn't close the card.
+            _clickOffPressPoint = e.GetPosition(this);
+        }
+
+        private Point? _clickOffPressPoint;
+
+        private void OnWindowPointerReleased(object? sender, PointerReleasedEventArgs e)
+        {
+            if (_clickOffPressPoint is not { } pressed) return;
+            _clickOffPressPoint = null;
+
+            if (DataContext is not VaultViewModel vm || vm.IsEditPanelVisible || vm.SelectedCredential is null)
+                return;
+
+            var released = e.GetPosition(this);
+            if (Math.Abs(released.X - pressed.X) > 6 || Math.Abs(released.Y - pressed.Y) > 6)
+                return;
 
             vm.SelectedCredential = null;
         }

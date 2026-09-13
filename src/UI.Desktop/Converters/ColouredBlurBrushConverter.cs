@@ -11,14 +11,17 @@ namespace PhantomVault.UI.Converters
     /// [1] bool UseColouredTileBlur. ConverterParameter selects the surface variant:
     ///   (none)/"tile" → the tile background, "icon" → the icon circle, "darker" → the
     ///   name-input/close-button surface (a slightly darker shade).
-    /// When coloured blur is OFF the tiles get a subtle blue colour-correction instead of a
-    /// washed-out neutral white, so they read as deliberate glass rather than grey haze.
+    /// When coloured blur is OFF the tiles take Obscura's navy instead of a washed-out
+    /// neutral white, so they read as deliberate glass in the app's own palette.
     /// </summary>
     public class ColouredBlurBrushConverter : IMultiValueConverter
     {
-        // Blue-tinted neutral glass used when coloured-blur is disabled.
-        private static readonly Color NeutralBlue = Color.FromRgb(0x5C, 0x9E, 0xDC);
-        private static readonly Color NeutralBlueDark = Color.FromRgb(0x2C, 0x4E, 0x76);
+        // Navy glass used when coloured-blur is disabled. The base is Color.Navy400 (#24384F)
+        // lifted slightly so tiles still separate from the #0A0F18-#162235 page behind them;
+        // the inset surfaces use Color.Navy600 (#162235), the header navy. The previous
+        // #5C9EDC was a bright sky blue that sat outside the Glass Navy palette.
+        private static readonly Color NeutralBlue = Color.FromRgb(0x2A, 0x42, 0x62);
+        private static readonly Color NeutralBlueDark = Color.FromRgb(0x16, 0x22, 0x35);
 
         public object? Convert(IList<object?> values, Type targetType, object? parameter, CultureInfo culture)
         {
@@ -32,10 +35,12 @@ namespace PhantomVault.UI.Converters
                     var c = Color.Parse(hex.Trim());
                     return variant switch
                     {
-                        // Stronger tint than before so coloured tiles read as frostier glass.
+                        // Tiles are near-solid: at 0x52 the dot grid and page showed through
+                        // enough to make rows look washed out. The "darker" surfaces (name box,
+                        // close button) rise with them so they still read as inset fields.
                         "icon" => Solid(c, 0x6E),
-                        "darker" => Solid(Darken(c, 0.62), 0x8A),
-                        _ => Solid(c, 0x52),
+                        "darker" => Solid(Darken(c, 0.62), 0xC8),
+                        _ => Solid(c, 0xB8),
                     };
                 }
                 catch
@@ -46,8 +51,8 @@ namespace PhantomVault.UI.Converters
             return variant switch
             {
                 "icon" => Solid(NeutralBlue, 0x3C),
-                "darker" => Solid(NeutralBlueDark, 0x4C),
-                _ => Solid(NeutralBlue, 0x2A),
+                "darker" => Solid(NeutralBlueDark, 0xB0),
+                _ => Solid(NeutralBlue, 0x9C),
             };
         }
 

@@ -470,19 +470,36 @@
                     <Binding Path="$parent[Window].Bounds.Width" Converter="{StaticResource IsWidthAtLeastConverter}" ConverterParameter="1200"/>
                 </MultiBinding>
             </Border.IsVisible>
-                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <!-- Background: the same lift and faint dots as the sidebar, over the window brush. -->
+                <!-- AllowAutoHide off: Fluent otherwise shrinks the bar to a hairline that is
+                     hard to hit. Kept full width (12px) and always grabbable. -->
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                              AllowAutoHide="False"
+                              Background="{DynamicResource Brush.PanelLiftDots}">
+                    <ScrollViewer.Styles>
+                        <Style Selector="ScrollBar:vertical">
+                            <Setter Property="Width" Value="12"/>
+                            <Setter Property="MinWidth" Value="12"/>
+                        </Style>
+                    </ScrollViewer.Styles>
                     <!-- Right margin bumped from 20 → 36 so the vertical scrollbar
                          doesn't sit over the card / clip the header buttons. -->
                     <Grid Margin="20,20,36,20">
                         <StackPanel IsVisible="{Binding !IsShowingSecureTrash}" Classes="fade-toggle">
 
+                        <!-- Opaque backing under the translucent card surface, exactly as the
+                             add/edit card has (EditPanelContainer), so both cards read with the
+                             same colour and transparency instead of the dots showing through. -->
+                        <Border CornerRadius="16"
+                                Background="{DynamicResource WindowBackgroundBrush}"
+                                IsVisible="{Binding SelectedCredential, Converter={x:Static ObjectConverters.IsNotNull}}">
                         <Border x:Name="DetailCard"
                                 Background="{DynamicResource CardBackgroundBrush}"
                                 CornerRadius="16"
                                 Padding="28,24"
                                 BoxShadow="{DynamicResource DetailCardShadow}"
                                 BorderBrush="{Binding SelectedCredentialCategoryBrush}"
-                                BorderThickness="3"
+                                BorderThickness="{Binding DetailCardBorderThickness}"
                                 IsVisible="{Binding SelectedCredential, Converter={x:Static ObjectConverters.IsNotNull}}">
                         <StackPanel Spacing="24" Classes="fade-toggle">
 
@@ -493,9 +510,12 @@
                                     <Image Source="{Binding SelectedCredential.AutoDetectedIconBitmap}"
                                            Width="108" Height="108" Stretch="Uniform"
                                            IsVisible="{Binding SelectedCredential.HasAutoDetectedIcon}"/>
-                                    <TextBlock Text="{Binding SelectedCredential.IconText}" FontSize="{StaticResource Type.IconLg.Size}" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}"
-                                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                                               IsVisible="{Binding !SelectedCredential.HasAutoDetectedIcon}"/>
+                                    <!-- No logo: the entry type's icon (driver licence, passport, bank…). -->
+                                    <dcontrols:SvgIcon IconName="{Binding SelectedCredential.TypeIconName}"
+                                                       Width="56" Height="56"
+                                                       IconColor="{DynamicResource PrimaryTextBrush}"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                       IsVisible="{Binding !SelectedCredential.HasAutoDetectedIcon}"/>
                                 </Grid>
                             </Border>
 
@@ -552,7 +572,9 @@
                             </StackPanel>
                         </Grid>
 
-                        <StackPanel Spacing="16" Margin="0,16,0,0">
+                        <!-- A single entry sits in the same tile as each account of a merged card. -->
+                        <Border Classes="section-tile" Margin="0,16,0,0" IsVisible="{Binding !ShowAccountTiles}">
+                        <StackPanel Spacing="16">
 
                             <details:PasswordDetailView DataContext="{Binding}"
                                 IsVisible="{Binding SelectedCredential.IsPasswordEntry}" />
@@ -581,8 +603,6 @@
                             <details:UrlDetailSection DataContext="{Binding}"
                                 IsVisible="{Binding SelectedCredential.HasUrl}" />
 
-                            <details:CategoryDetailSection DataContext="{Binding}"
-                                IsVisible="{Binding SelectedCredential.HasGroup}" />
 
                             <details:NotesDetailSection DataContext="{Binding}"
                                 IsVisible="{Binding SelectedCredential.HasNotes}" />
@@ -590,16 +610,196 @@
                             <details:SectionsDetailView DataContext="{Binding}"
                                 IsVisible="{Binding SelectedCredential.HasSections}" />
 
-                            <details:MetadataDetailSection DataContext="{Binding}" />
+                            <!-- Secondary details (category, expiry, dates, tags) fold away under
+                                 "More details" so the card leads with what you copy. -->
+                            <StackPanel Spacing="12">
+                                <ToggleButton x:Name="MoreDetailsToggle"
+                                              HorizontalAlignment="Stretch"
+                                              HorizontalContentAlignment="Stretch"
+                                              Background="Transparent"
+                                              BorderThickness="0"
+                                              Padding="0,6"
+                                              Cursor="Hand"
+                                              AutomationProperties.Name="More details">
+                                    <ToggleButton.Styles>
+                                        <Style Selector="ToggleButton /template/ ContentPresenter#PART_ContentPresenter, ToggleButton:pointerover /template/ ContentPresenter#PART_ContentPresenter, ToggleButton:pressed /template/ ContentPresenter#PART_ContentPresenter, ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter, ToggleButton:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                        </Style>
+                                        <Style Selector="ToggleButton TextBlock.more-chevron">
+                                            <Setter Property="RenderTransform" Value="rotate(0deg)"/>
+                                        </Style>
+                                        <Style Selector="ToggleButton:checked TextBlock.more-chevron">
+                                            <Setter Property="RenderTransform" Value="rotate(180deg)"/>
+                                        </Style>
+                                        <Style Selector="ToggleButton:pointerover TextBlock.more-label">
+                                            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                                        </Style>
+                                    </ToggleButton.Styles>
+                                    <Grid ColumnDefinitions="Auto,*,Auto">
+                                        <TextBlock Classes="more-label"
+                                                   Text="More details"
+                                                   FontSize="{StaticResource Type.Label.Size}"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource MutedTextBrush}"
+                                                   VerticalAlignment="Center"/>
+                                        <Border Grid.Column="1" Height="1" Margin="12,0"
+                                                VerticalAlignment="Center"
+                                                Background="{DynamicResource ControlBorderBrush}"/>
+                                        <TextBlock Grid.Column="2"
+                                                   Classes="more-chevron"
+                                                   Text="▾"
+                                                   FontSize="14"
+                                                   Foreground="{DynamicResource MutedTextBrush}"
+                                                   VerticalAlignment="Center"
+                                                   RenderTransformOrigin="50%,50%">
+                                            <TextBlock.Transitions>
+                                                <Transitions>
+                                                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2"/>
+                                                </Transitions>
+                                            </TextBlock.Transitions>
+                                        </TextBlock>
+                                    </Grid>
+                                </ToggleButton>
+                                <StackPanel Spacing="12" IsVisible="{Binding #MoreDetailsToggle.IsChecked}">
+                                    <dcontrols:FieldRow Spacing="12">
+                                        <details:CategoryDetailSection DataContext="{Binding}"
+                                            IsVisible="{Binding SelectedCredential.HasGroup}" />
+                                        <details:ExpiryDetailSection DataContext="{Binding}" />
+                                    </dcontrols:FieldRow>
+                                    <details:MetadataDetailSection DataContext="{Binding}" />
+                                    <details:TagsDetailSection DataContext="{Binding}" />
+                                </StackPanel>
+                            </StackPanel>
 
-                            <details:TagsDetailSection DataContext="{Binding}" />
 
-                            <details:ExpiryDetailSection DataContext="{Binding}" />
 
                             <details:DetailActionButtons DataContext="{Binding}" />
                         </StackPanel>
+                        </Border>
+
+                        <!-- Several entries for the same service: each is its own tile on this
+                             card, stacked. Each tile's DataContext is an AccountTileContext that
+                             exposes its entry as SelectedCredential, so the same detail sections
+                             render (and copy, edit, delete) that account. -->
+                        <ItemsControl ItemsSource="{Binding SelectedAccountTiles}"
+                                      IsVisible="{Binding ShowAccountTiles}"
+                                      Margin="0,16,0,0">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Spacing="16"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <!-- Each account is its own sunk-in tile: a shade darker than
+                                         the card, a hairline edge and a soft drop shadow, so the
+                                         accounts read as separate pieces within one card. -->
+                                    <Border Classes="section-tile" Margin="0,0,0,4">
+                                        <StackPanel Spacing="16">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="{Binding AccountLabel}"
+                                                           FontSize="{StaticResource Type.Tiny.Size}"
+                                                           FontWeight="SemiBold"
+                                                           LetterSpacing="1"
+                                                           Foreground="{DynamicResource MutedTextBrush}"/>
+                                                <TextBlock Text="{Binding AccountName}"
+                                                           FontSize="{StaticResource Type.H4.Size}"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource PrimaryTextBrush}"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+
+                                            <details:PasswordDetailView DataContext="{Binding}"
+                                                IsVisible="{Binding SelectedCredential.IsPasswordEntry}" />
+                                            <details:WiFiDetailView DataContext="{Binding}"
+                                                IsVisible="{Binding SelectedCredential.IsWiFiEntry}" />
+                                            <details:CreditCardDetailView DataContext="{Binding}"
+                                                IsVisible="{Binding SelectedCredential.IsCreditCardEntry}" />
+                                            <details:BankAccountDetailView DataContext="{Binding}"
+                                                IsVisible="{Binding SelectedCredential.IsBankAccountEntry}" />
+                                            <details:IdentityDetailView DataContext="{Binding}"
+                                                IsVisible="{Binding SelectedCredential.IsIdentityEntry}" />
+                                            <details:ApiKeyDetailView DataContext="{Binding}"
+                                                IsVisible="{Binding SelectedCredential.IsApiKeyEntry}" />
+                                            <details:ContactDetailView DataContext="{Binding}"
+                                                IsVisible="{Binding SelectedCredential.IsContactEntry}" />
+                                            <details:PinCodeDetailView DataContext="{Binding}"
+                                                IsVisible="{Binding SelectedCredential.IsPinCodeEntry}" />
+                                            <details:UrlDetailSection DataContext="{Binding}"
+                                                IsVisible="{Binding SelectedCredential.HasUrl}" />
+                                            <details:NotesDetailSection DataContext="{Binding}"
+                                                IsVisible="{Binding SelectedCredential.HasNotes}" />
+                                            <details:SectionsDetailView DataContext="{Binding}"
+                                                IsVisible="{Binding SelectedCredential.HasSections}" />
+                                            <StackPanel Spacing="12">
+                                                <ToggleButton x:Name="TileMoreToggle"
+                                                              HorizontalAlignment="Stretch"
+                                                              HorizontalContentAlignment="Stretch"
+                                                              Background="Transparent"
+                                                              BorderThickness="0"
+                                                              Padding="0,6"
+                                                              Cursor="Hand"
+                                                              AutomationProperties.Name="More details">
+                                                    <ToggleButton.Styles>
+                                                        <Style Selector="ToggleButton /template/ ContentPresenter#PART_ContentPresenter, ToggleButton:pointerover /template/ ContentPresenter#PART_ContentPresenter, ToggleButton:pressed /template/ ContentPresenter#PART_ContentPresenter, ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter, ToggleButton:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                                                            <Setter Property="Background" Value="Transparent"/>
+                                                            <Setter Property="BorderThickness" Value="0"/>
+                                                        </Style>
+                                                        <Style Selector="ToggleButton TextBlock.more-chevron">
+                                                            <Setter Property="RenderTransform" Value="rotate(0deg)"/>
+                                                        </Style>
+                                                        <Style Selector="ToggleButton:checked TextBlock.more-chevron">
+                                                            <Setter Property="RenderTransform" Value="rotate(180deg)"/>
+                                                        </Style>
+                                                        <Style Selector="ToggleButton:pointerover TextBlock.more-label">
+                                                            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                                                        </Style>
+                                                    </ToggleButton.Styles>
+                                                    <Grid ColumnDefinitions="Auto,*,Auto">
+                                                        <TextBlock Classes="more-label"
+                                                                   Text="More details"
+                                                                   FontSize="{StaticResource Type.Label.Size}"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource MutedTextBrush}"
+                                                                   VerticalAlignment="Center"/>
+                                                        <Border Grid.Column="1" Height="1" Margin="12,0"
+                                                                VerticalAlignment="Center"
+                                                                Background="{DynamicResource ControlBorderBrush}"/>
+                                                        <TextBlock Grid.Column="2"
+                                                                   Classes="more-chevron"
+                                                                   Text="▾"
+                                                                   FontSize="14"
+                                                                   Foreground="{DynamicResource MutedTextBrush}"
+                                                                   VerticalAlignment="Center"
+                                                                   RenderTransformOrigin="50%,50%">
+                                                            <TextBlock.Transitions>
+                                                                <Transitions>
+                                                                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2"/>
+                                                                </Transitions>
+                                                            </TextBlock.Transitions>
+                                                        </TextBlock>
+                                                    </Grid>
+                                                </ToggleButton>
+                                                <StackPanel Spacing="12" IsVisible="{Binding #TileMoreToggle.IsChecked}">
+                                                    <dcontrols:FieldRow Spacing="12">
+                                                        <details:CategoryDetailSection DataContext="{Binding}"
+                                                            IsVisible="{Binding SelectedCredential.HasGroup}" />
+                                                        <details:ExpiryDetailSection DataContext="{Binding}" />
+                                                    </dcontrols:FieldRow>
+                                                    <details:MetadataDetailSection DataContext="{Binding}" />
+                                                    <details:TagsDetailSection DataContext="{Binding}" />
+                                                </StackPanel>
+                                            </StackPanel>
+                                            <details:DetailActionButtons DataContext="{Binding}" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </StackPanel>
                     </Border>
+                        </Border>
 
                     <StackPanel Spacing="20"
                                 VerticalAlignment="Center"
@@ -992,7 +1192,7 @@
                     Grid.ColumnSpan="3"
                     ZIndex="999"
                     Classes="overlay-fade"
-                    Background="#B8000000"
+                    Background="Transparent"
                     Opacity="1"
                     IsVisible="{Binding IsEditPanelVisible}"
                     IsHitTestVisible="{Binding IsEditPanelVisible}"
@@ -1006,19 +1206,33 @@
                             PointerPressed="CloseEditPanel_Click"
                             ZIndex="0"/>
 
+            <!-- The editor takes the display card's place: VaultWindow.PositionEditCard lays
+                 this over DetailCard (same left edge, top and width, down to the column's
+                 bottom) and RunEditPanelOpenAnimation pops it outwards from its centre. The
+                 shadow sits here, unclipped; EditPanel inside clips its content to the same
+                 16px corners as the card. Size and alignment are set in code. -->
             <Border x:Name="EditPanelContainer"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Stretch"
-                Width="{Binding ElementName=DetailPanel, Path=Bounds.Width}"
                 ZIndex="1"
-                Background="Transparent"
+                Background="{DynamicResource WindowBackgroundBrush}"
+                CornerRadius="16"
+                BoxShadow="{DynamicResource DetailCardShadow}"
+                ClipToBounds="False"
                 Tag="{Binding IsEditPanelVisible}">
 
+            <!-- Dressed as the display card (DetailCard): same surface, corners, category
+                 border and shadow, so editing reads as the card itself turning editable.
+                 CardBackgroundBrush is translucent glass; the container behind it paints the
+                 same opaque WindowBackgroundBrush the real card sits on, so the display card
+                 underneath never shows through. -->
+
             <Border x:Name="EditPanel"
-                                Background="{DynamicResource HeaderBackgroundBrush}"
-                                BorderBrush="{DynamicResource ControlBorderBrush}"
-                                BorderThickness="1,0,0,0"
-                                BoxShadow="-34 0 110 -12 #F0000000">
+                                Background="{DynamicResource CardBackgroundBrush}"
+                                BorderBrush="{Binding SelectedCredentialCategoryBrush}"
+                                BorderThickness="{Binding DetailCardBorderThickness}"
+                                CornerRadius="16"
+                                ClipToBounds="True">
 
                         <Border.Styles>
 
@@ -1069,23 +1283,94 @@
 
                         <Grid RowDefinitions="Auto,Auto,*,Auto" DataContext="{Binding EditViewModel}">
 
+                            <!-- Header laid out like the display card's: icon circle, the entry's
+                                 title (live as you type) under an Add/Edit caption, and the close
+                                 button where the card has its Edit/Favourite buttons. -->
                             <Border Grid.Row="0"
-                                    Background="{DynamicResource WindowBackgroundBrush}"
-                                    Padding="25,30,10,20"
-                                    BorderBrush="{DynamicResource ControlBorderBrush}"
-                                    BorderThickness="0,0,0,1"
-                                    CornerRadius="0,0,12,12">
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <StackPanel Grid.Column="0" Spacing="6" Margin="0,0,15,0">
-                                        <TextBlock Text="Add/Edit Credentials"
-                                                   FontSize="{StaticResource Type.Icon.Size}"
+                                    Background="Transparent"
+                                    Padding="28,24,20,16">
+                                <Grid ColumnDefinitions="Auto,16,*,Auto">
+                                    <!-- Click the logo to open the Icon Manager; the icon picked there
+                                         becomes this entry's icon (OpenIconLibraryCommand sets Icon). -->
+                                    <Button Grid.Column="0"
+                                            Command="{Binding OpenIconLibraryCommand}"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            Padding="0"
+                                            CornerRadius="44"
+                                            Cursor="Hand"
+                                            AutomationProperties.Name="Change icon"
+                                            ToolTip.Tip="Click to choose an icon">
+                                        <Button.Styles>
+                                            <Style Selector="Button /template/ ContentPresenter#PART_ContentPresenter, Button:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button:pressed /template/ ContentPresenter#PART_ContentPresenter">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                                <Setter Property="BorderThickness" Value="0"/>
+                                            </Style>
+                                            <Style Selector="Button:pointerover Border.logo-circle">
+                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                            </Style>
+                                        </Button.Styles>
+                                    <Border Classes="logo-circle" Width="88" Height="88" CornerRadius="44"
+                                            BorderThickness="2" BorderBrush="Transparent"
+                                            Background="{DynamicResource ControlBackgroundBrush}">
+                                        <Grid>
+                                            <Image Source="{Binding Icon, Converter={StaticResource IconPathToBitmapConverter}}"
+                                                   Width="78" Height="78" Stretch="Uniform"
+                                                   IsVisible="{Binding Icon, Converter={StaticResource IconPathExistsConverter}}"/>
+                                            <!-- Logo detected live from the title / website as you type,
+                                                 shown until a custom icon is picked. -->
+                                            <Image Source="{Binding AutoDetectedIconBitmap}"
+                                                   Width="78" Height="78" Stretch="Uniform">
+                                                <Image.IsVisible>
+                                                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                        <Binding Path="HasAutoDetectedIcon"/>
+                                                        <Binding Path="!HasCustomIcon"/>
+                                                    </MultiBinding>
+                                                </Image.IsVisible>
+                                            </Image>
+                                            <TextBlock Text="{Binding DisplayIcon}"
+                                                       FontSize="{StaticResource Type.H2.Size}" FontWeight="Bold"
+                                                       Foreground="{DynamicResource PrimaryTextBrush}"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <TextBlock.IsVisible>
+                                                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                        <Binding Path="!HasCustomIcon"/>
+                                                        <Binding Path="!HasAutoDetectedIcon"/>
+                                                    </MultiBinding>
+                                                </TextBlock.IsVisible>
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+                                    </Button>
+                                    <StackPanel Grid.Column="2" Spacing="4" VerticalAlignment="Center" Margin="0,0,12,0">
+                                        <TextBlock Text="{Binding WindowTitle}"
+                                                   FontSize="{StaticResource Type.Label.Size}"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                                        <TextBlock Text="{Binding Title}"
+                                                   FontSize="{StaticResource Type.H1.Size}"
                                                    FontWeight="Bold"
-                                                   Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                                   Foreground="{DynamicResource PrimaryTextBrush}"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   IsVisible="{Binding Title, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                        <TextBlock Text="New entry"
+                                                   FontSize="{StaticResource Type.H1.Size}"
+                                                   FontWeight="Bold"
+                                                   Foreground="{DynamicResource MutedTextBrush}"
+                                                   IsVisible="{Binding Title, Converter={x:Static StringConverters.IsNullOrEmpty}}"/>
                                         <TextBlock Text="Enter credential details securely"
                                                    FontSize="{StaticResource Type.Label.Size}"
                                                    Foreground="{DynamicResource MutedTextBrush}"/>
+                                        <!-- Live merge: appears as soon as the name or website
+                                             matches an existing service. -->
+                                        <TextBlock Text="{Binding MergeNotice}"
+                                                   IsVisible="{Binding HasMergeNotice}"
+                                                   FontSize="{StaticResource Type.Label.Size}"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource AccentBrush}"
+                                                   TextWrapping="Wrap"/>
                                     </StackPanel>
-                                    <Button Grid.Column="1"
+                                    <Button Grid.Column="3"
                                             Command="{Binding $parent[Window].DataContext.CloseEditPanelCommand}"
                                             Classes="liquid-glass"
                                             Width="32"
@@ -1108,10 +1393,10 @@
                                  form scroller so section templates remain available while
                                  editing long entries. -->
                             <Border Grid.Row="1"
-                                    Background="#F019344D"
+                                    Background="Transparent"
                                     BorderBrush="{DynamicResource ControlBorderBrush}"
                                     BorderThickness="0,0,0,1"
-                                    Padding="30,7">
+                                    Padding="28,8">
                                 <Grid ColumnDefinitions="Auto,10,*" MaxWidth="590"
                                       HorizontalAlignment="Stretch">
                                     <TextBlock Grid.Column="0" Text="Start from template"
@@ -1178,22 +1463,24 @@
                                           HorizontalScrollBarVisibility="Disabled"
                                           HorizontalContentAlignment="Stretch"
                                           AllowAutoHide="False">
+                                <!-- The form sits in the same tile as the display card's details. -->
+                                <Border Classes="section-tile" Margin="20,16,20,20">
                                 <StackPanel x:Name="EditFormStack"
                                             Spacing="10"
-                                            HorizontalAlignment="Stretch"
-                                            MaxWidth="590"
-                                            Margin="30,25,30,30">
+                                            HorizontalAlignment="Stretch">
 
                                     <StackPanel Spacing="14" IsVisible="{Binding IsPasswordEntry}">
 
-                                    <StackPanel Spacing="8">
+                                    <!-- Title and username share a row, as on the display card. -->
+                                    <dcontrols:FieldRow Spacing="12">
+                                    <StackPanel Spacing="6">
                                         <TextBlock Text="Title *"
                                                    FontSize="{StaticResource Type.Label.Size}"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                                         <TextBox Text="{Binding Title}"
                                                  Watermark="e.g., GitHub, Gmail, Bank Account"
-                                                 Height="40"
+                                                 Height="38"
                                                  FontSize="{StaticResource Type.Body.Size}"
                                                  Background="{DynamicResource ControlBackgroundBrush}">
                                             <TextBox.Styles>
@@ -1218,7 +1505,7 @@
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                                         <TextBox Text="{Binding Username}"
                                                  Watermark="username@example.com"
-                                                 Height="40"
+                                                 Height="38"
                                                  FontSize="{StaticResource Type.Body.Size}"
                                                  Background="{DynamicResource ControlBackgroundBrush}">
                                             <TextBox.Styles>
@@ -1235,6 +1522,7 @@
                                                    Foreground="{DynamicResource ErrorBrush}"
                                                    IsVisible="{Binding HasUsernameError}"/>
                                     </StackPanel>
+                                    </dcontrols:FieldRow>
 
                                     <StackPanel Spacing="8" IsVisible="{Binding ShowPasswordFields}">
                                         <Grid ColumnDefinitions="*,Auto,4,Auto">
@@ -1277,7 +1565,7 @@
                                                          Text="{Binding Password}"
                                                          PasswordChar="{Binding PasswordChar}"
                                                          Watermark="Enter secure password"
-                                                         Height="40"
+                                                         Height="38"
                                                          FontSize="{StaticResource Type.Body.Size}"
                                                          Padding="12,10"
                                                          Margin="0,0,8,0"
@@ -1366,7 +1654,7 @@
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                                         <TextBox Text="{Binding Url}"
                                                  Watermark="https://example.com"
-                                                 Height="40"
+                                                 Height="38"
                                                  FontSize="{StaticResource Type.Body.Size}"
                                                  Background="{DynamicResource ControlBackgroundBrush}">
                                             <TextBox.Styles>
@@ -1378,9 +1666,6 @@
                                                 </Style>
                                             </TextBox.Styles>
                                         </TextBox>
-                                        <TextBlock Text="Optional - Used for auto-fill and quick access"
-                                                   FontSize="{StaticResource Type.Tiny.Size}"
-                                                   Foreground="{DynamicResource MutedTextBrush}"/>
                                     </StackPanel>
 
                                     <Border IsVisible="{Binding HasTotpSecret}"
@@ -1420,8 +1705,9 @@
                                                 <Button Grid.Column="3"
                                                         Command="{Binding OpenTotpSettingsCommand}"
                                                         Classes="liquid-glass"
-                                                        Width="30" Height="30"
-                                                        CornerRadius="8"
+                                                        Width="24" Height="24"
+                                                        MinWidth="0" MinHeight="0"
+                                                        CornerRadius="6"
                                                         Padding="0"
                                                         AutomationProperties.Name="TOTP settings"
                                                         ToolTip.Tip="TOTP Settings">
@@ -1434,8 +1720,9 @@
                                                 <Button Grid.Column="5"
                                                         Command="{Binding RemoveTotpSecretCommand}"
                                                         Classes="liquid-glass"
-                                                        Width="30" Height="30"
-                                                        CornerRadius="8"
+                                                        Width="24" Height="24"
+                                                        MinWidth="0" MinHeight="0"
+                                                        CornerRadius="6"
                                                         Padding="0"
                                                         AutomationProperties.Name="Remove TOTP"
                                                         ToolTip.Tip="Remove TOTP">
@@ -1585,7 +1872,8 @@
                                                    Foreground="{DynamicResource SecondaryTextBrush}"/>
                                         <ComboBox SelectedItem="{Binding SelectedCategory}"
                                                   ItemsSource="{Binding Categories}"
-                                                  Height="40"
+                                                  Height="38"
+                                                  HorizontalAlignment="Stretch"
                                                   FontSize="{StaticResource Type.Body.Size}">
                                             <ComboBox.ItemTemplate>
                                                 <DataTemplate>
@@ -1608,8 +1896,8 @@
                                                 BorderBrush="{DynamicResource ControlBorderBrush}"
                                                 BorderThickness="1"
                                                 CornerRadius="{DynamicResource Radius.Md}"
-                                                Padding="15"
-                                                Height="100"
+                                                Padding="10"
+                                                Height="64"
                                                 Cursor="Hand"
                                                 PointerReleased="IconSectionBorder_PointerReleased">
                                             <Border.Styles>
@@ -1620,15 +1908,15 @@
                                             <Grid ColumnDefinitions="Auto,*,Auto">
 
                                                 <Border Grid.Column="0"
-                                                        Width="70"
-                                                        Height="70"
+                                                        Width="44"
+                                                        Height="44"
                                                         Background="{DynamicResource ControlBackgroundBrush}"
                                                         CornerRadius="{DynamicResource Radius.Lg}"
                                                         BorderBrush="{DynamicResource ControlBorderBrush}"
                                                         BorderThickness="1">
                                                     <Image Source="{Binding IconPath}"
-                                                           Width="50"
-                                                           Height="50"
+                                                           Width="30"
+                                                           Height="30"
                                                            Stretch="Uniform"
                                                            HorizontalAlignment="Center"
                                                            VerticalAlignment="Center"/>
@@ -1675,7 +1963,7 @@
                                                  Watermark="Add any additional information..."
                                                  AcceptsReturn="True"
                                                  TextWrapping="Wrap"
-                                                 Height="100"
+                                                 Height="76"
                                                  FontSize="{StaticResource Type.Label.Size}"
                                                  Background="{DynamicResource ControlBackgroundBrush}">
                                             <TextBox.Styles>
@@ -1755,11 +2043,12 @@
                                     </Border>
 
                                 </StackPanel>
+                                </Border>
                             </ScrollViewer>
 
                             <Border Grid.Row="3"
-                                    Background="{DynamicResource FooterBackgroundBrush}"
-                                    Padding="25,15"
+                                    Background="Transparent"
+                                    Padding="28,14,28,20"
                                     BorderBrush="{DynamicResource ControlBorderBrush}"
                                     BorderThickness="0,1,0,0">
                                 <Grid ColumnDefinitions="*,Auto,Auto,Auto">
