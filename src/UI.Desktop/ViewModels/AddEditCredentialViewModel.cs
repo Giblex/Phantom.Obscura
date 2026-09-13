@@ -130,7 +130,9 @@ namespace PhantomVault.UI.ViewModels
 
             try
             {
-                var iconsDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Icons");
+                // The logo library lives under Assets\Visuals (the same root the display card
+                // detects from). Assets\Icons holds a single file, so auto-detect never matched.
+                var iconsDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Visuals");
                 _iconManager = new PhantomVault.Core.Services.IconManager(iconsDir);
             }
             catch
@@ -284,7 +286,65 @@ namespace PhantomVault.UI.ViewModels
             {
                 this.RaiseAndSetIfChanged(ref _title, value);
                 TitleError = string.Empty;
+                RaiseMergeNotice();
             }
+        }
+
+        private System.Func<PhantomVault.Core.Models.Credential, string?>? _mergeTargetLookup;
+
+        /// <summary>
+        /// Finds the existing entry this one would join (same service), set by the vault. Drives
+        /// the live notice as the name or website is typed.
+        /// </summary>
+        internal System.Func<PhantomVault.Core.Models.Credential, string?>? MergeTargetLookup
+        {
+            get => _mergeTargetLookup;
+            set
+            {
+                _mergeTargetLookup = value;
+                RaiseMergeNotice();
+            }
+        }
+
+        /// <summary>e.g. "Will be added to the “GitHub” card as another account".</summary>
+        public string MergeNotice
+        {
+            get
+            {
+                if (_mergeTargetLookup == null || string.IsNullOrWhiteSpace(Title) && string.IsNullOrWhiteSpace(Url))
+                    return string.Empty;
+
+                try
+                {
+                    var probe = new PhantomVault.Core.Models.Credential
+                    {
+                        Title = Title ?? string.Empty,
+                        Url = Url ?? string.Empty
+                    };
+                    if (_existingCredential != null)
+                    {
+                        probe.Id = _existingCredential.Id;
+                        probe.EntryType = _existingCredential.EntryType;
+                    }
+
+                    var target = _mergeTargetLookup(probe);
+                    return string.IsNullOrWhiteSpace(target)
+                        ? string.Empty
+                        : $"Will be added to the “{target}” card as another account";
+                }
+                catch
+                {
+                    return string.Empty;
+                }
+            }
+        }
+
+        public bool HasMergeNotice => !string.IsNullOrEmpty(MergeNotice);
+
+        private void RaiseMergeNotice()
+        {
+            this.RaisePropertyChanged(nameof(MergeNotice));
+            this.RaisePropertyChanged(nameof(HasMergeNotice));
         }
 
         public string Username
@@ -311,7 +371,11 @@ namespace PhantomVault.UI.ViewModels
         public string Url
         {
             get => _url;
-            set => this.RaiseAndSetIfChanged(ref _url, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _url, value);
+                RaiseMergeNotice();
+            }
         }
 
         public string Notes
@@ -1679,7 +1743,9 @@ namespace PhantomVault.UI.ViewModels
 
             ClearSensitiveFields();
 
-            _ownerWindow?.Close(true);
+            // The in-card editor is closed by the save callback; only the standalone window closes here.
+            if (_closeOwnerOnFinish)
+                _ownerWindow?.Close(true);
         }
 
         private async System.Threading.Tasks.Task ShowAttestorRequiredAsync(string message)
@@ -1699,7 +1765,8 @@ namespace PhantomVault.UI.ViewModels
         private void Cancel()
         {
             ClearSensitiveFields();
-            _ownerWindow?.Close(false);
+            if (_closeOwnerOnFinish)
+                _ownerWindow?.Close(false);
         }
 
         private void ClearSensitiveFields()
@@ -1856,15 +1923,62 @@ namespace PhantomVault.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Opens the icon library for this entry: logos closest to its title and site come first,
+        /// and the pick becomes the entry's icon. (It used to open a browse-only window whose
+        /// choice was thrown away.)
+        /// </summary>
         private async System.Threading.Tasks.Task OpenIconLibraryAsync()
         {
-            await IconLibraryLauncher.ShowAsync(_ownerWindow, "Icon Library");
+            try
+            {
+                var owner = _ownerWindow
+                    ?? (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+                var iconManager = _iconManager
+                    ?? new PhantomVault.Core.Services.IconManager(System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "Visuals"));
+
+                var libraryViewModel = new IconManagerViewModel(
+                    iconManager,
+                    PhantomVault.Core.Services.Icons.IconPickContext.ForEntry(Title, Url, EntryType.ToString()));
+                var libraryWindow = new PhantomVault.UI.Views.IconManagerWindow { DataContext = libraryViewModel };
+                libraryViewModel.SetOwnerWindow(libraryWindow, owner);
+
+                if (owner != null)
+                {
+                    await libraryWindow.ShowDialog(owner);
+                }
+                else
+                {
+                    var closed = new System.Threading.Tasks.TaskCompletionSource();
+                    libraryWindow.Closed += (_, _) => closed.TrySetResult();
+                    libraryWindow.Show();
+                    await closed.Task;
+                }
+
+                if (!string.IsNullOrEmpty(libraryViewModel.ConfirmedIconPath))
+                {
+                    Icon = libraryViewModel.ConfirmedIconPath;
+                    ShowQuickPicks = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Error(ex, "[AddEditCredential] Failed to open the icon library.");
+            }
         }
 
-        public void SetOwnerWindow(Window window)
+        /// <summary>
+        /// Whether finishing (save or cancel) closes the owner window. True for the standalone
+        /// editor window; false when the editor is a card inside the vault window, whose owner is
+        /// the vault window itself: closing that closed the vault, and with it the app.
+        /// </summary>
+        private bool _closeOwnerOnFinish = true;
+
+        public void SetOwnerWindow(Window window, bool closeOwnerOnFinish = true)
         {
             Debug.WriteLine($"[INIT] SetOwnerWindow called with: {window?.GetType().Name ?? "null"}");
             _ownerWindow = window;
+            _closeOwnerOnFinish = closeOwnerOnFinish;
             Debug.WriteLine($"[INIT] Owner window is now: {(_ownerWindow == null ? "NULL" : "SET")}");
         }
 

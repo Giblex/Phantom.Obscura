@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:converters="clr-namespace:PhantomVault.UI.Converters"
+             xmlns:dcontrols="clr-namespace:PhantomVault.UI.Desktop.Controls"
              x:Class="PhantomVault.UI.Views.Details.BankAccountDetailView">
 
     <UserControl.Resources>
@@ -17,60 +18,77 @@
                    FontSize="{StaticResource Type.Body.Size}"
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource SecondaryTextBrush}"/>
-        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasBankName}">
-            <TextBlock Text="Bank" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
-                <TextBox Text="{Binding SelectedCredential.BankName}" IsReadOnly="True" Height="36" Padding="10,8"/>
-        </StackPanel>
-        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasBankAccountType}">
-            <TextBlock Text="Account Type" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
-                <TextBox Text="{Binding SelectedCredential.BankAccountType}" IsReadOnly="True" Height="36" Padding="10,8"/>
-        </StackPanel>
-        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasBankAccountNumber}">
-            <TextBlock Text="Account Number" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
-                <TextBox Text="{Binding SelectedCredential.MaskedBankAccountNumber}" IsReadOnly="True" Height="36" Padding="10,8">
-                <TextBox.Effect>
-                    <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
-                </TextBox.Effect>
-            </TextBox>
-        </StackPanel>
-        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasBankRoutingNumber}">
-            <TextBlock Text="Routing Number" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
-                <TextBox Text="{Binding SelectedCredential.MaskedBankRoutingNumber}" IsReadOnly="True" Height="36" Padding="10,8">
-                <TextBox.Effect>
-                    <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
-                </TextBox.Effect>
-            </TextBox>
-        </StackPanel>
-        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasBankIban}">
-            <TextBlock Text="IBAN" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
-                <TextBox Text="{Binding SelectedCredential.MaskedBankIban}" IsReadOnly="True" Height="36" Padding="10,8">
-                <TextBox.Effect>
-                    <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
-                </TextBox.Effect>
-            </TextBox>
-        </StackPanel>
-        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasBankSwift}">
-            <TextBlock Text="SWIFT / BIC" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
-                <TextBox Text="{Binding SelectedCredential.MaskedBankSwift}" IsReadOnly="True" Height="36" Padding="10,8">
-                <TextBox.Effect>
-                    <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
-                </TextBox.Effect>
-            </TextBox>
-        </StackPanel>
-        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasBankBranchCode}">
-            <TextBlock Text="Branch Code" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
-                <TextBox Text="{Binding SelectedCredential.BankBranchCode}" IsReadOnly="True" Height="36" Padding="10,8"/>
-        </StackPanel>
-        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasBankBranchAddress}">
-            <TextBlock Text="Branch Address" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
-            <TextBox Text="{Binding SelectedCredential.BankBranchAddress}"
-                     IsReadOnly="True"
-                     BorderThickness="1"
-                     BorderBrush="{DynamicResource ControlBorderBrush}"
-                     Padding="10,8"
-                     TextWrapping="Wrap"
-                     AcceptsReturn="True"/>
-        </StackPanel>
+
+        <dcontrols:FieldRow Spacing="12">
+            <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasBankName}">
+                <TextBlock Text="Bank" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                <dcontrols:CopyableField Value="{Binding SelectedCredential.BankName}" CopyLabel="Bank"/>
+            </StackPanel>
+            <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasBankAccountType}">
+                <TextBlock Text="Account Type" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                <dcontrols:CopyableField Value="{Binding SelectedCredential.BankAccountType}" CopyLabel="Account type"/>
+            </StackPanel>
+        </dcontrols:FieldRow>
+
+        <dcontrols:FieldRow Spacing="12">
+            <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasBankAccountNumber}">
+                <TextBlock Text="Account Number" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                <dcontrols:CopyableField Value="{Binding SelectedCredential.BankAccountNumber}"
+                                         MaskedValue="{Binding SelectedCredential.MaskedBankAccountNumber}"
+                                         IsSecret="True"
+                                         CopyLabel="Account number">
+                    <dcontrols:CopyableField.Effect>
+                        <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                    </dcontrols:CopyableField.Effect>
+                </dcontrols:CopyableField>
+            </StackPanel>
+            <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasBankRoutingNumber}">
+                <TextBlock Text="Routing Number" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                <dcontrols:CopyableField Value="{Binding SelectedCredential.BankRoutingNumber}"
+                                         MaskedValue="{Binding SelectedCredential.MaskedBankRoutingNumber}"
+                                         IsSecret="True"
+                                         CopyLabel="Routing number">
+                    <dcontrols:CopyableField.Effect>
+                        <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                    </dcontrols:CopyableField.Effect>
+                </dcontrols:CopyableField>
+            </StackPanel>
+        </dcontrols:FieldRow>
+
+        <dcontrols:FieldRow Spacing="12">
+            <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasBankIban}">
+                <TextBlock Text="IBAN" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                <dcontrols:CopyableField Value="{Binding SelectedCredential.BankIBAN}"
+                                         MaskedValue="{Binding SelectedCredential.MaskedBankIban}"
+                                         IsSecret="True"
+                                         CopyLabel="IBAN">
+                    <dcontrols:CopyableField.Effect>
+                        <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                    </dcontrols:CopyableField.Effect>
+                </dcontrols:CopyableField>
+            </StackPanel>
+            <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasBankSwift}">
+                <TextBlock Text="SWIFT / BIC" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                <dcontrols:CopyableField Value="{Binding SelectedCredential.BankSWIFT}"
+                                         MaskedValue="{Binding SelectedCredential.MaskedBankSwift}"
+                                         IsSecret="True"
+                                         CopyLabel="SWIFT / BIC">
+                    <dcontrols:CopyableField.Effect>
+                        <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                    </dcontrols:CopyableField.Effect>
+                </dcontrols:CopyableField>
+            </StackPanel>
+        </dcontrols:FieldRow>
+
+        <dcontrols:FieldRow Spacing="12">
+            <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasBankBranchCode}">
+                <TextBlock Text="Branch Code" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                <dcontrols:CopyableField Value="{Binding SelectedCredential.BankBranchCode}" CopyLabel="Branch code"/>
+            </StackPanel>
+            <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasBankBranchAddress}">
+                <TextBlock Text="Branch Address" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                <dcontrols:CopyableField Value="{Binding SelectedCredential.BankBranchAddress}" CopyLabel="Branch address" IsMultiline="True"/>
+            </StackPanel>
+        </dcontrols:FieldRow>
     </StackPanel>
 </UserControl>
-

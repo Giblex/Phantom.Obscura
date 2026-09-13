@@ -57,7 +57,9 @@
     "allowedUpdateChannels": [],
     "requireDeviceBinding": false,
     "requireUsbBinding": false,
-    "requiredFields": []
+    "requiredFields": [],
+    "requireDualFactor": false,
+    "allowPassphraseOnly": true
   },
   "sync": {
     "enforceCrossPolicyValidation": true,
@@ -77,6 +79,6 @@
     "algorithm": "ECDSA-P256",
     "hash": "SHA-512",
     "signedBy": "OBSCURA-ROOT-1",
-    "value": "uFiSb8QRhNjYjqkLO2Tfx18P8gZQZzDby9lUvlPg\u002B41OaAYUOKBW2WEVRAH1cZz3ivRXee/e7ZUDq2tOlMH4hg=="
+    "value": "rE8iv5xvhZlKy3k1gmljgQE/j/5XQPYYM5cSCCsKr/Gy61MfHwD9AunCeU7fhM3fOBkdVA4GQ2uRT1H37jQrjw=="
   }
 }

@@ -50,13 +50,17 @@ namespace PhantomVault.Core.Services.Autofill
             ICredentialRepository credentialRepository,
             IAutofillVaultContext vaultContext,
             IEnumerable<string>? allowedOrigins = null,
-            ISyncStateBridge? syncBridge = null)
+            ISyncStateBridge? syncBridge = null,
+            IPasskeyAssertionRelay? passkeyRelay = null)
         {
             _credentialRepository = credentialRepository ?? throw new ArgumentNullException(nameof(credentialRepository));
             _vaultContext = vaultContext ?? throw new ArgumentNullException(nameof(vaultContext));
             _allowedOrigins = BuildAllowlist(allowedOrigins);
             _syncBridge = syncBridge;
+            _passkeyRelay = passkeyRelay;
         }
+
+        private readonly IPasskeyAssertionRelay? _passkeyRelay;
 
         public NativeMessagingHostService(ICredentialRepository credentialRepository)
             : this(credentialRepository, new LockedVaultContext(), null)
@@ -177,7 +181,8 @@ namespace PhantomVault.Core.Services.Autofill
                 if (string.IsNullOrEmpty(message.Origin) || !ValidateOrigin(message.Origin))
                     return CreateErrorResponse("Unauthorized origin", message.RequestId);
 
-                if (message.Type == "getCredentials" || message.Type == "saveCredential")
+                if (message.Type == "getCredentials" || message.Type == "saveCredential"
+                    || message.Type == "webauthnAssert")
                 {
                     var (allowed, reason) = EnsureAutofillAllowed();
                     if (!allowed)
@@ -195,6 +200,7 @@ namespace PhantomVault.Core.Services.Autofill
 
                     "fill" => HandleFill(message),
 
+                    "webauthnAssert" => await HandleWebAuthnAssertAsync(message, cancellationToken),
                     "detectTotp" => HandleDetectTotp(message),
                     "getSyncState" => HandleGetSyncState(message.RequestId),
                     "pushSyncState" => HandlePushSyncState(message, message.RequestId),
@@ -241,6 +247,61 @@ namespace PhantomVault.Core.Services.Autofill
             catch (Exception ex)
             {
                 return CreateErrorResponse($"Failed to get credentials: {ex.Message}", message.RequestId);
+            }
+        }
+
+        /// <summary>
+        /// Relays a page's <c>navigator.credentials.get()</c> to the app, which owns the
+        /// passkey and the entitlement decision.
+        ///
+        /// <para>
+        /// Note what is NOT done here: the origin is taken from the message that the
+        /// background worker built out of the sender tab, and is passed through unmodified for
+        /// the app to check. This process cannot verify it, so it does not pretend to — the
+        /// check belongs where the credential is.
+        /// </para>
+        /// </summary>
+        private async Task<string> HandleWebAuthnAssertAsync(NativeMessage message, CancellationToken cancellationToken)
+        {
+            if (_passkeyRelay == null)
+                return CreateErrorResponse("Passkey support is not available in this session.", message.RequestId);
+
+            try
+            {
+                var data = message.Data;
+                if (data == null)
+                    return CreateErrorResponse("Missing passkey request data", message.RequestId);
+
+                var clientDataJson = data.Value.TryGetProperty("clientDataJson", out var cd) ? cd.GetString() : null;
+                if (string.IsNullOrWhiteSpace(clientDataJson))
+                    return CreateErrorResponse("Missing clientDataJSON", message.RequestId);
+
+                var rpId = data.Value.TryGetProperty("rpId", out var rp) ? rp.GetString() ?? string.Empty : string.Empty;
+
+                // The page origin, not message.Origin — the latter is the extension's own
+                // chrome-extension:// URL, which is what the allowlist above checks. Mixing
+                // the two up would hand the app an origin that trivially fails, or worse,
+                // one that is the same for every site.
+                var pageOrigin = data.Value.TryGetProperty("pageOrigin", out var po) ? po.GetString() ?? string.Empty : string.Empty;
+
+                var result = await _passkeyRelay
+                    .AssertAsync(pageOrigin, rpId, clientDataJson!, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (result == null)
+                    return CreateErrorResponse("The passkey request was declined or no passkey is registered for this site.", message.RequestId);
+
+                return CreateSuccessResponse(new
+                {
+                    credentialId = result.CredentialId,
+                    authenticatorData = result.AuthenticatorData,
+                    signature = result.Signature,
+                    userHandle = result.UserHandle
+                }, message.RequestId);
+            }
+            catch (Exception ex)
+            {
+                return CreateErrorResponse($"Passkey assertion failed: {ex.Message}", message.RequestId);
             }
         }
 

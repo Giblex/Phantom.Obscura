@@ -13,6 +13,7 @@ namespace PhantomVault.UI.Views
     {
         private TranslateTransform? _sheetTranslate;
         private BlurEffect? _backdropBlur;
+        private Visual? _blurTarget;
         private const double BackdropBlurTarget = 14.0;
         private bool _isDragging;
         private double _dragStartY;
@@ -51,8 +52,13 @@ namespace PhantomVault.UI.Views
                 var credList = FindCredentialList();
                 if (credList != null)
                 {
+                    // Attached only while the dashboard blur is actually above zero (see
+                    // AttachBackdropBlur). A permanent effect, even at radius 0, renders the whole
+                    // list column into an offscreen layer clipped to its bounds: the header card's
+                    // shadow was cut off square at the column edge (a "shadowy border"), and the
+                    // column paid for an extra layer on every frame.
                     _backdropBlur = new BlurEffect { Radius = 0 };
-                    credList.Effect = _backdropBlur;
+                    _blurTarget = credList;
                 }
             }
 
@@ -263,18 +269,36 @@ namespace PhantomVault.UI.Views
             }
 
             _isAnimating = false;
+            ForceFullRedraw();
             onComplete?.Invoke();
+        }
+
+        /// <summary>
+        /// One full repaint of the window once the sheet stops moving (or the backdrop blur is
+        /// attached/removed). The per-frame slide plus the blur toggling on the list column could
+        /// leave part of the sheet showing a stale region: the Quick Access card cut off in a
+        /// hard rectangle with empty sheet around it.
+        /// </summary>
+        private void ForceFullRedraw()
+        {
+            InvalidateVisual();
+            if (FindDashboardSheet() is Visual sheet)
+                sheet.InvalidateVisual();
+            TopLevel.GetTopLevel(this)?.InvalidateVisual();
         }
 
         private async void AnimateBackdropBlurTo(double targetRadius, double durationMs)
         {
             if (_backdropBlur == null) return;
 
+            AttachBackdropBlur();
+
             var startRadius = _backdropBlur.Radius;
             var distance = targetRadius - startRadius;
             if (Math.Abs(distance) < 0.1)
             {
                 _backdropBlur.Radius = targetRadius;
+                DetachBackdropBlurIfClear();
                 return;
             }
 
@@ -291,6 +315,28 @@ namespace PhantomVault.UI.Views
                 var eased = SpringEase(t);
                 _backdropBlur.Radius = startRadius + distance * eased;
                 await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render);
+            }
+
+            DetachBackdropBlurIfClear();
+        }
+
+        private void AttachBackdropBlur()
+        {
+            if (_blurTarget != null && _backdropBlur != null && !ReferenceEquals(_blurTarget.Effect, _backdropBlur))
+            {
+                _blurTarget.Effect = _backdropBlur;
+                ForceFullRedraw();
+            }
+        }
+
+        /// <summary>Removes the blur once it has settled at zero, so the list renders normally.</summary>
+        private void DetachBackdropBlurIfClear()
+        {
+            if (_blurTarget != null && _backdropBlur != null && _backdropBlur.Radius <= 0.01 &&
+                ReferenceEquals(_blurTarget.Effect, _backdropBlur))
+            {
+                _blurTarget.Effect = null;
+                ForceFullRedraw();
             }
         }
     }

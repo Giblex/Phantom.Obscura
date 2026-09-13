@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:converters="clr-namespace:PhantomVault.UI.Converters"
+             xmlns:dcontrols="clr-namespace:PhantomVault.UI.Desktop.Controls"
              x:Class="PhantomVault.UI.Views.Details.WiFiDetailView">
 
     <UserControl.Resources>
@@ -11,60 +12,47 @@
         </ResourceDictionary>
     </UserControl.Resources>
 
+    <!-- Click any value to copy it; the network password reveals with the eye. -->
     <StackPanel Spacing="12"
                 IsVisible="{Binding SelectedCredential.IsWiFiEntry}">
         <TextBlock Text="Wi-Fi Network"
                    FontSize="{StaticResource Type.Body.Size}"
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource SecondaryTextBrush}"/>
-        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasWiFiSSID}">
-            <TextBlock Text="SSID" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
-            <TextBox Text="{Binding SelectedCredential.WiFiSSID}" IsReadOnly="True" Height="36" Padding="10,8">
-                <TextBox.Effect>
-                    <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
-                </TextBox.Effect>
-            </TextBox>
-        </StackPanel>
-        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasWiFiSecurity}">
-            <TextBlock Text="Security" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
-            <TextBox Text="{Binding SelectedCredential.WiFiSecurityType}" IsReadOnly="True" Height="36" Padding="10,8"/>
-        </StackPanel>
-        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasWiFiBssid}">
-            <TextBlock Text="BSSID" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
-            <TextBox Text="{Binding SelectedCredential.WiFiBSSID}" IsReadOnly="True" Height="36" Padding="10,8">
-                <TextBox.Effect>
-                    <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
-                </TextBox.Effect>
-            </TextBox>
-        </StackPanel>
+
+        <dcontrols:FieldRow Spacing="12">
+            <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasWiFiSSID}">
+                <TextBlock Text="SSID" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                <dcontrols:CopyableField Value="{Binding SelectedCredential.WiFiSSID}" CopyLabel="SSID">
+                    <dcontrols:CopyableField.Effect>
+                        <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                    </dcontrols:CopyableField.Effect>
+                </dcontrols:CopyableField>
+            </StackPanel>
+            <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasWiFiSecurity}">
+                <TextBlock Text="Security" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                <dcontrols:CopyableField Value="{Binding SelectedCredential.WiFiSecurityType}" CopyLabel="Security type"/>
+            </StackPanel>
+        </dcontrols:FieldRow>
+
         <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasWiFiPassword}">
             <TextBlock Text="Network Password" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
-            <Grid ColumnDefinitions="*,Auto">
-                <TextBox Grid.Column="0"
-                         Text="{Binding SelectedCredential.MaskedWiFiPassword}"
-                         PasswordChar="•"
-                         IsReadOnly="True"
-                         BorderThickness="1"
-                         BorderBrush="{DynamicResource ControlBorderBrush}"
-                         Height="36"
-                         Padding="10,8">
-                    <TextBox.Effect>
-                        <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
-                    </TextBox.Effect>
-                </TextBox>
-                <Button AutomationProperties.Name="Copy password" Grid.Column="1"
-                        Command="{Binding CopyPasswordCommand}"
-                        CommandParameter="{Binding SelectedCredential}"
-                        Classes="copy-btn"
-                        Width="36"
-                        Height="36"
-                        Padding="4"
-                        Margin="8,0,0,0"
-                        ToolTip.Tip="Copy password">
-                    <Image Source="{DynamicResource CopyIcon}" Width="18" Height="18" Stretch="Uniform"/>
-                </Button>
-            </Grid>
+            <dcontrols:CopyableField Value="{Binding SelectedCredential.WiFiPassword}"
+                                     IsSecret="True"
+                                     CopyLabel="Network password">
+                <dcontrols:CopyableField.Effect>
+                    <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                </dcontrols:CopyableField.Effect>
+            </dcontrols:CopyableField>
+        </StackPanel>
+
+        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasWiFiBssid}">
+            <TextBlock Text="BSSID" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+            <dcontrols:CopyableField Value="{Binding SelectedCredential.WiFiBSSID}" CopyLabel="BSSID">
+                <dcontrols:CopyableField.Effect>
+                    <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                </dcontrols:CopyableField.Effect>
+            </dcontrols:CopyableField>
         </StackPanel>
     </StackPanel>
 </UserControl>
-

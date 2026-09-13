@@ -1,35 +1,41 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:PhantomVault.UI.Desktop.Controls"
              x:Class="PhantomVault.UI.Views.Details.DetailActionButtons">
 
-    <Grid ColumnDefinitions="*,*" Margin="0,8,0,0">
-        <Button Grid.Column="0"
-                Command="{Binding EditCredentialCommand}"
+    <!-- A small red bin in the corner instead of full-width Edit / Delete buttons: the card's
+         header already has Edit. Account tiles on a merged card also get a small pencil, since
+         the header's Edit only reaches the card's first account. -->
+    <StackPanel Orientation="Horizontal" Spacing="6"
+                HorizontalAlignment="Right"
+                Margin="0,4,0,0">
+        <Button Command="{Binding EditCredentialCommand}"
                 CommandParameter="{Binding SelectedCredential}"
+                IsVisible="{Binding IsAccountTile}"
                 Classes="liquid-glass"
-                HorizontalAlignment="Stretch"
-                Height="44"
-                FontWeight="SemiBold"
-                Margin="0,0,6,0">
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock Text="✎" FontSize="{StaticResource Type.H4.Size}" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}"/>
-                <TextBlock Text="Edit" FontSize="{StaticResource Type.Body.Size}"/>
-            </StackPanel>
+                Width="30" Height="30"
+                MinWidth="0" MinHeight="0"
+                CornerRadius="8"
+                Padding="0"
+                AutomationProperties.Name="Edit this account"
+                ToolTip.Tip="Edit this account">
+            <TextBlock Text="✎" FontSize="14"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                       Foreground="{DynamicResource PrimaryTextBrush}"/>
         </Button>
-        <Button Grid.Column="1"
-                Command="{Binding DeleteCredentialCommand}"
+        <Button Command="{Binding DeleteCredentialCommand}"
                 CommandParameter="{Binding SelectedCredential}"
                 Classes="liquid-glass danger"
-                HorizontalAlignment="Stretch"
-                Height="44"
+                Width="30" Height="30"
+                MinWidth="0" MinHeight="0"
                 CornerRadius="8"
-                FontWeight="SemiBold"
-                Margin="6,0,0,0">
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock Text="🗑" FontSize="{StaticResource Type.H4.Size}"/>
-                <TextBlock Text="Delete" FontSize="{StaticResource Type.Body.Size}"/>
-            </StackPanel>
+                Padding="0"
+                AutomationProperties.Name="Delete entry"
+                ToolTip.Tip="Delete">
+            <controls:SvgIcon IconName="Assets/SVG/Current/Delete.svg"
+                              Width="14" Height="14"
+                              IconColor="#FFE5484D"
+                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Button>
-    </Grid>
+    </StackPanel>
 </UserControl>
-

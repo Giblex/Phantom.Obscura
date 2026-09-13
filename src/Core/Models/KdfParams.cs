@@ -20,11 +20,22 @@ namespace PhantomVault.Core.Models
     public sealed record ManifestKdfParams(int MemoryKb, int Iterations, int Parallelism)
     {
         /// <summary>
+        /// The single source of truth for the standard Argon2id cost. These are consts so
+        /// they can also serve as optional-parameter defaults (EncryptionService.DeriveKey)
+        /// and container-format defaults (PhantomContainerService), which previously each
+        /// hard-coded their own copy of the same numbers.
+        /// </summary>
+        public const int StandardMemoryKb = 256 * 1024;
+
+        /// <inheritdoc cref="StandardMemoryKb"/>
+        public const int StandardIterations = 6;
+
+        /// <summary>
         /// Default high-security parameters: 256 MiB / 6 iterations / auto-parallelism.
         /// Matches the historical hardcoded defaults in EncryptionService.DeriveKey so
         /// manifests written before this field existed remain readable.
         /// </summary>
-        public static ManifestKdfParams Standard { get; } = new(MemoryKb: 256 * 1024, Iterations: 6, Parallelism: 0);
+        public static ManifestKdfParams Standard { get; } = new(MemoryKb: StandardMemoryKb, Iterations: StandardIterations, Parallelism: 0);
 
         /// <summary>
         /// Reduced parameters for Fast Unlock mode: 64 MiB / 3 iterations / auto-parallelism.

@@ -1,3 +1,5 @@
+using System;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using PhantomVault.UI.ViewModels.Dialogs;
 using PhantomVault.UI.Views;
@@ -12,11 +14,11 @@ namespace PhantomVault.UI.Views.Dialogs
             DataContext = new PinSetupDialogViewModel(this);
         }
 
-        public PinSetupDialog(string? manifestPath)
+        /// <param name="setPin">Stores the PIN in the unlocked vault's encrypted manifest.</param>
+        public PinSetupDialog(Func<string, Task> setPin)
         {
             InitializeComponent();
-            DataContext = new PinSetupDialogViewModel(this, manifestPath);
+            DataContext = new PinSetupDialogViewModel(this, setPin);
         }
     }
 }
-

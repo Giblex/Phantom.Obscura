@@ -142,7 +142,12 @@ namespace PhantomVault.PrivilegedBroker
             }
         }
 
-        private static bool IsClientAllowed(string? clientPath)
+        /// <summary>
+        /// Whether a connecting client executable is the allow-listed UI. Internal rather
+        /// than private so the fail-closed behaviour can be tested directly — this is the
+        /// decision that gates every privileged operation the broker performs.
+        /// </summary>
+        internal static bool IsClientAllowed(string? clientPath)
         {
             if (string.IsNullOrWhiteSpace(clientPath))
                 return false;

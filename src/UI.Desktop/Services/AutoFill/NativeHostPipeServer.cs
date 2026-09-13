@@ -180,6 +180,12 @@ namespace PhantomVault.UI.Services.AutoFill
                     // this stays distinct from the rejected "saveCredential".
                     "credentialSubmitted" => HandleCredentialSubmitted(root),
 
+                    // A real WebAuthn assertion for the page's own challenge. Attestor
+                    // performs the user-verification prompt and enforces that the credential
+                    // belongs to this relying party, so this handler's job is to prove the
+                    // *page* is entitled to ask for this RP before relaying anything.
+                    "webauthnAssert" => HandleWebAuthnAssert(root),
+
                     _ => Fail($"Unknown action: {action}")
                 };
             }
@@ -280,6 +286,94 @@ namespace PhantomVault.UI.Services.AutoFill
 
             return JsonSerializer.Serialize(new { success = true, credentials });
         }
+
+        /// <summary>
+        /// Completes a WebAuthn <c>navigator.credentials.get()</c> for the page.
+        ///
+        /// <para>
+        /// The browser builds clientDataJSON — it is the only party that knows the true
+        /// challenge, origin and crossOrigin flag — and this hashes exactly the bytes it sent,
+        /// so what Attestor signs over is what the relying party will verify. The hash is
+        /// computed here rather than accepted from the extension: a caller-supplied digest
+        /// would let a compromised page have a signature made over data the site never saw.
+        /// </para>
+        ///
+        /// <para>
+        /// The <c>origin</c> comes from the background worker, which reads it from the
+        /// sender tab rather than from page content, so it cannot be spoofed by the site.
+        /// </para>
+        /// </summary>
+        private string HandleWebAuthnAssert(JsonElement root)
+        {
+            if (!_vaultContext.IsUnlocked)
+                return Fail("Vault is locked");
+
+            ICredentialProvider? provider;
+            lock (_credLock) { provider = _credentialProvider; }
+            if (provider == null)
+                return Fail("Vault not ready");
+
+            var origin = root.TryGetProperty("origin", out var o) ? o.GetString() ?? string.Empty : string.Empty;
+            var rpId = root.TryGetProperty("rpId", out var r) ? r.GetString() ?? string.Empty : string.Empty;
+            var clientDataJson = root.TryGetProperty("clientDataJson", out var c) ? c.GetString() ?? string.Empty : string.Empty;
+
+            // The entitlement decision lives in Core so it can be tested directly; see
+            // PasskeyAssertionGate for why a request that was never going to be legitimate must
+            // not reach the authenticator.
+            var decision = PasskeyAssertionGate.Evaluate(
+                provider.GetCredentials(), origin, rpId, clientDataJson);
+
+            if (!decision.IsAllowed)
+                return Fail(PasskeyAssertionGate.DescribeRefusal(decision.Outcome));
+
+            var match = decision.Credential!;
+            rpId = decision.RelyingPartyId;
+
+            try
+            {
+                var broker = (Avalonia.Application.Current as PhantomVault.UI.App)?
+                    .Services?.GetService(typeof(AttestorCredentialBrokerClient)) as AttestorCredentialBrokerClient;
+                if (broker == null)
+                    return Fail("Phantom Attestor is not available.");
+
+                var clientDataHash = System.Security.Cryptography.SHA256.HashData(
+                    Encoding.UTF8.GetBytes(clientDataJson));
+
+                // Attestor prompts for Windows Hello before signing, so the blocking call here
+                // is bounded by the user answering it, not by us.
+                var assertion = broker
+                    .AssertPasskeyAsync(match.AttestorPasskeyReference!, rpId, clientDataHash)
+                    .GetAwaiter().GetResult();
+
+                // Best effort, and deliberately after the signature. This enumerates a
+                // collection the UI thread owns, so a concurrent edit can throw; losing a
+                // LastUsed timestamp is nothing, whereas failing here would discard an
+                // assertion the user has already approved with Windows Hello and cannot be
+                // asked to approve again.
+                try { provider.UpdateLastUsed(match.Title); }
+                catch (InvalidOperationException) { }
+
+                return JsonSerializer.Serialize(new
+                {
+                    success = true,
+                    credentialId = Base64Url(assertion.CredentialId),
+                    authenticatorData = Base64Url(assertion.AuthenticatorData),
+                    signature = Base64Url(assertion.Signature),
+                    userHandle = (string?)null
+                });
+            }
+            catch (Exception ex)
+            {
+                // The message may name the relying party, which is already known to the page;
+                // it must not carry vault contents, so only the reason is surfaced.
+                Log.Warning(ex, "NativeHostPipeServer: passkey assertion failed for {RpId}", rpId);
+                return Fail("The passkey request was declined or could not be completed.");
+            }
+        }
+
+        /// <summary>base64url without padding — the encoding WebAuthn responses use.</summary>
+        private static string Base64Url(byte[] value) =>
+            Convert.ToBase64String(value).TrimEnd('=').Replace('+', '-').Replace('/', '_');
 
         private static string Fail(string error) =>
             JsonSerializer.Serialize(new { success = false, error });

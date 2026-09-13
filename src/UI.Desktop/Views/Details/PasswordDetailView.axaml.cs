@@ -1,8 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
+using PhantomVault.UI.Desktop.Controls;
 using PhantomVault.UI.ViewModels;
 
 namespace PhantomVault.UI.Views.Details;
@@ -32,28 +32,17 @@ public partial class PasswordDetailView : UserControl
         }
     }
 
-    private void CopyUsername_Tapped(object? sender, TappedEventArgs e)
+    // Username and password are CopyableFields now; only the TOTP tile copies from here. It uses
+    // the same copy path and feedback: bounce straight away, "Copied" only once it landed.
+    private async void CopyTotpCode_Tapped(object? sender, TappedEventArgs e)
     {
-        if (DataContext is VaultViewModel vm && vm.SelectedCredential != null)
-        {
-            vm.CopyUsernameCommand?.Execute(vm.SelectedCredential);
-        }
-    }
+        // The vault (single card) or an account tile (shared card): copy that entry's code.
+        if (DataContext is not IDetailHost host || host.SelectedCredential == null) return;
 
-    private void CopyPassword_Tapped(object? sender, TappedEventArgs e)
-    {
-        if (DataContext is VaultViewModel vm && vm.SelectedCredential != null)
-        {
-            vm.CopyPasswordCommand?.Execute(vm.SelectedCredential);
-        }
-    }
+        var tile = sender as Control;
+        if (tile != null) CopyFeedback.Bounce(tile);
 
-    private void CopyTotpCode_Tapped(object? sender, TappedEventArgs e)
-    {
-        if (DataContext is VaultViewModel vm && vm.SelectedCredential != null)
-        {
-            vm.CopyTotpCodeCommand?.Execute(vm.SelectedCredential);
-        }
+        if (await host.CopyFieldValueAsync(host.SelectedCredential.CurrentTotpCode, "TOTP code") && tile != null)
+            CopyFeedback.ShowCopied(tile);
     }
 }
-

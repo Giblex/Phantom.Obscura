@@ -24,6 +24,10 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
         private readonly EngineOptions _opts;
         private readonly string _pepperPath;
         private readonly string _verifierPath;
+
+        // Set when pepper.ref exists but cannot be resolved (or could not be written on first
+        // run). Surfaced when the pepper is next needed, never "repaired" by regenerating.
+        private readonly Exception? _pepperPointerFailure;
         private readonly SemaphoreSlim _lock = new(1, 1);
         private readonly Dictionary<string, int> _tempFileRefCounts = new();
         private readonly List<SecureTempFile> _tempFiles = new();
@@ -33,14 +37,21 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
         public bool IsUnlocked => _masterKey != null;
 
         public ZkVaultService(EngineOptions? opts = null)
+            : this(opts, Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "PhantomVault"))
+        {
+        }
+
+        /// <summary>
+        /// Test seam: places the key-material files (pepper pointer, pepper, salt, verifier) in
+        /// <paramref name="appDataDir"/> instead of the user's real %APPDATA%\PhantomVault.
+        /// </summary>
+        internal ZkVaultService(EngineOptions? opts, string appDataDir)
         {
             _opts = opts ?? new EngineOptions(EncryptionProfile.Advanced);
-            var appDataDir = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "PhantomVault"
-            );
             Directory.CreateDirectory(appDataDir);
-            _pepperPath = ResolvePepperPath(appDataDir);
+            _pepperPath = ResolvePepperPath(appDataDir, out _pepperPointerFailure);
             _verifierPath = Path.Combine(appDataDir, "master.verifier.json");
         }
 
@@ -49,13 +60,18 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
         // AppData folder from identifying the pepper by a predictable name
         // derived from MachineName|UserName. The pointer file itself is named
         // generically; the random target file is named like a cache blob.
-        private static string ResolvePepperPath(string appDataDir)
+        private static string ResolvePepperPath(string appDataDir, out Exception? pointerFailure)
         {
+            pointerFailure = null;
             var pointerPath = Path.Combine(appDataDir, "pepper.ref");
             string fileName;
 
             if (File.Exists(pointerPath))
             {
+                // An existing pointer is authoritative. Any failure here used to "fall through to
+                // regenerate", rewriting pepper.ref to a new random name: the real pepper was
+                // orphaned, a fresh one was created beside it, and the unlock ran as a first-time
+                // bootstrap. Record the failure instead; LoadOrCreatePepperAsync surfaces it.
                 try
                 {
                     var raw = File.ReadAllText(pointerPath).Trim();
@@ -63,8 +79,16 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                     {
                         return Path.Combine(appDataDir, raw);
                     }
+                    pointerFailure = new InvalidDataException("pepper.ref does not name a valid pepper file.");
                 }
-                catch { /* fall through to regenerate */ }
+                catch (Exception ex)
+                {
+                    pointerFailure = ex;
+                }
+
+                // Never used for IO while pointerFailure is set; it only has to sit in the right
+                // directory, because the salt path is derived from it.
+                return Path.Combine(appDataDir, "pepper.unresolved");
             }
 
             fileName = GenerateRandomPepperName();
@@ -83,10 +107,12 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                 }
                 File.WriteAllText(pointerPath, fileName);
             }
-            catch
+            catch (Exception ex)
             {
-                // If pointer write fails, LoadOrCreatePepperAsync will create a
-                // fresh pepper at the chosen path. The user re-enters credentials.
+                // Without a pointer, the next launch would pick yet another random name and
+                // orphan whatever pepper is created (or was just migrated) here. Fail the
+                // pepper step now rather than create key material that cannot be found again.
+                pointerFailure = ex;
             }
 
             return newPath;
@@ -384,9 +410,12 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                     {
                         File.SetUnixFileMode(appDataTemp, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
                     }
-                    catch
+                    catch (Exception ex)
                     {
-
+                        // Fail closed, as the Windows ACL branch does: never write decrypted
+                        // bytes into a directory whose permissions could not be restricted.
+                        try { Directory.Delete(appDataTemp, true); } catch { }
+                        throw new SecurityException($"Failed to set secure permissions on temp directory: {ex.Message}", ex);
                     }
                 }
 
@@ -424,9 +453,10 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                                     }
                                     _tempFiles.Remove(secureTempFile);
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
-
+                                    // No path in the message: temp file names mirror vault entry names.
+                                    Serilog.Log.Warning(ex, "[ZkVaultService] Failed to remove an expired decrypted temp file; it may remain on disk");
                                 }
                             }
                         }
@@ -535,9 +565,9 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                             Directory.Delete(sessionDir, true);
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
-
+                        Serilog.Log.Warning(ex, "[ZkVaultService] Failed to clean up an orphaned temp session directory");
                     }
                 }
             });
@@ -561,22 +591,30 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
 
                 File.Delete(path);
             }
-            catch
+            catch (Exception ex)
             {
-
+                Serilog.Log.Warning(ex, "[ZkVaultService] Secure overwrite of a temp file failed; falling back to plain delete");
                 try
                 {
                     File.Delete(path);
                 }
-                catch
+                catch (Exception deleteEx)
                 {
-
+                    Serilog.Log.Error(deleteEx, "[ZkVaultService] Failed to delete a decrypted temp file; it remains on disk");
                 }
             }
         }
 
         private async Task<(byte[] Pepper, bool Created)> LoadOrCreatePepperAsync()
         {
+            if (_pepperPointerFailure != null)
+            {
+                // IOException is classified as an operational failure by UnlockMasterKeyAsync.
+                throw new IOException(
+                    "The pepper pointer file (pepper.ref) could not be resolved; refusing to create a new pepper.",
+                    _pepperPointerFailure);
+            }
+
             var appDataDir = Path.GetDirectoryName(_pepperPath)!;
             Directory.CreateDirectory(appDataDir);
 
@@ -589,15 +627,14 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
 
             if (File.Exists(_pepperPath))
             {
-                try
-                {
-                    var sealedPepper = await File.ReadAllBytesAsync(_pepperPath);
-                    return (SecurityTuning.UnsealPepper(sealedPepper), false);
-                }
-                catch
-                {
-
-                }
+                // No catch here, deliberately. This used to swallow any read or DPAPI-unseal
+                // failure and fall through to create (and overwrite with) a fresh pepper. That
+                // silently changed the derived key of an existing vault, and because a created
+                // pepper marks the unlock as bootstrapping, it could re-initialise the verifier
+                // too. A CryptographicException now reaches UnlockMasterKeyAsync's handler, which
+                // reports it as the system-level failure it is; IO errors surface as operational.
+                var sealedPepper = await File.ReadAllBytesAsync(_pepperPath);
+                return (SecurityTuning.UnsealPepper(sealedPepper), false);
             }
 
             var protectedPepper = SecurityTuning.CreatePepperProtected();
@@ -614,14 +651,10 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
 
             if (File.Exists(saltPath))
             {
-                try
-                {
-                    return (File.ReadAllBytes(saltPath), false);
-                }
-                catch
-                {
-
-                }
+                // As with the pepper: an existing salt that cannot be read must fail the unlock,
+                // never be replaced. A new salt changes the derived key and marks the unlock as
+                // bootstrapping.
+                return (File.ReadAllBytes(saltPath), false);
             }
 
             var salt = RandomNumberGenerator.GetBytes(32);
@@ -811,9 +844,9 @@ namespace PhantomVault.Core.Services.ZeroKnowledge
                         Directory.Delete(tempFile.DirectoryPath, true);
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-
+                    Serilog.Log.Warning(ex, "[ZkVaultService] Failed to remove a decrypted temp file during dispose; it may remain on disk");
                 }
             }
             _tempFiles.Clear();

@@ -58,7 +58,7 @@
             <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:SectionEditorItemViewModel">
 
-                    <Border Classes="section-tile liquid-glass">
+                    <Border Classes="section-tile">
                         <StackPanel Spacing="10">
 
                             <Border Classes="section-chip" HorizontalAlignment="Left">

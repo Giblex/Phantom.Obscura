@@ -77,7 +77,9 @@
     <SolidColorBrush x:Key="InputForegroundBrush" Color="#10202A"/>
     <SolidColorBrush x:Key="TextSelectionBrush" Color="#40138A9C"/>
     <SolidColorBrush x:Key="TextCaretBrush" Color="#10202A"/>
-    <SolidColorBrush x:Key="OverlayBackgroundBrush" Color="#80000000"/>
+    <!-- Light palette: a soft navy wash behind panels, not the 50% black the dark palettes
+         use, which turned this light window a muddy grey whenever Settings was open. -->
+    <SolidColorBrush x:Key="OverlayBackgroundBrush" Color="#33203040"/>
     <SolidColorBrush x:Key="ReadOnlyFieldBackgroundBrush" Color="#DAE7EC"/>
     <SolidColorBrush x:Key="ReadOnlyFieldForegroundBrush" Color="#10202A"/>
     <SolidColorBrush x:Key="CategoryPanelBackgroundBrush" Color="#E5EFF2"/>

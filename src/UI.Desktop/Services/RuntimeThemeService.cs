@@ -332,11 +332,45 @@ namespace PhantomVault.UI.Services
                     StampResourceKeysFromDictionary(window, loaded);
                 }
 
+                SyncVariantToPalette(window);
+
                 Log.Debug("[RuntimeThemeService] Applied {ThemeId} to window: {Title}", theme.Id, window.Title);
             }
             catch (Exception ex)
             {
                 Log.Warning(ex, "[RuntimeThemeService] Failed to apply theme to window: {Title}", window.Title);
+            }
+        }
+
+        /// <summary>
+        /// Light palettes (e.g. Giblex Website) are light whatever the app's Light/Dark switch
+        /// says, but the window was still flagged Dark. Everything keyed on the variant then
+        /// picked its dark form on a light background: heavy black shadows, dark panel tints,
+        /// Fluent's dark control styles. Flag the window from the palette's actual brightness.
+        /// </summary>
+        private static void SyncVariantToPalette(Window window)
+        {
+            try
+            {
+                if (!window.TryGetResource("WindowBackgroundBrush", window.ActualThemeVariant, out var res))
+                    return;
+
+                Avalonia.Media.Color? color = res switch
+                {
+                    Avalonia.Media.ISolidColorBrush solid => solid.Color,
+                    Avalonia.Media.IGradientBrush { GradientStops.Count: > 0 } g => g.GradientStops[0].Color,
+                    _ => null
+                };
+                if (color is not { } c) return;
+
+                var luminance = (0.2126 * c.R + 0.7152 * c.G + 0.0722 * c.B) / 255.0;
+                window.RequestedThemeVariant = luminance > 0.5
+                    ? Avalonia.Styling.ThemeVariant.Light
+                    : Avalonia.Styling.ThemeVariant.Dark;
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, "[RuntimeThemeService] Could not sync the theme variant to the palette.");
             }
         }
 

@@ -249,6 +249,8 @@
             </StackPanel>
 
             <Grid Grid.Column="1" ColumnDefinitions="*,Auto" Margin="30,0" VerticalAlignment="Center">
+                <!-- Sunken well: a gradient layer inside (Brush.SearchWellShade in App.axaml,
+                     light/dark) darkens the top inner edge and fades down. -->
                 <Border Grid.Column="0"
                         Background="{DynamicResource ControlBackgroundBrush}"
                         BorderBrush="{DynamicResource ControlBorderBrush}"
@@ -258,6 +260,12 @@
                         MaxWidth="700"
                         Margin="0,0,1,0">
                     <Grid ColumnDefinitions="Auto,*,Auto">
+                        <!-- Sunken shading: dark along the top inner edge, fading downwards,
+                             drawn behind the icon and text. -->
+                        <Border Grid.Column="0" Grid.ColumnSpan="3"
+                                CornerRadius="19"
+                                IsHitTestVisible="False"
+                                Background="{DynamicResource Brush.SearchWellShade}"/>
                         <Path Grid.Column="0"
                               Data="{StaticResource Icon.Search}"
                               Width="20"

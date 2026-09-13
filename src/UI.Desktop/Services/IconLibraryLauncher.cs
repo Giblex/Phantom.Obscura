@@ -48,7 +48,9 @@ namespace PhantomVault.UI.Services
                     DataContext = managerViewModel
                 };
 
-                managerViewModel.SetOwnerWindow(window, ownerToUse);
+                // Browse-only: nothing reads a pick back, so no calling owner (which would switch
+                // the library into picker mode).
+                managerViewModel.SetOwnerWindow(window);
 
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {

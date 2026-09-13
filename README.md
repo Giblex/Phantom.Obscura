@@ -209,11 +209,39 @@ Windows-only packages (`System.Runtime.WindowsRuntime`, `System.Management`, `Yu
 
 ---
 
+## Suite companions are optional
+
+Phantom Obscura is the standalone product. **Phantom Key and Phantom Attestor are optional
+companions**, needed only by a vault that has been configured to require one — a vault bound to
+a PhantomKey volume, or one whose passkey / TOTP material is held in Attestor. A machine with
+neither installed runs Obscura fully.
+
+| Companion | Coupling | Absent behaviour |
+|---|---|---|
+| **Phantom Attestor** | Runtime only — a named pipe (`PhantomAttestorCredentialBroker`). Never a compile-time reference. | Read paths (`GetTotpCodeAsync`, `VerifyPasskeyPresenceAsync`) return null rather than throwing; the browser passkey bridge falls through to the browser's own authenticator. Write paths still fail loudly, because a caller that tried to *store* a secret must not be told it succeeded. `IsPaired` is the cheap check, `IsAvailableAsync` the live one. |
+| **Phantom Key** | Optional `ProjectReference`, gated by `BuildWithPhantomKey`. | The reference, `PhantomKeyIntegrityAnchorProvider`, `PhantomKeyWatchdogAnchorProvider` and the embedded PhantomKey unlock dialog all drop out together. The integrity watchdog still scans, detects tampering and writes health — it simply has no external notary to countersign the log head. |
+
+`BuildWithPhantomKey` defaults to true when `..\..\..\Phantom.Key\src\PhantomKey.Integration`
+exists and false otherwise, so a checkout without the companion builds as-is. Force the
+standalone configuration with:
+
+```
+dotnet build PhantomVault.sln -p:BuildWithPhantomKey=false
+```
+
+The `standalone` CI job builds exactly that way and fails if `PhantomKey.Integration.dll`
+appears in the output, so a hard dependency cannot creep back in unnoticed. It previously had:
+`PhantomVault.UI.csproj` and `PhantomVault.PrivilegedBroker.csproj` both carried an
+unconditional `ProjectReference` into the Phantom.Key repository, which made an optional
+companion mandatory to *compile*.
+
+
 ## Known Limitations
 
 | Area | Detail |
 |---|---|
 | Platform passkeys (non-Windows) | macOS and Linux platform passkeys are surfaced as unsupported in `PasskeySettingsWindow`; only Windows Hello passkeys are wired |
+| Passkey registration in the browser | `navigator.credentials.get()` is answered end-to-end by the extension (see *Browser passkey sign-in* below). `create()` deliberately still falls through to the browser: returning a credential needs a CBOR attestation object carrying the new public key in COSE form, and a half-built response would leave a site holding a credential it can never verify an assertion against |
 | USB binding / phone | Binding only occurs on the desktop. The mobile head can read a binding token from an already-bound USB vault but cannot create or rebind on Android |
 | Android (Avalonia) | `UI.Android.Avalonia` is the single Android head (application ID `com.giblex.phantom.obscura`). It ships Welcome, Unlock, Dashboard, CredentialList, AddEditCredential, CategoryLanding, SecurityDashboard, ImportExport, IconDownloader, Settings, ThemeSettings, and SmokeTest views; remaining desktop windows are tracked for future ports |
 | Multi-session vault access | Concurrent multi-session vault access is intentionally not implemented; the settings toggle is shown for roadmap visibility only |
@@ -221,6 +249,49 @@ Windows-only packages (`System.Runtime.WindowsRuntime`, `System.Management`, `Yu
 | Settings storage | `%APPDATA%\PhantomVault\settings.json` is plaintext JSON and includes PIN verification material (salt/hash); the vault manifest copy is authoritative |
 
 ---
+
+## Browser passkey sign-in
+
+A site's `navigator.credentials.get()` is completed by the vault rather than deferred to the
+platform authenticator. The path is deliberately split across trust boundaries:
+
+| Stage | Component | Holds |
+|---|---|---|
+| Page world | `src/Extension/webauthn-bridge.js` | Sees `navigator.credentials`; builds clientDataJSON from the real origin. No extension privileges. |
+| Isolated world | `src/Extension/content.js` | Relays over `postMessage`; treats every field as untrusted. |
+| Service worker | `src/Extension/background.js` | Supplies the page origin from the **sender tab**, never from page content. |
+| Host process | `NativeMessagingHostService` | Forwards over the pipe; verifies nothing it cannot verify. |
+| App | `NativeHostPipeServer.HandleWebAuthnAssert` | Runs `PasskeyAssertionGate`, hashes the exact clientDataJSON, calls Attestor. |
+| Authenticator | Phantom Attestor | Prompts for Windows Hello, re-checks RP binding, signs. |
+
+Three properties make this safe to relay at all:
+
+- **The challenge is the site's.** The bridge never invents one.
+- **The signature covers what the site will verify.** clientDataJSON is hashed in the app from
+  the bytes the page sent — a caller-supplied digest is never accepted, so a page cannot get a
+  signature over data the relying party never saw.
+- **Nothing signs silently.** Attestor requires Windows Hello verification per assertion, so a
+  script calling `get()` in the background cannot authenticate anyone without the user acting.
+
+The entitlement decision lives in `PhantomVault.Core.Services.Autofill` so it is testable
+rather than buried in a pipe handler:
+
+- `RelyingPartyId` is the rule itself — a secure context plus an exact or registrable-suffix
+  match. It is what stops `evil.test` obtaining an assertion scoped to `bank.example`, and it
+  is shared with the desktop auto-inject path so the two cannot drift.
+- `PasskeyAssertionGate` applies it, picks the credential, and returns a refusal reason. It
+  runs *before* Attestor is contacted on purpose: contacting Attestor raises a Windows Hello
+  prompt, and an attacker who could provoke prompts at will could train the user to approve
+  them.
+
+Where several passkeys match a site, the most recently used one is chosen — the vault does not
+record WebAuthn credential IDs, so it cannot filter on `allowCredentials` directly. The bridge
+compensates by checking the returned credential ID against `allowCredentials` and falling back
+to the browser if the vault picked one the site will not accept.
+
+If any stage fails — vault locked, no matching passkey, user declines — the bridge falls
+through to the browser's own authenticator rather than failing the ceremony.
+
 
 ## Policies
 

@@ -10,15 +10,48 @@ env:
   DOTNET_NOLOGO: true
   ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
   ANDROID_HOME: /usr/local/lib/android/sdk
+  SUITE_DIR: Phantom Suite
 
 jobs:
   build-apk:
     name: Build Android APK
     runs-on: ubuntu-latest
 
+    # `run` steps operate inside the relocated checkout; steps that need the workspace
+    # root (the shared Directory.Build.props) override this explicitly.
+    defaults:
+      run:
+        working-directory: Phantom Suite/Phantom.Obscura
+
     steps:
-      - name: Checkout repository
+      # The Android head ProjectReferences ..\..\..\Phantom.Root\Phantom.UI.Shared, which
+      # resolves to a SIBLING of this repository. Checking out into "Phantom Suite/..."
+      # reproduces the developer's on-disk layout so that reference resolves; a bare
+      # checkout at the workspace root cannot restore this project at all.
+      - name: Checkout Phantom.Obscura
         uses: actions/checkout@v4
+        with:
+          path: ${{ env.SUITE_DIR }}/Phantom.Obscura
+
+      - name: Checkout Phantom.Shared (as Phantom.Root)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.SHARED_REPO || 'Giblex-Pty-Ltd/Phantom.Shared' }}
+          token: ${{ secrets.SUITE_REPO_TOKEN }}
+          path: ${{ env.SUITE_DIR }}/Phantom.Root
+
+      # Lives beside the projects rather than inside any one repository; keeps stale
+      # obj_*/bin_* verification output out of the SDK's default compile globs.
+      - name: Restore suite-level Directory.Build.props
+        working-directory: ${{ github.workspace }}
+        run: |
+          cat > "$SUITE_DIR/Directory.Build.props" <<'PROPS'
+          <Project>
+            <PropertyGroup>
+              <DefaultItemExcludes>$(DefaultItemExcludes);**/obj_*/**;**/bin_*/**</DefaultItemExcludes>
+            </PropertyGroup>
+          </Project>
+          PROPS
 
       - name: Clear global.json SDK pin
         run: echo '{}' > global.json
@@ -81,7 +114,7 @@ jobs:
         with:
           name: phantom-obscura-apk
           path: |
-            artifacts/apk/*.apk
-            artifacts/apk/**/*.apk
+            Phantom Suite/Phantom.Obscura/artifacts/apk/*.apk
+            Phantom Suite/Phantom.Obscura/artifacts/apk/**/*.apk
           retention-days: 30
           if-no-files-found: error

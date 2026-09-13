@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:converters="clr-namespace:PhantomVault.UI.Converters"
+             xmlns:dcontrols="clr-namespace:PhantomVault.UI.Desktop.Controls"
              x:Class="PhantomVault.UI.Views.Details.IdentityDetailView">
 
     <UserControl.Resources>
@@ -17,34 +18,45 @@
                    FontSize="{StaticResource Type.Body.Size}"
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource SecondaryTextBrush}"/>
-        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasIdDocumentType}">
-            <TextBlock Text="Document Type" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
-            <TextBox Text="{Binding SelectedCredential.IdDocumentType}" IsReadOnly="True" Height="36" Padding="10,8"/>
-        </StackPanel>
-        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasIdNumber}">
-            <TextBlock Text="Document Number" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
-            <TextBox Text="{Binding SelectedCredential.IdNumber}" IsReadOnly="True" Height="36" Padding="10,8">
-                <TextBox.Effect>
-                    <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
-                </TextBox.Effect>
-            </TextBox>
-        </StackPanel>
-        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasIdIssuingCountry}">
-            <TextBlock Text="Issuing Country" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
-            <TextBox Text="{Binding SelectedCredential.IdIssuingCountry}" IsReadOnly="True" Height="36" Padding="10,8"/>
-        </StackPanel>
-        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasIdIssuingState}">
-            <TextBlock Text="Issuing State / Region" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
-            <TextBox Text="{Binding SelectedCredential.IdIssuingState}" IsReadOnly="True" Height="36" Padding="10,8"/>
-        </StackPanel>
-        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasIdIssueDate}">
-            <TextBlock Text="Issue Date" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
-            <TextBox Text="{Binding SelectedCredential.IdIssueDateText}" IsReadOnly="True" Height="36" Padding="10,8"/>
-        </StackPanel>
-        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasIdExpiryDate}">
-            <TextBlock Text="Expiration Date" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
-            <TextBox Text="{Binding SelectedCredential.IdExpiryDateText}" IsReadOnly="True" Height="36" Padding="10,8"/>
-        </StackPanel>
+
+        <dcontrols:FieldRow Spacing="12">
+            <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasIdDocumentType}">
+                <TextBlock Text="Document Type" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                <dcontrols:CopyableField Value="{Binding SelectedCredential.IdDocumentType}" CopyLabel="Document type"/>
+            </StackPanel>
+            <!-- Masked until revealed, like the other identity-grade secrets. -->
+            <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasIdNumber}">
+                <TextBlock Text="Document Number" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                <dcontrols:CopyableField Value="{Binding SelectedCredential.IdNumber}"
+                                         IsSecret="True"
+                                         CopyLabel="Document number">
+                    <dcontrols:CopyableField.Effect>
+                        <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                    </dcontrols:CopyableField.Effect>
+                </dcontrols:CopyableField>
+            </StackPanel>
+        </dcontrols:FieldRow>
+
+        <dcontrols:FieldRow Spacing="12">
+            <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasIdIssuingCountry}">
+                <TextBlock Text="Issuing Country" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                <dcontrols:CopyableField Value="{Binding SelectedCredential.IdIssuingCountry}" CopyLabel="Issuing country"/>
+            </StackPanel>
+            <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasIdIssuingState}">
+                <TextBlock Text="State / Region" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                <dcontrols:CopyableField Value="{Binding SelectedCredential.IdIssuingState}" CopyLabel="Issuing state"/>
+            </StackPanel>
+        </dcontrols:FieldRow>
+
+        <dcontrols:FieldRow Spacing="12">
+            <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasIdIssueDate}">
+                <TextBlock Text="Issued" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                <dcontrols:CopyableField Value="{Binding SelectedCredential.IdIssueDateText}" CopyLabel="Issue date"/>
+            </StackPanel>
+            <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasIdExpiryDate}">
+                <TextBlock Text="Expires" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                <dcontrols:CopyableField Value="{Binding SelectedCredential.IdExpiryDateText}" CopyLabel="Expiration date"/>
+            </StackPanel>
+        </dcontrols:FieldRow>
     </StackPanel>
 </UserControl>
-

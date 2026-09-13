@@ -39,7 +39,7 @@ namespace PhantomVault.UI.ViewModels
             _importExportService = new ImportExportService();
             _dialogService = new DialogService();
 
-            Formats = new ObservableCollection<string> { "CSV", "KeePass XML", "JSON" };
+            Formats = new ObservableCollection<string> { "CSV", "KeePass XML", "JSON", "Bitwarden CSV", "Bitwarden JSON" };
 
             var groups = new List<string> { "All Groups" };
             groups.AddRange(_credentials.Select(c => c.Group).Where(g => !string.IsNullOrEmpty(g)).Distinct().OrderBy(g => g));
@@ -171,9 +171,9 @@ namespace PhantomVault.UI.ViewModels
 
             var extension = SelectedFormat switch
             {
-                "CSV" => ".csv",
+                "CSV" or "Bitwarden CSV" => ".csv",
                 "KeePass XML" => ".xml",
-                "JSON" => ".json",
+                "JSON" or "Bitwarden JSON" => ".json",
                 _ => ".txt"
             };
 
@@ -184,9 +184,9 @@ namespace PhantomVault.UI.ViewModels
                 DefaultExtension = extension,
                 FileTypeChoices = SelectedFormat switch
                 {
-                    "CSV" => new[] { new FilePickerFileType("CSV Files") { Patterns = new[] { "*.csv" } } },
+                    "CSV" or "Bitwarden CSV" => new[] { new FilePickerFileType("CSV Files") { Patterns = new[] { "*.csv" } } },
                     "KeePass XML" => new[] { new FilePickerFileType("XML Files") { Patterns = new[] { "*.xml" } } },
-                    "JSON" => new[] { new FilePickerFileType("JSON Files") { Patterns = new[] { "*.json" } } },
+                    "JSON" or "Bitwarden JSON" => new[] { new FilePickerFileType("JSON Files") { Patterns = new[] { "*.json" } } },
                     _ => null
                 }
             };
@@ -235,6 +235,7 @@ namespace PhantomVault.UI.ViewModels
             try
             {
                 var credentialsToExport = GetFilteredCredentials();
+                int written = credentialsToExport.Count;
 
                 switch (SelectedFormat)
                 {
@@ -247,6 +248,12 @@ namespace PhantomVault.UI.ViewModels
                     case "JSON":
                         await _importExportService.ExportToJsonAsync(credentialsToExport, DestinationFile);
                         break;
+                    case "Bitwarden CSV":
+                        written = await _importExportService.ExportToBitwardenCsvAsync(credentialsToExport, DestinationFile);
+                        break;
+                    case "Bitwarden JSON":
+                        written = await _importExportService.ExportToBitwardenJsonAsync(credentialsToExport, DestinationFile);
+                        break;
                     default:
                         throw new NotSupportedException($"Format '{SelectedFormat}' is not supported");
                 }
@@ -255,7 +262,10 @@ namespace PhantomVault.UI.ViewModels
 
                 await _dialogService.ShowSuccessAsync(
                     "Export Successful",
-                    $"Successfully exported {credentialsToExport.Count} credential(s) to {SelectedFormat} file.\n\n" +
+                    $"Successfully exported {written} credential(s) to {SelectedFormat} file.\n\n" +
+                    (written < credentialsToExport.Count
+                        ? $"{credentialsToExport.Count - written} entr{(credentialsToExport.Count - written == 1 ? "y" : "ies")} that are not logins (cards, identities, notes and similar) were left out: this format carries logins only.\n\n"
+                        : "") +
                     $"File: {System.IO.Path.GetFileName(DestinationFile)}\n\n" +
                     (IncludePasswords ? "⚠️ Remember to secure or delete this file after use!" : "Passwords were redacted for security."),
                     _ownerWindow

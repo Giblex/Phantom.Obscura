@@ -33,7 +33,7 @@ namespace PhantomVault.UI.Views
         private bool _hasAutoScrolledToUsbActions;
         private bool _hasAutoScrolledToVaultPicker;
         private bool _hasAutoScrolledToSetupChoice;
-        private DispatcherTimer? _spinTimer;
+        private PhantomVault.UI.Services.FrameTimer? _spinTimer; // frame-paced (see FrameTimer)
         private ConicGradientBrush? _spinRingBrush;
 
         public WelcomePage()
@@ -57,6 +57,37 @@ namespace PhantomVault.UI.Views
             _spinRingBrush = this.FindControl<Border>("SpinRingOuter")?.BorderBrush as ConicGradientBrush;
 
             this.DataContextChanged += OnDataContextChanged;
+
+            // Open at the full height of the screen's work area (top to taskbar), keeping the
+            // designed width, so the whole start page is in view without scrolling.
+            Opened += (_, _) => FitToScreenHeight();
+        }
+
+        private void FitToScreenHeight()
+        {
+            try
+            {
+                var screen = Screens.ScreenFromWindow(this) ?? Screens.Primary;
+                if (screen == null) return;
+
+                var area = screen.WorkingArea;          // physical pixels
+                var scale = screen.Scaling;
+                if (scale <= 0) scale = 1;
+
+                // A little shy of the full work-area height, centred vertically, so there is a
+                // small even margin above and below.
+                const double HeightFraction = 0.88;
+                var heightPx = (int)System.Math.Round(area.Height * HeightFraction);
+                Height = heightPx / scale;
+                var widthPx = (int)System.Math.Round(Width * scale);
+                Position = new PixelPoint(
+                    area.X + (area.Width - widthPx) / 2,
+                    area.Y + (area.Height - heightPx) / 2);
+            }
+            catch (System.Exception ex)
+            {
+                Log.Debug(ex, "[Welcome] Could not size the window to the screen height.");
+            }
         }
 
         private void OnDataContextChanged(object? sender, EventArgs e)
@@ -97,11 +128,14 @@ namespace PhantomVault.UI.Views
 
         private void UpdateSpinTimer(bool active)
         {
-            if (active)
+            // Only tick when there is a ring to turn. "SpinRingOuter" is no longer in the page,
+            // so the brush is null and this 60 fps timer did nothing but wake the UI thread for
+            // the whole time USB detection ran on the welcome screen.
+            if (active && _spinRingBrush != null)
             {
                 if (_spinTimer == null)
                 {
-                    _spinTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
+                    _spinTimer = new PhantomVault.UI.Services.FrameTimer(this);
                     _spinTimer.Tick += OnSpinTimerTick;
                 }
                 _spinTimer.Start();
@@ -303,7 +337,6 @@ namespace PhantomVault.UI.Views
             if (_mainScrollViewer == null)
                 return;
 
-            const int frameDelayMs = 16;
             var stopwatch = Stopwatch.StartNew();
 
             while (stopwatch.ElapsedMilliseconds < durationMs)
@@ -314,7 +347,8 @@ namespace PhantomVault.UI.Views
                     : 1d - Math.Pow(-2d * t + 2d, 3d) / 2d;
                 var currentOffsetY = startOffsetY + ((targetOffsetY - startOffsetY) * eased);
                 _mainScrollViewer.Offset = new Vector(_mainScrollViewer.Offset.X, currentOffsetY);
-                await Task.Delay(frameDelayMs);
+                // One step per rendered frame (Task.Delay(16) really waited ~31 ms on Windows).
+                await PhantomVault.UI.Services.FrameClock.NextFrameAsync(_mainScrollViewer);
             }
 
             _mainScrollViewer.Offset = new Vector(_mainScrollViewer.Offset.X, targetOffsetY);
@@ -365,7 +399,6 @@ namespace PhantomVault.UI.Views
                 await Task.Delay(260);
 
                 const int fadeDurationMs = 360;
-                const int fadeFrameMs = 16;
                 var fade = Stopwatch.StartNew();
                 while (fade.ElapsedMilliseconds < fadeDurationMs)
                 {
@@ -375,7 +408,7 @@ namespace PhantomVault.UI.Views
                     _traceLeftEdge.Opacity = opacity;
                     _traceBottomEdge.Opacity = opacity;
                     _traceRightEdge.Opacity = opacity;
-                    await Task.Delay(fadeFrameMs);
+                    await PhantomVault.UI.Services.FrameClock.NextFrameAsync(_detectionTraceLine);
                 }
             }
             catch (Exception ex)
@@ -391,7 +424,6 @@ namespace PhantomVault.UI.Views
 
         private static async Task AnimateDimensionAsync(Border border, bool animateHeight, double from, double to, int durationMs, double opacity = 0.95)
         {
-            const int frameDelayMs = 16;
             var stopwatch = Stopwatch.StartNew();
             border.Opacity = opacity;
 
@@ -410,7 +442,7 @@ namespace PhantomVault.UI.Views
                     border.Width = current;
                 }
 
-                await Task.Delay(frameDelayMs);
+                await PhantomVault.UI.Services.FrameClock.NextFrameAsync(border);
             }
 
             if (animateHeight)
@@ -686,7 +718,8 @@ namespace PhantomVault.UI.Views
 
                         if (result == "Pin")
                         {
-                            var pinDialog = new PhantomVault.UI.Views.Dialogs.PinSetupDialog();
+                            // The PIN goes into this vault's encrypted manifest.
+                            var pinDialog = new PhantomVault.UI.Views.Dialogs.PinSetupDialog(pin => vaultViewModel.SetVaultPinAsync(pin));
                             await pinDialog.ShowDialog(vaultWindow);
                             if (pinDialog.DataContext is PhantomVault.UI.ViewModels.Dialogs.PinSetupDialogViewModel pinVm
                                 && pinVm.Success)
@@ -857,11 +890,26 @@ namespace PhantomVault.UI.Views
                 }
 
                 var services = app.Services;
+
+                // Developer bypass keeps its own settings, like a vault, so dev-only defaults
+                // never leak into real vaults or the global settings. Switched before the view
+                // model and window are built, since both read settings on construction.
+                PhantomVault.UI.Services.SettingsService.SetActiveVault(
+                    PhantomVault.UI.Services.SettingsService.ComputeVaultKey("developer-bypass"));
+
+                // First time only: screenshot protection starts off here, so the window can be
+                // captured while developing. Toggling it afterwards is remembered as usual.
+                if (!PhantomVault.UI.Services.SettingsService.ActiveVaultHasOwnSettings)
+                {
+                    PhantomVault.UI.Services.SettingsService.Update(s => s.EnableScreenshotProtection = false);
+                }
+
                 var vaultViewModel = services.GetRequiredService<VaultViewModel>();
                 var vaultWindow = new VaultWindow
                 {
                     DataContext = vaultViewModel
                 };
+                vaultWindow.Closed += (_, _) => PhantomVault.UI.Services.SettingsService.SetActiveVault(null);
 
                 var vaultLockDurationService = services.GetRequiredService<VaultLockDurationService>();
                 vaultLockDurationService.SetActiveSession(null);

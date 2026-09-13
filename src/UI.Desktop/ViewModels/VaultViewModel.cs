@@ -123,6 +123,7 @@ namespace PhantomVault.UI.ViewModels
         private ObservableCollection<CredentialViewModel> _credentials = new();
         private ObservableCollection<CredentialViewModel> _filteredCredentials = new();
         private ObservableCollection<ListItemWrapper> _groupedListItems = new();
+        private ObservableCollection<CategoryGridSection> _groupedGridSections = new();
         private ObservableCollection<CredentialViewModel> _passkeys = new();
         private ObservableCollection<CredentialViewModel> _flaggedCredentials = new();
         private ObservableCollection<CategoryViewModel> _categories = new();
@@ -137,7 +138,10 @@ namespace PhantomVault.UI.ViewModels
         private string _statusMessage = "Ready";
         private string _settingsSaveNotification = "Settings saved";
         private string _lastSyncTime = DateTime.Now.ToString("HH:mm");
-        private int _sortOption = 0;
+        // Group by category by default. The list is far easier to scan grouped than as one
+        // flat A-Z run, and the grouped view is the one the category headers were designed
+        // for. 4 is the "Category" entry of the sort ComboBox in CredentialListView.
+        private int _sortOption = 4;
         private bool _isShowingAll = false;
         private bool _isShowingPasswords = false;
         private bool _isShowingFavorites = false;
@@ -494,6 +498,8 @@ namespace PhantomVault.UI.ViewModels
                 _showCategoryColorBarOnly = s.ShowCategoryColorBarOnly;
                 _showEntryIcons = s.ShowEntryIcons;
                 _showCategoryColors = s.ShowCategoryColors;
+                _entryCardColourStyle = s.EntryCardColourStyle ?? "SideBar";
+                _detailCardColourStyle = s.DetailCardColourStyle ?? "Border";
             }
             catch { _showCategoryColorBarOnly = false; }
             SettingsService.SettingsChanged += OnUserSettingsChanged;
@@ -558,10 +564,16 @@ namespace PhantomVault.UI.ViewModels
                 _isDashboardEnabled = userSettings.DashboardEnabled;
                 _startWithWindows = WindowsStartupRegistration.IsEnabled();
                 _globalHotkeyEnabled = userSettings.GlobalHotkeyEnabled;
-                _isGridView = userSettings.PreferGridView;
+                // The SortOption setter forces list view when grouping by category; apply the
+                // same rule to the initial state, or a saved grid preference would start the
+                // app in the one combination that setter exists to prevent.
+                _isGridView = userSettings.PreferGridView && _sortOption != 4;
                 _gridViewIconPath = _isGridView ? "Assets/SVG/Current/List.svg" : "Assets/SVG/Current/Grid.svg";
             }
-            catch {  }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "[Vault] Failed to load user settings; using defaults");
+            }
 
             if (_isDashboardEnabled)
             {
@@ -1078,7 +1090,7 @@ namespace PhantomVault.UI.ViewModels
                 return IsLockscreenVisible
                        && IsSoftLocked
                        && settings.EnablePinLock
-                       && PinLockService.HasPinConfigured(settings, _manifestPath);
+                       && PinLockService.HasPinConfigured(_cachedRuntimeManifest);
             }
         }
 
@@ -1427,6 +1439,56 @@ namespace PhantomVault.UI.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _showCategoryColors, value);
         }
 
+        private string _entryCardColourStyle = "SideBar";
+
+        /// <summary>
+        /// How an entry card shows its category colour: "SideBar" (default), "Border",
+        /// "TopBar" or "None". Chosen in the Category Manager beside Coloured blur.
+        /// </summary>
+        public string EntryCardColourStyle
+        {
+            get => _entryCardColourStyle;
+            private set
+            {
+                if (string.Equals(_entryCardColourStyle, value, StringComparison.Ordinal)) return;
+                this.RaiseAndSetIfChanged(ref _entryCardColourStyle, value);
+                this.RaisePropertyChanged(nameof(ShowCardSideBar));
+                this.RaisePropertyChanged(nameof(ShowCardTopBar));
+                this.RaisePropertyChanged(nameof(ShowCardColourBorder));
+            }
+        }
+
+        private string _detailCardColourStyle = "Border";
+
+        /// <summary>
+        /// How the selected entry's detail card shows its category colour: "Border" (default),
+        /// "TopBar" or "None". Chosen in the Category Manager beside the card colour.
+        /// </summary>
+        public string DetailCardColourStyle
+        {
+            get => _detailCardColourStyle;
+            private set
+            {
+                if (string.Equals(_detailCardColourStyle, value, StringComparison.Ordinal)) return;
+                this.RaiseAndSetIfChanged(ref _detailCardColourStyle, value);
+                this.RaisePropertyChanged(nameof(DetailCardBorderThickness));
+            }
+        }
+
+        /// <summary>
+        /// The detail card draws its category colour as its border, so one thickness covers all
+        /// three styles: all sides for a full border, top only for a bar (it follows the card's
+        /// rounded corners), or none.
+        /// </summary>
+        public Avalonia.Thickness DetailCardBorderThickness =>
+            string.Equals(_detailCardColourStyle, "TopBar", StringComparison.OrdinalIgnoreCase) ? new Avalonia.Thickness(0, 5, 0, 0)
+            : string.Equals(_detailCardColourStyle, "None", StringComparison.OrdinalIgnoreCase) ? new Avalonia.Thickness(0)
+            : new Avalonia.Thickness(3);
+
+        public bool ShowCardSideBar => string.Equals(_entryCardColourStyle, "SideBar", StringComparison.OrdinalIgnoreCase);
+        public bool ShowCardTopBar => string.Equals(_entryCardColourStyle, "TopBar", StringComparison.OrdinalIgnoreCase);
+        public bool ShowCardColourBorder => string.Equals(_entryCardColourStyle, "Border", StringComparison.OrdinalIgnoreCase);
+
         private void OnUserSettingsChanged(object? sender, UserSettingsChangedEventArgs e)
         {
             try
@@ -1437,9 +1499,14 @@ namespace PhantomVault.UI.ViewModels
                     ShowCategoryColorBarOnly = e.Settings.ShowCategoryColorBarOnly;
                     ShowEntryIcons = e.Settings.ShowEntryIcons;
                     ShowCategoryColors = e.Settings.ShowCategoryColors;
+                    EntryCardColourStyle = e.Settings.EntryCardColourStyle ?? "SideBar";
+                    DetailCardColourStyle = e.Settings.DetailCardColourStyle ?? "Border";
                 });
             }
-            catch {  }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "[Vault] Failed to apply changed user settings");
+            }
         }
 
         public Core.Models.EntryType? CurrentEntryType
@@ -1826,6 +1893,13 @@ namespace PhantomVault.UI.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _filteredCredentials, value);
         }
 
+        /// <summary>Category sections for the grid view when sorted by category (header + tiles).</summary>
+        public ObservableCollection<CategoryGridSection> GroupedGridSections
+        {
+            get => _groupedGridSections;
+            private set => this.RaiseAndSetIfChanged(ref _groupedGridSections, value);
+        }
+
         public ObservableCollection<ListItemWrapper> GroupedListItems
         {
             get => _groupedListItems;
@@ -1875,6 +1949,7 @@ namespace PhantomVault.UI.ViewModels
             {
                 this.RaiseAndSetIfChanged(ref _selectedCredential, value);
                 this.RaisePropertyChanged(nameof(SelectedCredentialCategoryBrush));
+                RefreshAccountTiles();
             }
         }
 
@@ -2660,9 +2735,9 @@ namespace PhantomVault.UI.ViewModels
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-
+                Log.Warning(ex, "[Vault] Failed to apply category tile colours from the manifest");
             }
         }
 
@@ -2819,6 +2894,31 @@ namespace PhantomVault.UI.ViewModels
                     Url = "https://github.com",
                     Notes = "Primary GitHub account two-factor authentication",
                     CreatedUtc = DateTimeOffset.Now.AddMonths(-3)
+                },
+                // Merged-card examples: a second GitHub login (joins the GitHub card with the
+                // personal login and its authenticator) and a Google Workspace login (joins the
+                // Gmail card through the gmail -> google alias).
+                new Credential
+                {
+                    Title = "GitHub",
+                    Username = "alex@summit.io",
+                    Password = "W0rk!Git#2025",
+                    Url = "https://github.com/summit-robotics",
+                    Group = "Logins",
+                    EntryType = EntryType.Password,
+                    Notes = "Work account - Summit Robotics organisation",
+                    CreatedUtc = DateTimeOffset.Now.AddDays(-20)
+                },
+                new Credential
+                {
+                    Title = "Google Workspace",
+                    Username = "alex.rivera@summit.io",
+                    Password = "Summ!tMail88",
+                    Url = "https://mail.google.com",
+                    Group = "Logins",
+                    EntryType = EntryType.Password,
+                    Notes = "Work mail and calendar",
+                    CreatedUtc = DateTimeOffset.Now.AddMonths(-5)
                 },
                 new Credential
                 {
@@ -3033,7 +3133,13 @@ namespace PhantomVault.UI.ViewModels
 
             var materializedList = filtered.ToList();
 
+            // Entries for the same service show as one tile (the first in list order); the card
+            // then shows each of them as its own account tile.
+            var serviceGroups = GroupByService(materializedList);
+            materializedList = serviceGroups.Select(g => g.Primary).ToList();
+
             var groupedItems = new List<ListItemWrapper>();
+            var gridSections = new List<CategoryGridSection>();
             if (SortOption == 4)
             {
                 var grouped = materializedList.GroupBy(c => c.Group ?? "Uncategorized");
@@ -3044,7 +3150,10 @@ namespace PhantomVault.UI.ViewModels
                         string.Equals(cat.Name, group.Key, StringComparison.OrdinalIgnoreCase));
                     var categoryColor = categoryVm?.TileColor;
 
-                    groupedItems.Add(ListItemWrapper.CreateCategoryHeader(group.Key, categoryColor, group.Count()));
+                    var header = ListItemWrapper.CreateCategoryHeader(group.Key, categoryColor, group.Count());
+                    groupedItems.Add(header);
+                    // The grid view shows the same header above that category's tiles.
+                    gridSections.Add(new CategoryGridSection(header, group.ToList()));
 
                     foreach (var cred in group)
                     {
@@ -3066,8 +3175,15 @@ namespace PhantomVault.UI.ViewModels
             Dispatcher.UIThread.Post(() =>
             {
 
+                // Group assignment raises property changes, so it happens here on the UI thread.
+                foreach (var (_, members) in serviceGroups)
+                    foreach (var member in members)
+                        member.SetAccountGroup(members);
+
                 FilteredCredentials = new ObservableCollection<CredentialViewModel>(materializedList);
                 GroupedListItems = new ObservableCollection<ListItemWrapper>(groupedItems);
+                RefreshAccountTiles();
+                GroupedGridSections = new ObservableCollection<CategoryGridSection>(gridSections);
 
                 this.RaisePropertyChanged(nameof(FilteredCount));
                 this.RaisePropertyChanged(nameof(IsEmpty));
@@ -3460,6 +3576,7 @@ namespace PhantomVault.UI.ViewModels
                 CloseEditPanel();
             });
             EditViewModel.Categories = new ObservableCollection<CategoryViewModel>(Categories);
+            EditViewModel.MergeTargetLookup = FindMergeTargetTitle;
 
             IsEditPanelVisible = true;
 
@@ -3479,14 +3596,7 @@ namespace PhantomVault.UI.ViewModels
             SelectedCredential = credentialVm;
 
             var editingTitle = credentialVm.Title;
-            try
-            {
-                Debug.WriteLine($"[EDIT] Opening credential: {editingTitle}");
-            }
-            catch
-            {
-
-            }
+            Debug.WriteLine($"[EDIT] Opening credential: {editingTitle}");
 
             StatusMessage = string.IsNullOrWhiteSpace(editingTitle)
                 ? "Editing credential"
@@ -3499,6 +3609,7 @@ namespace PhantomVault.UI.ViewModels
                 CloseEditPanel();
             });
             EditViewModel.Categories = new ObservableCollection<CategoryViewModel>(Categories);
+            EditViewModel.MergeTargetLookup = FindMergeTargetTitle;
 
             IsEditPanelVisible = true;
 
@@ -3870,8 +3981,12 @@ namespace PhantomVault.UI.ViewModels
                                     }
                                 });
                             }
-                            catch (OperationCanceledException) {  }
-                            catch {  }
+                            catch (OperationCanceledException) { }
+                            catch (Exception ex)
+                            {
+                                // A failed auto-clear leaves the copied value on the clipboard.
+                                Log.Warning(ex, "[Clipboard] Auto-clear failed; the copied value may still be on the clipboard.");
+                            }
                         });
                     }
 
@@ -3946,8 +4061,12 @@ namespace PhantomVault.UI.ViewModels
                                     }
                                 });
                             }
-                            catch (OperationCanceledException) {  }
-                            catch {  }
+                            catch (OperationCanceledException) { }
+                            catch (Exception ex)
+                            {
+                                // A failed auto-clear leaves the copied value on the clipboard.
+                                Log.Warning(ex, "[Clipboard] Auto-clear failed; the copied value may still be on the clipboard.");
+                            }
                         });
                     }
 
@@ -3963,6 +4082,99 @@ namespace PhantomVault.UI.ViewModels
                     "The username could not be copied. Confirm clipboard access is allowed, then try again.",
                     _ownerWindow);
             }
+        }
+
+        /// <summary>
+        /// Copies one field shown in an entry detail view (see CopyableField). Uses the same
+        /// rate guard and auto-clear as the password copy: what counts as sensitive (an account
+        /// number, an address, a licence number) is not ours to second-guess per field.
+        /// </summary>
+        /// <returns>True when the value is now on the clipboard, so the caller can confirm it.</returns>
+        internal async Task<bool> CopyFieldValueAsync(string? value, string label)
+        {
+            try
+            {
+                _idleLockService.Reset();
+                try { _suiteSession?.TouchActivity(); } catch { /* best-effort */ }
+
+                if (string.IsNullOrEmpty(value))
+                {
+                    StatusMessage = "Nothing to copy";
+                    return false;
+                }
+
+                if (_clipboardGuard != null && !_clipboardGuard.CanCopy())
+                {
+                    await _dialogService.ShowWarningAsync(
+                        "Clipboard Blocked",
+                        "Too many clipboard operations detected. Please wait before copying again.",
+                        _ownerWindow);
+                    StatusMessage = "Clipboard temporarily blocked";
+                    return false;
+                }
+
+                var clipboard = TopLevel.GetTopLevel(_ownerWindow)?.Clipboard;
+                if (clipboard == null)
+                {
+                    StatusMessage = "Clipboard unavailable";
+                    return false;
+                }
+
+                await clipboard.SetTextAsync(value);
+                StatusMessage = $"{label} copied";
+                _clipboardGuard?.RegisterCopy(label);
+
+                _clipboardClearCts?.Cancel();
+                _clipboardClearCts = new CancellationTokenSource();
+                var clearToken = _clipboardClearCts.Token;
+
+                var clearDelay = SettingsService.Load().GetClipboardClearDelay();
+                if (clearDelay.HasValue)
+                {
+                    var copiedValue = value;
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await Task.Delay(clearDelay.Value, clearToken);
+                            await Dispatcher.UIThread.InvokeAsync(async () =>
+                            {
+                                var currentClip = TopLevel.GetTopLevel(_ownerWindow)?.Clipboard;
+                                if (currentClip != null)
+                                {
+                                    var currentText = await currentClip.TryGetTextAsync();
+                                    if (currentText == copiedValue)
+                                    {
+                                        await currentClip.ClearAsync();
+                                    }
+                                }
+                            });
+                        }
+                        catch (OperationCanceledException) { }
+                        catch (Exception ex)
+                        {
+                            // A failed auto-clear leaves the copied value on the clipboard.
+                            Log.Warning(ex, "[Clipboard] Auto-clear failed; the copied value may still be on the clipboard.");
+                        }
+                    });
+                }
+
+                // Not awaited: the caller shows its confirmation as soon as the copy lands.
+                _ = ResetStatusMessageSoonAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "[Clipboard] Failed to copy a detail field.");
+                StatusMessage = "The value could not be copied. Confirm clipboard access is allowed, then try again.";
+                return false;
+            }
+        }
+
+        private async Task ResetStatusMessageSoonAsync()
+        {
+            await Task.Delay(2000);
+            StatusMessage = "Ready";
         }
 
         private async Task CopyTotpCodeAsync(CredentialViewModel credential)
@@ -4018,8 +4230,12 @@ namespace PhantomVault.UI.ViewModels
                                 }
                             });
                         }
-                        catch (OperationCanceledException) {  }
-                        catch {  }
+                        catch (OperationCanceledException) { }
+                        catch (Exception ex)
+                        {
+                            // A failed auto-clear leaves the copied TOTP code on the clipboard.
+                            Log.Warning(ex, "[Clipboard] TOTP auto-clear failed; the code may still be on the clipboard.");
+                        }
                     });
 
                     await Task.Delay(2000);
@@ -5334,16 +5550,16 @@ namespace PhantomVault.UI.ViewModels
 
             try
             {
-                bool pinConfigured = PinLockService.SyncPinFlags(_manifestPath)
+                bool pinConfigured = PinLockService.SyncPinFlags(_cachedRuntimeManifest)
                     && SettingsService.Load().EnablePinLock;
                 if (!pinConfigured)
                 {
                     return;
                 }
             }
-            catch
+            catch (Exception ex)
             {
-
+                Log.Warning(ex, "[Vault] Could not evaluate the PIN lock state for the idle lock");
                 return;
             }
 
@@ -5601,7 +5817,7 @@ namespace PhantomVault.UI.ViewModels
         {
             try
             {
-                var dialog = new PhantomVault.UI.Views.Dialogs.PinSetupDialog(_manifestPath);
+                var dialog = new PhantomVault.UI.Views.Dialogs.PinSetupDialog(pin => SetVaultPinAsync(pin));
 
                 if (_ownerWindow != null)
                 {
@@ -5645,7 +5861,7 @@ namespace PhantomVault.UI.ViewModels
                 : "Vault locked by user.");
 
             var settings = SettingsService.Load();
-            bool pinConfigured = settings.EnablePinLock && PinLockService.HasPinConfigured(settings, _manifestPath);
+            bool pinConfigured = settings.EnablePinLock && PinLockService.HasPinConfigured(_cachedRuntimeManifest);
             bool usePinForAutoLock = settings.UsePinLockForAutoLock && pinConfigured;
 
             if (reason == LockReason.AutoLock && usePinForAutoLock)
@@ -5903,7 +6119,8 @@ namespace PhantomVault.UI.ViewModels
                 return Task.CompletedTask;
             }
 
-            if (!PinLockService.VerifyPin(LockscreenPin, _manifestPath))
+            // Checked against the manifest decrypted at unlock, not anything re-read from disk.
+            if (!PhantomVault.Core.Security.VaultPinLock.Verify(_cachedRuntimeManifest, LockscreenPin))
             {
                 RegisterFailedLockscreenAttempt("Invalid PIN.");
                 return Task.CompletedTask;
@@ -6081,9 +6298,9 @@ namespace PhantomVault.UI.ViewModels
                             ?? _manifestService.ReadManifestSecure(_manifestPath, _vaultPassword ?? SecurePassword.Empty(), keyfilePath);
                         ApplyManifestTransportState(runtimeManifest, _manifestPath);
                     }
-                    catch
+                    catch (Exception ex)
                     {
-
+                        Log.Warning(ex, "[Vault] Failed to apply manifest transport state during load");
                     }
                 }
 
@@ -6222,15 +6439,25 @@ namespace PhantomVault.UI.ViewModels
 
                 try
                 {
+                    // A PIN kept outside the encrypted manifest (older builds) is no longer
+                    // trusted: remove it and tell the user to set the PIN again.
+                    if (PinLockService.DiscardLegacyPinStores(_manifestPath))
+                    {
+                        Avalonia.Threading.Dispatcher.UIThread.Post(() => RecentIssuesLog.Instance.Record(
+                            IssueSeverity.Warning,
+                            "Set your PIN again",
+                            "PIN lock now keeps the PIN inside the vault's encrypted manifest. The PIN from the old storage was removed; set it again in Security settings."));
+                    }
+
                     // Drops stale EnablePinLock/UsePinLockForAutoLock flags when no PIN
                     // was ever set, so auto-lock never demands a PIN that doesn't exist.
-                    bool pinConfigured = PinLockService.SyncPinFlags(_manifestPath)
+                    bool pinConfigured = PinLockService.SyncPinFlags(_cachedRuntimeManifest)
                         && SettingsService.Load().EnablePinLock;
                     _vaultLockDurationService.AutoLockEnabled = pinConfigured;
                 }
-                catch
+                catch (Exception ex)
                 {
-
+                    Log.Warning(ex, "[Vault] Could not evaluate the PIN lock state after unlock; auto-lock disabled");
                     _vaultLockDurationService.AutoLockEnabled = false;
                 }
 
@@ -6545,9 +6772,9 @@ namespace PhantomVault.UI.ViewModels
                     keyfilePath,
                     recoveryVaultPath);
             }
-            catch
+            catch (Exception ex)
             {
-
+                Log.Warning(ex, "[Recovery] Failed to stage Phantom Recovery bootstrap artifacts");
             }
         }
 
@@ -7690,6 +7917,65 @@ namespace PhantomVault.UI.ViewModels
             {
                 IsBusy = false;
             }
+        }
+
+        /// <summary>
+        /// The manifest decrypted at unlock. The soft-lock PIN is checked against this copy,
+        /// never against anything re-read from disk.
+        /// </summary>
+        internal VaultManifest? RuntimeManifest => _cachedRuntimeManifest;
+
+        /// <summary>
+        /// Stores a new soft-lock PIN inside the vault's encrypted manifest.
+        /// </summary>
+        internal Task SetVaultPinAsync(string pin)
+        {
+            if (!PhantomVault.Core.Security.VaultPinLock.IsValidFormat(pin))
+                throw new ArgumentException(
+                    $"PIN must contain {PinLockService.MinVaultPinLength}-{PinLockService.MaxVaultPinLength} digits.", nameof(pin));
+
+            return UpdateManifestPinAsync(manifest => PhantomVault.Core.Security.VaultPinLock.SetPin(manifest, pin));
+        }
+
+        /// <summary>Removes the soft-lock PIN from the vault's encrypted manifest.</summary>
+        internal Task ClearVaultPinAsync()
+            => UpdateManifestPinAsync(PhantomVault.Core.Security.VaultPinLock.ClearPin);
+
+        private async Task UpdateManifestPinAsync(Action<VaultManifest> change)
+        {
+            var manifest = _cachedRuntimeManifest;
+            var manifestPath = _manifestPath;
+            if (string.IsNullOrWhiteSpace(manifestPath) || manifest == null)
+                throw new InvalidOperationException("Unlock the vault before changing its PIN.");
+
+            var previousSalt = manifest.PinSaltBase64;
+            var previousHash = manifest.PinHashBase64;
+            var previousIterations = manifest.PinPbkdf2Iterations;
+
+            try
+            {
+                await Task.Run(() =>
+                {
+                    change(manifest);
+                    _manifestService.WriteManifestSecure(
+                        manifest,
+                        manifestPath,
+                        _vaultPassword ?? SecurePassword.Empty(),
+                        _vaultKeyfilePath,
+                        usbSerial: null,
+                        requireDualFactor: false);
+                }).ConfigureAwait(false);
+            }
+            catch
+            {
+                // Keep the in-memory copy in step with what is on disk.
+                manifest.PinSaltBase64 = previousSalt;
+                manifest.PinHashBase64 = previousHash;
+                manifest.PinPbkdf2Iterations = previousIterations;
+                throw;
+            }
+
+            PinLockService.DiscardLegacyPinStores(manifestPath);
         }
 
         public string CurrentKeyfileDisplay

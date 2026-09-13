@@ -301,12 +301,26 @@ namespace PhantomVault.UI.ViewModels
                 {
                     var broker = (Avalonia.Application.Current as PhantomVault.UI.App)?
                         .Services?.GetService(typeof(AttestorCredentialBrokerClient)) as AttestorCredentialBrokerClient;
-                    if (broker == null || !await broker.AssertPasskeyAsync(match.AttestorPasskeyReference, rpId))
+                    // Local presence check, not a web sign-in.
+                    //
+                    // A real WebAuthn ceremony needs the site's clientDataJSON, which only the
+                    // browser can produce. That path now exists — the extension's MAIN-world
+                    // bridge forwards the challenge and relays the assertion back through
+                    // NativeHostPipeServer's "webauthnAssert" — but it belongs to the browser
+                    // flow. This is the desktop auto-inject row, where there is no page and no
+                    // challenge, so it stays a presence check and says so.
+                    if (broker == null || !await broker.VerifyPasskeyPresenceAsync(match.AttestorPasskeyReference, rpId))
                     {
                         RecentIssuesLog.Instance.Record(IssueSeverity.Warning,
                             "Passkey unavailable",
                             "Phantom Attestor did not approve this passkey request.");
+                        return;
                     }
+
+                    RecentIssuesLog.Instance.Record(IssueSeverity.Warning,
+                        "Passkey verified, not submitted",
+                        "Your passkey was verified locally. To sign in to the site, trigger its "
+                        + "passkey prompt in the browser — the Phantom extension answers it.");
                     return;
                 }
 
@@ -390,29 +404,12 @@ namespace PhantomVault.UI.ViewModels
         /// credential recorded for "example.com" may be asserted on
         /// "login.example.com", but never the reverse, and never across sites.
         /// </summary>
+        /// <summary>
+        /// Delegates to the shared rule in Core so this path and the browser-extension relay
+        /// cannot drift apart on what counts as a permitted relying party.
+        /// </summary>
         private static string? ResolveRelyingPartyId(CredentialMatch match)
-        {
-            var observed = (match.Domain ?? string.Empty).Trim().TrimEnd('.').ToLowerInvariant();
-            var stored = (match.RelyingPartyId ?? string.Empty).Trim().TrimEnd('.').ToLowerInvariant();
-
-            // No observed domain to check against — fall back to the stored value only
-            // if that is all we have, which matches the native (non-browser) case.
-            if (string.IsNullOrEmpty(observed))
-                return string.IsNullOrEmpty(stored) ? null : stored;
-
-            if (string.IsNullOrEmpty(stored))
-                return observed;
-
-            if (string.Equals(stored, observed, StringComparison.Ordinal))
-                return stored;
-
-            // Registrable domain suffix: "example.com" is valid for "login.example.com".
-            // The leading dot matters — it stops "notexample.com" matching "example.com".
-            if (observed.EndsWith("." + stored, StringComparison.Ordinal))
-                return stored;
-
-            return null;
-        }
+            => PhantomVault.Core.Services.Autofill.RelyingPartyId.Resolve(match.Domain, match.RelyingPartyId);
 
         /// <summary>
         /// Stored handles are base64 where possible; older entries are plain text.

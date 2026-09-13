@@ -64,6 +64,36 @@
             <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
             <Setter Property="BorderThickness" Value="2"/>
         </Style>
+
+        <!-- Icon and colour-picker buttons: the content is the affordance, so the button
+             itself draws nothing at rest. An own template keeps theme button chrome (which
+             targets the template, and so ignored Background="Transparent") from painting a
+             box behind the icon and swatch grid. Hover and press get only a faint wash. -->
+        <Style Selector="Button.bare">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Effect" Value="{x:Null}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <ContentPresenter x:Name="PART_ContentPresenter"
+                                      Background="{TemplateBinding Background}"
+                                      CornerRadius="8"
+                                      Padding="{TemplateBinding Padding}"
+                                      Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      HorizontalContentAlignment="Center"
+                                      VerticalContentAlignment="Center"/>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="Button.bare:pointerover">
+            <Setter Property="Background" Value="#14FFFFFF"/>
+        </Style>
+        <Style Selector="Button.bare:pressed">
+            <Setter Property="Background" Value="#24FFFFFF"/>
+        </Style>
     </UserControl.Styles>
 
     <Grid RowDefinitions="Auto,*,Auto" ClipToBounds="False">
@@ -116,12 +146,38 @@
                             BorderBrush="{DynamicResource ControlBorderBrush}"
                             BorderThickness="1"/>
                 </StackPanel>
-                <CheckBox Grid.Row="1" Grid.Column="1"
-                          Content="Coloured blur"
-                          IsChecked="{Binding UseColouredTileBlur, Mode=TwoWay}"
-                          HorizontalAlignment="Right"
-                          Margin="0,10,2,0"
-                          ToolTip.Tip="Tint category tiles with their own colour (mirrors Theme settings)"/>
+                <StackPanel Grid.Row="1" Grid.Column="1"
+                            Orientation="Horizontal"
+                            Spacing="16"
+                            HorizontalAlignment="Right"
+                            Margin="0,10,2,0">
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <TextBlock Text="Card colour"
+                                   VerticalAlignment="Center"
+                                   FontSize="{StaticResource Type.Label.Size}"
+                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                        <ComboBox ItemsSource="{Binding CardColourStyleNames}"
+                                  SelectedIndex="{Binding CardColourStyleIndex, Mode=TwoWay}"
+                                  Width="120"
+                                  VerticalAlignment="Center"
+                                  ToolTip.Tip="How entry cards in the list show their category colour"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <TextBlock Text="Detail colour"
+                                   VerticalAlignment="Center"
+                                   FontSize="{StaticResource Type.Label.Size}"
+                                   Foreground="{DynamicResource MutedTextBrush}"/>
+                        <ComboBox ItemsSource="{Binding DetailColourStyleNames}"
+                                  SelectedIndex="{Binding DetailColourStyleIndex, Mode=TwoWay}"
+                                  Width="120"
+                                  VerticalAlignment="Center"
+                                  ToolTip.Tip="How the open entry's detail card shows its category colour"/>
+                    </StackPanel>
+                    <CheckBox Content="Coloured blur"
+                              IsChecked="{Binding UseColouredTileBlur, Mode=TwoWay}"
+                              VerticalAlignment="Center"
+                              ToolTip.Tip="Tint category tiles with their own colour (mirrors Theme settings)"/>
+                </StackPanel>
             </Grid>
         </Border>
 
@@ -182,13 +238,10 @@
                                         <CheckBox Grid.Column="1" IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="8,0,8,0"/>
 
                                         <Button Grid.Column="2" Width="56" Height="56"
+                                                Classes="bare"
                                                 Command="{Binding #CategoryWindow.DataContext.PickIconCommand}"
                                                 CommandParameter="{Binding .}"
-                                                Background="Transparent"
-                                                BorderBrush="Transparent"
-                                                BorderThickness="0"
                                                 Margin="0,0,8,0"
-                                                Padding="0"
                                                 ToolTip.Tip="Choose icon"
                                                 VerticalAlignment="Center">
                                             <Border Width="50" Height="50" CornerRadius="25"
@@ -220,10 +273,7 @@
 
                                         <Button AutomationProperties.Name="Choose color" Grid.Column="3"
                                                 Width="36" Height="36"
-                                                Background="Transparent"
-                                                BorderBrush="Transparent"
-                                                BorderThickness="0"
-                                                Padding="0"
+                                                Classes="bare"
                                                 ToolTip.Tip="Choose color"
                                                 VerticalAlignment="Center" Margin="0,0,8,0"
                                                 IsVisible="{Binding IsTrash, Converter={StaticResource InvertBoolConverter}}">

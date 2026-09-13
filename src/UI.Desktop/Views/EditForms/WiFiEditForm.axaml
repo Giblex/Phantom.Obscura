@@ -1,27 +1,29 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:dcontrols="clr-namespace:PhantomVault.UI.Desktop.Controls"
              x:Class="PhantomVault.UI.Views.EditForms.WiFiEditForm">
 
     <Border x:Name="WiFiPanelBorder" Background="Transparent" IsVisible="{Binding IsWiFiEntry}">
-        <StackPanel x:Name="WiFiPanel" Spacing="14">
-        <TextBlock Text="Wi-Fi Network" Classes="form-section-title"/>
-        <StackPanel Classes="field-group">
-            <TextBlock Text="Network Name (SSID) *" Classes="field-label"/>
-            <TextBox Text="{Binding WiFiSSID}" Classes="form-field" Watermark="MyHomeWifi"/>
-        </StackPanel>
-        <StackPanel Classes="field-group">
-            <TextBlock Text="Security Type" Classes="field-label"/>
-            <TextBox Text="{Binding WiFiSecurityType}" Classes="form-field" Watermark="WPA2"/>
-        </StackPanel>
-        <StackPanel Classes="field-group">
-            <TextBlock Text="BSSID / MAC" Classes="field-label"/>
-            <TextBox Text="{Binding WiFiBSSID}" Classes="form-field" Watermark="AA:BB:CC:DD:EE:FF"/>
-        </StackPanel>
-        <StackPanel Classes="field-group">
-            <TextBlock Text="Network Password" Classes="field-label"/>
-            <TextBox Text="{Binding WiFiPassword}" PasswordChar="•" Classes="form-field" Watermark="••••••••"/>
-        </StackPanel>
+        <StackPanel x:Name="WiFiPanel" Spacing="12">
+            <TextBlock Text="Wi-Fi Network" Classes="form-section-title"/>
+            <dcontrols:FieldRow Spacing="12">
+                <StackPanel Classes="field-group">
+                    <TextBlock Text="Network Name (SSID) *" Classes="field-label"/>
+                    <TextBox Text="{Binding WiFiSSID}" Classes="form-field" Watermark="MyHomeWifi"/>
+                </StackPanel>
+                <StackPanel Classes="field-group">
+                    <TextBlock Text="Security Type" Classes="field-label"/>
+                    <TextBox Text="{Binding WiFiSecurityType}" Classes="form-field" Watermark="WPA2"/>
+                </StackPanel>
+            </dcontrols:FieldRow>
+            <StackPanel Classes="field-group">
+                <TextBlock Text="Network Password" Classes="field-label"/>
+                <TextBox Text="{Binding WiFiPassword}" PasswordChar="•" Classes="form-field" Watermark="••••••••"/>
+            </StackPanel>
+            <StackPanel Classes="field-group">
+                <TextBlock Text="BSSID / MAC" Classes="field-label"/>
+                <TextBox Text="{Binding WiFiBSSID}" Classes="form-field" Watermark="AA:BB:CC:DD:EE:FF"/>
+            </StackPanel>
         </StackPanel>
     </Border>
 </UserControl>
-

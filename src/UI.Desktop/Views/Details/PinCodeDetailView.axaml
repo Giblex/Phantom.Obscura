@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:converters="clr-namespace:PhantomVault.UI.Converters"
+             xmlns:dcontrols="clr-namespace:PhantomVault.UI.Desktop.Controls"
              x:Class="PhantomVault.UI.Views.Details.PinCodeDetailView">
 
     <UserControl.Resources>
@@ -17,26 +18,36 @@
                    FontSize="{StaticResource Type.Body.Size}"
                    FontWeight="SemiBold"
                    Foreground="{DynamicResource SecondaryTextBrush}"/>
-        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasPinLabel}">
-            <TextBlock Text="Label" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
-            <TextBox Text="{Binding SelectedCredential.PinLabel}" IsReadOnly="True" Height="36" Padding="10,8"/>
-        </StackPanel>
-        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasPinValue}">
-            <TextBlock Text="PIN" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
-            <TextBox Text="{Binding SelectedCredential.MaskedPinValue}" IsReadOnly="True" Height="36" Padding="10,8">
-                <TextBox.Effect>
-                    <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
-                </TextBox.Effect>
-            </TextBox>
-        </StackPanel>
-        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasPinCategory}">
-            <TextBlock Text="Category" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
-            <TextBox Text="{Binding SelectedCredential.PinCategory}" IsReadOnly="True" Height="36" Padding="10,8"/>
-        </StackPanel>
-        <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasPinIssuer}">
-            <TextBlock Text="Issuer" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
-            <TextBox Text="{Binding SelectedCredential.PinIssuer}" IsReadOnly="True" Height="36" Padding="10,8"/>
-        </StackPanel>
+
+        <dcontrols:FieldRow Spacing="12">
+            <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasPinLabel}">
+                <TextBlock Text="Label" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                <dcontrols:CopyableField Value="{Binding SelectedCredential.PinLabel}" CopyLabel="Label"/>
+            </StackPanel>
+            <StackPanel Spacing="6" IsVisible="{Binding SelectedCredential.HasPinCategory}">
+                <TextBlock Text="Category" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                <dcontrols:CopyableField Value="{Binding SelectedCredential.PinCategory}" CopyLabel="Category"/>
+            </StackPanel>
+        </dcontrols:FieldRow>
+
+        <!-- The PIN and who issued it share a line: the boxes size to the PIN. -->
+        <WrapPanel Orientation="Horizontal">
+            <StackPanel Spacing="6" Margin="0,0,24,8" IsVisible="{Binding SelectedCredential.HasPinValue}">
+                <TextBlock Text="PIN" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                <dcontrols:CopyableField Value="{Binding SelectedCredential.PinValue}"
+                                         MaskedValue="{Binding SelectedCredential.MaskedPinValue}"
+                                         IsSecret="True"
+                                         DigitBoxes="True"
+                                         CopyLabel="PIN">
+                    <dcontrols:CopyableField.Effect>
+                        <Binding Path="PrivacyModeEnabled" Converter="{StaticResource PrivacyBlurEffectConverter}"/>
+                    </dcontrols:CopyableField.Effect>
+                </dcontrols:CopyableField>
+            </StackPanel>
+            <StackPanel Spacing="6" Margin="0,0,0,8" MinWidth="160" IsVisible="{Binding SelectedCredential.HasPinIssuer}">
+                <TextBlock Text="Issuer" FontSize="{StaticResource Type.Label.Size}" FontWeight="SemiBold" Foreground="{DynamicResource MutedTextBrush}"/>
+                <dcontrols:CopyableField Value="{Binding SelectedCredential.PinIssuer}" CopyLabel="Issuer"/>
+            </StackPanel>
+        </WrapPanel>
     </StackPanel>
 </UserControl>
-

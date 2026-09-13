@@ -107,21 +107,22 @@ namespace PhantomVault.UI.Services
             var app = Application.Current;
             if (app == null) return;
 
-            var toRemove = new System.Collections.Generic.List<StyleInclude>();
-            for (int i = 0; i < app.Styles.Count; i++)
-            {
-                if (app.Styles[i] is StyleInclude si && si.Source != null && si.Source.OriginalString.Contains("Assets/Themes/Accents/Accent"))
-                {
-                    toRemove.Add(si);
-                }
-            }
+            // The Accent*.axaml files are ResourceDictionaries, not Styles. Loading them as a
+            // StyleInclude threw InvalidCastException (ResourceDictionary -> IStyle) from
+            // Styles.Add, which also aborted the rest of the startup theme block. Merge them
+            // into Application.Resources instead. Keys set directly on Application.Resources
+            // (e.g. SetAccentColor's AccentBrush) still take precedence over merged ones.
+            var merged = app.Resources.MergedDictionaries;
+            var toRemove = merged
+                .OfType<ResourceInclude>()
+                .Where(ri => ri.Source?.OriginalString.Contains("Assets/Themes/Accents/Accent") == true)
+                .ToList();
             foreach (var rem in toRemove)
             {
-                app.Styles.Remove(rem);
+                merged.Remove(rem);
             }
 
-            var include = new StyleInclude(new Uri("avares://PhantomVault.UI/")) { Source = new Uri(skinUri) };
-            app.Styles.Add(include);
+            merged.Add(new ResourceInclude(new Uri("avares://PhantomVault.UI/")) { Source = new Uri(skinUri) });
         }
 
         public void SetEffects(bool reduceAnimations, bool reduceTransparency)

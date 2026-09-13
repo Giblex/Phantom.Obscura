@@ -111,9 +111,9 @@ namespace PhantomVault.UI
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-
+                Serilog.Log.Warning(ex, "SetTheme: failed to update window styles for theme {Theme}", _currentTheme);
             }
 
             try
@@ -140,9 +140,9 @@ namespace PhantomVault.UI
                     TraceMergedDictionaries("App.SetTheme after resource update", appMerged);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-
+                Serilog.Log.Warning(ex, "SetTheme: failed to update application resources for theme {Theme}", _currentTheme);
             }
 
             CleanupThemeAwareWindows();

@@ -15,6 +15,24 @@ namespace PhantomVault.UI.Views.Autofill
             InitializeComponent();
 
             KeyDown += OnKeyDown;
+
+            // Frameless card: the header is the drag handle, and it springs open like the
+            // other AutoFill surfaces.
+            var header = this.FindControl<Grid>("DragHeader");
+            if (header != null)
+            {
+                header.PointerPressed += (_, e) =>
+                {
+                    if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed && e.Source == header)
+                        BeginMoveDrag(e);
+                };
+            }
+
+            Opened += (_, _) =>
+            {
+                if (this.FindControl<Border>("Shell") is { } shell)
+                    _ = AutofillMotion.EnterAsync(shell, fromY: -8);
+            };
         }
 
         private void InitializeComponent()

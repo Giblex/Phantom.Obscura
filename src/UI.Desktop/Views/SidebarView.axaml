@@ -307,6 +307,12 @@
         <Style Selector="ToggleButton.category-filter:pointerover /template/ Border#CategoryTint">
             <Setter Property="Opacity" Value="0.42"/>
         </Style>
+        <!-- Coloured blur OFF: the pills drop their category-colour wash and keep only the
+             accent bar, matching the neutral category tiles. The class is set on this view
+             from CategoryBlurPreference (see SidebarView.axaml.cs). -->
+        <Style Selector=".no-colour-tint ToggleButton.category-filter /template/ Border#CategoryTint">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
         <Style Selector="ToggleButton.category-filter:pointerover /template/ Border#CyanGlass">
             <Setter Property="Opacity" Value="0.30"/>
         </Style>
@@ -564,7 +570,9 @@
                 </Setter>
             </Style>
         </Border.Styles>
-        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <!-- Background: a translucent lift over the window brush plus a faint dot pattern. -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                      Background="{DynamicResource Brush.PanelLiftDots}">
             <ScrollViewer.OpacityMask>
                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
                     <GradientStop Offset="0.00" Color="#00FFFFFF"/>

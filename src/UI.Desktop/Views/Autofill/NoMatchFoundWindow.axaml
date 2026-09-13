@@ -3,44 +3,81 @@
     xmlns:views="clr-namespace:PhantomVault.UI.Views"
     x:Class="PhantomVault.UI.Views.AutoFill.NoMatchFoundWindow"
     Title="Phantom Obscura — No Credential Found"
-    Width="420" Height="230"
+    Width="404"
+    SizeToContent="Height"
     CanResize="False"
     Topmost="True"
     ShowInTaskbar="False"
+    SystemDecorations="None"
+    Background="Transparent"
+    TransparencyLevelHint="Transparent"
     WindowStartupLocation="CenterScreen">
-    <Border Padding="24">
-        <StackPanel Spacing="16">
-            <StackPanel Spacing="6">
-                <TextBlock Text="No Credential Found"
-                           FontSize="{StaticResource Type.H4.Size}"
-                           FontWeight="SemiBold"
-                           Foreground="{DynamicResource PrimaryTextBrush}"/>
-                <TextBlock Text="{Binding Message}"
-                           FontSize="{StaticResource Type.Body.Size}"
-                           Foreground="{DynamicResource MutedTextBrush}"
-                           TextWrapping="Wrap"/>
+
+    <views:ThemeAwareWindow.Styles>
+        <StyleInclude Source="avares://PhantomVault.UI/Views/Autofill/AutofillStyles.axaml"/>
+    </views:ThemeAwareWindow.Styles>
+
+    <!-- Same frameless card as the other AutoFill surfaces. Drag it by the header. -->
+    <Border x:Name="Shell" Classes="af-shell" RenderTransformOrigin="50%,50%">
+        <Border Classes="af-clip">
+            <StackPanel>
+                <Border Classes="af-accent-line"/>
+
+                <Grid x:Name="DragHeader" ColumnDefinitions="Auto,12,*,Auto" Margin="16,14,12,12" Background="Transparent">
+                    <Border Grid.Column="0" Classes="af-logo">
+                        <Image Source="avares://PhantomVault.UI/Assets/ok.png"
+                               Width="16" Height="16"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
+                        <TextBlock Text="PHANTOM OBSCURA" Classes="af-label"/>
+                        <TextBlock Text="No saved login for this site" Classes="af-title" FontSize="14"/>
+                    </StackPanel>
+                    <Button Grid.Column="3"
+                            Classes="af-btn ghost"
+                            Width="30" Height="30" Padding="0"
+                            VerticalAlignment="Top"
+                            Command="{Binding CancelCommand}"
+                            ToolTip.Tip="Close"
+                            AutomationProperties.Name="Close">
+                        <Path Data="M4 4L12 12M12 4L4 12"
+                              Stroke="{DynamicResource Af.TextSoft}"
+                              StrokeThickness="1.6"
+                              StrokeLineCap="Round"
+                              Width="12" Height="12"
+                              Stretch="Uniform"/>
+                    </Button>
+                </Grid>
+
+                <Border Classes="af-divider"/>
+
+                <StackPanel Margin="16,14,16,16" Spacing="14">
+                    <TextBlock Text="{Binding Message}" Classes="af-body"/>
+
+                    <StackPanel Spacing="8">
+                        <Button Command="{Binding AddNewEntryCommand}"
+                                Classes="af-btn primary"
+                                Height="38"
+                                HorizontalAlignment="Stretch"
+                                Content="Add New Entry"
+                                ToolTip.Tip="Open the credential editor to save a new login for this portal"/>
+
+                        <Button Command="{Binding CreatePasskeyCommand}"
+                                IsVisible="{Binding CanCreatePasskey}"
+                                Classes="af-btn"
+                                Height="38"
+                                HorizontalAlignment="Stretch"
+                                Content="Open Attestor Passkey Flow"
+                                ToolTip.Tip="{Binding AttestorStatus}"/>
+
+                        <Button Command="{Binding CancelCommand}"
+                                Classes="af-btn ghost"
+                                HorizontalAlignment="Stretch"
+                                Content="Cancel"/>
+                    </StackPanel>
+                </StackPanel>
             </StackPanel>
-
-            <Button Command="{Binding AddNewEntryCommand}"
-                    Content="Add New Entry"
-                    Classes="liquid-glass"
-                    HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Center"
-                    ToolTip.Tip="Open the credential editor to save a new login for this portal"/>
-
-            <Button Command="{Binding CreatePasskeyCommand}"
-                    IsVisible="{Binding CanCreatePasskey}"
-                    Content="Open Attestor Passkey Flow"
-                    Classes="liquid-glass"
-                    HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Center"
-                    ToolTip.Tip="{Binding AttestorStatus}"/>
-
-            <Button Command="{Binding CancelCommand}"
-                    Content="Cancel"
-                    HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Center"/>
-        </StackPanel>
+        </Border>
     </Border>
 </views:ThemeAwareWindow>
-

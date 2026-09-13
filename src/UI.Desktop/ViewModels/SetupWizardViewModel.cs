@@ -2260,7 +2260,17 @@ namespace PhantomVault.UI.ViewModels
 
                 if (!string.IsNullOrWhiteSpace(blackSecurePhysicalDevicePath))
                 {
-                    await _blackSecureRawVolumeService.InvalidateVolumeHeaderAsync(blackSecurePhysicalDevicePath).ConfigureAwait(false);
+                    // The header wipe now reports failure instead of swallowing it. Here it is
+                    // rollback only, so its failure is recorded without replacing the original
+                    // provisioning error that the rethrow below carries.
+                    try
+                    {
+                        await _blackSecureRawVolumeService.InvalidateVolumeHeaderAsync(blackSecurePhysicalDevicePath).ConfigureAwait(false);
+                    }
+                    catch (Exception wipeEx)
+                    {
+                        Log.Error(wipeEx, "Rollback could not invalidate the partially written Black Secure volume header");
+                    }
                 }
 
                 throw;
@@ -3644,11 +3654,6 @@ namespace PhantomVault.UI.ViewModels
         public string Password { get; init; } = string.Empty;
         public string Prompt { get; init; } = string.Empty;
         public DateTimeOffset CreatedUtc { get; init; }
-    }
-
-    internal sealed class HostCompanionLocator
-    {
-        public string HostCompanionKeyfilePath { get; init; } = string.Empty;
     }
 
 }

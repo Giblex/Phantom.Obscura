@@ -119,9 +119,10 @@ namespace PhantomVault.Core.Services.Security
                     });
                 }
             }
-            catch
+            catch (Exception ex)
             {
-
+                // A check that throws must not pass for a clean one.
+                Serilog.Log.Warning(ex, "[TamperDetection] Periodic tamper check failed; this cycle was not evaluated");
             }
         }
 

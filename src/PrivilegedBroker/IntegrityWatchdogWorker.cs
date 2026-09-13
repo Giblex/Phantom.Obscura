@@ -11,7 +11,12 @@ internal sealed class IntegrityWatchdogWorker : BackgroundService
     private const string ManifestName = "integrity-manifest.json";
     private const string PublicKeyName = "integrity-public-key.pem";
     private IntegrityController? _controller;
+#pragma warning disable CS0649 // assigned only in the PHANTOMKEY configuration
+    // Null on a standalone build: anchoring the integrity log to a Phantom Key is optional
+    // hardening, and PhantomKey is an optional companion. Staying null is the intended
+    // degradation, and every read of this field is already null-guarded.
     private IntegrityAnchorCoordinator? _anchors;
+#pragma warning restore CS0649
     private WindowsUsnJournalMonitor? _usn;
     private long _releaseSequence;
 
@@ -89,8 +94,15 @@ internal sealed class IntegrityWatchdogWorker : BackgroundService
             _controller.Start();
             try { _usn = new WindowsUsnJournalMonitor(root); }
             catch (Exception ex) { Program.TryLog($"[integrity] USN journal unavailable; periodic scans remain active: {ex.Message}"); }
+#if PHANTOMKEY
+            // Anchoring the integrity log to a Phantom Key is extra hardening on top of the
+            // log, not a prerequisite for it. Without the optional companion the watchdog still
+            // scans, still detects tampering and still writes health — it simply has no
+            // external notary to countersign the head. _anchors stays null and every use of it
+            // is already guarded.
             _anchors = new IntegrityAnchorCoordinator(log, new PhantomKeyWatchdogAnchorProvider(),
                 Path.Combine(state, "phantom-key-anchors.jsonl"), LoadPinnedPhantomKeyId());
+#endif
             WriteHealth(initial.IsClean ? "healthy" : "tampered",
                 initial.IsClean ? "Initial scan verified." : $"Initial scan found {initial.Changes.Count} change(s).",
                 initial.Changes.LastOrDefault());

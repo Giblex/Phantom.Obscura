@@ -258,4 +258,18 @@ public sealed class ObscuraVolumeCommitRecoveryTests : IDisposable
         Assert.Equal(before, File.ReadAllBytes(vol));
         Assert.False(File.Exists(vol + ".commit-journal"));
     }
+
+    [Fact]
+    public async Task A_legacy_volume_still_opens_without_a_keyfile_being_the_right_one()
+    {
+        // Back-compat: existing vaults must keep working before they are upgraded.
+        string vol = Path.Combine(_dir, "legacy.bin");
+        WriteLegacyVolume(vol, ("root/a.txt", Encoding.UTF8.GetBytes("alpha")));
+
+        string outDir = Path.Combine(_dir, "legacy_out");
+        await _svc.ExtractVolumeAsync(vol, outDir, _keyfile, progress: null, verify: true);
+
+        Assert.Equal("alpha", File.ReadAllText(Path.Combine(outDir, "root", "a.txt")));
+        Assert.True(await _svc.IsLegacyVolumeAsync(vol));
+    }
 }

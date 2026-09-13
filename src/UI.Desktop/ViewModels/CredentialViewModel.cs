@@ -30,9 +30,8 @@ namespace PhantomVault.UI.ViewModels
         private IBrush _passwordStrengthColor = Brushes.Gray;
         private string _currentTotpCode = string.Empty;
         private int _totpSecondsRemaining;
-        private Timer? _totpTimer;
-        private double _totpCodeOpacity = 1.0;
-        private double _totpCodeScale = 1.0;
+        private IDisposable? _totpTimer; // TotpTicker subscription
+        private bool _isPasswordRevealed;
 
         private static readonly Lazy<IconManager> _sharedIconManager = new(() =>
         {
@@ -65,8 +64,11 @@ namespace PhantomVault.UI.ViewModels
 
             try
             {
-                var iconManager = _sharedIconManager.Value;
-                var path = iconManager.FindIconPathForCredential(_credential);
+                // An icon the user picked (Icon Manager) wins; the auto-detected logo from the
+                // title / website is only the fallback. Before, the picked icon was saved but the
+                // card kept showing the auto-detected one.
+                var path = ResolveIconFile(_credential.Icon)
+                           ?? _sharedIconManager.Value.FindIconPathForCredential(_credential);
                 if (!string.IsNullOrEmpty(path) && System.IO.File.Exists(path))
                 {
                     _autoDetectedIconBitmap = new Bitmap(path);
@@ -89,9 +91,40 @@ namespace PhantomVault.UI.ViewModels
 
             if (!string.IsNullOrWhiteSpace(_credential.TotpSecret) || !string.IsNullOrWhiteSpace(_credential.AttestorTotpReference))
             {
-                _ = UpdateTotpCodeAsync();
-                _totpTimer = new Timer(_ => _ = UpdateTotpCodeAsync(), null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
+                // One process-wide tick for every TOTP entry (TotpTicker), instead of a timer per
+                // entry: a vault with many authenticator codes no longer runs a thread-pool timer
+                // for each. Subscribe also runs the first update immediately.
+                _totpTimer = TotpTicker.Subscribe(() => _ = UpdateTotpCodeAsync());
             }
+        }
+
+        /// <summary>
+        /// The file behind a picked icon: an absolute path, or one relative to the app folder or
+        /// its Assets\Visuals library. Null when it is not an image file that exists.
+        /// </summary>
+        private static string? ResolveIconFile(string? icon)
+        {
+            if (string.IsNullOrWhiteSpace(icon)) return null;
+            try
+            {
+                if (System.IO.Path.IsPathRooted(icon))
+                    return System.IO.File.Exists(icon) ? icon : null;
+
+                var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                foreach (var candidate in new[]
+                         {
+                             System.IO.Path.Combine(baseDir, icon),
+                             System.IO.Path.Combine(baseDir, "Assets", "Visuals", icon)
+                         })
+                {
+                    if (System.IO.File.Exists(candidate)) return candidate;
+                }
+            }
+            catch
+            {
+                // Not a usable path (e.g. an emoji or initials); fall back to auto-detect.
+            }
+            return null;
         }
 
         public string Title => _credential.Title;
@@ -164,27 +197,85 @@ namespace PhantomVault.UI.ViewModels
                 return string.Empty;
             }
 
+            // Resolved once per entry. This used to build a new IconManager (scanning the icon
+            // folders and rebuilding its index) on every read of DisplayIcon, for every entry
+            // without an icon; bindings read it repeatedly, which was a large part of the lag.
+            if (_displayIconResolved) return _resolvedDisplayIcon;
+
             try
             {
-                var iconsDir = System.IO.Path.Combine(
-                    AppDomain.CurrentDomain.BaseDirectory,
-                    "Assets", "Icons"
-                );
-
-                var iconManager = new PhantomVault.Core.Services.IconManager(iconsDir);
-                var autoIcon = iconManager.FindIconForCredential(_credential);
-
-                if (!string.IsNullOrEmpty(autoIcon))
-                {
-                    return autoIcon;
-                }
+                _resolvedDisplayIcon = _sharedAssetIconManager.Value.FindIconForCredential(_credential) ?? string.Empty;
             }
             catch
             {
-
+                _resolvedDisplayIcon = string.Empty;
             }
 
-            return string.Empty;
+            _displayIconResolved = true;
+            return _resolvedDisplayIcon;
+        }
+
+        private bool _displayIconResolved;
+        private string _resolvedDisplayIcon = string.Empty;
+
+        private static readonly Lazy<IconManager> _sharedAssetIconManager = new(() =>
+            new IconManager(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Icons")),
+            System.Threading.LazyThreadSafetyMode.ExecutionAndPublication);
+
+        /// <summary>
+        /// Default icon for the entry's type (a driver licence card, a passport, a bank, Wi-Fi…),
+        /// shown instead of the title's initials when the entry has no logo or custom icon.
+        /// Identity entries go by their document type.
+        /// </summary>
+        public string TypeIconName => "Assets/Visuals/App Icons/SVG/Entry Types/" + TypeIconFile() + ".svg";
+
+        /// <summary>True when the list tile should show <see cref="TypeIconName"/> (no logo, no custom icon).</summary>
+        public bool ShowTypeIcon => !HasAutoDetectedIcon && !HasCustomIcon;
+
+        private string TypeIconFile()
+        {
+            switch (EntryType)
+            {
+                case EntryType.Identity:
+                    var doc = (_credential.IdDocumentType ?? string.Empty).ToLowerInvariant();
+                    if (doc.Contains("passport")) return "passport";
+                    if (doc.Contains("driver") || doc.Contains("licen")) return "driver-licence";
+                    if (doc.Contains("medicare")) return "medicare-card";
+                    if (doc.Contains("birth")) return "birth-certificate";
+                    if (doc.Contains("age")) return "proof-of-age";
+                    if (doc.Contains("concession")) return "concession-card";
+                    if (doc.Contains("citizen")) return "citizenship";
+                    return "id-card";
+                case EntryType.WiFi: return "wifi";
+                case EntryType.ApiKey: return "api-key";
+                case EntryType.Contact: return "contact";
+                case EntryType.CreditCard: return "credit-card";
+                case EntryType.BankAccount: return "bank";
+                case EntryType.TotpGenerator: return "totp";
+                case EntryType.PinCode: return "pin";
+                case EntryType.Blank: return "note";
+                default: return "password";
+            }
+        }
+
+        // ── Account group (entries for the same service share one card) ──
+
+        private IReadOnlyList<CredentialViewModel> _siblingAccounts = Array.Empty<CredentialViewModel>();
+
+        /// <summary>Every entry in this entry's service group (including this one), in list order.</summary>
+        public IReadOnlyList<CredentialViewModel> SiblingAccounts => _siblingAccounts;
+
+        public int AccountCount => Math.Max(1, _siblingAccounts.Count);
+        public bool HasMultipleAccounts => _siblingAccounts.Count > 1;
+        public string AccountCountText => $"{AccountCount} accounts";
+
+        internal void SetAccountGroup(IReadOnlyList<CredentialViewModel> group)
+        {
+            _siblingAccounts = group ?? Array.Empty<CredentialViewModel>();
+            this.RaisePropertyChanged(nameof(SiblingAccounts));
+            this.RaisePropertyChanged(nameof(AccountCount));
+            this.RaisePropertyChanged(nameof(HasMultipleAccounts));
+            this.RaisePropertyChanged(nameof(AccountCountText));
         }
 
         public string IconText
@@ -439,31 +530,38 @@ namespace PhantomVault.UI.ViewModels
 
         public bool TotpIsExpiring => TotpSecondsRemaining > 0 && TotpSecondsRemaining <= 5;
 
-        public double TotpCodeOpacity
+        /// <summary>
+        /// Whether the detail view is showing this entry's password in clear text.
+        ///
+        /// Per credential and defaulted to hidden, so selecting another entry never inherits
+        /// a revealed state from the last one.
+        /// </summary>
+        public bool IsPasswordRevealed
         {
-            get => _totpCodeOpacity;
-            private set
+            get => _isPasswordRevealed;
+            set
             {
-                if (Math.Abs(_totpCodeOpacity - value) > 0.001)
-                {
-                    _totpCodeOpacity = value;
-                    this.RaisePropertyChanged();
-                }
+                this.RaiseAndSetIfChanged(ref _isPasswordRevealed, value);
+                this.RaisePropertyChanged(nameof(PasswordChar));
+                this.RaisePropertyChanged(nameof(PasswordVisibilitySvgIcon));
+                this.RaisePropertyChanged(nameof(PasswordVisibilityTooltip));
             }
         }
 
-        public double TotpCodeScale
-        {
-            get => _totpCodeScale;
-            private set
-            {
-                if (Math.Abs(_totpCodeScale - value) > 0.001)
-                {
-                    _totpCodeScale = value;
-                    this.RaisePropertyChanged();
-                }
-            }
-        }
+        /// <summary>
+        /// Mask character for the detail view's password box. NUL disables masking, which is
+        /// how Avalonia's TextBox shows clear text.
+        /// </summary>
+        public char PasswordChar => IsPasswordRevealed ? char.MinValue : '•';
+
+        /// <summary>Eye icon, matching the convention the add/edit window already uses.</summary>
+        public string PasswordVisibilitySvgIcon => IsPasswordRevealed
+            ? "Assets/SVG/Current/Hidden eye.svg"
+            : "Assets/SVG/Current/Visible eye.svg";
+
+        public string PasswordVisibilityTooltip => IsPasswordRevealed ? "Hide password" : "Show password";
+
+        public void TogglePasswordRevealed() => IsPasswordRevealed = !IsPasswordRevealed;
 
         public Geometry? TotpTimerArcPath
         {
@@ -643,6 +741,8 @@ namespace PhantomVault.UI.ViewModels
             this.RaisePropertyChanged(nameof(HasWiFiBssid));
             this.RaisePropertyChanged(nameof(HasWiFiPassword));
             this.RaisePropertyChanged(nameof(IdDocumentType));
+            this.RaisePropertyChanged(nameof(TypeIconName));
+            this.RaisePropertyChanged(nameof(ShowTypeIcon));
             this.RaisePropertyChanged(nameof(IdNumber));
             this.RaisePropertyChanged(nameof(IdIssuingCountry));
             this.RaisePropertyChanged(nameof(IdIssuingState));
@@ -920,18 +1020,10 @@ namespace PhantomVault.UI.ViewModels
 
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
-                    var codeChanged = _currentTotpCode != code;
+                    // The rollover animation lives in the view (RollingCodeText), which rolls
+                    // only the digits that changed.
                     CurrentTotpCode = code;
                     TotpSecondsRemaining = remaining;
-
-                    if (codeChanged && !string.IsNullOrEmpty(code))
-                    {
-
-                        TotpCodeOpacity = 0.0;
-                        TotpCodeScale = 0.85;
-
-                        _ = AnimateTotpCodeInAsync();
-                    }
                 });
             }
             catch
@@ -942,14 +1034,6 @@ namespace PhantomVault.UI.ViewModels
                     TotpSecondsRemaining = 0;
                 });
             }
-        }
-
-        private async System.Threading.Tasks.Task AnimateTotpCodeInAsync()
-        {
-
-            await System.Threading.Tasks.Task.Delay(30);
-            TotpCodeOpacity = 1.0;
-            TotpCodeScale = 1.0;
         }
 
         public void Dispose()

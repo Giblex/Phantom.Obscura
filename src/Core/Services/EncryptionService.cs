@@ -27,7 +27,7 @@ namespace PhantomVault.Core.Services
             return salt;
         }
 
-        public byte[] DeriveKey(ReadOnlySpan<char> password, byte[] salt, int keyLength = 32, int memoryCostKb = 256 * 1024, int iterations = 6, int parallelism = 0)
+        public byte[] DeriveKey(ReadOnlySpan<char> password, byte[] salt, int keyLength = 32, int memoryCostKb = PhantomVault.Core.Models.ManifestKdfParams.StandardMemoryKb, int iterations = PhantomVault.Core.Models.ManifestKdfParams.StandardIterations, int parallelism = 0)
         {
             if (password.IsEmpty)
             {

@@ -157,9 +157,10 @@ namespace PhantomVault.UI
                     ApplyScreenReaderOptimizations(AccessibilityService.Instance.ScreenReaderOptimizations);
                 };
             }
-            catch
+            catch (Exception ex)
             {
-
+                // Startup continues on the default theme, but a failure here used to vanish.
+                Serilog.Log.Warning(ex, "Failed to apply persisted theme/accessibility settings at startup");
             }
 
             try
@@ -167,9 +168,9 @@ namespace PhantomVault.UI
                 var syncService = _serviceProvider.GetRequiredService<CrossAppSyncService>();
                 syncService.Start();
             }
-            catch
+            catch (Exception ex)
             {
-
+                Serilog.Log.Warning(ex, "Failed to start cross-app sync service");
             }
 
             // Keyless suite session: start watching shared suite state and honour a

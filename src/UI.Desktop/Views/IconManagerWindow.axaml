@@ -1,257 +1,421 @@
 <views:ThemeAwareWindow xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:converters="clr-namespace:PhantomVault.UI.Converters"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:views="clr-namespace:PhantomVault.UI.Views"
-        mc:Ignorable="d" d:DesignWidth="720" d:DesignHeight="560"
-    x:Class="PhantomVault.UI.Views.IconManagerWindow"
-    Title="Icon Library Manager"
-    Width="1280" Height="800"
-    MinWidth="900" MinHeight="700"
+        mc:Ignorable="d" d:DesignWidth="540" d:DesignHeight="820"
+        x:Class="PhantomVault.UI.Views.IconManagerWindow"
+        Title="{Binding Title}"
+        Width="540" Height="820"
+        MinWidth="440" MinHeight="600"
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource WindowBackgroundBrush}"
         Classes="animated-window">
 
+    <!-- Styled after the website vault's Icon Manager (GiblexWeb vault.css). Tabs: Library,
+         Favicons (downloaded) and My icons (uploaded + downloaded). Icons load in batches as you
+         scroll (see OnIconScrollChanged); picking a line icon opens the colour wheel. -->
+    <Window.Styles>
+        <Style Selector="TextBlock.pv-label">
+            <Setter Property="FontFamily" Value="{StaticResource MonoFontFamily}"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="LetterSpacing" Value="1.2"/>
+            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+        </Style>
+        <Style Selector="TextBlock.pv-mono">
+            <Setter Property="FontFamily" Value="{StaticResource MonoFontFamily}"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
+        </Style>
+
+        <Style Selector="Border.pv-search">
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+        </Style>
+        <Style Selector="Border.pv-search:focus-within">
+            <Setter Property="BorderBrush" Value="#7FC8DC"/>
+        </Style>
+        <Style Selector="TextBox#SearchBox /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="TextBox#SearchBox:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="TextBox#SearchBox:focus /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+
+        <Style Selector="Button.pv-ghost">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="MinHeight" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Button.pv-ghost:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#12FFFFFF"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+        </Style>
+        <Style Selector="Button.pv-ghost:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#1CFFFFFF"/>
+        </Style>
+
+        <Style Selector="Button.pv-solid">
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="MinHeight" Value="0"/>
+        </Style>
+        <Style Selector="Button.pv-solid:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundBrush}"/>
+            <Setter Property="Opacity" Value="0.88"/>
+        </Style>
+
+        <Style Selector="Button.pv-icon-btn">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Width" Value="30"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="MinWidth" Value="0"/>
+            <Setter Property="MinHeight" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Button.pv-icon-btn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#16FFFFFF"/>
+        </Style>
+
+        <!-- icon tiles -->
+        <Style Selector="Button.pv-tile">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="MinWidth" Value="0"/>
+            <Setter Property="MinHeight" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Button.pv-tile:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#12FFFFFF"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+        </Style>
+        <Style Selector="Button.pv-tile.selected /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#1F7FC8DC"/>
+            <Setter Property="BorderBrush" Value="#7FC8DC"/>
+        </Style>
+
+        <!-- colour presets -->
+        <Style Selector="Button.pv-swatch">
+            <Setter Property="Width" Value="24"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="MinWidth" Value="0"/>
+            <Setter Property="MinHeight" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0,0,6,6"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#33FFFFFF"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+    </Window.Styles>
+
     <Window.Resources>
-        <converters:NullToBoolConverter x:Key="NullToBoolConverter"/>
-        <converters:InvertBoolConverter x:Key="InvertBoolConverter"/>
-        <SolidColorBrush x:Key="IconTileCellBrush">Transparent</SolidColorBrush>
+        <!-- Line icons draw as a silhouette in the text colour so every glyph reads alike (their
+             source files are charcoal, which vanishes on a dark background); logos and user icons
+             draw with their own colours. -->
+        <DataTemplate x:Key="IconTileTemplate">
+            <Button Classes="pv-tile"
+                    Classes.selected="{Binding IsSelected}"
+                    Width="64" Height="64"
+                    Margin="3"
+                    Command="{Binding $parent[Window].DataContext.SelectIconCommand}"
+                    CommandParameter="{Binding}"
+                    ToolTip.Tip="{Binding Name}"
+                    AutomationProperties.Name="{Binding Name}">
+                <Panel>
+                    <Border Width="34" Height="34"
+                            IsVisible="{Binding IsTintable}"
+                            Background="{DynamicResource PrimaryTextBrush}">
+                        <Border.OpacityMask>
+                            <ImageBrush Source="{Binding Bitmap}" Stretch="Uniform"/>
+                        </Border.OpacityMask>
+                    </Border>
+                    <Image Width="40" Height="40"
+                           IsVisible="{Binding IsPlain}"
+                           Source="{Binding Bitmap}"
+                           Stretch="Uniform"/>
+                </Panel>
+            </Button>
+        </DataTemplate>
     </Window.Resources>
 
-    <DockPanel Margin="20" LastChildFill="True">
+    <Border Margin="12"
+            Padding="18,16"
+            Background="{DynamicResource CardBackgroundBrush}"
+            BorderBrush="{DynamicResource ControlBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12">
+        <DockPanel LastChildFill="True">
 
-        <Border DockPanel.Dock="Top"
-                Background="{DynamicResource HeaderBackgroundBrush}"
-                Padding="16"
-                CornerRadius="6"
-                Margin="0,0,0,16">
-                <StackPanel Spacing="6">
-                <TextBlock Text="Icon Library Manager"
+            <!-- heading -->
+            <StackPanel DockPanel.Dock="Top" Spacing="4" Margin="0,0,0,12">
+                <TextBlock Text="{Binding Title}"
                            FontSize="{StaticResource Type.H3.Size}"
-                           FontWeight="Bold"
-                           Foreground="{DynamicResource PrimaryTextBrush}"/>
-                <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
-                    <Border Grid.Column="0"
-                            Background="{DynamicResource ControlBackgroundBrush}"
-                            CornerRadius="4"
-                            Padding="6,0">
-                        <Grid ColumnDefinitions="Auto,*">
-                            <TextBlock Grid.Column="0" Text="🔍" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <TextBox x:Name="SearchBox"
-                                     Grid.Column="1"
-                                     Text="{Binding SearchText, Mode=TwoWay}"
-                                     Watermark="Search icons..."
-                                     BorderThickness="0"
-                                     Background="Transparent"
-                                     VerticalContentAlignment="Center"/>
-                        </Grid>
-                    </Border>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" Margin="16,0,0,0" VerticalAlignment="Center">
-                        <Button Command="{Binding RefreshCommand}"
-                                Classes="liquid-glass"
-                                Width="110" Height="34">
-                            <TextBlock Text="Refresh" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Button>
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"
+                           TextTrimming="CharacterEllipsis"/>
+                <TextBlock Text="{Binding Subtitle}"
+                           FontSize="{StaticResource Type.Small.Size}"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
 
-                        <Button AutomationProperties.Name="Options" Name="OptionsButton" Classes="liquid-glass" Width="40" Height="34" ToolTip.Tip="Options">
-                            <TextBlock Text="⋮" FontSize="{StaticResource Type.Icon.Size}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            <Button.ContextMenu>
-                                <ContextMenu>
-                                    <MenuItem Header="Download Icons" Command="{Binding DownloadFlatIconsCommand}"/>
-                                    <MenuItem Header="Import Icons" Command="{Binding ImportIconCommand}"/>
-                                    <MenuItem Header="Open Icons Folder" Command="{Binding OpenIconsFolderCommand}"/>
-                                    <MenuItem Header="Toggle grid view" Command="{Binding ToggleGridViewCommand}"/>
-                                    <MenuItem Header="Show Selected" Command="{Binding RevealIconCommand}" CommandParameter="{Binding SelectedIcon}"/>
-                                </ContextMenu>
-                            </Button.ContextMenu>
+            <!-- tabs -->
+            <TabStrip DockPanel.Dock="Top"
+                      Margin="0,0,0,10"
+                      SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
+                <TabStripItem Content="Library"/>
+                <TabStripItem Content="Favicons"/>
+                <TabStripItem Content="My icons"/>
+            </TabStrip>
+
+            <!-- search + library filter -->
+            <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="0,0,0,12">
+                <Border Grid.Column="0"
+                        Classes="pv-search"
+                        Background="{DynamicResource ContentBackgroundBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="10,0"
+                        Height="36">
+                    <Grid ColumnDefinitions="Auto,*">
+                        <TextBlock Text="⌕" FontSize="16" Foreground="{DynamicResource MutedTextBrush}"
+                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBox x:Name="SearchBox"
+                                 Grid.Column="1"
+                                 Text="{Binding SearchText, Mode=TwoWay}"
+                                 Watermark="Search icons"
+                                 BorderThickness="0"
+                                 Background="Transparent"
+                                 Padding="0"
+                                 VerticalContentAlignment="Center"/>
+                    </Grid>
+                </Border>
+                <ComboBox Grid.Column="1"
+                          Margin="8,0,0,0"
+                          Width="120"
+                          VerticalAlignment="Center"
+                          ItemsSource="{Binding LibraryFilters}"
+                          SelectedIndex="{Binding LibraryFilterIndex, Mode=TwoWay}"
+                          IsVisible="{Binding IsLibraryTab}"/>
+            </Grid>
+
+            <!-- footer -->
+            <StackPanel DockPanel.Dock="Bottom" Spacing="8" Margin="0,12,0,0">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Classes="pv-mono" Text="{Binding StatusMessage}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Classes="pv-mono" Text="{Binding CountText}" VerticalAlignment="Center"/>
+                </Grid>
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Classes="pv-ghost" Content="Upload" Command="{Binding ImportIconCommand}"
+                                ToolTip.Tip="Add your own icons to My icons"/>
+                        <Button Classes="pv-ghost" Content="Download icons" Command="{Binding DownloadMoreCommand}"
+                                ToolTip.Tip="Search and download icons (saved under Favicons)"/>
+                        <Button Classes="pv-ghost" Content="⋮" Padding="12,7" AutomationProperties.Name="More options">
+                            <Button.Flyout>
+                                <MenuFlyout Placement="TopEdgeAlignedLeft">
+                                    <MenuItem Header="Open My icons folder" Command="{Binding OpenMyIconsFolderCommand}"/>
+                                    <MenuItem Header="Refresh library" Command="{Binding RefreshCommand}"/>
+                                </MenuFlyout>
+                            </Button.Flyout>
                         </Button>
                     </StackPanel>
+                    <Button Grid.Column="1" Classes="pv-ghost" Content="Close" Command="{Binding CloseCommand}"/>
                 </Grid>
             </StackPanel>
-        </Border>
 
-        <Border DockPanel.Dock="Bottom"
-                Background="{DynamicResource ControlBackgroundBrush}"
-                Padding="8"
-                CornerRadius="6"
-                Margin="0,8,0,0">
-            <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
-                <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space.Sm}" VerticalAlignment="Center" Grid.Column="0">
-                    <TextBlock Text="{Binding StatusMessage}"
-                               FontSize="{StaticResource Type.Tiny.Size}"
-                               Foreground="{DynamicResource MutedTextBrush}"
-                               TextWrapping="Wrap"/>
-                    <Border Width="1" Height="14" Background="{DynamicResource ControlBorderBrush}"/>
-                    <TextBlock Text="{Binding FilteredIconCount, StringFormat='Visible icons: {0}'}"
-                               FontSize="{StaticResource Type.Tiny.Size}"
-                               Foreground="{DynamicResource MutedTextBrush}"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Grid.Column="1" HorizontalAlignment="Center" Spacing="{StaticResource Space.Sm}" VerticalAlignment="Center">
-                    <Button Command="{Binding PrevPageCommand}" IsEnabled="{Binding IsFirstPage, Converter={StaticResource InvertBoolConverter}}" Classes="liquid-glass" Width="72" Height="30">Prev</Button>
-                    <TextBlock Text="{Binding PageIndicatorText}" VerticalAlignment="Center" Foreground="{DynamicResource MutedTextBrush}" FontSize="{StaticResource Type.Small.Size}"/>
-                    <Button Command="{Binding NextPageCommand}" IsEnabled="{Binding IsLastPage, Converter={StaticResource InvertBoolConverter}}" Classes="liquid-glass" Width="72" Height="30">Next</Button>
-                </StackPanel>
-                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="{StaticResource Space.Sm}" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="6">
-                        <TextBlock Text="Page size:" VerticalAlignment="Center" Foreground="{DynamicResource MutedTextBrush}" />
-                        <ComboBox SelectedItem="{Binding PageSize, Mode=TwoWay}" Width="80" ItemsSource="{Binding PageSizeOptions}" />
+            <!-- selected icon: preview, colour wheel, apply -->
+            <Border DockPanel.Dock="Bottom"
+                    IsVisible="{Binding HasSelection}"
+                    Margin="0,12,0,0"
+                    Padding="14"
+                    CornerRadius="10"
+                    Background="{DynamicResource ContentBackgroundBrush}"
+                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                    BorderThickness="1">
+                <StackPanel Spacing="12">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Border Width="60" Height="60" CornerRadius="12" Background="#0CFFFFFF">
+                            <Panel>
+                                <Border Width="40" Height="40"
+                                        IsVisible="{Binding ShowTintedPreview}"
+                                        Background="{Binding PreviewBrush}">
+                                    <Border.OpacityMask>
+                                        <ImageBrush Source="{Binding SelectedTile.Bitmap}" Stretch="Uniform"/>
+                                    </Border.OpacityMask>
+                                </Border>
+                                <Image Width="44" Height="44"
+                                       IsVisible="{Binding ShowPlainPreview}"
+                                       Source="{Binding SelectedTile.Bitmap}"
+                                       Stretch="Uniform"/>
+                            </Panel>
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="12,0" VerticalAlignment="Center" Spacing="2">
+                            <TextBlock Text="{Binding SelectedTile.Name}"
+                                       FontWeight="SemiBold"
+                                       FontSize="{StaticResource Type.Body.Size}"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"
+                                       TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Classes="pv-mono" Text="{Binding SelectedTile.KindLabel}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                            <Button Classes="pv-icon-btn" Command="{Binding RevealSelectedCommand}"
+                                    ToolTip.Tip="Show in folder" AutomationProperties.Name="Show in folder">
+                                <TextBlock Text="📂" FontSize="{StaticResource Type.Body.Size}"/>
+                            </Button>
+                            <Button Classes="pv-icon-btn" Command="{Binding DeleteSelectedCommand}"
+                                    IsVisible="{Binding CanDeleteSelected}"
+                                    ToolTip.Tip="Delete from my icons" AutomationProperties.Name="Delete icon">
+                                <TextBlock Text="🗑" FontSize="{StaticResource Type.Body.Size}"/>
+                            </Button>
+                            <Button Classes="pv-icon-btn" Command="{Binding ClearSelectionCommand}"
+                                    ToolTip.Tip="Close" AutomationProperties.Name="Close selection">
+                                <TextBlock Text="✕" FontSize="{StaticResource Type.Body.Size}" Foreground="{DynamicResource MutedTextBrush}"/>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Canva-style colour: spectrum + hue, presets, hex -->
+                    <StackPanel Spacing="10" IsVisible="{Binding CanRecolour}">
+                        <TextBlock Classes="pv-label" Text="COLOUR" Margin="0"/>
+                        <ColorView Color="{Binding SelectedColour, Mode=TwoWay}"
+                                   IsEnabled="{Binding !KeepOriginalColours}"
+                                   ColorSpectrumShape="Box"
+                                   IsAlphaEnabled="False"
+                                   IsAlphaVisible="False"
+                                   IsColorComponentsVisible="False"
+                                   IsColorPaletteVisible="False"
+                                   IsColorModelVisible="False"
+                                   IsColorPreviewVisible="False"
+                                   IsAccentColorsVisible="False"
+                                   IsHexInputVisible="False"
+                                   Height="200"/>
+                        <ItemsControl ItemsSource="{Binding PresetColours}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Classes="pv-swatch"
+                                            Background="{Binding Brush}"
+                                            Command="{Binding $parent[Window].DataContext.SetPresetColourCommand}"
+                                            CommandParameter="{Binding Color}"
+                                            ToolTip.Tip="{Binding Name}"
+                                            AutomationProperties.Name="{Binding Name}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Grid ColumnDefinitions="Auto,Auto,*">
+                            <TextBlock Classes="pv-label" Text="HEX" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBox Grid.Column="1"
+                                     Width="110"
+                                     Text="{Binding HexText, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                     IsEnabled="{Binding !KeepOriginalColours}"/>
+                            <CheckBox Grid.Column="2"
+                                      HorizontalAlignment="Right"
+                                      Content="Original colours"
+                                      IsChecked="{Binding KeepOriginalColours, Mode=TwoWay}"/>
+                        </Grid>
                     </StackPanel>
-                    <Button Command="{Binding CloseCommand}" Classes="liquid-glass" Width="100" Height="28">
-                        <TextBlock Text="Close" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Button>
+
+                    <Button Classes="pv-solid"
+                            HorizontalAlignment="Right"
+                            Content="{Binding ApplyButtonText}"
+                            Command="{Binding ApplyCommand}"
+                            IsVisible="{Binding CanApplySelection}"/>
                 </StackPanel>
-            </Grid>
-        </Border>
+            </Border>
 
-    <Border Margin="0,0,0,8" CornerRadius="6" Background="{DynamicResource HeaderBackgroundBrush}" Padding="8" DockPanel.Dock="Top">
-            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Height="100" Padding="0,0,0,8">
-                <ItemsControl Name="TopIconsList" ItemsSource="{Binding TopIcons}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center"/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Button AutomationProperties.Name="Show icon variants" Command="{Binding DataContext.ShowVariantsCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" MinWidth="72" Height="82" Classes="liquid-glass" Margin="2">
-                                <Border Width="56" Height="56" CornerRadius="8" Background="Transparent" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <Image Source="{Binding IconBitmap}" Stretch="Uniform" Width="48" Height="48"/>
-                                </Border>
-                            </Button>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
-        </Border>
+            <!-- icon grid, loaded in batches as you scroll -->
+            <Grid>
+                <ScrollViewer x:Name="IconScroller"
+                              HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto"
+                              ScrollChanged="OnIconScrollChanged">
+                    <StackPanel Spacing="8">
+                        <StackPanel IsVisible="{Binding IsDownloadsTab}" Spacing="6" Margin="0,0,0,4">
+                            <TextBlock Text="Icons you have downloaded. They are also listed under My icons."
+                                       TextWrapping="Wrap"
+                                       FontSize="{StaticResource Type.Small.Size}"
+                                       Foreground="{DynamicResource MutedTextBrush}"/>
+                        </StackPanel>
 
-        <Popup Name="VariantPopup" IsOpen="{Binding IsVariantPopupOpen, Mode=TwoWay}" Placement="Bottom"
-               IsLightDismissEnabled="True">
-            <Border Margin="0,4,0,0" Background="Transparent" Padding="0" MaxWidth="350">
-                <Border Background="{DynamicResource WindowBackgroundBrush}" CornerRadius="6" Padding="6" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1" Effect="{DynamicResource SubtleDropShadow}">
-                    <ItemsControl Name="VariantItemsControl" ItemsSource="{Binding VariantIcons}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel Orientation="Horizontal"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Button AutomationProperties.Name="Apply icon variant" Command="{Binding #VariantItemsControl.DataContext.ApplyVariantToCategoryCommand}"
-                                        CommandParameter="{Binding}" Margin="2" Padding="0"
-                                        Width="36" Height="36" MinWidth="0" MinHeight="0"
-                                        Cursor="Hand" Focusable="True">
-                                    <Button.Template>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border Width="36" Height="36" CornerRadius="2" Background="Transparent">
-                                                <ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                            </Border>
-                                        </ControlTemplate>
-                                    </Button.Template>
-                                    <Image Source="{Binding IconBitmap}" Width="36" Height="36" Stretch="Uniform"/>
-                                </Button>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                        <StackPanel IsVisible="{Binding HasSuggestions}">
+                            <TextBlock Classes="pv-label" Text="{Binding SuggestedTitle}"/>
+                            <ItemsControl ItemsSource="{Binding Suggested}" ItemTemplate="{StaticResource IconTileTemplate}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+                            <TextBlock Classes="pv-label" Text="EVERYTHING ELSE" Margin="0,10,0,6"/>
+                        </StackPanel>
+
+                        <ItemsControl ItemsSource="{Binding VisibleIcons}" ItemTemplate="{StaticResource IconTileTemplate}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+
+                        <TextBlock Classes="pv-mono"
+                                   Text="Loading more…"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,6"
+                                   IsVisible="{Binding HasMore}"/>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <TextBlock Text="{Binding EmptyText}"
+                           IsVisible="{Binding IsEmpty}"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           MaxWidth="300"
+                           Foreground="{DynamicResource MutedTextBrush}"/>
+
+                <Border Background="{DynamicResource OverlayBackgroundBrush}"
+                        CornerRadius="8"
+                        IsVisible="{Binding IsBusy}">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
+                        <ProgressBar IsIndeterminate="True" Width="200" Height="4" Foreground="{DynamicResource AccentBrush}"/>
+                        <TextBlock Classes="pv-mono" Text="Organising icons…" HorizontalAlignment="Center"/>
+                    </StackPanel>
                 </Border>
-            </Border>
-        </Popup>
-
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-
-            <DataGrid Grid.Row="0" IsVisible="{Binding IsGridView, Converter={StaticResource InvertBoolConverter}}"
-                      ItemsSource="{Binding Icons}"
-                      SelectedItem="{Binding SelectedIcon, Mode=TwoWay}"
-                      IsReadOnly="True"
-                      AutoGenerateColumns="False"
-                      RowHeight="48"
-                      CanUserReorderColumns="False"
-                      CanUserResizeColumns="True"
-                      GridLinesVisibility="Horizontal"
-                      HeadersVisibility="Column"
-                      HorizontalScrollBarVisibility="Auto"
-                      VerticalScrollBarVisibility="Auto">
-                <DataGrid.Columns>
-                    <DataGridTemplateColumn Header="" Width="48">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <Border Width="40" Height="40" CornerRadius="6" HorizontalAlignment="Center" VerticalAlignment="Center" Background="{StaticResource IconTileCellBrush}">
-                                    <Image Source="{Binding IconBitmap}" Stretch="Uniform" Width="28" Height="28"/>
-                                </Border>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="2*"/>
-                    <DataGridTextColumn Header="Location" Binding="{Binding RelativePath}" Width="3*"/>
-                    <DataGridTextColumn Header="Size" Binding="{Binding SizeDisplay}" Width="*"/>
-                    <DataGridTextColumn Header="Updated" Binding="{Binding LastModifiedDisplay}" Width="*"/>
-                    <DataGridTemplateColumn Header="Actions" Width="Auto">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <Button AutomationProperties.Name="Show in Explorer" Command="{Binding DataContext.RevealIconCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                            CommandParameter="{Binding}"
-                                            Classes="liquid-glass"
-                                            Width="34" Height="30"
-                                            ToolTip.Tip="Show in Explorer">
-                                        <TextBlock Text="📂" FontSize="{StaticResource Type.Body.Size}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Button>
-                                    <Button AutomationProperties.Name="Delete icon" Command="{Binding DataContext.DeleteIconCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                            CommandParameter="{Binding}"
-                                            Classes="liquid-glass"
-                                            Width="34" Height="30"
-                                            ToolTip.Tip="Delete icon">
-                                        <TextBlock Text="🗑" FontSize="{StaticResource Type.Body.Size}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Button>
-                                </StackPanel>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                </DataGrid.Columns>
-            </DataGrid>
-
-            <ScrollViewer Grid.Row="0" Padding="20" IsVisible="{Binding IsGridView}" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                <ItemsControl ItemsSource="{Binding GridIcons}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                                <Button AutomationProperties.Name="Show icon variants" Command="{Binding DataContext.ShowVariantsCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" MinWidth="72" Height="96" Classes="liquid-glass" Margin="6">
-                                <StackPanel>
-                                    <Border Width="68" Height="68" CornerRadius="8" Background="{StaticResource IconTileCellBrush}" HorizontalAlignment="Center">
-                                        <Image Source="{Binding IconBitmap}" Width="60" Height="60" Stretch="Uniform"/>
-                                    </Border>
-                                </StackPanel>
-                            </Button>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
-
-                <Border Grid.Row="0"
-                    Background="{DynamicResource OverlayBackgroundBrush}"
-                    CornerRadius="6"
-                    IsVisible="{Binding IsBusy}"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch">
-                <Border.Transitions>
-                    <Transitions>
-                        <DoubleTransition Property="Opacity" Duration="0:0:0.3"/>
-                    </Transitions>
-                </Border.Transitions>
-                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="{StaticResource Space.Md}">
-                    <ProgressBar IsIndeterminate="True" Width="260" Height="4" Foreground="{DynamicResource AccentBrush}"/>
-                    <TextBlock Text="Loading icons..." FontSize="{StaticResource Type.Small.Size}" Foreground="{DynamicResource MutedTextBrush}" HorizontalAlignment="Center" Opacity="0.7"/>
-                </StackPanel>
-            </Border>
-        </Grid>
-    </DockPanel>
+            </Grid>
+        </DockPanel>
+    </Border>
 </views:ThemeAwareWindow>
-
