@@ -11,24 +11,63 @@ namespace PhantomVault.Core.Services.Security
     {
 
         // CSPRNG by default so generated decoys are not predictable from process
-        // start time; a seeded System.Random is only used when an explicit seed is
-        // supplied (deterministic test scenarios).
+        // start time. Only when an explicit seed is supplied (deterministic test
+        // scenarios) does it switch to a small seeded SplitMix64 stream. That keeps
+        // tests reproducible without System.Random, which the security hard-rules
+        // forbid anywhere in src.
         private sealed class SecureRng
         {
-#pragma warning disable CA5394 // seeded Random is intentional for reproducible tests
-            private readonly Random? _seeded;
+            private readonly bool _seeded;
+            private ulong _state;
 
             public SecureRng(int? seed)
             {
-                _seeded = seed.HasValue ? new Random(seed.Value) : null;
+                if (seed.HasValue)
+                {
+                    _seeded = true;
+                    _state = unchecked((ulong)seed.Value * 0x9E3779B97F4A7C15UL + 1UL);
+                }
             }
 
             public int Next(int maxExclusive)
-                => _seeded?.Next(maxExclusive) ?? RandomNumberGenerator.GetInt32(maxExclusive);
+                => _seeded ? SeededRange(0, maxExclusive) : RandomNumberGenerator.GetInt32(maxExclusive);
 
             public int Next(int minInclusive, int maxExclusive)
-                => _seeded?.Next(minInclusive, maxExclusive) ?? RandomNumberGenerator.GetInt32(minInclusive, maxExclusive);
-#pragma warning restore CA5394
+                => _seeded ? SeededRange(minInclusive, maxExclusive) : RandomNumberGenerator.GetInt32(minInclusive, maxExclusive);
+
+            // SplitMix64 (Steele, Lea & Flood): a well-distributed, non-cryptographic
+            // stream, used only for the seeded test path.
+            private ulong NextUInt64()
+            {
+                unchecked
+                {
+                    _state += 0x9E3779B97F4A7C15UL;
+                    var z = _state;
+                    z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9UL;
+                    z = (z ^ (z >> 27)) * 0x94D049BB133111EBUL;
+                    return z ^ (z >> 31);
+                }
+            }
+
+            // Uniform in [min, max) by rejection sampling, so no value is favoured by
+            // modulo bias. An empty range returns min, as System.Random.Next did.
+            private int SeededRange(int minInclusive, int maxExclusive)
+            {
+                if (maxExclusive < minInclusive)
+                    throw new ArgumentOutOfRangeException(nameof(maxExclusive));
+                if (maxExclusive == minInclusive)
+                    return minInclusive;
+
+                var range = (ulong)((long)maxExclusive - minInclusive);
+                var limit = ulong.MaxValue - (ulong.MaxValue % range);
+                ulong value;
+                do
+                {
+                    value = NextUInt64();
+                } while (value >= limit);
+
+                return (int)(minInclusive + (long)(value % range));
+            }
         }
 
         private readonly SecureRng _rng;
