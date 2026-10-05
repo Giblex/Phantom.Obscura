@@ -498,8 +498,8 @@
                                 CornerRadius="16"
                                 Padding="28,24"
                                 BoxShadow="{DynamicResource DetailCardShadow}"
-                                BorderBrush="{Binding SelectedCredentialCategoryBrush}"
-                                BorderThickness="{Binding DetailCardBorderThickness}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1"
                                 IsVisible="{Binding SelectedCredential, Converter={x:Static ObjectConverters.IsNotNull}}">
                         <StackPanel Spacing="24" Classes="fade-toggle">
 
@@ -573,7 +573,10 @@
                         </Grid>
 
                         <!-- A single entry sits in the same tile as each account of a merged card. -->
-                        <Border Classes="section-tile" Margin="0,16,0,0" IsVisible="{Binding !ShowAccountTiles}">
+                        <!-- The category colour sits on the tile, not the whole card. -->
+                        <Border Classes="section-tile" Margin="0,16,0,0" IsVisible="{Binding !ShowAccountTiles}"
+                                BorderBrush="{Binding SelectedCredentialCategoryBrush}"
+                                BorderThickness="{Binding DetailCardBorderThickness}">
                         <StackPanel Spacing="16">
 
                             <details:PasswordDetailView DataContext="{Binding}"
@@ -695,7 +698,10 @@
                                     <!-- Each account is its own sunk-in tile: a shade darker than
                                          the card, a hairline edge and a soft drop shadow, so the
                                          accounts read as separate pieces within one card. -->
-                                    <Border Classes="section-tile" Margin="0,0,0,4">
+                                    <!-- Each account's tile carries its own entry's category colour. -->
+                                    <Border Classes="section-tile" Margin="0,0,0,4"
+                                            BorderBrush="{Binding CategoryBrush}"
+                                            BorderThickness="{Binding CategoryBorderThickness}">
                                         <StackPanel Spacing="16">
                                             <StackPanel Spacing="2">
                                                 <TextBlock Text="{Binding AccountLabel}"
@@ -1229,8 +1235,8 @@
 
             <Border x:Name="EditPanel"
                                 Background="{DynamicResource CardBackgroundBrush}"
-                                BorderBrush="{Binding SelectedCredentialCategoryBrush}"
-                                BorderThickness="{Binding DetailCardBorderThickness}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                BorderThickness="1"
                                 CornerRadius="16"
                                 ClipToBounds="True">
 
@@ -1464,7 +1470,11 @@
                                           HorizontalContentAlignment="Stretch"
                                           AllowAutoHide="False">
                                 <!-- The form sits in the same tile as the display card's details. -->
-                                <Border Classes="section-tile" Margin="20,16,20,20">
+                                <!-- Category colour on the form tile, matching the display card's tiles.
+                                     Bound through the window: this Grid's DataContext is the editor. -->
+                                <Border Classes="section-tile" Margin="20,16,20,20"
+                                        BorderBrush="{Binding $parent[Window].DataContext.SelectedCredentialCategoryBrush}"
+                                        BorderThickness="{Binding $parent[Window].DataContext.DetailCardBorderThickness}">
                                 <StackPanel x:Name="EditFormStack"
                                             Spacing="10"
                                             HorizontalAlignment="Stretch">

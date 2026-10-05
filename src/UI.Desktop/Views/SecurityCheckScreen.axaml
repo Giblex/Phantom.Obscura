@@ -14,7 +14,7 @@
         CanResize="False"
         SystemDecorations="None"
         Background="{DynamicResource WindowBackgroundBrush}"
-        Icon="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Parent Icon.ico"
+        Icon="avares://PhantomVault.UI/Assets/phantom_obscura_app.ico"
         FontFamily="{DynamicResource DefaultFontFamily}"
         FontSize="{DynamicResource DefaultFontSize}"
         Classes="animated-window">

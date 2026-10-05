@@ -1,0 +1,109 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        One look for every dialog and tool window, matching the vault's cards and editor:
+        a header with an icon circle, a small caption and a bold title; the content in
+        section tiles (EntryFormStyles' Border.section-tile); and a footer with a hairline
+        top edge holding the actions, primary on the right. DialogService builds its
+        popups from the same classes, so code-built and XAML dialogs match.
+    -->
+
+    <!-- The dialog's contents sit on a card over the window background, like the Icon
+         Manager: a 12px inset, the card surface, a hairline edge and rounded corners. -->
+    <Style Selector="Border.dialog-card">
+        <Setter Property="Margin" Value="12"/>
+        <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="ClipToBounds" Value="True"/>
+    </Style>
+
+    <!-- Header: icon circle + caption + title, laid out like the editor's header. -->
+    <Style Selector="Border.dialog-header">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Padding" Value="24,20,24,10"/>
+    </Style>
+
+    <Style Selector="Border.dialog-icon">
+        <Setter Property="Width" Value="44"/>
+        <Setter Property="Height" Value="44"/>
+        <Setter Property="CornerRadius" Value="22"/>
+        <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="TextBlock.dialog-caption">
+        <!-- Plain numbers, not {StaticResource Type.*}: the type scale lives in the theme,
+             which is not in scope when app-level styles load (that lookup crashed startup). -->
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
+    </Style>
+
+    <Style Selector="TextBlock.dialog-title">
+        <Setter Property="FontSize" Value="24"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+
+    <Style Selector="TextBlock.dialog-message">
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="LineHeight" Value="22"/>
+    </Style>
+
+    <!-- Small upper-case label at the top of a tile ("GENERATED PASSWORD"). -->
+    <Style Selector="TextBlock.tile-label">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="LetterSpacing" Value="1"/>
+        <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
+    </Style>
+
+    <!-- Footer: a hairline above the actions. -->
+    <Style Selector="Border.dialog-footer">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="0,1,0,0"/>
+        <Setter Property="Padding" Value="24,14"/>
+    </Style>
+
+    <!-- Buttons: one size everywhere; secondary is the liquid-glass default. -->
+    <Style Selector="Button.dialog-button">
+        <Setter Property="Height" Value="36"/>
+        <Setter Property="MinHeight" Value="36"/>
+        <Setter Property="MinWidth" Value="96"/>
+        <Setter Property="Padding" Value="18,0"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="Button.dialog-primary">
+        <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundBrush}"/>
+    </Style>
+
+    <Style Selector="Button.dialog-danger">
+        <Setter Property="Background" Value="{DynamicResource ErrorBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundBrush}"/>
+    </Style>
+
+    <!-- Square icon button used inside tiles (copy, regenerate). -->
+    <Style Selector="Button.tile-icon-button">
+        <Setter Property="Width" Value="32"/>
+        <Setter Property="Height" Value="32"/>
+        <Setter Property="MinWidth" Value="0"/>
+        <Setter Property="MinHeight" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+</Styles>

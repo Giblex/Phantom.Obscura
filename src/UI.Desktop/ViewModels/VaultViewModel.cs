@@ -1884,8 +1884,17 @@ namespace PhantomVault.UI.ViewModels
                         // Persistence is best-effort; the runtime switch already applied.
                     }
                 }
+
+                this.RaisePropertyChanged(nameof(IsOfflineConfirmed));
             }
         }
+
+        /// <summary>
+        /// Offline mode is actually in force: the switch is on and the process-wide shield (which
+        /// the internet gateway obeys) reports itself engaged. The settings panel's offline icon
+        /// turns green on this, not on the switch alone, so it only shows success once it is real.
+        /// </summary>
+        public bool IsOfflineConfirmed => _privacyModeEnabled && PrivacyShield.PrivacyModeEnabled;
 
         public ObservableCollection<CredentialViewModel> FilteredCredentials
         {
@@ -1958,9 +1967,15 @@ namespace PhantomVault.UI.ViewModels
         // wears the category's colour. Falls back to the accent brush when
         // there's no match (uncategorised, unknown group, bad hex) so the
         // border is always clearly visible.
-        public Avalonia.Media.IBrush SelectedCredentialCategoryBrush
+        public Avalonia.Media.IBrush SelectedCredentialCategoryBrush => CategoryBrushFor(_selectedCredential?.Group);
+
+        /// <summary>
+        /// A category's tile colour as a brush, falling back to the accent brush when the group
+        /// has no category or colour. Used for the detail tiles' borders: the single-entry tile
+        /// and each account tile on a merged card, which can belong to different categories.
+        /// </summary>
+        internal Avalonia.Media.IBrush CategoryBrushFor(string? group)
         {
-            get
             {
                 Avalonia.Media.IBrush ResolveFallback()
                 {
@@ -1978,7 +1993,6 @@ namespace PhantomVault.UI.ViewModels
                     return new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#3B82F6"));
                 }
 
-                var group = _selectedCredential?.Group;
                 if (string.IsNullOrWhiteSpace(group)) return ResolveFallback();
 
                 var cat = _categories.FirstOrDefault(c =>
@@ -5102,6 +5116,14 @@ namespace PhantomVault.UI.ViewModels
                 _cachedRuntimeManifest = manifest;
                 ApplyManifestTransportState(manifest, manifestPath);
                 ApplyEntitlementsFromManifest(manifest);
+
+                // The Boot ROM marker on the device is pinned inside this manifest. A mismatch
+                // means it was replaced since binding — reported, not blocked, because the
+                // binding itself already held: the vault would not have opened otherwise.
+                if (!VerifyBootRomMarkerPin())
+                {
+                    StatusMessage = "Warning: the Boot ROM marker on this device does not match the one recorded for this vault.";
+                }
             }
             catch
             {
@@ -5517,6 +5539,13 @@ namespace PhantomVault.UI.ViewModels
             _vaultPassword?.Dispose();
             _vaultPassword = null;
             _vaultKeyfilePath = null;
+
+            // The Boot ROM contribution is vault key material: it lives only while unlocked, so
+            // a locked vault cannot be re-derived from anything left in this process.
+            if (!string.IsNullOrWhiteSpace(_manifestPath))
+            {
+                PhantomVault.Core.Services.BootRom.BootRomSession.Clear(_manifestPath);
+            }
         }
 
         private Task ReleaseTransientHandlesAsync()

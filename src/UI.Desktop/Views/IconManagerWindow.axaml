@@ -3,10 +3,11 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:views="clr-namespace:PhantomVault.UI.Views"
-        mc:Ignorable="d" d:DesignWidth="540" d:DesignHeight="820"
+        xmlns:cp="clr-namespace:Avalonia.Controls.Primitives;assembly=Avalonia.Controls.ColorPicker"
+        mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="820"
         x:Class="PhantomVault.UI.Views.IconManagerWindow"
         Title="{Binding Title}"
-        Width="540" Height="820"
+        Width="500" Height="820"
         MinWidth="440" MinHeight="600"
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource WindowBackgroundBrush}"
@@ -306,18 +307,27 @@
                     <!-- Canva-style colour: spectrum + hue, presets, hex -->
                     <StackPanel Spacing="10" IsVisible="{Binding CanRecolour}">
                         <TextBlock Classes="pv-label" Text="COLOUR" Margin="0"/>
-                        <ColorView Color="{Binding SelectedColour, Mode=TwoWay}"
-                                   IsEnabled="{Binding !KeepOriginalColours}"
-                                   ColorSpectrumShape="Box"
-                                   IsAlphaEnabled="False"
-                                   IsAlphaVisible="False"
-                                   IsColorComponentsVisible="False"
-                                   IsColorPaletteVisible="False"
-                                   IsColorModelVisible="False"
-                                   IsColorPreviewVisible="False"
-                                   IsAccentColorsVisible="False"
-                                   IsHexInputVisible="False"
-                                   Height="200"/>
+                        <!-- Just the two parts needed: a brightness slider and the hue/saturation
+                             box. The full ColorView added its own tab strip (the stretched grey
+                             bar) and grew with the window, filling half the page when maximised. -->
+                        <Grid ColumnDefinitions="Auto,10,*"
+                              Height="180"
+                              MaxWidth="440"
+                              HorizontalAlignment="Left"
+                              IsEnabled="{Binding !KeepOriginalColours}">
+                            <cp:ColorSlider Grid.Column="0"
+                                            Orientation="Vertical"
+                                            Width="20"
+                                            ColorComponent="Component3"
+                                            ColorModel="Hsva"
+                                            IsAlphaVisible="False"
+                                            Color="{Binding SelectedColour, Mode=TwoWay}"/>
+                            <cp:ColorSpectrum Grid.Column="2"
+                                              Shape="Box"
+                                              Components="HueSaturation"
+                                              CornerRadius="8"
+                                              Color="{Binding SelectedColour, Mode=TwoWay}"/>
+                        </Grid>
                         <ItemsControl ItemsSource="{Binding PresetColours}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
@@ -362,7 +372,9 @@
                               HorizontalScrollBarVisibility="Disabled"
                               VerticalScrollBarVisibility="Auto"
                               ScrollChanged="OnIconScrollChanged">
-                    <StackPanel Spacing="8">
+                    <!-- Centred: the block is as wide as its widest row of tiles, so any spare
+                         width splits evenly on both sides instead of pooling on the right. -->
+                    <StackPanel Spacing="8" HorizontalAlignment="Center">
                         <StackPanel IsVisible="{Binding IsDownloadsTab}" Spacing="6" Margin="0,0,0,4">
                             <TextBlock Text="Icons you have downloaded. They are also listed under My icons."
                                        TextWrapping="Wrap"

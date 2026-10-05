@@ -14,7 +14,7 @@
     <!-- Use Avalonia for cross‑platform desktop UI. -->
 
     <!-- Application Icon (Desktop/Taskbar icon) -->
-    <ApplicationIcon>Assets\Visuals\Giblex Icons\Parent Icon.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\phantom_obscura_app.ico</ApplicationIcon>
     <!--
       App manifest: requests administrator at process start so per-call UAC prompts
       from diskpart / USB write-protection IOCTLs are suppressed (one prompt at
@@ -130,6 +130,9 @@
     <AvaloniaResource Include="Assets\palette-icon.png" />
     <AvaloniaResource Include="Assets\phantom_obscura_tray.png" />
     <AvaloniaResource Include="Assets\phantom_obscura_tray.ico" />
+    <AvaloniaResource Include="Assets\phantom_obscura_app.ico" />
+    <AvaloniaResource Include="Assets\Rounded Corner White Square.png" />
+    <AvaloniaResource Include="Assets\phantom_obscura_app.png" />
     <AvaloniaResource Include="Assets\PO Icon.png" />
     <AvaloniaResource Include="Assets\PO.svg" />
     <AvaloniaResource Include="Assets\Logo Transparent.svg" />

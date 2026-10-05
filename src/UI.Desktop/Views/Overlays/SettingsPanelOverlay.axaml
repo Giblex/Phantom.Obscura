@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:conv="using:PhantomVault.UI.Converters"
+             xmlns:dcontrols="clr-namespace:PhantomVault.UI.Desktop.Controls"
              x:Class="PhantomVault.UI.Views.Overlays.SettingsPanelOverlay">
 
     <UserControl.Resources>
@@ -202,24 +203,71 @@
                     <!-- Master "Go Offline" switch: surfaces PrivacyShield.PrivacyModeEnabled
                          (wired to the internet gateway) prominently above every settings tab.
                          When ON the app refuses all network consent and revokes active grants. -->
+                    <!-- Same faint dotted lift as the vault's sidebar and detail view. -->
                     <Border Grid.Row="1"
-                            Background="{DynamicResource CategoryPanelBackgroundBrush}"
+                            Background="{DynamicResource Brush.PanelLiftDots}"
                             BorderBrush="{DynamicResource ControlBorderBrush}"
                             BorderThickness="0,0,0,1"
                             Padding="25,9"
                             ZIndex="1">
                         <Grid ColumnDefinitions="Auto,*,Auto">
+                            <!-- Shield icon: muted while online, fading slowly to green once offline
+                                 mode is confirmed in force (IsOfflineConfirmed, not just the switch).
+                                 Two stacked copies cross-fade, since an SVG's colour can't tween. -->
                             <Border Grid.Column="0"
-                                    Width="28" Height="28"
-                                    CornerRadius="14"
+                                    Classes="offline-icon"
+                                    Classes.on="{Binding IsOfflineConfirmed}"
+                                    Width="30" Height="30"
+                                    CornerRadius="15"
                                     VerticalAlignment="Center"
                                     Background="{DynamicResource ControlBackgroundBrush}"
-                                    BorderBrush="{DynamicResource ControlBorderBrush}"
                                     BorderThickness="1">
-                                <TextBlock Text="🛡"
-                                           FontSize="14"
-                                           HorizontalAlignment="Center"
-                                           VerticalAlignment="Center"/>
+                                <Border.Styles>
+                                    <Style Selector="Border.offline-icon">
+                                        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+                                        <Setter Property="Transitions">
+                                            <Transitions>
+                                                <BrushTransition Property="BorderBrush" Duration="0:0:1.2" Easing="CubicEaseInOut"/>
+                                            </Transitions>
+                                        </Setter>
+                                    </Style>
+                                    <Style Selector="Border.offline-icon.on">
+                                        <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}"/>
+                                    </Style>
+                                </Border.Styles>
+                                <!-- The icon's own sequence (shield out, green tick drawing itself,
+                                     then the tick dissolving into a green shield) is run in code:
+                                     SettingsPanelOverlay.axaml.cs, PlayOfflineIcon. -->
+                                <Panel>
+                                    <dcontrols:SvgIcon x:Name="OfflineShieldOff"
+                                                       IconName="Assets/SVG/Current/Security.svg"
+                                                       Width="15" Height="15"
+                                                       IconColor="{DynamicResource MutedTextBrush}"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <dcontrols:SvgIcon x:Name="OfflineShieldOn"
+                                                       IconName="Assets/SVG/Current/Security.svg"
+                                                       Width="15" Height="15"
+                                                       Opacity="0"
+                                                       IconColor="{DynamicResource SuccessBrush}"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <Viewbox x:Name="OfflineTick"
+                                             Width="16" Height="16"
+                                             Opacity="0"
+                                             HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <Canvas Width="24" Height="24">
+                                            <!-- Dash length (10) covers the whole stroke in units of
+                                                 the stroke thickness, so the offset draws it on. -->
+                                            <Path x:Name="OfflineTickPath"
+                                                  Data="M4.5,12.5 L10,18 L19.5,6.5"
+                                                  Stroke="{DynamicResource SuccessBrush}"
+                                                  StrokeThickness="2.6"
+                                                  StrokeLineCap="Round"
+                                                  StrokeJoin="Round"
+                                                  StrokeDashArray="10,10"
+                                                  StrokeDashOffset="10"/>
+                                        </Canvas>
+                                    </Viewbox>
+                                </Panel>
                             </Border>
                             <TextBlock Grid.Column="1"
                                        Text="Offline mode"
@@ -236,10 +284,11 @@
 
                     <Grid Grid.Row="2" ColumnDefinitions="220,*" VerticalAlignment="Stretch">
 
+                        <!-- Settings navigation: the dotted lift, as on the vault's sidebar. -->
                         <Border Grid.Column="0"
                                 VerticalAlignment="Stretch"
                                 ClipToBounds="True"
-                                Background="{DynamicResource CategoryPanelBackgroundBrush}"
+                                Background="{DynamicResource Brush.PanelLiftDots}"
                                 BorderBrush="{DynamicResource ControlBorderBrush}"
                                 BorderThickness="0,0,1,0">
                           <Grid RowDefinitions="Auto,*">
@@ -561,7 +610,11 @@
                                     VerticalAlignment="Bottom"
                                     Height="90"
                                     IsHitTestVisible="False"
-                                    Background="{DynamicResource CategoryPanelBackgroundBrush}">
+                                    Background="{DynamicResource WindowBackgroundBrush}">
+                                <!-- Solid base + the dotted lift, so the fade still hides the list's
+                                     last items (the dotted brush alone is see-through) and matches
+                                     the navigation column's background. -->
+                                <Border Background="{DynamicResource Brush.PanelLiftDots}"/>
                                 <Border.OpacityMask>
                                     <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
                                         <GradientStop Offset="0.00" Color="#40FFFFFF"/>

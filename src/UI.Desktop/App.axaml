@@ -124,6 +124,14 @@
         <!-- Colour wheel used by the icon library. -->
         <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />
 
+        <!-- The app icon for every window, so new windows don't have to remember.
+             :is(Window) rather than Window because almost every window here derives from
+             ThemeAwareWindow, and a bare type selector matches the exact type only.
+             A window that sets Icon="..." itself still wins: a local value beats a setter. -->
+        <Style Selector=":is(Window)">
+            <Setter Property="Icon" Value="avares://PhantomVault.UI/Assets/phantom_obscura_app.ico"/>
+        </Style>
+
         <Style Selector="ToolTip">
             <Setter Property="FontSize" Value="{DynamicResource ToolTipFontSize}"/>
         </Style>
@@ -144,6 +152,10 @@
         <StyleInclude Source="avares://PhantomVault.UI/Resources/Styles/SelectionControls.axaml" />
 
         <StyleInclude Source="avares://PhantomVault.UI/Styles/EntryFormStyles.axaml" />
+
+        <!-- Shared dialog look (header, tiles, footer, buttons); after EntryFormStyles, whose
+             section tiles and form fields the dialogs reuse. -->
+        <StyleInclude Source="avares://PhantomVault.UI/Styles/DialogStyles.axaml" />
 
         <Style Selector="Window.animated-window">
             <Setter Property="Opacity" Value="0"/>

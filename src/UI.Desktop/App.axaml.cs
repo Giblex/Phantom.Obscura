@@ -512,6 +512,16 @@ namespace PhantomVault.UI
 
                 try
                 {
+                    // Boot ROM contributions are vault key material; never outlive the process.
+                    PhantomVault.Core.Services.BootRom.BootRomSession.ClearAll();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[App] Error clearing Boot ROM session on exit: {ex.Message}");
+                }
+
+                try
+                {
                     var sysController = _serviceProvider?.GetService<ISystemSecurityController>();
                     sysController?.ClearClipboardAsync().Wait(TimeSpan.FromSeconds(2));
                 }

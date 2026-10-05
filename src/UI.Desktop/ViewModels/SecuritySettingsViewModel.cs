@@ -122,6 +122,12 @@ namespace PhantomVault.UI.ViewModels
                 RevealCurrentKeyfile = !RevealCurrentKeyfile;
             });
 
+            EnableBootRomCommand = ReactiveCommand.CreateFromTask(EnableBootRomAsync,
+                this.WhenAnyValue(vm => vm.IsBusy).Select(b => !b));
+
+            DisableBootRomCommand = ReactiveCommand.CreateFromTask(DisableBootRomAsync,
+                this.WhenAnyValue(vm => vm.IsBusy).Select(b => !b));
+
             // Fast Unlock state: load persisted user preference; the "needs re-key" flag is
             // derived against the host VM's current manifest KDF tier.
             try { _useFastUnlock = SettingsService.Load().UseFastUnlock; } catch { _useFastUnlock = false; }
@@ -307,6 +313,104 @@ namespace PhantomVault.UI.ViewModels
         public ReactiveCommand<Unit, Unit> SetOrChangePinCommand { get; }
         public ReactiveCommand<Unit, Unit> ClearPinCommand { get; }
         public ReactiveCommand<Unit, Unit> ToggleCurrentKeyfileVisibilityCommand { get; }
+
+        // ── Boot ROM protection ─────────────────────────────────────────────────────────
+
+        public ReactiveCommand<Unit, Unit> EnableBootRomCommand { get; }
+        public ReactiveCommand<Unit, Unit> DisableBootRomCommand { get; }
+
+        /// <summary>True when the open vault's device carries a Boot ROM.</summary>
+        public bool IsBootRomBound => _hostViewModel?.IsBootRomBound ?? false;
+
+        /// <summary>Boot ROM settings only make sense with a vault open.</summary>
+        public bool CanConfigureBootRom => _hostViewModel is not null;
+
+        public string BootRomStatusText => IsBootRomBound
+            ? "Protected — this vault's key includes material held by its Boot ROM, so the vault will not open without it."
+            : "Not enabled — this vault unlocks with its keyfile and passphrase alone.";
+
+        /// <summary>
+        /// Turns on Boot ROM protection, then makes the user acknowledge the recovery code. The
+        /// code is shown once and never stored: without it, a lost or damaged Boot ROM means a
+        /// vault nobody can open, so the acknowledgement is not a formality.
+        /// </summary>
+        private async Task EnableBootRomAsync()
+        {
+            if (_hostViewModel is null)
+                return;
+
+            var proceed = await _dialogService.ShowConfirmationAsync(
+                "Enable Boot ROM protection",
+                "This seals a Boot ROM to this device and rewrites the vault so its key includes material "
+                + "held by that ROM.\n\n"
+                + "After this, the vault opens only on this device, with this keyfile. You will be given a "
+                + "recovery code — write it down before continuing. If you lose both the device and the code, "
+                + "the vault cannot be recovered by anyone, including us.",
+                confirmText: "Enable",
+                cancelText: "Cancel");
+
+            if (!proceed)
+                return;
+
+            try
+            {
+                IsBusy = true;
+                string? recoveryCode = await _hostViewModel.EnableBootRomBindingAsync();
+                if (string.IsNullOrWhiteSpace(recoveryCode))
+                    return; // The vault view model has already explained why.
+
+                // Keep showing it until they say they have it, with a bounded number of repeats.
+                for (int attempt = 0; attempt < 10; attempt++)
+                {
+                    var saved = await _dialogService.ShowConfirmationAsync(
+                        "Save your Boot ROM recovery code",
+                        $"{recoveryCode}\n\n"
+                        + "This is the only way back into the vault if the Boot ROM is lost or damaged. "
+                        + "It is shown once and is not stored anywhere.",
+                        confirmText: "I have saved it",
+                        cancelText: "Show again");
+
+                    if (saved)
+                        break;
+                }
+            }
+            finally
+            {
+                IsBusy = false;
+                this.RaisePropertyChanged(nameof(IsBootRomBound));
+                this.RaisePropertyChanged(nameof(BootRomStatusText));
+            }
+        }
+
+        /// <summary>Removes Boot ROM protection and rewrites the vault without the ROM's material.</summary>
+        private async Task DisableBootRomAsync()
+        {
+            if (_hostViewModel is null)
+                return;
+
+            var proceed = await _dialogService.ShowConfirmationAsync(
+                "Remove Boot ROM protection",
+                "The vault will be rewritten so its key no longer includes the Boot ROM's material, and the "
+                + "ROM, its marker and its recovery file will be deleted from the device.\n\n"
+                + "After this the vault unlocks with its keyfile and passphrase alone.",
+                confirmText: "Remove",
+                cancelText: "Cancel");
+
+            if (!proceed)
+                return;
+
+            try
+            {
+                IsBusy = true;
+                await _hostViewModel.DisableBootRomBindingAsync();
+            }
+            finally
+            {
+                IsBusy = false;
+                this.RaisePropertyChanged(nameof(IsBootRomBound));
+                this.RaisePropertyChanged(nameof(BootRomStatusText));
+            }
+        }
 
         // The encrypted-drive implementation belongs to the live vault host. Expose it
         // through this settings VM so the embedded settings card binds to real commands

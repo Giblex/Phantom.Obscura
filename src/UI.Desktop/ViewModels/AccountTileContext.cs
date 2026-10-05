@@ -30,6 +30,12 @@ namespace PhantomVault.UI.ViewModels
 
         CredentialViewModel? IDetailHost.SelectedCredential => SelectedCredential;
 
+        /// <summary>This account's own category colour, for its tile border.</summary>
+        public Avalonia.Media.IBrush CategoryBrush => _vault.CategoryBrushFor(SelectedCredential.Group);
+
+        /// <summary>Full border, top bar or none, following the card colour-style setting.</summary>
+        public Avalonia.Thickness CategoryBorderThickness => _vault.DetailCardBorderThickness;
+
         /// <summary>Shows the per-account edit button (the card header's Edit reaches only the first account).</summary>
         public bool IsAccountTile => true;
 
@@ -62,6 +68,13 @@ namespace PhantomVault.UI.ViewModels
                 case nameof(VaultViewModel.IsAttestorAvailable):
                 case nameof(VaultViewModel.AttestorStatus):
                     this.RaisePropertyChanged(e.PropertyName);
+                    break;
+                case nameof(VaultViewModel.DetailCardBorderThickness):
+                    this.RaisePropertyChanged(nameof(CategoryBorderThickness));
+                    break;
+                case nameof(VaultViewModel.SelectedCredentialCategoryBrush):
+                    // Category colours can be edited; re-read this tile's own colour too.
+                    this.RaisePropertyChanged(nameof(CategoryBrush));
                     break;
             }
         }

@@ -13,7 +13,7 @@
         MinWidth="800" MinHeight="700"
         WindowStartupLocation="CenterScreen"
         CanResize="True"
-        Icon="avares://PhantomVault.UI/Assets/Visuals/Giblex Icons/Parent Icon.ico"
+        Icon="avares://PhantomVault.UI/Assets/phantom_obscura_app.ico"
         Background="{DynamicResource WindowBackgroundBrush}"
         FontFamily="{DynamicResource DefaultFontFamily}"
         Classes="animated-window native-dot-grid">

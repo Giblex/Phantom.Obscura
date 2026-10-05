@@ -4,7 +4,9 @@ using System.Linq;
 using System.Management;
 using System.Reactive;
 using System.Runtime.Versioning;
+using System.Security;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Avalonia;
@@ -15,6 +17,7 @@ using ReactiveUI;
 using Serilog;
 using PhantomVault.Core.Models;
 using PhantomVault.Core.Services;
+using PhantomVault.Core.Services.BootRom;
 using PhantomVault.Core.Utils;
 using PhantomVault.Core.Services.ZeroKnowledge;
 using PhantomVault.UI.Services;
@@ -203,6 +206,193 @@ namespace PhantomVault.UI.ViewModels
             _ownerWindow = window;
         }
 
+        /// <summary>
+        /// Runs this drive's Boot ROM and registers its contribution for the unlock that follows.
+        /// On failure the user is offered the recovery code recorded when binding was enabled;
+        /// without either, the vault stays shut. Returns true when the contribution is registered.
+        /// </summary>
+        private async Task<bool> EstablishBootRomBindingAsync(string driveRoot, string manifestPath, string? keyfilePath)
+        {
+            if (string.IsNullOrWhiteSpace(keyfilePath))
+            {
+                await _dialogService.ShowErrorAsync(
+                    "Boot ROM cannot be verified",
+                    "This vault is Boot ROM bound, but no keyfile was found on the device. The Boot ROM is sealed to "
+                    + "that keyfile material, so it cannot be opened without it.",
+                    _ownerWindow);
+                return false;
+            }
+
+            // Stable inputs: the ROM compares these against what was recorded when it was created,
+            // so anything that varies per run would lock the user out.
+            byte[] integrityDigest = SHA256.HashData(Encoding.UTF8.GetBytes("integrity:allowed"));
+            byte[] bindingDigest;
+            try
+            {
+                var binding = new UsbBindingService();
+                bindingDigest = SHA256.HashData(Encoding.UTF8.GetBytes(binding.ComputeDeviceId(driveRoot) ?? string.Empty));
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "[VaultUnlock] Could not compute the device binding for the Boot ROM");
+                bindingDigest = SHA256.HashData(Array.Empty<byte>());
+            }
+
+            var outcome = new BootRomService().Run(driveRoot, keyfilePath, integrityDigest, bindingDigest);
+
+            if (outcome.IsSuccess)
+            {
+                BootRomSession.Set(manifestPath, outcome.Contribution!);
+                Log.Information("[VaultUnlock] Boot ROM verified for {Manifest}", System.IO.Path.GetFileName(manifestPath));
+                return true;
+            }
+
+            Log.Warning("[VaultUnlock] Boot ROM run failed: {Status} — {Message}", outcome.Status, outcome.Message);
+
+            var useRecovery = await _dialogService.ShowConfirmationAsync(
+                "Boot ROM verification failed",
+                outcome.Message
+                + "\n\nThis vault's key includes material held by its Boot ROM, so it cannot be unlocked without it.\n\n"
+                + "If you still have the recovery code recorded when Boot ROM protection was enabled, you can use it now.",
+                confirmText: "Use recovery code",
+                cancelText: "Cancel",
+                owner: _ownerWindow);
+
+            if (!useRecovery)
+                return false;
+
+            return await TryRecoverBootRomContributionAsync(driveRoot, manifestPath);
+        }
+
+        /// <summary>
+        /// Recovers the ROM's contribution from the escrow blob using the user's recovery code,
+        /// so a lost or damaged Boot ROM does not mean a lost vault.
+        /// </summary>
+        private async Task<bool> TryRecoverBootRomContributionAsync(string driveRoot, string manifestPath)
+        {
+            var marker = BootRomMarker.TryLoad(driveRoot);
+            string escrowPath = BootRomMarker.EscrowPath(driveRoot);
+
+            if (marker is null || !System.IO.File.Exists(escrowPath))
+            {
+                await _dialogService.ShowErrorAsync(
+                    "No recovery data on this device",
+                    "The Boot ROM recovery file is missing from this device, so a recovery code cannot be used here.",
+                    _ownerWindow);
+                return false;
+            }
+
+            for (int attempt = 0; attempt < 3; attempt++)
+            {
+                var code = await _dialogService.ShowTextPromptAsync(
+                    "Boot ROM recovery",
+                    "Enter the recovery code you saved when Boot ROM protection was enabled for this vault.",
+                    fieldLabel: "Recovery code",
+                    watermark: "XXXX-XXXX-XXXX-XXXX",
+                    confirmText: "Unlock",
+                    owner: _ownerWindow);
+
+                if (string.IsNullOrWhiteSpace(code))
+                    return false;
+
+                try
+                {
+                    byte[] escrow = System.IO.File.ReadAllBytes(escrowPath);
+                    byte[] escrowSalt = Convert.FromBase64String(marker.EscrowSaltBase64);
+                    byte[] contribution = BootRomKeyDerivation.UnwrapContributionForRecovery(escrow, code, escrowSalt);
+
+                    BootRomSession.Set(manifestPath, contribution);
+                    CryptographicOperations.ZeroMemory(contribution);
+                    Log.Information("[VaultUnlock] Boot ROM contribution recovered with a recovery code");
+                    return true;
+                }
+                catch (SecurityException)
+                {
+                    await _dialogService.ShowWarningAsync(
+                        "Recovery code not accepted",
+                        $"That code did not unlock the Boot ROM escrow. {2 - attempt} attempt(s) left.",
+                        _ownerWindow);
+                }
+                catch (Exception ex) when (ex is System.IO.IOException or FormatException or UnauthorizedAccessException)
+                {
+                    Log.Warning(ex, "[VaultUnlock] Boot ROM escrow could not be read");
+                    await _dialogService.ShowErrorAsync(
+                        "Recovery data unreadable",
+                        "The Boot ROM recovery file on this device could not be read.",
+                        _ownerWindow);
+                    return false;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Offers to start the privileged helper when a required module is detected as inactive,
+        /// and starts it on "Activate now". Installing it raises the single Windows elevation
+        /// prompt; an already-installed helper is just restarted. Returns true once it is running.
+        /// </summary>
+        private async Task<bool> OfferToActivatePrivilegedHelperAsync()
+        {
+            var controller = (Application.Current as PhantomVault.UI.App)?.Services?
+                .GetService<PhantomVault.UI.Services.Privileged.BrokerServiceController>();
+
+            if (controller is null)
+            {
+                return false;
+            }
+
+            bool installed = controller.IsInstalled();
+            var confirmed = await _dialogService.ShowConfirmationAsync(
+                "Privileged helper is not running",
+                installed
+                    ? "The Phantom Obscura privileged helper is installed but not running, so the vault's integrity cannot be verified.\n\n"
+                      + "Activate it now to continue unlocking. Windows will ask for permission."
+                    : "The Phantom Obscura privileged helper is not installed, so the vault's integrity cannot be verified.\n\n"
+                      + "Activate it now to continue unlocking. Windows will ask for permission once; you won't be asked again.",
+                confirmText: "Activate now",
+                cancelText: "Cancel",
+                owner: _ownerWindow);
+
+            if (!confirmed)
+            {
+                return false;
+            }
+
+            Status = installed ? "Starting the privileged helper..." : "Installing the privileged helper...";
+
+            bool running = installed
+                ? await controller.StartInstalledAsync().ConfigureAwait(true)
+                : await controller.EnsureInstalledAsync().ConfigureAwait(true);
+
+            if (running)
+            {
+                // Activating here is consent: later privileged calls install silently rather
+                // than asking again (and clears any earlier decline).
+                try
+                {
+                    var settings = SettingsService.Load();
+                    settings.PrivilegedBrokerAutoInstall = true;
+                    settings.PrivilegedBrokerDeclined = false;
+                    SettingsService.Save(settings);
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "[VaultUnlock] Could not persist privileged-helper consent");
+                }
+
+                return true;
+            }
+
+            await _dialogService.ShowErrorAsync(
+                "Could not activate the helper",
+                "The Phantom Obscura privileged helper could not be started. This usually means the elevation prompt "
+                + "was declined, or the helper is missing from the installation folder.",
+                _ownerWindow);
+
+            return false;
+        }
+
         public async Task UnlockVaultAsync()
         {
             var integrityGate = (Application.Current as PhantomVault.UI.App)?.Services?
@@ -210,6 +400,24 @@ namespace PhantomVault.UI.ViewModels
             if (integrityGate is not null)
             {
                 var verdict = await integrityGate.IsUnlockAllowedAsync().ConfigureAwait(false);
+
+                // The helper simply not running is recoverable, so offer to start it here
+                // instead of dead-ending the unlock behind an error the user cannot act on.
+                if (!verdict.Allowed && verdict.HelperInactive)
+                {
+                    var activated = await Dispatcher.UIThread.InvokeAsync(async () =>
+                    {
+                        Status = "Privileged helper is not running";
+                        return await OfferToActivatePrivilegedHelperAsync();
+                    });
+
+                    if (activated)
+                    {
+                        Status = "Re-checking integrity...";
+                        verdict = await integrityGate.IsUnlockAllowedAsync().ConfigureAwait(false);
+                    }
+                }
+
                 if (!verdict.Allowed)
                 {
                     Log.Warning("[VaultUnlock] Unlock blocked by integrity gate: {Reason}", verdict.Reason);
@@ -387,6 +595,20 @@ namespace PhantomVault.UI.ViewModels
 
                 var keyfilePath = string.IsNullOrWhiteSpace(selectedDriveRoot) ? null : FindKeyfileOnDrive(selectedDriveRoot);
                 string? password = null;
+
+                // Boot ROM binding, before anything is decrypted: the ROM's contribution is part
+                // of this vault's key, so it has to be established now or not at all. A failure
+                // here leaves the vault shut — there is no verdict to override, only a key that
+                // cannot be derived without it.
+                if (selectedDriveRoot is { Length: > 0 } boundDriveRoot && BootRomService.IsBound(boundDriveRoot))
+                {
+                    Status = "Verifying Boot ROM...";
+                    if (!await EstablishBootRomBindingAsync(boundDriveRoot, manifestPath, keyfilePath).ConfigureAwait(true))
+                    {
+                        CloseAndReturnToWelcome();
+                        return;
+                    }
+                }
 
                 Log.Debug("[VaultUnlock] manifest={ManifestName} keyfile={KeyfileState}", System.IO.Path.GetFileName(manifestPath), keyfilePath is null ? "<none>" : "<present>");
 

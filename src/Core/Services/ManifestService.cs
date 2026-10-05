@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using PhantomVault.Core.Models;
+using PhantomVault.Core.Services.BootRom;
 using PhantomVault.Core.Utils;
 
 namespace PhantomVault.Core.Services
@@ -91,7 +92,12 @@ namespace PhantomVault.Core.Services
             }
 
             bool requireKeyfileMaterial = requireDualFactor || !string.IsNullOrEmpty(keyfilePath);
-            using var combinedSecret = SecurePasswordCombiner.Combine(passphrase, keyfilePath, requireKeyfileMaterial);
+
+            // Boot ROM binding enters here and in ReadManifestSecure — the only two derivations
+            // for a standalone manifest — so a write can never use different material than the
+            // read that follows it.
+            using var combinedSecret = SecurePasswordCombiner.Combine(
+                passphrase, keyfilePath, requireKeyfileMaterial, BootRomSession.Peek(filePath));
 
             var effectiveKdf = overrideKdfParams ?? manifest.RuntimeKdfParams ?? ManifestKdfParams.Standard;
             byte[] key = _encryptionService.DeriveKey(
@@ -308,7 +314,8 @@ namespace PhantomVault.Core.Services
                 }
 
                 bool requireKeyfileMaterial = requireDualFactor || !string.IsNullOrEmpty(keyfilePath);
-                using var combinedSecret = SecurePasswordCombiner.Combine(passphrase, keyfilePath, requireKeyfileMaterial);
+                using var combinedSecret = SecurePasswordCombiner.Combine(
+                    passphrase, keyfilePath, requireKeyfileMaterial, BootRomSession.Peek(filePath));
                 byte[] key = _encryptionService.DeriveKey(
                     combinedSecret.AsSpan(), salt,
                     memoryCostKb: envelopeKdf.MemoryKb,

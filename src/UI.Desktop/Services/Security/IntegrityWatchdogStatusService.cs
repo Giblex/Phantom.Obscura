@@ -28,7 +28,12 @@ public sealed class IntegrityWatchdogStatusService : IDisposable
             "PhantomObscura", "Broker", "integrity", "health.json");
     }
 
-    public async Task<(bool Allowed, string Reason)> IsUnlockAllowedAsync()
+    /// <summary>
+    /// Whether unlock may proceed. <c>HelperInactive</c> marks the one recoverable failure:
+    /// the privileged helper is not running, so no verdict could be obtained. Callers offer to
+    /// start it rather than dead-ending the unlock. Every other failure stays fail-closed.
+    /// </summary>
+    public async Task<(bool Allowed, string Reason, bool HelperInactive)> IsUnlockAllowedAsync()
     {
         string challenge = Convert.ToHexString(RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();
         try
@@ -37,10 +42,10 @@ public sealed class IntegrityWatchdogStatusService : IDisposable
             using JsonDocument document = JsonDocument.Parse(json);
             JsonElement root = document.RootElement;
             if (root.GetProperty("Challenge").GetString() != challenge)
-                return (false, "Integrity watchdog response failed freshness validation.");
+                return (false, "Integrity watchdog response failed freshness validation.", false);
             DateTimeOffset timestamp = root.GetProperty("TimestampUtc").GetDateTimeOffset();
             if ((DateTimeOffset.UtcNow - timestamp).Duration() > TimeSpan.FromSeconds(30))
-                return (false, "Integrity watchdog response is stale.");
+                return (false, "Integrity watchdog response is stale.", false);
             string status = root.GetProperty("Health").TryGetProperty("Status", out var node)
                 ? node.GetString() ?? "unknown" : "unknown";
             bool controllerReady = root.GetProperty("ControllerReady").GetBoolean();
@@ -53,14 +58,14 @@ public sealed class IntegrityWatchdogStatusService : IDisposable
             if (!controllerReady && status == "unprovisioned")
             {
                 Serilog.Log.Warning("Integrity controller is unprovisioned for an unsigned Debug build; authenticated broker connectivity verified");
-                return (true, "debug-unprovisioned");
+                return (true, "debug-unprovisioned", false);
             }
 #endif
             if (!controllerReady)
-                return (false, "Integrity watchdog is not provisioned or ready.");
+                return (false, "Integrity watchdog is not provisioned or ready.", false);
             return status is "healthy" or "warning"
-                ? (true, status)
-                : (false, $"Integrity watchdog status is {status}.");
+                ? (true, status, false)
+                : (false, $"Integrity watchdog status is {status}.", false);
         }
         catch (Exception ex) when (ex is IOException
             or InvalidOperationException
@@ -70,7 +75,16 @@ public sealed class IntegrityWatchdogStatusService : IDisposable
             or PrivilegedBrokerUnavailableException)
         {
             Serilog.Log.Warning(ex, "Integrity watchdog verdict unavailable");
-            return (false, "Integrity watchdog verification is unavailable. Unlock remains blocked.");
+
+            // A missing helper is recoverable: the caller can offer to start it. Pipe-level
+            // faults (timeout, closed pipe) are reported the same way, since the helper being
+            // down is by far their most common cause and starting it is a safe retry.
+            bool helperInactive = ex is PrivilegedBrokerUnavailableException or TimeoutException or IOException;
+            return (false,
+                helperInactive
+                    ? "The Phantom Obscura privileged helper is not running, so the vault's integrity could not be verified."
+                    : "Integrity watchdog verification is unavailable. Unlock remains blocked.",
+                helperInactive);
         }
     }
 

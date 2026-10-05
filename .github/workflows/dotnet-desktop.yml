@@ -183,10 +183,18 @@ jobs:
           -c Release -r win-x64 --self-contained false
           -o ${{ github.workspace }}/publish
 
+      # `secrets` is not a valid context in a step's `if:` (only env/vars/steps/etc. are), so
+      # the presence check runs as its own step and the result is read back via `steps.*.outputs`.
+      - name: Check for signing certificate
+        if: matrix.configuration == 'Release'
+        id: check_signing_cert
+        shell: bash
+        run: echo "has_cert=${{ secrets.SIGNING_CERT_BASE64 != '' }}" >> "$GITHUB_OUTPUT"
+
       # Signing runs only when a certificate is configured, so forks and contributors without
       # access to the secret still get a green build rather than a confusing failure.
       - name: Sign the published binaries
-        if: matrix.configuration == 'Release' && secrets.SIGNING_CERT_BASE64 != ''
+        if: matrix.configuration == 'Release' && steps.check_signing_cert.outputs.has_cert == 'true'
         env:
           SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
           SIGNING_CERT_PASSWORD: ${{ secrets.SIGNING_CERT_PASSWORD }}

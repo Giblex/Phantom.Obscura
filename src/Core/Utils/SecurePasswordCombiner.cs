@@ -21,58 +21,83 @@ namespace PhantomVault.Core.Utils
             _pinnedHandle = GCHandle.Alloc(_combinedBuffer, GCHandleType.Pinned);
         }
 
-        public static SecurePasswordCombiner Combine(SecurePassword passphrase, string? keyfilePath, bool keyfileRequired = false)
+        /// <param name="passphrase">The user's passphrase; may be empty when a keyfile is used.</param>
+        /// <param name="keyfilePath">Keyfile (or composite keyfile set) to fold in.</param>
+        /// <param name="keyfileRequired">Fail rather than derive without keyfile material.</param>
+        /// <param name="additionalMaterial">
+        /// Extra secret appended to the derived secret — the Boot ROM's contribution when the
+        /// vault is ROM-bound. Must be supplied identically on read and write, which is why the
+        /// only caller takes it from <c>BootRomSession</c> at the single derivation chokepoint.
+        /// </param>
+        public static SecurePasswordCombiner Combine(
+            SecurePassword passphrase,
+            string? keyfilePath,
+            bool keyfileRequired = false,
+            ReadOnlySpan<byte> additionalMaterial = default)
         {
             if (passphrase == null)
             {
                 throw new ArgumentNullException(nameof(passphrase));
             }
 
-            if (string.IsNullOrWhiteSpace(keyfilePath))
-            {
-                if (keyfileRequired)
-                {
-                    throw new SecurityException("Keyfile required but no keyfile path was provided.");
-                }
-
-                var buffer = new char[passphrase.Length];
-                passphrase.AsSpan().CopyTo(buffer);
-                return new SecurePasswordCombiner(buffer);
-            }
-
-            byte[] keyfileBytes = CompositeKeyfilePath.ReadCombinedBytes(keyfilePath, keyfileRequired);
-            byte[]? keyfileBase64Bytes = null;
-            char[]? keyfileBase64Chars = null;
+            char[]? extraChars = additionalMaterial.IsEmpty
+                ? null
+                : Convert.ToBase64String(additionalMaterial).ToCharArray();
+            int extraLength = extraChars?.Length ?? 0;
 
             try
             {
+                if (string.IsNullOrWhiteSpace(keyfilePath))
+                {
+                    if (keyfileRequired)
+                    {
+                        throw new SecurityException("Keyfile required but no keyfile path was provided.");
+                    }
 
-                string keyfileBase64 = Convert.ToBase64String(keyfileBytes);
-                keyfileBase64Chars = keyfileBase64.ToCharArray();
+                    var buffer = new char[passphrase.Length + extraLength];
+                    passphrase.AsSpan().CopyTo(buffer);
+                    extraChars?.AsSpan().CopyTo(buffer.AsSpan(passphrase.Length));
+                    return new SecurePasswordCombiner(buffer);
+                }
 
-                int combinedLength = passphrase.Length + keyfileBase64Chars.Length;
-                var combined = new char[combinedLength];
+                byte[] keyfileBytes = CompositeKeyfilePath.ReadCombinedBytes(keyfilePath, keyfileRequired);
+                char[]? keyfileBase64Chars = null;
 
-                passphrase.AsSpan().CopyTo(combined.AsSpan(0, passphrase.Length));
+                try
+                {
 
-                keyfileBase64Chars.AsSpan().CopyTo(combined.AsSpan(passphrase.Length));
+                    string keyfileBase64 = Convert.ToBase64String(keyfileBytes);
+                    keyfileBase64Chars = keyfileBase64.ToCharArray();
 
-                return new SecurePasswordCombiner(combined);
+                    int combinedLength = passphrase.Length + keyfileBase64Chars.Length + extraLength;
+                    var combined = new char[combinedLength];
+
+                    passphrase.AsSpan().CopyTo(combined.AsSpan(0, passphrase.Length));
+
+                    keyfileBase64Chars.AsSpan().CopyTo(combined.AsSpan(passphrase.Length));
+
+                    extraChars?.AsSpan().CopyTo(combined.AsSpan(passphrase.Length + keyfileBase64Chars.Length));
+
+                    return new SecurePasswordCombiner(combined);
+                }
+                finally
+                {
+
+                    if (keyfileBytes != null)
+                    {
+                        CryptographicOperations.ZeroMemory(keyfileBytes);
+                    }
+                    if (keyfileBase64Chars != null)
+                    {
+                        Array.Clear(keyfileBase64Chars, 0, keyfileBase64Chars.Length);
+                    }
+                }
             }
             finally
             {
-
-                if (keyfileBytes != null)
+                if (extraChars != null)
                 {
-                    CryptographicOperations.ZeroMemory(keyfileBytes);
-                }
-                if (keyfileBase64Bytes != null)
-                {
-                    CryptographicOperations.ZeroMemory(keyfileBase64Bytes);
-                }
-                if (keyfileBase64Chars != null)
-                {
-                    Array.Clear(keyfileBase64Chars, 0, keyfileBase64Chars.Length);
+                    Array.Clear(extraChars, 0, extraChars.Length);
                 }
             }
         }

@@ -274,6 +274,15 @@ namespace PhantomVault.Core.Models
         [JsonPropertyName("manifestEd25519Signature")]
         public string? ManifestEd25519SignatureBase64 { get; set; } = null;
 
+        /// <summary>
+        /// SHA-256 of the Boot ROM marker this vault was bound with, or null when the vault is
+        /// not ROM bound. Stored inside the encrypted manifest, so a marker swapped on the device
+        /// is detectable once the vault opens. It is evidence, not a gate: the binding itself is
+        /// enforced cryptographically, since the wrong ROM simply yields the wrong key.
+        /// </summary>
+        [JsonPropertyName("bootRomMarkerHash")]
+        public string? BootRomMarkerHashBase64 { get; set; } = null;
+
         [JsonPropertyName("pinSaltBase64")]
         public string? PinSaltBase64 { get; set; } = null;
 
