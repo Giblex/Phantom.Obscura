@@ -24,21 +24,10 @@ jobs:
         working-directory: Phantom Suite/Phantom.Obscura
 
     steps:
-      # The Android head ProjectReferences ..\..\..\Phantom.Root\Phantom.UI.Shared, which
-      # resolves to a SIBLING of this repository. Checking out into "Phantom Suite/..."
-      # reproduces the developer's on-disk layout so that reference resolves; a bare
-      # checkout at the workspace root cannot restore this project at all.
       - name: Checkout Phantom.Obscura
         uses: actions/checkout@v4
         with:
           path: ${{ env.SUITE_DIR }}/Phantom.Obscura
-
-      - name: Checkout Phantom.Shared (as Phantom.Root)
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ vars.SHARED_REPO || 'Giblex-Pty-Ltd/Phantom.Shared' }}
-          token: ${{ secrets.SUITE_REPO_TOKEN }}
-          path: ${{ env.SUITE_DIR }}/Phantom.Root
 
       # Lives beside the projects rather than inside any one repository; keeps stale
       # obj_*/bin_* verification output out of the SDK's default compile globs.
