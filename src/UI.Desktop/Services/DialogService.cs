@@ -46,7 +46,7 @@ namespace PhantomVault.UI.Services
 
         private static (string Glyph, IBrush Brush, string Caption) Look(DialogKind kind) => kind switch
         {
-            DialogKind.Warning => ("!", ThemeBrush("WarningBrush", "#FBBF24"), "Warning"),
+            DialogKind.Warning => ("!", ThemeBrush("WarningBrush", "#F08A42"), "Warning"),
             DialogKind.Error => ("!", ThemeBrush("ErrorBrush", "#EF4444"), "Something went wrong"),
             DialogKind.Success => ("✓", ThemeBrush("SuccessBrush", "#4ADE80"), "Done"),
             DialogKind.Question => ("?", ThemeBrush("AccentBrush", "#6B8CAE"), "Please confirm"),
@@ -463,7 +463,7 @@ namespace PhantomVault.UI.Services
             var dialog = NewDialog(title, 640, owner);
 
             var success = ThemeBrush("SuccessBrush", "#4ADE80");
-            var warning = ThemeBrush("WarningBrush", "#FBBF24");
+            var warning = ThemeBrush("WarningBrush", "#F08A42");
             var error = ThemeBrush("ErrorBrush", "#EF4444");
             var primary = ThemeBrush("PrimaryTextBrush", "#E6ECF5");
 

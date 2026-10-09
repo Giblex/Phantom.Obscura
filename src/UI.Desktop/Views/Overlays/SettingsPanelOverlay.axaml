@@ -147,6 +147,18 @@
                     ClipToBounds="True"
                     BoxShadow="{DynamicResource Shadow.SettingsPanel}"
                     RenderTransformOrigin="1,0.5">
+                <!-- Reverted to the IsVisible mechanism.
+                     An attempt to make this animate (by keeping the panel attached and driving the
+                     slide from a class) broke the panel twice: a hyphenated class name does not
+                     bind, and styles declared on a control also apply to its descendants, so the
+                     bare "Border" selector below translated every nested border off-screen too.
+                     The panel not opening is far worse than it opening without a slide, so this is
+                     back to the version that works.
+
+                     If this is revisited: scope the selectors by name (Border#SettingsSlideHost),
+                     use a class name without a hyphen, and verify against an unlocked vault — the
+                     settings panel only exists inside the vault window, so it cannot be checked
+                     from the welcome screen. -->
                 <Border.IsVisible>
                     <MultiBinding Converter="{x:Static BoolConverters.Or}">
                         <Binding Path="IsSettingsPanelVisible"/>

@@ -10,6 +10,8 @@ using PhantomVault.Core.Models;
 using PhantomVault.Core.Security;
 using PhantomVault.Core.Utils;
 
+using PhantomVault.Core.Services.BootRom;
+
 namespace PhantomVault.Core.Services
 {
 
@@ -154,7 +156,7 @@ namespace PhantomVault.Core.Services
             byte[] salt = new byte[SaltSize];
             RandomNumberGenerator.Fill(salt);
 
-            byte[] containerKey = await DeriveContainerKeyAsync(password, keyfilePath, salt, DefaultIterations, DefaultMemoryKb);
+            byte[] containerKey = await DeriveContainerKeyAsync(password, keyfilePath, salt, DefaultIterations, DefaultMemoryKb, containerPath);
             byte[] hmacKey = DeriveHmacKey(containerKey);
 
             try
@@ -528,7 +530,7 @@ namespace PhantomVault.Core.Services
                 await fileStream.ReadExactlyAsync(manifestOffsetBytes, cancellationToken);
             }
 
-            byte[] containerKey = await DeriveContainerKeyAsync(password, keyfilePath, salt, iterations, DefaultMemoryKb);
+            byte[] containerKey = await DeriveContainerKeyAsync(password, keyfilePath, salt, iterations, DefaultMemoryKb, fileStream.Name);
 
             try
             {
@@ -674,7 +676,7 @@ namespace PhantomVault.Core.Services
             }
         }
 
-        private async Task<byte[]> DeriveContainerKeyAsync(string? password, string? keyfilePath, byte[] salt, int iterations, int memoryCostKb)
+        private async Task<byte[]> DeriveContainerKeyAsync(string? password, string? keyfilePath, byte[] salt, int iterations, int memoryCostKb, string? containerPath)
         {
             byte[] passwordKey = Array.Empty<byte>();
             byte[] keyfileKey = Array.Empty<byte>();
@@ -726,11 +728,20 @@ namespace PhantomVault.Core.Services
                     keyfileKey = new byte[32];
                 }
 
-                byte[] combinedInput = new byte[passwordKey.Length + keyfileKey.Length];
+                // Boot ROM contribution, when this vault is bound to one. Appended last, and only
+                // when a contribution is actually registered for this container: with none, the
+                // input is byte-for-byte what it was before this existed, so every container
+                // created without a ROM keeps deriving exactly the same key. The array belongs to
+                // the session — read it, never zero it.
+                byte[]? romContribution = string.IsNullOrEmpty(containerPath) ? null : BootRomSession.Peek(containerPath);
+
+                byte[] combinedInput = new byte[passwordKey.Length + keyfileKey.Length + (romContribution?.Length ?? 0)];
                 try
                 {
                     Buffer.BlockCopy(passwordKey, 0, combinedInput, 0, passwordKey.Length);
                     Buffer.BlockCopy(keyfileKey, 0, combinedInput, passwordKey.Length, keyfileKey.Length);
+                    if (romContribution is { Length: > 0 })
+                        Buffer.BlockCopy(romContribution, 0, combinedInput, passwordKey.Length + keyfileKey.Length, romContribution.Length);
 
                     combinedKey = HKDF.DeriveKey(
                         HashAlgorithmName.SHA256,
@@ -767,7 +778,7 @@ namespace PhantomVault.Core.Services
             return Convert.ToBase64String(sha256.Hash!);
         }
 
-        private byte[] DeriveContainerKey(string? password, string? keyfilePath, byte[] salt, int iterations, int memoryCostKb)
+        private byte[] DeriveContainerKey(string? password, string? keyfilePath, byte[] salt, int iterations, int memoryCostKb, string? containerPath)
         {
             byte[] passwordKey = Array.Empty<byte>();
             byte[] keyfileKey = Array.Empty<byte>();
@@ -801,11 +812,20 @@ namespace PhantomVault.Core.Services
                     keyfileKey = new byte[32];
                 }
 
-                byte[] combinedInput = new byte[passwordKey.Length + keyfileKey.Length];
+                // Boot ROM contribution, when this vault is bound to one. Appended last, and only
+                // when a contribution is actually registered for this container: with none, the
+                // input is byte-for-byte what it was before this existed, so every container
+                // created without a ROM keeps deriving exactly the same key. The array belongs to
+                // the session — read it, never zero it.
+                byte[]? romContribution = string.IsNullOrEmpty(containerPath) ? null : BootRomSession.Peek(containerPath);
+
+                byte[] combinedInput = new byte[passwordKey.Length + keyfileKey.Length + (romContribution?.Length ?? 0)];
                 try
                 {
                     Buffer.BlockCopy(passwordKey, 0, combinedInput, 0, passwordKey.Length);
                     Buffer.BlockCopy(keyfileKey, 0, combinedInput, passwordKey.Length, keyfileKey.Length);
+                    if (romContribution is { Length: > 0 })
+                        Buffer.BlockCopy(romContribution, 0, combinedInput, passwordKey.Length + keyfileKey.Length, romContribution.Length);
 
                     return HKDF.DeriveKey(
                         HashAlgorithmName.SHA256,
@@ -1150,7 +1170,8 @@ namespace PhantomVault.Core.Services
                     keyfilePath,
                     salt,
                     bootstrapSection.BootstrapHeader.KdfIterations,
-                    bootstrapSection.BootstrapHeader.KdfMemoryKb).ConfigureAwait(false);
+                    bootstrapSection.BootstrapHeader.KdfMemoryKb,
+                    fs.Name).ConfigureAwait(false);
 
                 try
                 {
@@ -1210,7 +1231,8 @@ namespace PhantomVault.Core.Services
                     keyfilePath,
                     salt,
                     bootstrapSection.BootstrapHeader.KdfIterations,
-                    bootstrapSection.BootstrapHeader.KdfMemoryKb);
+                    bootstrapSection.BootstrapHeader.KdfMemoryKb,
+                    fs.Name);
 
                 try
                 {
@@ -1343,7 +1365,8 @@ namespace PhantomVault.Core.Services
                 keyfilePath,
                 salt,
                 legacySection.ManifestSection.ContainerManifest.KdfIterations,
-                legacySection.ManifestSection.ContainerManifest.KdfMemoryKb).ConfigureAwait(false);
+                legacySection.ManifestSection.ContainerManifest.KdfMemoryKb,
+                fs.Name).ConfigureAwait(false);
             byte[] hmacKey = DeriveHmacKey(containerKey);
 
             byte[] computedHmac = HMACSHA256.HashData(hmacKey, legacySection.ManifestSection.ManifestJsonBytes);
@@ -1378,7 +1401,8 @@ namespace PhantomVault.Core.Services
                 keyfilePath,
                 salt,
                 legacySection.ManifestSection.ContainerManifest.KdfIterations,
-                legacySection.ManifestSection.ContainerManifest.KdfMemoryKb);
+                legacySection.ManifestSection.ContainerManifest.KdfMemoryKb,
+                fs.Name);
             byte[] hmacKey = DeriveHmacKey(containerKey);
 
             byte[] computedHmac = HMACSHA256.HashData(hmacKey, legacySection.ManifestSection.ManifestJsonBytes);
@@ -1467,7 +1491,7 @@ namespace PhantomVault.Core.Services
             if (version < 3 || manifestOffset <= 0)
                 return null;
 
-            byte[] containerKey = DeriveContainerKey(password, keyfilePath, salt, iterations, DefaultMemoryKb);
+            byte[] containerKey = DeriveContainerKey(password, keyfilePath, salt, iterations, DefaultMemoryKb, fs.Name);
             try
             {
                 var footer = ReadVaultManifestFooter(fs, manifestOffset)
@@ -1550,7 +1574,7 @@ namespace PhantomVault.Core.Services
                 manifestOffset = BitConverter.ToInt64(manifestOffsetBuf);
             }
 
-            byte[] containerKey = DeriveContainerKey(password, keyfilePath, salt, iterations, DefaultMemoryKb);
+            byte[] containerKey = DeriveContainerKey(password, keyfilePath, salt, iterations, DefaultMemoryKb, fs.Name);
             try
             {
                 long writeOffset = manifestOffset > 0 ? manifestOffset : fs.Length;

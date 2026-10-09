@@ -31,22 +31,8 @@ namespace PhantomVault.UI.ViewModels
             BootRomDriveRoot is { Length: > 0 } root && BootRomService.IsBound(root);
 
         /// <summary>Digests the ROM is provisioned against. Must match what unlock supplies.</summary>
-        private (byte[] Integrity, byte[] Binding) ComputeBootRomDigests(string driveRoot)
-        {
-            byte[] integrity = SHA256.HashData(Encoding.UTF8.GetBytes("integrity:allowed"));
-            byte[] binding;
-            try
-            {
-                var service = new UsbBindingService();
-                binding = SHA256.HashData(Encoding.UTF8.GetBytes(service.ComputeDeviceId(driveRoot) ?? string.Empty));
-            }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, "[BootRom] Could not compute the device binding digest");
-                binding = SHA256.HashData(Array.Empty<byte>());
-            }
-            return (integrity, binding);
-        }
+        private static (byte[] Integrity, byte[] Binding) ComputeBootRomDigests(string driveRoot) =>
+            BootRomDigests.For(driveRoot);
 
         /// <summary>
         /// Provisions a Boot ROM for this vault and re-wraps the manifest so its key now includes
@@ -80,7 +66,32 @@ namespace PhantomVault.UI.ViewModels
                 return null;
             }
 
+            // _manifestPath is guaranteed non-empty by the guard above.
             string manifestPath = _manifestPath;
+
+            // Container-backed vaults cannot be re-keyed in place yet.
+            //
+            // Writing a manifest that lives inside a .pvault container first authenticates and
+            // reads the existing container. Registering the ROM contribution beforehand changes
+            // the derived key, so that read fails against a container written without it — and the
+            // rollback write fails the same way. It is safe (nothing is modified; the vault still
+            // opens) but it cannot succeed, so it is refused here rather than attempted.
+            //
+            // Boot ROM applied at vault CREATION is unaffected: the container is written bound
+            // from the start and never re-read under a changed key.
+            if (_manifestPath.EndsWith(".pvault", StringComparison.OrdinalIgnoreCase))
+            {
+                Log.Information("[BootRom] Enable refused: {Manifest} is a container vault and cannot be re-keyed in place",
+                    System.IO.Path.GetFileName(_manifestPath));
+
+                await _dialogService.ShowInfoAsync(
+                    "Not available for this vault",
+                    "Boot ROM protection cannot be added to a vault that is already set up in this format.\n\n"
+                    + "It can be enabled when a vault is created. Your vault has not been changed.",
+                    _ownerWindow);
+                return null;
+            }
+
             var (integrity, binding) = ComputeBootRomDigests(driveRoot);
             BootRomProvisionResult? provisioned = null;
 
@@ -124,7 +135,7 @@ namespace PhantomVault.UI.ViewModels
                 }).ConfigureAwait(true);
 
                 StatusMessage = "Boot ROM protection enabled";
-                Log.Information("[BootRom] Binding enabled for {Manifest}", System.IO.Path.GetFileName(manifestPath));
+                Log.Information("[BootRom] Binding enabled for {Manifest}", System.IO.Path.GetFileName(_manifestPath));
                 this.RaisePropertyChanged(nameof(IsBootRomBound));
                 return provisioned.RecoveryCode;
             }
@@ -256,7 +267,7 @@ namespace PhantomVault.UI.ViewModels
 
                 BootRomProvisioner.Remove(driveRoot);
                 StatusMessage = "Boot ROM protection removed";
-                Log.Information("[BootRom] Binding removed for {Manifest}", System.IO.Path.GetFileName(manifestPath));
+                Log.Information("[BootRom] Binding removed for {Manifest}", System.IO.Path.GetFileName(_manifestPath));
                 this.RaisePropertyChanged(nameof(IsBootRomBound));
                 return true;
             }

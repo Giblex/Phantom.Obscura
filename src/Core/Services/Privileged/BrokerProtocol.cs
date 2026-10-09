@@ -43,7 +43,19 @@ namespace PhantomVault.Core.Services.Privileged
         MountPhantomVolume = 9,
         UnmountPhantomVolume = 10,
         GetIntegrityVerdict = 11,
-        AuthorizeIntegrityWrite = 12
+        AuthorizeIntegrityWrite = 12,
+
+        /// <summary>
+        /// Ask the helper to stop its own service.
+        ///
+        /// It stops itself rather than being stopped from outside because the UI is not elevated:
+        /// an external "sc stop" would raise a UAC prompt every time the app closed. The service
+        /// already runs as LocalSystem, so it can shut itself down without prompting.
+        ///
+        /// Only the allow-listed client can ask — the pipe rejects anything else before a request
+        /// is even read — so this cannot be used by another process to disable the helper.
+        /// </summary>
+        Shutdown = 13
     }
 
     public enum BrokerMessageType

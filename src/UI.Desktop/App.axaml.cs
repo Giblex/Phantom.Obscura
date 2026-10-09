@@ -151,6 +151,7 @@ namespace PhantomVault.UI
                 AccessibilityService.Instance.ScreenReaderOptimizations = persistedSettings.EnableScreenReader;
                 ApplyTooltipScale(persistedSettings.LargeTooltips);
                 ApplyScreenReaderOptimizations(persistedSettings.EnableScreenReader);
+                ApplyAccessibilityFont(persistedSettings.AccessibilityFontSize, persistedSettings.AccessibilityFontFamily);
                 AccessibilityService.Instance.SettingsChanged += (_, _) =>
                 {
                     ApplyTooltipScale(AccessibilityService.Instance.LargeTooltips);
@@ -212,7 +213,7 @@ namespace PhantomVault.UI
                 persistedSettings.SecureTrashEnabled,
                 persistedSettings.SecureTrashAutoPurge,
                 persistedSettings.SecureTrashRetentionDays,
-                persistedSettings.SecureTrashWipePasses);
+                ResolveWipePasses(persistedSettings));
             secureTrash.SecurelyPurgeExpired();
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -309,6 +310,11 @@ namespace PhantomVault.UI
                 }
 
                 InitializePrivilegedBroker();
+
+                // Deliberately not inside InitializePrivilegedBroker: that method returns early
+                // when the process is already elevated, which would have silently disabled the
+                // whole USB-insert flow for anyone running the app as administrator.
+                WireUsbVaultSession();
 
                 desktop.MainWindow.Closing += (sender, e) =>
                 {
@@ -413,18 +419,233 @@ namespace PhantomVault.UI
 
                 PhantomVault.Core.Services.Privileged.PrivilegedExecution.Broker = client;
 
-                // Deliberately no eager install here. This used to fire a raw Windows
-                // UAC elevation prompt in the background on every non-elevated launch —
-                // with no app-level context and no memory of a decline, so cancelling it
-                // just meant getting it again on the very next launch. Installing the
-                // helper is now purely reactive: EnsureAvailableAsync (wired above) shows
-                // an in-app confirmation dialog the moment a privileged feature actually
-                // needs it, and only then triggers the single UAC prompt.
+                // Still no eager *install* here. What used to be in this spot fired a raw Windows
+                // UAC elevation prompt in the background on every non-elevated launch — with no
+                // app-level context and no memory of a decline, so cancelling it just meant
+                // getting it again on the very next launch.
+                //
+                // What runs below is not that. It reads the helper's state, and only when the
+                // helper is actually unavailable does it show an in-app dialogue explaining why,
+                // with an Activate button. Nothing is elevated unless the user presses it, and a
+                // decline is remembered. The reason this is worth doing at startup at all: the
+                // helper is a Windows service, and anything on the machine can stop or disable it
+                // between launches. Waiting for a privileged feature to fail means the user first
+                // meets the problem as a broken vault unlock.
+                StartupHelperCheck(controller);
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"[App] InitializePrivilegedBroker failed: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Connects the USB to the vault session: inserting the stick while locked brings up the
+        /// unlock prompt for that drive, and pulling it out locks the vault it was backing.
+        ///
+        /// Both halves matter. Without the first, inserting the stick appears to do nothing,
+        /// because the autofill flow aborts on a locked vault. Without the second, an unlocked
+        /// vault keeps running after the key material has physically left the machine.
+        /// </summary>
+        private void WireUsbVaultSession()
+        {
+            try
+            {
+                var tray = _serviceProvider?
+                    .GetService<PhantomVault.UI.Services.TrayBackground.ITrayBackgroundService>();
+                if (tray is null)
+                    return;
+
+                // Start watching now, not at unlock. The whole point of the USB flow is that
+                // inserting the stick is what gets you into a *locked* vault — a watcher that only
+                // runs once the vault is already open could never see that insertion. It is safe
+                // while locked because the flow checks IsVaultReady before touching anything and
+                // only raises the unlock request.
+                try
+                {
+                    if (SettingsService.Load().AutoFillModeEnabled && !tray.IsRunning)
+                    {
+                        _ = tray.StartAsync();
+                        Serilog.Log.Information("[UsbSession] Tray watcher started at launch — listening for vault USB insertion");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Serilog.Log.Warning(ex, "[UsbSession] Could not start the tray watcher at launch");
+                }
+
+                tray.VaultUnlockRequested += drivePath =>
+                {
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        try
+                        {
+                            if (ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
+                                return;
+
+                            // An unlock prompt already on screen is left alone — a second one
+                            // competing for the same drive helps nobody.
+                            var existing = desktop.Windows
+                                .FirstOrDefault(w => w.GetType().Name == "VaultUnlockWindow");
+                            if (existing is not null)
+                            {
+                                existing.Show();
+                                existing.Activate();
+                                return;
+                            }
+
+                            var window = new Views.VaultUnlockWindow();
+                            window.Show();
+                            window.Activate();
+                            Serilog.Log.Information("[UsbSession] Unlock prompt opened for inserted drive {Drive}", drivePath);
+                        }
+                        catch (Exception ex)
+                        {
+                            Serilog.Log.Error(ex, "[UsbSession] Could not open the unlock prompt for an inserted drive");
+                        }
+                    });
+                };
+
+                tray.DriveRemoved += drivePath =>
+                {
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        try
+                        {
+                            if (ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
+                                return;
+
+                            var vaultWindow = desktop.Windows
+                                .FirstOrDefault(w => w.GetType().Name == "VaultWindow");
+
+                            if (vaultWindow?.DataContext is ViewModels.VaultViewModel vm)
+                            {
+                                // Locking is deliberately unconditional on removal rather than
+                                // trying to match drive letters: a letter can be reassigned or
+                                // reported differently than the vault recorded it, and failing to
+                                // lock is far worse than locking once when it was a different stick.
+                                Serilog.Log.Information("[UsbSession] Drive {Drive} removed — locking the open vault", drivePath);
+                                vm.RequestSuiteLock();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Serilog.Log.Error(ex, "[UsbSession] Could not lock the vault after drive removal");
+                        }
+                    });
+                };
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Warning(ex, "[UsbSession] Could not wire USB vault-session handling");
+            }
+        }
+
+        /// <summary>
+        /// Notices on launch that the privileged helper has been stopped or disabled, and offers to
+        /// put it back. Runs off the startup path so a slow SCM query cannot delay the first window.
+        /// </summary>
+        private void StartupHelperCheck(PhantomVault.UI.Services.Privileged.BrokerServiceController controller)
+        {
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var state = controller.GetState();
+                    if (state == PhantomVault.UI.Services.Privileged.PrivilegedHelperState.Running)
+                        return;
+
+                    // A missing binary is reported where it actually blocks something, not on every
+                    // launch: a build without the Broker folder would otherwise show an error box
+                    // at every start, which trains the user to dismiss it.
+                    if (state == PhantomVault.UI.Services.Privileged.PrivilegedHelperState.BinaryMissing)
+                    {
+                        Serilog.Log.Warning("[PrivilegedHelper] Helper binary is not present in this installation");
+                        return;
+                    }
+
+                    // An earlier "no" to installing it is respected and not re-asked. A helper that
+                    // was installed and has since been stopped or disabled is different: consent
+                    // was already given, and the thing they consented to has regressed.
+                    if (state == PhantomVault.UI.Services.Privileged.PrivilegedHelperState.NotInstalled)
+                    {
+                        try
+                        {
+                            if (SettingsService.Load().PrivilegedBrokerDeclined)
+                                return;
+                        }
+                        catch
+                        {
+                            // Unreadable settings: fall through and ask.
+                        }
+                    }
+
+                    var activator = _serviceProvider?
+                        .GetService<PhantomVault.UI.Services.Privileged.PrivilegedHelperActivator>();
+                    if (activator is null)
+                        return;
+
+                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+                    {
+                        var owner = (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+                        await activator.EnsureActiveAsync(owner, "on this machine");
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Serilog.Log.Warning(ex, "[PrivilegedHelper] Startup availability check failed");
+                }
+            });
+        }
+
+        /// <summary>
+        /// Applies the saved accessibility font at startup.
+        ///
+        /// The settings screen applied this when the user changed it, but nothing restored it on
+        /// the next launch — so the choice silently reverted every time the app restarted. The
+        /// index-to-value mapping is kept identical to the settings screen's.
+        /// </summary>
+        private static void ApplyAccessibilityFont(int sizeIndex, int familyIndex)
+        {
+            try
+            {
+                if (Application.Current is null)
+                    return;
+
+                double[] sizes = { 11, 13, 15, 17 };
+                string[] families = { "Segoe UI", "Aptos", "Times New Roman", "Calibri" };
+
+                Application.Current.Resources["GlobalFontSize"] =
+                    sizes[Math.Clamp(sizeIndex, 0, sizes.Length - 1)];
+                Application.Current.Resources["GlobalFontFamily"] =
+                    new Avalonia.Media.FontFamily(families[Math.Clamp(familyIndex, 0, families.Length - 1)]);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[App] Failed to apply accessibility font: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Pass count for secure erasure.
+        ///
+        /// Two settings described the same thing: a raw pass count, and the "Erasure method"
+        /// dropdown the settings screen actually shows. Only the raw count was ever read, so
+        /// choosing DoD or Gutmann changed nothing. The dropdown is what the user sees, so it
+        /// wins; the raw count remains the fallback for a method index outside the known list.
+        /// </summary>
+        private static int ResolveWipePasses(UserSettings settings)
+        {
+            // Indices match the Erasure method combo in Rubbish Bin settings.
+            return settings.SecureTrashErasureMethod switch
+            {
+                0 => 1,      // Simple
+                1 => 3,      // Standard
+                2 => 7,      // DoD 5220.22-M
+                3 => 35,     // Gutmann
+                4 => 1000,   // Enhanced
+                _ => settings.SecureTrashWipePasses
+            };
         }
 
         private static void ApplyTooltipScale(bool largeTooltips)

@@ -2715,6 +2715,9 @@ namespace PhantomVault.UI.ViewModels
             _categories.Add(new CategoryViewModel { Name = "Notes", Icon = IconPathMigrator.NotesIcon, Count = 0, TileColor = "#FCA5A5" });
             _categories.Add(new CategoryViewModel { Name = "Custom", Icon = IconPathMigrator.CustomIcon, Count = 0, TileColor = "#C4B5FD" });
             _categories.Add(new CategoryViewModel { Name = "Secure Rubbish Bin", Icon = IconPathMigrator.TrashIcon, Count = _secureTrashService.Records.Count, TileColor = "#6B7280" });
+
+            // The categories now exist, so the remembered filter can be matched against them.
+            RestoreLastActiveCategory();
         }
 
         private void LoadCategoryColorsFromManifest()
@@ -3091,9 +3094,20 @@ namespace PhantomVault.UI.ViewModels
                         ? Services.FuzzyMatcher.CalculateScore(SearchText, sectionText)
                         : 0;
 
+                    // Alias match: "google" should find an entry titled "Gmail", and "gmail"
+                    // should find "Google". Fuzzy scoring alone cannot do this — the two strings
+                    // share almost no characters — so the service identity is compared directly.
+                    // Scored just below an exact title hit so a literal match always ranks first.
+                    int aliasScore = 0;
+                    if (Services.ServiceAliases.SameService(SearchText, credential.Title) ||
+                        Services.ServiceAliases.SameService(SearchText, credential.Url))
+                    {
+                        aliasScore = 90;
+                    }
+
                     int maxScore = Math.Max(
                         Math.Max(Math.Max(titleScore, usernameScore), Math.Max(groupScore, urlScore)),
-                        sectionScore);
+                        Math.Max(sectionScore, aliasScore));
 
                     if (maxScore >= 30)
                     {
@@ -3103,7 +3117,8 @@ namespace PhantomVault.UI.ViewModels
                             MatchedField = maxScore == titleScore ? "Title" :
                                           maxScore == usernameScore ? "Username" :
                                           maxScore == groupScore ? "Group" :
-                                          maxScore == urlScore ? "URL" : "Section"
+                                          maxScore == urlScore ? "URL" :
+                                          maxScore == aliasScore ? "Service" : "Section"
                         });
                     }
                 }
@@ -5007,6 +5022,47 @@ namespace PhantomVault.UI.ViewModels
             ActiveCategoryDisplayName = categoryName ?? string.Empty;
             this.RaisePropertyChanged(nameof(IsShowingCategoryFiltered));
             UpdateCategoryActiveStates();
+
+            // Remember the filter so reopening the vault lands where the user left off. The
+            // setting existed but was never written to or read, so the category filter reset on
+            // every unlock. Only the category NAME is stored, which is already visible in the
+            // sidebar — no credential data leaves the vault.
+            try
+            {
+                SettingsService.Update(cfg => cfg.LastActiveCategory = categoryName);
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, "[Vault] Could not persist the active category");
+            }
+        }
+
+        /// <summary>
+        /// Re-applies the category filter the user last had selected, if it still exists.
+        /// A category that has since been deleted falls back to showing everything rather than
+        /// leaving the list filtered to nothing.
+        /// </summary>
+        private void RestoreLastActiveCategory()
+        {
+            try
+            {
+                var remembered = SettingsService.Load().LastActiveCategory;
+                if (string.IsNullOrWhiteSpace(remembered))
+                    return;
+
+                if (_categories == null ||
+                    !_categories.Any(c => string.Equals(c.Name, remembered, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return;
+                }
+
+                SetActiveCategory(remembered);
+                ApplyFilters();
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, "[Vault] Could not restore the last active category");
+            }
         }
 
         private void UpdateCategoryActiveStates()
@@ -5546,6 +5602,14 @@ namespace PhantomVault.UI.ViewModels
             {
                 PhantomVault.Core.Services.BootRom.BootRomSession.Clear(_manifestPath);
             }
+
+            // The tray autofill watcher is deliberately NOT stopped here.
+            //
+            // It has to outlive a locked vault, because inserting the USB is how the user gets
+            // back into one: a watcher that shut down on lock could never see that insertion, and
+            // plugging the stick in would appear to do nothing. It is harmless while locked —
+            // the autofill flow checks IsVaultReady before touching the vault and does no more
+            // than raise an unlock request. It stops when autofill is switched off, or on exit.
         }
 
         private Task ReleaseTransientHandlesAsync()
@@ -6524,6 +6588,10 @@ namespace PhantomVault.UI.ViewModels
             finally
             {
                 IsLoadingCredentials = false;
+
+                // Credentials are loaded, so the scheduled duplicate scan has something to work
+                // with. Fire-and-forget: a background tidy-up must never delay the vault opening.
+                _ = MaybeRunScheduledDuplicateScanAsync();
             }
         }
 
@@ -7032,13 +7100,33 @@ namespace PhantomVault.UI.ViewModels
                 UpdateWeakCredentials();
                 RefreshSecurityDashboardMetrics();
 
+                // One dashboard only. Clicking the button again used to build a second window and
+                // drop the reference to the first, leaving stacked copies that each held their own
+                // snapshot of the metrics. Re-use the open one and refresh it instead.
+                if (_securityDashboardWindow is { } existing)
+                {
+                    existing.Activate();
+                    StatusMessage = "✓ Security Dashboard is already open";
+                    return;
+                }
+
                 var window = new Views.SecurityDashboardWindow { DataContext = this };
                 System.Diagnostics.Debug.WriteLine(">>> SecurityDashboardWindow created");
 
                 _securityDashboardWindow = window;
                 window.Closed += (_, _) => _securityDashboardWindow = null;
 
-                window.Show();
+                // Shown as a child of the vault window so it stays above it rather than being lost
+                // behind it. Deliberately not Topmost: that would also float it over unrelated
+                // applications, which is not what "on top" means here.
+                if (_ownerWindow is { } owner)
+                {
+                    window.Show(owner);
+                }
+                else
+                {
+                    window.Show();
+                }
                 System.Diagnostics.Debug.WriteLine(">>> SecurityDashboardWindow shown");
 
                 StatusMessage = "✓ Security Dashboard opened successfully";

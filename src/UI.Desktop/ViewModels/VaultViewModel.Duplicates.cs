@@ -7,6 +7,7 @@ using Avalonia.Controls;
 using Avalonia.Threading;
 using PhantomVault.Core.Models;
 using PhantomVault.Core.Services;
+using PhantomVault.UI.Services;
 using PhantomVault.UI.Views;
 using ReactiveUI;
 
@@ -86,6 +87,104 @@ namespace PhantomVault.UI.ViewModels
             {
                 Serilog.Log.Warning(ex, "[Duplicates] Failed to copy a credential value.");
                 StatusMessage = "The value could not be copied. Confirm clipboard access is allowed and try again.";
+            }
+        }
+
+        /// <summary>
+        /// Runs the duplicate scan on the schedule the user configured in Rubbish Bin settings.
+        ///
+        /// Three settings drove this and none of them were read, so the scan only ever happened
+        /// when the user opened it by hand. "Manual only" (the default) still means exactly that —
+        /// this returns immediately — so turning automation on is a deliberate choice.
+        ///
+        /// Automatic deletion moves entries to the Secure Rubbish Bin, never destroys them, and
+        /// uses the same smart-selection rule as the button in the scanner: one member of each
+        /// group is always kept, and groups the scanner flags as needing review or blocked are
+        /// skipped entirely. An automated action must not be able to do something the user could
+        /// not inspect and undo.
+        /// </summary>
+        private async Task MaybeRunScheduledDuplicateScanAsync()
+        {
+            try
+            {
+                var settings = SettingsService.Load();
+
+                if (!settings.SecureTrashDuplicateDetectionEnabled)
+                    return;
+
+                var interval = settings.SecureTrashDuplicateScanFrequency switch
+                {
+                    0 => TimeSpan.FromDays(1),    // Daily
+                    1 => TimeSpan.FromDays(7),    // Weekly
+                    2 => TimeSpan.FromDays(30),   // Monthly
+                    _ => TimeSpan.Zero            // Manual only
+                };
+
+                if (interval == TimeSpan.Zero)
+                    return;
+
+                var last = settings.LastDuplicateScanUtc;
+                if (last.HasValue && DateTimeOffset.UtcNow - last.Value < interval)
+                    return;
+
+                var credentials = _credentials.Select(c => c.GetCredential()).ToList();
+                if (credentials.Count == 0)
+                    return;
+
+                var scan = new DuplicateScanViewModel(credentials);
+
+                // Record the run before acting on it. If something below throws, the scan is not
+                // retried on every single unlock afterwards.
+                SettingsService.Update(cfg => cfg.LastDuplicateScanUtc = DateTimeOffset.UtcNow);
+
+                if (!scan.HasDuplicates || scan.ActionableGroupCount == 0)
+                {
+                    Serilog.Log.Information("[Duplicates] Scheduled scan found nothing actionable");
+                    return;
+                }
+
+                if (!settings.SecureTrashAutoDeleteDuplicates)
+                {
+                    StatusMessage =
+                        $"Duplicate scan found {scan.ActionableGroupCount} group(s) worth reviewing — open Duplicate Scanner to see them.";
+                    return;
+                }
+
+                scan.SmartSelect();
+
+                var blocked = scan.DeletionBlockedReason;
+                if (!string.IsNullOrEmpty(blocked))
+                {
+                    // Something in the selection is not safe to remove unattended. Leave it for
+                    // the user rather than working around the scanner's own guard.
+                    StatusMessage = "Duplicate scan needs review before anything can be removed.";
+                    Serilog.Log.Information("[Duplicates] Scheduled auto-delete stood down: {Reason}", blocked);
+                    return;
+                }
+
+                var toRemove = scan.SelectedForDeletion;
+                if (toRemove.Count == 0)
+                    return;
+
+                // Same path the manual scanner uses: moved to the Secure Rubbish Bin, removed
+                // from the list, then the vault is saved.
+                var removed = RemoveCredentials(toRemove);
+
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    UpdateCategoryCounts();
+                    ApplyFilters();
+                    StatusMessage =
+                        $"Duplicate scan moved {removed} duplicate entr{(removed == 1 ? "y" : "ies")} to the Secure Rubbish Bin.";
+                });
+
+                await SaveVaultAsync();
+                Serilog.Log.Information("[Duplicates] Scheduled scan auto-removed {Count} duplicate(s)", removed);
+            }
+            catch (Exception ex)
+            {
+                // A scheduled tidy-up must never get in the way of opening the vault.
+                Serilog.Log.Warning(ex, "[Duplicates] Scheduled duplicate scan failed");
             }
         }
 

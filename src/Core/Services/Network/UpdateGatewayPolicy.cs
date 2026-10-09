@@ -16,15 +16,15 @@ namespace PhantomVault.Core.Services.Network
     /// </para>
     ///
     /// <para>
-    /// <b>SECURITY — PIN ROTATION</b>: pins below are the all-zero placeholder
-    /// (matched by the security-hard-rules CI workflow ONLY when it lives in a
-    /// <c>*GatewayPolicy.cs</c> file). Before the update host goes live, extract
-    /// the real leaf + intermediate SPKI hashes via the same .NET SslStream
-    /// recipe used for <see cref="FlaticonGatewayPolicy"/> / <see cref="HibpGatewayPolicy"/>
-    /// and replace <see cref="PlaceholderPin"/> below. While the placeholder is
-    /// in place, every TLS connection through this policy fails closed at the
-    /// gateway's pin-validation callback, so the update pipeline is inert —
-    /// matching <see cref="Update.UpdatePublicKey.IsProvisioned"/> being false.
+    /// <b>SECURITY — SPKI PINNING.</b> Pinning is optional across the gateway model:
+    /// a host with pins has them enforced, a host without is not pinned. This channel
+    /// ships with no pin, so it proceeds on standard public-CA TLS validation; its
+    /// integrity gate is the Ed25519 manifest signature, verified against
+    /// <see cref="Update.UpdatePublicKey"/> after download (and fail-closed while that
+    /// key is unprovisioned). To add pinning later as defence-in-depth, extract the real
+    /// leaf + intermediate SPKI hashes via the same .NET SslStream recipe used for
+    /// <see cref="FlaticonGatewayPolicy"/> / <see cref="HibpGatewayPolicy"/> and add them
+    /// to <see cref="SpkiPinsByHost"/>.
     /// </para>
     /// </summary>
     public static class UpdateGatewayPolicy
@@ -38,17 +38,12 @@ namespace PhantomVault.Core.Services.Network
             "The update is verified with an embedded Ed25519 key before it can be installed.";
 
         /// <summary>
-        /// 32-byte all-zero SPKI hash, base64. Sentinel meaning "pipeline is not
-        /// live yet — fail closed". CI hard-rules permit this literal only inside
-        /// <c>*GatewayPolicy.cs</c>.
+        /// No SPKI pins configured for the update host — pinning is optional (see the
+        /// class remarks). Add real leaf/intermediate SPKI hashes here to enable pinning
+        /// as defence-in-depth; while empty, the host is not pinned.
         /// </summary>
-        private const string PlaceholderPin = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
-
         public static IReadOnlyDictionary<string, IReadOnlyList<string>> SpkiPinsByHost { get; } =
-            new Dictionary<string, IReadOnlyList<string>>(StringComparer.OrdinalIgnoreCase)
-            {
-                [UpdateHost] = new[] { PlaceholderPin },
-            };
+            new Dictionary<string, IReadOnlyList<string>>(StringComparer.OrdinalIgnoreCase);
 
         public static IReadOnlyList<string> AllowedHosts { get; } = new[] { UpdateHost };
 

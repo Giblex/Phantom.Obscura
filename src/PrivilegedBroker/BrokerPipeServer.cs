@@ -29,10 +29,13 @@ namespace PhantomVault.PrivilegedBroker
         private readonly PhantomVolumeService _phantomVolume = new();
         private readonly IntegrityWatchdogWorker _watchdog;
 
-        public BrokerPipeServer(Action<string> log, IntegrityWatchdogWorker watchdog)
+        private readonly Action? _requestStop;
+
+        public BrokerPipeServer(Action<string> log, IntegrityWatchdogWorker watchdog, Action? requestStop = null)
         {
             _log = log;
             _watchdog = watchdog;
+            _requestStop = requestStop;
             // This process is the elevated authority; never broker back to itself.
             PrivilegedExecution.ForceInProcess = true;
         }
@@ -189,6 +192,15 @@ namespace PhantomVault.PrivilegedBroker
             {
                 case BrokerOperation.Ping:
                     WriteMessage(writer, writeGate, BoolResult(true));
+                    break;
+
+                case BrokerOperation.Shutdown:
+                    // Answer first, then stop — otherwise the caller sees a broken pipe instead of
+                    // a confirmation and cannot tell a clean shutdown from a crash.
+                    _log("Shutdown requested by the allow-listed client; stopping the service.");
+                    WriteMessage(writer, writeGate, BoolResult(true));
+                    try { await writer.FlushAsync(ct).ConfigureAwait(false); } catch { /* client may have gone */ }
+                    _requestStop?.Invoke();
                     break;
 
                 case BrokerOperation.ApplyProtection:

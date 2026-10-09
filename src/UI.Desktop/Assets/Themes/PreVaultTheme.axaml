@@ -34,7 +34,7 @@
     <SolidColorBrush x:Key="ErrorBrush" Color="#EF4444"/>
     <SolidColorBrush x:Key="SuccessBrush" Color="#4ADE80"/>
     <SolidColorBrush x:Key="SuccessTextBrush" Color="#4ADE80"/>
-    <SolidColorBrush x:Key="WarningBrush" Color="#FBBF24"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="#F08A42"/>
 
     <DropShadowEffect x:Key="FooterGroundedShadow" Color="#071018" Opacity="0.2" BlurRadius="8"/>
     <DropShadowEffect x:Key="FrontPageTileBaseShadow" Color="#071018" Opacity="0.25" BlurRadius="16"/>

@@ -224,19 +224,9 @@ namespace PhantomVault.UI.ViewModels
             }
 
             // Stable inputs: the ROM compares these against what was recorded when it was created,
-            // so anything that varies per run would lock the user out.
-            byte[] integrityDigest = SHA256.HashData(Encoding.UTF8.GetBytes("integrity:allowed"));
-            byte[] bindingDigest;
-            try
-            {
-                var binding = new UsbBindingService();
-                bindingDigest = SHA256.HashData(Encoding.UTF8.GetBytes(binding.ComputeDeviceId(driveRoot) ?? string.Empty));
-            }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, "[VaultUnlock] Could not compute the device binding for the Boot ROM");
-                bindingDigest = SHA256.HashData(Array.Empty<byte>());
-            }
+            // so anything that varies per run would lock the user out. Shared with provisioning
+            // via BootRomDigests — these two must agree exactly or the vault will not open.
+            var (integrityDigest, bindingDigest) = BootRomDigests.For(driveRoot);
 
             var outcome = new BootRomService().Run(driveRoot, keyfilePath, integrityDigest, bindingDigest);
 
@@ -334,63 +324,22 @@ namespace PhantomVault.UI.ViewModels
         /// </summary>
         private async Task<bool> OfferToActivatePrivilegedHelperAsync()
         {
-            var controller = (Application.Current as PhantomVault.UI.App)?.Services?
-                .GetService<PhantomVault.UI.Services.Privileged.BrokerServiceController>();
+            // Delegates to the shared activator so unlock, app start and the setup wizard describe
+            // the problem the same way, and all three handle a stopped, disabled, uninstalled or
+            // missing helper identically.
+            var activator = (Application.Current as PhantomVault.UI.App)?.Services?
+                .GetService<PhantomVault.UI.Services.Privileged.PrivilegedHelperActivator>();
 
-            if (controller is null)
+            if (activator is null)
             {
                 return false;
             }
 
-            bool installed = controller.IsInstalled();
-            var confirmed = await _dialogService.ShowConfirmationAsync(
-                "Privileged helper is not running",
-                installed
-                    ? "The Phantom Obscura privileged helper is installed but not running, so the vault's integrity cannot be verified.\n\n"
-                      + "Activate it now to continue unlocking. Windows will ask for permission."
-                    : "The Phantom Obscura privileged helper is not installed, so the vault's integrity cannot be verified.\n\n"
-                      + "Activate it now to continue unlocking. Windows will ask for permission once; you won't be asked again.",
-                confirmText: "Activate now",
-                cancelText: "Cancel",
-                owner: _ownerWindow);
+            Status = "Checking the privileged helper...";
 
-            if (!confirmed)
-            {
-                return false;
-            }
-
-            Status = installed ? "Starting the privileged helper..." : "Installing the privileged helper...";
-
-            bool running = installed
-                ? await controller.StartInstalledAsync().ConfigureAwait(true)
-                : await controller.EnsureInstalledAsync().ConfigureAwait(true);
-
-            if (running)
-            {
-                // Activating here is consent: later privileged calls install silently rather
-                // than asking again (and clears any earlier decline).
-                try
-                {
-                    var settings = SettingsService.Load();
-                    settings.PrivilegedBrokerAutoInstall = true;
-                    settings.PrivilegedBrokerDeclined = false;
-                    SettingsService.Save(settings);
-                }
-                catch (Exception ex)
-                {
-                    Log.Warning(ex, "[VaultUnlock] Could not persist privileged-helper consent");
-                }
-
-                return true;
-            }
-
-            await _dialogService.ShowErrorAsync(
-                "Could not activate the helper",
-                "The Phantom Obscura privileged helper could not be started. This usually means the elevation prompt "
-                + "was declined, or the helper is missing from the installation folder.",
-                _ownerWindow);
-
-            return false;
+            return await activator
+                .EnsureActiveAsync(_ownerWindow, "to verify this vault's integrity")
+                .ConfigureAwait(true);
         }
 
         public async Task UnlockVaultAsync()
@@ -965,15 +914,60 @@ namespace PhantomVault.UI.ViewModels
                             var scrubber = new UsbJunkScrubber();
                             if (scrubber.HasJunk(selectedDriveRoot))
                             {
-                                var removed = scrubber.Scrub(
-                                    selectedDriveRoot,
-                                    quarantineDays: usbSettings.UsbScrubQuarantineDays,
-                                    dryRun: false,
-                                    manifest: testManifest);
-                                if (removed.Count > 0)
+                                // Ask before the first deletion on this machine. The setting
+                                // defaults to "prompt", but was never read — so the scrubber
+                                // silently removed files from the user's USB the first time it
+                                // ever ran. Deleting someone's files without asking is not
+                                // something a default should do quietly.
+                                bool proceedWithScrub = true;
+                                if (usbSettings.UsbScrubPromptOnFirstFind)
                                 {
-                                    Log.Information("[VaultUnlock] scrubbed {Count} OS-junk entries from {Drive}",
-                                        removed.Count, selectedDriveRoot);
+                                    proceedWithScrub = await Dispatcher.UIThread.InvokeAsync(async () =>
+                                        await _dialogService.ShowConfirmationAsync(
+                                            "Clean up operating-system clutter?",
+                                            "Phantom Obscura found files this device's operating system left behind "
+                                            + "(thumbnail caches, trash folders and similar) on your vault drive.\n\n"
+                                            + "They can be moved to quarantine so they are recoverable for "
+                                            + $"{usbSettings.UsbScrubQuarantineDays} days before being removed.\n\n"
+                                            + "Your vault's own files are never touched.",
+                                            confirmText: "Clean up",
+                                            cancelText: "Leave them",
+                                            owner: _ownerWindow));
+
+                                    // Asked once, as the setting's name says. The answer is
+                                    // remembered either way so unlocking never nags.
+                                    try
+                                    {
+                                        PhantomVault.UI.Services.SettingsService.Update(cfg =>
+                                        {
+                                            cfg.UsbScrubPromptOnFirstFind = false;
+                                            if (!proceedWithScrub)
+                                                cfg.UsbAutoScrubEnabled = false;
+                                        });
+                                    }
+                                    catch (Exception prefEx)
+                                    {
+                                        Log.Warning(prefEx, "[VaultUnlock] Could not persist the USB scrub answer");
+                                    }
+                                }
+
+                                if (!proceedWithScrub)
+                                {
+                                    Log.Information("[VaultUnlock] USB clean-up declined; auto-scrub turned off");
+                                }
+                                else
+                                {
+                                    var removed = scrubber.Scrub(
+                                        selectedDriveRoot,
+                                        quarantineDays: usbSettings.UsbScrubQuarantineDays,
+                                        dryRun: false,
+                                        manifest: testManifest);
+
+                                    if (removed.Count > 0)
+                                    {
+                                        Log.Information("[VaultUnlock] scrubbed {Count} OS-junk entries from {Drive}",
+                                            removed.Count, selectedDriveRoot);
+                                    }
                                 }
                             }
                         }
@@ -1120,6 +1114,29 @@ namespace PhantomVault.UI.ViewModels
 
                         svc.GetService<PhantomVault.UI.Services.AutoFill.INativeHostPipeServer>()
                            ?.SetCredentialProvider(credProvider, testManifest!);
+
+                        // Bring the tray watcher up with the vault. Everything above only hands the
+                        // autofill machinery its vault context — nothing was actually watching for
+                        // login fields, so autofill did nothing until the user started it by hand.
+                        // Gated on both switches: the feature itself, and the auto-start preference.
+                        try
+                        {
+                            var autoFillSettings = SettingsService.Load();
+                            if (autoFillSettings.AutoFillModeEnabled && autoFillSettings.AutoFillStartInTrayOnVaultOpen)
+                            {
+                                var tray = svc.GetService<PhantomVault.UI.Services.TrayBackground.ITrayBackgroundService>();
+                                if (tray is { IsRunning: false })
+                                {
+                                    _ = tray.StartAsync();
+                                    Log.Information("[AutoFill] Tray watcher started for the unlocked vault");
+                                }
+                            }
+                        }
+                        catch (Exception trayEx)
+                        {
+                            // Autofill failing to start must never block opening the vault.
+                            Log.Warning(trayEx, "[AutoFill] Could not start the tray watcher");
+                        }
 
                         // Suite presence: report this app unlocked (with its own keyfile, in
                         // this process). No key material leaves the process — the coordinator

@@ -133,6 +133,13 @@ namespace PhantomVault.PrivilegedBroker
         public static int Start()
         {
             Log("Starting installed privileged helper.");
+
+            // A service whose start type was set to Disabled cannot be started at all —
+            // "sc start" fails with ERROR_SERVICE_DISABLED (1058) and no amount of retrying
+            // helps. Put it back to automatic first so stopping or disabling the helper
+            // outside the app is recoverable from inside it, without a full reinstall.
+            RunSc($"config {BrokerProtocol.ServiceName} start= auto", ignoreFailure: true);
+
             int start = RunSc($"start {BrokerProtocol.ServiceName}", ignoreFailure: true);
             if (start == 0)
             {

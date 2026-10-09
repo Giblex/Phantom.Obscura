@@ -174,7 +174,7 @@
     </LinearGradientBrush>
 
     <SolidColorBrush x:Key="SuccessBrush" Color="#22C55E"/>
-    <SolidColorBrush x:Key="WarningBrush" Color="#EAB308"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="#DE7A28"/>
     <SolidColorBrush x:Key="ErrorBrush" Color="#EF4444"/>
     <SolidColorBrush x:Key="SuccessBackgroundBrush">#1A22C55E</SolidColorBrush>
     <SolidColorBrush x:Key="WarningBackgroundBrush">#1AEAB308</SolidColorBrush>

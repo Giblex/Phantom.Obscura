@@ -14,6 +14,30 @@ namespace PhantomVault.UI.Services.Privileged
     /// here — when the helper is first installed. After that the non-elevated app
     /// talks to the always-running service over a named pipe with no further prompts.
     /// </summary>
+    /// <summary>
+    /// What the privileged helper is actually doing right now. The activation UI needs to tell
+    /// these apart, because they call for different wording and different remedies: a stopped
+    /// service is started, a disabled one has to be re-enabled first, a missing registration is
+    /// installed, and a missing binary cannot be fixed from inside the app at all.
+    /// </summary>
+    public enum PrivilegedHelperState
+    {
+        /// <summary>Registered and running. Nothing to do.</summary>
+        Running,
+
+        /// <summary>Registered but not running — the ordinary "someone stopped it" case.</summary>
+        Stopped,
+
+        /// <summary>Registered with start type Disabled; it cannot be started until re-enabled.</summary>
+        Disabled,
+
+        /// <summary>Not registered with the SCM, but the binary is present so it can be installed.</summary>
+        NotInstalled,
+
+        /// <summary>The helper executable is not in the installation folder; the app cannot repair this.</summary>
+        BinaryMissing
+    }
+
     public sealed class BrokerServiceController
     {
         private const string BrokerExeName = "PhantomVault.PrivilegedBroker.exe";
@@ -147,6 +171,118 @@ namespace PhantomVault.UI.Services.Privileged
             finally
             {
                 _gate.Release();
+            }
+        }
+
+        /// <summary>
+        /// The helper's current state. Checked before showing any activation dialogue so the
+        /// wording matches reality rather than guessing between "not installed" and "not running".
+        /// </summary>
+        public PrivilegedHelperState GetState()
+        {
+            string? state = QueryState();
+
+            if (state is null)
+            {
+                // Not registered. Whether that is fixable depends on the binary being present.
+                return ResolveBrokerExe() is null
+                    ? PrivilegedHelperState.BinaryMissing
+                    : PrivilegedHelperState.NotInstalled;
+            }
+
+            if (string.Equals(state, "RUNNING", StringComparison.OrdinalIgnoreCase))
+                return PrivilegedHelperState.Running;
+
+            if (ResolveBrokerExe() is null)
+                return PrivilegedHelperState.BinaryMissing;
+
+            return IsStartTypeDisabled() ? PrivilegedHelperState.Disabled : PrivilegedHelperState.Stopped;
+        }
+
+        /// <summary>
+        /// Brings the helper back to running from whatever state it is in, raising at most one
+        /// elevation prompt. Returns true only when the service is genuinely running afterwards —
+        /// never on a "probably worked".
+        /// </summary>
+        public async Task<bool> ActivateAsync()
+        {
+            if (IsRunning())
+                return true;
+
+            await _gate.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                // Another caller may have fixed it while we queued behind the gate.
+                if (IsRunning())
+                    return true;
+
+                switch (GetState())
+                {
+                    case PrivilegedHelperState.Running:
+                        return true;
+
+                    case PrivilegedHelperState.BinaryMissing:
+                        // Nothing the app can do: the helper is not part of this installation.
+                        return false;
+
+                    case PrivilegedHelperState.NotInstalled:
+                        return await EnsureInstalledAsync().ConfigureAwait(false);
+
+                    default:
+                        // Stopped or Disabled. "--start" now re-enables a disabled service before
+                        // starting it. If it still will not come up, the registration itself is
+                        // suspect, so fall back to a reinstall — which deletes and recreates the
+                        // service as start= auto and starts it.
+                        if (await StartInstalledAsync().ConfigureAwait(false))
+                            return true;
+
+                        return await EnsureInstalledAsync().ConfigureAwait(false);
+                }
+            }
+            finally
+            {
+                _gate.Release();
+            }
+        }
+
+        /// <summary>
+        /// True when the registered service's start type is Disabled. Read with "sc qc", which
+        /// needs no elevation.
+        /// </summary>
+        private static bool IsStartTypeDisabled()
+        {
+            try
+            {
+                var psi = new ProcessStartInfo("sc.exe", $"qc {BrokerProtocol.ServiceName}")
+                {
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                };
+
+                using var process = Process.Start(psi);
+                if (process is null)
+                    return false;
+
+                string output = process.StandardOutput.ReadToEnd();
+                process.WaitForExit(10_000);
+                if (process.ExitCode != 0)
+                    return false;
+
+                foreach (var raw in output.Split('\n'))
+                {
+                    var line = raw.Trim();
+                    // e.g. "START_TYPE         : 4   DISABLED"
+                    if (line.StartsWith("START_TYPE", StringComparison.OrdinalIgnoreCase))
+                        return line.Contains("DISABLED", StringComparison.OrdinalIgnoreCase);
+                }
+
+                return false;
+            }
+            catch
+            {
+                return false;
             }
         }
 

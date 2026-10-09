@@ -160,7 +160,7 @@
     <SolidColorBrush x:Key="QuickFilterGlassActiveBorderBrush" Color="#45FFFFFF"/>
 
     <SolidColorBrush x:Key="SuccessBrush" Color="#107C10"/>
-    <SolidColorBrush x:Key="WarningBrush" Color="#FFB900"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="#FF8C2E"/>
     <SolidColorBrush x:Key="ErrorBrush" Color="#D13438"/>
     <SolidColorBrush x:Key="SuccessBackgroundBrush" Color="#DFF6DD"/>
     <SolidColorBrush x:Key="WarningBackgroundBrush" Color="#FFF4CE"/>

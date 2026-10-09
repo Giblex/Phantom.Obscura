@@ -55,6 +55,60 @@ namespace PhantomVault.Core.Services.Autofill
                 .ToList();
         }
 
+        /// <summary>
+        /// Suggestions appropriate to the kind of form that was detected.
+        ///
+        /// Login forms match on domain, as before. Payment, identity and PIN forms cannot: a saved
+        /// card or passport has no website attached to it, so domain matching would return nothing
+        /// every time. Those are offered by entry type instead, and the user picks.
+        ///
+        /// Entry types are kept strictly apart. A payment form is never offered a login password
+        /// and a login form is never offered a card number — filling the wrong kind of secret into
+        /// a form is how a card number ends up in somebody's password field, and from there into
+        /// their logs.
+        /// </summary>
+        public async Task<List<CredentialSuggestion>> GetSuggestionsForFormAsync(string url, FormType formType)
+        {
+            switch (formType)
+            {
+                case FormType.Payment:
+                    return await GetSuggestionsByEntryTypeAsync(EntryType.CreditCard);
+
+                case FormType.Identity:
+                    return await GetSuggestionsByEntryTypeAsync(EntryType.Identity);
+
+                case FormType.Pin:
+                    return await GetSuggestionsByEntryTypeAsync(EntryType.PinCode);
+
+                default:
+                    return await GetSuggestionsForDomainAsync(url);
+            }
+        }
+
+        /// <summary>
+        /// Every credential of one entry type, most recently used first. Used for the kinds of
+        /// entry that are not tied to a site.
+        /// </summary>
+        public async Task<List<CredentialSuggestion>> GetSuggestionsByEntryTypeAsync(EntryType entryType)
+        {
+            var allCredentials = await _repository.GetAllCredentialsAsync();
+
+            return allCredentials
+                .Where(c => c.EntryType == entryType)
+                .Select(c => new CredentialSuggestion
+                {
+                    Credential = c,
+                    // Not a domain match, so there is no meaningful score to compute. A flat
+                    // value keeps the ordering below in charge rather than implying a relevance
+                    // ranking that was never measured.
+                    MatchScore = 50,
+                    MatchType = MatchType.EntryType
+                })
+                .OrderByDescending(s => s.Credential.LastUsedUtc)
+                .ThenBy(s => s.Credential.Title)
+                .ToList();
+        }
+
         public async Task<List<CredentialSuggestion>> GetSuggestionsForUsernameAsync(string url, string partialUsername)
         {
             var domainSuggestions = await GetSuggestionsForDomainAsync(url);
@@ -150,7 +204,13 @@ namespace PhantomVault.Core.Services.Autofill
     {
         Exact,
         Subdomain,
-        BaseDomain
+        BaseDomain,
+
+        /// <summary>
+        /// Offered because the entry kind suits the form, not because a domain matched. Cards,
+        /// identity documents and PINs are not tied to a website.
+        /// </summary>
+        EntryType
     }
 }
 

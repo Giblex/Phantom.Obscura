@@ -20,6 +20,7 @@ namespace PhantomVault.UI.ViewModels.AutoFill
 
             AddNewEntryCommand = ReactiveCommand.Create(OnAddNewEntry);
             CreatePasskeyCommand = ReactiveCommand.Create(OnCreatePasskey);
+            GeneratePasswordCommand = ReactiveCommand.Create(OnGeneratePassword);
             CancelCommand = ReactiveCommand.Create(OnCancel);
         }
 
@@ -36,12 +37,20 @@ namespace PhantomVault.UI.ViewModels.AutoFill
 
         public ReactiveCommand<Unit, Unit> AddNewEntryCommand { get; }
         public ReactiveCommand<Unit, Unit> CreatePasskeyCommand { get; }
+
+        /// <summary>
+        /// Generate a strong password, type it into the field that triggered this, and save it.
+        /// The common case when signing up for something new, and previously the user had to go
+        /// and do it by hand in another window.
+        /// </summary>
+        public ReactiveCommand<Unit, Unit> GeneratePasswordCommand { get; }
         public ReactiveCommand<Unit, Unit> CancelCommand { get; }
 
         public event EventHandler<NoMatchResult>? ResultChosen;
 
         private void OnAddNewEntry() => ResultChosen?.Invoke(this, NoMatchResult.AddNewEntry);
         private void OnCreatePasskey() => ResultChosen?.Invoke(this, NoMatchResult.CreatePasskey);
+        private void OnGeneratePassword() => ResultChosen?.Invoke(this, NoMatchResult.GeneratePassword);
         private void OnCancel() => ResultChosen?.Invoke(this, NoMatchResult.Cancel);
     }
 
@@ -49,6 +58,7 @@ namespace PhantomVault.UI.ViewModels.AutoFill
     {
         AddNewEntry,
         CreatePasskey,
+        GeneratePassword,
         Cancel
     }
 }

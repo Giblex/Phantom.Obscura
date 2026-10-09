@@ -24,6 +24,21 @@ namespace PhantomVault.UI.Services.TrayBackground
 
         public bool IsRunning => _isRunning;
 
+        /// <summary>
+        /// The vault's USB was inserted while the vault was locked. Raised instead of running the
+        /// autofill flow, which would abort at its first guard with nothing to fill from. The
+        /// handler is expected to put the unlock prompt in front of the user; autofill resumes on
+        /// the next insertion event once the vault is open.
+        /// </summary>
+        public event Action<string>? VaultUnlockRequested;
+
+        /// <summary>
+        /// A removable drive was pulled out. The handler decides whether it was the drive backing
+        /// the open vault and, if so, locks it: an unlocked vault whose key material has physically
+        /// left the machine must not stay open.
+        /// </summary>
+        public event Action<string>? DriveRemoved;
+
         public TrayBackgroundService(IUsbDetector usbDetector, IAutoFillOrchestrator orchestrator)
         {
             _usbDetector = usbDetector;
@@ -46,6 +61,7 @@ namespace PhantomVault.UI.Services.TrayBackground
             });
 
             _usbDetector.RemovableDriveInserted += OnUsbInserted;
+            _usbDetector.RemovableDriveRemoved += OnUsbRemoved;
             _isRunning = true;
 
             Log.Information("[TrayBackground] AutoFill Mode started — listening for USB insertion");
@@ -57,6 +73,7 @@ namespace PhantomVault.UI.Services.TrayBackground
             if (!_isRunning) return Task.CompletedTask;
 
             _usbDetector.RemovableDriveInserted -= OnUsbInserted;
+            _usbDetector.RemovableDriveRemoved -= OnUsbRemoved;
 
             Dispatcher.UIThread.InvokeAsync(() =>
             {
@@ -73,13 +90,36 @@ namespace PhantomVault.UI.Services.TrayBackground
         {
             try
             {
-
+                // Give the OS a moment to finish mounting before anything reads the drive.
                 await Task.Delay(500);
+
+                if (!_orchestrator.IsVaultReady)
+                {
+                    // Locked: running the flow now would abort at its first guard and look like
+                    // nothing happened. Ask for the vault to be opened instead.
+                    Log.Information("[TrayBackground] USB inserted with a locked vault — requesting unlock for {Drive}", drivePath);
+                    Dispatcher.UIThread.Post(() => VaultUnlockRequested?.Invoke(drivePath));
+                    return;
+                }
+
                 await _orchestrator.RunAutoFillFlowAsync(drivePath);
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "[TrayBackground] Error during USB-triggered auto-fill");
+            }
+        }
+
+        private void OnUsbRemoved(string drivePath)
+        {
+            try
+            {
+                Log.Information("[TrayBackground] Removable drive removed: {Drive}", drivePath);
+                Dispatcher.UIThread.Post(() => DriveRemoved?.Invoke(drivePath));
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "[TrayBackground] Error handling USB removal");
             }
         }
 

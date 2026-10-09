@@ -179,8 +179,17 @@ namespace PhantomVault.UI.Services
         private SecurityThreatLevel DetermineThreatLevel(SecurityCheckResult check)
         {
 
-            if (check.TamperCheckResult.DebuggerDetected ||
-                check.TamperCheckResult.RemoteDebuggerDetected ||
+            // "Detect debugger attachment" is a user setting, and the UI promises it decides
+            // whether an attached debugger refuses the unlock. It was never read, so a debugger
+            // escalated to Critical regardless of the choice. Only the two debugger signals are
+            // gated — integrity violations and credential harvesting stay Critical either way,
+            // because those are not something a preference should be able to switch off.
+            bool blockOnDebugger = true;
+            try { blockOnDebugger = SettingsService.Load().BlockRemoteDebugging; }
+            catch { /* unreadable settings: keep the protective default */ }
+
+            if ((blockOnDebugger && (check.TamperCheckResult.DebuggerDetected ||
+                                     check.TamperCheckResult.RemoteDebuggerDetected)) ||
                 check.TamperCheckResult.IntegrityViolated ||
                 check.AutofillCheckResult.CredentialHarvestingDetected ||
                 check.AutofillCheckResult.InvalidRequesterDetected)

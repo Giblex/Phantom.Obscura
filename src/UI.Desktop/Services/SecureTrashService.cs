@@ -50,7 +50,10 @@ namespace PhantomVault.UI.Services
             IsEnabled = enabled;
             AutoPurgeEnabled = autoPurgeEnabled;
             RetentionDays = Math.Clamp(retentionDays, 1, 365);
-            SecureWipePasses = Math.Clamp(secureWipePasses, 1, 10);
+            // Ceiling raised from 10 so the erasure methods the settings screen offers can
+            // actually be honoured: Gutmann is 35 passes and "Enhanced" is 1000. Clamping to 10
+            // silently downgraded both to something the user never chose.
+            SecureWipePasses = Math.Clamp(secureWipePasses, 1, 1000);
             if (AutoPurgeEnabled)
             {
                 PurgeExpiredInternal();

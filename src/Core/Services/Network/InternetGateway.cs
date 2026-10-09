@@ -232,12 +232,27 @@ namespace PhantomVault.Core.Services.Network
                 return false;
             }
 
+            // Pinning is optional per grant, but the decision is made on whether this
+            // grant pins AT ALL — never on a host we might have failed to resolve.
+            // A grant with no pins is an unpinned channel by design and proceeds on the
+            // public-CA TLS validation already confirmed above (errors == None).
+            bool grantPins = false;
+            foreach (var list in grant.SpkiPinsByHost.Values)
+            {
+                if (list is not null && list.Count > 0) { grantPins = true; break; }
+            }
+            if (!grantPins)
+                return true;
+
+            // Pinned grant: the host MUST resolve to a configured, non-empty pin set and
+            // the server SPKI MUST match one, otherwise fail closed. An unresolved host
+            // on a pinned grant is an anomaly and is rejected rather than waved through.
             var host = TryGetHost(sender);
             if (string.IsNullOrEmpty(host) ||
                 !grant.SpkiPinsByHost.TryGetValue(host, out var pins) ||
                 pins is null || pins.Count == 0)
             {
-                LogPinFailure(grant, host, detail: "No pin set for host.");
+                LogPinFailure(grant, host, detail: "No pin resolvable for host on a pinned grant.");
                 return false;
             }
 

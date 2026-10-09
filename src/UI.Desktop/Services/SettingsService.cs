@@ -35,6 +35,13 @@ namespace PhantomVault.UI.Services
         public bool SecureTrashDuplicateDetectionEnabled { get; set; } = false;
         public bool SecureTrashAutoDeleteDuplicates { get; set; } = false;
         public int SecureTrashDuplicateScanFrequency { get; set; } = 3;
+
+        /// <summary>
+        /// When the scheduled duplicate scan last ran. Null means it never has.
+        /// Stored so the chosen frequency means something — without it the scan would either
+        /// run on every unlock or never.
+        /// </summary>
+        public DateTimeOffset? LastDuplicateScanUtc { get; set; }
         public bool BackupAutomationEnabled { get; set; } = false;
         public int BackupFrequencyMode { get; set; } = 0;
         public string BackupLocation { get; set; } = string.Empty;
@@ -232,6 +239,26 @@ namespace PhantomVault.UI.Services
         public bool PrivilegedBrokerDeclined { get; set; } = false;
 
         public bool AutoFillAutoInputTotp { get; set; } = true;
+
+        /// <summary>
+        /// Start the tray autofill watcher automatically when a vault is unlocked.
+        ///
+        /// On by default: autofill that has to be started by hand after every unlock is autofill
+        /// nobody uses. It still does nothing unless <see cref="AutoFillModeEnabled"/> is on, and
+        /// it stops when the vault locks — the watcher is useless without an unlocked vault and
+        /// must not outlive one.
+        /// </summary>
+        public bool AutoFillStartInTrayOnVaultOpen { get; set; } = true;
+
+        /// <summary>
+        /// Which single factor to require when a vault's USB is inserted and autofill opens it.
+        ///
+        /// Automatic by default: use whatever the vault actually has, strongest first. The stored
+        /// choice is a preference, not an override — <c>UsbStartupUnlockPolicy</c> refuses to let it
+        /// weaken a vault below the factors it is genuinely protected by.
+        /// </summary>
+        public PhantomVault.UI.Services.AutoFill.UsbStartupFactor AutoFillUsbStartupFactor { get; set; }
+            = PhantomVault.UI.Services.AutoFill.UsbStartupFactor.Automatic;
 
         public bool AutoFillShowNewEntryOnNoMatch { get; set; } = true;
 

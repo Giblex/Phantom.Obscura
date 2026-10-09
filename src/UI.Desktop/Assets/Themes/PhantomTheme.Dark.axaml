@@ -63,7 +63,7 @@
 
             <SolidColorBrush x:Key="ControlBackgroundBrush">#1A2434</SolidColorBrush>
 
-            <SolidColorBrush x:Key="ControlBorderBrush">#FFFFFF15</SolidColorBrush>
+            <SolidColorBrush x:Key="ControlBorderBrush">#15FFFFFF</SolidColorBrush>
 
             <SolidColorBrush x:Key="SettingsPanelBackgroundBrush">#1E2A38</SolidColorBrush>
             <SolidColorBrush x:Key="SettingsPanelBorderBrush">#2A3A4E</SolidColorBrush>
@@ -157,7 +157,7 @@
             <SolidColorBrush x:Key="QuickFilterGlassActiveBorderBrush">#45FFFFFF</SolidColorBrush>
 
             <SolidColorBrush x:Key="SuccessBrush">#B8E6C8</SolidColorBrush>
-            <SolidColorBrush x:Key="WarningBrush">#FFC107</SolidColorBrush>
+            <SolidColorBrush x:Key="WarningBrush">#F4803A</SolidColorBrush>
             <SolidColorBrush x:Key="WarningBrushDark">#E65100</SolidColorBrush>
             <SolidColorBrush x:Key="WarningBrushDarker">#BF360C</SolidColorBrush>
             <SolidColorBrush x:Key="WarningIcon">#FF9800</SolidColorBrush>
@@ -202,9 +202,9 @@
             <CornerRadius x:Key="Radius.Xxl">16</CornerRadius>
             <CornerRadius x:Key="Radius.Pill">999</CornerRadius>
 
-            <SolidColorBrush x:Key="Brush.BorderSoft">#FFFFFF15</SolidColorBrush>
-            <SolidColorBrush x:Key="Brush.BorderMedium">#FFFFFF25</SolidColorBrush>
-            <SolidColorBrush x:Key="Brush.BorderStrong">#FFFFFF35</SolidColorBrush>
+            <SolidColorBrush x:Key="Brush.BorderSoft">#15FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="Brush.BorderMedium">#25FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="Brush.BorderStrong">#35FFFFFF</SolidColorBrush>
 
             <SolidColorBrush x:Key="Brush.Accent">#6B8CAE</SolidColorBrush>
             <SolidColorBrush x:Key="Brush.AccentHover">#8FB5DF</SolidColorBrush>
@@ -388,7 +388,7 @@
                  KeePassPasswordDialog) -->
             <SolidColorBrush x:Key="ObscuraCanvasBrush">#151D2A</SolidColorBrush>
             <SolidColorBrush x:Key="ObscuraSurfaceAltBrush">#1A2434</SolidColorBrush>
-            <SolidColorBrush x:Key="ObscuraBorderBrush">#FFFFFF15</SolidColorBrush>
+            <SolidColorBrush x:Key="ObscuraBorderBrush">#15FFFFFF</SolidColorBrush>
             <SolidColorBrush x:Key="ObscuraAccentBrush">#6B8CAE</SolidColorBrush>
 
             <!-- Generic surface/text aliases -->

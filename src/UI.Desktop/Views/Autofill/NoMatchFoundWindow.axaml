@@ -56,8 +56,15 @@
                     <TextBlock Text="{Binding Message}" Classes="af-body"/>
 
                     <StackPanel Spacing="8">
-                        <Button Command="{Binding AddNewEntryCommand}"
+                        <Button Command="{Binding GeneratePasswordCommand}"
                                 Classes="af-btn primary"
+                                Height="38"
+                                HorizontalAlignment="Stretch"
+                                Content="Generate &amp; Fill Password"
+                                ToolTip.Tip="Generate a strong password, type it into this form, and save it to the vault"/>
+
+                        <Button Command="{Binding AddNewEntryCommand}"
+                                Classes="af-btn"
                                 Height="38"
                                 HorizontalAlignment="Stretch"
                                 Content="Add New Entry"

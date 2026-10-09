@@ -38,7 +38,7 @@
             <SolidColorBrush x:Key="ControlBorderBrush">#6A8BAF</SolidColorBrush>
 
             <SolidColorBrush x:Key="SuccessBrush">#B8E6C8</SolidColorBrush>
-            <SolidColorBrush x:Key="WarningBrush">#FFC107</SolidColorBrush>
+            <SolidColorBrush x:Key="WarningBrush">#F4803A</SolidColorBrush>
             <SolidColorBrush x:Key="ErrorBrush">#F48771</SolidColorBrush>
 
             <SolidColorBrush x:Key="SuccessBackgroundBrush">#1A2A38</SolidColorBrush>

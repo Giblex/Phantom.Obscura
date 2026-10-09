@@ -144,21 +144,24 @@
         <DataTemplate x:Key="IconTileTemplate">
             <Button Classes="pv-tile"
                     Classes.selected="{Binding IsSelected}"
-                    Width="64" Height="64"
+                    Width="{Binding $parent[Window].DataContext.TileSize}"
+                    Height="{Binding $parent[Window].DataContext.TileSize}"
                     Margin="3"
                     Command="{Binding $parent[Window].DataContext.SelectIconCommand}"
                     CommandParameter="{Binding}"
                     ToolTip.Tip="{Binding Name}"
                     AutomationProperties.Name="{Binding Name}">
                 <Panel>
-                    <Border Width="34" Height="34"
+                    <Border Width="{Binding $parent[Window].DataContext.GlyphSize}"
+                            Height="{Binding $parent[Window].DataContext.GlyphSize}"
                             IsVisible="{Binding IsTintable}"
                             Background="{DynamicResource PrimaryTextBrush}">
                         <Border.OpacityMask>
                             <ImageBrush Source="{Binding Bitmap}" Stretch="Uniform"/>
                         </Border.OpacityMask>
                     </Border>
-                    <Image Width="40" Height="40"
+                    <Image Width="{Binding $parent[Window].DataContext.ImageSize}"
+                           Height="{Binding $parent[Window].DataContext.ImageSize}"
                            IsVisible="{Binding IsPlain}"
                            Source="{Binding Bitmap}"
                            Stretch="Uniform"/>

@@ -121,8 +121,9 @@ namespace PhantomVault.UI
                     sp.GetRequiredService<PhantomVault.Core.Services.Network.IInternetGateway>()));
 
             // Update pipeline — verifier fails closed while the embedded Ed25519 key
-            // remains the all-zero placeholder; UpdateGatewayPolicy also pins the
-            // all-zero SPKI sentinel until the real update host is provisioned.
+            // remains the all-zero placeholder. SPKI pinning is optional for the
+            // update channel (integrity rests on the signed manifest); a real pin can
+            // be added to UpdateGatewayPolicy later as defence-in-depth.
             services.AddSingleton<PhantomVault.Core.Services.Update.IUpdateVerifier>(_ =>
                 new PhantomVault.Core.Services.Update.UpdateVerifier());
             services.AddSingleton<PhantomVault.Core.Services.Update.UpdateChannelSettings>(_ =>
@@ -250,6 +251,7 @@ namespace PhantomVault.UI
             // helper over a named pipe, so the app ships asInvoker with no per-launch UAC.
             services.AddSingleton<PhantomVault.UI.Services.Privileged.BrokerServiceController>();
             services.AddSingleton<PhantomVault.UI.Services.Privileged.NamedPipeBrokerClient>();
+            services.AddSingleton<PhantomVault.UI.Services.Privileged.PrivilegedHelperActivator>();
 
             services.AddTransient<MainViewModel>();
             services.AddTransient<ProvisionViewModel>();

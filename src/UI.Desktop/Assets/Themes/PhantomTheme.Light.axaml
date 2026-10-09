@@ -174,7 +174,7 @@
             </LinearGradientBrush>
 
             <SolidColorBrush x:Key="SuccessBrush">#16A34A</SolidColorBrush>
-            <SolidColorBrush x:Key="WarningBrush">#F59E0B</SolidColorBrush>
+            <SolidColorBrush x:Key="WarningBrush">#E2722C</SolidColorBrush>
             <SolidColorBrush x:Key="WarningBrushDark">#E65100</SolidColorBrush>
             <SolidColorBrush x:Key="WarningBrushDarker">#BF360C</SolidColorBrush>
             <SolidColorBrush x:Key="WarningIcon">#FF9800</SolidColorBrush>

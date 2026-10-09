@@ -30,8 +30,10 @@ namespace PhantomVault.Core.Services.Network
         public required IReadOnlyList<string> AllowedHosts { get; init; }
 
         /// <summary>
-        /// SPKI (SubjectPublicKeyInfo) SHA-256 pins, base64. At least one pin per host
-        /// must match the server certificate or the connection is rejected.
+        /// SPKI (SubjectPublicKeyInfo) SHA-256 pins, base64. Pinning is OPTIONAL by design:
+        /// a host that carries one or more pins has them enforced (the server certificate
+        /// must match a pin or the connection is rejected); a host with no pin is not
+        /// pinned and proceeds on standard public-CA TLS validation. May be empty.
         /// </summary>
         public required IReadOnlyDictionary<string, IReadOnlyList<string>> SpkiPinsByHost { get; init; }
 
@@ -57,14 +59,7 @@ namespace PhantomVault.Core.Services.Network
             if (AllowedHosts.Any(h => string.IsNullOrWhiteSpace(h) || h.Contains('*') || h.Contains('/')))
                 throw new ArgumentException("Hosts must be exact (no wildcards, no paths).", nameof(AllowedHosts));
             if (SpkiPinsByHost is null)
-                throw new ArgumentException("SpkiPinsByHost is required.", nameof(SpkiPinsByHost));
-            foreach (var host in AllowedHosts)
-            {
-                if (!SpkiPinsByHost.TryGetValue(host, out var pins) || pins is null || pins.Count == 0)
-                    throw new ArgumentException(
-                        $"Every allowed host must have at least one SPKI pin. Missing: '{host}'.",
-                        nameof(SpkiPinsByHost));
-            }
+                throw new ArgumentException("SpkiPinsByHost is required (may be empty — pinning is optional).", nameof(SpkiPinsByHost));
             if (Ttl < TimeSpan.FromMinutes(1))
                 throw new ArgumentException("TTL must be at least 1 minute.", nameof(Ttl));
             if (Ttl > TimeSpan.FromMinutes(60))

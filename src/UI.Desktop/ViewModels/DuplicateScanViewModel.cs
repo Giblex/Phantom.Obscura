@@ -133,6 +133,14 @@ namespace PhantomVault.UI.ViewModels
         public ICommand CancelCommand { get; }
 
         public event Action<List<Credential>>? DeleteRequested;
+
+        /// <summary>Credentials currently marked for deletion, after validation.</summary>
+        internal List<Credential> SelectedForDeletion =>
+            Groups.SelectMany(g => g.Entries).Where(e => e.IsSelected).Select(e => e.Credential).ToList();
+
+        /// <summary>Why the current selection cannot be deleted, or null when it is safe.</summary>
+        internal string? DeletionBlockedReason =>
+            ValidateDeletionSelection(Groups.SelectMany(g => g.Entries).Where(e => e.IsSelected).ToList());
         public event Action<List<ConsolidationPlan>>? ConsolidateRequested;
         public event Action? CloseRequested;
 
@@ -290,7 +298,12 @@ namespace PhantomVault.UI.ViewModels
         private static bool HasAny(params string?[] values)
             => values.Any(v => !string.IsNullOrWhiteSpace(v));
 
-        private void SmartSelect()
+        /// <summary>
+        /// Selects every member of each group except the best one. Internal rather than private so
+        /// the scheduled scan deletes by exactly the same rule as the "Smart select" button —
+        /// an automated deletion must never use a looser rule than the one a user can inspect.
+        /// </summary>
+        internal void SmartSelect()
         {
             foreach (var group in Groups)
             {

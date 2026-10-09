@@ -388,6 +388,21 @@ namespace PhantomVault.UI.Views
             try
             {
                 ApplyProvisioningProgress(0, 3, "Initializing secure provisioning...", "Handing off the validated setup plan to the provisioning engine.");
+
+                // Creating a vault needs the privileged helper for the volume work. Check it here,
+                // before any of that starts, so a stopped or disabled helper is something the user
+                // can fix with one button instead of meeting it as a provisioning failure partway
+                // through. Declining is not treated as fatal — the later steps still fail with
+                // their own errors if the helper really was required.
+                var activator = (Application.Current as App)?.Services?
+                    .GetService(typeof(Services.Privileged.PrivilegedHelperActivator))
+                    as Services.Privileged.PrivilegedHelperActivator;
+
+                if (activator is not null)
+                {
+                    await activator.EnsureActiveAsync(this, "to create a vault");
+                }
+
                 _wizardViewModel.ProvisioningProgressChanged += OnProvisioningProgressChanged;
                 await _wizardViewModel.ExecuteVaultCreationAsync(_creationCancellation.Token);
 
@@ -395,6 +410,32 @@ namespace PhantomVault.UI.Views
                 {
                     await Dispatcher.UIThread.InvokeAsync(async () =>
                         await Views.Dialogs.RecoveryExportDialog.ShowAsync(this, _wizardViewModel));
+                }
+
+                // The Boot ROM recovery code is shown once and stored nowhere. If the device is
+                // lost or the ROM is damaged, it is the only way back in — so it has to be put in
+                // front of the user before this window closes, and repeated until they confirm.
+                if (_wizardViewModel.BootRomRecoveryCode is { Length: > 0 } bootRomRecoveryCode)
+                {
+                    var dialogs = new DialogService();
+                    await Dispatcher.UIThread.InvokeAsync(async () =>
+                    {
+                        for (int attempt = 0; attempt < 10; attempt++)
+                        {
+                            var saved = await dialogs.ShowConfirmationAsync(
+                                "Save your Boot ROM recovery code",
+                                $"{bootRomRecoveryCode}\n\n"
+                                + "This vault is sealed to a Boot ROM on this device. If that device is lost "
+                                + "or damaged, this code is the only way back in. It is shown once and is not "
+                                + "stored anywhere.",
+                                confirmText: "I have saved it",
+                                cancelText: "Show again",
+                                owner: this);
+
+                            if (saved)
+                                break;
+                        }
+                    });
                 }
 
                 await ShowCompletion();

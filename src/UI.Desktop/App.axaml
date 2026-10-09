@@ -101,6 +101,14 @@
             </ResourceDictionary.ThemeDictionaries>
 
             <FontFamily x:Key="MonoFontFamily">Consolas</FontFamily>
+
+            <!-- Accessibility font, applied by the styles below and overwritten at startup from
+                 the user's saved choice. These were previously written to by the accessibility
+                 settings screen but declared nowhere and consumed by nothing, so changing the
+                 setting had no effect at all. Defaults match the app's existing appearance, so a
+                 user who never touches the setting sees no change. -->
+            <x:Double x:Key="GlobalFontSize">13</x:Double>
+            <FontFamily x:Key="GlobalFontFamily">Segoe UI</FontFamily>
             <x:Double x:Key="ToolTipFontSize">12</x:Double>
             <x:Boolean x:Key="ScrollBarAllowAutoHide">True</x:Boolean>
 
@@ -130,6 +138,18 @@
              A window that sets Icon="..." itself still wins: a local value beats a setter. -->
         <Style Selector=":is(Window)">
             <Setter Property="Icon" Value="avares://PhantomVault.UI/Assets/phantom_obscura_app.ico"/>
+        </Style>
+
+        <!-- Applied as style setters, which a control's own explicit FontSize/FontFamily still
+             beats. Anything that sets its own size keeps it; everything else follows the
+             accessibility choice. -->
+        <Style Selector=":is(TemplatedControl)">
+            <Setter Property="FontSize" Value="{DynamicResource GlobalFontSize}"/>
+            <Setter Property="FontFamily" Value="{DynamicResource GlobalFontFamily}"/>
+        </Style>
+        <Style Selector="TextBlock">
+            <Setter Property="FontSize" Value="{DynamicResource GlobalFontSize}"/>
+            <Setter Property="FontFamily" Value="{DynamicResource GlobalFontFamily}"/>
         </Style>
 
         <Style Selector="ToolTip">

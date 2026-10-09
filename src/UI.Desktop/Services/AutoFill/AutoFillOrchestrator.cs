@@ -7,6 +7,7 @@ using PhantomVault.Core.Models;
 using PhantomVault.Core.Models.AutoInject;
 using PhantomVault.Core.Services;
 using PhantomVault.Core.Services.AutoInject;
+using PhantomVault.Core.Services.Security;
 using CorePlatform = PhantomVault.Core.Services.Platform;
 using PhantomVault.Core.Services.Platform;
 using PhantomVault.UI.Services;
@@ -80,6 +81,16 @@ namespace PhantomVault.UI.Services.AutoFill
         _attestorBroker = attestorBroker;
     }
 
+        /// <inheritdoc />
+        public bool IsVaultReady
+        {
+            get
+            {
+                try { return _credentialProvider is not null && _credentialProvider.IsVaultUnlocked(); }
+                catch { return false; }
+            }
+        }
+
         public void SetVaultContext(ICredentialProvider provider, VaultManifest manifest)
         {
             _credentialProvider = provider;
@@ -139,6 +150,15 @@ namespace PhantomVault.UI.Services.AutoFill
 
                         if (isBrowser)
                         {
+                            // "Enable browser auto-fill" — the companion to the desktop-apps
+                            // switch below. Both were saved and never read, so auto-fill ran in
+                            // browsers and native windows alike whatever the user had chosen.
+                            if (!SettingsService.Load().EnableAutoFill)
+                            {
+                                Log.Debug("[AutoFill] Browser auto-fill is disabled in settings — stopping");
+                                state = State.Done;
+                                break;
+                            }
 
                             var url = _windowDetector.TryGetBrowserUrl();
                             if (!string.IsNullOrEmpty(url))
@@ -147,12 +167,34 @@ namespace PhantomVault.UI.Services.AutoFill
                                 context.Domain = ExtractDomain(url);
                             }
                             Log.Debug("[AutoFill] Browser detected — domain: {Domain}", context.Domain);
+
+                            // The whitelist was saved in settings but never consulted, so it
+                            // restricted nothing. An empty list still means "no restriction";
+                            // a non-empty one now actually limits where secrets are typed.
+                            if (!IsDomainAllowed(context.Domain))
+                            {
+                                Log.Information("[AutoFill] Domain {Domain} is not in the auto-fill whitelist — stopping", context.Domain);
+                                state = State.Done;
+                                break;
+                            }
+
                             state = string.IsNullOrEmpty(context.Domain)
                                 ? State.ShowNoMatchDialog
                                 : State.ResolveCredential;
                         }
                         else
                         {
+
+                            // Typing a vault secret into an arbitrary desktop application is a
+                            // bigger step than filling a browser form — there is no domain to
+                            // check it against. The switch for it existed in settings but was
+                            // never read, so native auto-fill happened regardless of the choice.
+                            if (!SettingsService.Load().AutoFillDesktopApps)
+                            {
+                                Log.Debug("[AutoFill] Desktop-app auto-fill is disabled — not inspecting the native window");
+                                state = State.Done;
+                                break;
+                            }
 
                             nativeContext = _windowDetector.DetectNativeLoginFields();
                             if (nativeContext is null)
@@ -235,9 +277,30 @@ namespace PhantomVault.UI.Services.AutoFill
 
                     case State.FillCredential:
                     {
-                        var username = credential!.Username ?? string.Empty;
-                        var password = credential.Password ?? string.Empty;
+                        var fillSettings = SettingsService.Load();
+
+                        // These three switches exist in Auto-fill settings and were previously
+                        // saved but never read: the flow filled both fields and never submitted,
+                        // whatever the user had chosen. A setting that does nothing is worse than
+                        // no setting, because it tells the user they are in control when they are
+                        // not.
+                        var username = fillSettings.AutoFillInjectUsername
+                            ? (credential!.Username ?? string.Empty)
+                            : string.Empty;
+
+                        var password = fillSettings.AutoFillInjectPassword
+                            ? (credential!.Password ?? string.Empty)
+                            : string.Empty;
+
+                        bool submitAfterFill = fillSettings.AutoFillAutoSubmit;
                         bool filled = false;
+
+                        if (username.Length == 0 && password.Length == 0)
+                        {
+                            Log.Information("[AutoFill] Both username and password injection are disabled — nothing to fill");
+                            state = State.Done;
+                            break;
+                        }
 
                         if (!isBrowser && nativeContext is not null)
                         {
@@ -248,11 +311,11 @@ namespace PhantomVault.UI.Services.AutoFill
                         if (!filled)
                         {
 
-                            if (!string.IsNullOrEmpty(credential.AutoTypeSequence))
+                            if (!string.IsNullOrEmpty(credential!.AutoTypeSequence))
                                 await _autoTypeService.TypeCustomSequenceAsync(
                                     credential.AutoTypeSequence, username, password);
                             else
-                                await _autoTypeService.TypeCredentialsAsync(username, password, submit: false);
+                                await _autoTypeService.TypeCredentialsAsync(username, password, submit: submitAfterFill);
                         }
 
                         _credentialProvider!.UpdateLastUsed(bestMatch!.CredentialId);
@@ -262,8 +325,8 @@ namespace PhantomVault.UI.Services.AutoFill
 
                         // The seed may be held in a TOTP section (inline or linked to a
                         // separate authenticator entry) rather than on the entry itself.
-                        effectiveTotp = CredentialTotpResolver.Resolve(credential, LookupCredentialById);
-                        attestorTotpReference = credential.AttestorTotpReference;
+                        effectiveTotp = CredentialTotpResolver.Resolve(credential!, LookupCredentialById);
+                        attestorTotpReference = credential!.AttestorTotpReference;
 
                         state = (settings.AutoFillAutoInputTotp &&
                                  (effectiveTotp is not null || !string.IsNullOrWhiteSpace(attestorTotpReference)))
@@ -361,6 +424,10 @@ namespace PhantomVault.UI.Services.AutoFill
                             {
                                 _integratedAttestorService.TryLaunch(out _);
                             }
+                            else if (result == NoMatchResult.GeneratePassword)
+                            {
+                                await GenerateFillAndOfferToSaveAsync(context, nativeContext, portalId);
+                            }
                         });
 
                         state = State.Done;
@@ -370,6 +437,103 @@ namespace PhantomVault.UI.Services.AutoFill
             }
 
             Log.Information("[AutoFill] Flow complete");
+        }
+
+        /// <summary>
+        /// Raised after a generated password has been typed into a form, so the vault can offer to
+        /// save it. The orchestrator deliberately does not write to the vault itself: saving goes
+        /// through the same confirm-then-save path as a captured password, so there is one place
+        /// that decides what gets stored and the user always sees it before it lands.
+        /// </summary>
+        public event EventHandler<GeneratedCredentialEventArgs>? GeneratedCredentialFilled;
+
+        /// <summary>
+        /// Generates a strong password, types it into the form that had no match, and hands it to
+        /// the vault to offer saving.
+        ///
+        /// No username is invented here. The field that triggered this may or may not have one
+        /// filled in already, and guessing would quietly save a wrong account name against a real
+        /// password — worse than leaving it blank for the user to complete in the save prompt.
+        /// </summary>
+        private async Task GenerateFillAndOfferToSaveAsync(
+            AutoInjectContext? context,
+            NativeLoginContext? nativeContext,
+            string portalId)
+        {
+            string generated;
+            try
+            {
+                generated = PasswordGenerator.Generate();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "[AutoFill] Password generation failed");
+                return;
+            }
+
+            try
+            {
+                bool filled = false;
+                if (nativeContext is not null)
+                    filled = await _windowDetector.TryFillNativeLoginAsync(nativeContext, string.Empty, generated);
+
+                if (!filled)
+                    await _autoTypeService.TypeCredentialsAsync(string.Empty, generated, submit: false);
+
+                Log.Information("[AutoFill] Generated password filled for {Portal}", portalId);
+
+                GeneratedCredentialFilled?.Invoke(this, new GeneratedCredentialEventArgs(
+                    portalId,
+                    context?.Url ?? string.Empty,
+                    context?.Domain ?? portalId,
+                    generated));
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "[AutoFill] Filling the generated password failed");
+            }
+        }
+
+        /// <summary>
+        /// Whether auto-fill is permitted on this domain.
+        ///
+        /// An empty whitelist means no restriction, which is the default and must stay that way —
+        /// treating empty as "allow nothing" would silently disable auto-fill for everyone. A
+        /// configured list is matched on the registrable domain, so listing "example.com" also
+        /// covers its subdomains without the user having to enumerate them.
+        /// </summary>
+        private static bool IsDomainAllowed(string? domain)
+        {
+            try { return IsDomainAllowed(domain, SettingsService.Load().AutoFillDomainWhitelist); }
+            catch { return true; }
+        }
+
+        /// <summary>
+        /// The whitelist rule itself, separated from loading settings so it can be tested directly.
+        /// </summary>
+        public static bool IsDomainAllowed(string? domain, string? whitelist)
+        {
+            var raw = whitelist ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(raw))
+                return true;
+
+            if (string.IsNullOrWhiteSpace(domain))
+                return false;
+
+            var candidate = domain.Trim().TrimEnd('.').ToLowerInvariant();
+
+            foreach (var entry in raw.Split(new[] { ',', ';', ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var allowed = entry.Trim().TrimStart('*', '.').TrimEnd('.').ToLowerInvariant();
+                if (allowed.Length == 0)
+                    continue;
+
+                if (candidate == allowed || candidate.EndsWith("." + allowed, StringComparison.Ordinal))
+                    return true;
+            }
+
+            return false;
         }
 
         private static string ExtractDomain(string url)

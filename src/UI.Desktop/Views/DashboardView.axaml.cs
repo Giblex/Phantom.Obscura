@@ -43,7 +43,10 @@ namespace PhantomVault.UI.Views
                     _sheetTranslate = new TranslateTransform();
                     sheetPanel.RenderTransform = _sheetTranslate;
 
-                    _sheetTranslate.Y = -1200;
+                    // Parked off-screen until SyncSheetToCurrentState below decides where it
+                    // actually belongs. Measured rather than a fixed 1200px, which was visible
+                    // on taller displays.
+                    _sheetTranslate.Y = -ParkOffset();
                 }
             }
 
@@ -84,6 +87,55 @@ namespace PhantomVault.UI.Views
                     _vmWired = true;
                 }
             }
+
+            // Apply the dashboard's CURRENT state, rather than waiting for it to change.
+            //
+            // The sheet is parked off-screen above when the control attaches, and it was only ever
+            // brought back by a PropertyChanged notification. If the dashboard was already showing
+            // at that moment — it is the default view, or the control got re-attached after a view
+            // switch — no notification ever arrived and the sheet stayed parked. The dashboard then
+            // rendered blank, or partly, depending on how far off-screen the park offset put it.
+            SyncSheetToCurrentState();
+        }
+
+        /// <summary>
+        /// Puts the sheet where the view model says it should be, without animating. Safe to call
+        /// on every attach: it only ever corrects a mismatch.
+        /// </summary>
+        private void SyncSheetToCurrentState()
+        {
+            if (_sheetTranslate == null)
+                return;
+
+            if (_vaultVm?.IsShowingDashboard == true)
+            {
+                _isAnimating = false;
+                _sheetTranslate.Y = 0;
+                AttachBackdropBlur();
+                if (_backdropBlur != null)
+                    _backdropBlur.Radius = BackdropBlurTarget;
+            }
+            else
+            {
+                _sheetTranslate.Y = -ParkOffset();
+            }
+        }
+
+        /// <summary>
+        /// How far up the sheet is parked when hidden. Measured, not assumed: the old hard-coded
+        /// 1200px left the sheet visible on any display taller than that, which read as the
+        /// dashboard rendering only partially.
+        /// </summary>
+        private double ParkOffset()
+        {
+            if (Bounds.Height > 0)
+                return Bounds.Height;
+
+            var top = TopLevel.GetTopLevel(this);
+            if (top is { ClientSize.Height: > 0 })
+                return top.ClientSize.Height;
+
+            return 1200;
         }
 
         private void OnVaultVmPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -94,8 +146,7 @@ namespace PhantomVault.UI.Views
             if (_vaultVm.IsShowingDashboard)
             {
 
-                var h = Bounds.Height > 0 ? Bounds.Height : 1200;
-                _sheetTranslate.Y = -h;
+                _sheetTranslate.Y = -ParkOffset();
                 _isAnimating = false;
                 Dispatcher.UIThread.Post(() => AnimateSheetTo(0, 420), DispatcherPriority.Loaded);
                 Dispatcher.UIThread.Post(() => AnimateBackdropBlurTo(BackdropBlurTarget, 420), DispatcherPriority.Loaded);
@@ -105,7 +156,7 @@ namespace PhantomVault.UI.Views
 
                 if (_sheetTranslate.Y > -10 && !_isAnimating)
                 {
-                    var h = Bounds.Height > 0 ? Bounds.Height : 1200;
+                    var h = ParkOffset();
                     Dispatcher.UIThread.Post(() => AnimateSheetTo(-h, 350), DispatcherPriority.Loaded);
                 }
                 Dispatcher.UIThread.Post(() => AnimateBackdropBlurTo(0, 320), DispatcherPriority.Loaded);

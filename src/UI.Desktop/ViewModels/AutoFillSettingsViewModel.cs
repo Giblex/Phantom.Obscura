@@ -17,6 +17,9 @@ namespace PhantomVault.UI.ViewModels
         private bool _suppressStage;
 
         private bool _enableAutoFill;
+        private bool _startInTrayOnVaultOpen = true;
+        private PhantomVault.UI.Services.AutoFill.UsbStartupFactor _usbStartupFactor =
+            PhantomVault.UI.Services.AutoFill.UsbStartupFactor.Automatic;
         private string _domainWhitelist = string.Empty;
         private bool _injectUsername = true;
         private bool _injectPassword = true;
@@ -90,6 +93,8 @@ namespace PhantomVault.UI.ViewModels
             _autoFillModeEnabled = settings.AutoFillModeEnabled;
             _autoFillAutoInputTotp = settings.AutoFillAutoInputTotp;
             _autoFillShowNewEntryOnNoMatch = settings.AutoFillShowNewEntryOnNoMatch;
+            _startInTrayOnVaultOpen = settings.AutoFillStartInTrayOnVaultOpen;
+            _usbStartupFactor = settings.AutoFillUsbStartupFactor;
         }
 
         private void SavePreferences()
@@ -105,6 +110,8 @@ namespace PhantomVault.UI.ViewModels
             settings.AutoFillModeEnabled = AutoFillModeEnabled;
             settings.AutoFillAutoInputTotp = AutoFillAutoInputTotp;
             settings.AutoFillShowNewEntryOnNoMatch = AutoFillShowNewEntryOnNoMatch;
+            settings.AutoFillStartInTrayOnVaultOpen = StartInTrayOnVaultOpen;
+            settings.AutoFillUsbStartupFactor = UsbStartupFactor;
             SettingsService.Save(settings);
         }
 
@@ -113,6 +120,33 @@ namespace PhantomVault.UI.ViewModels
             get => _enableAutoFill;
             set { this.RaiseAndSetIfChanged(ref _enableAutoFill, value); StageAll(); }
         }
+
+        /// <summary>Start the tray watcher automatically whenever a vault is unlocked.</summary>
+        public bool StartInTrayOnVaultOpen
+        {
+            get => _startInTrayOnVaultOpen;
+            set { this.RaiseAndSetIfChanged(ref _startInTrayOnVaultOpen, value); StageAll(); }
+        }
+
+        /// <summary>
+        /// Which factor to require when the vault's USB is inserted. Only ever applied when the
+        /// vault actually has that factor — the policy will not let this weaken a vault.
+        /// </summary>
+        public PhantomVault.UI.Services.AutoFill.UsbStartupFactor UsbStartupFactor
+        {
+            get => _usbStartupFactor;
+            set { this.RaiseAndSetIfChanged(ref _usbStartupFactor, value); StageAll(); }
+        }
+
+        /// <summary>Options offered in the picker, in the order they are shown.</summary>
+        public PhantomVault.UI.Services.AutoFill.UsbStartupFactor[] UsbStartupFactorOptions { get; } =
+        {
+            PhantomVault.UI.Services.AutoFill.UsbStartupFactor.Automatic,
+            PhantomVault.UI.Services.AutoFill.UsbStartupFactor.WindowsHello,
+            PhantomVault.UI.Services.AutoFill.UsbStartupFactor.Pin,
+            PhantomVault.UI.Services.AutoFill.UsbStartupFactor.Passphrase,
+            PhantomVault.UI.Services.AutoFill.UsbStartupFactor.KeyfileOnly
+        };
 
         public string DomainWhitelist
         {

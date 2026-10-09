@@ -169,7 +169,7 @@
     </LinearGradientBrush>
 
     <SolidColorBrush x:Key="SuccessBrush" Color="#4ADE80"/>
-    <SolidColorBrush x:Key="WarningBrush" Color="#FBBF24"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="#F08A42"/>
     <SolidColorBrush x:Key="WarningBrushDark" Color="#E65100"/>
     <SolidColorBrush x:Key="WarningBrushDarker" Color="#BF360C"/>
     <SolidColorBrush x:Key="WarningIcon" Color="#FF9800"/>

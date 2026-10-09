@@ -15,6 +15,7 @@ using PhantomVault.Core;
 using PhantomVault.Core.Models;
 using PhantomVault.Core.Services;
 using PhantomVault.Core.Utils;
+using PhantomVault.Core.Services.BootRom;
 using PhantomVault.Core.Services.ZeroKnowledge;
 using PhantomVault.UI.Services;
 using PhantomVault.UI.Views;
@@ -421,10 +422,87 @@ namespace PhantomVault.UI.ViewModels
 
                     var manifestPath = Path.Combine(phantomPath, "manifests", $"{encryptedName}.manifest");
 
+                    // Boot ROM: seal one to this device and register its key contribution BEFORE the
+                    // manifest is written, so the very first write already derives with it.
+                    //
+                    // Doing it here rather than from Settings later is what makes this safe. Enabling
+                    // it on a live vault has to re-wrap an existing manifest, and a failure midway
+                    // leaves a vault nobody can open. At creation there is nothing to re-wrap: either
+                    // the whole vault comes into existence bound, or it does not come into existence.
+                    //
+                    // A keyfile is mandatory above, so the material the ROM seals to always exists.
+                    string? bootRomRecoveryCode = null;
+                    bool bootRomProvisioned = false;
+                    try
+                    {
+                        Status = "Sealing the Boot ROM to this device...";
+                        Progress = 0.815;
+
+                        var (romIntegrity, romBinding) = BootRomDigests.For(SelectedDrive!);
+                        var romResult = new BootRomProvisioner().Provision(
+                            SelectedDrive!, KeyfilePath!, romIntegrity, romBinding);
+                        bootRomProvisioned = true;
+
+                        try
+                        {
+                            BootRomSession.Set(manifestPath, romResult.Contribution);
+                            // Pinned inside the encrypted manifest so a marker swapped on the device
+                            // is detectable once the vault opens.
+                            manifest.BootRomMarkerHashBase64 =
+                                Convert.ToBase64String(SHA256.HashData(romResult.Marker.CanonicalBytes()));
+                            bootRomRecoveryCode = romResult.RecoveryCode;
+                        }
+                        finally
+                        {
+                            CryptographicOperations.ZeroMemory(romResult.Contribution);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Leave no half-sealed state behind: strip the artefacts and the registered
+                        // contribution, then fail the creation rather than writing a manifest whose
+                        // key does not match the device.
+                        Serilog.Log.Error(ex, "[BootRom] Provisioning during vault creation failed");
+                        BootRomSession.Clear(manifestPath);
+                        if (bootRomProvisioned)
+                            BootRomProvisioner.Remove(SelectedDrive!);
+                        throw;
+                    }
+
                     var passwordForManifest = string.IsNullOrEmpty(Passphrase) ? null : Passphrase;
                     Progress = 0.82;
-                    using (var manifestPassphrase = SecurePassword.FromString(passwordForManifest))
-                        _manifestService.WriteManifestSecure(manifest, manifestPath, manifestPassphrase, KeyfilePath);
+                    try
+                    {
+                        // "Use Fast Unlock" is documented as applying to newly created vaults,
+                        // with existing ones re-keyed on demand from Security settings. Creation
+                        // never read it, so every new vault got Standard parameters whatever the
+                        // user had chosen. Fast is a weaker KDF (64 MiB / 3 iterations) — it is
+                        // off by default and only ever used because the user asked for it.
+                        var creationKdf = SettingsService.Load().UseFastUnlock
+                            ? PhantomVault.Core.Models.ManifestKdfParams.Fast
+                            : null;
+
+                        if (creationKdf is not null)
+                            Serilog.Log.Information("[Provision] Creating this vault with Fast Unlock KDF parameters");
+
+                        using (var manifestPassphrase = SecurePassword.FromString(passwordForManifest))
+                            _manifestService.WriteManifestSecure(
+                                manifest,
+                                manifestPath,
+                                manifestPassphrase,
+                                KeyfilePath,
+                                usbSerial: null,
+                                requireDualFactor: false,
+                                overrideKdfParams: creationKdf);
+                    }
+                    catch
+                    {
+                        // The manifest is the thing the ROM binds; with no manifest the ROM on the
+                        // device is just an orphan that would make a later vault unopenable.
+                        BootRomSession.Clear(manifestPath);
+                        BootRomProvisioner.Remove(SelectedDrive!);
+                        throw;
+                    }
 
                     PhantomVault.Core.Utils.HybridKeyDerivation.ZeroMemory(kemPrivateKey, kemPublicKey, kemCiphertextForManifest!);
 
@@ -439,6 +517,30 @@ namespace PhantomVault.UI.ViewModels
                     });
 
                     Status = "Vault successfully created.";
+
+                    // Shown once, and never stored. Without the ROM this code is the only way back
+                    // into the vault, so it is surfaced before the user can navigate away.
+                    if (!string.IsNullOrWhiteSpace(bootRomRecoveryCode))
+                    {
+                        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+                        {
+                            for (int attempt = 0; attempt < 10; attempt++)
+                            {
+                                var saved = await _dialogService.ShowConfirmationAsync(
+                                    "Save your Boot ROM recovery code",
+                                    $"{bootRomRecoveryCode}\n\n"
+                                    + "This vault is sealed to a Boot ROM on this device. If that device is lost "
+                                    + "or damaged, this code is the only way back in. It is shown once and is not "
+                                    + "stored anywhere.",
+                                    confirmText: "I have saved it",
+                                    cancelText: "Show again",
+                                    owner: _ownerWindow);
+
+                                if (saved)
+                                    break;
+                            }
+                        });
+                    }
 
                     if (!string.IsNullOrEmpty(KeePassFilePath))
                     {

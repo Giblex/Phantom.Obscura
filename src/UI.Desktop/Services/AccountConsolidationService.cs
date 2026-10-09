@@ -15,14 +15,6 @@ public static class AccountConsolidationService
 {
     public const string ServiceKeyField = "phantom.account-service";
 
-    private static readonly Dictionary<string, string> Aliases = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["gmail"] = "google",
-        ["googlemail"] = "google",
-        ["google account"] = "google",
-        ["microsoftonline"] = "microsoft",
-        ["office365"] = "microsoft"
-    };
 
     public static void Consolidate(Credential candidate, IEnumerable<Credential> existingCredentials)
     {
@@ -93,16 +85,10 @@ public static class AccountConsolidationService
         return labels[^2];
     }
 
-    private static string NormalizeLabel(string? value)
-    {
-        var normalized = Regex.Replace((value ?? string.Empty).Trim().ToLowerInvariant(), "[^a-z0-9]+", " ").Trim();
-        normalized = Regex.Replace(normalized,
-            "\\b(account|accounts|login|password|credential|credentials|totp|2fa|authenticator|recovery)\\b",
-            string.Empty,
-            RegexOptions.IgnoreCase);
-        return Regex.Replace(normalized, "\\s+", " ").Trim();
-    }
+    // Normalisation and aliasing live in ServiceAliases so grouping and search agree on what
+    // counts as the same service. A brand added there is understood by both at once, rather
+    // than search knowing about a service that grouping has never heard of.
+    private static string NormalizeLabel(string? value) => ServiceAliases.Normalise(value);
 
-    private static string ApplyAlias(string key)
-        => Aliases.TryGetValue(key, out var alias) ? alias : key;
+    private static string ApplyAlias(string key) => ServiceAliases.CanonicaliseNormalised(key);
 }

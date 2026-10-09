@@ -13,6 +13,20 @@
                 <CheckBox Content="Automatically fill username" IsChecked="{Binding InjectUsername, Mode=TwoWay}" />
                 <CheckBox Content="Automatically fill password" IsChecked="{Binding InjectPassword, Mode=TwoWay}" />
             </StackPanel>
+            <CheckBox Content="Start auto‑fill in the tray when a vault is opened"
+                      IsChecked="{Binding StartInTrayOnVaultOpen, Mode=TwoWay}"
+                      Margin="0,5,0,0" />
+
+            <TextBlock Text="When the vault's USB is inserted, require:" Margin="0,8,0,0" />
+            <ComboBox ItemsSource="{Binding UsbStartupFactorOptions}"
+                      SelectedItem="{Binding UsbStartupFactor, Mode=TwoWay}"
+                      HorizontalAlignment="Stretch" />
+            <TextBlock Text="Automatic uses the strongest factor the vault actually has. A vault with no PIN, passphrase or Windows Hello opens on its keyfile alone. This choice can never require less than the vault is protected by."
+                       TextWrapping="Wrap"
+                       Opacity="0.75"
+                       FontSize="11"
+                       Margin="0,2,0,0" />
+
             <TextBlock Text="Domain whitelist (comma separated):" Margin="0,5,0,0" />
             <TextBox Text="{Binding DomainWhitelist, Mode=TwoWay}" Height="60" AcceptsReturn="True" />
             <Button Content="Save" Command="{Binding SaveCommand}" Width="80" HorizontalAlignment="Left" />

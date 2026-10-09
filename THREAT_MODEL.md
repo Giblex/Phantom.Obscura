@@ -44,7 +44,7 @@ Boundaries (untrusted side first):
 3. Background service worker → native messaging host (`chrome.exe` stdio).
 4. Native messaging host → desktop app (named pipe, current-user only).
 5. Desktop app → local disk (DPAPI per-user for metadata; AEAD for vault).
-6. Desktop app → internet (gateway-mediated, consent + audit + pinning).
+6. Desktop app → internet (gateway-mediated, consent + audit + optional SPKI pinning).
 
 ## 2. STRIDE per surface
 
@@ -74,7 +74,7 @@ Boundaries (untrusted side first):
 
 | Threat | Mitigation |
 | --- | --- |
-| **S**poofing — DNS hijack to attacker server | TLS SPKI pinning (**OPEN** — placeholder pins) |
+| **S**poofing — DNS hijack to attacker server | Public-CA TLS on every host; SPKI pinning enforced where a policy sets pins (Flaticon, HIBP). Update channel is unpinned by design — its integrity gate is the Ed25519-signed manifest. |
 | **T**ampering — response injection | TLS + AEAD on app payloads where applicable |
 | **R**epudiation — silent network calls | `IInternetGateway` audit log + per-feature consent |
 | **I**nfo disclosure — password sent to HIBP | k-anonymity range API (first 5 hex of SHA-1 only) |

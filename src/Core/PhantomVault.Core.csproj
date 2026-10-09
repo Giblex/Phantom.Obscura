@@ -63,6 +63,10 @@
     <Compile Remove="Services\YubiKeyService.Oath.cs" />                 <!-- depends on Yubico.YubiKey OATH module -->
     <Compile Remove="Services\Security\VirtualMachineDetection.cs" />    <!-- uses System.Management (WMI) -->
     <Compile Remove="Services\PolicyService.cs" />                       <!-- transitively depends on PolicyEngine which uses System.Management -->
+    <!-- Boot ROM binds a vault to a USB device identity, which this target cannot compute:
+         UsbBindingService is removed above and has no Mobile stub. The rest of the Boot ROM
+         code is platform-neutral and still compiles here. -->
+    <Compile Remove="Services\BootRom\BootRomDigests.cs" />
   </ItemGroup>
   <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'android'">
     <Compile Remove="Services\Mobile\BlackSecureRawVolumeServiceMobile.cs" />

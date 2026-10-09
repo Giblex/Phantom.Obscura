@@ -17,6 +17,7 @@ namespace PhantomVault.Core.Tests
     /// The property that makes binding worth having: once a vault is written with a
     /// contribution, it does not open without it.
     /// </summary>
+    [Collection(BootRomSessionCollection.Name)]
     public sealed class BootRomBindingTests : IDisposable
     {
         private readonly string _root = Path.Combine(Path.GetTempPath(), $"PhantomVault_BootRom_{Guid.NewGuid():N}");

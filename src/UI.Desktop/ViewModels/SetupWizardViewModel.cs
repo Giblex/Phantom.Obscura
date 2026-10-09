@@ -21,6 +21,7 @@ using CommunityToolkit.Mvvm.Input;
 using PhantomVault.Core.Models;
 using PhantomVault.Core.Models.Licensing;
 using PhantomVault.Core.Services;
+using PhantomVault.Core.Services.BootRom;
 using PhantomVault.Core.Services.DomainKeys;
 using PhantomVault.Core.Services.Security;
 using PhantomVault.Core.Utils;
@@ -41,6 +42,15 @@ namespace PhantomVault.UI.ViewModels
         private readonly DialogService _dialogService = new();
         private readonly EncryptionService _encryptionService;
         private readonly ManifestService _manifestService;
+
+        /// <summary>Drive whose Boot ROM artefacts this run created, for rollback on failure.</summary>
+        private string? _bootRomProvisionedDriveRoot;
+
+        /// <summary>
+        /// Shown once after creation and never stored. Without the Boot ROM this is the only way
+        /// back into the vault, so the creation UI must surface it before the user moves on.
+        /// </summary>
+        public string? BootRomRecoveryCode { get; private set; }
         private readonly UsbBindingService _usbBindingService;
         private readonly PhantomContainerService _containerService;
         private readonly UsbArtifactProtectionService _usbArtifactProtectionService;
@@ -1826,6 +1836,67 @@ namespace PhantomVault.UI.ViewModels
                         : throw new InvalidOperationException("TOTP was enabled, but no verified TOTP secret is staged.");
                     StatusMessage = "Generated TOTP secret...";
                     Log.Information("TOTP secret generated");
+                }
+
+                // Boot ROM: seal one to this device and register its contribution BEFORE the
+                // containers are written, so the root container — the one carrying the manifest —
+                // is encrypted with it from the very first write.
+                //
+                // Only the manifest-bearing container is bound. The others hold vault data already
+                // protected by the passphrase and keyfile, and binding them would buy nothing while
+                // multiplying the number of places a key mismatch could strand the user.
+                //
+                // Skipped when there is no USB drive root (a non-removable install): the ROM's whole
+                // purpose is binding to a specific device, and there is none to bind to.
+                if (!string.IsNullOrWhiteSpace(driveRoot) && !string.IsNullOrWhiteSpace(keyfilePath))
+                {
+                    ReportProvisioningStage(4, 64, "Sealing the Boot ROM to this device...", "Binding the vault key to a ROM that only this device can run.");
+                    try
+                    {
+                        var (romIntegrity, romBinding) = BootRomDigests.For(driveRoot!);
+                        var romResult = new BootRomProvisioner().Provision(
+                            driveRoot!, keyfilePath!, romIntegrity, romBinding);
+                        _bootRomProvisionedDriveRoot = driveRoot;
+
+                        try
+                        {
+                            // Registered under the path the container is written to now, and also
+                            // under its final resting place. When provisioning runs in a staging
+                            // directory the file is moved afterwards, and anything that re-reads it
+                            // by the destination path would otherwise find no contribution and
+                            // derive the wrong key. The contribution is per vault, so registering
+                            // the same bytes under both paths costs nothing.
+                            BootRomSession.Set(rootContainerPath, romResult.Contribution);
+                            string finalRootContainerPath = Path.Combine(
+                                vaultPath!, rootContainerRelativePath.Replace('/', Path.DirectorySeparatorChar));
+                            if (!string.Equals(finalRootContainerPath, rootContainerPath, StringComparison.OrdinalIgnoreCase))
+                                BootRomSession.Set(finalRootContainerPath, romResult.Contribution);
+
+                            manifest.BootRomMarkerHashBase64 =
+                                Convert.ToBase64String(SHA256.HashData(romResult.Marker.CanonicalBytes()));
+                            BootRomRecoveryCode = romResult.RecoveryCode;
+                        }
+                        finally
+                        {
+                            CryptographicOperations.ZeroMemory(romResult.Contribution);
+                        }
+                    }
+                    catch (Exception romEx)
+                    {
+                        // Leave nothing half-sealed: a marker on the device with no matching
+                        // container would gate every future unlock on a ROM that binds nothing.
+                        Log.Error(romEx, "[BootRom] Provisioning during wizard vault creation failed");
+                        BootRomSession.Clear(rootContainerPath);
+                        BootRomSession.Clear(Path.Combine(
+                            vaultPath!, rootContainerRelativePath.Replace('/', Path.DirectorySeparatorChar)));
+                        if (_bootRomProvisionedDriveRoot is { Length: > 0 } failedRoot)
+                        {
+                            BootRomProvisioner.Remove(failedRoot);
+                            _bootRomProvisionedDriveRoot = null;
+                        }
+                        BootRomRecoveryCode = null;
+                        throw;
+                    }
                 }
 
                 var containerSpecs = new List<(string Path, long SizeBytes, VaultManifest? EmbeddedManifest)>

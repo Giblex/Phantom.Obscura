@@ -240,6 +240,10 @@ namespace PhantomVault.UI.ViewModels
             ImportIconCommand = ReactiveCommand.CreateFromTask(ImportIconsAsync);
             DownloadMoreCommand = ReactiveCommand.CreateFromTask(DownloadMoreAsync);
             OpenMyIconsFolderCommand = ReactiveCommand.Create(OpenMyIconsFolder);
+
+            // Before the first Rebuild, so the picker opens on the set the user last used.
+            RestoreIconBrowsingState();
+            ApplyIconDisplaySize();
             RevealSelectedCommand = ReactiveCommand.Create(RevealSelected);
             DeleteSelectedCommand = ReactiveCommand.CreateFromTask(DeleteSelectedAsync);
             RefreshCommand = ReactiveCommand.CreateFromTask(() => LoadAsync(rebuild: true));
@@ -348,6 +352,7 @@ namespace PhantomVault.UI.ViewModels
                 this.RaisePropertyChanged(nameof(IsDownloadsTab));
                 this.RaisePropertyChanged(nameof(IsMyIconsTab));
                 SelectedTile = null;
+                PersistIconBrowsingState();
                 Rebuild();
             }
         }
@@ -356,7 +361,104 @@ namespace PhantomVault.UI.ViewModels
         public bool IsDownloadsTab => SelectedTabIndex == 1;
         public bool IsMyIconsTab => SelectedTabIndex == 2;
 
+        // ---- tile size -----------------------------------------------------------------
+
+        private double _tileSize = 64;
+        private double _glyphSize = 34;
+        private double _imageSize = 40;
+
+        /// <summary>Outer size of each icon button.</summary>
+        public double TileSize
+        {
+            get => _tileSize;
+            private set => this.RaiseAndSetIfChanged(ref _tileSize, value);
+        }
+
+        /// <summary>Size of the tinted (line-icon) glyph inside a tile.</summary>
+        public double GlyphSize
+        {
+            get => _glyphSize;
+            private set => this.RaiseAndSetIfChanged(ref _glyphSize, value);
+        }
+
+        /// <summary>Size of a full-colour image inside a tile.</summary>
+        public double ImageSize
+        {
+            get => _imageSize;
+            private set => this.RaiseAndSetIfChanged(ref _imageSize, value);
+        }
+
+        /// <summary>
+        /// Applies the saved icon display size. The setting existed with a "Medium" default but
+        /// nothing read it and the tiles were hard-coded to 64px, so it could never have had an
+        /// effect. Proportions between the tile, the glyph and the image are preserved.
+        /// </summary>
+        private void ApplyIconDisplaySize()
+        {
+            try
+            {
+                var size = Services.SettingsService.Load().IconDisplaySize;
+
+                (TileSize, GlyphSize, ImageSize) = (size ?? "Medium").Trim().ToLowerInvariant() switch
+                {
+                    "small" => (48d, 26d, 30d),
+                    "large" => (88d, 48d, 56d),
+                    _ => (64d, 34d, 40d)   // Medium, and the fallback for anything unrecognised
+                };
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Debug(ex, "[IconManager] Could not apply the icon display size");
+            }
+        }
+
         public string[] LibraryFilters { get; } = { "All icons", "Line icons", "Logos" };
+
+        /// <summary>
+        /// Remembers which set of icons the user was last browsing, so reopening the picker lands
+        /// where they left off instead of resetting to the full library every time. Stored as
+        /// "tab:filter" — this is a UI position, not vault data.
+        /// </summary>
+        private void PersistIconBrowsingState()
+        {
+            try
+            {
+                Services.SettingsService.Update(cfg =>
+                    cfg.LastIconPack = $"{_selectedTabIndex}:{_libraryFilterIndex}");
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Debug(ex, "[IconManager] Could not persist the icon browsing state");
+            }
+        }
+
+        /// <summary>
+        /// Restores the remembered tab and filter. Applied to the backing fields directly so it
+        /// does not trigger a Rebuild per property while the view model is still being set up.
+        /// </summary>
+        private void RestoreIconBrowsingState()
+        {
+            try
+            {
+                var stored = Services.SettingsService.Load().LastIconPack;
+                if (string.IsNullOrWhiteSpace(stored))
+                    return;
+
+                var parts = stored.Split(':');
+                if (parts.Length != 2)
+                    return;
+
+                if (int.TryParse(parts[0], out var tab) && tab >= 0 && tab <= 2)
+                    _selectedTabIndex = tab;
+
+                if (int.TryParse(parts[1], out var filter) && filter >= 0 && filter < LibraryFilters.Length)
+                    _libraryFilterIndex = filter;
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Debug(ex, "[IconManager] Could not restore the icon browsing state");
+            }
+        }
 
         public int LibraryFilterIndex
         {
@@ -365,6 +467,7 @@ namespace PhantomVault.UI.ViewModels
             {
                 if (value == _libraryFilterIndex) return;
                 this.RaiseAndSetIfChanged(ref _libraryFilterIndex, value);
+                PersistIconBrowsingState();
                 Rebuild();
             }
         }

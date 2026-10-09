@@ -128,7 +128,7 @@
     <SolidColorBrush x:Key="SidebarItemSelectedBrush" Color="#DEE6F4"/>
 
     <SolidColorBrush x:Key="SuccessBrush" Color="#22C55E"/>
-    <SolidColorBrush x:Key="WarningBrush" Color="#F59E0B"/>
+    <SolidColorBrush x:Key="WarningBrush" Color="#E2722C"/>
     <SolidColorBrush x:Key="ErrorBrush" Color="#EF4444"/>
     <SolidColorBrush x:Key="SuccessBackgroundBrush" Color="#ECFDF5"/>
     <SolidColorBrush x:Key="WarningBackgroundBrush" Color="#FFFBEB"/>

@@ -48,6 +48,17 @@ namespace PhantomVault.UI.ViewModels
 
                     if (pipeServer != null)
                         pipeServer.CredentialSubmitted += OnCredentialSubmitted;
+
+                    // A password generated from the "no match" prompt is offered for saving
+                    // through exactly the same route as one captured from a submitted form, so
+                    // there is a single place that decides save-vs-update and a single prompt
+                    // the user confirms before anything is written.
+                    var orchestrator = (Avalonia.Application.Current as PhantomVault.UI.App)?.Services
+                        ?.GetService(typeof(PhantomVault.UI.Services.AutoFill.IAutoFillOrchestrator))
+                        as PhantomVault.UI.Services.AutoFill.AutoFillOrchestrator;
+
+                    if (orchestrator != null)
+                        orchestrator.GeneratedCredentialFilled += OnGeneratedCredentialFilled;
                 }
                 catch (Exception ex)
                 {
@@ -80,8 +91,15 @@ namespace PhantomVault.UI.ViewModels
                     // The overlay is topmost and borderless. It MUST be closed on every
                     // path, including exceptions: a leaked one sits over the whole
                     // desktop and the user cannot click past it.
+                    // "Show auto-fill icon" was saved in settings but never read, so the badge
+                    // appeared whatever the user chose. Turning it off suppresses the badge and,
+                    // with it, the click-to-switch-account menu — the fill itself still happens.
+                    bool showBadge = true;
+                    try { showBadge = SettingsService.Load().AutoFillShowIcon; }
+                    catch { /* unreadable settings: keep the visible default */ }
+
                     var overlay = new AutofillUsbIndicatorOverlay();
-                    AutofillIconBadge badge;
+                    AutofillIconBadge? badge = null;
                     try
                     {
                         overlay.Show();
@@ -90,13 +108,20 @@ namespace PhantomVault.UI.ViewModels
                         // ── 3. Badge takes over the traced ring ─────────────────────
                         // Shown while the stroke is still up, then the stroke fades over
                         // it, so the drawn ring appears to become the badge.
-                        badge = new AutofillIconBadge();
-                        badge.Show();
-                        badge.PositionLeftOfField(fieldRect);
+                        if (showBadge)
+                        {
+                            badge = new AutofillIconBadge();
+                            badge.Show();
+                            badge.PositionLeftOfField(fieldRect);
 
-                        var popIn = badge.PopInAsync();
-                        await overlay.FadeOutAsync(cts.Token);
-                        await popIn;
+                            var popIn = badge.PopInAsync();
+                            await overlay.FadeOutAsync(cts.Token);
+                            await popIn;
+                        }
+                        else
+                        {
+                            await overlay.FadeOutAsync(cts.Token);
+                        }
 
                         // Pre-fill the strongest match so the common case needs no
                         // clicks at all — but never submit. The badge stays put so the
@@ -116,6 +141,9 @@ namespace PhantomVault.UI.ViewModels
 
                     // ── 4. Icon click → credential menu ──────────────────────────────────
                     var autoInjectSvc = _autoInjectService;
+                    if (badge is null)
+                        return;
+
                     badge.IconClicked += (_, _) =>
                     {
                         try
@@ -184,6 +212,57 @@ namespace PhantomVault.UI.ViewModels
         /// Nothing is written to the vault without explicit user consent — the pipe
         /// handler only raises this event, and the prompt is what authorises the write.
         /// </summary>
+        /// <summary>
+        /// A password was generated and typed into a form that had no saved match. Offer to save it
+        /// exactly as a captured one would be — the user still confirms, and nothing is written
+        /// until they do.
+        /// </summary>
+        private void OnGeneratedCredentialFilled(
+            object? sender,
+            PhantomVault.UI.Services.AutoFill.GeneratedCredentialEventArgs e)
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                try
+                {
+                    if (IsLockscreenVisible) return;
+
+                    var url = string.IsNullOrWhiteSpace(e.Url) ? e.Domain : e.Url;
+
+                    var decision = new CredentialSaveDetector().Evaluate(
+                        url,
+                        new[] { (Descriptor: "username", Type: "text", Value: string.Empty),
+                                (Descriptor: "password", Type: "password", Value: e.Password) },
+                        _credentials.Select(c => c.GetCredential()));
+
+                    // A brand-new password for a site with nothing saved is worth offering even
+                    // when the detector sees no username to compare against — that is the whole
+                    // point of having just generated one.
+                    if (decision.Kind == SavePromptKind.None)
+                    {
+                        decision = new SavePromptDecision
+                        {
+                            Kind = SavePromptKind.SaveNew,
+                            Domain = e.Domain,
+                            Username = string.Empty,
+                            Password = e.Password
+                        };
+                    }
+
+                    if (IsSiteSuppressed(decision.Domain)) return;
+
+                    var prompt = new AutofillSavePrompt(decision);
+                    prompt.Completed += OnSavePromptCompleted;
+                    prompt.Show();
+                    prompt.PositionBottomRight();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[AutoFill] Generated-password save prompt failed: {ex.Message}");
+                }
+            });
+        }
+
         private void OnCredentialSubmitted(
             object? sender,
             PhantomVault.UI.Services.AutoFill.CredentialSubmittedEventArgs e)

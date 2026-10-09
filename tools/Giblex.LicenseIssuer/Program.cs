@@ -70,7 +70,7 @@ internal static class Program
     {
         var (pub, priv) = LicenseTokenCodec.GenerateKeyPair();
 
-        Console.WriteLine("Public key — replace the Placeholder array in");
+        Console.WriteLine("Public key — replace the ProductionPublicKey array in");
         Console.WriteLine("src/Core/Services/Licensing/LicensePublicKey.cs:");
         Console.WriteLine();
         for (var i = 0; i < pub.Length; i += 16)
