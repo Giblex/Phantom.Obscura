@@ -686,7 +686,7 @@ namespace PhantomVault.UI
                 Console.WriteLine("[App] Shutdown requested - cleaning up resources");
 #endif
 
-                _serviceProvider?.Dispose();
+                // Disposal is deferred to Exit: ShutdownRequested can still be cancelled.
             }
             catch (Exception ex)
             {
@@ -715,6 +715,23 @@ namespace PhantomVault.UI
 
         private void OnApplicationExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
         {
+            if (OperatingSystem.IsWindows() && _serviceProvider is not null)
+            {
+                try
+                {
+                    var client = _serviceProvider.GetRequiredService<PhantomVault.UI.Services.Privileged.NamedPipeBrokerClient>();
+                    client.EnsureAvailableAsync = null;
+                    _serviceProvider.GetService<PhantomVault.UI.Services.Security.IntegrityWatchdogStatusService>()?.Dispose();
+                    var controller = _serviceProvider.GetRequiredService<PhantomVault.UI.Services.Privileged.BrokerServiceController>();
+                    using var timeout = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(15));
+                    controller.StopAsync(client, timeout.Token).GetAwaiter().GetResult();
+                }
+                catch (Exception ex)
+                {
+                    Serilog.Log.Error(ex, "The privileged helper could not be stopped during app exit");
+                }
+            }
+
             try
             {
                 _globalHotkey?.Dispose();
@@ -761,6 +778,8 @@ namespace PhantomVault.UI
                     Debug.WriteLine($"[App] Error cleaning up spawned processes: {ex.Message}");
                 }
 
+                _serviceProvider?.Dispose();
+                _serviceProvider = null;
                 Environment.Exit(e.ApplicationExitCode);
             }
             catch (Exception ex)

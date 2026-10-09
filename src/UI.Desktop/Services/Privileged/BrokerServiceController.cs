@@ -12,7 +12,7 @@ namespace PhantomVault.UI.Services.Privileged
     /// Detects and (one-time, elevated) installs the Phantom Obscura privileged
     /// helper Windows service. The single UAC prompt the user ever sees happens
     /// here — when the helper is first installed. After that the non-elevated app
-    /// talks to the always-running service over a named pipe with no further prompts.
+    /// talks to the service over a named pipe and stops it on application exit.
     /// </summary>
     /// <summary>
     /// What the privileged helper is actually doing right now. The activation UI needs to tell
@@ -51,6 +51,67 @@ namespace PhantomVault.UI.Services.Privileged
 
         /// <summary>True when the service is registered and currently running.</summary>
         public bool IsRunning() => string.Equals(QueryState(), "RUNNING", StringComparison.OrdinalIgnoreCase);
+
+        public async Task StopAsync(NamedPipeBrokerClient client, CancellationToken cancellationToken)
+        {
+            var state = await QueryShutdownStateAsync(cancellationToken).ConfigureAwait(false);
+            if (state is null || state == "STOPPED")
+                return;
+            if (!string.Equals(state, "STOP_PENDING", StringComparison.OrdinalIgnoreCase))
+                await client.ShutdownAsync(cancellationToken).ConfigureAwait(false);
+            await WaitForStoppedAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        private static async Task WaitForStoppedAsync(CancellationToken cancellationToken)
+        {
+            while (true)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var state = await QueryShutdownStateAsync(cancellationToken).ConfigureAwait(false);
+                if (state is null || string.Equals(state, "STOPPED", StringComparison.OrdinalIgnoreCase))
+                    return;
+                await Task.Delay(100, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        private static async Task<string?> QueryShutdownStateAsync(CancellationToken cancellationToken)
+        {
+            using var process = Process.Start(new ProcessStartInfo("sc.exe", $"query {BrokerProtocol.ServiceName}")
+            {
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            }) ?? throw new InvalidOperationException("Could not query the privileged helper.");
+            var outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
+            var errorTask = process.StandardError.ReadToEndAsync(cancellationToken);
+            try
+            {
+                await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+                string output = await outputTask.ConfigureAwait(false);
+                await errorTask.ConfigureAwait(false);
+                if (process.ExitCode == 1060)
+                    return null;
+                if (process.ExitCode != 0)
+                    throw new InvalidOperationException($"Service query failed with code {process.ExitCode}.");
+                foreach (string raw in output.Split('\n'))
+                {
+                    string line = raw.Trim();
+                    if (!line.StartsWith("STATE", StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    int separator = line.IndexOf(':');
+                    if (separator < 0) break;
+                    var fields = line[(separator + 1)..].Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    if (fields.Length >= 2) return fields[1];
+                }
+                throw new InvalidDataException("Service query returned no state.");
+            }
+            catch (OperationCanceledException)
+            {
+                if (!process.HasExited) process.Kill();
+                throw;
+            }
+        }
 
         /// <summary>
         /// Ensures the helper is installed and running. If it is missing this raises

@@ -63,12 +63,12 @@ Boundaries (untrusted side first):
 
 | Threat | Mitigation |
 | --- | --- |
-| **S**poofing — non-browser process connects | `GetNamedPipeClientProcessId` + process-name allowlist |
+| **S**poofing — impostor native host connects | `GetNamedPipeClientProcessId` + exact application-image path; Authenticode required in Release |
 | **T**ampering — pipe MITM by another user | `PipeOptions.CurrentUserOnly` rejects cross-user connects |
 | **R**epudiation | Origin + timestamp captured in audit log |
 | **I**nfo disclosure — origin allowlist leaks | DPAPI-sealed (per-user) |
 | **D**enial of service — slowloris client | Async I/O + per-connection timeout |
-| **E**levation — credential exfil by hostile site | Origin allowlist gate + chip requires explicit click |
+| **E**levation — credential exfil by hostile site | Origin allowlist gate + exact credential hostname match + chip requires explicit click |
 
 ### 2.3 Internet egress (gateway)
 

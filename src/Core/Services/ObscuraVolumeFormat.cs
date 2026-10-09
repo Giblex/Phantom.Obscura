@@ -47,14 +47,13 @@ namespace PhantomVault.Core.Services
     /// </para>
     ///
     /// <para>
-    /// Version detection needs no v2 marker: v1 volumes start with the old ASCII magic, so
-    /// its <i>absence</i> means v2. Once the last v1 volume is upgraded the discriminator
-    /// stops being consulted, and nothing identifying remains on disk.
+    /// Plaintext v1 volumes are rejected using their old ASCII signature. Absence of that
+    /// signature does not prove v2: the encrypted header must authenticate with the keyfile.
     /// </para>
     /// </summary>
     internal static class ObscuraVolumeFormat
     {
-        /// <summary>The v1 signature. Retained only to recognise volumes awaiting upgrade.</summary>
+        /// <summary>The v1 signature. Retained only to reject unsupported plaintext volumes.</summary>
         internal static readonly byte[] LegacyMagic = System.Text.Encoding.ASCII.GetBytes("OBSCUR01");
 
             internal const int SaltLength = 16;

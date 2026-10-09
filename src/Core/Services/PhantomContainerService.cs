@@ -86,12 +86,22 @@ namespace PhantomVault.Core.Services
         private const string ManifestMarker = "MNFST";
         private const int ManifestMarkerSize = 5;
         private const int CurrentVersion = 4;
-        private const int MaxSupportedVersion = 4;
+        private const int MaxCiphertextBytes = 64 * 1024 * 1024;
+        private const int MaxKdfMemoryKb = 1024 * 1024;
+        private const int MaxKdfIterations = 16;
 
-        private const int V3_HeaderSize = 8;
-        private const int V3_IterationCountSize = 4;
-        private const int V3_ContainerSizeSize = 8;
-        private const int V3_ManifestOffsetSize = 8;
+        private static void RequireCurrentVersion(int version)
+        {
+            if (version != CurrentVersion)
+                throw new NotSupportedException($"Container version {version} is not supported. Only v4 containers can be opened.");
+        }
+
+        private static void ValidateKdf(int iterations, int memoryCostKb)
+        {
+            if (iterations < 1 || iterations > MaxKdfIterations ||
+                memoryCostKb < 8 || memoryCostKb > MaxKdfMemoryKb)
+                throw new InvalidDataException("Container KDF parameters exceed the supported limits.");
+        }
 
         private const int V4_HeaderSizeFieldSize = 4;
         private const int V4_StaticHeaderTotalSize = 16;
@@ -323,22 +333,14 @@ namespace PhantomVault.Core.Services
             byte[] versionBytes = new byte[VersionFieldSize];
             await fileStream.ReadExactlyAsync(versionBytes, cancellationToken);
             int version = BitConverter.ToInt32(versionBytes);
-            if (version < 1 || version > MaxSupportedVersion)
-                throw new InvalidOperationException($"Unsupported container version: {version}");
+            RequireCurrentVersion(version);
 
             var targetDir = Path.GetDirectoryName(targetPath);
             if (!string.IsNullOrEmpty(targetDir))
                 Directory.CreateDirectory(targetDir);
 
             await using var outputStream = new FileStream(targetPath, FileMode.Create, FileAccess.Write, FileShare.None);
-            if (version >= 4)
-            {
-                await OpenContainerV4Async(fileStream, outputStream, password, keyfilePath, cancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
-                await OpenContainerV3Async(fileStream, version, outputStream, password, keyfilePath, cancellationToken).ConfigureAwait(false);
-            }
+            await OpenContainerV4Async(fileStream, outputStream, password, keyfilePath, cancellationToken).ConfigureAwait(false);
 
             return targetPath;
         }
@@ -369,17 +371,9 @@ namespace PhantomVault.Core.Services
             byte[] versionBytes = new byte[VersionFieldSize];
             await fileStream.ReadExactlyAsync(versionBytes, cancellationToken);
             int version = BitConverter.ToInt32(versionBytes);
-            if (version < 1 || version > MaxSupportedVersion)
-                throw new InvalidOperationException($"Unsupported container version: {version}");
+            RequireCurrentVersion(version);
 
-            if (version >= 4)
-            {
-                await OpenContainerV4Async(fileStream, outputStream, password, keyfilePath, cancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
-                await OpenContainerV3Async(fileStream, version, outputStream, password, keyfilePath, cancellationToken).ConfigureAwait(false);
-            }
+            await OpenContainerV4Async(fileStream, outputStream, password, keyfilePath, cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<long> GetPayloadSizeAsync(string containerPath, CancellationToken cancellationToken = default)
@@ -397,24 +391,9 @@ namespace PhantomVault.Core.Services
             await fileStream.ReadExactlyAsync(versionBytes, cancellationToken).ConfigureAwait(false);
             int version = BitConverter.ToInt32(versionBytes);
 
-            if (version >= 4)
-            {
-                var manifestSection = await ReadV4ManifestSectionAsync(fileStream, cancellationToken).ConfigureAwait(false);
-                return manifestSection.ContainerManifest.PayloadSize;
-            }
-
-            byte[] salt = new byte[SaltSize];
-            await fileStream.ReadExactlyAsync(salt, cancellationToken).ConfigureAwait(false);
-
-            if (version >= 2)
-            {
-                byte[] iterationBytes = new byte[V3_IterationCountSize];
-                await fileStream.ReadExactlyAsync(iterationBytes, cancellationToken).ConfigureAwait(false);
-            }
-
-            byte[] sizeBytes = new byte[V3_ContainerSizeSize];
-            await fileStream.ReadExactlyAsync(sizeBytes, cancellationToken).ConfigureAwait(false);
-            return BitConverter.ToInt64(sizeBytes);
+            RequireCurrentVersion(version);
+            var manifestSection = await ReadV4ManifestSectionAsync(fileStream, cancellationToken).ConfigureAwait(false);
+            return manifestSection.ContainerManifest.PayloadSize;
         }
 
         public async Task<long> GetPayloadSizeAsync(
@@ -436,13 +415,9 @@ namespace PhantomVault.Core.Services
             await fileStream.ReadExactlyAsync(versionBytes, cancellationToken).ConfigureAwait(false);
             int version = BitConverter.ToInt32(versionBytes);
 
-            if (version >= 4)
-            {
-                using var context = await AuthenticateV4ContainerAsync(fileStream, password, keyfilePath, cancellationToken).ConfigureAwait(false);
-                return context.ManifestSection.ContainerManifest.PayloadSize;
-            }
-
-            return await GetPayloadSizeAsync(containerPath, cancellationToken).ConfigureAwait(false);
+            RequireCurrentVersion(version);
+            using var context = await AuthenticateV4ContainerAsync(fileStream, password, keyfilePath, cancellationToken).ConfigureAwait(false);
+            return context.ManifestSection.ContainerManifest.PayloadSize;
         }
 
         private async Task<string> OpenContainerV4Async(
@@ -484,7 +459,14 @@ namespace PhantomVault.Core.Services
                     blockCiphertext, blockNonce, blockTag, context.ContainerKey,
                     Encoding.UTF8.GetBytes($"block-{blockIndex}"));
 
-                await outputStream.WriteAsync(blockPlaintext.AsMemory(0, Math.Min(blockPlaintext.Length, currentBlockSize)), ct);
+                try
+                {
+                    await outputStream.WriteAsync(blockPlaintext.AsMemory(0, Math.Min(blockPlaintext.Length, currentBlockSize)), ct);
+                }
+                finally
+                {
+                    CryptographicOperations.ZeroMemory(blockPlaintext);
+                }
             }
 
             await outputStream.FlushAsync(ct);
@@ -494,96 +476,6 @@ namespace PhantomVault.Core.Services
             if (!CryptographicOperations.FixedTimeEquals(computedHash, expectedHash))
             {
                 throw new CryptographicException("Payload integrity check failed — container data may be corrupted or tampered");
-            }
-        }
-
-        private async Task<string> OpenContainerV3Async(
-            FileStream fileStream, int version, string targetPath, string? password, string? keyfilePath, CancellationToken cancellationToken)
-        {
-            await using var outputStream = new FileStream(targetPath, FileMode.Create, FileAccess.Write, FileShare.None);
-            await OpenContainerV3Async(fileStream, version, outputStream, password, keyfilePath, cancellationToken).ConfigureAwait(false);
-            return targetPath;
-        }
-
-        private async Task OpenContainerV3Async(
-            FileStream fileStream, int version, Stream outputStream, string? password, string? keyfilePath, CancellationToken cancellationToken)
-        {
-
-            byte[] salt = new byte[SaltSize];
-            await fileStream.ReadExactlyAsync(salt, cancellationToken);
-
-            int iterations = DefaultIterations;
-            if (version >= 2)
-            {
-                byte[] iterationBytes = new byte[V3_IterationCountSize];
-                await fileStream.ReadExactlyAsync(iterationBytes, cancellationToken);
-                iterations = BitConverter.ToInt32(iterationBytes);
-            }
-
-            byte[] sizeBytes = new byte[V3_ContainerSizeSize];
-            await fileStream.ReadExactlyAsync(sizeBytes, cancellationToken);
-            long containerSize = BitConverter.ToInt64(sizeBytes);
-
-            if (version >= 3)
-            {
-                byte[] manifestOffsetBytes = new byte[V3_ManifestOffsetSize];
-                await fileStream.ReadExactlyAsync(manifestOffsetBytes, cancellationToken);
-            }
-
-            byte[] containerKey = await DeriveContainerKeyAsync(password, keyfilePath, salt, iterations, DefaultMemoryKb, fileStream.Name);
-
-            try
-            {
-
-                byte[] metadataSizeBytes = new byte[4];
-                await fileStream.ReadExactlyAsync(metadataSizeBytes, cancellationToken);
-                int metadataSize = BitConverter.ToInt32(metadataSizeBytes);
-
-                byte[] metadataNonce = new byte[NonceSize];
-                await fileStream.ReadExactlyAsync(metadataNonce, cancellationToken);
-
-                byte[] metadataTag = new byte[TagSize];
-                await fileStream.ReadExactlyAsync(metadataTag, cancellationToken);
-
-                byte[] metadataCiphertext = new byte[metadataSize];
-                await fileStream.ReadExactlyAsync(metadataCiphertext, cancellationToken);
-
-                try
-                {
-                    _encryptionService.Decrypt(metadataCiphertext, metadataNonce, metadataTag, containerKey, Array.Empty<byte>());
-                }
-                catch (CryptographicException)
-                {
-                    throw new UnauthorizedAccessException("Invalid password or keyfile");
-                }
-
-                long totalBlocks = (containerSize + BlockSize - 1) / BlockSize;
-                for (long blockIndex = 0; blockIndex < totalBlocks; blockIndex++)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    byte[] blockNonce = new byte[NonceSize];
-                    await fileStream.ReadExactlyAsync(blockNonce, cancellationToken);
-
-                    byte[] blockTag = new byte[TagSize];
-                    await fileStream.ReadExactlyAsync(blockTag, cancellationToken);
-
-                    int currentBlockSize = (int)Math.Min(BlockSize, containerSize - (blockIndex * BlockSize));
-                    byte[] blockCiphertext = new byte[currentBlockSize];
-                    await fileStream.ReadExactlyAsync(blockCiphertext, cancellationToken);
-
-                    byte[] blockPlaintext = _encryptionService.Decrypt(
-                        blockCiphertext, blockNonce, blockTag, containerKey,
-                        Encoding.UTF8.GetBytes($"block-{blockIndex}"));
-
-                    await outputStream.WriteAsync(blockPlaintext.AsMemory(0, Math.Min(blockPlaintext.Length, currentBlockSize)), cancellationToken);
-                }
-
-                await outputStream.FlushAsync(cancellationToken);
-            }
-            finally
-            {
-                CryptographicOperations.ZeroMemory(containerKey);
             }
         }
 
@@ -678,6 +570,7 @@ namespace PhantomVault.Core.Services
 
         private async Task<byte[]> DeriveContainerKeyAsync(string? password, string? keyfilePath, byte[] salt, int iterations, int memoryCostKb, string? containerPath)
         {
+            ValidateKdf(iterations, memoryCostKb);
             byte[] passwordKey = Array.Empty<byte>();
             byte[] keyfileKey = Array.Empty<byte>();
             byte[] combinedKey = Array.Empty<byte>();
@@ -780,6 +673,7 @@ namespace PhantomVault.Core.Services
 
         private byte[] DeriveContainerKey(string? password, string? keyfilePath, byte[] salt, int iterations, int memoryCostKb, string? containerPath)
         {
+            ValidateKdf(iterations, memoryCostKb);
             byte[] passwordKey = Array.Empty<byte>();
             byte[] keyfileKey = Array.Empty<byte>();
 
@@ -871,8 +765,7 @@ namespace PhantomVault.Core.Services
             Span<byte> versionBuf = stackalloc byte[VersionFieldSize];
             fs.ReadExactly(versionBuf);
             int version = BitConverter.ToInt32(versionBuf);
-            if (version < 4)
-                return null;
+            RequireCurrentVersion(version);
 
             try
             {
@@ -897,7 +790,7 @@ namespace PhantomVault.Core.Services
 
         private static int ValidateFooterCiphertextSize(int ciphertextSize, long fileLength, long footerOffset)
         {
-            if (ciphertextSize <= 0)
+            if (ciphertextSize <= 0 || ciphertextSize > MaxCiphertextBytes)
                 throw new InvalidOperationException("Invalid vault manifest footer size");
 
             long remainingBytes = fileLength - footerOffset - ManifestMarkerSize - sizeof(int);
@@ -986,11 +879,7 @@ namespace PhantomVault.Core.Services
             {
                 bootstrapHeader = JsonSerializer.Deserialize<V4PublicBootstrapHeader>(headerJsonBytes, ContainerManifestJsonOptions);
                 if (bootstrapHeader != null &&
-                    string.Equals(bootstrapHeader.HeaderMode, V4_PrivateHeaderMode, StringComparison.OrdinalIgnoreCase) &&
-                    !string.IsNullOrWhiteSpace(bootstrapHeader.Salt) &&
-                    bootstrapHeader.KdfIterations > 0 &&
-                    bootstrapHeader.KdfMemoryKb > 0 &&
-                    bootstrapHeader.PrivateHeaderCiphertextSize > 0)
+                    string.Equals(bootstrapHeader.HeaderMode, V4_PrivateHeaderMode, StringComparison.OrdinalIgnoreCase))
                 {
                     return true;
                 }
@@ -1025,6 +914,7 @@ namespace PhantomVault.Core.Services
             byte[] tag = new byte[TagSize];
             await fs.ReadExactlyAsync(tag, cancellationToken).ConfigureAwait(false);
 
+            ValidatePrivateHeader(bootstrapHeader, fs);
             byte[] ciphertext = new byte[bootstrapHeader.PrivateHeaderCiphertextSize];
             await fs.ReadExactlyAsync(ciphertext, cancellationToken).ConfigureAwait(false);
 
@@ -1061,6 +951,7 @@ namespace PhantomVault.Core.Services
             byte[] tag = new byte[TagSize];
             fs.ReadExactly(tag);
 
+            ValidatePrivateHeader(bootstrapHeader, fs);
             byte[] ciphertext = new byte[bootstrapHeader.PrivateHeaderCiphertextSize];
             fs.ReadExactly(ciphertext);
 
@@ -1439,10 +1330,8 @@ namespace PhantomVault.Core.Services
             fs.ReadExactly(versionBuf);
             int version = BitConverter.ToInt32(versionBuf);
 
-            if (version >= 4)
-                return ReadManifestFromContainerV4(fs, password, keyfilePath);
-
-            return ReadManifestFromContainerV3(fs, version, password, keyfilePath);
+            RequireCurrentVersion(version);
+            return ReadManifestFromContainerV4(fs, password, keyfilePath);
         }
 
         private VaultManifest? ReadManifestFromContainerV4(FileStream fs, string? password, string? keyfilePath)
@@ -1460,53 +1349,6 @@ namespace PhantomVault.Core.Services
             catch (CryptographicException)
             {
                 throw new UnauthorizedAccessException("Invalid password or keyfile");
-            }
-        }
-
-        private VaultManifest? ReadManifestFromContainerV3(FileStream fs, int version, string? password, string? keyfilePath)
-        {
-
-            byte[] salt = new byte[SaltSize];
-            fs.ReadExactly(salt);
-
-            int iterations = DefaultIterations;
-            if (version >= 2)
-            {
-                Span<byte> iterBuf = stackalloc byte[V3_IterationCountSize];
-                fs.ReadExactly(iterBuf);
-                iterations = BitConverter.ToInt32(iterBuf);
-            }
-
-            Span<byte> sizeBuf2 = stackalloc byte[V3_ContainerSizeSize];
-            fs.ReadExactly(sizeBuf2);
-
-            long manifestOffset = 0;
-            if (version >= 3)
-            {
-                Span<byte> manifestOffsetBuf = stackalloc byte[V3_ManifestOffsetSize];
-                fs.ReadExactly(manifestOffsetBuf);
-                manifestOffset = BitConverter.ToInt64(manifestOffsetBuf);
-            }
-
-            if (version < 3 || manifestOffset <= 0)
-                return null;
-
-            byte[] containerKey = DeriveContainerKey(password, keyfilePath, salt, iterations, DefaultMemoryKb, fs.Name);
-            try
-            {
-                var footer = ReadVaultManifestFooter(fs, manifestOffset)
-                    ?? throw new InvalidOperationException("Manifest marker not found at expected offset");
-
-                byte[] manifestBytes = _encryptionService.Decrypt(footer.Ciphertext, footer.Nonce, footer.Tag, containerKey, Array.Empty<byte>());
-                return JsonSerializer.Deserialize<VaultManifest>(Encoding.UTF8.GetString(manifestBytes));
-            }
-            catch (CryptographicException)
-            {
-                throw new UnauthorizedAccessException("Invalid password or keyfile");
-            }
-            finally
-            {
-                CryptographicOperations.ZeroMemory(containerKey);
             }
         }
 
@@ -1530,13 +1372,8 @@ namespace PhantomVault.Core.Services
             fs.ReadExactly(versionBuf);
             int version = BitConverter.ToInt32(versionBuf);
 
-            if (version >= 4)
-            {
-                UpdateManifestInContainerV4(fs, manifest, password, keyfilePath);
-                return;
-            }
-
-            UpdateManifestInContainerV3(fs, version, manifest, password, keyfilePath);
+            RequireCurrentVersion(version);
+            UpdateManifestInContainerV4(fs, manifest, password, keyfilePath);
         }
 
         private void UpdateManifestInContainerV4(FileStream fs, VaultManifest manifest, string? password, string? keyfilePath)
@@ -1546,58 +1383,23 @@ namespace PhantomVault.Core.Services
             fs.Flush();
         }
 
-        private void UpdateManifestInContainerV3(FileStream fs, int version, VaultManifest manifest, string? password, string? keyfilePath)
-        {
-
-            if (version < 3)
-                throw new InvalidOperationException("Cannot update manifest in a v2 container — upgrade the container first");
-
-            byte[] salt = new byte[SaltSize];
-            fs.ReadExactly(salt);
-
-            int iterations = DefaultIterations;
-            if (version >= 2)
-            {
-                Span<byte> iterBuf = stackalloc byte[V3_IterationCountSize];
-                fs.ReadExactly(iterBuf);
-                iterations = BitConverter.ToInt32(iterBuf);
-            }
-
-            Span<byte> sizeBuf = stackalloc byte[V3_ContainerSizeSize];
-            fs.ReadExactly(sizeBuf);
-
-            long manifestOffset = 0;
-            if (version >= 3)
-            {
-                Span<byte> manifestOffsetBuf = stackalloc byte[V3_ManifestOffsetSize];
-                fs.ReadExactly(manifestOffsetBuf);
-                manifestOffset = BitConverter.ToInt64(manifestOffsetBuf);
-            }
-
-            byte[] containerKey = DeriveContainerKey(password, keyfilePath, salt, iterations, DefaultMemoryKb, fs.Name);
-            try
-            {
-                long writeOffset = manifestOffset > 0 ? manifestOffset : fs.Length;
-                WriteVaultManifestFooter(fs, writeOffset, manifest, containerKey);
-
-                long offsetFieldPos = HeaderMagicSize + VersionFieldSize + SaltSize + V3_IterationCountSize + V3_ContainerSizeSize;
-                fs.Seek(offsetFieldPos, SeekOrigin.Begin);
-                fs.Write(BitConverter.GetBytes(writeOffset));
-
-                fs.Flush();
-            }
-            finally
-            {
-                CryptographicOperations.ZeroMemory(containerKey);
-            }
-        }
-
         private static int ValidateManifestSize(int manifestSize)
         {
             if (manifestSize <= 0 || manifestSize > 64 * 1024)
                 throw new InvalidOperationException("Invalid container manifest size");
 
             return manifestSize;
+        }
+
+        private static void ValidatePrivateHeader(V4PublicBootstrapHeader header, FileStream stream)
+        {
+            ValidateKdf(header.KdfIterations, header.KdfMemoryKb);
+            if (string.IsNullOrWhiteSpace(header.Salt) || Convert.FromBase64String(header.Salt).Length != SaltSize)
+                throw new InvalidDataException("Invalid container KDF salt.");
+            if (header.PrivateHeaderCiphertextSize <= TagSize ||
+                header.PrivateHeaderCiphertextSize > 64 * 1024 ||
+                header.PrivateHeaderCiphertextSize > stream.Length - stream.Position)
+                throw new InvalidDataException("Invalid private header ciphertext size.");
         }
 
         private static byte[] ParsePayloadHash(string payloadHash)
@@ -1665,4 +1467,3 @@ namespace PhantomVault.Core.Services
         }
     }
 }
-

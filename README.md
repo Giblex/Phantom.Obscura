@@ -38,7 +38,7 @@ The integrated recovery panel (`Views/RecoveryPanelStub.cs` → `RecoveryPanel`,
 ### Vault & Encryption
 - Argon2id master key derivation with DPAPI-protected pepper and a **mandatory USB keyfile** (enforced by `KeyfileGuard.Require` at every create/unlock/mount entry point — passwords are an optional additional factor)
 - AES-GCM authenticated encryption for all vault data
-- Custom `PhantomContainerService` container format (v4): static bootstrap header, Argon2id KDF material, encrypted private header with payload hash and HMAC, backwards-compatible with v2/v3
+- Custom `PhantomContainerService` container format (v4): static bootstrap header, bounded Argon2id KDF material, encrypted private header with payload hash and HMAC. Versions 1-3 and plaintext `OBSCUR01` volumes are rejected; existing legacy files are not converted or modified.
 - Zero-knowledge vault service (`ZkVaultService`) — master key verified against a stored HMAC verifier before access is granted; key material zeroed after lock via `CryptographicOperations.ZeroMemory`
 - Post-quantum hybrid encryption — BouncyCastle ML-KEM-768 (CRYSTALS-Kyber) encapsulates a 32-byte shared secret that keys AES-256-GCM (`KyberAesHybrid` algorithm in `HybridEncryptionService`)
 - Layered and hybrid encryption pipelines

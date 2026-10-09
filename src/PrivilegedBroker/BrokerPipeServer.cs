@@ -186,7 +186,7 @@ namespace PhantomVault.PrivilegedBroker
             }
         }
 
-        private async Task DispatchAsync(BrokerRequest request, StreamWriter writer, object writeGate, CancellationToken ct)
+        internal async Task DispatchAsync(BrokerRequest request, StreamWriter writer, object writeGate, CancellationToken ct)
         {
             switch (request.Operation)
             {

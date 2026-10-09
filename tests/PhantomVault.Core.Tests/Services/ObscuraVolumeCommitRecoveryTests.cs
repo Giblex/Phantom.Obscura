@@ -217,7 +217,7 @@ public sealed class ObscuraVolumeCommitRecoveryTests : IDisposable
     }
 
     [Fact]
-    public async Task Legacy_upgrade_rewrites_only_the_header_and_round_trips_payload()
+    public async Task Legacy_volume_is_rejected_by_all_readers_without_writing_files()
     {
         string vol = Path.Combine(_dir, "legacy.bin");
         WriteLegacyVolume(vol,
@@ -225,51 +225,53 @@ public sealed class ObscuraVolumeCommitRecoveryTests : IDisposable
             ("decoy/decoy.database.pmeta", Encoding.UTF8.GetBytes("beta")));
 
         Assert.True(await _svc.IsLegacyVolumeAsync(vol));
-        Assert.True(await _svc.UpgradeLegacyVolumeAsync(vol, _keyfile));
-        Assert.False(await _svc.IsLegacyVolumeAsync(vol));
-        Assert.False(await _svc.UpgradeLegacyVolumeAsync(vol, _keyfile));
-
-        string rawText = Encoding.ASCII.GetString(File.ReadAllBytes(vol));
-        Assert.DoesNotContain("OBSCUR01", rawText, StringComparison.Ordinal);
-        Assert.DoesNotContain("decoy", rawText, StringComparison.OrdinalIgnoreCase);
-
-        string extracted = Path.Combine(_dir, "upgraded");
-        await _svc.ExtractVolumeAsync(vol, extracted, _keyfile, progress: null, verify: true);
-        Assert.Equal("alpha", File.ReadAllText(Path.Combine(extracted, "root", "a.txt")));
-        Assert.Equal("beta", File.ReadAllText(Path.Combine(extracted, "decoy", "decoy.database.pmeta")));
+        byte[] before = File.ReadAllBytes(vol);
+        Assert.False(await _svc.IsPlausibleObscuraVolumeAsync(vol));
+        await Assert.ThrowsAsync<NotSupportedException>(() => _svc.ReadManifestAsync(vol, _keyfile));
+        await Assert.ThrowsAsync<NotSupportedException>(() => _svc.ReadHeaderInfoAsync(vol, _keyfile));
+        await Assert.ThrowsAsync<NotSupportedException>(() => _svc.ResolveKeyfileAsync(vol, new[] { _keyfile }));
+        string extracted = Path.Combine(_dir, "rejected");
+        await Assert.ThrowsAsync<NotSupportedException>(() =>
+            _svc.ExtractVolumeAsync(vol, extracted, _keyfile, progress: null, verify: false));
+        Assert.False(Directory.Exists(extracted));
+        Assert.Equal(before, File.ReadAllBytes(vol));
         Assert.False(File.Exists(vol + ".tmp"));
         Assert.False(File.Exists(vol + ".bak"));
         Assert.False(File.Exists(vol + ".commit-journal"));
     }
 
     [Fact]
-    public async Task Legacy_upgrade_refuses_corrupt_payload_and_preserves_original()
+    public async Task Legacy_traversal_is_rejected_and_preserves_existing_file()
     {
         string vol = Path.Combine(_dir, "corrupt-legacy.bin");
-        WriteLegacyVolume(vol, ("root/a.txt", Encoding.UTF8.GetBytes("original")));
+        string outside = Path.Combine(_dir, "outside.txt");
+        File.WriteAllText(outside, "original");
+        WriteLegacyVolume(vol, ("../outside.txt", Encoding.UTF8.GetBytes("overwrite")));
         byte[] before = File.ReadAllBytes(vol);
         before[^1] ^= 0x7f;
         File.WriteAllBytes(vol, before);
 
-        await Assert.ThrowsAsync<CryptographicException>(
-            () => _svc.UpgradeLegacyVolumeAsync(vol, _keyfile));
+        await Assert.ThrowsAsync<NotSupportedException>(
+            () => _svc.ExtractVolumeAsync(vol, Path.Combine(_dir, "extract"), _keyfile, null, false));
 
+        Assert.Equal("original", File.ReadAllText(outside));
         Assert.True(await _svc.IsLegacyVolumeAsync(vol));
         Assert.Equal(before, File.ReadAllBytes(vol));
         Assert.False(File.Exists(vol + ".commit-journal"));
     }
 
     [Fact]
-    public async Task A_legacy_volume_still_opens_without_a_keyfile_being_the_right_one()
+    public async Task Legacy_absolute_path_is_rejected_before_extraction()
     {
-        // Back-compat: existing vaults must keep working before they are upgraded.
         string vol = Path.Combine(_dir, "legacy.bin");
-        WriteLegacyVolume(vol, ("root/a.txt", Encoding.UTF8.GetBytes("alpha")));
+        string outside = Path.Combine(_dir, "absolute.txt");
+        WriteLegacyVolume(vol, (outside, Encoding.UTF8.GetBytes("alpha")));
 
         string outDir = Path.Combine(_dir, "legacy_out");
-        await _svc.ExtractVolumeAsync(vol, outDir, _keyfile, progress: null, verify: true);
+        await Assert.ThrowsAsync<NotSupportedException>(() =>
+            _svc.ExtractVolumeAsync(vol, outDir, _keyfile, progress: null, verify: true));
 
-        Assert.Equal("alpha", File.ReadAllText(Path.Combine(outDir, "root", "a.txt")));
+        Assert.False(File.Exists(outside));
         Assert.True(await _svc.IsLegacyVolumeAsync(vol));
     }
 }

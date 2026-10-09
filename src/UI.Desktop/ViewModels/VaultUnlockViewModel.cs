@@ -78,8 +78,7 @@ namespace PhantomVault.UI.ViewModels
         /// Picks the keyfile that actually opens this volume, out of the candidates present on
         /// the drive. Returns null when none of them do.
         ///
-        /// Legacy (plaintext-header) volumes need no key, and ResolveKeyfileAsync reports the
-        /// first candidate for them, so this stays correct across both on-disk versions.
+        /// Legacy plaintext-header volumes are rejected before extraction.
         /// </summary>
         private async Task<string?> ResolveVolumeKeyfileAsync(
             ObscuraVolumeService volumeService, string volumePath, string? driveRoot)
@@ -765,30 +764,6 @@ namespace PhantomVault.UI.ViewModels
                         _ownerWindow);
                     CloseAndReturnToWelcome();
                     return;
-                }
-
-                // A v1 header exposes the vault layout in plaintext. Upgrade only after the
-                // inner manifest has authenticated, because legacy headers themselves cannot
-                // tell us which composite keyfile candidate is correct. Failure is non-fatal:
-                // read-only or failing removable media must not turn a valid unlock into a
-                // lockout, and the original volume remains intact through the atomic journal.
-                if (extractedFromVolumePath != null && !string.IsNullOrWhiteSpace(keyfilePath))
-                {
-                    try
-                    {
-                        Status = "Securing legacy vault header...";
-                        var upgradeService = new ObscuraVolumeService();
-                        if (await upgradeService.UpgradeLegacyVolumeAsync(extractedFromVolumePath, keyfilePath).ConfigureAwait(false))
-                        {
-                            volumeKeyfilePath = keyfilePath;
-                            Log.Information("[VaultUnlock] upgraded legacy Obscura volume header to v2 at {Path}", extractedFromVolumePath);
-                        }
-                    }
-                    catch (Exception upgradeEx)
-                    {
-                        Log.Warning(upgradeEx,
-                            "[VaultUnlock] legacy header upgrade failed; continuing with the authenticated vault");
-                    }
                 }
 
                 var vaultOptions = new Core.Options.VaultOptions();
@@ -1869,4 +1844,3 @@ namespace PhantomVault.UI.ViewModels
         }
     }
 }
-

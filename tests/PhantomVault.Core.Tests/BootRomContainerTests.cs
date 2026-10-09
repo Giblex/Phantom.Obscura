@@ -45,6 +45,29 @@ namespace PhantomVault.Core.Tests
         }
 
         [Fact]
+        public void The_maximum_program_size_round_trips()
+        {
+            var (priv, pub) = NewSigningKeys();
+            byte[] romKey = Key32();
+            byte[] program = RandomNumberGenerator.GetBytes(PhantomRomContainer.MaxProgramBytes);
+            byte[] opened = null;
+            try
+            {
+                byte[] container = PhantomRomContainer.Seal(program, priv, romKey, KeyId(), 1);
+                Assert.Equal(PhantomRomContainer.MaxContainerBytes, container.Length);
+                opened = PhantomRomContainer.Open(container, pub, romKey, out _);
+                Assert.Equal(program, opened);
+            }
+            finally
+            {
+                CryptographicOperations.ZeroMemory(priv);
+                CryptographicOperations.ZeroMemory(romKey);
+                CryptographicOperations.ZeroMemory(program);
+                if (opened is not null) CryptographicOperations.ZeroMemory(opened);
+            }
+        }
+
+        [Fact]
         public void Open_rejects_a_container_signed_by_an_untrusted_key()
         {
             var (priv, _) = NewSigningKeys();

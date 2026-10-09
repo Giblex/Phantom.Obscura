@@ -35,6 +35,15 @@ namespace PhantomVault.UI.Services.Privileged
         /// </summary>
         public Func<Task<bool>>? EnsureAvailableAsync { get; set; }
 
+        public async Task ShutdownAsync(CancellationToken cancellationToken = default)
+        {
+            var result = await ExchangeOnceAsync(
+                new BrokerRequest { Operation = BrokerOperation.Shutdown },
+                null, cancellationToken).ConfigureAwait(false);
+            if (!result.BoolResult)
+                throw new InvalidOperationException("The privileged helper refused to stop.");
+        }
+
         public bool ApplyProtection(string driveRoot, UsbWriteProtectionState state)
         {
             var request = new BrokerRequest

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Security;
 using System.Security.Cryptography;
+using Org.BouncyCastle.Crypto.Parameters;
 using PhantomVault.Core.Services.BootRom;
 using Xunit;
 
@@ -131,6 +132,85 @@ namespace PhantomVault.Core.Tests
             var outcome = _service.Run(UsbRoot, KeyfilePath, _integrity, _binding);
 
             Assert.Equal(BootRomStatus.RollbackBlocked, outcome.Status);
+        }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(135)]
+        [InlineData(PhantomRomContainer.MaxContainerBytes + 1)]
+        [InlineData(PhantomRomContainer.MaxContainerBytes * 2)]
+        public void An_invalid_image_size_is_rejected_before_key_derivation(long length)
+        {
+            Provision();
+            string romPath = BootRomMarker.RomPath(UsbRoot);
+            using (var image = File.Open(romPath, FileMode.Open, FileAccess.Write))
+                image.SetLength(length);
+
+            var outcome = _service.Run(UsbRoot, Path.Combine(_root, "missing.key"), _integrity, _binding);
+
+            Assert.Equal(BootRomStatus.RomRejected, outcome.Status);
+            Assert.Null(outcome.Contribution);
+            Assert.Equal("The Boot ROM image size is outside the supported range.", outcome.Message);
+            using var exclusive = File.Open(romPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        }
+
+        [Theory]
+        [InlineData("keyId")]
+        [InlineData("salt")]
+        [InlineData("signingKey")]
+        public void Incorrect_marker_parameter_lengths_are_rejected(string parameter)
+        {
+            Provision();
+            var marker = BootRomMarker.TryLoad(UsbRoot)!;
+            string invalid = Convert.ToBase64String(new byte[1]);
+            if (parameter == "keyId") marker.KeyIdBase64 = invalid;
+            if (parameter == "salt") marker.SaltBase64 = invalid;
+            if (parameter == "signingKey") marker.SigningPublicKeyBase64 = invalid;
+            marker.Save(UsbRoot);
+
+            var outcome = _service.Run(UsbRoot, KeyfilePath, _integrity, _binding);
+
+            Assert.Equal(BootRomStatus.RomRejected, outcome.Status);
+            Assert.Null(outcome.Contribution);
+        }
+
+        [Fact]
+        public void A_valid_image_at_the_loading_limit_still_runs()
+        {
+            var provisioned = Provision();
+            var marker = provisioned.Marker;
+            byte[] romKey = BootRomKeyDerivation.DeriveRomKey(KeyfilePath,
+                Convert.FromBase64String(marker.SaltBase64), Convert.FromBase64String(marker.KeyIdBase64));
+            byte[] signingPrivate = RandomNumberGenerator.GetBytes(32);
+            byte[] program = PhantomRomContainer.Open(File.ReadAllBytes(BootRomMarker.RomPath(UsbRoot)),
+                Convert.FromBase64String(marker.SigningPublicKeyBase64), romKey, out _);
+            byte[] padded = new byte[PhantomRomContainer.MaxProgramBytes];
+            BootRomOutcome outcome = null;
+            try
+            {
+                program.CopyTo(padded, 0);
+                marker.SigningPublicKeyBase64 = Convert.ToBase64String(
+                    new Ed25519PrivateKeyParameters(signingPrivate, 0).GeneratePublicKey().GetEncoded());
+                marker.Save(UsbRoot);
+                byte[] container = PhantomRomContainer.Seal(padded, signingPrivate, romKey,
+                    Convert.FromBase64String(marker.KeyIdBase64), marker.MinRomVersion);
+                Assert.Equal(PhantomRomContainer.MaxContainerBytes, container.Length);
+                File.WriteAllBytes(BootRomMarker.RomPath(UsbRoot), container);
+
+                outcome = _service.Run(UsbRoot, KeyfilePath, _integrity, _binding);
+
+                Assert.Equal(BootRomStatus.Success, outcome.Status);
+                Assert.Equal(provisioned.Contribution, outcome.Contribution);
+            }
+            finally
+            {
+                CryptographicOperations.ZeroMemory(romKey);
+                CryptographicOperations.ZeroMemory(signingPrivate);
+                CryptographicOperations.ZeroMemory(program);
+                CryptographicOperations.ZeroMemory(padded);
+                CryptographicOperations.ZeroMemory(provisioned.Contribution);
+                if (outcome?.Contribution is not null) CryptographicOperations.ZeroMemory(outcome.Contribution);
+            }
         }
 
         [Fact]

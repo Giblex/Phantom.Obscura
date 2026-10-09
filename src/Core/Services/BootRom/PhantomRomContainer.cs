@@ -45,6 +45,7 @@ namespace PhantomVault.Core.Services.BootRom
 
         /// <summary>Largest image accepted, so a corrupt length cannot drive a huge allocation.</summary>
         public const int MaxProgramBytes = 1024 * 1024;
+        public const int MaxContainerBytes = HeaderSize + MaxProgramBytes + TagSize + SignatureSize;
 
         private static ReadOnlySpan<byte> Magic => "PHROM\0\0\0"u8;
 

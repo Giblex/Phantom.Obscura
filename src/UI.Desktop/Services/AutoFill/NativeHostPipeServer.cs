@@ -275,9 +275,11 @@ namespace PhantomVault.UI.Services.AutoFill
             var domain = root.TryGetProperty("domain", out var d) ? d.GetString() ?? string.Empty : string.Empty;
             var normalizedSearch = NormalizeDomain(domain);
 
+            if (normalizedSearch.Length == 0)
+                return Fail("A site hostname is required");
+
             var credentials = provider.GetCredentials()
-                .Where(c => normalizedSearch.Length == 0 ||
-                            NormalizeDomain(ExtractDomain(c.Url)).Contains(normalizedSearch, StringComparison.OrdinalIgnoreCase))
+                .Where(c => DomainsMatch(ExtractDomain(c.Url), domain))
                 .OrderByDescending(c => string.Equals(NormalizeDomain(ExtractDomain(c.Url)), normalizedSearch, StringComparison.OrdinalIgnoreCase))
                 .ThenByDescending(c => c.LastUsedUtc ?? DateTimeOffset.MinValue)
                 .Take(3)
@@ -379,7 +381,7 @@ namespace PhantomVault.UI.Services.AutoFill
             JsonSerializer.Serialize(new { success = false, error });
 
         private static string NormalizeDomain(string domain) =>
-            domain.ToLowerInvariant().Replace("www.", "").Trim();
+            domain.Trim().TrimEnd('.').ToLowerInvariant();
 
         private static string ExtractDomain(string url)
         {
@@ -390,21 +392,16 @@ namespace PhantomVault.UI.Services.AutoFill
 
         public void Dispose() => Stop();
 
-        // Allowed browser process names (lowercased, no extension). Anything
-        // else connecting to the pipe is rejected. Combined with the Authenticode
-        // check below this is defence-in-depth on top of PipeOptions.CurrentUserOnly;
-        // the OS identity boundary remains the primary security guarantee.
-        private static readonly string[] AllowedBrowserProcessNames =
+        public static bool DomainsMatch(string savedHost, string requestedHost)
         {
-            "chrome",
-            "msedge",
-            "firefox",
-            "brave",
-            "opera",
-            "vivaldi",
-            "arc",
-            "chromium",
-        };
+            var requested = NormalizeDomain(requestedHost);
+            return requested.Length > 0 &&
+                string.Equals(NormalizeDomain(savedHost), requested, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static bool IsNativeHostImage(string? clientPath, string? applicationPath)
+            => !string.IsNullOrWhiteSpace(clientPath) && !string.IsNullOrWhiteSpace(applicationPath) &&
+               string.Equals(Path.GetFullPath(clientPath), Path.GetFullPath(applicationPath), StringComparison.OrdinalIgnoreCase);
 
         [SupportedOSPlatform("windows")]
         [DllImport("kernel32.dll", SetLastError = true)]
@@ -437,21 +434,8 @@ namespace PhantomVault.UI.Services.AutoFill
             try
             {
                 using var proc = Process.GetProcessById((int)pid);
-                var name = (proc.ProcessName ?? string.Empty).ToLowerInvariant();
-                if (string.IsNullOrEmpty(name))
-                {
-                    reason = $"empty process name for PID {pid}";
-                    return false;
-                }
-
-                if (!AllowedBrowserProcessNames.Contains(name))
-                {
-                    reason = $"process '{name}' (PID {pid}) is not an allowed browser";
-                    return false;
-                }
-
-                // Process names are trivially spoofable (copy any exe as chrome.exe), so
-                // additionally require a valid Authenticode signature on the client image.
+                // The browser launches this application in --native-messaging mode;
+                // the browser itself never connects to this pipe.
                 string? imagePath;
                 try
                 {
@@ -463,16 +447,16 @@ namespace PhantomVault.UI.Services.AutoFill
                     return false;
                 }
 
-                if (string.IsNullOrEmpty(imagePath))
+                if (string.IsNullOrWhiteSpace(imagePath) || !IsNativeHostImage(imagePath, Environment.ProcessPath))
                 {
-                    reason = $"empty image path for PID {pid}";
+                    reason = $"client PID {pid} is not the installed native host";
                     return false;
                 }
 
                 if (!IsImageSignatureTrusted(imagePath))
                 {
 #if DEBUG
-                    // Permit unsigned dev/Chromium builds in Debug only.
+                    // Permit the exact local application image in Debug only.
                     Log.Warning("AutofillPipe: '{Path}' has no valid Authenticode signature; allowed in DEBUG build only", imagePath);
 #else
                     reason = $"image '{imagePath}' (PID {pid}) failed Authenticode verification";
@@ -592,4 +576,3 @@ namespace PhantomVault.UI.Services.AutoFill
         }
     }
 }
-

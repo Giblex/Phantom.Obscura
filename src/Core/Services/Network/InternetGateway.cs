@@ -157,7 +157,7 @@ namespace PhantomVault.Core.Services.Network
                 {
                     EnabledSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13,
                     RemoteCertificateValidationCallback = (sender, cert, chain, errors)
-                        => ValidatePin(grant, sender, cert, errors),
+                        => ValidatePin(grant, sender, cert, chain, errors),
                 },
             };
 
@@ -219,7 +219,7 @@ namespace PhantomVault.Core.Services.Network
             return ttl;
         }
 
-        private bool ValidatePin(InternetAccessGrant grant, object? sender, X509Certificate? cert, SslPolicyErrors errors)
+        private bool ValidatePin(InternetAccessGrant grant, object? sender, X509Certificate? cert, X509Chain? chain, SslPolicyErrors errors)
         {
             if (errors != SslPolicyErrors.None)
             {
@@ -258,7 +258,7 @@ namespace PhantomVault.Core.Services.Network
 
             foreach (var pin in pins)
             {
-                if (SpkiPin.Matches(cert2, pin)) return true;
+                if (SpkiPin.MatchesValidatedChain(cert2, chain, errors, pin)) return true;
             }
 
             LogPinFailure(grant, host, detail: "Server SPKI does not match any pin.");

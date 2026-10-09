@@ -126,7 +126,24 @@ namespace PhantomVault.Core.Services.BootRom
                 if (!File.Exists(romPath))
                     return new BootRomOutcome { Status = BootRomStatus.RomMissing, Message = "The Boot ROM image is missing from this device." };
 
-                container = File.ReadAllBytes(romPath);
+                using var image = File.Open(romPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                long length = image.Length;
+                if (length < PhantomRomContainer.HeaderSize + PhantomRomContainer.TagSize + PhantomRomContainer.SignatureSize ||
+                    length > PhantomRomContainer.MaxContainerBytes)
+                    return new BootRomOutcome
+                    {
+                        Status = BootRomStatus.RomRejected,
+                        Message = "The Boot ROM image size is outside the supported range."
+                    };
+
+                container = new byte[(int)length];
+                image.ReadExactly(container);
+                if (image.ReadByte() != -1)
+                    return new BootRomOutcome
+                    {
+                        Status = BootRomStatus.RomRejected,
+                        Message = "The Boot ROM image changed while being read."
+                    };
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
@@ -144,6 +161,8 @@ namespace PhantomVault.Core.Services.BootRom
             {
                 return new BootRomOutcome { Status = BootRomStatus.RomRejected, Message = "The Boot ROM marker is malformed." };
             }
+            if (keyId.Length != PhantomRomContainer.KeyIdSize || salt.Length != 32 || signingKey.Length != 32)
+                return new BootRomOutcome { Status = BootRomStatus.RomRejected, Message = "The Boot ROM marker is malformed." };
 
             // Rollback floor, checked before unsealing. The header is authenticated during Open,
             // so a forged version cannot survive — this only avoids wasted work on an obvious one.

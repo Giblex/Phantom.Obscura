@@ -14,7 +14,6 @@ namespace PhantomVault.Core.Services
 
     public sealed class ObscuraVolumeService
     {
-        private static readonly byte[] Magic = Encoding.ASCII.GetBytes("OBSCUR01");
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
             WriteIndented = false
@@ -411,11 +410,7 @@ namespace PhantomVault.Core.Services
                 if (total < 12) return false;
 
                 if (ObscuraVolumeFormat.IsLegacyHeader(head))
-                {
-                    int legacyLength = BinaryPrimitives.ReadInt32LittleEndian(head.AsSpan(8, 4));
-                    return legacyLength > 0 && legacyLength <= MaxHeaderBytes
-                        && info.Length >= Magic.Length + 4 + (long)legacyLength;
-                }
+                    return false;
 
                 if (total < ObscuraVolumeFormat.V2FixedPrefixLength) return false;
                 int cipherLength = BinaryPrimitives.ReadInt32LittleEndian(
@@ -523,6 +518,8 @@ namespace PhantomVault.Core.Services
             var manifest = header.Manifest;
             long payloadStart = header.PayloadStart;
 
+            ValidateManifestLayout(manifest, new FileInfo(volumePath).Length - payloadStart);
+            var outputPaths = manifest.Entries.Select(entry => ResolveEntryPath(destinationRoot, entry.Path)).ToArray();
             Directory.CreateDirectory(destinationRoot);
             const int IoBuffer = 1024 * 1024;
 
@@ -553,7 +550,7 @@ namespace PhantomVault.Core.Services
                 async (i, ct) =>
                 {
                     var entry = manifest.Entries[i];
-                    string outputPath = Path.Combine(destinationRoot, entry.Path.Replace('/', Path.DirectorySeparatorChar));
+                    string outputPath = outputPaths[i];
                     Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
 
                     await using var input = new FileStream(
@@ -647,7 +644,7 @@ namespace PhantomVault.Core.Services
             foreach (var entry in manifest.Entries)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                string path = Path.Combine(destinationRoot, entry.Path.Replace('/', Path.DirectorySeparatorChar));
+                string path = ResolveEntryPath(destinationRoot, entry.Path);
                 if (!File.Exists(path)) return false;
                 await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read,
                     bufferSize: 1024 * 1024, useAsync: true);
@@ -684,11 +681,7 @@ namespace PhantomVault.Core.Services
             if (read < 12) return false;
 
             if (ObscuraVolumeFormat.IsLegacyHeader(head))
-            {
-                int legacyLength = BinaryPrimitives.ReadInt32LittleEndian(head.AsSpan(8, 4));
-                return legacyLength > 0 && legacyLength <= MaxHeaderBytes
-                    && info.Length >= Magic.Length + 4 + (long)legacyLength;
-            }
+                return false;
 
             if (read < ObscuraVolumeFormat.V2FixedPrefixLength) return false;
             int cipherLength = BinaryPrimitives.ReadInt32LittleEndian(
@@ -710,7 +703,6 @@ namespace PhantomVault.Core.Services
         /// possible test of "is this the right one", far cheaper than the manifest's Argon2
         /// pass, so resolving here costs almost nothing and saves the caller guessing.
         ///
-        /// A legacy volume needs no key at all, so the first candidate is returned unchanged.
         /// </summary>
         public async Task<string?> ResolveKeyfileAsync(
             string volumePath, IReadOnlyList<string> candidates, CancellationToken cancellationToken = default)
@@ -718,7 +710,7 @@ namespace PhantomVault.Core.Services
             if (candidates == null || candidates.Count == 0) return null;
 
             if (await IsLegacyVolumeAsync(volumePath, cancellationToken).ConfigureAwait(false))
-                return candidates[0];
+                throw new NotSupportedException("Legacy OBSCUR01 volumes are no longer supported.");
 
             foreach (var candidate in candidates)
             {
@@ -762,46 +754,15 @@ namespace PhantomVault.Core.Services
             return read == 8 && ObscuraVolumeFormat.IsLegacyHeader(head);
         }
 
-        /// <summary>
-        /// Rewrites a legacy plaintext-header volume to v2 without decrypting or rebuilding
-        /// any entry. The legacy payload is authenticated first, then copied byte-for-byte
-        /// through the normal journalled atomic commit path. Returns <c>false</c> when the
-        /// volume was already v2, making this safe to call after every successful unlock.
-        /// </summary>
-        public async Task<bool> UpgradeLegacyVolumeAsync(
-            string volumePath,
-            string keyfilePath,
-            CancellationToken cancellationToken = default)
+        private static string ResolveEntryPath(string destinationRoot, string entryPath)
         {
-            if (string.IsNullOrWhiteSpace(volumePath) || !File.Exists(volumePath))
-                throw new FileNotFoundException("Obscura volume not found", volumePath);
-            if (string.IsNullOrWhiteSpace(keyfilePath))
-                throw new ArgumentException("A keyfile is required to upgrade an Obscura volume.", nameof(keyfilePath));
-
-            RecoverPendingCommit(volumePath);
-            var header = await ReadHeaderAsync(volumePath, keyfilePath, cancellationToken).ConfigureAwait(false);
-            if (!header.IsLegacy) return false;
-
-            long payloadLength = ValidateManifestLayout(header.Manifest, new FileInfo(volumePath).Length - header.PayloadStart);
-            await VerifyPayloadAsync(volumePath, header, cancellationToken).ConfigureAwait(false);
-
-            byte[] headerBytes = JsonSerializer.SerializeToUtf8Bytes(header.Manifest, JsonOptions);
-            await CommitVolumeAtomicAsync(volumePath, headerBytes, keyfilePath, async (output, ct) =>
-            {
-                await using var input = new FileStream(
-                    volumePath, FileMode.Open, FileAccess.Read, FileShare.Read,
-                    bufferSize: 1024 * 1024, useAsync: true);
-                input.Position = header.PayloadStart;
-                await CopyExactlyAsync(input, output, payloadLength, ct).ConfigureAwait(false);
-            }, cancellationToken).ConfigureAwait(false);
-
-            // Do not report success until the replacement header authenticates with the
-            // selected keyfile. The old volume remains recoverable through the commit journal
-            // if the process or media fails before the atomic swap completes.
-            var upgraded = await ReadHeaderAsync(volumePath, keyfilePath, cancellationToken).ConfigureAwait(false);
-            if (upgraded.IsLegacy)
-                throw new InvalidOperationException("The Obscura volume upgrade did not replace the legacy header.");
-            return true;
+            if (string.IsNullOrWhiteSpace(entryPath) || Path.IsPathRooted(entryPath) || entryPath.Contains(':'))
+                throw new InvalidDataException("Invalid volume entry path.");
+            string root = Path.GetFullPath(destinationRoot).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            string output = Path.GetFullPath(Path.Combine(root, entryPath.Replace('/', Path.DirectorySeparatorChar)));
+            if (!output.StartsWith(root, OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
+                throw new InvalidDataException("Volume entry path escapes the extraction directory.");
+            return output;
         }
 
         private static long ValidateManifestLayout(ObscuraVolumeManifest manifest, long availablePayloadBytes)
@@ -822,64 +783,8 @@ namespace PhantomVault.Core.Services
             return payloadLength;
         }
 
-        private static async Task VerifyPayloadAsync(
-            string volumePath, VolumeHeader header, CancellationToken cancellationToken)
-        {
-            using var payloadHasher = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
-            foreach (var entry in header.Manifest.Entries)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                await using var input = new FileStream(
-                    volumePath, FileMode.Open, FileAccess.Read, FileShare.Read,
-                    bufferSize: 1024 * 1024, useAsync: true);
-                input.Position = header.PayloadStart + entry.Offset;
-
-                using var entryHasher = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
-                byte[] buffer = new byte[1024 * 1024];
-                long remaining = entry.Length;
-                while (remaining > 0)
-                {
-                    int read = await input.ReadAsync(
-                        buffer.AsMemory(0, (int)Math.Min(buffer.Length, remaining)), cancellationToken).ConfigureAwait(false);
-                    if (read == 0) throw new EndOfStreamException($"Unexpected end of volume while validating {entry.Path}");
-                    entryHasher.AppendData(buffer.AsSpan(0, read));
-                    remaining -= read;
-                }
-
-                byte[] hash = entryHasher.GetHashAndReset();
-                if (!string.IsNullOrWhiteSpace(entry.Sha256) &&
-                    !CryptographicOperations.FixedTimeEquals(hash, Convert.FromBase64String(entry.Sha256)))
-                    throw new CryptographicException($"Legacy volume entry integrity check failed for {entry.Path}");
-                payloadHasher.AppendData(hash);
-            }
-
-            string computed = Convert.ToBase64String(payloadHasher.GetHashAndReset());
-            if (!string.Equals(computed, header.Manifest.PayloadHash, StringComparison.Ordinal))
-                throw new CryptographicException("Legacy volume payload integrity check failed");
-        }
-
-        private static async Task CopyExactlyAsync(
-            Stream input, Stream output, long length, CancellationToken cancellationToken)
-        {
-            byte[] buffer = new byte[1024 * 1024];
-            long remaining = length;
-            while (remaining > 0)
-            {
-                int read = await input.ReadAsync(
-                    buffer.AsMemory(0, (int)Math.Min(buffer.Length, remaining)), cancellationToken).ConfigureAwait(false);
-                if (read == 0) throw new EndOfStreamException("Unexpected end of legacy volume payload during upgrade.");
-                await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken).ConfigureAwait(false);
-                remaining -= read;
-            }
-        }
-
         /// <summary>
-        /// Reads a volume header, transparently handling both on-disk versions.
-        ///
-        /// v1 volumes open with the ASCII signature and carry a plaintext manifest; v2
-        /// volumes open with a random salt and carry an encrypted one. The absence of the v1
-        /// signature is the only discriminator needed — see <see cref="ObscuraVolumeFormat"/>
-        /// for why v2 deliberately has no signature of its own.
+        /// Reads an authenticated v2 header. Plaintext v1 headers are rejected.
         ///
         /// Returns the manifest together with the offset at which the payload begins, so
         /// callers never have to recompute that from format constants. Getting that
@@ -901,30 +806,12 @@ namespace PhantomVault.Core.Services
                 throw new InvalidOperationException("Obscura volume is truncated.");
 
             if (ObscuraVolumeFormat.IsLegacyHeader(head))
-                return await ReadLegacyHeaderAsync(input, head, cancellationToken).ConfigureAwait(false);
+                throw new NotSupportedException("Legacy OBSCUR01 volumes are no longer supported.");
 
             if (headRead < ObscuraVolumeFormat.V2FixedPrefixLength)
                 throw new InvalidOperationException("Obscura volume is truncated.");
 
             return await ReadV2HeaderAsync(input, head, keyfilePath, cancellationToken).ConfigureAwait(false);
-        }
-
-        private static async Task<VolumeHeader> ReadLegacyHeaderAsync(
-            FileStream input, byte[] head, CancellationToken cancellationToken)
-        {
-            int headerLength = BinaryPrimitives.ReadInt32LittleEndian(head.AsSpan(8, 4));
-            if (headerLength <= 0 || headerLength > MaxHeaderBytes)
-                throw new InvalidOperationException("Invalid Obscura volume header length");
-
-            input.Position = Magic.Length + 4;
-            byte[] headerBytes = new byte[headerLength];
-            if (await ReadExactlyAsync(input, headerBytes, cancellationToken).ConfigureAwait(false) != headerLength)
-                throw new EndOfStreamException("Failed to read Obscura volume header");
-
-            var manifest = JsonSerializer.Deserialize<ObscuraVolumeManifest>(headerBytes, JsonOptions)
-                ?? throw new InvalidOperationException("Failed to parse Obscura volume manifest");
-
-            return new VolumeHeader(manifest, Magic.Length + 4 + headerLength, IsLegacy: true);
         }
 
         private static async Task<VolumeHeader> ReadV2HeaderAsync(
@@ -941,7 +828,8 @@ namespace PhantomVault.Core.Services
             int cipherLength = BinaryPrimitives.ReadInt32LittleEndian(
                 head.AsSpan(ObscuraVolumeFormat.V2FixedPrefixLength - 4, 4));
 
-            if (cipherLength <= 0 || cipherLength > MaxHeaderBytes)
+            if (cipherLength <= 0 || cipherLength > MaxHeaderBytes ||
+                cipherLength > input.Length - input.Position)
                 throw new InvalidOperationException("Invalid Obscura volume header length");
 
             byte[] ciphertext = new byte[cipherLength];
@@ -1090,4 +978,3 @@ namespace PhantomVault.Core.Services
         }
     }
 }
-

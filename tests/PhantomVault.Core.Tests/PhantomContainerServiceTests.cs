@@ -1,6 +1,11 @@
+#nullable enable
 using System;
 using System.IO;
 using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json.Nodes;
+using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using PhantomVault.Core.Models;
 using PhantomVault.Core.Services;
@@ -10,6 +15,110 @@ namespace PhantomVault.Core.Tests
 {
     public sealed class PhantomContainerServiceTests
     {
+        [Theory]
+        [InlineData(1)]
+        [InlineData(2)]
+        [InlineData(3)]
+        [InlineData(5)]
+        public async Task UnsupportedVersions_AreRejectedOnEverySurfaceWithoutOverwriting(int version)
+        {
+            string directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(directory);
+            try
+            {
+                string container = Path.Combine(directory, "legacy.pvault");
+                string target = Path.Combine(directory, "target");
+                byte[] bytes = new byte[12];
+                Encoding.ASCII.GetBytes("PHANTOM1").CopyTo(bytes, 0);
+                BitConverter.GetBytes(version).CopyTo(bytes, 8);
+                File.WriteAllBytes(container, bytes);
+                File.WriteAllText(target, "keep");
+                using var service = new PhantomContainerService(new EncryptionService());
+                await Assert.ThrowsAsync<NotSupportedException>(() => service.OpenContainerAsync(container, target, null, null));
+                using var output = new MemoryStream();
+                await Assert.ThrowsAsync<NotSupportedException>(() => service.OpenContainerToStreamAsync(container, output, null, null));
+                await Assert.ThrowsAsync<NotSupportedException>(() => service.GetPayloadSizeAsync(container));
+                await Assert.ThrowsAsync<NotSupportedException>(() => service.GetPayloadSizeAsync(container, null, null));
+                Assert.Throws<NotSupportedException>(() => PhantomContainerService.ReadContainerManifest(container));
+                Assert.Throws<NotSupportedException>(() => service.ReadManifestFromContainer(container, null, null));
+                Assert.Throws<NotSupportedException>(() => service.UpdateManifestInContainer(container, new VaultManifest(), null, null));
+                Assert.Equal("keep", File.ReadAllText(target));
+                Assert.Equal(bytes, File.ReadAllBytes(container));
+                Assert.Equal(0, output.Length);
+            }
+            finally { Directory.Delete(directory, true); }
+        }
+
+        [Theory]
+        [InlineData("KdfIterations", 17)]
+        [InlineData("KdfIterations", 0)]
+        [InlineData("KdfMemoryKb", -1)]
+        [InlineData("KdfMemoryKb", 1_048_577)]
+        [InlineData("PrivateHeaderCiphertextSize", 65_537)]
+        [InlineData("PrivateHeaderCiphertextSize", 2_147_483_647)]
+        [InlineData("PrivateHeaderCiphertextSize", -1)]
+        public async Task UntrustedBootstrapParameters_AreRejectedBeforeDerivationOrAllocation(string property, int value)
+        {
+            using var harness = await ContainerHarness.CreateAsync();
+            byte[] original = File.ReadAllBytes(harness.ContainerPath);
+            int headerLength = BitConverter.ToInt32(original, 16);
+            var header = JsonNode.Parse(original.AsSpan(20, headerLength))!;
+            header[property] = value;
+            byte[] modifiedHeader = JsonSerializerBytes(header);
+            using (var output = File.Create(harness.ContainerPath))
+            {
+                output.Write(original.AsSpan(0, 16));
+                output.Write(BitConverter.GetBytes(modifiedHeader.Length));
+                output.Write(modifiedHeader);
+                output.Write(original.AsSpan(20 + headerLength));
+            }
+            await Assert.ThrowsAsync<InvalidDataException>(() =>
+                harness.Service.GetPayloadSizeAsync(harness.ContainerPath, ContainerHarness.Password, harness.KeyfilePath));
+            Assert.Throws<InvalidDataException>(() =>
+                harness.Service.ReadManifestFromContainer(harness.ContainerPath, ContainerHarness.Password, harness.KeyfilePath));
+        }
+
+        private static byte[] JsonSerializerBytes(JsonNode node) => Encoding.UTF8.GetBytes(node.ToJsonString());
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(1)]
+        [InlineData(2)]
+        public async Task DecryptedBlock_IsZeroizedAfterSuccessfulFailedOrCancelledWrite(int failureMode)
+        {
+            using var harness = await ContainerHarness.CreateAsync();
+            using var output = new CapturingStream(failureMode);
+            if (failureMode == 1)
+                await Assert.ThrowsAsync<IOException>(() => harness.Service.OpenContainerToStreamAsync(
+                    harness.ContainerPath, output, ContainerHarness.Password, harness.KeyfilePath));
+            else if (failureMode == 2)
+                await Assert.ThrowsAnyAsync<OperationCanceledException>(() => harness.Service.OpenContainerToStreamAsync(
+                    harness.ContainerPath, output, ContainerHarness.Password, harness.KeyfilePath));
+            else
+                await harness.Service.OpenContainerToStreamAsync(
+                    harness.ContainerPath, output, ContainerHarness.Password, harness.KeyfilePath);
+            Assert.NotNull(output.Plaintext);
+            Assert.True(output.SawNonzeroPlaintext);
+            Assert.Equal(4096, output.Plaintext!.Length);
+            Assert.All(output.Plaintext, value => Assert.Equal((byte)0, value));
+        }
+
+        private sealed class CapturingStream(int failureMode) : MemoryStream
+        {
+            public byte[]? Plaintext { get; private set; }
+            public bool SawNonzeroPlaintext { get; private set; }
+            public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
+            {
+                Assert.True(MemoryMarshal.TryGetArray(buffer, out ArraySegment<byte> segment));
+                Plaintext = segment.Array;
+                foreach (byte value in buffer.Span)
+                    if (value != 0) SawNonzeroPlaintext = true;
+                if (failureMode == 1) throw new IOException("Simulated write failure.");
+                if (failureMode == 2) return ValueTask.FromCanceled(new CancellationToken(true));
+                return base.WriteAsync(buffer, cancellationToken);
+            }
+        }
+
         [Fact]
         public async Task GetPayloadSizeAsync_InvalidV4HeaderSize_Throws()
         {
@@ -135,7 +244,10 @@ namespace PhantomVault.Core.Tests
 
                 var containerPath = Path.Combine(tempDirectory, "vault.pcv");
                 var service = new PhantomContainerService(new EncryptionService());
-                await service.CreateContainerAsync(containerPath, sizeBytes: 4096, password: Password, keyfilePath: keyfilePath);
+                byte[] content = new byte[4096];
+                Array.Fill(content, (byte)0x5a);
+                using var payload = new MemoryStream(content, writable: false);
+                await service.CreateContainerFromStreamAsync(containerPath, payload, sizeBytes: 4096, password: Password, keyfilePath: keyfilePath);
                 return new ContainerHarness(tempDirectory, containerPath, keyfilePath, service);
             }
 

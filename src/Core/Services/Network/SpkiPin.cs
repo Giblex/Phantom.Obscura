@@ -1,4 +1,5 @@
 using System;
+using System.Net.Security;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
@@ -11,6 +12,27 @@ namespace PhantomVault.Core.Services.Network
     /// </summary>
     public static class SpkiPin
     {
+        public static bool MatchesValidatedChain(
+            X509Certificate2 certificate, X509Chain? chain, SslPolicyErrors errors, string pinBase64)
+        {
+            if (errors != SslPolicyErrors.None)
+                return false;
+            if (Matches(certificate, pinBase64))
+                return true;
+            if (chain is null || chain.ChainElements.Count < 2 ||
+                chain.ChainStatus.Length != 0 ||
+                !certificate.RawData.AsSpan().SequenceEqual(chain.ChainElements[0].Certificate.RawData))
+                return false;
+
+            // Trust anchors are not rotation backups: only intermediates in the validated chain.
+            for (int i = 1; i < chain.ChainElements.Count - 1; i++)
+            {
+                if (Matches(chain.ChainElements[i].Certificate, pinBase64))
+                    return true;
+            }
+            return false;
+        }
+
         /// <summary>
         /// Compute the base64 SHA-256 SPKI pin for a certificate. Used for tests,
         /// developer tooling, and one-time pin extraction during pin rotation.

@@ -84,9 +84,13 @@ The browser extension talks to the desktop app via a named pipe
 
 - `PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly`
 - Connecting process is identified via `GetNamedPipeClientProcessId` and the
-  process name is checked against an allowlist
-  (`chrome, msedge, firefox, brave, opera, vivaldi, arc, chromium`). Other
-  callers are rejected before any vault state is touched.
+  executable path must match the running Obscura application image. The browser
+  launches that image in native-messaging mode; the browser itself is not the
+  pipe client. Release builds also require valid Authenticode trust; Debug
+  permits the exact unsigned local application image.
+- Credential lookup requires an exact hostname match (case-insensitive, ignoring
+  a trailing DNS dot). Empty hostnames and substring/sibling/subdomain matches
+  do not return credentials.
 - The autofill origin allowlist is read from `%AppData%\PhantomVault\` and is
   **DPAPI-sealed** to `autofill-origins.dpapi` (per-user scope). Legacy
   plaintext `autofill-origins.json` is auto-migrated and best-effort deleted
@@ -175,3 +179,31 @@ allows any process on the host to decrypt.
 Security issues: open a private security advisory on
 <https://github.com/Giblex/Phantom.Obscura/security/advisories>. Do not file
 public issues for vulnerabilities.
+
+## 9. Container and helper lifecycle controls
+
+- Only encrypted-header Obscura v2 volumes and Phantom v4 containers are accepted.
+  Plaintext `OBSCUR01` volumes and Phantom v1-v3 containers are rejected before
+  extraction or output creation. No automatic legacy conversion is performed.
+- Volume extraction validates every entry range and canonical destination path
+  before creating output files.
+- Phantom container KDF costs are limited to 1-16 iterations and at most 1 GiB
+  of memory. Private headers are limited to 64 KiB and manifest-footer ciphertext
+  to 64 MiB, with remaining-file checks before allocation.
+- GV-CZK headers, TOCs, and entry ciphertext are limited to 64 KiB, 16 MiB, and
+  256 MiB respectively. Larger entries require a streaming format rather than
+  unbounded in-memory allocation. Updated TOC size is checked before appending
+  entry data, so size rejection leaves existing entries intact.
+- Decrypted Phantom payload blocks are zeroized in `finally`, including failed
+  and cancelled output writes.
+- Boot ROM image loading checks the opened file's length before allocating:
+  at most 1 MiB of program plus the 136-byte signed-container overhead. Reads
+  require the exact length and reject growth; malformed marker key and salt
+  lengths are rejected before key derivation.
+- TLS pinning checks the leaf and intermediates in the validated certificate
+  chain; trust anchors are excluded. Name or chain validation errors still fail
+  closed. An intermediate pin therefore supports leaf-key rotation.
+- On actual desktop exit, the app disables helper activation, sends the
+  authenticated broker shutdown request without reinstall/restart retries, and
+  waits for SCM to report stopped before disposal (15-second bound). Failure is
+  logged explicitly. Closing to the autofill tray is not an application exit.
